@@ -1,11 +1,3 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -22,20 +14,22 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        )
 #endif
 {
+	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
+	for (int i = 0; i < numVoices; i++) {
+				harmEngine[i] = new HarmonyVoice();
+				harmEngine[i]->voiceIsOn = false;
+			}
 }
 
-ImogenAudioProcessor::~ImogenAudioProcessor()
-{
+ImogenAudioProcessor::~ImogenAudioProcessor() {
 }
 
 //==============================================================================
-const juce::String ImogenAudioProcessor::getName() const
-{
+const juce::String ImogenAudioProcessor::getName() const {
     return JucePlugin_Name;
 }
 
-bool ImogenAudioProcessor::acceptsMidi() const
-{
+bool ImogenAudioProcessor::acceptsMidi() const {
    #if JucePlugin_WantsMidiInput
     return true;
    #else
@@ -43,8 +37,7 @@ bool ImogenAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool ImogenAudioProcessor::producesMidi() const
-{
+bool ImogenAudioProcessor::producesMidi() const {
    #if JucePlugin_ProducesMidiOutput
     return true;
    #else
@@ -52,8 +45,7 @@ bool ImogenAudioProcessor::producesMidi() const
    #endif
 }
 
-bool ImogenAudioProcessor::isMidiEffect() const
-{
+bool ImogenAudioProcessor::isMidiEffect() const {
    #if JucePlugin_IsMidiEffect
     return true;
    #else
@@ -61,44 +53,40 @@ bool ImogenAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double ImogenAudioProcessor::getTailLengthSeconds() const
-{
+double ImogenAudioProcessor::getTailLengthSeconds() const {
     return 0.0;
 }
 
-int ImogenAudioProcessor::getNumPrograms()
-{
+int ImogenAudioProcessor::getNumPrograms() {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int ImogenAudioProcessor::getCurrentProgram()
-{
+int ImogenAudioProcessor::getCurrentProgram() {
     return 0;
 }
 
-void ImogenAudioProcessor::setCurrentProgram (int index)
-{
+void ImogenAudioProcessor::setCurrentProgram (int index) {
 }
 
-const juce::String ImogenAudioProcessor::getProgramName (int index)
-{
+const juce::String ImogenAudioProcessor::getProgramName (int index) {
     return {};
 }
 
-void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
-{
+void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName) {
 }
 
 //==============================================================================
-void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
-{
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
+	
+	lastSampleRate = sampleRate;
+	lastBlockSize = samplesPerBlock;
+	for (int i = 0; i < numVoices; i++) {
+		harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
+	}
 }
 
-void ImogenAudioProcessor::releaseResources()
-{
+void ImogenAudioProcessor::releaseResources() {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
@@ -127,43 +115,28 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 }
 #endif
 
+
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+	
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
+	
+	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
+	for (int i = 0; i < numVoices; i++) {
+		harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples());
+	}
 }
 
 //==============================================================================
-bool ImogenAudioProcessor::hasEditor() const
-{
+bool ImogenAudioProcessor::hasEditor() const {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
-{
+juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor() {
     return new ImogenAudioProcessorEditor (*this);
 }
 

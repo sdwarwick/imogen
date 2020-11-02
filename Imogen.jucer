@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="MrjZks" name="Imogen" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
               companyName="Ben Vining Music Software" companyWebsite="http://www.gumroad.com/benvining"
               companyEmail="ben.the.vining@gmail.com" pluginCharacteristicsValue="pluginWantsMidiIn"
               pluginName="Imogen" pluginDesc="vocal harmonizer" pluginManufacturer="Ben Vining Music Software"
-              pluginChannelConfigs="1, 2" pluginVSTNumMidiInputs="1" pluginVST3Category="Fx,Pitch Shift"
-              pluginRTASCategory="4,64" pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
+              pluginVST3Category="Fx,Pitch Shift" pluginRTASCategory="4,64"
+              pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
               pluginFormats="buildAU,buildVST3">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
@@ -18,6 +18,7 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="SMlInG" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>

@@ -18,8 +18,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     setSize (400, 300);
 }
 
-ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
-{
+ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
 }
 
 //==============================================================================
