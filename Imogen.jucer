@@ -19,6 +19,7 @@
       <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
     <FILE id="SMlInG" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
+    <FILE id="JQ0SCd" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>

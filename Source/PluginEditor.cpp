@@ -13,9 +13,39 @@
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
     setSize (400, 300);
+	
+	adsrAttack.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+	adsrAttack.setRange(0.01f, 1.0f);
+	adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	adsrAttack.addListener(this);
+	addAndMakeVisible(&adsrAttack);
+	attackLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
+	adsrAttack.setValue(0.035f);
+	
+	adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+	adsrDecay.setRange(0.01f, 1.0f);
+	adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	adsrDecay.addListener(this);
+	addAndMakeVisible(&adsrDecay);
+	decayLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrDecay", adsrDecay);
+	adsrDecay.setValue(0.06f);
+	
+	adsrSustain.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+	adsrSustain.setRange(0.01f, 1.0f);
+	adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	adsrSustain.addListener(this);
+	addAndMakeVisible(&adsrSustain);
+	sustainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrSustain", adsrSustain);
+	adsrSustain.setValue(0.8f);
+	
+	adsrRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+	adsrRelease.setRange(0.01f, 1.0f);
+	adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	adsrRelease.addListener(this);
+	addAndMakeVisible(&adsrRelease);
+	releaseLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrRelease", adsrRelease);
+	adsrRelease.setValue(0.1f);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -34,6 +64,14 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 
 void ImogenAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+	adsrAttack.setBounds(10, 10, 75, 75);
+	adsrDecay.setBounds(90, 10, 75, 75);
+	adsrSustain.setBounds(170, 10, 75, 75);
+	adsrRelease.setBounds(250, 10, 75, 75);
+}
+
+
+
+void ImogenAudioProcessorEditor::sliderValueChanged(Slider* slider) {
+	
 }

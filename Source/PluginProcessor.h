@@ -1,7 +1,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-
 #include "HarmonyVoice.h"
 
 //==============================================================================
@@ -46,6 +45,10 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+	
+	double voxCurrentPitch = 440.;  // a variable to store the modulator signal's current input pitch [as frequency!]
+	
+	AudioProcessorValueTreeState tree;
 	
 private:
     //==============================================================================

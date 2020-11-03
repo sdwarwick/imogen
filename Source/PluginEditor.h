@@ -14,7 +14,7 @@
 //==============================================================================
 /**
 */
-class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor
+class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -23,11 +23,23 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+	
+	void sliderValueChanged (Slider* slider) override;
 
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     ImogenAudioProcessor& audioProcessor;
+	
+	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> attackLink;
+	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> decayLink;
+	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> sustainLink;
+	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> releaseLink;
+	
+	Slider adsrAttack;
+	Slider adsrDecay;
+	Slider adsrSustain;
+	Slider adsrRelease;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

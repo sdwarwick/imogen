@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "HarmonyVoice.h"
 
 //==============================================================================
 ImogenAudioProcessor::ImogenAudioProcessor()
@@ -11,14 +12,23 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+tree (*this, nullptr)
 #endif
 {
+	
+	tree.createAndAddParameter("adsrAttack", "ADSR Attack", "ADSR Attack", NormalisableRange<float> (0.01f, 1.0f), 0.035f, nullptr, nullptr);
+	tree.createAndAddParameter("adsrDecay", "ADSR Decay", "ADSR Decay", NormalisableRange<float> (0.01f, 1.0f), 0.06f, nullptr, nullptr);
+	tree.createAndAddParameter("adsrSustain", "ADSR Sustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f, nullptr, nullptr);
+	tree.createAndAddParameter("adsrRelease", "ADSR Release", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f, nullptr, nullptr);
+	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < numVoices; i++) {
-				harmEngine[i] = new HarmonyVoice();
-				harmEngine[i]->voiceIsOn = false;
-			}
+		harmEngine[i] = new HarmonyVoice();
+		harmEngine[i]->voiceIsOn = false;
+		harmEngine[i]->thisVoiceNumber = i;
+	}
+	
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -81,14 +91,26 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 	
 	lastSampleRate = sampleRate;
 	lastBlockSize = samplesPerBlock;
+	
+	// pointers for ADSR parameter values
+	float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
+	float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
+	float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
+	float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
+	
 	for (int i = 0; i < numVoices; i++) {
 		harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
+		harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
 	}
 }
 
 void ImogenAudioProcessor::releaseResources() {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+	
+	for (int i = 0; i < numVoices; i++) {
+		harmEngine[i]->voiceIsOn = false;
+	}
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -116,6 +138,8 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 #endif
 
 
+
+
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
@@ -125,11 +149,30 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 	
+	// need to update the voxCurrentPitch variable!!
+	
+	// create float pointers to reference current ADSR parameter values:
+	float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
+	float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
+	float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
+	float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
+	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
-	for (int i = 0; i < numVoices; i++) {
-		harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples());
+	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
+		if (harmEngine[i]->voiceIsOn == true) {  // only do audio processing on active voices:
+			
+			// update ADSR parameters
+			harmEngine[i]->adsrEnv.setSampleRate(lastSampleRate);  // idk if this is truly necessary?
+			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
+	
+			// render next audio vector
+			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);
+		}
 	}
 }
+
+
+
 
 //==============================================================================
 bool ImogenAudioProcessor::hasEditor() const {
