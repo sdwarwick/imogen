@@ -22,16 +22,19 @@
 
 class HarmonyVoice {
 	
+	// STiLL NEED TO DEAL WITH:
+	// pitch wheel / pitch bend
+	// midiPan
+	
 public:
 		
 	bool voiceIsOn;
 	int thisVoiceNumber;
 	
-	void startNote (int midiPitch, int velocity, int midiPan, int currentPitchWheelPosition) {
+	void startNote (int midiPitch, int velocity) {
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
 		amplitudeMultiplier = float(velocity / 127);
-		panning = midiPan;
 		adsrEnv.noteOn();
 		
 		// still need to deal with pitch wheel
@@ -54,6 +57,7 @@ public:
 	
 	void updateDSPsettings(double newSampleRate, int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
+		pitchShifter.updateDSPsettings(newSampleRate, newBlockSize);  // passes settings thru to shifter instance 
 	}
 	
 	
@@ -71,6 +75,8 @@ public:
 		
 		float pitchShiftFactor = float(desiredFrequency / modInputFreq);  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
 		
+		// need to pass dry input signal directly into shifter, to be used in pitchShifter.output
+		
 		// iterate through samples and write shifted samples to output buffer
 		for(int sample = 0; sample < numSamples; ++sample) {
 			// shifted signal			 =   pitch shifter output										* mult. for MIDI velocity *  ADSR envelope
@@ -82,6 +88,7 @@ public:
 		}
 		
 		// send all 12 harm. voice's output to one stereo buffer, so that they can be mixed as one "wet" signal...
+		// need to make sure that I am ADDING to the output buffer signal, and not OVERWRITING it, otherwise you'll only hear the most recently played voice...
 	}
 	
 	ADSR adsrEnv;

@@ -20,6 +20,9 @@
     </GROUP>
     <FILE id="SMlInG" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
     <FILE id="JQ0SCd" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
+    <FILE id="yuBDuH" name="MidiProcessor.h" compile="0" resource="0" file="Source/MidiProcessor.h"/>
+    <FILE id="Z0nYva" name="PolyphonyVoiceManager.h" compile="0" resource="0"
+          file="Source/PolyphonyVoiceManager.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
