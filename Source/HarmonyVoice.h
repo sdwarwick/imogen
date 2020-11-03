@@ -73,7 +73,7 @@ public:
 	
 	void renderNextBlock (AudioBuffer <float> &outputBuffer, int startSample, int numSamples, double modInputFreq) {
 		
-		float pitchShiftFactor = float(desiredFrequency / modInputFreq);  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
+		float pitchShiftFactor = 1 + (modInputFreq - desiredFrequency) / desiredFrequency;  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
 		
 		// need to pass dry input signal directly into shifter, to be used in pitchShifter.output
 		
