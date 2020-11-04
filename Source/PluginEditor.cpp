@@ -68,6 +68,8 @@ void ImogenAudioProcessorEditor::resized()
 	adsrDecay.setBounds(90, 10, 75, 75);
 	adsrSustain.setBounds(170, 10, 75, 75);
 	adsrRelease.setBounds(250, 10, 75, 75);
+	
+	stereoWidth.setBounds(10, 100, 75, 75);
 }
 
 

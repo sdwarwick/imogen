@@ -39,7 +39,7 @@ public:
 		this->midiPan = midiPan;
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
-		amplitudeMultiplier = float(velocity / 127);
+		amplitudeMultiplier = float(velocity / 127);  // IMPLEMENT MIDI VELOCITY SENSITIVITY DIAL ??
 		adsrEnv.noteOn();
 		
 		// still need to deal with panning [maybe pass midiPan into this function as variable, so that assignment of pan vals can be done elsewhere?
