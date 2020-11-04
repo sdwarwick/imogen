@@ -6,7 +6,7 @@
     Author:  Ben Vining
 
  
- 	This class hosts each of the 12 harmony algorithms.
+ 	This class defines one instance of the harmony algorithm.
  
   ==============================================================================
 */
@@ -29,9 +29,9 @@ public:
 	bool voiceIsOn;
 	int thisVoiceNumber;
 	
-	HarmonyVoice(int voiceNum) {   // constructor to initialize
+	HarmonyVoice(int thisVoiceNumber) {  
 		voiceIsOn = false;
-		thisVoiceNumber = voiceNum;
+		this->thisVoiceNumber = thisVoiceNumber;
 	}
 	
 	
@@ -52,11 +52,6 @@ public:
 		adsrEnv.noteOff();
 		voiceIsOn = false;
 		amplitudeMultiplier = 0;
-	}
-	
-	
-	void pitchWheelMoved (int newPitchWheelValue) {
-		
 	}
 	
 	

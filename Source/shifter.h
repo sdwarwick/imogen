@@ -29,6 +29,8 @@ public:
 		// resynthesis -- play back grains at altered speed / density / repititions, using an OLA method
 		
 		// resample into an output signal -- which will be the stream of doubles output from shifter.output
+		
+		return double(0.0);
 	}
 	
 	

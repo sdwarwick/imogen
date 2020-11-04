@@ -23,7 +23,7 @@ class MidiProcessor
 public:
 													// currently taking polyphonyManager passed from audio process block as a reference -- but be sure that it's actually changing the PROCESS BLOCK's version of polyphonyManager and not just a copy local to this class!
 											
-	void assignNewNotes (MidiBuffer& midiMessages, PolyphonyVoiceManager& polyphonyManager)
+	void processIncomingMidi (MidiBuffer& midiMessages)
 	{
 		MidiBuffer::Iterator it(midiMessages);
 		MidiMessage currentMessage;
@@ -69,5 +69,5 @@ public:
 	}
 	
 private:
-	
+	PolyphonyVoiceManager polyphonyManager;
 };

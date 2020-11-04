@@ -53,7 +53,6 @@ public:
 	AudioProcessorValueTreeState tree;
 	
 	MidiProcessor midiProcessor;
-	PolyphonyVoiceManager polyphonyManager;
 	
 	static const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
 	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running

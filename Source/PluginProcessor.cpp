@@ -143,7 +143,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 	
-	midiProcessor.assignNewNotes(midiMessages, polyphonyManager); 
+	midiProcessor.processIncomingMidi(midiMessages); 
 	
 	// add internal limiter here
 	
