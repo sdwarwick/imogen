@@ -15,13 +15,10 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 
-class PolyphonyVoiceManager {
+class PolyphonyVoiceManager
+{
 	
 public:
-	
-	const static int numberOfVoices = 12;  // link this to global # of voices setting
-	int harmonyPitches[numberOfVoices];
-	
 	
 	void updatePitchCollection(int voiceNumber, int midiPitch)
 	{
@@ -63,5 +60,6 @@ public:
 	
 	
 private:
-	
+	const static int numberOfVoices = 12;  // link this to global # of voices setting
+	int harmonyPitches[numberOfVoices];
 };

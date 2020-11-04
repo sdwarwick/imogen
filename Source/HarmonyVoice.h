@@ -27,7 +27,6 @@ class HarmonyVoice {
 public:
 		
 	bool voiceIsOn;
-	int thisVoiceNumber;
 	
 	HarmonyVoice(int thisVoiceNumber) {  
 		voiceIsOn = false;
@@ -36,22 +35,20 @@ public:
 	
 	
 	
-	void startNote (int midiPitch, int velocity) {
+	void startNote (int midiPitch, int velocity, int midiPan) {
+		this->midiPan = midiPan;
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
 		amplitudeMultiplier = float(velocity / 127);
 		adsrEnv.noteOn();
 		
-		// still need to deal with pitch wheel
-		
-		// for glide -- maybe input "prev pitch" as argument to this function?
+		// still need to deal with panning [maybe pass midiPan into this function as variable, so that assignment of pan vals can be done elsewhere?
 	}
 	
 	
 	void stopNote () {
 		adsrEnv.noteOff();
 		voiceIsOn = false;
-		amplitudeMultiplier = 0;
 	}
 	
 	
@@ -95,6 +92,9 @@ public:
 	ADSR::Parameters adsrParams;
 	
 private:
+	int thisVoiceNumber;
+	int midiPan;
+	
 	double desiredFrequency;
 	float amplitudeMultiplier;
 	int panning;

@@ -38,6 +38,14 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(&adsrRelease);
 	releaseLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrRelease", adsrRelease);
 	adsrRelease.setValue(0.1f);
+	
+	stereoWidth.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+	stereoWidth.setRange(0, 100);
+	stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	stereoWidth.addListener(this);
+	addAndMakeVisible(&stereoWidth);
+	stereoWidthLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "stereoWidth", stereoWidth);
+	stereoWidth.setValue(100);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

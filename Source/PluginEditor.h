@@ -23,15 +23,19 @@ private:
     // access the processor object that created it.
     ImogenAudioProcessor& audioProcessor;
 	
+	// elements for control of harmony ADSR's
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> attackLink;
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> decayLink;
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> sustainLink;
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> releaseLink;
-	
 	Slider adsrAttack;
 	Slider adsrDecay;
 	Slider adsrSustain;
 	Slider adsrRelease;
+	
+	// stereo width of harmony output
+	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
+	Slider stereoWidth;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

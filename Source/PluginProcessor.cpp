@@ -20,6 +20,7 @@ tree (*this, nullptr)
 	tree.createAndAddParameter("adsrDecay", "ADSR Decay", "ADSR Decay", NormalisableRange<float> (0.01f, 1.0f), 0.06f, nullptr, nullptr);
 	tree.createAndAddParameter("adsrSustain", "ADSR Sustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f, nullptr, nullptr);
 	tree.createAndAddParameter("adsrRelease", "ADSR Release", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f, nullptr, nullptr);
+	tree.createAndAddParameter("stereoWidth", "Stereo Width", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100, nullptr, nullptr);
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < numVoices; ++i) {
@@ -143,9 +144,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 	
-	midiProcessor.processIncomingMidi(midiMessages); 
-	
-	// add internal limiter here
+	midiProcessor.processIncomingMidi(midiMessages);
+	midiProcessor.updateStereoWidth(stereoWidthListener);  // ideally only update this if the value actually changes...
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?

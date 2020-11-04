@@ -15,13 +15,13 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 #include "PolyphonyVoiceManager.h"
+#include "MidiPanningManager.h"
 
 
 class MidiProcessor
 {
 	
 public:
-													// currently taking polyphonyManager passed from audio process block as a reference -- but be sure that it's actually changing the PROCESS BLOCK's version of polyphonyManager and not just a copy local to this class!
 											
 	void processIncomingMidi (MidiBuffer& midiMessages)
 	{
@@ -40,13 +40,11 @@ public:
 					
 					int newVoiceNumber = polyphonyManager.nextAvailableVoice();
 					
-					polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch); // need to save to AUDIO PROCESS BLOCK'S copy of polyphonyManager and not just a copy local to this MidiProcessor class!
+					polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 					
 					
 					// need to transmit note data to appropriate instance of HarmonyVoice within harmEngine
-					// harmEngine[voiceNumber]->startNote(pitch, velocity);
-					
-			//		harmEngine[newVoiceNumber].HarmonyVoice::startNote(newPitch, newVelocity);
+					// harmEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
 				
 				}
 				else
@@ -60,14 +58,23 @@ public:
 				}
 			}
 			else
+			{
 				// non-note events go to here...
 				// pitch wheel / pitch bend, sustain pedal, etc...
-			{
-				
 			}
 		}
 	}
 	
+	
+	
+	void updateStereoWidth(float* newStereoWidth) {
+		
+		float desiredStereoWidth = *newStereoWidth;
+		// midiPanningManager.updateStereoWidth(desiredStereoWidth);
+	}
+	
+	
 private:
 	PolyphonyVoiceManager polyphonyManager;
+	MidiPanningManager midiPanningManager;
 };

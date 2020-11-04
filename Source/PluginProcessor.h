@@ -70,5 +70,7 @@ private:
 	float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
 	float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
 	
+	float* stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
+	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
