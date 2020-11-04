@@ -5,20 +5,23 @@
     Created: 3 Nov 2020 2:34:29am
     Author:  Ben Vining
 
+ 	This class allocates, stores & retrieves incoming MIDI into 12 polyphonic harmony voices, which directly control the 12 instances of HarmonyVoice
+ 
   ==============================================================================
 */
 
 #pragma once
 
-#include <JuceHeader.h>
-#include "PluginProcessor.h"
+#include "../JuceLibraryCode/JuceHeader.h"
+
 
 class PolyphonyVoiceManager {
 	
 public:
 	
-	const static int numberOfVoices = 12;
+	const static int numberOfVoices = 12;  // link this to global # of voices setting
 	int harmonyPitches[numberOfVoices];
+	
 	
 	void updatePitchCollection(int voiceNumber, int midiPitch)
 	{
@@ -36,7 +39,7 @@ public:
 				foundNextVoice = true;
 				return voiceTesting;
 			} else {
-				voiceTesting++;
+				++voiceTesting;
 			}
 		}
 	}
@@ -53,7 +56,7 @@ public:
 				harmonyPitches[voicetest] = -1;
 				return voicetest;
 			} else {
-				voicetest++;
+				++voicetest;
 			}
 		}
 	}

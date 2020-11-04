@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+
 #include "HarmonyVoice.h"
 #include "MidiProcessor.h"
 
@@ -51,14 +52,15 @@ public:
 	
 	AudioProcessorValueTreeState tree;
 	
+	MidiProcessor midiProcessor;
 	PolyphonyVoiceManager polyphonyManager;
+	
+	static const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
+	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
 	
 //==============================================================================
 	
 private:
-	
-	static const int numVoices = 12; 
-	HarmonyVoice *harmEngine[numVoices];
 	
 	double lastSampleRate;
 	int lastBlockSize;
@@ -68,8 +70,6 @@ private:
 	float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
 	float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
 	float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
-	
-	MidiProcessor midiProcessor;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

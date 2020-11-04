@@ -4,21 +4,26 @@
     MidiProcessor.h
     Created: 3 Nov 2020 1:44:22am
     Author:  Ben Vining
+ 
+ 	This class processes incoming MIDI. Note ons and offs are routed to the appropriate functions of the PolhyphonyVoiceManager class (PolyphonyVoiceManager will actually DO the reporting/storing/recalling of voices).
 
   ==============================================================================
 */
 
 #pragma once
 
-#include <JuceHeader.h>
+#include "../JuceLibraryCode/JuceHeader.h"
+
 #include "PolyphonyVoiceManager.h"
+
 
 class MidiProcessor
 {
 	
 public:
-	
-	void assignNewNotes (MidiBuffer& midiMessages, PolyphonyVoiceManager polyphonyManager)
+													// currently taking polyphonyManager passed from audio process block as a reference -- but be sure that it's actually changing the PROCESS BLOCK's version of polyphonyManager and not just a copy local to this class!
+											
+	void assignNewNotes (MidiBuffer& midiMessages, PolyphonyVoiceManager& polyphonyManager)
 	{
 		MidiBuffer::Iterator it(midiMessages);
 		MidiMessage currentMessage;
@@ -30,31 +35,25 @@ public:
 			{
 				if(currentMessage.isNoteOn())
 				{
-				/* if it's a note on:
-				 - find the # of the next available voice in harmEngine
-				 - assign the midiPitch & velocity to that instance
-				 */
-				
 					int newPitch = currentMessage.getNoteNumber();
 					int newVelocity = currentMessage.getVelocity();
 					
 					int newVoiceNumber = polyphonyManager.nextAvailableVoice();
 					
-					polyphonyManager.updatePitchCollection(newVoiceNumber, newVelocity);
+					polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch); // need to save to AUDIO PROCESS BLOCK'S copy of polyphonyManager and not just a copy local to this MidiProcessor class!
 					
-					// harmEngine[newVoiceNumber]->startNote(newPitch, velocity);
+					
 					// need to transmit note data to appropriate instance of HarmonyVoice within harmEngine
+					// harmEngine[voiceNumber]->startNote(pitch, velocity);
+					
+			//		harmEngine[newVoiceNumber].HarmonyVoice::startNote(newPitch, newVelocity);
 				
 				}
 				else
 				{
-				/*
-				  if it's a note off:
-				 - find the # of the voice that was playing that pitch
-				 - turn that voice off
-				 */
-					
 					int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
+					
+					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 					
 					// harmEngine[voiceToTurnOff]->stopNote();
 					// need to transmit note data to appropriate instance of HarmonyVoice within harmEngine
@@ -62,13 +61,12 @@ public:
 			}
 			else
 				// non-note events go to here...
+				// pitch wheel / pitch bend, sustain pedal, etc...
 			{
 				
 			}
 		}
 	}
-	
-//	PolyphonyVoiceManager polyphonyManager;
 	
 private:
 	

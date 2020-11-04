@@ -15,9 +15,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-#include "PluginProcessor.h"
 #include "shifter.h"
-
 
 
 class HarmonyVoice {
@@ -30,6 +28,13 @@ public:
 		
 	bool voiceIsOn;
 	int thisVoiceNumber;
+	
+	HarmonyVoice(int voiceNum) {   // constructor to initialize
+		voiceIsOn = false;
+		thisVoiceNumber = voiceNum;
+	}
+	
+	
 	
 	void startNote (int midiPitch, int velocity) {
 		voiceIsOn = true;
@@ -92,6 +97,7 @@ public:
 	}
 	
 	ADSR adsrEnv;
+	ADSR::Parameters adsrParams;
 	
 private:
 	double desiredFrequency;
@@ -99,8 +105,6 @@ private:
 	int panning;
 	
 	Shifter pitchShifter;
-	
-	ADSR::Parameters adsrParams;
 };
 
 

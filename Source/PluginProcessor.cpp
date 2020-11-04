@@ -1,6 +1,5 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "HarmonyVoice.h"
 
 //==============================================================================
 ImogenAudioProcessor::ImogenAudioProcessor()
@@ -23,10 +22,8 @@ tree (*this, nullptr)
 	tree.createAndAddParameter("adsrRelease", "ADSR Release", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f, nullptr, nullptr);
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
-	for (int i = 0; i < numVoices; i++) {
-		harmEngine[i] = new HarmonyVoice();
-		harmEngine[i]->voiceIsOn = false;
-		harmEngine[i]->thisVoiceNumber = i;
+	for (int i = 0; i < numVoices; ++i) {
+		harmEngine.add(new HarmonyVoice(i));
 	}
 	
 }
@@ -92,7 +89,7 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 	lastSampleRate = sampleRate;
 	lastBlockSize = samplesPerBlock;
 	
-	for (int i = 0; i < numVoices; i++) {
+	for (int i = 0; i < numVoices; ++i) {
 		harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
 		harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
 	}
@@ -102,7 +99,7 @@ void ImogenAudioProcessor::releaseResources() {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 	
-	for (int i = 0; i < numVoices; i++) {
+	for (int i = 0; i < numVoices; ++i) {
 		harmEngine[i]->voiceIsOn = false;
 	}
 }
@@ -146,7 +143,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 	
-	midiProcessor.assignNewNotes(midiMessages, polyphonyManager);
+	midiProcessor.assignNewNotes(midiMessages, polyphonyManager); 
 	
 	// add internal limiter here
 	
@@ -171,6 +168,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 //==============================================================================
 //==============================================================================
+
 
 
 
