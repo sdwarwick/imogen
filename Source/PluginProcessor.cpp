@@ -21,12 +21,12 @@ tree (*this, nullptr)
 	tree.createAndAddParameter("adsrSustain", "ADSR Sustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f, nullptr, nullptr);
 	tree.createAndAddParameter("adsrRelease", "ADSR Release", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f, nullptr, nullptr);
 	tree.createAndAddParameter("stereoWidth", "Stereo Width", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100, nullptr, nullptr);
+	tree.createAndAddParameter("midiVelocitySensitivity", "MIDI Velocity Sensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100, nullptr, nullptr);
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < numVoices; ++i) {
 		harmEngine.add(new HarmonyVoice(i));
 	}
-	
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -92,7 +92,7 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 	
 	for (int i = 0; i < numVoices; ++i) {
 		harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
-		harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
+		harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 	}
 }
 
@@ -156,7 +156,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			
 			// update ADSR parameters
 			harmEngine[i]->adsrEnv.setSampleRate(lastSampleRate);  // idk if this is truly necessary?
-			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
+			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 	
 			// render next audio vector
 			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);

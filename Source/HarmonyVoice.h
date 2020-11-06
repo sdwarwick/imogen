@@ -35,14 +35,13 @@ public:
 	
 	
 	
-	void startNote (int midiPitch, int velocity, int midiPan) {
-		this->midiPan = midiPan;
+	void startNote (int midiPitch, int velocity)//, int midiPan)
+	{
+	//	this->midiPan = midiPan;
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
-		amplitudeMultiplier = float(velocity / 127);  // IMPLEMENT MIDI VELOCITY SENSITIVITY DIAL ??
+		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		adsrEnv.noteOn();
-		
-		// still need to deal with panning [maybe pass midiPan into this function as variable, so that assignment of pan vals can be done elsewhere?
 	}
 	
 	
@@ -52,19 +51,27 @@ public:
 	}
 	
 	
+	float calcVelocityMultiplier(int midiVelocity) {
+		float initialMutiplier = float(midiVelocity / 127);
+		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
+	}
+	
+	
 	void updateDSPsettings(double newSampleRate, int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
 		pitchShifter.updateDSPsettings(newSampleRate, newBlockSize);  // passes settings thru to shifter instance 
 	}
 	
 	
-	void adsrSettingsListener(float* adsrAttackTime, float* adsrDecayTime, float* adsrSustainRatio, float* adsrReleaseTime) {
+	void adsrSettingsListener(float* adsrAttackTime, float* adsrDecayTime, float* adsrSustainRatio, float* adsrReleaseTime, float* midiVelocitySensListener) {
 		// attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
 		adsrParams.attack = *adsrAttackTime;
 		adsrParams.decay = *adsrDecayTime;
 		adsrParams.sustain = *adsrSustainRatio;
 		adsrParams.release = *adsrReleaseTime;
 		adsrEnv.setParameters(adsrParams);
+		
+		midiVelocitySensitivity = (float)(*midiVelocitySensListener / 100);
 	}
 	
 	
@@ -80,7 +87,8 @@ public:
 			double envelopedShiftedSignal = pitchShifter.output(pitchShiftFactor, startSample, numSamples) * amplitudeMultiplier * adsrEnv.getNextSample();
 		
 			for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel) {
-				outputBuffer.addSample(channel, startSample, envelopedShiftedSignal);  // ADD TO THIS STEP: multiplying each channel's signal by the multiplier for that channel to create panning !!
+				outputBuffer.addSample(channel, startSample, envelopedShiftedSignal);
+				// ADD TO THIS STEP: multiplying each channel's signal by the multiplier for that channel to create panning !!
 			}
 		}
 		
@@ -93,7 +101,9 @@ public:
 	
 private:
 	int thisVoiceNumber;
+	
 	int midiPan;
+	float midiVelocitySensitivity;  
 	
 	double desiredFrequency;
 	float amplitudeMultiplier;

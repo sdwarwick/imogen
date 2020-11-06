@@ -5,7 +5,7 @@
     Created: 3 Nov 2020 1:44:22am
     Author:  Ben Vining
  
- 	This class processes incoming MIDI. Note ons and offs are routed to the appropriate functions of the PolhyphonyVoiceManager class (PolyphonyVoiceManager will actually DO the reporting/storing/recalling of voices).
+ 	This class processes incoming MIDI. Note ons and offs are routed to the appropriate functions of the PolhyphonyVoiceManager class (PolyphonyVoiceManager will actually DO the reporting/storing/recalling of voices), and resulting data is routed to the appropraite instance of HarmonyVoice.
 
   ==============================================================================
 */
@@ -41,10 +41,9 @@ public:
 					int newVoiceNumber = polyphonyManager.nextAvailableVoice();
 					
 					polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-					
-					
+									
 					// need to transmit note data to appropriate instance of HarmonyVoice within harmEngine
-					// harmEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
+				//	 harmEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
 				
 				}
 				else
@@ -54,13 +53,12 @@ public:
 					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 					
 					// harmEngine[voiceToTurnOff]->stopNote();
-					// need to transmit note data to appropriate instance of HarmonyVoice within harmEngine
 				}
 			}
 			else
 			{
 				// non-note events go to here...
-				// pitch wheel / pitch bend, sustain pedal, etc...
+				// pitch wheel / pitch bend, sustain pedal, aftertouch, key pressure, etc...
 			}
 		}
 	}
@@ -68,9 +66,7 @@ public:
 	
 	
 	void updateStereoWidth(float* newStereoWidth) {
-		
-		float desiredStereoWidth = *newStereoWidth;
-		// midiPanningManager.updateStereoWidth(desiredStereoWidth);
+		midiPanningManager.updateStereoWidth(*newStereoWidth);
 	}
 	
 	

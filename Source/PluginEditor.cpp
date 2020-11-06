@@ -46,6 +46,13 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(&stereoWidth);
 	stereoWidthLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "stereoWidth", stereoWidth);
 	stereoWidth.setValue(100);
+	
+	midiVelocitySens.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+	midiVelocitySens.setRange(0,100);
+	midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	midiVelocitySens.addListener(this);
+	addAndMakeVisible(&midiVelocitySens);
+	midiVelocitySensLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

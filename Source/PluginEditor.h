@@ -36,6 +36,10 @@ private:
 	// stereo width of harmony output
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
 	Slider stereoWidth;
+	
+	// MIDI velocity sensitivity dial
+	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
+	Slider midiVelocitySens;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
