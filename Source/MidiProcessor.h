@@ -25,6 +25,11 @@ public:
 											
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
+		
+		
+		
+		
+		
 		MidiBuffer::Iterator it(midiMessages);
 		MidiMessage currentMessage;
 		int samplePos;
@@ -67,9 +72,6 @@ public:
 	
 	
 private:
-	
-
-	
 	PolyphonyVoiceManager polyphonyManager;
 	MidiPanningManager midiPanningManager;
 };

@@ -12,7 +12,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	adsrAttack.addListener(this);
 	addAndMakeVisible(&adsrAttack);
-	attackLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
+	attackLink = AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
 	adsrAttack.setValue(0.035f);
 	
 	adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);

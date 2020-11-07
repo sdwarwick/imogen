@@ -24,6 +24,7 @@ private:
     ImogenAudioProcessor& audioProcessor;
 	
 	// elements for control of harmony ADSR's
+	
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> attackLink;
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> decayLink;
 	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> sustainLink;

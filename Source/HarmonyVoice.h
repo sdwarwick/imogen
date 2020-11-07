@@ -33,7 +33,6 @@ public:
 	};
 	
 	
-	
 	void startNote (const int midiPitch, const int velocity, const int midiPan)
 	{
 		if (midiPan != prevPan) {
@@ -77,7 +76,7 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float> &outputBuffer, int startSample, int numSamples, double modInputFreq) {
+	void renderNextBlock (AudioBuffer <float>& outputBuffer, int startSample, int numSamples, double modInputFreq) {
 		
 		float pitchShiftFactor = 1 + (modInputFreq - desiredFrequency) / desiredFrequency;  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
 		
@@ -109,7 +108,8 @@ public:
 	
 	
 	void calculatePanningChannelMultipliers(const int midipanning) {
-		
+		panningMultR = midipanning / 127;
+		panningMultL = 1 - panningMultR;
 	}
 	
 	
@@ -127,6 +127,9 @@ private:
 	double desiredFrequency;
 	float amplitudeMultiplier;
 	int panning;
+	
+	float panningMultR = 0.5;
+	float panningMultL = 0.5;
 	
 	Shifter pitchShifter;
 };
