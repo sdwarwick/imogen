@@ -40,9 +40,10 @@ public:
 			calculatePanningChannelMultipliers(midiPan);
 			prevPan = midiPan;
 		}
-		voiceIsOn = true;
-		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
+		desiredFrequency = mtof(midiPitch);
+		lastNoteRecieved = midiPitch;
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
+		voiceIsOn = true;
 		adsrEnv.noteOn();
 	};
 	
@@ -115,7 +116,7 @@ public:
 	
 	void changePanning(const int newPanVal) {   // this function updates the voice's panning if it is active when the stereo width setting is changed
 												// TODO: ramp this value???
-		this->midiPan = newPanVal;
+		midiPan = newPanVal;
 		prevPan = newPanVal;
 		calculatePanningChannelMultipliers(newPanVal);
 	};
@@ -123,6 +124,25 @@ public:
 	
 	void pitchBend(const int pitchBend) {
 												// NEED TO IMPLEMENT PITCH BEND!!!
+		
+		const int rangeAbove = 12;
+		const int rangeBelow = 12;  // link these variables to global settings, with GUI listeners, etc...
+		
+		if (pitchBend > 64) {
+			const float newPitchOut = ((rangeAbove * (pitchBend - 65)) / 62) + lastNoteRecieved;
+			desiredFrequency = mtof(newPitchOut);
+		} else if (pitchBend < 64) {
+			const float newOutputPitch = (((1 - rangeBelow) * pitchBend) / 63) + lastNoteRecieved - rangeBelow;
+			desiredFrequency = mtof(newOutputPitch);
+		} else if (pitchBend == 64) {
+			desiredFrequency = mtof(lastNoteRecieved);
+		}
+		
+	}
+	
+	
+	double mtof(const float midiNote) {  // converts midiPitch to frequency in Hz
+		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
 	}
 	
 	
@@ -141,6 +161,8 @@ private:
 	float midiVelocitySensitivity;  
 	
 	double desiredFrequency;
+	int lastNoteRecieved;
+	
 	float amplitudeMultiplier;
 	
 	Shifter pitchShifter;
