@@ -34,7 +34,7 @@ public:
 	};
 	
 	
-	void updateDSPsettings(double newSampleRate, int newBlockSize) {
+	void updateDSPsettings(const double newSampleRate, const int newBlockSize) {
 		
 	};
 	

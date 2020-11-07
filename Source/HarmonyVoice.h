@@ -53,7 +53,7 @@ public:
 	
 	
 	float calcVelocityMultiplier(const int midiVelocity) {
-		const float initialMutiplier = float(midiVelocity / 127); // what the multiplier would be without any sensitivity calculations...
+		const float initialMutiplier = midiVelocity / 127; // what the multiplier would be without any sensitivity calculations...
 		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
 	
@@ -115,9 +115,9 @@ public:
 	
 	void changePanning(const int newPanVal) {
 		this->midiPan = newPanVal;
-		calculatePanningChannelMultipliers(newPanVal);
 		prevPan = newPanVal;
-	}
+		calculatePanningChannelMultipliers(newPanVal);
+	};
 	
 	
 	ADSR adsrEnv;
@@ -128,15 +128,14 @@ private:
 	
 	int midiPan;
 	int prevPan = -1;
+	int panning;
+	float panningMultR = 0.5;
+	float panningMultL = 0.5;
 	
 	float midiVelocitySensitivity;  
 	
 	double desiredFrequency;
 	float amplitudeMultiplier;
-	int panning;
-	
-	float panningMultR = 0.5;
-	float panningMultL = 0.5;
 	
 	Shifter pitchShifter;
 };

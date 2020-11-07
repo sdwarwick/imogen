@@ -28,16 +28,14 @@ public:
 		mapArrayIndexes();
 		
 		const float rangeMultiplier = newStereoWidth/100;
-		
 		const float maxPan = 63.5 + (63.5 * rangeMultiplier);
 		const float minPan = 63.5 - (63.5 * rangeMultiplier);
-		
-		float increment = (maxPan - minPan) / numberOfVoices;
+		const float increment = (maxPan - minPan) / numberOfVoices;
 		
 		// first, assign all possible, evenly spaced pan vals within range to an array
 		for (int i = 0; i < numberOfVoices - 1; ++i) {
-			float panningVal = minPan + (i * increment) + (increment/2);
-			int panning = round(panningVal);
+			const float panningVal = minPan + (i * increment) + (increment/2);
+			const int panning = round(panningVal);
 			possiblePanVals[i] = panning;
 		}
 		
@@ -83,7 +81,7 @@ public:
 	
 	
 	int getNextPanVal() {
-		int indexReadingFrom = indexOfLastSentPanVal + 1;
+		const int indexReadingFrom = indexOfLastSentPanVal + 1;
 		if (indexReadingFrom <= numberOfVoices - 1) {
 			return panValsInAssigningOrder[indexReadingFrom];
 			++indexOfLastSentPanVal;
@@ -94,9 +92,9 @@ public:
 	};
 	
 	
-	int retrievePanVal(const int index) {
+	int retrievePanVal(const int index) const {
 		return panValsInAssigningOrder[index];
-	}
+	};
 								   							
 	
 private:

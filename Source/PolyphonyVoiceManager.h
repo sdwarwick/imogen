@@ -26,8 +26,8 @@ public:
 	};
 	
 	
-	int nextAvailableVoice()
-	{
+	int nextAvailableVoice() const {
+		
 		bool foundNextVoice = false;
 		int voiceTesting = 0;
 		while(foundNextVoice == false && voiceTesting < numberOfVoices)

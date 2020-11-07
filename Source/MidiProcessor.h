@@ -41,6 +41,9 @@ public:
 									if(newVoiceNumber >= 0) {
 										polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 										harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
+									} else {
+										// no voices are available to turn on
+										// if voice stealing is enabled, then assign the note to the voice that has been holding its note the LONGEST
 									}
 								}
 								else
