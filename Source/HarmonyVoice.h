@@ -83,7 +83,7 @@ public:
 		// iterate through samples and write shifted samples to output buffer
 		for(int sample = 0; sample < numSamples; ++sample) {
 			
-			if(adsrEnv.isActive() != true) {  // done while looping thru each sample...
+			if(adsrEnv.isActive() == false) {  // done while looping thru each sample...
 				voiceIsOn = false;			// ... so that the voice itself doesn't turn off unti the ADSR actually *REACHES* zero
 			} else {
 				
