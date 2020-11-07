@@ -19,9 +19,8 @@ class MidiPanningManager
 public:
 	
 	const static int numberOfVoices = 12;  // link this to global # of voices setting
-	int arrayIndexesMapped[numberOfVoices] = { };
-	float centerofarray = numberOfVoices / 2;
-	int middleIndex = round(centerofarray);
+	const float centerofarray = numberOfVoices / 2;
+	const int middleIndex = round(centerofarray);
 	
 	
 	void updateStereoWidth(const int newStereoWidth) {
@@ -98,6 +97,6 @@ public:
 private:
 	int possiblePanVals[numberOfVoices] = { };
 	int panValsInAssigningOrder[numberOfVoices] = { };
-	
+	int arrayIndexesMapped[numberOfVoices] = { };
 	int indexOfLastSentPanVal = 0;
 };
