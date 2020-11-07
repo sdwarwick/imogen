@@ -144,11 +144,16 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 	
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
         buffer.clear (i, 0, buffer.getNumSamples());
+	}
+	
+	if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
+		midiProcessor.updateStereoWidth(stereoWidthListener);
+	}
+	previousStereoWidth = *stereoWidthListener;
 	
 	midiProcessor.processIncomingMidi(midiMessages, harmEngine);
-	midiProcessor.updateStereoWidth(stereoWidthListener);  // ideally only update this if the value actually changes...
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
@@ -158,14 +163,23 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		if (harmEngine[i]->voiceIsOn == true) {  // only do audio processing on active voices:
 			
 			// update ADSR parameters
-			harmEngine[i]->adsrEnv.setSampleRate(lastSampleRate);  // idk if this is truly necessary?
+			
+			if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
+			
 			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
+			}
 	
 			// render next audio vector
 			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);
 		}
 	}
 	// goal is to add all 12 voices together into a master audio signal for harmEngine, which can then be mixed with the original input signal (dry/wet)
+	
+	prevAttack = *adsrAttackListener;
+	prevDecay = *adsrDecayListener;
+	prevSustain = *adsrSustainListener;
+	prevRelease = *adsrReleaseListener;
+	prevVelocitySens = *midiVelocitySensListener;
 }
 
 

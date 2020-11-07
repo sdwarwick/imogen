@@ -52,7 +52,7 @@ public:
 	
 	
 	float calcVelocityMultiplier(int midiVelocity) {
-		float initialMutiplier = float(midiVelocity / 127);
+		float initialMutiplier = float(midiVelocity / 127); // what the multiplier would be without any sensitivity calculations...
 		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
 	
