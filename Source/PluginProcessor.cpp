@@ -171,7 +171,16 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	
 	if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
-		midiProcessor.updateStereoWidth(stereoWidthListener);
+		midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
+		
+		// update active voices' assigned panning values
+		int activeVoiceNumber = 0;
+		for (int i = 0; i < numVoices; ++i) {
+			if(harmEngine[i]->voiceIsOn == true) {
+				midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
+				++activeVoiceNumber;
+			}
+		}
 	}
 	previousStereoWidth = *stereoWidthListener;
 	

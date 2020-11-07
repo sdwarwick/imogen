@@ -110,6 +110,13 @@ public:
 	void calculatePanningChannelMultipliers(const int midipanning) {
 		panningMultR = midipanning / 127;
 		panningMultL = 1 - panningMultR;
+	};
+	
+	
+	void changePanning(const int newPanVal) {
+		this->midiPan = newPanVal;
+		calculatePanningChannelMultipliers(newPanVal);
+		prevPan = newPanVal;
 	}
 	
 	

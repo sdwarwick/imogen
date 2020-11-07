@@ -92,6 +92,11 @@ public:
 			indexOfLastSentPanVal = 0;
 		}
 	};
+	
+	
+	int retrievePanVal(const int index) {
+		return panValsInAssigningOrder[index];
+	}
 								   							
 	
 private:

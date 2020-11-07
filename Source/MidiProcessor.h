@@ -17,7 +17,6 @@
 #include "PolyphonyVoiceManager.h"
 #include "MidiPanningManager.h"
 
-
 class MidiProcessor
 {
 	
@@ -30,38 +29,46 @@ public:
 		{
 			const auto currentMessage = meta.getMessage();
 			
-			if(currentMessage.isNoteOnOrOff())
-			{
-				if(currentMessage.isNoteOn())
-				{
-					const int newPitch = currentMessage.getNoteNumber();
-					const int newVelocity = currentMessage.getVelocity();
-					const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
-					
-					if(newVoiceNumber >= 0) {
-						polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-						harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
-					}
-				}
-				else
-				{
-					const int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
-					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
-					harmonyEngine[voiceToTurnOff]->stopNote();
-				}
-			}
-			else
-			{
-				// non-note events go to here...
-				// pitch wheel / pitch bend, sustain pedal, aftertouch, key pressure, etc...
-			}
+			
+							if(currentMessage.isNoteOnOrOff())
+							{
+								if(currentMessage.isNoteOn())
+								{
+									const int newPitch = currentMessage.getNoteNumber();
+									const int newVelocity = currentMessage.getVelocity();
+									const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
+									
+									if(newVoiceNumber >= 0) {
+										polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
+										harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
+									}
+								}
+								else
+								{
+									const int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
+									polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
+									harmonyEngine[voiceToTurnOff]->stopNote();
+								}
+							}
+							else
+							{
+								// non-note events go to here...
+								// pitch wheel / pitch bend, sustain pedal, aftertouch, key pressure, etc...
+							}
+			
+			
 		}
 	};
-	
-	
+
 	
 	void updateStereoWidth(float* newStereoWidth) {
 		midiPanningManager.updateStereoWidth(*newStereoWidth);
+	};
+	
+	
+	void refreshMidiPanVal (OwnedArray<HarmonyVoice>& harmonyEngine, const int voiceNumber, const int indexToRead) {
+		const int newPanVal = midiPanningManager.retrievePanVal(indexToRead);
+		harmonyEngine[voiceNumber]->changePanning(newPanVal);
 	};
 	
 	
