@@ -64,6 +64,8 @@ private:
 	
 	double lastSampleRate;
 	int lastBlockSize;
+	double prevLastSampleRate = 0.0;
+	int prevLastBlockSize = 0;
 	
 	// pointers for ADSR parameter values
 	float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));

@@ -24,14 +24,14 @@ public:
 	int middleIndex = round(centerofarray);
 	
 	
-	void updateStereoWidth(int newStereoWidth) {
+	void updateStereoWidth(const int newStereoWidth) {
 		
 		mapArrayIndexes();
 		
-		float rangeMultiplier = newStereoWidth/100;
+		const float rangeMultiplier = newStereoWidth/100;
 		
-		float maxPan = 63.5 + (63.5 * rangeMultiplier);
-		float minPan = 63.5 - (63.5 * rangeMultiplier);
+		const float maxPan = 63.5 + (63.5 * rangeMultiplier);
+		const float minPan = 63.5 - (63.5 * rangeMultiplier);
 		
 		float increment = (maxPan - minPan) / numberOfVoices;
 		

@@ -93,10 +93,15 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 	lastSampleRate = sampleRate;
 	lastBlockSize = samplesPerBlock;
 	
-	for (int i = 0; i < numVoices; ++i) {
-		harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
-		harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
+	if (prevLastSampleRate != lastSampleRate || prevLastBlockSize != lastBlockSize)
+	{
+		for (int i = 0; i < numVoices; ++i) {
+			harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
+			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
+		}
 	}
+	prevLastSampleRate = lastSampleRate;
+	prevLastBlockSize = lastBlockSize;
 }
 
 void ImogenAudioProcessor::releaseResources() {

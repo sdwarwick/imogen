@@ -27,21 +27,20 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(int thisVoiceNumber) {  
+	HarmonyVoice(const int thisVoiceNumber) {
 		voiceIsOn = false;
 		this->thisVoiceNumber = thisVoiceNumber;
 	};
 	
 	
 	
-	void startNote (int midiPitch, int velocity, int midiPan)
+	void startNote (const int midiPitch, const int velocity, const int midiPan)
 	{
 		if (midiPan != prevPan) {
 			this->midiPan = midiPan;
 			calculatePanningChannelMultipliers(midiPan);
 			prevPan = midiPan;
 		}
-		
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
@@ -54,13 +53,13 @@ public:
 	};
 	
 	
-	float calcVelocityMultiplier(int midiVelocity) {
-		float initialMutiplier = float(midiVelocity / 127); // what the multiplier would be without any sensitivity calculations...
+	float calcVelocityMultiplier(const int midiVelocity) {
+		const float initialMutiplier = float(midiVelocity / 127); // what the multiplier would be without any sensitivity calculations...
 		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
 	
 	
-	void updateDSPsettings(double newSampleRate, int newBlockSize) {
+	void updateDSPsettings(const double newSampleRate, const int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
 		pitchShifter.updateDSPsettings(newSampleRate, newBlockSize);  // passes settings thru to shifter instance 
 	};
@@ -109,7 +108,7 @@ public:
 	};
 	
 	
-	void calculatePanningChannelMultipliers(int midipanning) {
+	void calculatePanningChannelMultipliers(const int midipanning) {
 		
 	}
 	

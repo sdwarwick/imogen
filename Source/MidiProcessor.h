@@ -35,9 +35,9 @@ public:
 			{
 				if(currentMessage.isNoteOn())
 				{
-					int newPitch = currentMessage.getNoteNumber();
-					int newVelocity = currentMessage.getVelocity();
-					int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
+					const int newPitch = currentMessage.getNoteNumber();
+					const int newVelocity = currentMessage.getVelocity();
+					const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
 					
 					if(newVoiceNumber >= 0) {
 						polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
@@ -46,7 +46,7 @@ public:
 				}
 				else
 				{
-					int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
+					const int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
 					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 					harmonyEngine[voiceToTurnOff]->stopNote();
 				}

@@ -20,7 +20,7 @@ class PolyphonyVoiceManager
 	
 public:
 	
-	void updatePitchCollection(int voiceNumber, int midiPitch)
+	void updatePitchCollection(const int voiceNumber, const int midiPitch)
 	{
 		harmonyPitches[voiceNumber] = midiPitch;
 	};
@@ -45,7 +45,7 @@ public:
 	};
 	
 	
-	int turnOffNote(int noteNumber)
+	int turnOffNote(const int noteNumber)
 	{
 		bool foundVoice = false;
 		int voicetest = 0;
