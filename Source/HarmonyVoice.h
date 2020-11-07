@@ -47,7 +47,6 @@ public:
 	
 	void stopNote () {
 		adsrEnv.noteOff();
-		voiceIsOn = false;
 	};
 	
 	
@@ -83,17 +82,26 @@ public:
 		
 		// iterate through samples and write shifted samples to output buffer
 		for(int sample = 0; sample < numSamples; ++sample) {
-			// shifted signal			 =   pitch shifter output										* mult. for MIDI velocity *  ADSR envelope
-			double envelopedShiftedSignal = pitchShifter.output(pitchShiftFactor, startSample, numSamples) * amplitudeMultiplier * adsrEnv.getNextSample();
-		
-			for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel) {
-				outputBuffer.addSample(channel, startSample, envelopedShiftedSignal);
-				// ADD TO THIS STEP: multiplying each channel's signal by the multiplier for that channel to create panning !!
+			
+			if(adsrEnv.isActive() != true) {  // done while looping thru each sample...
+				voiceIsOn = false;			// ... so that the voice itself doesn't turn off unti the ADSR actually *REACHES* zero
+			} else {
+				
+				// shifted signal			 =   pitch shifter output										* mult. for MIDI velocity *  ADSR envelope
+				double envelopedShiftedSignal = pitchShifter.output(pitchShiftFactor, startSample, numSamples) * amplitudeMultiplier * adsrEnv.getNextSample();
+				
+				
+			
+				for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel) {
+					outputBuffer.addSample(channel, startSample, envelopedShiftedSignal);
+					// ADD TO THIS STEP: multiplying each channel's signal by the multiplier for that channel to create panning !!
+				}
 			}
 		}
 		
 		// send all 12 harm. voice's output to one stereo buffer, so that they can be mixed as one "wet" signal...
 		// need to make sure that I am ADDING to the output buffer signal, and not OVERWRITING it, otherwise you'll only hear the most recently played voice...
+		
 	};
 	
 	ADSR adsrEnv;

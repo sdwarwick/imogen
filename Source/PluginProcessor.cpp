@@ -102,10 +102,6 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 void ImogenAudioProcessor::releaseResources() {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-	
-	for (int i = 0; i < numVoices; ++i) {
-		harmEngine[i]->voiceIsOn = false;
-	}
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -162,18 +158,19 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn == true) {  // only do audio processing on active voices:
 			
-			// update ADSR parameters
-			
+	// 1	// update ADSR parameters, if any params have changed
+			// N.B.:: WILL THIS MAKE IT SO PARAMS CAN ONLY BE CHANGED ONCE EVERY AUDIO VECTOR? ie "prevAttack" only being updated once every 512 samples...
 			if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
-			
 			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 			}
+			
 	
-			// render next audio vector
+	// 2	// render next audio vector
 			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);
 		}
 	}
 	// goal is to add all 12 voices together into a master audio signal for harmEngine, which can then be mixed with the original input signal (dry/wet)
+	// make sure to be ADDING to same audio vector, and not OVERWRITING that sample.
 	
 	prevAttack = *adsrAttackListener;
 	prevDecay = *adsrDecayListener;
@@ -185,13 +182,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 //==============================================================================
 //==============================================================================
-
-
-
-HarmonyVoice& returnVoice(int voiceNumber) {
-//	harmEngine[voiceNumber]
-}
-
 
 
 
