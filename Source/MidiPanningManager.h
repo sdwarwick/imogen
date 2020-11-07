@@ -20,12 +20,12 @@ public:
 	
 	void updateStereoWidth(int newStereoWidth) {
 		
-	}
+	};
 	
 	
 	int getNextPanVal() {
 		return 0;
-	}
+	};
 	
 	
 private:

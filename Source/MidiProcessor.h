@@ -61,13 +61,13 @@ public:
 				// pitch wheel / pitch bend, sustain pedal, aftertouch, key pressure, etc...
 			}
 		}
-	}
+	};
 	
 	
 	
 	void updateStereoWidth(float* newStereoWidth) {
 		midiPanningManager.updateStereoWidth(*newStereoWidth);
-	}
+	};
 	
 	
 private:

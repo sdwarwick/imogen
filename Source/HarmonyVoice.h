@@ -31,7 +31,7 @@ public:
 	HarmonyVoice(int thisVoiceNumber) {  
 		voiceIsOn = false;
 		this->thisVoiceNumber = thisVoiceNumber;
-	}
+	};
 	
 	
 	
@@ -42,25 +42,25 @@ public:
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		adsrEnv.noteOn();
-	}
+	};
 	
 	
 	void stopNote () {
 		adsrEnv.noteOff();
 		voiceIsOn = false;
-	}
+	};
 	
 	
 	float calcVelocityMultiplier(int midiVelocity) {
 		float initialMutiplier = float(midiVelocity / 127);
 		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
-	}
+	};
 	
 	
 	void updateDSPsettings(double newSampleRate, int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
 		pitchShifter.updateDSPsettings(newSampleRate, newBlockSize);  // passes settings thru to shifter instance 
-	}
+	};
 	
 	
 	void adsrSettingsListener(float* adsrAttackTime, float* adsrDecayTime, float* adsrSustainRatio, float* adsrReleaseTime, float* midiVelocitySensListener) {
@@ -72,7 +72,7 @@ public:
 		adsrEnv.setParameters(adsrParams);
 		
 		midiVelocitySensitivity = (float)(*midiVelocitySensListener / 100);
-	}
+	};
 	
 	
 	void renderNextBlock (AudioBuffer <float> &outputBuffer, int startSample, int numSamples, double modInputFreq) {
@@ -94,7 +94,7 @@ public:
 		
 		// send all 12 harm. voice's output to one stereo buffer, so that they can be mixed as one "wet" signal...
 		// need to make sure that I am ADDING to the output buffer signal, and not OVERWRITING it, otherwise you'll only hear the most recently played voice...
-	}
+	};
 	
 	ADSR adsrEnv;
 	ADSR::Parameters adsrParams;

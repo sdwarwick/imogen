@@ -23,7 +23,7 @@ public:
 	void updatePitchCollection(int voiceNumber, int midiPitch)
 	{
 		harmonyPitches[voiceNumber] = midiPitch;
-	}
+	};
 	
 	
 	int nextAvailableVoice()
@@ -39,7 +39,7 @@ public:
 				++voiceTesting;
 			}
 		}
-	}
+	};
 	
 	
 	int turnOffNote(int noteNumber)
@@ -56,7 +56,7 @@ public:
 				++voicetest;
 			}
 		}
-	}
+	};
 	
 	
 private:

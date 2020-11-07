@@ -31,12 +31,12 @@ public:
 		// resample into an output signal -- which will be the stream of doubles output from shifter.output
 		
 		return double(0.0);
-	}
+	};
 	
 	
 	void updateDSPsettings(double newSampleRate, int newBlockSize) {
 		
-	}
+	};
 	
 	
 private:
