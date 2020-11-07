@@ -33,15 +33,12 @@ public:
 	};
 	
 	
-	void startNote (const int midiPitch, const int velocity, const int midiPan)
+	void startNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend)
 	{
-		if (midiPan != prevPan) {
-			this->midiPan = midiPan;
-			calculatePanningChannelMultipliers(midiPan);
-			prevPan = midiPan;
-		}
-		desiredFrequency = mtof(midiPitch);
 		lastNoteRecieved = midiPitch;
+		const float desiredMidiFloat = returnMidiFloat(lastPitchBend);
+		desiredFrequency = mtof(desiredMidiFloat);
+		
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
 		adsrEnv.noteOn();
@@ -123,8 +120,6 @@ public:
 	
 	
 	void pitchBend(const int pitchBend) {
-												// NEED TO IMPLEMENT PITCH BEND!!!
-		
 		const int rangeAbove = 12;
 		const int rangeBelow = 12;  // link these variables to global settings, with GUI listeners, etc...
 		
@@ -137,13 +132,29 @@ public:
 		} else if (pitchBend == 64) {
 			desiredFrequency = mtof(lastNoteRecieved);
 		}
+	};
+	
+	
+	float returnMidiFloat(const int bend) {
+		const int rangeAbove = 12;
+		const int rangeBelow = 12;  // link these variables to global settings, with GUI listeners, etc...
 		
-	}
+		if (bend > 64) {
+			const float newPitchOut = ((rangeAbove * (bend - 65)) / 62) + lastNoteRecieved;
+			return newPitchOut;
+		} else if (bend < 64) {
+			const float newOutputPitch = (((1 - rangeBelow) * bend) / 63) + lastNoteRecieved - rangeBelow;
+			return newOutputPitch;
+		} else if (bend == 64) {
+			return lastNoteRecieved;
+		}
+	};
+	
 	
 	
 	double mtof(const float midiNote) {  // converts midiPitch to frequency in Hz
 		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
-	}
+	};
 	
 	
 	ADSR adsrEnv;

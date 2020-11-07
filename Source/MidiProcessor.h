@@ -40,7 +40,7 @@ public:
 									
 									if(newVoiceNumber >= 0) {
 										polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-										harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
+										harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
 									} else {
 										// no voices are available to turn on
 										// if voice stealing is enabled, then assign the note to the voice that has been holding its note the LONGEST
@@ -63,6 +63,7 @@ public:
 											harmonyEngine[i]->pitchBend(pitchBend);
 										}
 									}
+									lastRecievedPitchBend = pitchBend;
 								} else {
 									// non-note events go to here...
 									// sustain pedal, aftertouch, key pressure, etc...
@@ -90,4 +91,6 @@ private:
 	MidiPanningManager midiPanningManager;
 	
 	const static int numberOfVoices = 12;  // link this to global # of voices setting
+	
+	int lastRecievedPitchBend = 64;
 };
