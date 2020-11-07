@@ -23,7 +23,7 @@ class MidiProcessor
 	
 public:
 											
-	void processIncomingMidi (MidiBuffer& midiMessages)
+	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
 		MidiBuffer::Iterator it(midiMessages);
 		MidiMessage currentMessage;
@@ -38,21 +38,21 @@ public:
 					int newPitch = currentMessage.getNoteNumber();
 					int newVelocity = currentMessage.getVelocity();
 					
-					int newVoiceNumber = polyphonyManager.nextAvailableVoice();
+					int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
 					
 					polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-									
-					// need to transmit note data to appropriate instance of HarmonyVoice within harmEngine
-				//	 harmEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
-				
+					
+					harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
+
 				}
 				else
 				{
 					int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
 					
-					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
+					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);  // returns -1 if can't find voice to turn off
 					
-					// harmEngine[voiceToTurnOff]->stopNote();
+					harmonyEngine[voiceToTurnOff]->stopNote();
+					
 				}
 			}
 			else

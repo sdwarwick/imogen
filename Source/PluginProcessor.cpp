@@ -30,6 +30,9 @@ tree (*this, nullptr)
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
+	for (int i = 0; i < numVoices; ++i) {
+		delete harmEngine[i];
+	}
 }
 
 //==============================================================================
@@ -144,7 +147,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 	
-	midiProcessor.processIncomingMidi(midiMessages);
+	midiProcessor.processIncomingMidi(midiMessages, harmEngine);
 	midiProcessor.updateStereoWidth(stereoWidthListener);  // ideally only update this if the value actually changes...
 	
 	// need to update the voxCurrentPitch variable!!
@@ -168,6 +171,12 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 //==============================================================================
 //==============================================================================
+
+
+
+HarmonyVoice& returnVoice(int voiceNumber) {
+//	harmEngine[voiceNumber]
+}
 
 
 

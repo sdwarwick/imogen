@@ -35,9 +35,9 @@ public:
 	
 	
 	
-	void startNote (int midiPitch, int velocity)//, int midiPan)
+	void startNote (int midiPitch, int velocity, int midiPan)
 	{
-	//	this->midiPan = midiPan;
+		this->midiPan = midiPan;
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
