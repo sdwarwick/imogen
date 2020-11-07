@@ -26,16 +26,10 @@ public:
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
 		
-		
-		
-		
-		
-		MidiBuffer::Iterator it(midiMessages);
-		MidiMessage currentMessage;
-		int samplePos;
-		
-		while (it.getNextEvent(currentMessage, samplePos))
+		for (const auto meta : midiMessages)
 		{
+			const auto currentMessage = meta.getMessage();
+			
 			if(currentMessage.isNoteOnOrOff())
 			{
 				if(currentMessage.isNoteOn())

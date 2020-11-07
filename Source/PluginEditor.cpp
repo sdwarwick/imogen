@@ -12,7 +12,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	adsrAttack.addListener(this);
 	addAndMakeVisible(&adsrAttack);
-	attackLink = AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
+	attackLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
 	adsrAttack.setValue(0.035f);
 	
 	adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -53,9 +53,16 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	midiVelocitySens.addListener(this);
 	addAndMakeVisible(&midiVelocitySens);
 	midiVelocitySensLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
+	midiVelocitySens.setValue(100);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
+	delete attackLink;
+	delete decayLink;
+	delete sustainLink;
+	delete releaseLink;
+	delete stereoWidthLink;
+	delete midiVelocitySensLink;
 }
 
 //==============================================================================
