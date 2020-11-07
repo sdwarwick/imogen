@@ -80,7 +80,7 @@ public:
 			}
 			++i;
 		}
-	}
+	};
 	
 	
 	int getNextPanVal() {

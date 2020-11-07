@@ -59,9 +59,6 @@ public:
 				++voicetest;
 			}
 		}
-		if(foundVoice == false) {
-			return -1;  // returns -1 if can't find voice to turn off
-		}
 	};
 	
 	

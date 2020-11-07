@@ -37,22 +37,18 @@ public:
 				{
 					int newPitch = currentMessage.getNoteNumber();
 					int newVelocity = currentMessage.getVelocity();
-					
 					int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
 					
-					polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-					
-					harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
-
+					if(newVoiceNumber >= 0) {
+						polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
+						harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal());
+					}
 				}
 				else
 				{
 					int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
-					
-					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);  // returns -1 if can't find voice to turn off
-					
+					polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 					harmonyEngine[voiceToTurnOff]->stopNote();
-					
 				}
 			}
 			else

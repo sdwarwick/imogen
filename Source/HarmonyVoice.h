@@ -36,7 +36,12 @@ public:
 	
 	void startNote (int midiPitch, int velocity, int midiPan)
 	{
-		this->midiPan = midiPan;
+		if (midiPan != prevPan) {
+			this->midiPan = midiPan;
+			calculatePanningChannelMultipliers(midiPan);
+			prevPan = midiPan;
+		}
+		
 		voiceIsOn = true;
 		desiredFrequency = MidiMessage::getMidiNoteInHertz(midiPitch);
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
@@ -103,6 +108,12 @@ public:
 		
 	};
 	
+	
+	void calculatePanningChannelMultipliers(int midipanning) {
+		
+	}
+	
+	
 	ADSR adsrEnv;
 	ADSR::Parameters adsrParams;
 	
@@ -110,6 +121,8 @@ private:
 	int thisVoiceNumber;
 	
 	int midiPan;
+	int prevPan = -1;
+	
 	float midiVelocitySensitivity;  
 	
 	double desiredFrequency;
