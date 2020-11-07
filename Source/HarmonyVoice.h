@@ -113,11 +113,17 @@ public:
 	};
 	
 	
-	void changePanning(const int newPanVal) {
+	void changePanning(const int newPanVal) {   // this function updates the voice's panning if it is active when the stereo width setting is changed
+												// TODO: ramp this value???
 		this->midiPan = newPanVal;
 		prevPan = newPanVal;
 		calculatePanningChannelMultipliers(newPanVal);
 	};
+	
+	
+	void pitchBend(const int pitchBend) {
+												// NEED TO IMPLEMENT PITCH BEND!!!
+	}
 	
 	
 	ADSR adsrEnv;

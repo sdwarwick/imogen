@@ -55,8 +55,18 @@ public:
 							}
 							else
 							{
-								// non-note events go to here...
-								// pitch wheel / pitch bend, sustain pedal, aftertouch, key pressure, etc...
+								if(currentMessage.isPitchWheel())
+								{
+									const int pitchBend = currentMessage.getPitchWheelValue();
+									for(int i = 0; i < numberOfVoices; ++i) {
+										if(harmonyEngine[i]->voiceIsOn) {
+											harmonyEngine[i]->pitchBend(pitchBend);
+										}
+									}
+								} else {
+									// non-note events go to here...
+									// sustain pedal, aftertouch, key pressure, etc...
+								}
 							}
 			
 			
@@ -78,4 +88,6 @@ public:
 private:
 	PolyphonyVoiceManager polyphonyManager;
 	MidiPanningManager midiPanningManager;
+	
+	const static int numberOfVoices = 12;  // link this to global # of voices setting
 };

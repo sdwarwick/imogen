@@ -176,7 +176,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		// update active voices' assigned panning values
 		int activeVoiceNumber = 0;
 		for (int i = 0; i < numVoices; ++i) {
-			if(harmEngine[i]->voiceIsOn == true) {
+			if(harmEngine[i]->voiceIsOn) {
 				midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
 				++activeVoiceNumber;
 			}
@@ -191,7 +191,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
-		if (harmEngine[i]->voiceIsOn == true) {  // only do audio processing on active voices:
+		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
 //	 1	// update ADSR parameters, if any params have changed
 //			 N.B.:: WILL THIS MAKE IT SO PARAMS CAN ONLY BE CHANGED ONCE EVERY AUDIO VECTOR? ie "prevAttack" only being updated once every 512 samples...
