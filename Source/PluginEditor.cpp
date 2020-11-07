@@ -55,6 +55,37 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	AudioProcessorValueTreeState::SliderAttachment* midiVelocitySensLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
 	midiVelocitySens.setValue(100);
 	
+	pitchBendUp.addItem("Minor Second", 1);
+	pitchBendUp.addItem("Major Second", 2);
+	pitchBendUp.addItem("Minor Third", 3);
+	pitchBendUp.addItem("Major Third", 4);
+	pitchBendUp.addItem("Perfect Fourth", 5);
+	pitchBendUp.addItem("Aug Fourth/Dim Fifth", 6);
+	pitchBendUp.addItem("Perfect Fifth", 7);
+	pitchBendUp.addItem("Minor Sixth", 8);
+	pitchBendUp.addItem("Major Sixth", 9);
+	pitchBendUp.addItem("Minor Seventh", 10);
+	pitchBendUp.addItem("Major Seventh", 11);
+	pitchBendUp.addItem("Octave", 12);
+	addAndMakeVisible(pitchBendUp);
+	AudioProcessorValueTreeState::ComboBoxAttachment* pitchBendUpLink = new AudioProcessorValueTreeState::ComboBoxAttachment (audioProcessor.tree, "PitchBendUpRange", pitchBendUp);
+	pitchBendUp.setSelectedId(2);
+	
+	pitchBendDown.addItem("Minor Second", 1);
+	pitchBendDown.addItem("Major Second", 2);
+	pitchBendDown.addItem("Minor Third", 3);
+	pitchBendDown.addItem("Major Third", 4);
+	pitchBendDown.addItem("Perfect Fourth", 5);
+	pitchBendDown.addItem("Aug Fourth/Dim Fifth", 6);
+	pitchBendDown.addItem("Perfect Fifth", 7);
+	pitchBendDown.addItem("Minor Sixth", 8);
+	pitchBendDown.addItem("Major Sixth", 9);
+	pitchBendDown.addItem("Minor Seventh", 10);
+	pitchBendDown.addItem("Major Seventh", 11);
+	pitchBendDown.addItem("Octave", 12);
+	addAndMakeVisible(pitchBendDown);
+	AudioProcessorValueTreeState::ComboBoxAttachment* pitchBendDownLink = new AudioProcessorValueTreeState::ComboBoxAttachment (audioProcessor.tree, "PitchBendDownRange", pitchBendDown);
+	pitchBendDown.setSelectedId(2);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -80,6 +111,10 @@ void ImogenAudioProcessorEditor::resized()
 	adsrRelease.setBounds(250, 10, 75, 75);
 	
 	stereoWidth.setBounds(10, 100, 75, 75);
+	midiVelocitySens.setBounds(90, 100, 75, 75);
+	
+	pitchBendUp.setBounds(10, 250, 350, 25);
+	pitchBendDown.setBounds(375, 250, 350, 25);
 }
 
 

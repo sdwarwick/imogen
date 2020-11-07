@@ -18,7 +18,9 @@ tree (*this, nullptr, "PARAMETERS",
 		  std::make_unique<AudioParameterFloat> ("adsrSustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f),
 		  std::make_unique<AudioParameterFloat> ("adsrRelease", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f),
 		  std::make_unique<AudioParameterFloat> ("stereoWidth", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100),
-		  std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100) }
+		  std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100),
+		  std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2),
+		  std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2) }
 	  )
 #endif
 {
@@ -123,6 +125,11 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 		midiProcessor.updateStereoWidth(stereoWidthListener);
 		previousStereoWidth = *stereoWidthListener;
 	}
+	
+	// pitch bend settings
+	for (int i = 0; i < numVoices; ++i) {
+		harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+	}
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -177,6 +184,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		int activeVoiceNumber = 0;
 		for (int i = 0; i < numVoices; ++i) {
 			if(harmEngine[i]->voiceIsOn) {
+				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 				midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
 				++activeVoiceNumber;
 			}
@@ -198,6 +206,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
 			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 			}
+			harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 			
 	
 	// 2	// render next audio vector

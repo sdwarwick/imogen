@@ -74,6 +74,12 @@ public:
 	};
 	
 	
+	void pitchBendSettingsListener(float* rangeUp, float* rangeDown) {
+		pitchBendRangeUp = *rangeUp;
+		pitchBendRangeDown = *rangeDown;
+	}
+	
+	
 	void renderNextBlock (AudioBuffer <float>& outputBuffer, int startSample, int numSamples, double modInputFreq) {
 		
 		float pitchShiftFactor = 1 + (modInputFreq - desiredFrequency) / desiredFrequency;  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
@@ -120,14 +126,11 @@ public:
 	
 	
 	void pitchBend(const int pitchBend) {
-		const int rangeAbove = 12;
-		const int rangeBelow = 12;  // link these variables to global settings, with GUI listeners, etc...
-		
 		if (pitchBend > 64) {
-			const float newPitchOut = ((rangeAbove * (pitchBend - 65)) / 62) + lastNoteRecieved;
+			const float newPitchOut = ((pitchBendRangeUp * (pitchBend - 65)) / 62) + lastNoteRecieved;
 			desiredFrequency = mtof(newPitchOut);
 		} else if (pitchBend < 64) {
-			const float newOutputPitch = (((1 - rangeBelow) * pitchBend) / 63) + lastNoteRecieved - rangeBelow;
+			const float newOutputPitch = (((1 - pitchBendRangeDown) * pitchBend) / 63) + lastNoteRecieved - pitchBendRangeDown;
 			desiredFrequency = mtof(newOutputPitch);
 		} else if (pitchBend == 64) {
 			desiredFrequency = mtof(lastNoteRecieved);
@@ -136,14 +139,11 @@ public:
 	
 	
 	float returnMidiFloat(const int bend) {
-		const int rangeAbove = 12;
-		const int rangeBelow = 12;  // link these variables to global settings, with GUI listeners, etc...
-		
 		if (bend > 64) {
-			const float newPitchOut = ((rangeAbove * (bend - 65)) / 62) + lastNoteRecieved;
+			const float newPitchOut = ((pitchBendRangeUp * (bend - 65)) / 62) + lastNoteRecieved;
 			return newPitchOut;
 		} else if (bend < 64) {
-			const float newOutputPitch = (((1 - rangeBelow) * bend) / 63) + lastNoteRecieved - rangeBelow;
+			const float newOutputPitch = (((1 - pitchBendRangeDown) * bend) / 63) + lastNoteRecieved - pitchBendRangeDown;
 			return newOutputPitch;
 		} else if (bend == 64) {
 			return lastNoteRecieved;
@@ -161,6 +161,10 @@ public:
 	ADSR::Parameters adsrParams;
 	
 private:
+	
+	int pitchBendRangeUp = 2;
+	int pitchBendRangeDown = 2;
+	
 	int thisVoiceNumber;
 	
 	int midiPan;

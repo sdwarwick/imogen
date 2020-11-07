@@ -79,6 +79,12 @@ private:
 
 	float* midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
 	float prevVelocitySens = 0.0f;
+	
+	float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
+	float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
+
+
+

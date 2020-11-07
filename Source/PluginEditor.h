@@ -24,12 +24,10 @@ private:
     ImogenAudioProcessor& audioProcessor;
 	
 	// elements for control of harmony ADSR's
-	
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> attackLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> decayLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> sustainLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> releaseLink;
-	
 	Slider adsrAttack;
 	Slider adsrDecay;
 	Slider adsrSustain;
@@ -42,6 +40,12 @@ private:
 	// MIDI velocity sensitivity dial
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
 	Slider midiVelocitySens;
+	
+	// MIDI pitch bend range up/down controls
+	ComboBox pitchBendUp;
+	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendUpLink;
+	ComboBox pitchBendDown;
+	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendDownLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
