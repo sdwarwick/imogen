@@ -12,7 +12,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	adsrAttack.addListener(this);
 	addAndMakeVisible(&adsrAttack);
-	attackLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
+	AudioProcessorValueTreeState::SliderAttachment* attackLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrAttack", adsrAttack);
 	adsrAttack.setValue(0.035f);
 	
 	adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -20,7 +20,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	adsrDecay.addListener(this);
 	addAndMakeVisible(&adsrDecay);
-	decayLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrDecay", adsrDecay);
+	AudioProcessorValueTreeState::SliderAttachment* decayLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrDecay", adsrDecay);
 	adsrDecay.setValue(0.06f);
 	
 	adsrSustain.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -28,7 +28,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	adsrSustain.addListener(this);
 	addAndMakeVisible(&adsrSustain);
-	sustainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrSustain", adsrSustain);
+	AudioProcessorValueTreeState::SliderAttachment* sustainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrSustain", adsrSustain);
 	adsrSustain.setValue(0.8f);
 	
 	adsrRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -36,7 +36,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	adsrRelease.addListener(this);
 	addAndMakeVisible(&adsrRelease);
-	releaseLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrRelease", adsrRelease);
+	AudioProcessorValueTreeState::SliderAttachment* releaseLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "adsrRelease", adsrRelease);
 	adsrRelease.setValue(0.1f);
 	
 	stereoWidth.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -44,7 +44,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	stereoWidth.addListener(this);
 	addAndMakeVisible(&stereoWidth);
-	stereoWidthLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "stereoWidth", stereoWidth);
+	AudioProcessorValueTreeState::SliderAttachment* stereoWidthLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "stereoWidth", stereoWidth);
 	stereoWidth.setValue(100);
 	
 	midiVelocitySens.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -52,17 +52,13 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	midiVelocitySens.addListener(this);
 	addAndMakeVisible(&midiVelocitySens);
-	midiVelocitySensLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
+	AudioProcessorValueTreeState::SliderAttachment* midiVelocitySensLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
 	midiVelocitySens.setValue(100);
+	
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
-	delete attackLink;
-	delete decayLink;
-	delete sustainLink;
-	delete releaseLink;
-	delete stereoWidthLink;
-	delete midiVelocitySensLink;
+
 }
 
 //==============================================================================

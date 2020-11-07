@@ -12,16 +12,18 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-tree (*this, nullptr)
+tree (*this, nullptr, "PARAMETERS",
+	  { std::make_unique<AudioParameterFloat> ("adsrAttack", "ADSR Attack", NormalisableRange<float> (0.01f, 1.0f), 0.035f),
+		  std::make_unique<AudioParameterFloat> ("adsrDecay", "ADSR Decay", NormalisableRange<float> (0.01f, 1.0f), 0.06f),
+		  std::make_unique<AudioParameterFloat> ("adsrSustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f),
+		  std::make_unique<AudioParameterFloat> ("adsrRelease", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f),
+		  std::make_unique<AudioParameterFloat> ("stereoWidth", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100),
+		  std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100) }
+	  )
 #endif
 {
 	
-	tree.createAndAddParameter("adsrAttack", "ADSR Attack", "ADSR Attack", NormalisableRange<float> (0.01f, 1.0f), 0.035f, nullptr, nullptr);
-	tree.createAndAddParameter("adsrDecay", "ADSR Decay", "ADSR Decay", NormalisableRange<float> (0.01f, 1.0f), 0.06f, nullptr, nullptr);
-	tree.createAndAddParameter("adsrSustain", "ADSR Sustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f, nullptr, nullptr);
-	tree.createAndAddParameter("adsrRelease", "ADSR Release", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f, nullptr, nullptr);
-	tree.createAndAddParameter("stereoWidth", "Stereo Width", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100, nullptr, nullptr);
-	tree.createAndAddParameter("midiVelocitySensitivity", "MIDI Velocity Sensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100, nullptr, nullptr);
+
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < numVoices; ++i) {
@@ -93,15 +95,34 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 	lastSampleRate = sampleRate;
 	lastBlockSize = samplesPerBlock;
 	
+	// DSP settings
 	if (prevLastSampleRate != lastSampleRate || prevLastBlockSize != lastBlockSize)
 	{
 		for (int i = 0; i < numVoices; ++i) {
 			harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
+		}
+		prevLastSampleRate = lastSampleRate;
+		prevLastBlockSize = lastBlockSize;
+	}
+	
+	// ADSR settings (...and also midi velocity sensitivity)
+	if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener)
+	{
+		for (int i = 0; i < numVoices; ++i) {
 			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 		}
+		prevAttack = *adsrAttackListener;
+		prevDecay = *adsrDecayListener;
+		prevSustain = *adsrSustainListener;
+		prevRelease = *adsrReleaseListener;
+		prevVelocitySens = *midiVelocitySensListener;
 	}
-	prevLastSampleRate = lastSampleRate;
-	prevLastBlockSize = lastBlockSize;
+	
+	// stereo width
+	if (previousStereoWidth != *stereoWidthListener) {
+		midiProcessor.updateStereoWidth(stereoWidthListener);
+		previousStereoWidth = *stereoWidthListener;
+	}
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -163,8 +184,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn == true) {  // only do audio processing on active voices:
 			
-	// 1	// update ADSR parameters, if any params have changed
-			// N.B.:: WILL THIS MAKE IT SO PARAMS CAN ONLY BE CHANGED ONCE EVERY AUDIO VECTOR? ie "prevAttack" only being updated once every 512 samples...
+//	 1	// update ADSR parameters, if any params have changed
+//			 N.B.:: WILL THIS MAKE IT SO PARAMS CAN ONLY BE CHANGED ONCE EVERY AUDIO VECTOR? ie "prevAttack" only being updated once every 512 samples...
 			if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
 			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 			}

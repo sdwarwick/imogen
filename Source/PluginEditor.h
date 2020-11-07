@@ -25,21 +25,22 @@ private:
 	
 	// elements for control of harmony ADSR's
 	
-	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> attackLink;
-	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> decayLink;
-	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> sustainLink;
-	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> releaseLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> attackLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> decayLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> sustainLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> releaseLink;
+	
 	Slider adsrAttack;
 	Slider adsrDecay;
 	Slider adsrSustain;
 	Slider adsrRelease;
 	
 	// stereo width of harmony output
-	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
 	Slider stereoWidth;
 	
 	// MIDI velocity sensitivity dial
-	ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
 	Slider midiVelocitySens;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
