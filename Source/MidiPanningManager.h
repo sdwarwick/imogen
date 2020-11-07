@@ -84,17 +84,16 @@ public:
 	
 	
 	int getNextPanVal() {
-		
-		// get value from panValsInAssigningOrder
-		
-		return 0;
-		++indexOfLastSentPanVal;
+		int indexReadingFrom = indexOfLastSentPanVal + 1;
+		if (indexReadingFrom <= numberOfVoices - 1) {
+			return panValsInAssigningOrder[indexReadingFrom];
+			++indexOfLastSentPanVal;
+		} else {
+			return panValsInAssigningOrder[0];
+			indexOfLastSentPanVal = 0;
+		}
 	};
-								   
-								   
-								   
-								   
-								   
+								   							
 	
 private:
 	int possiblePanVals[numberOfVoices] = { };
