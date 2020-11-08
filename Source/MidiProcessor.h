@@ -29,28 +29,17 @@ public:
 		{
 			const auto currentMessage = meta.getMessage();
 			
-			
 							if(currentMessage.isNoteOnOrOff())
 							{
-								if(currentMessage.isNoteOn())
-								{
-									const int newPitch = currentMessage.getNoteNumber();
-									const int newVelocity = currentMessage.getVelocity();
-									const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
-									
-									if(newVoiceNumber >= 0) {
-										polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-										harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+								if(midiLatch == false) {
+									// run this code if MIDI latch is OFF
+									if(currentMessage.isNoteOn()) {
+										harmonyNoteOn(currentMessage, harmonyEngine);
 									} else {
-										// no voices are available to turn on
-										// if voice stealing is enabled, then assign the note to the voice that has been holding its note the LONGEST
+										harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
 									}
-								}
-								else
-								{
-									const int voiceToTurnOff = polyphonyManager.turnOffNote(currentMessage.getNoteNumber());
-									polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
-									harmonyEngine[voiceToTurnOff]->stopNote();
+								} else {
+									processActiveLatch(currentMessage, harmonyEngine);
 								}
 							}
 							else
@@ -86,6 +75,52 @@ public:
 	};
 	
 	
+	// actually sends a new note on out to the harmony engine
+	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
+	{
+		const int newPitch = currentMessage.getNoteNumber();
+		const int newVelocity = currentMessage.getVelocity();
+		const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
+		
+		if(newVoiceNumber >= 0) {
+			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
+			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+		} else {
+			// no voices are available to turn on
+			// if voice stealing is enabled, then assign the note to the voice that has been holding its note the LONGEST
+		}
+	};
+	
+	
+	// actually sends a note off out to the harmony engine
+	void harmonyNoteOff(const int pitch, OwnedArray<HarmonyVoice>& harmonyEngine) {
+		const int voiceToTurnOff = polyphonyManager.turnOffNote(pitch);
+		polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
+		harmonyEngine[voiceToTurnOff]->stopNote();
+	};
+	
+	
+	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
+	{
+		const int midiPitch = currentMessage.getNoteNumber();
+		if(currentMessage.isNoteOn())
+		{
+			// if note isn't already on (latched), then turn it on:
+			if (polyphonyManager.isPitchActive(midiPitch) == false) {
+				harmonyNoteOn(currentMessage, harmonyEngine);
+			} else {
+			// need to remove pitch from bucket of note offs
+			}
+			
+		} else {
+			// collect bucket of note offs here, to be sent when latch is deactivated
+			// check that incoming val isn't already in list, to avoid duplicates
+		}
+	};
+	
+	
+	
+	
 private:
 	PolyphonyVoiceManager polyphonyManager;
 	MidiPanningManager midiPanningManager;
@@ -93,4 +128,6 @@ private:
 	const static int numberOfVoices = 12;  // link this to global # of voices setting
 	
 	int lastRecievedPitchBend = 64;
+	
+	bool midiLatch = false; // link this to global midi latch toggle on/off setting
 };

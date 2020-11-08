@@ -62,6 +62,19 @@ public:
 	};
 	
 	
+	bool isPitchActive(const int midiPitch)
+	{
+		bool foundIt = false;
+		for(int i = 0; i < numberOfVoices; ++i) {
+			if (harmonyPitches[i] == midiPitch) {
+				foundIt = true;
+			}
+		}
+		
+		return foundIt;
+	};
+	
+	
 private:
 	const static int numberOfVoices = 12;  // link this to global # of voices setting
 	int harmonyPitches[numberOfVoices];
