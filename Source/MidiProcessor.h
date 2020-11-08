@@ -128,5 +128,4 @@ private:
 	
 	bool midiLatch = false; // link this to global midi latch toggle on/off setting
 	MidiLatchManager latchManager;
-	
 };
