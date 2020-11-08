@@ -12,7 +12,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-tree (*this, nullptr, "PARAMETERS",
+tree (
+	  *this, nullptr, "PARAMETERS",
 	  { std::make_unique<AudioParameterFloat> ("adsrAttack", "ADSR Attack", NormalisableRange<float> (0.01f, 1.0f), 0.035f),
 		  std::make_unique<AudioParameterFloat> ("adsrDecay", "ADSR Decay", NormalisableRange<float> (0.01f, 1.0f), 0.06f),
 		  std::make_unique<AudioParameterFloat> ("adsrSustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f),
@@ -20,7 +21,9 @@ tree (*this, nullptr, "PARAMETERS",
 		  std::make_unique<AudioParameterFloat> ("stereoWidth", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100),
 		  std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100),
 		  std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2),
-		  std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2) }
+		  std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2),
+		  std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(0.0f, 1.0f), 1.0),
+		  std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(0.0f, 1.0f), 1.0) }
 	  )
 #endif
 {

@@ -46,6 +46,14 @@ private:
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendUpLink;
 	ComboBox pitchBendDown;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendDownLink;
+	
+	// modulator input gain (gain applied before mod signal is sent into harmony algorithm
+	Slider inputGain;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
+	
+	// master output gain
+	Slider outputGain;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

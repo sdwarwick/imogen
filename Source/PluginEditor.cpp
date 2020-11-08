@@ -86,6 +86,22 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(pitchBendDown);
 	AudioProcessorValueTreeState::ComboBoxAttachment* pitchBendDownLink = new AudioProcessorValueTreeState::ComboBoxAttachment (audioProcessor.tree, "PitchBendDownRange", pitchBendDown);
 	pitchBendDown.setSelectedId(2);
+	
+	inputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
+	inputGain.setRange(0.0f, 1.0f);
+	inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	inputGain.addListener(this);
+	addAndMakeVisible(&inputGain);
+	AudioProcessorValueTreeState::SliderAttachment* inputGainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "inputGain", inputGain);
+	inputGain.setValue(1.0f);
+	
+	outputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
+	outputGain.setRange(0.0f, 1.0f);
+	outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	outputGain.addListener(this);
+	addAndMakeVisible(&outputGain);
+	AudioProcessorValueTreeState::SliderAttachment* outputGainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "outputGain", outputGain);
+	outputGain.setValue(1.0f);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -115,6 +131,9 @@ void ImogenAudioProcessorEditor::resized()
 	
 	pitchBendUp.setBounds(10, 250, 350, 25);
 	pitchBendDown.setBounds(375, 250, 350, 25);
+	
+	inputGain.setBounds(170, 100, 50, 150);
+	outputGain.setBounds(250, 100, 50, 150);
 }
 
 

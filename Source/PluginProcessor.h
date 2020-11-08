@@ -82,6 +82,9 @@ private:
 	
 	float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
 	float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
+	
+	float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
+	float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

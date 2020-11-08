@@ -77,7 +77,7 @@ public:
 	void pitchBendSettingsListener(float* rangeUp, float* rangeDown) {
 		pitchBendRangeUp = *rangeUp;
 		pitchBendRangeDown = *rangeDown;
-	}
+	};
 	
 	
 	void renderNextBlock (AudioBuffer <float>& outputBuffer, int startSample, int numSamples, double modInputFreq) {
@@ -145,7 +145,7 @@ public:
 		} else if (bend < 64) {
 			const float newOutputPitch = (((1 - pitchBendRangeDown) * bend) / 63) + lastNoteRecieved - pitchBendRangeDown;
 			return newOutputPitch;
-		} else if (bend == 64) {
+		} else {
 			return lastNoteRecieved;
 		}
 	};
