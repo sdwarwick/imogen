@@ -12,15 +12,15 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
 #include "PolyphonyVoiceManager.h"
 #include "MidiPanningManager.h"
+#include "MidiLatchManager.h"
 
 class MidiProcessor
 {
 	
 public:
+	
 											
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
@@ -29,36 +29,34 @@ public:
 		{
 			const auto currentMessage = meta.getMessage();
 			
-							if(currentMessage.isNoteOnOrOff())
-							{
-								if(midiLatch == false) {
-									// run this code if MIDI latch is OFF
-									if(currentMessage.isNoteOn()) {
-										harmonyNoteOn(currentMessage, harmonyEngine);
-									} else {
-										harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
-									}
-								} else {
-									processActiveLatch(currentMessage, harmonyEngine);
-								}
+				if(currentMessage.isNoteOnOrOff())
+				{
+					if(midiLatch == false) {
+						if(currentMessage.isNoteOn()) {
+							harmonyNoteOn(currentMessage, harmonyEngine);
+						} else {
+							harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
+						}
+					} else {
+						processActiveLatch(currentMessage, harmonyEngine);
+					}
+				}
+				else
+				{
+					if(currentMessage.isPitchWheel())
+					{
+						const int pitchBend = currentMessage.getPitchWheelValue();
+						for(int i = 0; i < numberOfVoices; ++i) {
+							if(harmonyEngine[i]->voiceIsOn) {
+								harmonyEngine[i]->pitchBend(pitchBend);
 							}
-							else
-							{
-								if(currentMessage.isPitchWheel())
-								{
-									const int pitchBend = currentMessage.getPitchWheelValue();
-									for(int i = 0; i < numberOfVoices; ++i) {
-										if(harmonyEngine[i]->voiceIsOn) {
-											harmonyEngine[i]->pitchBend(pitchBend);
-										}
-									}
-									lastRecievedPitchBend = pitchBend;
-								} else {
-									// non-note events go to here...
-									// sustain pedal, aftertouch, key pressure, etc...
-								}
-							}
-			
+						}
+						lastRecievedPitchBend = pitchBend;
+					} else {
+						// non-note events go to here...
+						// sustain pedal, aftertouch, key pressure, etc...
+					}
+				}
 			
 		}
 	};
@@ -100,23 +98,22 @@ public:
 	};
 	
 	
+	
+	
 	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
 		const int midiPitch = currentMessage.getNoteNumber();
 		if(currentMessage.isNoteOn())
 		{
-			// if note isn't already on (latched), then turn it on:
 			if (polyphonyManager.isPitchActive(midiPitch) == false) {
-				harmonyNoteOn(currentMessage, harmonyEngine);
+				harmonyNoteOn(currentMessage, harmonyEngine);  // if note isn't already on (latched), then turn it on
 			} else {
-			// need to remove pitch from bucket of note offs
+				latchManager.noteOnRecieved(midiPitch);
 			}
-			
 		} else {
-			// collect bucket of note offs here, to be sent when latch is deactivated
-			// check that incoming val isn't already in list, to avoid duplicates
+			latchManager.noteOffRecieved(midiPitch);
 		}
-	};
+	}; // processes note events that occur while midiLatch is active
 	
 	
 	
@@ -130,4 +127,6 @@ private:
 	int lastRecievedPitchBend = 64;
 	
 	bool midiLatch = false; // link this to global midi latch toggle on/off setting
+	MidiLatchManager latchManager;
+	
 };

@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
 
 class PolyphonyVoiceManager
 {
@@ -35,6 +33,7 @@ public:
 			if(harmonyPitches[voiceTesting] == -1) {
 				foundNextVoice = true;
 				return voiceTesting;
+				break;
 			} else {
 				++voiceTesting;
 			}
@@ -55,6 +54,7 @@ public:
 				foundVoice = true;
 				harmonyPitches[voicetest] = -1;
 				return voicetest;
+				break;
 			} else {
 				++voicetest;
 			}
@@ -68,9 +68,9 @@ public:
 		for(int i = 0; i < numberOfVoices; ++i) {
 			if (harmonyPitches[i] == midiPitch) {
 				foundIt = true;
+				break;
 			}
 		}
-		
 		return foundIt;
 	};
 	

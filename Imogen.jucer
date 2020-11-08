@@ -7,7 +7,8 @@
               pluginName="Imogen" pluginDesc="vocal harmonizer" pluginManufacturer="Ben Vining Music Software"
               pluginVST3Category="Fx,Pitch Shift" pluginRTASCategory="4,64"
               pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
-              pluginFormats="buildAU,buildVST3">
+              pluginFormats="buildAU,buildVST3" pluginManufacturerCode="BenV"
+              pluginCode="Imog">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
       <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"
@@ -26,6 +27,8 @@
             file="Source/PolyphonyVoiceManager.h"/>
       <FILE id="GAxnNB" name="MidiPanningManager.h" compile="0" resource="0"
             file="Source/MidiPanningManager.h"/>
+      <FILE id="ZY8pbE" name="MidiLatchManager.h" compile="0" resource="0"
+            file="Source/MidiLatchManager.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

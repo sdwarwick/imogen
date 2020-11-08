@@ -36,8 +36,7 @@ public:
 	void startNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend)
 	{
 		lastNoteRecieved = midiPitch;
-		const float desiredMidiFloat = returnMidiFloat(lastPitchBend);
-		desiredFrequency = mtof(desiredMidiFloat);
+		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
 		
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
@@ -47,12 +46,6 @@ public:
 	
 	void stopNote () {
 		adsrEnv.noteOff();
-	};
-	
-	
-	float calcVelocityMultiplier(const int midiVelocity) {
-		const float initialMutiplier = midiVelocity / 127; // what the multiplier would be without any sensitivity calculations...
-		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
 	
 	
@@ -82,7 +75,7 @@ public:
 	
 	void renderNextBlock (AudioBuffer <float>& outputBuffer, int startSample, int numSamples, double modInputFreq) {
 		
-		float pitchShiftFactor = 1 + (modInputFreq - desiredFrequency) / desiredFrequency;  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
+		const float pitchShiftFactor = 1 + (modInputFreq - desiredFrequency) / desiredFrequency;  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
 		
 		// need to pass dry input signal directly into shifter, to be used in pitchShifter.output
 		
@@ -112,8 +105,8 @@ public:
 	
 	
 	void calculatePanningChannelMultipliers(const int midipanning) {
-		panningMultR = midipanning / 127;
-		panningMultL = 1 - panningMultR;
+		panningMultR = midipanning / 127.0;
+		panningMultL = 1.0 - panningMultR;
 	};
 	
 	
@@ -127,11 +120,9 @@ public:
 	
 	void pitchBend(const int pitchBend) {
 		if (pitchBend > 64) {
-			const float newPitchOut = ((pitchBendRangeUp * (pitchBend - 65)) / 62) + lastNoteRecieved;
-			desiredFrequency = mtof(newPitchOut);
+			desiredFrequency = mtof(((pitchBendRangeUp * (pitchBend - 65)) / 62) + lastNoteRecieved);
 		} else if (pitchBend < 64) {
-			const float newOutputPitch = (((1 - pitchBendRangeDown) * pitchBend) / 63) + lastNoteRecieved - pitchBendRangeDown;
-			desiredFrequency = mtof(newOutputPitch);
+			desiredFrequency = mtof((((1 - pitchBendRangeDown) * pitchBend) / 63) + lastNoteRecieved - pitchBendRangeDown);
 		} else if (pitchBend == 64) {
 			desiredFrequency = mtof(lastNoteRecieved);
 		}
@@ -140,11 +131,9 @@ public:
 	
 	float returnMidiFloat(const int bend) {
 		if (bend > 64) {
-			const float newPitchOut = ((pitchBendRangeUp * (bend - 65)) / 62) + lastNoteRecieved;
-			return newPitchOut;
+			return ((pitchBendRangeUp * (bend - 65)) / 62) + lastNoteRecieved;
 		} else if (bend < 64) {
-			const float newOutputPitch = (((1 - pitchBendRangeDown) * bend) / 63) + lastNoteRecieved - pitchBendRangeDown;
-			return newOutputPitch;
+			return (((1 - pitchBendRangeDown) * bend) / 63) + lastNoteRecieved - pitchBendRangeDown;
 		} else {
 			return lastNoteRecieved;
 		}
@@ -154,6 +143,13 @@ public:
 	
 	double mtof(const float midiNote) {  // converts midiPitch to frequency in Hz
 		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
+	};
+	
+	
+	
+	float calcVelocityMultiplier(const int midiVelocity) {
+		const float initialMutiplier = midiVelocity / 127.0; // what the multiplier would be without any sensitivity calculations...
+		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
 	
 	
