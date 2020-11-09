@@ -46,13 +46,14 @@ public:
 	
 	//==============================================================================
 	
-	static const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
+	const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
 	
 	double voxCurrentPitch = 440.;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
 	AudioProcessorValueTreeState tree;
 	
 	MidiProcessor midiProcessor;
+	bool midiLatch = false;
 	
 	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
 	

@@ -28,8 +28,6 @@ tree (
 #endif
 {
 	
-
-	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < numVoices; ++i) {
 		harmEngine.add(new HarmonyVoice(i));
@@ -40,6 +38,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 	for (int i = 0; i < numVoices; ++i) {
 		delete harmEngine[i];
 	}
+	
 }
 
 //==============================================================================
@@ -182,7 +181,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
 		midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
-		
 		// update active voices' assigned panning values
 		int activeVoiceNumber = 0;
 		for (int i = 0; i < numVoices; ++i) {
@@ -195,7 +193,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	previousStereoWidth = *stereoWidthListener;
 	
-	midiProcessor.processIncomingMidi(midiMessages, harmEngine);
+	midiProcessor.processIncomingMidi(midiMessages, harmEngine, midiLatch);
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?

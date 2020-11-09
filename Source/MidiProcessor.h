@@ -21,8 +21,10 @@ class MidiProcessor
 	
 public:
 	
+//	MidiProcessor(const int numVoices): numberOfVoices(numVoices) { };
+	
 											
-	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine)
+	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch)
 	{
 		
 		for (const auto meta : midiMessages)
@@ -73,6 +75,31 @@ public:
 	};
 	
 	
+	void turnOffLatch(OwnedArray<HarmonyVoice>& harmonyEngine)  // run this function to turn off latch & send held note offs out to harmony engine
+	{
+		for(int i = 0; i < numberOfVoices; ++i)
+		{
+			const int returnedVal = latchManager.noteAtIndex(i);
+			if(returnedVal != -1) {
+				harmonyNoteOff(returnedVal, harmonyEngine);
+			}
+			latchManager.clear();
+		}
+	};
+	
+	
+	
+private:
+	int numberOfVoices = 12;  // link this to global # of voices setting
+	
+	PolyphonyVoiceManager polyphonyManager;
+	MidiPanningManager midiPanningManager;
+	
+	int lastRecievedPitchBend = 64;
+	
+	MidiLatchManager latchManager;
+	
+	
 	// sends a note on out to the harmony engine
 	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
@@ -98,8 +125,6 @@ public:
 	};
 	
 	
-	
-	
 	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
 		const int midiPitch = currentMessage.getNoteNumber();
@@ -114,31 +139,4 @@ public:
 			latchManager.noteOffRecieved(midiPitch);
 		}
 	}; // processes note events that occur while midiLatch is active
-	
-	
-	
-	void turnOffLatch(OwnedArray<HarmonyVoice>& harmonyEngine)  // run this function to turn off latch & send held note offs out to harmony engine
-	{
-		for(int i = 0; i < numberOfVoices; ++i)
-		{
-			const int returnedVal = latchManager.noteAtIndex(i);
-			if(returnedVal != -1) {
-				harmonyNoteOff(returnedVal, harmonyEngine);
-			}
-			latchManager.clear();
-		}
-	};
-	
-	
-	
-private:
-	PolyphonyVoiceManager polyphonyManager;
-	MidiPanningManager midiPanningManager;
-	
-	const static int numberOfVoices = 12;  // link this to global # of voices setting
-	
-	int lastRecievedPitchBend = 64;
-	
-	bool midiLatch = false; // link this to global midi latch toggle on/off setting
-	MidiLatchManager latchManager;
 };

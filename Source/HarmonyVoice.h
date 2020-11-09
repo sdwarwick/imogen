@@ -102,12 +102,6 @@ public:
 	};
 	
 	
-	void calculatePanningChannelMultipliers(const int midipanning) {
-		panningMultR = midipanning / 127.0;
-		panningMultL = 1.0 - panningMultR;
-	};
-	
-	
 	void changePanning(const int newPanVal) {   // this function updates the voice's panning if it is active when the stereo width setting is changed
 												// TODO: ramp this value???
 		midiPan = newPanVal;
@@ -124,30 +118,6 @@ public:
 		} else if (pitchBend == 64) {
 			desiredFrequency = mtof(lastNoteRecieved);
 		}
-	};
-	
-	
-	float returnMidiFloat(const int bend) {
-		if (bend > 64) {
-			return ((pitchBendRangeUp * (bend - 65)) / 62) + lastNoteRecieved;
-		} else if (bend < 64) {
-			return (((1 - pitchBendRangeDown) * bend) / 63) + lastNoteRecieved - pitchBendRangeDown;
-		} else {
-			return lastNoteRecieved;
-		}
-	};
-	
-	
-	
-	double mtof(const float midiNote) {  // converts midiPitch to frequency in Hz
-		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
-	};
-	
-	
-	
-	float calcVelocityMultiplier(const int midiVelocity) {
-		const float initialMutiplier = midiVelocity / 127.0; // what the multiplier would be without any sensitivity calculations...
-		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
 	
 	
@@ -175,6 +145,33 @@ private:
 	float amplitudeMultiplier;
 	
 	Shifter pitchShifter;
+	
+	void calculatePanningChannelMultipliers(const int midipanning) {
+		panningMultR = midipanning / 127.0;
+		panningMultL = 1.0 - panningMultR;
+	};
+	
+	
+	float returnMidiFloat(const int bend) {
+		if (bend > 64) {
+			return ((pitchBendRangeUp * (bend - 65)) / 62) + lastNoteRecieved;
+		} else if (bend < 64) {
+			return (((1 - pitchBendRangeDown) * bend) / 63) + lastNoteRecieved - pitchBendRangeDown;
+		} else {
+			return lastNoteRecieved;
+		}
+	};
+	
+	
+	double mtof(const float midiNote) {  // converts midiPitch to frequency in Hz
+		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
+	};
+	
+	
+	float calcVelocityMultiplier(const int midiVelocity) {
+		const float initialMutiplier = midiVelocity / 127.0; // what the multiplier would be without any sensitivity calculations...
+		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
+	};
 };
 
 
