@@ -102,6 +102,10 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(&outputGain);
 	AudioProcessorValueTreeState::SliderAttachment* outputGainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "outputGain", outputGain);
 	outputGain.setValue(1.0f);
+	
+	midiLatch.setButtonText("MIDI latch");
+	addAndMakeVisible(&midiLatch);
+	midiLatch.setToggleState(false, true);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

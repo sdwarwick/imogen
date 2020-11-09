@@ -54,6 +54,9 @@ private:
 	// master output gain
 	Slider outputGain;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
+	
+	// midi latch on/off toggle
+	ToggleButton midiLatch;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
