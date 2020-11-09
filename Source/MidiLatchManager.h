@@ -14,24 +14,53 @@
 class MidiLatchManager
 {
 public:
-	MidiLatchManager() {
-		
+
+	void clear() {
+		for(int i = 0; i < numberOfVoices; ++i)
+		{
+			heldNoteOffs[i] = -1;
+		}
 	};
 	
-	void clear() {
-		// clears all elements from the bucket
-	};
 	
 	void noteOffRecieved(const int noteNumber) {
-		// adds noteNumber to the bucket
+		int i = 0;
+		while (i < numberOfVoices)
+		{
+			if (heldNoteOffs[i] == -1) {
+				heldNoteOffs[i] = noteNumber;
+				break;
+			} else {
+				++i;
+			}
+		}
 	};
+	
 	
 	void noteOnRecieved(const int noteNumber) {
-		// removes noteNumber from the bucket
+		int i = 0;
+		while (i < numberOfVoices)
+		{
+			if (heldNoteOffs[i] == noteNumber) {
+				heldNoteOffs[i] = -1;
+				break;
+			} else {
+				++i;
+			}
+		}
 	};
 	
-	// function to send all note offs once latch is deactivated 
+	
+	int noteAtIndex(const int indexToRead)
+	{
+		return heldNoteOffs[indexToRead];
+	};
+	
 	
 private:
 	
+	const static int numberOfVoices = 12; // the max # of notes that can be latched is the # of active instances of HarmonyVoice
+										// link this to global numVoices setting
+	
+	int heldNoteOffs[numberOfVoices] = { -1 }; // array holds all note offs recieved while latch is active. Holds -1 for "empty array slot"
 };

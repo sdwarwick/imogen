@@ -73,7 +73,7 @@ public:
 	};
 	
 	
-	// actually sends a new note on out to the harmony engine
+	// sends a note on out to the harmony engine
 	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
 	{
 		const int newPitch = currentMessage.getNoteNumber();
@@ -90,7 +90,7 @@ public:
 	};
 	
 	
-	// actually sends a note off out to the harmony engine
+	// sends a note off out to the harmony engine
 	void harmonyNoteOff(const int pitch, OwnedArray<HarmonyVoice>& harmonyEngine) {
 		const int voiceToTurnOff = polyphonyManager.turnOffNote(pitch);
 		polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
@@ -115,6 +115,19 @@ public:
 		}
 	}; // processes note events that occur while midiLatch is active
 	
+	
+	
+	void turnOffLatch(OwnedArray<HarmonyVoice>& harmonyEngine)  // run this function to turn off latch & send held note offs out to harmony engine
+	{
+		for(int i = 0; i < numberOfVoices; ++i)
+		{
+			const int returnedVal = latchManager.noteAtIndex(i);
+			if(returnedVal != -1) {
+				harmonyNoteOff(returnedVal, harmonyEngine);
+			}
+			latchManager.clear();
+		}
+	};
 	
 	
 	
