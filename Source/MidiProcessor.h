@@ -16,12 +16,13 @@
 #include "MidiPanningManager.h"
 #include "MidiLatchManager.h"
 
+
 class MidiProcessor
 {
 	
 public:
 	
-	MidiProcessor(): lastRecievedPitchBend(64), numberOfVoices(12) { };
+	MidiProcessor(): numberOfVoices(12), lastRecievedPitchBend(64) { };
 											
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch)
 	{
