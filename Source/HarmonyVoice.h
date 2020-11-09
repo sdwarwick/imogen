@@ -25,10 +25,7 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int thisVoiceNumber) {
-		voiceIsOn = false;
-		this->thisVoiceNumber = thisVoiceNumber;
-	};
+	HarmonyVoice(const int thisVoiceNumber): voiceIsOn(false), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(thisVoiceNumber), prevPan(-1), panningMultR(0.5), panningMultL(0.5) { };
 	
 	
 	void startNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend)
@@ -124,18 +121,19 @@ public:
 	ADSR adsrEnv;
 	ADSR::Parameters adsrParams;
 	
+	
 private:
 	
-	int pitchBendRangeUp = 2;
-	int pitchBendRangeDown = 2;
+	int pitchBendRangeUp;
+	int pitchBendRangeDown;
 	
-	int thisVoiceNumber;
+	const int thisVoiceNumber;
 	
 	int midiPan;
-	int prevPan = -1;
+	int prevPan;
 	int panning;
-	float panningMultR = 0.5;
-	float panningMultL = 0.5;
+	float panningMultR;
+	float panningMultL;
 	
 	float midiVelocitySensitivity;  
 	

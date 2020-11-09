@@ -17,6 +17,10 @@ class MidiPanningManager
 {
 public:
 	
+	MidiPanningManager(): middleIndex(round(numberOfVoices / 2)), indexOfLastSentPanVal(0) {
+		
+	};
+	
 	void updateStereoWidth(const int newStereoWidth) {
 		
 		mapArrayIndexes();
@@ -59,13 +63,12 @@ public:
 	
 private:
 	const static int numberOfVoices = 12;  // link this to global # of voices setting
-	const float centerofarray = numberOfVoices / 2;
-	const int middleIndex = round(centerofarray);
+	const int middleIndex;
 	
 	int possiblePanVals[numberOfVoices] = { };
 	int panValsInAssigningOrder[numberOfVoices] = { };
 	int arrayIndexesMapped[numberOfVoices] = { };
-	int indexOfLastSentPanVal = 0;
+	int indexOfLastSentPanVal;
 	
 	void mapArrayIndexes() {
 		/* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and index 11 the highest.

@@ -10,7 +10,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
+                      #endif
                        ),
 tree (
 	  *this, nullptr, "PARAMETERS",

@@ -63,5 +63,4 @@ private:
 										// link this to global numVoices setting
 	
 	int heldNoteOffs[numberOfVoices] = { -1 }; // array holds all note offs recieved while latch is active. Holds -1 for "empty array slot"
-	
 };

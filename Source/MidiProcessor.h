@@ -21,8 +21,7 @@ class MidiProcessor
 	
 public:
 	
-//	MidiProcessor(const int numVoices): numberOfVoices(numVoices) { };
-	
+	MidiProcessor(): lastRecievedPitchBend(64), numberOfVoices(12) { };
 											
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch)
 	{
@@ -90,12 +89,12 @@ public:
 	
 	
 private:
-	int numberOfVoices = 12;  // link this to global # of voices setting
+	const int numberOfVoices;  // link this to global # of voices setting
 	
 	PolyphonyVoiceManager polyphonyManager;
 	MidiPanningManager midiPanningManager;
 	
-	int lastRecievedPitchBend = 64;
+	int lastRecievedPitchBend;
 	
 	MidiLatchManager latchManager;
 	
