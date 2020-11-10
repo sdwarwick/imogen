@@ -75,6 +75,11 @@ public:
 	};
 	
 	
+	int pitchAtIndex(const int index) const {
+		return harmonyPitches[index];
+	};
+	
+	
 private:
 	const static int numberOfVoices = 12;  // link this to global # of voices setting
 	int harmonyPitches[numberOfVoices];

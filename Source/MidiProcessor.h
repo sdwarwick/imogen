@@ -62,6 +62,18 @@ public:
 			
 		}
 	};
+	
+	
+	void killAll(OwnedArray<HarmonyVoice>& harmonyEngine) {  // run this function to clear all held / turned on midi notes
+		for(int i = 0; i < numberOfVoices; ++i) {
+			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
+			if (returnedmidipitch != -1) {
+				harmonyNoteOff(returnedmidipitch, harmonyEngine);
+				polyphonyManager.updatePitchCollection(i, -1);
+			}
+		}
+		latchManager.clear();
+	};
 
 	
 	void updateStereoWidth(float* newStereoWidth) {
@@ -94,11 +106,9 @@ private:
 	
 	PolyphonyVoiceManager polyphonyManager;
 	MidiPanningManager midiPanningManager;
-	
-	int lastRecievedPitchBend;
-	
 	MidiLatchManager latchManager;
 	
+	int lastRecievedPitchBend;
 	
 	// sends a note on out to the harmony engine
 	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
