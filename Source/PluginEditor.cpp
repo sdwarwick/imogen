@@ -140,6 +140,8 @@ void ImogenAudioProcessorEditor::resized()
 	
 	inputGain.setBounds(170, 100, 50, 150);
 	outputGain.setBounds(250, 100, 50, 150);
+	
+	midiLatch.setBounds(10, 250, 75, 35);
 }
 
 
