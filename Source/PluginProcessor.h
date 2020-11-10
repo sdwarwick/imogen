@@ -92,6 +92,8 @@ private:
 	float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
 	bool previousLatch = false;
 	
+	AudioProcessorValueTreeState::ParameterLayout createParameters();
+	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
 
