@@ -5,7 +5,7 @@
 
 //==============================================================================
 
-class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener, public Button::Listener
+class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -13,10 +13,6 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
-	
-	void sliderValueChanged (Slider* slider) override;
-	void buttonClicked (Button* button) override;
-	void buttonStateChanged (Button* button) override;
 	
 //==============================================================================
 
@@ -26,22 +22,22 @@ private:
     ImogenAudioProcessor& audioProcessor;
 	
 	// elements for control of harmony ADSR's
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> attackLink;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> decayLink;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> sustainLink;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> releaseLink;
 	Slider adsrAttack;
 	Slider adsrDecay;
 	Slider adsrSustain;
 	Slider adsrRelease;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> attackLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> decayLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> sustainLink;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> releaseLink;
 	
 	// stereo width of harmony output
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
 	Slider stereoWidth;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
 	
 	// MIDI velocity sensitivity dial
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
 	Slider midiVelocitySens;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
 	
 	// MIDI pitch bend range up/down controls
 	ComboBox pitchBendUp;
