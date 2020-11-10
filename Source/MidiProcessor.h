@@ -83,8 +83,8 @@ public:
 			if(returnedVal != -1) {
 				harmonyNoteOff(returnedVal, harmonyEngine);
 			}
-			latchManager.clear();
 		}
+		latchManager.clear();
 	};
 	
 	

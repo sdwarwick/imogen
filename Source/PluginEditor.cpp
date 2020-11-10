@@ -104,7 +104,9 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	outputGain.setValue(1.0f);
 	
 	midiLatch.setButtonText("MIDI latch");
+	midiLatch.addListener(this);
 	addAndMakeVisible(&midiLatch);
+	AudioProcessorValueTreeState::ButtonAttachment* midiLatchLink = new AudioProcessorValueTreeState::ButtonAttachment (audioProcessor.tree, "midiLatch", midiLatch);
 	midiLatch.setToggleState(false, true);
 }
 
@@ -143,5 +145,15 @@ void ImogenAudioProcessorEditor::resized()
 
 
 void ImogenAudioProcessorEditor::sliderValueChanged(Slider* slider) {
+	
+}
+
+
+void ImogenAudioProcessorEditor::buttonClicked(Button* button) {
+	
+}
+
+
+void ImogenAudioProcessorEditor::buttonStateChanged(Button* button) {
 	
 }

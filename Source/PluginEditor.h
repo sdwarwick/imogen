@@ -5,7 +5,7 @@
 
 //==============================================================================
 
-class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener
+class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener, public Button::Listener
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -15,6 +15,8 @@ public:
     void resized() override;
 	
 	void sliderValueChanged (Slider* slider) override;
+	void buttonClicked (Button* button) override;
+	void buttonStateChanged (Button* button) override;
 	
 //==============================================================================
 
@@ -57,6 +59,7 @@ private:
 	
 	// midi latch on/off toggle
 	ToggleButton midiLatch;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> midiLatchLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

@@ -46,7 +46,7 @@ public:
 	
 	//==============================================================================
 	
-	const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
+	static const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
 	
 	double voxCurrentPitch = 440.;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
@@ -86,7 +86,10 @@ private:
 	
 	float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
 	float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
-
+	
+	float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
+	bool previousLatch = false;
+	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
 

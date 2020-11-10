@@ -23,7 +23,8 @@ tree (
 		  std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2),
 		  std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2),
 		  std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(0.0f, 1.0f), 1.0),
-		  std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(0.0f, 1.0f), 1.0) }
+		  std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(0.0f, 1.0f), 1.0),
+		  std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch", false) }
 	  )
 #endif
 {
@@ -193,7 +194,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	previousStereoWidth = *stereoWidthListener;
 	
-	midiProcessor.processIncomingMidi(midiMessages, harmEngine, midiLatch);
+	bool latchIsOn = *midiLatchListener > 0.5f;
+	midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn);
+	if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
+	previousLatch = latchIsOn;
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
