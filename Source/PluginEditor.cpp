@@ -88,20 +88,20 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	pitchBendDown.setSelectedId(2);
 	
 	inputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
-	inputGain.setRange(0.0f, 1.0f);
+	inputGain.setRange(-60.0f, 0.0f);
 	inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	inputGain.addListener(this);
 	addAndMakeVisible(&inputGain);
 	AudioProcessorValueTreeState::SliderAttachment* inputGainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "inputGain", inputGain);
-	inputGain.setValue(1.0f);
+	inputGain.setValue(0.0f);
 	
 	outputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
-	outputGain.setRange(0.0f, 1.0f);
+	outputGain.setRange(-60.0f, 0.0f);
 	outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 	outputGain.addListener(this);
 	addAndMakeVisible(&outputGain);
 	AudioProcessorValueTreeState::SliderAttachment* outputGainLink = new AudioProcessorValueTreeState::SliderAttachment (audioProcessor.tree, "outputGain", outputGain);
-	outputGain.setValue(1.0f);
+	outputGain.setValue(-4.0f);
 	
 	midiLatch.setButtonText("MIDI latch");
 	midiLatch.addListener(this);
