@@ -202,6 +202,9 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
 	
+	inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
+	outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
+	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:

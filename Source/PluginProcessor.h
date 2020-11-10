@@ -85,7 +85,9 @@ private:
 	float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
 	
 	float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
+	float inputGainMultiplier;
 	float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
+	float outputGainMultiplier;
 	
 	float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
 	bool previousLatch = false;
