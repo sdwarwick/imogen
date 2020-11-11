@@ -99,6 +99,11 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(&midiLatch);
 	midiLatchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "midiLatch", midiLatch);
 	midiLatch.setToggleState(false, true);
+	
+	voiceStealing.setButtonText("Voice stealing");
+	addAndMakeVisible(&voiceStealing);
+	voiceStealingLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing);
+	voiceStealing.setToggleState(false, true);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

@@ -56,6 +56,10 @@ private:
 	// midi latch on/off toggle
 	ToggleButton midiLatch;
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> midiLatchLink;
+	
+	// voice stealing on/off toggle
+	ToggleButton voiceStealing;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> voiceStealingLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

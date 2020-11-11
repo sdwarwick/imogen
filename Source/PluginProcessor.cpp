@@ -46,6 +46,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f), 0.0));
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0));
 	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch", false));
+	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
 	
 	return { params.begin(), params.end() };
 }
@@ -203,7 +204,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	previousStereoWidth = *stereoWidthListener;
 	
 	bool latchIsOn = *midiLatchListener > 0.5f;
-	midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn);
+	bool stealingIsOn = *voiceStealingListener > 0.5f;
+	midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
 	if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
 	previousLatch = latchIsOn;
 	

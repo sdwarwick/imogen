@@ -92,6 +92,8 @@ private:
 	float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
 	bool previousLatch = false;
 	
+	float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
+	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
 	

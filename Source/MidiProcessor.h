@@ -23,10 +23,8 @@ class MidiProcessor
 public:
 	
 	MidiProcessor(): numberOfVoices(12), lastRecievedPitchBend(64) { };
-	
-	bool stealingIsOn = false;
 											
-	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch)
+	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch, bool stealing)
 	{
 		
 		for (const auto meta : midiMessages)
@@ -37,12 +35,12 @@ public:
 				{
 					if(midiLatch == false) {
 						if(currentMessage.isNoteOn()) {
-							harmonyNoteOn(currentMessage, harmonyEngine);  // voice "stealing" is dealt with inside these functions.
+							harmonyNoteOn(currentMessage, harmonyEngine, stealing);  // voice "stealing" is dealt with inside these functions.
 						} else {
 							harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
 						}
 					} else {
-						processActiveLatch(currentMessage, harmonyEngine);
+						processActiveLatch(currentMessage, harmonyEngine, stealing);
 					}
 				}
 				else
@@ -115,7 +113,7 @@ private:
 	int lastRecievedPitchBend;
 	
 	// sends a note on out to the harmony engine
-	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
+	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, bool stealingIsOn)
 	{
 		const int newPitch = currentMessage.getNoteNumber();
 		const int newVelocity = currentMessage.getVelocity();
@@ -145,13 +143,13 @@ private:
 	};
 	
 	
-	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine)
+	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, bool stealing)
 	{
 		const int midiPitch = currentMessage.getNoteNumber();
 		if(currentMessage.isNoteOn())
 		{
 			if (polyphonyManager.isPitchActive(midiPitch) == false) {
-				harmonyNoteOn(currentMessage, harmonyEngine);  // if note isn't already on (latched), then turn it on
+				harmonyNoteOn(currentMessage, harmonyEngine, stealing);  // if note isn't already on (latched), then turn it on
 			} else {
 				latchManager.noteOnRecieved(midiPitch);
 			}
