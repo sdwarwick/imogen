@@ -20,10 +20,7 @@ public:
 	};
 
 	void clear() {
-		for(int i = 0; i < numberOfVoices; ++i)
-		{
-			heldNoteOffs[i] = -1;
-		}
+		for(int i = 0; i < numberOfVoices; ++i) { heldNoteOffs[i] = -1; }
 	};
 	
 	

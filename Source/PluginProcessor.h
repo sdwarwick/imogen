@@ -57,6 +57,10 @@ public:
 	
 	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
 	
+	// float array to send to PluginEditor for waveform visualization
+	Array<float> history; // a running averaged wave, for GUI purposes
+	int historyLength; // length of history array ( number of frequency bins represented ) // should be roughly equal to length of waveform GUI in pixels
+	
 //==============================================================================
 	
 private:

@@ -12,7 +12,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                       #endif
                        ),
-		tree (*this, nullptr, "PARAMETERS", createParameters())
+		tree (*this, nullptr, "PARAMETERS", createParameters()),
+		historyLength(400)
 
 #endif
 {
@@ -20,6 +21,10 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < numVoices; ++i) {
 		harmEngine.add(new HarmonyVoice(i));
+	}
+	
+	for(int i = 0; i < historyLength; ++i) {
+		history.add(0);
 	}
 }
 
@@ -195,7 +200,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		int activeVoiceNumber = 0;
 		for (int i = 0; i < numVoices; ++i) {
 			if(harmEngine[i]->voiceIsOn) {
-				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 				midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
 				++activeVoiceNumber;
 			}
