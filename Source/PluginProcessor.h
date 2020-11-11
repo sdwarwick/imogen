@@ -53,13 +53,14 @@ public:
 	AudioProcessorValueTreeState tree;
 	
 	MidiProcessor midiProcessor;
-	bool midiLatch = false;
+	bool midiLatch;
 	
 	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
 	
 	// float array to send to PluginEditor for waveform visualization
 	Array<float> history; // a running averaged wave, for GUI purposes
-	int historyLength; // length of history array ( number of frequency bins represented ) // should be roughly equal to length of waveform GUI in pixels
+	int historyLength; // length of history array / should be roughly equal to length of waveform GUI in pixels
+	Array<float> getHistory() { return history; };
 	
 //==============================================================================
 	
@@ -74,16 +75,16 @@ private:
 	float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
 	float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
 	float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
-	float prevAttack = 0.0f;
-	float prevDecay = 0.0f;
-	float prevSustain = 0.0f;
-	float prevRelease = 0.0f;
+	float prevAttack;
+	float prevDecay;
+	float prevSustain;
+	float prevRelease;
 
 	float* stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
-	float previousStereoWidth = 0.0f;
+	float previousStereoWidth;
 
 	float* midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
-	float prevVelocitySens = 0.0f;
+	float prevVelocitySens;
 	
 	float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
 	float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
@@ -94,12 +95,19 @@ private:
 	float outputGainMultiplier;
 	
 	float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
-	bool previousLatch = false;
+	bool latchIsOn;
+	bool previousLatch;
 	
 	float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
+	
+	AudioBuffer<float> processingBuffer;
+	AudioBuffer<float> wetBuffer;
+	AudioBuffer<float> outputBuffer;
+	AudioBuffer<float> mixBuffer;
+	int mixBufferPos;  // mixBuffer is circular to account for latency
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

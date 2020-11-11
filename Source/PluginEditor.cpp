@@ -119,6 +119,39 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white);
     g.setFont (15.0f);
     g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+	
+	Array<float> history = audioProcessor.getHistory();
+	
+	{  // reads from history array of output signal values to write waveform to a graphical vector
+		Path waveform;
+		float max = 0.0f;
+		
+		int width = 500; // width of waveform visualizer in pixels
+		int height = 250;
+		
+		for (int i = 0; i < history.size(); ++i) {
+			
+			const float val = history[i];  // convert float values to decibels ?
+			
+			if(i == 0) {
+				waveform.startNewSubPath(0, 1);
+				waveform.startNewSubPath(0, -1);
+				waveform.startNewSubPath(0, val);
+			}
+			else waveform.lineTo(i, val);
+			
+		}
+		
+		if (waveform.isEmpty()) return;
+		if (waveform.getBounds().getWidth() < 0.01 ) return;
+		if (waveform.getBounds().getWidth() != waveform.getBounds().getWidth()) return;
+		
+		max = FloatVectorOperations::findMaximum(history.getRawDataPointer(), history.size());
+		max = jlimit<float>(-1, 2, max);
+		
+		waveform.scaleToFit(0, 0, width, height, false);
+	}
+	
 }
 
 void ImogenAudioProcessorEditor::resized()

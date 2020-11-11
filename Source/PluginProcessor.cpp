@@ -13,7 +13,13 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                       #endif
                        ),
 		tree (*this, nullptr, "PARAMETERS", createParameters()),
-		historyLength(400)
+		midiLatch(false),
+		historyLength(400),
+		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
+		previousStereoWidth(0.0f),
+		prevVelocitySens(0.0f),
+		latchIsOn(false), previousLatch(false),
+		mixBufferPos(0)
 
 #endif
 {
@@ -180,38 +186,46 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 #endif
 
 
-////==============================================================================////
-////==============================================================================////
+/*===========================================================================================================================
+============================================================================================================================*/
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+	const auto numSamples = buffer.getNumSamples();
 	
-	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
-        buffer.clear (i, 0, buffer.getNumSamples());
-	}
-	
-	if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
-		midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
-		// update active voices' assigned panning values
-		int activeVoiceNumber = 0;
-		for (int i = 0; i < numVoices; ++i) {
-			if(harmEngine[i]->voiceIsOn) {
-				midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
-				++activeVoiceNumber;
+	// update buffer sizes
+	{
+		// check buffer sizes
+		if (processingBuffer.getNumSamples() != numSamples) {
+			processingBuffer.setSize(2, numSamples, true, true, true);
+			wetBuffer.setSize(2, numSamples, true, true, true);
+			outputBuffer.setSize(2, numSamples, true, true, true);
+			
+			if ((2 * numSamples) + (2 * getLatencySamples()) > mixBuffer.getNumSamples()) {
+				mixBuffer.setSize(2, (2 * numSamples) + (2 * getLatencySamples()), true, true, true);
 			}
 		}
 	}
-	previousStereoWidth = *stereoWidthListener;
 	
-	bool latchIsOn = *midiLatchListener > 0.5f;
-	bool stealingIsOn = *voiceStealingListener > 0.5f;
-	midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
-	if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
-	previousLatch = latchIsOn;
+	// update settings & process MIDI
+	{
+		if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
+			midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
+			// update active voices' assigned panning values
+			int activeVoiceNumber = 0;
+			for (int i = 0; i < numVoices; ++i) {
+				if(harmEngine[i]->voiceIsOn) {
+					midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
+					++activeVoiceNumber;
+				}
+			}
+		}
+		latchIsOn = *midiLatchListener > 0.5f;
+		bool stealingIsOn = *voiceStealingListener > 0.5f;
+		midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
+		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
+	}
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
@@ -219,18 +233,22 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
 	outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
 	
+	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
+	
+	buffer.applyGain(0, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
+	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
 //	 1	// update ADSR parameters, if any params have changed
+			{
 //			 N.B.:: WILL THIS MAKE IT SO PARAMS CAN ONLY BE CHANGED ONCE EVERY AUDIO VECTOR? ie "prevAttack" only being updated once every 512 samples...
 			if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
 			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 			}
 			harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
-			
-	
+			}
 	// 2	// render next audio vector
 			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);
 		}
@@ -238,16 +256,41 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	// goal is to add all 12 voices together into a master audio signal for harmEngine, which can then be mixed with the original input signal (dry/wet)
 	// make sure to be ADDING to same audio vector, and not OVERWRITING that sample.
 	
-	prevAttack = *adsrAttackListener;
-	prevDecay = *adsrDecayListener;
-	prevSustain = *adsrSustainListener;
-	prevRelease = *adsrReleaseListener;
-	prevVelocitySens = *midiVelocitySensListener;
+	
+	
+	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
+	
+	
+	// HISTORY array, for GUI visualization:
+	{
+		for(int i = 0; i < numSamples; ++i) {
+			// just adding a sample every 20 or so...
+			if(i%20 == 0) {
+				const float sample = (buffer.getSample(0, i)/2) + (buffer.getSample(1, i) / 2);
+				history.add(sample);
+				
+				if (history.size() > historyLength) {
+							history.remove(0);
+				}
+			}
+		}
+	}
+	
+	// update storage of previous frame's parameters, for comparison when the NEXT frame comes in...
+	{
+		prevAttack = *adsrAttackListener;
+		prevDecay = *adsrDecayListener;
+		prevSustain = *adsrSustainListener;
+		prevRelease = *adsrReleaseListener;
+		prevVelocitySens = *midiVelocitySensListener;
+		previousLatch = latchIsOn;
+		previousStereoWidth = *stereoWidthListener;
+	}
 }
 
 
-//==============================================================================
-//==============================================================================
+/*===========================================================================================================================
+ ============================================================================================================================*/
 
 
 
