@@ -32,7 +32,6 @@ public:
 	{
 		lastNoteRecieved = midiPitch;
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
-		
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
 		adsrEnv.noteOn();
@@ -41,6 +40,15 @@ public:
 	
 	void stopNote () {
 		adsrEnv.noteOff();
+		// voiceIsOn is set to FALSE in the renderNextBlock function so that the bool changes only after the ADSR has actually reached 0.
+	};
+	
+	
+	void changeNote(const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend) {  // run this function to change the assigned midi pitch without retriggering the ADSR
+		lastNoteRecieved = midiPitch;
+		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
+		amplitudeMultiplier = calcVelocityMultiplier(velocity);
+		voiceIsOn = true;
 	};
 	
 	

@@ -4,6 +4,8 @@
     VoiceStealingManager.h
     Created: 10 Nov 2020 7:36:24pm
     Author:  Ben Vining
+ 
+ Helper class to keep track of voice #s that are active, so that it can return the voice # that has been active the LONGEST in order to "steal" that voice 
 
   ==============================================================================
 */

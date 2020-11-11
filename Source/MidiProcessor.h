@@ -130,7 +130,7 @@ private:
 				const int voiceToSteal = stealingManager.voiceToSteal();
 				polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
 				stealingManager.addSentVoice(voiceToSteal);
-				harmonyEngine[voiceToSteal]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+				harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
 			}
 		}
 	};
