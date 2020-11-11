@@ -17,25 +17,35 @@ class VoiceStealingManager
 public:
 	
 	void addSentVoice(const int sentVoiceNum) {
-		// appends sentVoiceNum to end of list of sent voice #s
+		sentVoiceNumbers.push_back(sentVoiceNum);
 	};
 	
 	
 	void removeSentVoice(const int voiceNumRemoving) {
-		// removes voiceNumRemoving from the list of sent voice #s, regardless of where it is in the list, then moves all list elements together so there are no empty spaces 
+		// removes voiceNumRemoving from the list of sent voice #s, regardless of where it is in the list, then moves all list elements together so there are no empty spaces
+		for (auto it = sentVoiceNumbers.begin(); it != sentVoiceNumbers.end(); ) {
+			if (*it == voiceNumRemoving) {
+				it = sentVoiceNumbers.erase(it);
+			} else {
+				++it;
+			}
+		}
 	};
 	
 	
 	int voiceToSteal() {
-		
 		// returns the first element in the list of sent voice #s, then removes that element from the list and moves all other elements up 1 index
-		
-		int voiceNumberToSteal = 0;
-		
+		const int voiceNumberToSteal = sentVoiceNumbers.front();
 		return voiceNumberToSteal;
+		sentVoiceNumbers.erase(sentVoiceNumbers.begin());
+	};
+	
+	
+	void clear() {
+		sentVoiceNumbers.clear();
 	};
 	
 	
 private:
-	
+	std::vector <int> sentVoiceNumbers;
 };

@@ -37,7 +37,7 @@ public:
 				{
 					if(midiLatch == false) {
 						if(currentMessage.isNoteOn()) {
-							harmonyNoteOn(currentMessage, harmonyEngine);
+							harmonyNoteOn(currentMessage, harmonyEngine);  // voice "stealing" is dealt with inside these functions.
 						} else {
 							harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
 						}
@@ -74,6 +74,7 @@ public:
 				polyphonyManager.updatePitchCollection(i, -1);
 			}
 		}
+		stealingManager.clear();
 		latchManager.clear();
 	};
 
@@ -120,7 +121,7 @@ private:
 		const int newVelocity = currentMessage.getVelocity();
 		const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
 		
-		if(newVoiceNumber >= 0) {
+		if(newVoiceNumber >= 0 && newVoiceNumber < numberOfVoices) {
 			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 			stealingManager.addSentVoice(newVoiceNumber);
 			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
