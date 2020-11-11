@@ -25,6 +25,8 @@
       <FILE id="yuBDuH" name="MidiProcessor.h" compile="0" resource="0" file="Source/MidiProcessor.h"/>
       <FILE id="Z0nYva" name="PolyphonyVoiceManager.h" compile="0" resource="0"
             file="Source/PolyphonyVoiceManager.h"/>
+      <FILE id="Zm4UOS" name="VoiceStealingManager.h" compile="0" resource="0"
+            file="Source/VoiceStealingManager.h"/>
       <FILE id="GAxnNB" name="MidiPanningManager.h" compile="0" resource="0"
             file="Source/MidiPanningManager.h"/>
       <FILE id="ZY8pbE" name="MidiLatchManager.h" compile="0" resource="0"

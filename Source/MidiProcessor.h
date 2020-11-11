@@ -13,9 +13,9 @@
 #pragma once
 
 #include "PolyphonyVoiceManager.h"
+#include "VoiceStealingManager.h"
 #include "MidiPanningManager.h"
 #include "MidiLatchManager.h"
-
 
 class MidiProcessor
 {
@@ -23,6 +23,8 @@ class MidiProcessor
 public:
 	
 	MidiProcessor(): numberOfVoices(12), lastRecievedPitchBend(64) { };
+	
+	bool stealingIsOn = false;
 											
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch)
 	{
@@ -105,6 +107,7 @@ private:
 	const int numberOfVoices;  // link this to global # of voices setting
 	
 	PolyphonyVoiceManager polyphonyManager;
+	VoiceStealingManager stealingManager;
 	MidiPanningManager midiPanningManager;
 	MidiLatchManager latchManager;
 	
@@ -119,10 +122,15 @@ private:
 		
 		if(newVoiceNumber >= 0) {
 			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
+			stealingManager.addSentVoice(newVoiceNumber);
 			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
 		} else {
-			// no voices are available to turn on
-			// if voice stealing is enabled, then assign the note to the voice that has been holding its note the LONGEST
+			if (stealingIsOn == true) {
+				const int voiceToSteal = stealingManager.voiceToSteal();
+				polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
+				stealingManager.addSentVoice(voiceToSteal);
+				harmonyEngine[voiceToSteal]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+			}
 		}
 	};
 	
@@ -131,6 +139,7 @@ private:
 	void harmonyNoteOff(const int pitch, OwnedArray<HarmonyVoice>& harmonyEngine) {
 		const int voiceToTurnOff = polyphonyManager.turnOffNote(pitch);
 		polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
+		stealingManager.removeSentVoice(voiceToTurnOff);
 		harmonyEngine[voiceToTurnOff]->stopNote();
 	};
 	
