@@ -56,6 +56,11 @@ public:
 	};
 	
 	
+	void reset() {  // run this function when all voices are cleared
+		indexOfLastSentPanVal = 0;
+	};
+	
+	
 	int retrievePanVal(const int index) const {
 		return panValsInAssigningOrder[index];
 	};
@@ -84,7 +89,7 @@ private:
 		
 		arrayIndexesMapped[0] = middleIndex;
 		
-		int i = 0;
+		int i = 1;
 		int p = 1;
 		int m = -1;
 		

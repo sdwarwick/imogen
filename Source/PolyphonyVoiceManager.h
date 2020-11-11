@@ -46,12 +46,10 @@ public:
 	
 	int turnOffNote(const int noteNumber)
 	{
-		bool foundVoice = false;
 		int voicetest = 0;
-		while(foundVoice == false && voicetest < numberOfVoices)
+		while(voicetest < numberOfVoices)
 		{
 			if(harmonyPitches[voicetest] == noteNumber) {
-				foundVoice = true;
 				harmonyPitches[voicetest] = -1;
 				return voicetest;
 				break;

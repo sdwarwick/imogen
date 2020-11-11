@@ -73,6 +73,7 @@ public:
 			}
 		}
 		stealingManager.clear();
+		midiPanningManager.reset();
 		latchManager.clear();
 	};
 
