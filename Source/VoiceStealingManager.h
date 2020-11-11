@@ -26,6 +26,7 @@ public:
 		for (auto it = sentVoiceNumbers.begin(); it != sentVoiceNumbers.end(); ) {
 			if (*it == voiceNumRemoving) {
 				it = sentVoiceNumbers.erase(it);
+				break;
 			} else {
 				++it;
 			}

@@ -51,8 +51,7 @@ public:
 	};
 	
 	
-	int noteAtIndex(const int indexToRead)
-	{
+	int noteAtIndex(const int indexToRead) const {
 		return heldNoteOffs[indexToRead];
 	};
 	

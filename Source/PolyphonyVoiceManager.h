@@ -62,8 +62,7 @@ public:
 	};
 	
 	
-	bool isPitchActive(const int midiPitch)
-	{
+	bool isPitchActive(const int midiPitch) const {
 		bool foundIt = false;
 		for(int i = 0; i < numberOfVoices; ++i) {
 			if (harmonyPitches[i] == midiPitch) {
