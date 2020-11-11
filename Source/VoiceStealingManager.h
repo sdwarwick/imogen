@@ -18,6 +18,10 @@ class VoiceStealingManager
 	
 public:
 	
+	VoiceStealingManager() {
+		sentVoiceNumbers.clear();
+	};
+	
 	void addSentVoice(const int sentVoiceNum) {
 		sentVoiceNumbers.push_back(sentVoiceNum);
 	};

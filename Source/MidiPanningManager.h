@@ -18,12 +18,12 @@ class MidiPanningManager
 public:
 	
 	MidiPanningManager(): middleIndex(round(numberOfVoices / 2)), indexOfLastSentPanVal(0) {
-		
+		mapArrayIndexes();
 	};
 	
 	void updateStereoWidth(const int newStereoWidth) {
 		
-		mapArrayIndexes();
+	//	mapArrayIndexes(); may not need to re-call this function if called in constructor
 		
 		const float rangeMultiplier = newStereoWidth/100;
 		const float maxPan = 63.5 + (63.5 * rangeMultiplier);

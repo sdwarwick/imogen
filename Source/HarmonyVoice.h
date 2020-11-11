@@ -44,7 +44,7 @@ public:
 	};
 	
 	
-	void changeNote(const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend) {  // run this function to change the assigned midi pitch without retriggering the ADSR
+	void changeNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend) {  // run this function to change the assigned midi pitch without retriggering the ADSR
 		lastNoteRecieved = midiPitch;
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
@@ -158,7 +158,7 @@ private:
 	};
 	
 	
-	float returnMidiFloat(const int bend) {
+	float returnMidiFloat(const int bend) const {
 		if (bend > 64) {
 			return ((pitchBendRangeUp * (bend - 65)) / 62) + lastNoteRecieved;
 		} else if (bend < 64) {
@@ -169,12 +169,12 @@ private:
 	};
 	
 	
-	double mtof(const float midiNote) {  // converts midiPitch to frequency in Hz
+	double mtof(const float midiNote) const {  // converts midiPitch to frequency in Hz
 		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
 	};
 	
 	
-	float calcVelocityMultiplier(const int midiVelocity) {
+	float calcVelocityMultiplier(const int midiVelocity) const {
 		const float initialMutiplier = midiVelocity / 127.0; // what the multiplier would be without any sensitivity calculations...
 		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};

@@ -69,9 +69,9 @@ public:
 			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
 			if (returnedmidipitch != -1) {
 				harmonyNoteOff(returnedmidipitch, harmonyEngine);
-				polyphonyManager.updatePitchCollection(i, -1);
 			}
 		}
+		polyphonyManager.clear();
 		stealingManager.clear();
 		midiPanningManager.reset();
 		latchManager.clear();

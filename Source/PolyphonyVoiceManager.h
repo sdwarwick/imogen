@@ -18,6 +18,11 @@ class PolyphonyVoiceManager
 	
 public:
 	
+	PolyphonyVoiceManager() {
+		clear();
+	};
+	
+	
 	void updatePitchCollection(const int voiceNumber, const int midiPitch)
 	{
 		harmonyPitches[voiceNumber] = midiPitch;
@@ -74,6 +79,14 @@ public:
 	
 	int pitchAtIndex(const int index) const {
 		return harmonyPitches[index];
+	};
+	
+	
+	void clear() {
+		int i = 0;
+		while (i < numberOfVoices) {
+			harmonyPitches[i] = -1;
+		}
 	};
 	
 	
