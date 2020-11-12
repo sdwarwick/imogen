@@ -20,8 +20,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevVelocitySens(0.0f),
 		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
-		mixBufferPos(0),
-		stealingIsOn(true)
+		stealingIsOn(true),
+		mixBufferPos(0)
 
 #endif
 {

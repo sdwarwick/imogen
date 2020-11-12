@@ -27,48 +27,52 @@ public:
 	
 	// the "MIDI CALLBACK" ::
 	
-	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch, bool stealing)
+	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch, const bool stealing)
 	{
-		
-		for (const auto meta : midiMessages)
+		for (const MidiMessageMetadata meta : midiMessages)
 		{
-			const auto currentMessage = meta.getMessage();
+			const MidiMessage currentMessage = meta.getMessage();
+		//	const int samplePos = meta.samplePosition;
 			
-				if(currentMessage.isNoteOnOrOff())
-				{
-					if(midiLatch == false) {
-						if(currentMessage.isNoteOn()) {
-							harmonyNoteOn(currentMessage, harmonyEngine, stealing);  // voice "stealing" is dealt with inside these functions.
-						} else {
-							harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
-						}
+			if(currentMessage.isNoteOnOrOff())
+			{
+				if(midiLatch == false) {
+					if(currentMessage.isNoteOn()) {
+						harmonyNoteOn(currentMessage, harmonyEngine, stealing);  // voice "stealing" is dealt with inside these functions.
 					} else {
-						processActiveLatch(currentMessage, harmonyEngine, stealing);
+						harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
 					}
+				} else {
+					processActiveLatch(currentMessage, harmonyEngine, stealing);
 				}
-				else
+			}
+			else
+			{
+				if(currentMessage.isPitchWheel())
 				{
-					if(currentMessage.isPitchWheel())
-					{
-						const int pitchBend = currentMessage.getPitchWheelValue();
-						for(int i = 0; i < numberOfVoices; ++i) {
-							if(harmonyEngine[i]->voiceIsOn) {
-								harmonyEngine[i]->pitchBend(pitchBend);
-							}
+					const int pitchBend = currentMessage.getPitchWheelValue();
+					for(int i = 0; i < numberOfVoices; ++i) {
+						if(harmonyEngine[i]->voiceIsOn) {
+							harmonyEngine[i]->pitchBend(pitchBend);
 						}
-						lastRecievedPitchBend = pitchBend;
-					} else {
-						// non-note events go to here...
-						// sustain pedal, aftertouch, key pressure, etc...
 					}
+					lastRecievedPitchBend = pitchBend;
+				} else {
+					// non-note events go to here...
+					// sustain pedal, aftertouch, key pressure, etc...
 				}
+			}
+			
+			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) {
+				killAll(harmonyEngine);
+			}
 		}
-		
 	};
 	
 	// :: END MIDI CALLBACK
 	
 	
+	// run this function to kill all active harmony notes:
 	void killAll(OwnedArray<HarmonyVoice>& harmonyEngine) {  // run this function to clear all held / turned on midi notes
 		for(int i = 0; i < numberOfVoices; ++i) {
 			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
@@ -89,8 +93,7 @@ public:
 	
 	
 	void refreshMidiPanVal (OwnedArray<HarmonyVoice>& harmonyEngine, const int voiceNumber, const int indexToRead) {
-		const int newPanVal = midiPanningManager.retrievePanVal(indexToRead);
-		harmonyEngine[voiceNumber]->changePanning(newPanVal);
+		harmonyEngine[voiceNumber]->changePanning(midiPanningManager.retrievePanVal(indexToRead));
 	};
 	
 	
@@ -119,7 +122,7 @@ private:
 	int lastRecievedPitchBend;
 	
 	// sends a note on out to the harmony engine
-	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, bool stealingIsOn)
+	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, const bool stealingIsOn)
 	{
 		const int newPitch = currentMessage.getNoteNumber();
 		const int newVelocity = currentMessage.getVelocity();
@@ -148,7 +151,7 @@ private:
 	};
 	
 	
-	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, bool stealing)
+	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, const bool stealing)
 	{
 		const int midiPitch = currentMessage.getNoteNumber();
 		if(currentMessage.isNoteOn())

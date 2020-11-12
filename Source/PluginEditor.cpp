@@ -210,5 +210,6 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::buttonClicked(Button* button) {
 	if (button == &midiKill) {
 		audioProcessor.killAllMidi();
+		// make this also CLEAR the notes display
 	}
 }
