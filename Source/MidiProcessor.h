@@ -26,7 +26,6 @@ public:
 	
 	
 	// the "MIDI CALLBACK" ::
-	
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch, const bool stealing)
 	{
 		for (const MidiMessageMetadata meta : midiMessages)
@@ -51,11 +50,7 @@ public:
 				if(currentMessage.isPitchWheel())
 				{
 					const int pitchBend = currentMessage.getPitchWheelValue();
-					for(int i = 0; i < numberOfVoices; ++i) {
-						if(harmonyEngine[i]->voiceIsOn) {
-							harmonyEngine[i]->pitchBend(pitchBend);
-						}
-					}
+					for(int i = 0; i < numberOfVoices; ++i) { harmonyEngine[i]->pitchBend(pitchBend); }
 					lastRecievedPitchBend = pitchBend;
 				} else {
 					// non-note events go to here...
@@ -63,12 +58,9 @@ public:
 				}
 			}
 			
-			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) {
-				killAll(harmonyEngine);
-			}
+			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) { killAll(harmonyEngine); }
 		}
 	};
-	
 	// :: END MIDI CALLBACK
 	
 	
@@ -76,9 +68,7 @@ public:
 	void killAll(OwnedArray<HarmonyVoice>& harmonyEngine) {  // run this function to clear all held / turned on midi notes
 		for(int i = 0; i < numberOfVoices; ++i) {
 			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
-			if (returnedmidipitch != -1) {
-				harmonyNoteOff(returnedmidipitch, harmonyEngine);
-			}
+			if (returnedmidipitch != -1) { harmonyNoteOff(returnedmidipitch, harmonyEngine); }
 		}
 		polyphonyManager.clear();
 		stealingManager.clear();
@@ -102,9 +92,7 @@ public:
 		for(int i = 0; i < numberOfVoices; ++i)
 		{
 			const int returnedVal = latchManager.noteAtIndex(i);
-			if(returnedVal != -1) {
-				harmonyNoteOff(returnedVal, harmonyEngine);
-			}
+			if(returnedVal != -1) { harmonyNoteOff(returnedVal, harmonyEngine); }
 		}
 		latchManager.clear();
 	};
