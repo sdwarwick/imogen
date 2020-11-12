@@ -23,7 +23,10 @@ class MidiProcessor
 public:
 	
 	MidiProcessor(): numberOfVoices(12), lastRecievedPitchBend(64) { };
-											
+	
+	
+	// the "MIDI CALLBACK" ::
+	
 	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch, bool stealing)
 	{
 		
@@ -59,9 +62,11 @@ public:
 						// sustain pedal, aftertouch, key pressure, etc...
 					}
 				}
-			
 		}
+		
 	};
+	
+	// :: END MIDI CALLBACK
 	
 	
 	void killAll(OwnedArray<HarmonyVoice>& harmonyEngine) {  // run this function to clear all held / turned on midi notes

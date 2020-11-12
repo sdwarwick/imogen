@@ -20,7 +20,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevVelocitySens(0.0f),
 		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
-		mixBufferPos(0)
+		mixBufferPos(0),
+		stealingIsOn(true)
 
 #endif
 {
@@ -197,6 +198,7 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+	
 	const auto numSamples = buffer.getNumSamples();
 	
 	// update buffer sizes
@@ -213,7 +215,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		}
 	}
 	
-	// update settings & process MIDI
+	// update settings/parameters
 	{
 		if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
 			midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
@@ -236,10 +238,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		latchIsOn = *midiLatchListener > 0.5f;
 		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
 		
-		bool stealingIsOn = *voiceStealingListener > 0.5f;
-		
-		midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
+		stealingIsOn = *voiceStealingListener > 0.5f;
 	}
+	
+	midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?

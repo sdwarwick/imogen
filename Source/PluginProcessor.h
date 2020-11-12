@@ -98,6 +98,7 @@ private:
 		bool latchIsOn;
 		bool previousLatch;
 		float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
+		bool stealingIsOn;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
