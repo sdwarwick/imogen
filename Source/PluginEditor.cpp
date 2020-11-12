@@ -129,8 +129,10 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 		voiceStealing.setToggleState(false, true);
 	}
 	
-//	midiKill.setButtonText("Kill all MIDI");
-//	addAndMakeVisible(&midiKill);
+	// kill all midi button
+	midiKill.setButtonText("Kill all MIDI");
+	midiKill.addListener(this);
+	addAndMakeVisible(&midiKill);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -200,7 +202,13 @@ void ImogenAudioProcessorEditor::resized()
 	midiLatch.setBounds(10, 250, 75, 35);
 	
 	voiceStealing.setBounds(10, 375, 75, 25);
+	
+	midiKill.setBounds(100, 250, 75, 35);
 }
 
 
-
+void ImogenAudioProcessorEditor::buttonClicked(Button* button) {
+	if (button == &midiKill) {
+		audioProcessor.killAllMidi();
+	}
+}

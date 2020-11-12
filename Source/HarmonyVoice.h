@@ -166,7 +166,7 @@ private:
 	
 	
 	double mtof(const float midiNote) const {  // converts midiPitch to frequency in Hz
-		return 440.0 * std::pow(2.0, ((midiNote - 69) / 12.0));
+		return 440.0 * std::pow(2.0, ((midiNote - 69.0) / 12.0));
 	};
 	
 	

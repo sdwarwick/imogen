@@ -5,7 +5,7 @@
 
 //==============================================================================
 
-class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor
+class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor, public Button::Listener
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -13,6 +13,8 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+	
+	void buttonClicked(Button* button) override;
 	
 //==============================================================================
 
@@ -62,7 +64,7 @@ private:
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> voiceStealingLink;
 	
 	// kill all MIDI button
-//	Button midiKill;
+	TextButton midiKill;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
