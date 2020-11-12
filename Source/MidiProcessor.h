@@ -138,7 +138,6 @@ private:
 	// sends a note off out to the harmony engine
 	void harmonyNoteOff(const int pitch, OwnedArray<HarmonyVoice>& harmonyEngine) {
 		const int voiceToTurnOff = polyphonyManager.turnOffNote(pitch);
-		polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 		stealingManager.removeSentVoice(voiceToTurnOff);
 		harmonyEngine[voiceToTurnOff]->stopNote();
 	};

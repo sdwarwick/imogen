@@ -82,7 +82,7 @@ public:
 	
 	void clear() {
 		int i = 0;
-		while (i < numberOfVoices) { harmonyPitches[i] = -1; }
+		while (i < numberOfVoices) { harmonyPitches[i] = -1; ++i; }
 	};
 	
 	

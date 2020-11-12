@@ -60,6 +60,9 @@ private:
 	// voice stealing on/off toggle
 	ToggleButton voiceStealing;
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> voiceStealingLink;
+	
+	// kill all MIDI button
+//	Button midiKill;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

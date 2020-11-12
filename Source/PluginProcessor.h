@@ -24,6 +24,8 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+	
+	void killAllMidi();
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -71,34 +73,31 @@ private:
 	double prevLastSampleRate = 0.0;
 	int prevLastBlockSize = 0;
 	
-	float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
-	float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
-	float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
-	float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
-	float prevAttack;
-	float prevDecay;
-	float prevSustain;
-	float prevRelease;
-
-	float* stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
-	float previousStereoWidth;
-
-	float* midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
-	float prevVelocitySens;
-	
-	float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
-	float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
-	
-	float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
-	float inputGainMultiplier;
-	float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
-	float outputGainMultiplier;
-	
-	float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
-	bool latchIsOn;
-	bool previousLatch;
-	
-	float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
+	// variables for tracking GUI-changeable parameters
+		float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
+		float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
+		float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
+		float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
+		float prevAttack;
+		float prevDecay;
+		float prevSustain;
+		float prevRelease;
+		float* stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
+		float previousStereoWidth;
+		float* midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
+		float prevVelocitySens;
+		float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
+		float prevPitchBendUp;
+		float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
+		float prevPitchBendDown;
+		float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
+		float inputGainMultiplier;
+		float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
+		float outputGainMultiplier;
+		float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
+		bool latchIsOn;
+		bool previousLatch;
+		float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();

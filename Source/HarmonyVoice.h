@@ -100,10 +100,6 @@ public:
 				}
 			}
 		}
-		
-		// send all 12 harm. voice's output to one stereo buffer, so that they can be mixed as one "wet" signal...
-		// need to make sure that I am ADDING to the output buffer signal, and not OVERWRITING it, otherwise you'll only hear the most recently played voice...
-		
 	};
 	
 	

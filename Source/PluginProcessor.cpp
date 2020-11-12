@@ -18,6 +18,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
 		previousStereoWidth(0.0f),
 		prevVelocitySens(0.0f),
+		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
 		mixBufferPos(0)
 
@@ -151,8 +152,12 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 	}
 	
 	// pitch bend settings
-	for (int i = 0; i < numVoices; ++i) {
-		harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+	if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
+		for (int i = 0; i < numVoices; ++i) {
+			harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+		}
+		prevPitchBendUp = *pitchBendUpListener;
+		prevPitchBendDown = *pitchBendDownListener;
 	}
 }
 
@@ -221,10 +226,19 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 				}
 			}
 		}
+		// pitch bend settings -- need to update all voices' pitch bend settings, even if voice is currently off !
+		if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
+			for(int i = 0; i < numVoices; ++i) {
+				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+			}
+		}
+		
 		latchIsOn = *midiLatchListener > 0.5f;
-		bool stealingIsOn = *voiceStealingListener > 0.5f;
-		midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
 		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
+		
+		bool stealingIsOn = *voiceStealingListener > 0.5f;
+		
+		midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
 	}
 	
 	// need to update the voxCurrentPitch variable!!
@@ -241,14 +255,14 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
-//	 1	// update ADSR parameters, if any params have changed
+//	 1	// update ADSR parameters & other settings, if they have changed
 			{
-//			 N.B.:: WILL THIS MAKE IT SO PARAMS CAN ONLY BE CHANGED ONCE EVERY AUDIO VECTOR? ie "prevAttack" only being updated once every 512 samples...
-			if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
-			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
+				// adsr settings & midi velocity sensitivity
+				if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
+				harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
+				}
 			}
-			harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
-			}
+			
 	// 2	// render next audio vector
 			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);
 		}
@@ -285,6 +299,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		prevVelocitySens = *midiVelocitySensListener;
 		previousLatch = latchIsOn;
 		previousStereoWidth = *stereoWidthListener;
+		prevPitchBendUp = *pitchBendUpListener;
+		prevPitchBendDown = *pitchBendDownListener;
 	}
 }
 
@@ -292,6 +308,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 /*===========================================================================================================================
  ============================================================================================================================*/
 
+
+void ImogenAudioProcessor::killAllMidi() {
+	midiProcessor.killAll(harmEngine);
+};
 
 
 bool ImogenAudioProcessor::hasEditor() const {
