@@ -20,8 +20,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevVelocitySens(0.0f),
 		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
-		stealingIsOn(true),
-		mixBufferPos(0)
+		stealingIsOn(true)
 
 #endif
 {
@@ -200,20 +199,12 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 {
 	
 	const auto numSamples = buffer.getNumSamples();
-	
-	// update buffer sizes
-	{
+
 		// check buffer sizes
-		if (processingBuffer.getNumSamples() != numSamples) {
-			processingBuffer.setSize(2, numSamples, true, true, true);
+		if (wetBuffer.getNumSamples() != numSamples) {
 			wetBuffer.setSize(2, numSamples, true, true, true);
-			outputBuffer.setSize(2, numSamples, true, true, true);
-			
-			if ((2 * numSamples) + (2 * getLatencySamples()) > mixBuffer.getNumSamples()) {
-				mixBuffer.setSize(2, (2 * numSamples) + (2 * getLatencySamples()), true, true, true);
-			}
 		}
-	}
+	
 	
 	// update settings/parameters
 	{
@@ -253,6 +244,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	buffer.applyGain(0, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
 	
+	wetBuffer.clear();
+	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
@@ -266,13 +259,18 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 			
 	// 2	// render next audio vector
-			harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch);
+		harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch, wetBuffer);
+			// also adds each of the 12 harmony voices together into one buffer -- wetBuffer
 		}
 	}
 	// goal is to add all 12 voices together into a master audio signal for harmEngine, which can then be mixed with the original input signal (dry/wet)
 	// make sure to be ADDING to same audio vector, and not OVERWRITING that sample.
 	
+	wetBuffer.applyGain(0, 0, numSamples, outputGainMultiplier);
 	
+	// copy from wetBuffer to output buffer [which is the original input buffer]
+	buffer.copyFrom(0, 0, wetBuffer, 0, 0, numSamples);
+	buffer.copyFrom(1, 0, wetBuffer, 1, 0, numSamples);
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	

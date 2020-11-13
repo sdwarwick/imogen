@@ -76,28 +76,30 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& outputBuffer, int startSample, int numSamples, double modInputFreq) {
+	// returns an AudioBuffer<float>
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, int startSample, int numSamples, double modInputFreq, AudioBuffer<float>& wetBuffer) {
 		
-		const float pitchShiftFactor = 1 + (modInputFreq - desiredFrequency) / desiredFrequency;  // maybe update this at sample rate too, instead of once per vector. depends how fast the input pitch detection updates...
+		shiftedBuffer.clear();
 		
-		// need to pass dry input signal directly into shifter, to be used in pitchShifter.output
+		const float pitchShiftFactor = (1 + (modInputFreq - desiredFrequency)) / desiredFrequency;
 		
-		// iterate through samples and write shifted samples to output buffer
+		// this function puts shifted samples into the shiftedBuffer
+		pitchShifter.doTheShifting(inputBuffer, shiftedBuffer, modInputFreq, pitchShiftFactor);
+		
 		for(int sample = 0; sample < numSamples; ++sample) {
 			
 			if(adsrEnv.isActive() == false) {  // done while looping thru each sample...
 				voiceIsOn = false;			// ... so that the voice itself doesn't turn off unti the ADSR actually *REACHES* zero
 			} else {
 				
-				// shifted signal			 =   pitch shifter output										* mult. for MIDI velocity *  ADSR envelope
-				double envelopedShiftedSignal = pitchShifter.output(pitchShiftFactor, startSample, numSamples) * amplitudeMultiplier * adsrEnv.getNextSample();
+				// shifted signal			 =   pitch shifter output				* mult. for MIDI velocity *  ADSR envelope
+				const float envelopedShiftedSignal = shiftedBuffer.getSample(0, sample) * amplitudeMultiplier * adsrEnv.getNextSample();
 				
-				
-			
-				for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel) {
-					outputBuffer.addSample(channel, startSample, envelopedShiftedSignal);
-					// ADD TO THIS STEP: multiplying each channel's signal by the multiplier for that channel to create panning !!
+				for (int channel = 0; channel < 2; ++channel) {  // put into STEREO BUFFER 
+					wetBuffer.addSample(channel, sample, (envelopedShiftedSignal * panningMultipliers[channel]));
 				}
+				
+			//	return wetBuffer;
 			}
 		}
 	};
@@ -128,6 +130,8 @@ public:
 	
 private:
 	
+	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER
+	
 	int pitchBendRangeUp;
 	int pitchBendRangeDown;
 	
@@ -138,6 +142,7 @@ private:
 	int panning;
 	float panningMultR;
 	float panningMultL;
+	float panningMultipliers[2];
 	
 	float midiVelocitySensitivity;  
 	
@@ -151,6 +156,8 @@ private:
 	void calculatePanningChannelMultipliers(const int midipanning) {
 		panningMultR = midipanning / 127.0;
 		panningMultL = 1.0 - panningMultR;
+		panningMultipliers[0] = panningMultL;
+		panningMultipliers[1] = panningMultR;
 	};
 	
 	

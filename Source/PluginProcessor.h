@@ -103,11 +103,7 @@ private:
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
 	
-	AudioBuffer<float> processingBuffer;
-	AudioBuffer<float> wetBuffer;
-	AudioBuffer<float> outputBuffer;
-	AudioBuffer<float> mixBuffer;
-	int mixBufferPos;  // mixBuffer is circular to account for latency
+	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

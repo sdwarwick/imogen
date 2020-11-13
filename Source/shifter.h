@@ -18,7 +18,10 @@
 class Shifter {
 	
 public:
-	double output(float pitchShiftRatio, int startingSample, int numSamples) {
+	
+	
+	// this function actually returns individual sample values to HarmonyVoice
+	float output(float pitchShiftRatio, int startingSample, int numSamples) {
 		
 		// dry input signal in from audio process block...
 		
@@ -28,7 +31,12 @@ public:
 		
 		// resample into an output signal -- which will be the stream of doubles output from shifter.output
 		
-		return double(0.0);
+		return float(0.0);
+	};
+	
+	
+	void doTheShifting(AudioBuffer<float>& inputBuffer, AudioBuffer<float>& shiftedBuffer, const double inputFreq, const float pitchShiftFactor) {
+		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer 
 	};
 	
 	
