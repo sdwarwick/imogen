@@ -13,6 +13,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                       #endif
                        ),
 		tree (*this, nullptr, "PARAMETERS", createParameters()),
+		midiProcessor(harmEngine),
 		midiLatch(false),
 		historyLength(400),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
@@ -214,7 +215,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			int activeVoiceNumber = 0;
 			for (int i = 0; i < numVoices; ++i) {
 				if(harmEngine[i]->voiceIsOn) {
-					midiProcessor.refreshMidiPanVal(harmEngine, i, activeVoiceNumber);
+					midiProcessor.refreshMidiPanVal(i, activeVoiceNumber);
 					++activeVoiceNumber;
 				}
 			}
@@ -227,12 +228,12 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		}
 		
 		latchIsOn = *midiLatchListener > 0.5f;
-		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(harmEngine); }
+		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
 		
 		stealingIsOn = *voiceStealingListener > 0.5f;
 	}
 	
-	midiProcessor.processIncomingMidi(midiMessages, harmEngine, latchIsOn, stealingIsOn);
+	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
 	
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
@@ -310,7 +311,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 
 void ImogenAudioProcessor::killAllMidi() {
-	midiProcessor.killAll(harmEngine);
+	midiProcessor.killAll();
 };
 
 

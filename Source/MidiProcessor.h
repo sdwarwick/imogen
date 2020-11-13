@@ -22,11 +22,11 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(): numberOfVoices(12), lastRecievedPitchBend(64) { };
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), numberOfVoices(12), lastRecievedPitchBend(64) { };
 	
 	
 	// the "MIDI CALLBACK" ::
-	void processIncomingMidi (MidiBuffer& midiMessages, OwnedArray<HarmonyVoice>& harmonyEngine, const bool midiLatch, const bool stealing)
+	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing)
 	{
 		for (const MidiMessageMetadata meta : midiMessages)
 		{
@@ -37,12 +37,12 @@ public:
 			{
 				if(midiLatch == false) {
 					if(currentMessage.isNoteOn()) {
-						harmonyNoteOn(currentMessage, harmonyEngine, stealing);  // voice "stealing" is dealt with inside these functions.
+						harmonyNoteOn(currentMessage, stealing);  // voice "stealing" is dealt with inside these functions.
 					} else {
-						harmonyNoteOff(currentMessage.getNoteNumber(), harmonyEngine);
+						harmonyNoteOff(currentMessage.getNoteNumber());
 					}
 				} else {
-					processActiveLatch(currentMessage, harmonyEngine, stealing);
+					processActiveLatch(currentMessage, stealing);
 				}
 			}
 			else
@@ -58,17 +58,17 @@ public:
 				}
 			}
 			
-			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) { killAll(harmonyEngine); }
+			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) { killAll(); }
 		}
 	};
 	// :: END MIDI CALLBACK
 	
 	
 	// run this function to kill all active harmony notes:
-	void killAll(OwnedArray<HarmonyVoice>& harmonyEngine) {  // run this function to clear all held / turned on midi notes
+	void killAll() {  // run this function to clear all held / turned on midi notes
 		for(int i = 0; i < numberOfVoices; ++i) {
 			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
-			if (returnedmidipitch != -1) { harmonyNoteOff(returnedmidipitch, harmonyEngine); }
+			if (returnedmidipitch != -1) { harmonyNoteOff(returnedmidipitch); }
 		}
 		polyphonyManager.clear();
 		stealingManager.clear();
@@ -82,17 +82,17 @@ public:
 	};
 	
 	
-	void refreshMidiPanVal (OwnedArray<HarmonyVoice>& harmonyEngine, const int voiceNumber, const int indexToRead) {
+	void refreshMidiPanVal (const int voiceNumber, const int indexToRead) {
 		harmonyEngine[voiceNumber]->changePanning(midiPanningManager.retrievePanVal(indexToRead));
 	};
 	
 	
-	void turnOffLatch(OwnedArray<HarmonyVoice>& harmonyEngine)  // run this function to turn off latch & send held note offs out to harmony engine
+	void turnOffLatch()  // run this function to turn off latch & send held note offs out to harmony engine
 	{
 		for(int i = 0; i < numberOfVoices; ++i)
 		{
 			const int returnedVal = latchManager.noteAtIndex(i);
-			if(returnedVal != -1) { harmonyNoteOff(returnedVal, harmonyEngine); }
+			if(returnedVal != -1) { harmonyNoteOff(returnedVal); }
 		}
 		latchManager.clear();
 	};
@@ -100,6 +100,8 @@ public:
 	
 	
 private:
+	OwnedArray<HarmonyVoice>& harmonyEngine;
+	
 	const int numberOfVoices;  // link this to global # of voices setting
 	
 	PolyphonyVoiceManager polyphonyManager;
@@ -110,7 +112,7 @@ private:
 	int lastRecievedPitchBend;
 	
 	// sends a note on out to the harmony engine
-	void harmonyNoteOn(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, const bool stealingIsOn)
+	void harmonyNoteOn(const MidiMessage currentMessage, const bool stealingIsOn)
 	{
 		const int newPitch = currentMessage.getNoteNumber();
 		const int newVelocity = currentMessage.getVelocity();
@@ -132,20 +134,20 @@ private:
 	
 	
 	// sends a note off out to the harmony engine
-	void harmonyNoteOff(const int pitch, OwnedArray<HarmonyVoice>& harmonyEngine) {
+	void harmonyNoteOff(const int pitch) {
 		const int voiceToTurnOff = polyphonyManager.turnOffNote(pitch);
 		stealingManager.removeSentVoice(voiceToTurnOff);
 		harmonyEngine[voiceToTurnOff]->stopNote();
 	};
 	
 	
-	void processActiveLatch(const MidiMessage currentMessage, OwnedArray<HarmonyVoice>& harmonyEngine, const bool stealing)
+	void processActiveLatch(const MidiMessage currentMessage, const bool stealing)
 	{
 		const int midiPitch = currentMessage.getNoteNumber();
 		if(currentMessage.isNoteOn())
 		{
 			if (polyphonyManager.isPitchActive(midiPitch) == false) {
-				harmonyNoteOn(currentMessage, harmonyEngine, stealing);  // if note isn't already on (latched), then turn it on
+				harmonyNoteOn(currentMessage, stealing);  // if note isn't already on (latched), then turn it on
 			} else {
 				latchManager.noteOnRecieved(midiPitch);
 			}

@@ -54,10 +54,10 @@ public:
 	
 	AudioProcessorValueTreeState tree;
 	
+	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
+	
 	MidiProcessor midiProcessor;
 	bool midiLatch;
-	
-	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
 	
 	// float array to send to PluginEditor for waveform visualization
 	Array<float> history; // a running averaged wave, for GUI purposes
