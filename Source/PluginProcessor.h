@@ -52,8 +52,6 @@ public:
 	
 	static const int numChannels = 2; // declares 2 output channels (stereo). could conceivably be reconstructed to work with more sophisticated spatialization techniques in the future
 	
-	static const int inputChannel = 1; // which channel # your input is [since the plugin only accepts mono input]
-	
 	double voxCurrentPitch = 440.;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
 	AudioProcessorValueTreeState tree;
@@ -98,6 +96,8 @@ private:
 		bool previousLatch;
 		float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
 		bool stealingIsOn;
+	
+		int* inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();

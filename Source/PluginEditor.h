@@ -65,6 +65,10 @@ private:
 	
 	// kill all MIDI button
 	TextButton midiKill;
+	
+	// set input channel [plugin only accepts a single mono input source]
+	Slider inputChannel;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

@@ -133,6 +133,14 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	midiKill.setButtonText("Kill all MIDI");
 	midiKill.addListener(this);
 	addAndMakeVisible(&midiKill);
+	
+	// set input channel
+	inputChannel.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
+	inputChannel.setRange(0, 99);
+	inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+	addAndMakeVisible(&inputChannel);
+	inputChannelLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel);
+	inputChannel.setValue(0);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

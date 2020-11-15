@@ -56,6 +56,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0));
 	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch", false));
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
+	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 99, 0));
 	
 	return { params.begin(), params.end() };
 }
@@ -196,6 +197,11 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 {
 	
 	const auto numSamples = buffer.getNumSamples();
+	
+	int inputChannel = *inputChannelListener;
+	if (inputChannel > buffer.getNumChannels()) {
+		inputChannel = buffer.getNumChannels() - 1;
+	}
 
 		// check buffer sizes
 		if (wetBuffer.getNumSamples() != numSamples) {
@@ -265,7 +271,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 				float* output = wetBuffer.getWritePointer(channel);
 				
 				for(int sample = 0; sample < numSamples; ++sample) {
-					output[sample] = (output[sample] + reading[sample])/2;  // add value TO the wetBuffer instead of overwriting
+					output[sample] = (output[sample] + reading[sample])/2.0f;  // add value TO the wetBuffer instead of overwriting
 				}
 			}
 		}
@@ -275,6 +281,12 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	wetBuffer.applyGain(0, 0, numSamples, outputGainMultiplier);
 	wetBuffer.applyGain(1, 0, numSamples, outputGainMultiplier);
+	
+	if (buffer.getNumChannels() > 2) {
+		for (int i = 3; i < buffer.getNumChannels(); ++i) {
+			buffer.clear(i, 0, numSamples);
+		}
+	} // clear excess buffer output channels [bc outputs will always be chans 1 & 2]
 	
 	// place shifted audio samples from wetBuffer into buffer
 	for (int channel = 0; channel < numChannels; ++channel)
