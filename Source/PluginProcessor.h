@@ -106,6 +106,11 @@ private:
 	int previousmidipan;
 	int dryvoxpanningmults[2];
 	
+	int* masterDryWetListener = (int*)(tree.getRawParameterValue("masterdryWet"));
+	int previousMasterDryWet;
+	float dryMultiplier;
+	float wetMultiplier;
+	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
 	

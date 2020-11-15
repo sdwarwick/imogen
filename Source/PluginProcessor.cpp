@@ -21,7 +21,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
 		stealingIsOn(true),
-		previousmidipan(64)
+		previousmidipan(64),
+		previousMasterDryWet(100),
+		dryMultiplier(0.0f), wetMultiplier(1.0f)
 
 #endif
 {
@@ -56,6 +58,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat> ("adsrRelease", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f));
 	params.push_back(std::make_unique<AudioParameterFloat> ("stereoWidth", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100));
 	params.push_back(std::make_unique<AudioParameterInt>("dryPan", "Dry vox pan", 0, 127, 64));
+	params.push_back(std::make_unique<AudioParameterInt>("masterDryWet", "% wet", 0, 100, 100));
 	params.push_back(std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100));
 	params.push_back(std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2));
 	params.push_back(std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2));
@@ -229,6 +232,11 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
 	
+	if(*masterDryWetListener != previousMasterDryWet) {
+		wetMultiplier = (*masterDryWetListener)/100.0f;
+		dryMultiplier = 1.0 - wetMultiplier;
+	}
+	
 	const auto numSamples = buffer.getNumSamples();
 	
 	int inputChannel = *inputChannelListener;
@@ -317,11 +325,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	// goal is to add all active voices' audio together into wetBuffer !!
 
-	
-	wetBuffer.applyGain(0, 0, numSamples, outputGainMultiplier);
-	wetBuffer.applyGain(1, 0, numSamples, outputGainMultiplier);
-	
-	
 	buffer.clear();
 	{
 	// plan B if that doesnt work:
@@ -335,14 +338,18 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	// place shifted audio samples from wetBuffer into buffer
 	for (int channel = 0; channel < numChannels; ++channel)
 	{
-		const float* readPointer = wetBuffer.getReadPointer(channel);
+		const float* wetreadPointer = wetBuffer.getReadPointer(channel);
+		const float* dryreadPointer = dryBuffer.getReadPointer(channel);
 		float* outputSample = buffer.getWritePointer(channel);
 		
 		for (int sample = 0; sample < numSamples; ++sample)
 		{
-			outputSample[sample] = readPointer[sample]; // output to speakers
+			outputSample[sample] = ((wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier))/2.0f; // mix dry & wet signals together & output to speakers
 		}
 	}
+	
+	buffer.applyGain(0, 0, numSamples, outputGainMultiplier);
+	buffer.applyGain(1, 0, numSamples, outputGainMultiplier);
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
@@ -356,8 +363,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		prevVelocitySens = *midiVelocitySensListener;
 		previousLatch = latchIsOn;
 		previousStereoWidth = *stereoWidthListener;
+		previousMasterDryWet = *masterDryWetListener;
 		prevPitchBendUp = *pitchBendUpListener;
 		prevPitchBendDown = *pitchBendDownListener;
+		previousmidipan = *dryVoxPanListener; // this is the panning for the dry vox signal
 	}
 }
 
@@ -415,6 +424,8 @@ void ImogenAudioProcessor::writeToDryBuffer (const float* readingPointer, AudioB
 	
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
 	
+	// NEED TO ACCOUNT FOR LATENCY OF THE HARMONY ALGORITHM !!!
+	
 	if(*dryVoxPanListener != previousmidipan) {
 		const float panR = (*dryVoxPanListener)/127.0;
 		const float panL = 1.0 - panR;
@@ -429,5 +440,4 @@ void ImogenAudioProcessor::writeToDryBuffer (const float* readingPointer, AudioB
 		}
 	}
 	
-	previousmidipan = *dryVoxPanListener;
 };

@@ -58,6 +58,16 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 		dryPan.setValue(64);
 	}
 	
+	// master dry/wet
+	{
+		masterDryWet.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+		masterDryWet.setRange(0, 100);
+		masterDryWet.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+		addAndMakeVisible(&masterDryWet);
+		masterDryWetLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "masterDryWet", masterDryWet);
+		masterDryWet.setValue(100);
+	}
+	
 	// MIDI velocity sensitivity
 	{
 		midiVelocitySens.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);

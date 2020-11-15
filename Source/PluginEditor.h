@@ -41,6 +41,10 @@ private:
 	Slider dryPan;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
 	
+	// master dry/wet
+	Slider masterDryWet;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
+	
 	// MIDI velocity sensitivity dial
 	Slider midiVelocitySens;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
