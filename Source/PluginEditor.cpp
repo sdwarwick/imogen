@@ -180,6 +180,8 @@ void ImogenAudioProcessorEditor::resized()
 	voiceStealing.setBounds(10, 375, 75, 25);
 	
 	midiKill.setBounds(100, 250, 75, 35);
+	
+	inputChannel.setBounds(190, 250, 75, 35);
 }
 
 

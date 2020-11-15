@@ -12,7 +12,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                       #endif
                        ),
-		tree (*this, nullptr, "PARAMETERS", createParameters()),
+		tree(*this, nullptr, "PARAMETERS", createParameters()),
 		midiProcessor(harmEngine),
 		midiLatch(false),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
@@ -115,19 +115,27 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 }
 
 //==============================================================================
-void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
+void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock) {
 	
 	lastSampleRate = sampleRate;
 	lastBlockSize = samplesPerBlock;
 	
 	// DSP settings
-	if (prevLastSampleRate != lastSampleRate || prevLastBlockSize != lastBlockSize)
 	{
-		for (int i = 0; i < numVoices; ++i) {
-			harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
+		if (prevLastSampleRate != lastSampleRate || prevLastBlockSize != lastBlockSize)
+		{
+			for (int i = 0; i < numVoices; ++i) {
+				harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
+			}
+			prevLastSampleRate = lastSampleRate;
+			prevLastBlockSize = lastBlockSize;
 		}
-		prevLastSampleRate = lastSampleRate;
-		prevLastBlockSize = lastBlockSize;
+		if (wetBuffer.getNumSamples() != samplesPerBlock) {
+			wetBuffer.setSize(2, samplesPerBlock, true, true, true);
+		}
+		for(int i = 0; i < numVoices; ++i) {
+			harmEngine[i]->checkBufferSizes(samplesPerBlock);
+		}
 	}
 	
 	// ADSR settings (...and also midi velocity sensitivity)
@@ -160,8 +168,12 @@ void ImogenAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 }
 
 void ImogenAudioProcessor::releaseResources() {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
+	
+	wetBuffer.clear();
+	for(int i = 0; i < numVoices; ++i) {
+		harmEngine[i]->clearBuffers();
+	}
+	
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -203,10 +215,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		inputChannel = buffer.getNumChannels() - 1;
 	}
 
-		// check buffer sizes
-		if (wetBuffer.getNumSamples() != numSamples) {
-			wetBuffer.setSize(2, numSamples, true, true, true);
-		}
+	// check buffer sizes
+	if (wetBuffer.getNumSamples() != numSamples) {
+		wetBuffer.setSize(2, numSamples, true, true, true);
+	}
 	
 	
 	// update settings/parameters
@@ -251,6 +263,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	const float* readPointer = buffer.getReadPointer(inputChannel);
 	
+	analyzeInput(buffer, inputChannel);
+	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
@@ -263,7 +277,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 			
 			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
-			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, voxCurrentPitch);
+			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, inputChannel, voxCurrentPitch);
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel) {
@@ -355,3 +369,13 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ImogenAudioProcessor();
 }
+
+
+
+
+
+/////// ANALYZE INPUT
+
+void ImogenAudioProcessor::analyzeInput (AudioBuffer<float> input, const int inputChan) {
+	
+};

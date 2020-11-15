@@ -35,8 +35,9 @@ public:
 	};
 	
 	
-	void doTheShifting(AudioBuffer<float>& inputBuffer, AudioBuffer<float>& shiftedBuffer, const double inputFreq, const float pitchShiftFactor) {
-		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer 
+	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const double inputFreq, const float pitchShiftFactor) {
+		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
+		// shiftedBuffer is MONO !
 	};
 	
 	

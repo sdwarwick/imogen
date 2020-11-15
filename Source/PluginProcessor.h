@@ -99,6 +99,8 @@ private:
 	
 		int* inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
 	
+	void analyzeInput (AudioBuffer<float> input, const int inputChan);
+	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
 	
