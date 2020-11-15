@@ -263,7 +263,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	const float* readPointer = buffer.getReadPointer(inputChannel);
 	
-	analyzeInput(buffer, inputChannel);
+	analyzeInput(buffer, inputChannel);  
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
