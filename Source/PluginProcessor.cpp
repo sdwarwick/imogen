@@ -239,28 +239,20 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
 	
-	if(*masterDryWetListener != previousMasterDryWet) {
-		wetMultiplier = (*masterDryWetListener)/100.0f;
-		dryMultiplier = 1.0 - wetMultiplier;
-	}
-	
 	const auto numSamples = buffer.getNumSamples();
 	
 	int inputChannel = *inputChannelListener;
 	if (inputChannel > buffer.getNumChannels()) {
 		inputChannel = buffer.getNumChannels() - 1;
 	}
-
-	// check buffer sizes
-	if (wetBuffer.getNumSamples() != numSamples) {
-		wetBuffer.setSize(2, numSamples, true, true, true);
-	}
-	if(dryBuffer.getNumSamples() != numSamples) {
-		dryBuffer.setSize(2, numSamples, true, true, true);
-	}
 	
 	// update settings/parameters
 	{
+		if(*masterDryWetListener != previousMasterDryWet) {
+			wetMultiplier = (*masterDryWetListener)/100.0f;
+			dryMultiplier = 1.0 - wetMultiplier;
+		}
+		
 		if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
 			midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
 			// update active voices' assigned panning values
@@ -283,6 +275,16 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
 		
 		stealingIsOn = *voiceStealingListener > 0.5f;
+	}
+	
+	// check buffer sizes
+	{
+		if (wetBuffer.getNumSamples() != numSamples) {
+			wetBuffer.setSize(2, numSamples, true, true, true);
+		}
+		if(dryBuffer.getNumSamples() != numSamples) {
+			dryBuffer.setSize(2, numSamples, true, true, true);
+		}
 	}
 	
 	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
@@ -427,8 +429,10 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float> input, const int inp
 	// this function will perform analysis of the input signal ONCE so it can be passed to all 12 harmony instances.
 	/* this function should determine:
 	 	- input signal's fundamental frequency
+	 		- update voxCurrentPitch variable
+	 
 	 	- pitch epoch locations (ie, positions in the input buffer referenced by sample #)
-	 	- ideal grain sizes/overlap locations...???
+	 		- feed these locations to the shifter instances (as a string of integers) so they know which sample #s to "center" their grains on
 	 
 	 	how to feed this data to the shifter instances?
 	 */

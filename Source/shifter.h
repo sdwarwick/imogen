@@ -20,13 +20,17 @@ class Shifter {
 public:
 	
 	
-	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float pitchShiftFactor) {
+	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double fundamentalFreq, const float pitchShiftFactor) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
 		// shiftedBuffer is MONO !! only use channel 0
 		
-		const float* readingfrom = inputBuffer.getReadPointer(0);
-		float* writingto = shiftedBuffer.getWritePointer(0);
+	//	const float* readingfrom = inputBuffer.getReadPointer(0);
+	//	float* writingto = shiftedBuffer.getWritePointer(0);
 		
+		/* recieve from the main processBlock the pitch epoch locations in the inputBuffer as a string of sample #s.
+		 these sample #s should be the centerpoints in time of each playback grain.
+		 the length of each grain should be two fundamental pitch periods.
+		 */
 	};
 	
 	
