@@ -25,7 +25,11 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int thisVoiceNumber): voiceIsOn(false), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(thisVoiceNumber), prevPan(-1), panningMultR(0.5), panningMultL(0.5) { };
+	HarmonyVoice(const int thisVoiceNumber): voiceIsOn(false), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(thisVoiceNumber), prevPan(-1), panningMultR(0.5), panningMultL(0.5)
+	{
+		shiftedBuffer.setSize(1, 512);
+		harmonyBuffer.setSize(2, 512);
+	};
 	
 	
 	void startNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend)
@@ -76,16 +80,27 @@ public:
 	};
 	
 	
-	// returns an AudioBuffer<float>
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, int startSample, int numSamples, double modInputFreq, AudioBuffer<float>& wetBuffer) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const float* readPointer, int numSamples, double modInputFreq) {
+		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
-		shiftedBuffer.clear();
+		{ // clear buffers & check sizes
+			shiftedBuffer.clear();
+			harmonyBuffer.clear();
+			if(shiftedBuffer.getNumSamples() != numSamples) {
+				shiftedBuffer.setSize(1, numSamples);
+			}
+			if(harmonyBuffer.getNumSamples() != numSamples) {
+				harmonyBuffer.setSize(2, numSamples);
+			}
+		} // clear buffers & check sizes
 		
 		const float pitchShiftFactor = (1 + (modInputFreq - desiredFrequency)) / desiredFrequency;
 		
-		// this function puts shifted samples into the shiftedBuffer
+		// this function puts shifted samples into the mono shiftedBuffer
 		pitchShifter.doTheShifting(inputBuffer, shiftedBuffer, modInputFreq, pitchShiftFactor);
 		
+		
+		// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
 		for(int sample = 0; sample < numSamples; ++sample) {
 			
 			if(adsrEnv.isActive() == false) {  // done while looping thru each sample...
@@ -95,13 +110,14 @@ public:
 				// shifted signal			 =   pitch shifter output				* mult. for MIDI velocity *  ADSR envelope
 				const float envelopedShiftedSignal = shiftedBuffer.getSample(0, sample) * amplitudeMultiplier * adsrEnv.getNextSample();
 				
-				for (int channel = 0; channel < 2; ++channel) {  // put into STEREO BUFFER 
-					wetBuffer.addSample(channel, sample, (envelopedShiftedSignal * panningMultipliers[channel]));
+				for (int channel = 0; channel < 2; ++channel) {  // put into STEREO BUFFER
+					
+					float* writePointer = harmonyBuffer.getWritePointer(channel);
+					writePointer[sample] = (envelopedShiftedSignal * panningMultipliers[channel]);
 				}
-				
-			//	return wetBuffer;
 			}
 		}
+		
 	};
 	
 	
@@ -124,13 +140,16 @@ public:
 	};
 	
 	
+	AudioBuffer<float> harmonyBuffer; // this buffer stores the harmony voice's actual output. STEREO BUFFER [step 2]
+	
+	
 	ADSR adsrEnv;
 	ADSR::Parameters adsrParams;
 	
 	
 private:
 	
-	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER
+	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1]
 	
 	int pitchBendRangeUp;
 	int pitchBendRangeDown;
@@ -187,3 +206,5 @@ private:
 
 
 // create a function for "panning changed" to reassign multiplier vals for each channel
+
+

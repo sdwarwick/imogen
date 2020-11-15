@@ -50,6 +50,10 @@ public:
 	
 	static const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
 	
+	static const int numChannels = 2; // declares 2 output channels (stereo). could conceivably be reconstructed to work with more sophisticated spatialization techniques in the future
+	
+	static const int inputChannel = 1; // which channel # your input is [since the plugin only accepts mono input]
+	
 	double voxCurrentPitch = 440.;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
 	AudioProcessorValueTreeState tree;
@@ -58,11 +62,6 @@ public:
 	
 	MidiProcessor midiProcessor;
 	bool midiLatch;
-	
-	// float array to send to PluginEditor for waveform visualization
-	Array<float> history; // a running averaged wave, for GUI purposes
-	int historyLength; // length of history array / should be roughly equal to length of waveform GUI in pixels
-	Array<float> getHistory() { return history; };
 	
 //==============================================================================
 	

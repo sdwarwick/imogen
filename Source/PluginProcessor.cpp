@@ -15,7 +15,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		tree (*this, nullptr, "PARAMETERS", createParameters()),
 		midiProcessor(harmEngine),
 		midiLatch(false),
-		historyLength(400),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
 		previousStereoWidth(0.0f),
 		prevVelocitySens(0.0f),
@@ -31,9 +30,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		harmEngine.add(new HarmonyVoice(i));
 	}
 	
-	for(int i = 0; i < historyLength; ++i) {
-		history.add(0);
-	}
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -247,49 +243,53 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	wetBuffer.clear();
 	
+	const float* readPointer = buffer.getReadPointer(inputChannel);
+	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
-//	 1	// update ADSR parameters & other settings, if they have changed
+			// update ADSR parameters & other settings, if they have changed
 			{
-				// adsr settings & midi velocity sensitivity
 				if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
 				harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
 				}
 			}
 			
-	// 2	// render next audio vector
-		harmEngine[i]->renderNextBlock(buffer, 0, buffer.getNumSamples(), voxCurrentPitch, wetBuffer);
-			// also adds each of the 12 harmony voices together into one buffer -- wetBuffer
-		}
-	}
-	// goal is to add all 12 voices together into a master audio signal for harmEngine, which can then be mixed with the original input signal (dry/wet)
-	// make sure to be ADDING to same audio vector, and not OVERWRITING that sample.
-	
-	wetBuffer.applyGain(0, 0, numSamples, outputGainMultiplier);
-	
-	// copy from wetBuffer to output buffer [which is the original input buffer]
-	buffer.copyFrom(0, 0, wetBuffer, 0, 0, numSamples);
-	buffer.copyFrom(1, 0, wetBuffer, 1, 0, numSamples);
-	
-	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
-	
-	
-	// HISTORY array, for GUI visualization:
-	{
-		for(int i = 0; i < numSamples; ++i) {
-			// just adding a sample every 20 or so...
-			if(i%20 == 0) {
-				const float sample = (buffer.getSample(0, i)/2) + (buffer.getSample(1, i) / 2);
-				history.add(sample);
+			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
+			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, voxCurrentPitch);
+			
+			// writes shifted sample values to wetBuffer
+			for (int channel = 0; channel < numChannels; ++channel) {
+				const float* reading = harmEngine[i]->harmonyBuffer.getReadPointer(channel);
+				float* output = wetBuffer.getWritePointer(channel);
 				
-				if (history.size() > historyLength) {
-							history.remove(0);
+				for(int sample = 0; sample < numSamples; ++sample) {
+					output[sample] = (output[sample] + reading[sample])/2;  // add value TO the wetBuffer instead of overwriting
 				}
 			}
 		}
 	}
+	// goal is to add all active voices' audio together into wetBuffer !!
+
+	
+	wetBuffer.applyGain(0, 0, numSamples, outputGainMultiplier);
+	wetBuffer.applyGain(1, 0, numSamples, outputGainMultiplier);
+	
+	// place shifted audio samples from wetBuffer into buffer
+	for (int channel = 0; channel < numChannels; ++channel)
+	{
+		const float* readPointer = wetBuffer.getReadPointer(channel);
+		float* outputSample = buffer.getWritePointer(channel);
+		
+		for (int sample = 0; sample < numSamples; ++sample)
+		{
+			outputSample[sample] = readPointer[sample]; // output to speakers
+		}
+	}
+	
+	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
+	
 	
 	// update storage of previous frame's parameters, for comparison when the NEXT frame comes in...
 	{
