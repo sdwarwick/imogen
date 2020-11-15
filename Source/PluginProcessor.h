@@ -101,10 +101,16 @@ private:
 	
 	void analyzeInput (AudioBuffer<float> input, const int inputChan);
 	
+	void writeToDryBuffer (const float* readingPointer, AudioBuffer<float>& dryBuffer, const int numSamples);
+	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
+	int previousmidipan;
+	int dryvoxpanningmults[2];
+	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
 	
 	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+	AudioBuffer<float> dryBuffer; // this buffer holds the original input signal, delayed for latency, so it can be mixed back together with the wet signal for the dry/wet effect
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

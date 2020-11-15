@@ -212,8 +212,3 @@ private:
 };
 
 
-
-
-// create a function for "panning changed" to reassign multiplier vals for each channel
-
-

@@ -37,6 +37,10 @@ private:
 	Slider stereoWidth;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
 	
+	// dry vox (modulator) pan (in midiPan)
+	Slider dryPan;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
+	
 	// MIDI velocity sensitivity dial
 	Slider midiVelocitySens;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;

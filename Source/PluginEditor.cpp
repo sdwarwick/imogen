@@ -48,6 +48,16 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 		stereoWidth.setValue(100);
 	}
 	
+	// dry pan
+	{
+		dryPan.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+		dryPan.setRange(0, 127);
+		dryPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+		addAndMakeVisible(&dryPan);
+		dryPanLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan);
+		dryPan.setValue(64);
+	}
+	
 	// MIDI velocity sensitivity
 	{
 		midiVelocitySens.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -167,6 +177,9 @@ void ImogenAudioProcessorEditor::resized()
 	adsrRelease.setBounds(250, 10, 75, 75);
 	
 	stereoWidth.setBounds(10, 100, 75, 75);
+	
+	dryPan.setBounds(10, 100, 75, 75);
+	
 	midiVelocitySens.setBounds(90, 100, 75, 75);
 	
 	pitchBendUp.setBounds(10, 250, 350, 25);
@@ -182,6 +195,7 @@ void ImogenAudioProcessorEditor::resized()
 	midiKill.setBounds(100, 250, 75, 35);
 	
 	inputChannel.setBounds(190, 250, 75, 35);
+	
 }
 
 
