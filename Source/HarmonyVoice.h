@@ -98,31 +98,24 @@ public:
 	void renderNextBlock (AudioBuffer <float>& inputBuffer, const float* readPointer, const int numSamples, const int inputChannel, const double modInputFreq) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
-		{ // clear buffers & check sizes
-			clearBuffers();
-			checkBufferSizes(numSamples);
-		} // clear buffers & check sizes
+		checkBufferSizes(numSamples);
 		
 		const float pitchShiftFactor = (1 + (modInputFreq - desiredFrequency)) / desiredFrequency;
 		
 		// this function puts shifted samples into the mono shiftedBuffer
-		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, modInputFreq, pitchShiftFactor);
-		
+		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, pitchShiftFactor);
 		
 		// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
+		const float* shiftedReader = shiftedBuffer.getReadPointer(0);
 		for(int sample = 0; sample < numSamples; ++sample) {
-			
-			if(adsrEnv.isActive() == false) {  // done while looping thru each sample...
-				voiceIsOn = false;			// ... so that the voice itself doesn't turn off unti the ADSR actually *REACHES* zero
+
+			if(adsrEnv.isActive() == false) {
+				voiceIsOn = false;
 			} else {
-				
-				// shifted signal			 =   pitch shifter output				* mult. for MIDI velocity *  ADSR envelope
-				const float envelopedShiftedSignal = shiftedBuffer.getSample(0, sample) * amplitudeMultiplier * adsrEnv.getNextSample();
-				
+				const float envelopedShiftedSignal = shiftedReader[sample] * amplitudeMultiplier * adsrEnv.getNextSample();
+
 				for (int channel = 0; channel < 2; ++channel) {  // put into STEREO BUFFER
-					
-					float* writePointer = harmonyBuffer.getWritePointer(channel);
-					writePointer[sample] = (envelopedShiftedSignal * panningMultipliers[channel]);
+					harmonyBuffer.getWritePointer(channel)[sample] = envelopedShiftedSignal * panningMultipliers[channel];
 				}
 			}
 		}
@@ -158,7 +151,7 @@ public:
 	
 private:
 	
-	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1]
+	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1] - only use channel 0
 	
 	int pitchBendRangeUp;
 	int pitchBendRangeDown;

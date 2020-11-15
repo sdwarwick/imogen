@@ -20,24 +20,13 @@ class Shifter {
 public:
 	
 	
-	// this function actually returns individual sample values to HarmonyVoice
-	float output(float pitchShiftRatio, int startingSample, int numSamples) {
-		
-		// dry input signal in from audio process block...
-		
-		// analysis of input signal in (?) -- grain lengths & peak locations for current signal vector
-		
-		// resynthesis -- play back grains at altered speed / density / repititions, using an OLA method
-		
-		// resample into an output signal -- which will be the stream of doubles output from shifter.output
-		
-		return float(0.0);
-	};
-	
-	
-	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const double inputFreq, const float pitchShiftFactor) {
+	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float pitchShiftFactor) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
-		// shiftedBuffer is MONO !
+		// shiftedBuffer is MONO !! only use channel 0
+		
+		const float* readingfrom = inputBuffer.getReadPointer(0);
+		float* writingto = shiftedBuffer.getWritePointer(0);
+		
 	};
 	
 	

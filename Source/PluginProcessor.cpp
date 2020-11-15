@@ -188,6 +188,13 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		prevPitchBendUp = *pitchBendUpListener;
 		prevPitchBendDown = *pitchBendDownListener;
 	}
+	
+	// master dry/wet
+	if(*masterDryWetListener != previousMasterDryWet) {
+		wetMultiplier = (*masterDryWetListener)/100.0f;
+		dryMultiplier = 1.0 - wetMultiplier;
+		previousMasterDryWet = *masterDryWetListener;
+	}
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -294,9 +301,9 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	const float* readPointer = buffer.getReadPointer(inputChannel);
 	
-	analyzeInput(buffer, inputChannel);
-	
 	writeToDryBuffer(readPointer, dryBuffer, numSamples);
+	
+	analyzeInput(buffer, inputChannel);
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
@@ -335,7 +342,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 //		}
 	}
 	
-	// place shifted audio samples from wetBuffer into buffer
+	// mix shifted & dry audio together & place into "buffer" for output
 	for (int channel = 0; channel < numChannels; ++channel)
 	{
 		const float* wetreadPointer = wetBuffer.getReadPointer(channel);
@@ -344,7 +351,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		
 		for (int sample = 0; sample < numSamples; ++sample)
 		{
-			outputSample[sample] = ((wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier))/2.0f; // mix dry & wet signals together & output to speakers
+			outputSample[sample] = ((wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier))/2.0f; // mix dry & wet signals together & output to speakers -- is /2 here necessary?
 		}
 	}
 	
@@ -417,9 +424,20 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float> input, const int inputChan) {
 	
+	// this function will perform analysis of the input signal ONCE so it can be passed to all 12 harmony instances.
+	/* this function should determine:
+	 	- input signal's fundamental frequency
+	 	- pitch epoch locations (ie, positions in the input buffer referenced by sample #)
+	 	- ideal grain sizes/overlap locations...???
+	 
+	 	how to feed this data to the shifter instances?
+	 */
+	
 };
 
 
+
+//// write dry input to dryBuffer so it can be mixed w wet signal for output
 void ImogenAudioProcessor::writeToDryBuffer (const float* readingPointer, AudioBuffer<float>& dryBuffer, const int numSamples) {
 	
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
