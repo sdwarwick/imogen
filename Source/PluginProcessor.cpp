@@ -444,7 +444,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
 	analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
 	analysisShiftHalved = round(analysisShift/2);
-	analysisLimit = numSamples - analysisShift - 1;
+	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
 	windowLength = analysisShift + analysisShiftHalved + 1; 
 	if(windowLength != prevWindowLength) {
 		calcWindow(windowLength);
