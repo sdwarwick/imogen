@@ -47,6 +47,9 @@ public:
 		int analysisBlockEnd;
 		int synthesisBlockEnd;
 		
+		const int synthesisPitchPeriod = ceil(currentSampleRate/desiredFreq);
+		// distance between successive pitch epochs in synthesized signal should be equal to synthesisPitchPeriod
+		
 		// PSOLA algorithm
 		while (analysisIndex < analysisLimit) {
 			// analysis blocks are two pitch periods long
