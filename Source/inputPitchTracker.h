@@ -9,3 +9,22 @@
 */
 
 #pragma once
+
+
+class PitchTracker
+{
+	
+public:
+	
+	float returnPitch(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples)
+	{
+		
+		const float* input = inputBuffer.getReadPointer(inputChan);
+		
+		return 0.0f;
+	};
+	
+	
+private:
+	
+};

@@ -307,7 +307,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	writeToDryBuffer(readPointer, dryBuffer, numSamples);
 	
-	analyzeInput(buffer, inputChannel);
+	analyzeInput(buffer, inputChannel, numSamples);
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
@@ -324,7 +324,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved);
 			
 			// writes shifted sample values to wetBuffer
-			for (int channel = 0; channel < numChannels; ++channel) {
+			for (int channel = 0; channel < numChannels; ++channel)
+			{
 				const float* reading = harmEngine[i]->harmonyBuffer.getReadPointer(channel);
 				float* output = wetBuffer.getWritePointer(channel);
 				
@@ -426,7 +427,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 /////// ANALYZE INPUT
 
-void ImogenAudioProcessor::analyzeInput (AudioBuffer<float> input, const int inputChan) {
+void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples) {
 	
 	// this function will perform analysis of the input signal ONCE so it can be passed to all 12 harmony instances.
 	/* this function should determine:
@@ -438,6 +439,8 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float> input, const int inp
 	 
 	 	how to feed this data to the shifter instances?
 	 */
+	
+	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples);
 	
 	analysisShift = std::ceil(lastSampleRate/voxCurrentPitch);
 	analysisShiftHalved = round(analysisShift/2);

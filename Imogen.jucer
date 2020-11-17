@@ -21,6 +21,8 @@
     </GROUP>
     <FILE id="SMlInG" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
     <FILE id="JQ0SCd" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
+    <FILE id="Arrayc" name="inputPitchTracker.h" compile="0" resource="0"
+          file="Source/inputPitchTracker.h"/>
     <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
       <FILE id="yuBDuH" name="MidiProcessor.h" compile="0" resource="0" file="Source/MidiProcessor.h"/>
       <FILE id="Z0nYva" name="PolyphonyVoiceManager.h" compile="0" resource="0"

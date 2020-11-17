@@ -4,6 +4,7 @@
 
 #include "HarmonyVoice.h"
 #include "MidiProcessor.h"
+#include "inputPitchTracker.h"
 
 //==============================================================================
 /**
@@ -99,9 +100,10 @@ private:
 	
 		int* inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
 	
-	void analyzeInput (AudioBuffer<float> input, const int inputChan);
+	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
 	int analysisShift;
 	int analysisShiftHalved;
+	PitchTracker pitchTracker;
 	
 	void writeToDryBuffer (const float* readingPointer, AudioBuffer<float>& dryBuffer, const int numSamples);
 	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
