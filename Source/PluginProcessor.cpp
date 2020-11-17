@@ -309,6 +309,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	analyzeInput(buffer, inputChannel, numSamples);
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
+	int activeVoices = 0;
 	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
@@ -332,12 +333,23 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 					output[sample] = (output[sample] + reading[sample])/2.0f;  // add value TO the wetBuffer instead of overwriting
 				}
 			}
+			
+			++activeVoices;
 		}
 	}
-	// divide wetBuffer's contents by # of currently active voices
 	
-	// goal is to add all active voices' audio together into wetBuffer !!
-
+	// divide wetBuffer's sample values by # of currently active voices:
+	if(activeVoices > 0) {
+		for(int channel = 0; channel < 2; ++ channel) {
+			const float* reading = wetBuffer.getWritePointer(channel);
+			float* writing = wetBuffer.getWritePointer(channel);
+			for(int i = 0; i < numSamples; ++i) {
+				writing[i] = reading[i] / activeVoices;
+			}
+		}
+	}
+	
+	
 	{
 		if (buffer.getNumChannels() > 2) {
 			for (int i = 3; i <= buffer.getNumChannels(); ++i) {

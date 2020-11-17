@@ -93,6 +93,7 @@ public:
 	void clearBuffers() {
 		shiftedBuffer.clear();
 		harmonyBuffer.clear();
+		pitchShifter.clearBuffer();
 	};
 	
 	
@@ -166,7 +167,7 @@ private:
 	
 	float midiVelocitySensitivity;  
 	
-	double desiredFrequency;
+	float desiredFrequency;
 	int lastNoteRecieved;
 	
 	float amplitudeMultiplier;

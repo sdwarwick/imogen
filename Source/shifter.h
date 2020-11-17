@@ -30,7 +30,6 @@ public:
 		// shiftedBuffer is MONO !! only use channel 0
 		
 		const float* inputReadingfrom = inputBuffer.getReadPointer(inputChan);
-		float* ouputWritingto = shiftedBuffer.getWritePointer(0);
 		
 		workingBuffer.clear();
 		
@@ -77,6 +76,7 @@ public:
 		
 		
 		const float* reading = workingBuffer.getReadPointer(0);
+		float* ouputWritingto = shiftedBuffer.getWritePointer(0);
 		for(int sample = 0; sample < numSamples; ++sample) {
 			ouputWritingto[sample] = reading[sample];
 		}
@@ -94,6 +94,11 @@ public:
 		if(workingBuffer.getNumSamples() != newBufferSize * 2) {
 			workingBuffer.setSize(0, newBufferSize * 2);
 		}
+	};
+	
+	
+	void clearBuffer() {
+		workingBuffer.clear();
 	};
 	
 	
