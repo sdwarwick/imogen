@@ -36,21 +36,23 @@ public:
 		// pitch shift factor = desired % change of fundamental frequency
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
 		
+		int epochIndex = 0; // index # in array of epoch locations
+		
 		// PSOLA constants
 		// analysisShift = ceil(lastSampleRate/voxCurrentPitch); the # of samples being processed in current frame
 		const int synthesisShift = round(analysisShift * scalingFactor); // the # of samples synthesized with each OLA
-		int analysisIndex = -1; // or analysisIndex = epochLocations[0]
+		int analysisIndex = -1; // or analysisIndex = epochLocations[epochIndex] + 1
 		int synthesisIndex = 0;
 		int analysisBlockStart;
 		int analysisBlockEnd;
 		int synthesisBlockEnd;
-	
+		
 		// PSOLA algorithm
 		while (analysisIndex < analysisLimit) {
 			// analysis blocks are two pitch periods long
 			analysisBlockStart = analysisIndex + 1 - analysisShiftHalved;
 			if (analysisBlockStart < 0) { analysisBlockStart = 0; };
-			analysisBlockEnd = analysisBlockStart + analysisShiftHalved;  
+			analysisBlockEnd = analysisBlockStart + analysisShift;   // original was analysisBlockEnd = analysisBlockStart + analysisShiftHalved
 			if (analysisBlockEnd > (numSamples - 1)) { analysisBlockEnd = numSamples - 1; };
 			
 			// overlap & add
@@ -65,7 +67,8 @@ public:
 				++windowIndex;
 			}
 			// update pointers
-			analysisIndex += analysisShift; // or analysisIndex = epochLocations[1]
+			++epochIndex;
+			analysisIndex += analysisShift; // or analysisIndex = epochLocations[epochIndex] + 1
 			synthesisIndex += synthesisShift;
 		}
 		

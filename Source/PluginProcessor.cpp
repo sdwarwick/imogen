@@ -449,7 +449,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	if(windowLength != prevWindowLength) {
 		calcWindow(windowLength);
 	}
-	epochLocations = epochs.returnEpochs(input, inputChan, numSamples, lastSampleRate);
+	epochLocations = epochs.returnEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch);
 };
 
 
@@ -481,19 +481,21 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 
 
 
-void ImogenAudioProcessor::calcWindow(const int length) {
+void ImogenAudioProcessor::calcWindow(int length) {
 	
-	if (length < 1) return;
+	if (length < analysisShift) { length = analysisShift; };
+	
+	const int winLen = length;
 	
 	delete[] window;
-	window = new float[length];
+	window = new float[winLen];
 	
-	if(length == 1) {
+	if(winLen == 1) {
 		window[0] = 1.0f;
 		return;
 	}
 	
-	const int N = length - 1;
+	const int N = winLen - 1;
 	const int middle = N >> 1;
 	const float slope = ((float)(1<<15))/(N*4);
 	
@@ -501,7 +503,7 @@ void ImogenAudioProcessor::calcWindow(const int length) {
 	for(int i = 1; i <= middle; ++i) {
 		window[i] = window[i-1] + slope;
 	}
-	for(int i = middle+1; i<= N; ++i) {
+	for(int i = middle+1; i <= N; ++i) {
 		window[i] = window[N - i];
 	}
 }
