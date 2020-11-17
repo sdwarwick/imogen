@@ -239,7 +239,7 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
 	
-	const auto numSamples = buffer.getNumSamples();
+	const int numSamples = buffer.getNumSamples();
 	
 	int inputChannel = *inputChannelListener;
 	if (inputChannel > buffer.getNumChannels()) {
@@ -248,6 +248,11 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	// update settings/parameters
 	{
+		if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
+			inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
+			outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
+		}
+		
 		if(*masterDryWetListener != previousMasterDryWet) {
 			wetMultiplier = (*masterDryWetListener)/100.0f;
 			dryMultiplier = 1.0 - wetMultiplier;
@@ -292,9 +297,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	// need to update the voxCurrentPitch variable!!
 	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
 	
-	inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
-	outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
-	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
 	buffer.applyGain(0, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
@@ -319,7 +321,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 			
 			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
-			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, inputChannel, voxCurrentPitch);
+			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved);
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel) {
@@ -334,14 +336,12 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	// goal is to add all active voices' audio together into wetBuffer !!
 
-	buffer.clear();
 	{
-	// plan B if that doesnt work:
-//		if (buffer.getNumChannels() > 2) {
-//			for (int i = 3; i <= buffer.getNumChannels(); ++i) {
-//				buffer.clear(i, 0, numSamples);
-//			}
-//		}
+		if (buffer.getNumChannels() > 2) {
+			for (int i = 3; i <= buffer.getNumChannels(); ++i) {
+				buffer.clear(i, 0, numSamples);
+			}
+		}
 	}
 	
 	// mix shifted & dry audio together & place into "buffer" for output
@@ -376,6 +376,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		prevPitchBendUp = *pitchBendUpListener;
 		prevPitchBendDown = *pitchBendDownListener;
 		previousmidipan = *dryVoxPanListener; // this is the panning for the dry vox signal
+		prevideb = *inputGainListener;
+		prevodeb = *outputGainListener;
 	}
 }
 
@@ -437,6 +439,8 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float> input, const int inp
 	 	how to feed this data to the shifter instances?
 	 */
 	
+	analysisShift = std::ceil(lastSampleRate/voxCurrentPitch);
+	analysisShiftHalved = round(analysisShift/2);
 };
 
 

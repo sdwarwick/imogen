@@ -87,6 +87,7 @@ public:
 		if(harmonyBuffer.getNumSamples() != newNumSamples) {
 			harmonyBuffer.setSize(2, newNumSamples);
 		}
+		pitchShifter.checkBuffer(newNumSamples);
 	};
 	
 	void clearBuffers() {
@@ -95,15 +96,13 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, const float* readPointer, const int numSamples, const int inputChannel, const double modInputFreq) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const float* readPointer, const int numSamples, const int inputChannel, const double modInputFreq, const int analysisShift, const int analysisShiftHalved) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
 		checkBufferSizes(numSamples);
 		
-		const float pitchShiftFactor = (1 + (modInputFreq - desiredFrequency)) / desiredFrequency;
-		
 		// this function puts shifted samples into the mono shiftedBuffer
-		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, pitchShiftFactor);
+		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, desiredFrequency, analysisShift, analysisShiftHalved);
 		
 		// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
 		const float* shiftedReader = shiftedBuffer.getReadPointer(0);

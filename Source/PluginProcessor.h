@@ -100,6 +100,8 @@ private:
 		int* inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
 	
 	void analyzeInput (AudioBuffer<float> input, const int inputChan);
+	int analysisShift;
+	int analysisShiftHalved;
 	
 	void writeToDryBuffer (const float* readingPointer, AudioBuffer<float>& dryBuffer, const int numSamples);
 	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
@@ -110,6 +112,9 @@ private:
 	int previousMasterDryWet;
 	float dryMultiplier;
 	float wetMultiplier;
+	
+	float prevideb;
+	float prevodeb;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
