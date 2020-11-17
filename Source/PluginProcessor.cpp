@@ -205,6 +205,7 @@ void ImogenAudioProcessor::releaseResources() {
 	for(int i = 0; i < numVoices; ++i) {
 		harmEngine[i]->clearBuffers();
 	}
+	pitchTracker.clearBuffer();
 	
 }
 
@@ -295,9 +296,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
 	
-	// need to update the voxCurrentPitch variable!!
-	// identify grain lengths & peak locations ONCE based on input signal, then pass info to individual instances of shifter ?
-	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
 	buffer.applyGain(0, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
@@ -330,7 +328,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 				float* output = wetBuffer.getWritePointer(channel);
 				
 				for(int sample = 0; sample < numSamples; ++sample) {
-					output[sample] = (output[sample] + reading[sample])/2.0f;  // add value TO the wetBuffer instead of overwriting
+					output[sample] = output[sample] + reading[sample];  // add value TO the wetBuffer instead of overwriting
 				}
 			}
 			
