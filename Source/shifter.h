@@ -25,7 +25,7 @@ public:
 	}
 	
 	
-	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, float* window) {
+	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, float* window, Array<int>* epochLocations) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
 		// shiftedBuffer is MONO !! only use channel 0
 		
@@ -37,7 +37,8 @@ public:
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
 		
 		// PSOLA constants
-		const int synthesisShift = round(analysisShift * scalingFactor);
+		// analysisShift = ceil(lastSampleRate/voxCurrentPitch); the # of samples being processed in current frame
+		const int synthesisShift = round(analysisShift * scalingFactor); // the # of samples synthesized with each OLA
 		int analysisIndex = -1;
 		int synthesisIndex = 0;
 		int analysisBlockStart;
@@ -48,29 +49,23 @@ public:
 		while (analysisIndex < analysisLimit) {
 			// analysis blocks are two pitch periods long
 			analysisBlockStart = analysisIndex + 1 - analysisShiftHalved;
-			if (analysisBlockStart < 0) {
-				analysisBlockStart = 0;
-			}
-			analysisBlockEnd = analysisBlockStart + analysisShift + analysisShiftHalved;
-			if (analysisBlockEnd > (numSamples - 1)) {
-				analysisBlockEnd = numSamples - 1;
-			}
+			if (analysisBlockStart < 0) { analysisBlockStart = 0; };
+			analysisBlockEnd = analysisBlockStart + analysisShiftHalved;  
+			if (analysisBlockEnd > (numSamples - 1)) { analysisBlockEnd = numSamples - 1; };
 			
 			// overlap & add
 			synthesisBlockEnd = synthesisIndex + analysisBlockEnd - analysisBlockStart;
 			int inputIndex = analysisBlockStart;
 			int windowIndex = 0;
-			
 			const float* workingReadingfrom = workingBuffer.getReadPointer(0);
 			float* workingWritingto = workingBuffer.getWritePointer(0);
-			
 			for (int i = synthesisIndex; i <= synthesisBlockEnd; ++i) {
 				workingWritingto[i] = workingReadingfrom[i] + (inputReadingfrom[inputIndex] * window[windowIndex]);
 				++inputIndex;
 				++windowIndex;
 			}
 			// update pointers
-			analysisIndex += analysisShift;
+			analysisIndex += analysisShift; // or analysisIndex = epochLocations[i] increment i
 			synthesisIndex += synthesisShift;
 		}
 		

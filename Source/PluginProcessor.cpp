@@ -319,7 +319,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 			
 			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window);
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window, &epochLocations);
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)
@@ -442,13 +442,14 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
 {
 	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
-	analysisShift = ceil(lastSampleRate/voxCurrentPitch);
+	analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
 	analysisShiftHalved = round(analysisShift/2);
 	analysisLimit = numSamples - analysisShift - 1;
-	windowLength = analysisShift + analysisShiftHalved + 1;
+	windowLength = analysisShift * 2.0f; // window length = 2 fundamental pitch periods
 	if(windowLength != prevWindowLength) {
 		calcWindow(windowLength);
 	}
+	epochLocations = epochs.returnEpochs(input, inputChan, numSamples, lastSampleRate);
 };
 
 
@@ -496,22 +497,11 @@ void ImogenAudioProcessor::calcWindow(const int length) {
 	const int middle = N >> 1;
 	const float slope = ((float)(1<<15))/(N*4);
 	
-	if(N % 2 == 0) {
-		window[0] = 0;
-		for(int i = 1; i <= middle; ++i) {
-			window[i] = window[i-1] + slope;
-		}
-		for(int i = middle+1; i<= N; ++i) {
-			window[i] = window[N - i];
-		}
-	} else {
-		window[0] = 0;
-		for(int i = 1; i <= middle; ++i) {
-			window[i] = window[i - 1] + slope;
-		}
-		window[middle + 1] = window[middle];
-		for(int i = middle+1; i <= N; ++i) {
-			window[i] = window[N - i];
-		}
+	window[0] = 0;
+	for(int i = 1; i <= middle; ++i) {
+		window[i] = window[i-1] + slope;
+	}
+	for(int i = middle+1; i<= N; ++i) {
+		window[i] = window[N - i];
 	}
 }
