@@ -21,7 +21,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
 		stealingIsOn(true),
-		pitchTracker(6, 150),
 		previousmidipan(64),
 		previousMasterDryWet(100),
 		dryMultiplier(0.0f), wetMultiplier(1.0f)

@@ -16,149 +16,106 @@ class PitchTracker
 	
 public:
 	
-	PitchTracker(const int levels, const int windowLen): oldFreq(0.0f), dLength(0), oldMode(0) {
-		// levels = number of levels for the FLWT algorithm
-		// windowLen = length of the analysis windows
-		
-		window = new int[windowLen];
-		this->levels = levels;
-		maxCount = new int[levels];
-		minCount = new int[levels];
-		maxIndices = new int[windowLen];
-		minIndices = new int[windowLen];
-		mode = new int[levels];
-		windowLength = windowLen;
-		differs = new int[windowLen];
-	};
-	
-	~PitchTracker() {
-		delete[] window;
-		delete[] maxCount;
-		delete[] minCount;
-		delete[] maxIndices;
-		delete[] minIndices;
-		delete[] mode;
-		delete[] differs;
-	}
-	
-	
 	float returnPitch(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate)
 	{
-		
-		const float* input = inputBuffer.getReadPointer(inputChan);
-		
-		int newWidth = (numSamples > windowLength) ? windowLength : numSamples;
-		long average = 0;
-		float globalMax = 0.0f;
-		float globalMin = 0.0f;
-		float maxThresh;
-		float minThresh;
-		
-		for(int i = 0; i < numSamples; ++i) {
-			window[i] = input[i];
-			average += input[i];
-			if(input[i] > globalMax) {
-				globalMax = input[i];
-			}
-			if(input[i] < globalMin) {
-				globalMin = input[i];
-			}
-		}
-		average /= numSamples;
-		
-		int minDist;
-		int climber;
-		bool isSearching;
-		int tooClose;
-		int test;
-		
-		for (int lev = 0; lev < levels; ++lev) {
-			// re initialize level parameters
-			mode[lev] = 0;
-			maxCount[lev] = 0;
-			minCount[lev] = 0;
-			isSearching = true;
-			tooClose = 0;
-			dLength = 0;
-			
-			newWidth = newWidth >> 1;
-	//		minDist = max(floor((samplerate/maxFreq) >> (lev + 1)), 1);
-			
-			if((window[3] + window[2] - window[1] - window[0]) > 0) {
-				climber = 1;
-			} else {
-				climber = -1;
-			}
-			
-			window[0] = (window[1] + window[0]) >> 1;
-			for(int j = 1; j < newWidth; ++j) {
-				window[j] = (window[2*j+1] + window[2*j]) >> 1;
-				
-				test = window[j] - window[j-1];
-				
-				if(climber >= 0 && test < 0) {
-					if(window[j-1] >= maxThresh && isSearching && !tooClose) {
-						maxIndices[maxCount[lev]] = j - 1;
-						maxCount[lev]++;
-						isSearching = false;
-						tooClose = minDist;
-					}
-					climber = -1;
-				} else if (climber <= 0 && test > 0) {
-					if(window[j-1]<= minThresh && isSearching && !tooClose) {
-						minIndices[minCount[lev]] = j - 1;
-						minCount[lev]++;
-						isSearching = false;
-						tooClose = minDist;
-					}
-					climber = 1;
-				}
-				
-				if((window[j] <= average && window[j-1] > average) || (window[j]>= average && window[j-1] < average)) {
-					isSearching = true;
-				}
-				
-				if(tooClose) {
-					tooClose--;
-				}
-			}
-			
-			if(maxCount[lev] >= 2 && minCount[lev] >= 2) {
-				
-			}
-			
+		if(bufferSize != numSamples) {
+			yin.setSize(1, numSamples);
+			bufferSize = numSamples;
 		}
 		
-		return 0.0f;
+		float pitch = calculatePitch(inputBuffer, inputChan, numSamples, samplerate);
+		
+		if(pitch > 0.0f){
+			pitch = samplerate / pitch;
+		} else {
+			pitch = 0.0f;
+		}
+		
+		return pitch;
 	};
 	
 	
 private:
 	
-	int windowLength;
+	int bufferSize;
+	float tolerance = 0.15;
 	
-	int* window;
-	int* maxCount;
-	int* minCount;
-	int* maxIndices;
-	int* minIndices;
-	int* mode;
-	int* differs;
+	AudioBuffer<float> yin;
 	
-	int levels;
 	
-	int dLength;
+	float quadraticPeakPosition(const float* data, unsigned int pos) noexcept
+	{
+		float s0, s1, s2;
+		unsigned int x0, x2;
+		if(pos == 0 || pos == bufferSize - 1) return pos;
+		x0 = (pos < 1) ? pos : pos - 1;
+		x2 = (pos + 1 < bufferSize) ? pos + 1 : pos;
+		if(x0 == pos) return (data[pos] <= data[x2]) ? pos : x2;
+		if(x2 == pos) return (data[pos] <= data[x0]) ? pos : x0;
+		s0 = data[x0];
+		s1 = data[pos];
+		s2 = data[x2];
+		return pos + 0.5 * (s0 - s2) / (s0 - 2.* s1 + s2);
+	};
 	
-	float oldFreq;
-	int oldMode;
-								 
-	float maxFreq = 44100.0f;
 	
-	int max(const int x, const int y) {
-		if(x > y) {
-			return x;
-		} else {
-			return y;
+	unsigned int minElement (const float* data) noexcept
+	{
+		unsigned int j, pos = 0;
+		float tmp = data[0];
+		for(j = 0; j < bufferSize; ++j) {
+			pos = (tmp < data[j]) ? pos : j;
+			tmp = (tmp < data[j]) ? tmp : data[j];
 		}
-	}
+		return pos;
+	};
+	
+	
+	void fillyindata(AudioBuffer<float>& input) {
+		float tmp;
+		float* yinData = yin.getWritePointer(0);
+		const float* inputData = input.getReadPointer(0);
+		
+		FloatVectorOperations::fill(yinData, 0.0f, bufferSize);
+		
+		for(int tau = 1; tau < bufferSize; ++tau) {
+			for(int j = 0; j < bufferSize; ++j) {
+				tmp = inputData[j] - inputData[j + tau];
+				yinData[tau] += (tmp * tmp);
+			}
+		}
+	};
+	
+	
+	float calculatePitch(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate)
+	{
+		int period;
+		float delta = 0.0f;
+		float runningSum = 0.0f;
+		float* yinData = yin.getWritePointer(0);
+		const float* inputData = inputBuffer.getReadPointer(inputChan);
+		
+		yinData[0] = 1.0;
+		for(int tau = 1; tau < bufferSize; ++tau) {
+			yinData[tau] = 0.0f;
+			for(int j = 0; j < bufferSize; ++j) {
+				delta = inputData[j] - inputData[j + tau];
+				yinData[tau] += (delta * delta);
+			}
+			runningSum += yinData[tau];
+			if(runningSum != 0) {
+				yinData[tau] *= (tau/runningSum);
+			}
+			else {
+				yinData[tau] = 1.0;
+			}
+			period = tau - 3;
+			if (tau > 4 && yinData[period] < tolerance && yinData[period] < yinData[period + 1]) {
+				return quadraticPeakPosition(yin.getReadPointer(0), period);
+			}
+		}
+		
+		return quadraticPeakPosition(yin.getReadPointer(0), minElement(yin.getReadPointer(0)));
+	};
+	
 };
