@@ -432,7 +432,6 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
 {
 	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
-	
 	analysisShift = ceil(lastSampleRate/voxCurrentPitch);
 	analysisShiftHalved = round(analysisShift/2);
 	analysisLimit = numSamples - analysisShift - 1;
