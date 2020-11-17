@@ -39,7 +39,7 @@ public:
 		// PSOLA constants
 		// analysisShift = ceil(lastSampleRate/voxCurrentPitch); the # of samples being processed in current frame
 		const int synthesisShift = round(analysisShift * scalingFactor); // the # of samples synthesized with each OLA
-		int analysisIndex = -1;
+		int analysisIndex = -1; // or analysisIndex = epochLocations[0]
 		int synthesisIndex = 0;
 		int analysisBlockStart;
 		int analysisBlockEnd;
@@ -65,7 +65,7 @@ public:
 				++windowIndex;
 			}
 			// update pointers
-			analysisIndex += analysisShift; // or analysisIndex = epochLocations[i] increment i
+			analysisIndex += analysisShift; // or analysisIndex = epochLocations[1]
 			synthesisIndex += synthesisShift;
 		}
 		
