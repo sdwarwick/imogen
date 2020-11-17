@@ -25,7 +25,7 @@ public:
 	}
 	
 	
-	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved) {
+	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, float* window) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
 		// shiftedBuffer is MONO !! only use channel 0
 		
@@ -36,6 +36,7 @@ public:
 		
 		// pitch shift factor = desired % change of fundamental frequency
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
+		
 		// PSOLA constants
 		const int synthesisShift = round(analysisShift * scalingFactor);
 		int analysisIndex = -1;
@@ -43,14 +44,11 @@ public:
 		int analysisBlockStart;
 		int analysisBlockEnd;
 		int synthesisBlockEnd;
-		const int analysisLimit = numSamples - analysisShift - 1;
-		// window declaration
-	//	int windowLength = analysisShift + analysisShiftHalved + 1;
-		
+	
 		// PSOLA algorithm
 		while (analysisIndex < analysisLimit) {
 			// analysis blocks are two pitch periods long
-			analysisBlockStart = (analysisIndex + 1) - analysisShiftHalved;
+			analysisBlockStart = analysisIndex + 1 - analysisShiftHalved;
 			if (analysisBlockStart < 0) {
 				analysisBlockStart = 0;
 			}
@@ -68,7 +66,7 @@ public:
 			float* workingWritingto = workingBuffer.getWritePointer(0);
 			
 			for (int i = synthesisIndex; i <= synthesisBlockEnd; ++i) {
-				workingWritingto[i] = workingReadingfrom[i] + ((inputReadingfrom[inputIndex])); // multiply the input by a windowing function within these parentheses in this step !!
+				workingWritingto[i] = workingReadingfrom[i] + (inputReadingfrom[inputIndex] * window[windowIndex]);
 				++inputIndex;
 				++windowIndex;
 			}
@@ -79,16 +77,14 @@ public:
 		
 		
 		const float* reading = workingBuffer.getReadPointer(0);
-		float* writing = workingBuffer.getWritePointer(0);
 		for(int sample = 0; sample < numSamples; ++sample) {
-			ouputWritingto[sample] = reading[sample]; // write to output
-			writing[sample] = 0.0f; 				   // clear out the working buffer
+			ouputWritingto[sample] = reading[sample];
 		}
 		
 	};
 	
 	
-	void updateDSPsettings(const double newSampleRate, const int newBlockSize) {
+	void updateDSPsettings(const double newSampleRate) {
 		currentSampleRate = newSampleRate;
 	};
 	
@@ -106,4 +102,5 @@ private:
 	AudioBuffer<float> workingBuffer;
 	
 	double currentSampleRate;
+	
 };

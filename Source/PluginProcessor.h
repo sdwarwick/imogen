@@ -62,6 +62,8 @@ public:
 	MidiProcessor midiProcessor;
 	bool midiLatch;
 	
+	float* window;
+	
 //==============================================================================
 	
 private:
@@ -103,9 +105,13 @@ private:
 	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
 	int analysisShift;
 	int analysisShiftHalved;
+	int analysisLimit;
+	int windowLength;
+	int prevWindowLength;
 	PitchTracker pitchTracker;
+	void calcWindow(const int length);
 	
-	void writeToDryBuffer (const float* readingPointer, AudioBuffer<float>& dryBuffer, const int numSamples);
+	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& dryBuffer, const int numSamples);
 	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
 	int previousmidipan;
 	int dryvoxpanningmults[2];

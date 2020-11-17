@@ -21,6 +21,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
 		latchIsOn(false), previousLatch(false),
 		stealingIsOn(true),
+		pitchTracker(6, 150),
 		previousmidipan(64),
 		previousMasterDryWet(100),
 		dryMultiplier(0.0f), wetMultiplier(1.0f)
@@ -45,6 +46,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 		delete harmEngine[i];
 	}
 	
+	delete[] window;
 }
 
 
@@ -303,9 +305,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	wetBuffer.clear();
 	
-	const float* readPointer = buffer.getReadPointer(inputChannel);
-	
-	writeToDryBuffer(readPointer, dryBuffer, numSamples);
+	writeToDryBuffer(buffer, inputChannel, dryBuffer, numSamples);
 	
 	analyzeInput(buffer, inputChannel, numSamples);
 	
@@ -321,7 +321,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 			
 			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
-			harmEngine[i]->renderNextBlock(buffer, readPointer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved);
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window);
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)
@@ -335,6 +335,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 		}
 	}
+	// divide wetBuffer's contents by # of currently active voices
+	
 	// goal is to add all active voices' audio together into wetBuffer !!
 
 	{
@@ -379,6 +381,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		previousmidipan = *dryVoxPanListener; // this is the panning for the dry vox signal
 		prevideb = *inputGainListener;
 		prevodeb = *outputGainListener;
+		prevWindowLength = windowLength;
 	}
 }
 
@@ -427,29 +430,23 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 /////// ANALYZE INPUT
 
-void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples) {
+void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
+{
+	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
 	
-	// this function will perform analysis of the input signal ONCE so it can be passed to all 12 harmony instances.
-	/* this function should determine:
-	 	- input signal's fundamental frequency
-	 		- update voxCurrentPitch variable
-	 
-	 	- pitch epoch locations (ie, positions in the input buffer referenced by sample #)
-	 		- feed these locations to the shifter instances (as a string of integers) so they know which sample #s to "center" their grains on
-	 
-	 	how to feed this data to the shifter instances?
-	 */
-	
-	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples);
-	
-	analysisShift = std::ceil(lastSampleRate/voxCurrentPitch);
+	analysisShift = ceil(lastSampleRate/voxCurrentPitch);
 	analysisShiftHalved = round(analysisShift/2);
+	analysisLimit = numSamples - analysisShift - 1;
+	windowLength = analysisShift + analysisShiftHalved + 1;
+	if(windowLength != prevWindowLength) {
+		calcWindow(windowLength);
+	}
 };
 
 
 
 //// write dry input to dryBuffer so it can be mixed w wet signal for output
-void ImogenAudioProcessor::writeToDryBuffer (const float* readingPointer, AudioBuffer<float>& dryBuffer, const int numSamples) {
+void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& dryBuffer, const int numSamples) {
 	
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
 	
@@ -462,6 +459,8 @@ void ImogenAudioProcessor::writeToDryBuffer (const float* readingPointer, AudioB
 		dryvoxpanningmults[1] = panR;
 	}
 	
+	const float* readingPointer = inputBuffer.getReadPointer(inputChan);
+	
 	for(int channel = 0; channel < 2; ++channel) {
 		float* drywriting = dryBuffer.getWritePointer(channel);
 		for (int sample = 0; sample < numSamples; ++sample) {
@@ -470,3 +469,41 @@ void ImogenAudioProcessor::writeToDryBuffer (const float* readingPointer, AudioB
 	}
 	
 };
+
+
+
+void ImogenAudioProcessor::calcWindow(const int length) {
+	
+	if (length < 1) return;
+	
+	delete[] window;
+	window = new float[length];
+	
+	if(length == 1) {
+		window[0] = 1.0f;
+		return;
+	}
+	
+	const int N = length - 1;
+	const int middle = N >> 1;
+	const float slope = ((float)(1<<15))/(N*4);
+	
+	if(N % 2 == 0) {
+		window[0] = 0;
+		for(int i = 1; i <= middle; ++i) {
+			window[i] = window[i-1] + slope;
+		}
+		for(int i = middle+1; i<= N; ++i) {
+			window[i] = window[N - i];
+		}
+	} else {
+		window[0] = 0;
+		for(int i = 1; i <= middle; ++i) {
+			window[i] = window[i - 1] + slope;
+		}
+		window[middle + 1] = window[middle];
+		for(int i = middle+1; i <= N; ++i) {
+			window[i] = window[N - i];
+		}
+	}
+}

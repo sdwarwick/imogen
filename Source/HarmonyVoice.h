@@ -58,7 +58,7 @@ public:
 	
 	void updateDSPsettings(const double newSampleRate, const int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
-		pitchShifter.updateDSPsettings(newSampleRate, newBlockSize);  // passes settings thru to shifter instance 
+		pitchShifter.updateDSPsettings(newSampleRate); 
 	};
 	
 	
@@ -96,13 +96,13 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, const float* readPointer, const int numSamples, const int inputChannel, const double modInputFreq, const int analysisShift, const int analysisShiftHalved) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const double modInputFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, float* window) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
 		checkBufferSizes(numSamples);
 		
 		// this function puts shifted samples into the mono shiftedBuffer
-		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, desiredFrequency, analysisShift, analysisShiftHalved);
+		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, desiredFrequency, analysisShift, analysisShiftHalved, analysisLimit, window);
 		
 		// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
 		const float* shiftedReader = shiftedBuffer.getReadPointer(0);
