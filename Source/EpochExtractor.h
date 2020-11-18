@@ -18,7 +18,7 @@ public:
 	{
 		// determine pitch epoch locations in time, referenced by sample # within input buffer, and write these sample number locations to an integer array
 		
-		epochLocations->clearQuick();
+		epochLocations->clear();
 		
 	};
 	

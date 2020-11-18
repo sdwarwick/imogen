@@ -7,6 +7,10 @@
 #include "inputPitchTracker.h"
 #include "EpochExtractor.h"
 
+#ifndef NUMBER_OF_VOICES
+#define NUMBER_OF_VOICES 12
+#endif
+
 //==============================================================================
 /**
 */
@@ -50,7 +54,7 @@ public:
 	
 	//==============================================================================
 	
-	static const int numVoices = 12;  // global setting for how many instances of the harmony engine will be running concurrently
+	static const int numVoices = NUMBER_OF_VOICES;  // global setting for how many instances of the harmony engine will be running concurrently
 	
 	static const int numChannels = 2; // declares 2 output channels (stereo). could conceivably be reconstructed to work with more sophisticated spatialization techniques in the future
 	

@@ -12,6 +12,10 @@
 
 #pragma once
 
+#ifndef NUMBER_OF_VOICES
+#define NUMBER_OF_VOICES 12
+#endif
+
 
 class MidiPanningManager
 {
@@ -72,7 +76,7 @@ public:
 								   							
 	
 private:
-	const static int numberOfVoices = 12;  // link this to global # of voices setting
+	const static int numberOfVoices = NUMBER_OF_VOICES;  // link this to global # of voices setting
 	const int middleIndex;
 	
 	int possiblePanVals[numberOfVoices];

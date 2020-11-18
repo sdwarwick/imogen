@@ -10,6 +10,10 @@
 
 #pragma once
 
+#ifndef NUMBER_OF_VOICES
+#define NUMBER_OF_VOICES 12
+#endif
+
 
 class MidiLatchManager
 {
@@ -59,7 +63,7 @@ public:
 	
 private:
 	
-	const static int numberOfVoices = 12; // the max # of notes that can be latched is the # of active instances of HarmonyVoice
+	const static int numberOfVoices = NUMBER_OF_VOICES; // the max # of notes that can be latched is the # of active instances of HarmonyVoice
 										// link this to global numVoices setting
 	
 	int heldNoteOffs[numberOfVoices]; // array holds all note offs recieved while latch is active. Holds -1 for "empty array slot"

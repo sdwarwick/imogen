@@ -17,12 +17,20 @@
 #include "MidiPanningManager.h"
 #include "MidiLatchManager.h"
 
+#ifndef NUMBER_OF_VOICES
+#define NUMBER_OF_VOICES 12
+#endif
+
 class MidiProcessor
 {
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), numberOfVoices(12), lastRecievedPitchBend(64) { };
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), lastRecievedPitchBend(64)
+	{
+		numberOfVoices = NUMBER_OF_VOICES;
+		
+	};
 	
 	
 	// the "MIDI CALLBACK" ::
@@ -102,7 +110,7 @@ public:
 private:
 	OwnedArray<HarmonyVoice>& harmonyEngine;
 	
-	const int numberOfVoices;  // link this to global # of voices setting
+	int numberOfVoices;  // link this to global # of voices setting
 	
 	PolyphonyVoiceManager polyphonyManager;
 	VoiceStealingManager stealingManager;
