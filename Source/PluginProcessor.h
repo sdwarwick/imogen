@@ -63,7 +63,7 @@ public:
 	MidiProcessor midiProcessor;
 	bool midiLatch;
 	
-	float* window;
+	Array<float>* window;
 	
 //==============================================================================
 	

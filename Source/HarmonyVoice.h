@@ -97,7 +97,7 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const double modInputFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, float* window, Array<int>* epochLocations) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const double modInputFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window, Array<int>* epochLocations) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
 		checkBufferSizes(numSamples);

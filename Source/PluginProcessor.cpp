@@ -38,6 +38,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	dryvoxpanningmults[0] = 64;
 	dryvoxpanningmults[1] = 64;
+	
+	window = new Array<float>;
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -45,7 +47,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 		delete harmEngine[i];
 	}
 	
-	delete[] window;
+	delete window;
 }
 
 
@@ -482,13 +484,16 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 
 
 void ImogenAudioProcessor::calcWindow(int length) {
-	
 	if (length < analysisShift) { length = analysisShift; };
 	
 	const int winLen = length;
 	
-	delete[] window;
-	window = new float[winLen];
+	window->clearQuick();
+	
+	if(window->size() != winLen) {
+		window->resize(winLen);
+	}
+	
 	
 	if(winLen == 1) {
 		window[0] = 1.0f;
@@ -501,9 +506,9 @@ void ImogenAudioProcessor::calcWindow(int length) {
 	
 	window[0] = 0;
 	for(int i = 1; i <= middle; ++i) {
-		window[i] = window[i-1] + slope;
+		window->set(i, window->getUnchecked(i - 1) + slope);
 	}
 	for(int i = middle+1; i <= N; ++i) {
-		window[i] = window[N - i];
+		window->set(i, window->getUnchecked(N -i));
 	}
-}
+};
