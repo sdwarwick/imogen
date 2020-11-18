@@ -10,9 +10,7 @@
 
 #pragma once
 
-#ifndef TOLERANCE
 #define TOLERANCE 0.15
-#endif
 
 
 class PitchTracker
