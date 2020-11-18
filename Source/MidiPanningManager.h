@@ -21,10 +21,10 @@ class MidiPanningManager
 {
 public:
 	
-	MidiPanningManager(): middleIndex(round(numberOfVoices / 2)), indexOfLastSentPanVal(0)
+	MidiPanningManager(): middleIndex(round(NUMBER_OF_VOICES / 2)), indexOfLastSentPanVal(0)
 	{
 		mapArrayIndexes();
-		for(int i = 0; i < numberOfVoices; ++i) {
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			possiblePanVals[i] = 64;
 			panValsInAssigningOrder[i] = 64;
 		}
@@ -37,17 +37,17 @@ public:
 		const float rangeMultiplier = newStereoWidth/100;
 		const float maxPan = 63.5 + (63.5 * rangeMultiplier);
 		const float minPan = 63.5 - (63.5 * rangeMultiplier);
-		const float increment = (maxPan - minPan) / numberOfVoices;
+		const float increment = (maxPan - minPan) / NUMBER_OF_VOICES;
 		
 		// first, assign all possible, evenly spaced pan vals within range to an array
-		for (int i = 0; i < numberOfVoices - 1; ++i) {
+		for (int i = 0; i < NUMBER_OF_VOICES - 1; ++i) {
 			const float panningVal = minPan + (i * increment) + (increment/2);
 			const int panning = round(panningVal);
 			possiblePanVals[i] = panning;
 		}
 		
 		// then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
-		for (int i = 0; i < numberOfVoices; ++i) {
+		for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			panValsInAssigningOrder[i] = possiblePanVals[(arrayIndexesMapped[i])];
 		}
 	};
@@ -55,7 +55,7 @@ public:
 	
 	int getNextPanVal() {
 		const int indexReadingFrom = indexOfLastSentPanVal + 1;
-		if (indexReadingFrom <= numberOfVoices - 1) {
+		if (indexReadingFrom <= NUMBER_OF_VOICES - 1) {
 			return panValsInAssigningOrder[indexReadingFrom];
 			++indexOfLastSentPanVal;
 		} else {
@@ -76,12 +76,12 @@ public:
 								   							
 	
 private:
-	const static int numberOfVoices = NUMBER_OF_VOICES;  // link this to global # of voices setting
+
 	const int middleIndex;
 	
-	int possiblePanVals[numberOfVoices];
-	int panValsInAssigningOrder[numberOfVoices];
-	int arrayIndexesMapped[numberOfVoices];
+	int possiblePanVals[NUMBER_OF_VOICES];
+	int panValsInAssigningOrder[NUMBER_OF_VOICES];
+	int arrayIndexesMapped[NUMBER_OF_VOICES];
 	int indexOfLastSentPanVal;
 	
 	void mapArrayIndexes() {
@@ -102,7 +102,7 @@ private:
 		int p = 1;
 		int m = -1;
 		
-		while (i < numberOfVoices) {
+		while (i < NUMBER_OF_VOICES) {
 			if(i % 2 == 0) {
 				// i is even
 				if(middleIndex + p)

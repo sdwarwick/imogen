@@ -26,11 +26,7 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), lastRecievedPitchBend(64)
-	{
-		numberOfVoices = NUMBER_OF_VOICES;
-		
-	};
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), lastRecievedPitchBend(64) { };
 	
 	
 	// the "MIDI CALLBACK" ::
@@ -58,7 +54,7 @@ public:
 				if(currentMessage.isPitchWheel())
 				{
 					const int pitchBend = currentMessage.getPitchWheelValue();
-					for(int i = 0; i < numberOfVoices; ++i) { harmonyEngine[i]->pitchBend(pitchBend); }
+					for(int i = 0; i < NUMBER_OF_VOICES; ++i) { harmonyEngine[i]->pitchBend(pitchBend); }
 					lastRecievedPitchBend = pitchBend;
 				} else {
 					// non-note events go to here...
@@ -74,7 +70,7 @@ public:
 	
 	// run this function to kill all active harmony notes:
 	void killAll() {  // run this function to clear all held / turned on midi notes
-		for(int i = 0; i < numberOfVoices; ++i) {
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
 			if (returnedmidipitch != -1) { harmonyNoteOff(returnedmidipitch); }
 		}
@@ -97,7 +93,7 @@ public:
 	
 	void turnOffLatch()  // run this function to turn off latch & send held note offs out to harmony engine
 	{
-		for(int i = 0; i < numberOfVoices; ++i)
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
 			const int returnedVal = latchManager.noteAtIndex(i);
 			if(returnedVal != -1) { harmonyNoteOff(returnedVal); }
@@ -109,8 +105,6 @@ public:
 	
 private:
 	OwnedArray<HarmonyVoice>& harmonyEngine;
-	
-	int numberOfVoices;  // link this to global # of voices setting
 	
 	PolyphonyVoiceManager polyphonyManager;
 	VoiceStealingManager stealingManager;
@@ -126,7 +120,7 @@ private:
 		const int newVelocity = currentMessage.getVelocity();
 		const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
 		
-		if(newVoiceNumber >= 0 && newVoiceNumber < numberOfVoices) {
+		if(newVoiceNumber >= 0 && newVoiceNumber < NUMBER_OF_VOICES) {
 			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 			stealingManager.addSentVoice(newVoiceNumber);
 			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);

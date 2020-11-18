@@ -37,7 +37,7 @@ public:
 		
 		bool foundNextVoice = false;
 		int voiceTesting = 0;
-		while(foundNextVoice == false && voiceTesting < numberOfVoices)
+		while(foundNextVoice == false && voiceTesting < NUMBER_OF_VOICES)
 		{
 			if(harmonyPitches[voiceTesting] == -1) {
 				foundNextVoice = true;
@@ -54,7 +54,7 @@ public:
 	int turnOffNote(const int noteNumber)
 	{
 		int voicetest = 0;
-		while(voicetest < numberOfVoices)
+		while(voicetest < NUMBER_OF_VOICES)
 		{
 			if(harmonyPitches[voicetest] == noteNumber) {
 				harmonyPitches[voicetest] = -1;
@@ -69,7 +69,7 @@ public:
 	
 	bool isPitchActive(const int midiPitch) const {
 		bool foundIt = false;
-		for(int i = 0; i < numberOfVoices; ++i) {
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if (harmonyPitches[i] == midiPitch) {
 				foundIt = true;
 				break;
@@ -86,11 +86,10 @@ public:
 	
 	void clear() {
 		int i = 0;
-		while (i < numberOfVoices) { harmonyPitches[i] = -1; ++i; }
+		while (i < NUMBER_OF_VOICES) { harmonyPitches[i] = -1; ++i; }
 	};
 	
 	
 private:
-	const static int numberOfVoices = NUMBER_OF_VOICES;  // link this to global # of voices setting
-	int harmonyPitches[numberOfVoices];
+	int harmonyPitches[NUMBER_OF_VOICES];
 };

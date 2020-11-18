@@ -10,6 +10,10 @@
 
 #pragma once
 
+#ifndef TOLERANCE
+#define TOLERANCE 0.15
+#endif
+
 
 class PitchTracker
 {
@@ -43,7 +47,6 @@ public:
 private:
 	
 	int bufferSize;
-	float tolerance = 0.15;
 	
 	AudioBuffer<float> yin;
 
@@ -75,7 +78,7 @@ private:
 				yinData[tau] = 1.0;
 			}
 			period = tau - 3;
-			if (tau > 4 && yinData[period] < tolerance && yinData[period] < yinData[period + 1]) {
+			if (tau > 4 && yinData[period] < TOLERANCE && yinData[period] < yinData[period + 1]) {
 				return quadraticPeakPosition(yin.getReadPointer(0), period);
 			}
 		}

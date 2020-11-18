@@ -24,13 +24,13 @@ public:
 	};
 
 	void clear() {
-		for(int i = 0; i < numberOfVoices; ++i) { heldNoteOffs[i] = -1; }
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) { heldNoteOffs[i] = -1; }
 	};
 	
 	
 	void noteOffRecieved(const int noteNumber) {
 		int i = 0;
-		while (i < numberOfVoices)
+		while (i < NUMBER_OF_VOICES)
 		{
 			if (heldNoteOffs[i] == -1) {
 				heldNoteOffs[i] = noteNumber;
@@ -44,7 +44,7 @@ public:
 	
 	void noteOnRecieved(const int noteNumber) {
 		int i = 0;
-		while (i < numberOfVoices)
+		while (i < NUMBER_OF_VOICES)
 		{
 			if (heldNoteOffs[i] == noteNumber) {
 				heldNoteOffs[i] = -1;
@@ -63,8 +63,5 @@ public:
 	
 private:
 	
-	const static int numberOfVoices = NUMBER_OF_VOICES; // the max # of notes that can be latched is the # of active instances of HarmonyVoice
-										// link this to global numVoices setting
-	
-	int heldNoteOffs[numberOfVoices]; // array holds all note offs recieved while latch is active. Holds -1 for "empty array slot"
+	int heldNoteOffs[NUMBER_OF_VOICES]; // array holds all note offs recieved while latch is active. Holds -1 for "empty array slot"
 };

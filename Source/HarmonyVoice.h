@@ -18,8 +18,6 @@
 
 class HarmonyVoice {
 	
-	// STiLL NEED TO DEAL WITH:
-	// pitch wheel / pitch bend
 	
 public:
 		
