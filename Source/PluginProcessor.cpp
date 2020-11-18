@@ -39,9 +39,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	dryvoxpanningmults[0] = 64;
 	dryvoxpanningmults[1] = 64;
 	
-	window = new Array<float>;
-	
 	epochLocations = new Array<int>;
+	
+	window = new Array<float>;
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -49,8 +49,9 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 		delete harmEngine[i];
 	}
 	
-	delete[] window;
 	delete[] epochLocations;
+	
+	delete[] window;
 }
 
 
@@ -452,7 +453,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
 	windowLength = analysisShift + analysisShiftHalved + 1; 
 	if(windowLength != prevWindowLength) {
-		calcWindow(windowLength);
+	hanning.calcWindow(windowLength, analysisShift, analysisShiftHalved, window);
 	}
 	epochs.findEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch, epochLocations);
 };
@@ -484,29 +485,3 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 	
 };
 
-
-
-void ImogenAudioProcessor::calcWindow(int length)
-{
-	if (length < analysisShift + analysisShiftHalved) { length = analysisShift + analysisShiftHalved; };
-	
-	const int winLen = length;
-	
-	window->clearQuick();
-	
-	if(window->size() != winLen) {
-		window->resize(winLen);
-	}
-	
-	const int N = winLen - 1;
-	const int middle = N >> 1;
-	const float slope = ((float)(1<<15))/(N*4);
-	
-	window[0] = 0;
-	for(int i = 1; i <= middle; ++i) {
-		window->set(i, window->getUnchecked(i - 1) + slope);
-	}
-	for(int i = middle+1; i <= N; ++i) {
-		window->set(i, window->getUnchecked(N -i));
-	}
-};
