@@ -40,6 +40,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	dryvoxpanningmults[1] = 64;
 	
 	window = new Array<float>;
+	
+	epochLocations = new Array<int>;
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -47,7 +49,8 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 		delete harmEngine[i];
 	}
 	
-	delete window;
+	delete[] window;
+	delete[] epochLocations;
 }
 
 
@@ -321,7 +324,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 			
 			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window, &epochLocations);
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window, epochLocations);
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)
@@ -451,7 +454,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	if(windowLength != prevWindowLength) {
 		calcWindow(windowLength);
 	}
-	epochLocations = epochs.returnEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch);
+	epochs.findEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch, epochLocations);
 };
 
 
@@ -483,8 +486,9 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 
 
 
-void ImogenAudioProcessor::calcWindow(int length) {
-	if (length < analysisShift) { length = analysisShift; };
+void ImogenAudioProcessor::calcWindow(int length)
+{
+	if (length < analysisShift + analysisShiftHalved) { length = analysisShift + analysisShiftHalved; };
 	
 	const int winLen = length;
 	
@@ -492,12 +496,6 @@ void ImogenAudioProcessor::calcWindow(int length) {
 	
 	if(window->size() != winLen) {
 		window->resize(winLen);
-	}
-	
-	
-	if(winLen == 1) {
-		window[0] = 1.0f;
-		return;
 	}
 	
 	const int N = winLen - 1;

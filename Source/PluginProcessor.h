@@ -65,6 +65,8 @@ public:
 	
 	Array<float>* window;
 	
+	Array<int>* epochLocations;
+	
 //==============================================================================
 	
 private:
@@ -112,7 +114,6 @@ private:
 	PitchTracker pitchTracker;
 	void calcWindow(const int length);
 	EpochExtractor epochs;
-	Array<int> epochLocations;
 	
 	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& dryBuffer, const int numSamples);
 	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));

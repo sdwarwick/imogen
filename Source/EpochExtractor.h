@@ -14,12 +14,12 @@ class EpochExtractor {
 	
 public:
 	
-	Array<int> returnEpochs(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate, const float inputFreq)
+	void findEpochs(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate, const float inputFreq, Array<int>* epochLocations)
 	{
 		// determine pitch epoch locations in time, referenced by sample # within input buffer, and write these sample number locations to an integer array
 		
-		Array<int> epochs;
-		return epochs;
+		epochLocations->clearQuick();
+		
 	};
 	
 private:
