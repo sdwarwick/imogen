@@ -4,6 +4,8 @@
     Window.h
     Created: 18 Nov 2020 1:16:01am
     Author:  Ben Vining
+ 
+ 	Computes sample values for a Hanning window of variable length & writes to *window array
 
   ==============================================================================
 */
@@ -22,8 +24,6 @@ public:
 		
 		const int winLen = length;
 		
-		window->clearQuick();
-		
 		if(window->size() != winLen) {
 			window->resize(winLen);
 		}
@@ -39,7 +39,8 @@ public:
 	
 private:
 	
-	float ncos(const int order, const int i, const int size) const {
+	float ncos(const int order, const int i, const int size) const
+	{
 		return std::cos((order * i * MathConstants<float>::pi)/(size - 1));
 	}
 	
