@@ -19,6 +19,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		midiProcessor(harmEngine),
 		midiLatch(false),
 		lastSampleRate(44100), lastBlockSize(512), prevLastSampleRate(44100), prevLastBlockSize(512),
+		frameIsPitched(false),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
 		previousStereoWidth(100.0f),
 		prevVelocitySens(100.0f),
@@ -48,7 +49,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	epochLocations = new Array<int>;
 	
 	window = new Array<float>;
-	window->resize(100);
+	window->resize(151);
 	hanning.calcWindow(151, window);
 	
 	dryvoxpanningmults[0] = 0.5f;
@@ -155,64 +156,103 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			for (int i = 0; i < numVoices; ++i) {
 				harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
 			}
-			prevLastSampleRate = lastSampleRate;
-			prevLastBlockSize = lastBlockSize;
+			
+			pitchTracker.updateSettings(lastBlockSize);
 		}
+		prevLastSampleRate = lastSampleRate;
+		prevLastBlockSize = lastBlockSize;
 		if (wetBuffer.getNumSamples() != samplesPerBlock) {
-			wetBuffer.setSize(2, samplesPerBlock, true, true, true);
+			wetBuffer.setSize(2, samplesPerBlock);
 		}
 		if(dryBuffer.getNumSamples() != samplesPerBlock) {
-			dryBuffer.setSize(2, samplesPerBlock, true, true, true);
-		}
-		for(int i = 0; i < numVoices; ++i) {
-			harmEngine[i]->checkBufferSizes(samplesPerBlock);
+			dryBuffer.setSize(2, samplesPerBlock);
 		}
 	}
 	
-	// ADSR settings (...and also midi velocity sensitivity)
-	if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener)
+	// ADSR settings
 	{
-		for (int i = 0; i < numVoices; ++i) {
-			harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
+		if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
+		{
+			for (int i = 0; i < numVoices; ++i) {
+				harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
+			}
+			prevAttack = *adsrAttackListener;
+			prevDecay = *adsrDecayListener;
+			prevSustain = *adsrSustainListener;
+			prevRelease = *adsrReleaseListener;
+			prevVelocitySens = *midiVelocitySensListener;
+	}
+	}
+	
+	// MIDI velocity sensitivity
+	{
+		if(prevVelocitySens != *midiVelocitySensListener) {
+			for(int i = 0; i < numVoices; ++i)
+			{
+				harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
+			}
 		}
-		prevAttack = *adsrAttackListener;
-		prevDecay = *adsrDecayListener;
-		prevSustain = *adsrSustainListener;
-		prevRelease = *adsrReleaseListener;
 		prevVelocitySens = *midiVelocitySensListener;
 	}
 	
 	// stereo width
-	if (previousStereoWidth != *stereoWidthListener) {
-		midiProcessor.updateStereoWidth(stereoWidthListener);
-		previousStereoWidth = *stereoWidthListener;
+	{
+		if (previousStereoWidth != *stereoWidthListener) {
+			midiProcessor.updateStereoWidth(stereoWidthListener);
+			previousStereoWidth = *stereoWidthListener;
+		}
 	}
 	
 	// dry vox pan
-	if(*dryVoxPanListener != previousmidipan) {
-		const float panR = (*dryVoxPanListener)/127.0;
-		const float panL = 1.0 - panR;
-		dryvoxpanningmults[0] = panL;
-		dryvoxpanningmults[1] = panR;
-		
-		previousmidipan = *dryVoxPanListener;
+	{
+		if(*dryVoxPanListener != previousmidipan) {
+			const float panR = (*dryVoxPanListener)/127.0f;
+			const float panL = 1.0f - panR;
+			dryvoxpanningmults[0] = panL;
+			dryvoxpanningmults[1] = panR;
+			
+			previousmidipan = *dryVoxPanListener;
+		}
 	}
 	
 	// pitch bend settings
-	if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
-		for (int i = 0; i < numVoices; ++i) {
-			harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+	{
+		if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
+			for (int i = 0; i < numVoices; ++i) {
+				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+			}
+			prevPitchBendUp = *pitchBendUpListener;
+			prevPitchBendDown = *pitchBendDownListener;
 		}
-		prevPitchBendUp = *pitchBendUpListener;
-		prevPitchBendDown = *pitchBendDownListener;
 	}
 	
 	// master dry/wet
-	if(*masterDryWetListener != previousMasterDryWet) {
-		wetMultiplier = (*masterDryWetListener)/100.0f;
-		dryMultiplier = 1.0 - wetMultiplier;
-		previousMasterDryWet = *masterDryWetListener;
+	{
+		if(*masterDryWetListener != previousMasterDryWet) {
+			wetMultiplier = (*masterDryWetListener)/100.0f;
+			dryMultiplier = 1.0f - wetMultiplier;
+			previousMasterDryWet = *masterDryWetListener;
+		}
 	}
+	
+	// input & output gain
+	{
+		if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
+			inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
+			outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
+		}
+		prevideb = *inputGainListener;
+		prevodeb = *outputGainListener;
+	}
+	
+	// MIDI latch
+	{
+		latchIsOn = *midiLatchListener > 0.5f;
+		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
+		previousLatch = latchIsOn;
+	}
+	
+	stealingIsOn = *voiceStealingListener > 0.5f;
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -267,47 +307,83 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	// update settings/parameters
 	{
-		if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
-			inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
-			outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
-		}
-		
-		if(*masterDryWetListener != previousMasterDryWet) {
-			wetMultiplier = (*masterDryWetListener)/100.0f;
-			dryMultiplier = 1.0 - wetMultiplier;
-		}
-		
-		if(previousStereoWidth != *stereoWidthListener) {  // update stereo width, if the value has changed
-			midiProcessor.updateStereoWidth(stereoWidthListener); // update array of possible panning values
-			// update active voices' assigned panning values
-			int activeVoiceNumber = 0;
-			for (int i = 0; i < numVoices; ++i) {
-				if(harmEngine[i]->voiceIsOn) {
-					midiProcessor.refreshMidiPanVal(i, activeVoiceNumber);
-					++activeVoiceNumber;
+		// ADSR settings
+		{
+			if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
+			{
+				for (int i = 0; i < numVoices; ++i) {
+					harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
 				}
 			}
 		}
-		// pitch bend settings -- need to update all voices' pitch bend settings, even if voice is currently off !
-		if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
-			for(int i = 0; i < numVoices; ++i) {
-				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+		
+		// MIDI velocity sensitivity
+		{
+			if(prevVelocitySens != *midiVelocitySensListener) {
+				for(int i = 0; i < numVoices; ++i)
+				{
+					harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
+				}
 			}
 		}
 		
-		latchIsOn = *midiLatchListener > 0.5f;
-		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
+		// stereo width
+		{
+			if (previousStereoWidth != *stereoWidthListener) {
+				midiProcessor.updateStereoWidth(stereoWidthListener);
+			}
+		}
 		
-		stealingIsOn = *voiceStealingListener > 0.5f;
+		// dry vox pan
+		{
+			if(*dryVoxPanListener != previousmidipan) {
+				const float panR = (*dryVoxPanListener)/127.0f;
+				const float panL = 1.0f - panR;
+				dryvoxpanningmults[0] = panL;
+				dryvoxpanningmults[1] = panR;
+			}
+		}
+		
+		// pitch bend settings
+		{
+			if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
+				for (int i = 0; i < numVoices; ++i) {
+					harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
+				}
+			}
+		}
+		
+		// master dry/wet
+		{
+			if(*masterDryWetListener != previousMasterDryWet) {
+				wetMultiplier = (*masterDryWetListener)/100.0f;
+				dryMultiplier = 1.0f - wetMultiplier;
+			}
+		}
+		
+		// input & output gain
+		{
+			if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
+				inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
+				outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
+			}
+		}
+		
+		// MIDI latch
+		{
+			latchIsOn = *midiLatchListener > 0.5f;
+			if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
+		}
 	}
+	
 	
 	// check buffer sizes
 	{
 		if (wetBuffer.getNumSamples() != numSamples) {
-			wetBuffer.setSize(2, numSamples, true, true, true);
+			wetBuffer.setSize(2, numSamples);
 		}
 		if(dryBuffer.getNumSamples() != numSamples) {
-			dryBuffer.setSize(2, numSamples, true, true, true);
+			dryBuffer.setSize(2, numSamples);
 		}
 	}
 	
@@ -315,27 +391,20 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
-	buffer.applyGain(0, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
+	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
 	
-	wetBuffer.clear();
-	
-	writeToDryBuffer(buffer, inputChannel, dryBuffer, numSamples);
+	writeToDryBuffer(buffer, inputChannel, dryBuffer, numSamples); // write this frame's input to the stereo dryBuffer
 	
 	analyzeInput(buffer, inputChannel, numSamples);
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
 	int activeVoices = 0;
-	for (int i = 0; i < numVoices; i++) {  // i = the harmony voice # currently being processed
+	for (int i = 0; i < numVoices; ++i) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
-			// update ADSR parameters & other settings, if they have changed
-			{
-				if(prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener || prevVelocitySens != *midiVelocitySensListener) {
-				harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener, midiVelocitySensListener);
-				}
-			}
+			// frameIsPitched ?
 			
-			// render next audio vector (writes pitch shifted samples to HarmonyVoice's stereo harmonyBuffer)
+			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
 			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window, epochLocations);
 			
 			// writes shifted sample values to wetBuffer
@@ -365,6 +434,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	
 	
+	// clear any extra channels present in I/O buffer
 	{
 		if (buffer.getNumChannels() > 2) {
 			for (int i = 3; i <= buffer.getNumChannels(); ++i) {
@@ -384,10 +454,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		{
 			outputSample[sample] = ((wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier))/2.0f; // mix dry & wet signals together & output to speakers -- is /2 here necessary?
 		}
+		
+		buffer.applyGain(channel, 0, numSamples, outputGainMultiplier);
 	}
 	
-	buffer.applyGain(0, 0, numSamples, outputGainMultiplier);
-	buffer.applyGain(1, 0, numSamples, outputGainMultiplier);
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
@@ -399,14 +469,16 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		prevSustain = *adsrSustainListener;
 		prevRelease = *adsrReleaseListener;
 		prevVelocitySens = *midiVelocitySensListener;
-		previousLatch = latchIsOn;
+		prevVelocitySens = *midiVelocitySensListener;
 		previousStereoWidth = *stereoWidthListener;
-		previousMasterDryWet = *masterDryWetListener;
+		previousmidipan = *dryVoxPanListener;
 		prevPitchBendUp = *pitchBendUpListener;
 		prevPitchBendDown = *pitchBendDownListener;
-		previousmidipan = *dryVoxPanListener; // this is the panning for the dry vox signal
+		previousMasterDryWet = *masterDryWetListener;
 		prevideb = *inputGainListener;
 		prevodeb = *outputGainListener;
+		previousLatch = latchIsOn;
+		stealingIsOn = *voiceStealingListener > 0.5f;
 		prevWindowLength = windowLength;
 	}
 }
@@ -459,15 +531,28 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
 {
 	const float newPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
-	if (newPitch > 0) { voxCurrentPitch = newPitch; }
-	analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
+	if (newPitch > 0.0f)
+	{
+		voxCurrentPitch = newPitch;
+		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
+		frameIsPitched = true;
+	} else {
+		voxCurrentPitch = 60.0f; // nneed to set to arbitrary value ??
+		analysisShift = 100;  // default grain size for unpitched parts of signal
+		frameIsPitched = false;
+	}
+	
 	analysisShiftHalved = round(analysisShift/2);
 	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
-	windowLength = analysisShift + analysisShiftHalved + 1;
+	
+	windowLength = analysisShift;
+	// windowLength = analysisShift + analysisShiftHalved + 1;
 	if(windowLength != prevWindowLength) {
 		hanning.calcWindow(windowLength, window);
 	}
+	
 	epochs.findEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch, epochLocations);
+	
 };
 
 
@@ -478,14 +563,7 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
 	
 	// NEED TO ACCOUNT FOR LATENCY OF THE HARMONY ALGORITHM !!!
-	
-	if(*dryVoxPanListener != previousmidipan) {
-		const float panR = (*dryVoxPanListener)/127.0;
-		const float panL = 1.0 - panR;
-		dryvoxpanningmults[0] = panL;
-		dryvoxpanningmults[1] = panR;
-	}
-	
+
 	const float* readingPointer = inputBuffer.getReadPointer(inputChan);
 	
 	for(int channel = 0; channel < 2; ++channel) {

@@ -72,14 +72,18 @@ public:
 	};
 	
 	
-	void adsrSettingsListener(float* adsrAttackTime, float* adsrDecayTime, float* adsrSustainRatio, float* adsrReleaseTime, float* midiVelocitySensListener) {
+	void adsrSettingsListener(float* adsrAttackTime, float* adsrDecayTime, float* adsrSustainRatio, float* adsrReleaseTime) {
 		// attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
 		adsrParams.attack = *adsrAttackTime;
 		adsrParams.decay = *adsrDecayTime;
 		adsrParams.sustain = *adsrSustainRatio;
 		adsrParams.release = *adsrReleaseTime;
 		adsrEnv.setParameters(adsrParams);
-		
+	};
+	
+	
+	void midiVelocitySensitivityListener(float* midiVelocitySensListener)
+	{
 		midiVelocitySensitivity = *midiVelocitySensListener / 100.0f;
 	};
 	
@@ -89,16 +93,6 @@ public:
 		pitchBendRangeDown = *rangeDown;
 	};
 	
-	
-	void checkBufferSizes(const int newNumSamples) {
-		if(shiftedBuffer.getNumSamples() != newNumSamples) {
-			shiftedBuffer.setSize(1, newNumSamples);
-		}
-		if(harmonyBuffer.getNumSamples() != newNumSamples) {
-			harmonyBuffer.setSize(2, newNumSamples);
-		}
-		pitchShifter.checkBuffer(newNumSamples);
-	};
 	
 	void clearBuffers() {
 		shiftedBuffer.clear();
@@ -115,18 +109,21 @@ public:
 		// this function puts shifted samples into the mono shiftedBuffer
 		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, desiredFrequency, analysisShift, analysisShiftHalved, analysisLimit, window, epochLocations);
 		
+		shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
+		
 		// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
 		const float* shiftedReader = shiftedBuffer.getReadPointer(0);
-		for(int sample = 0; sample < numSamples; ++sample) {
-
-			if(adsrEnv.isActive() == false) {
-				voiceIsOn = false;
-				amplitudeMultiplier = 0.0f;
-			} else {
-				const float envelopedShiftedSignal = shiftedReader[sample] * amplitudeMultiplier * adsrEnv.getNextSample();
-
-				for (int channel = 0; channel < 2; ++channel) {  // put into STEREO BUFFER
-					harmonyBuffer.getWritePointer(channel)[sample] = envelopedShiftedSignal * panningMultipliers[channel];
+		for(int channel = 0; channel < 2; ++channel)
+		{
+			float* writingTo = harmonyBuffer.getWritePointer(channel);
+			for(int sample = 0; sample < numSamples; ++sample)
+			{
+				if(adsrEnv.isActive() == false) {
+					voiceIsOn = false;
+					amplitudeMultiplier = 0.0f;
+					clearBuffers();
+				} else {
+					writingTo[sample] = shiftedReader[sample] * adsrEnv.getNextSample() * panningMultipliers[channel];
 				}
 			}
 		}
@@ -136,9 +133,12 @@ public:
 	
 	void changePanning(const int newPanVal) {   // this function updates the voice's panning if it is active when the stereo width setting is changed
 												// TODO: ramp this value???
-		midiPan = newPanVal;
-		prevPan = newPanVal;
-		calculatePanningChannelMultipliers(newPanVal);
+		if(midiPan != newPanVal)
+		{
+			prevPan = midiPan;
+			midiPan = newPanVal;
+			calculatePanningChannelMultipliers(newPanVal);
+		}
 	};
 	
 	
@@ -213,6 +213,18 @@ private:
 		const float initialMutiplier = midiVelocity / 127.0; // what the multiplier would be without any sensitivity calculations...
 		return ((1 - initialMutiplier) * (1 - midiVelocitySensitivity) + initialMutiplier);
 	};
+	
+	
+	void checkBufferSizes(const int newNumSamples) {
+		if(shiftedBuffer.getNumSamples() != newNumSamples) {
+			shiftedBuffer.setSize(1, newNumSamples);
+		}
+		if(harmonyBuffer.getNumSamples() != newNumSamples) {
+			harmonyBuffer.setSize(2, newNumSamples);
+		}
+		pitchShifter.checkBuffer(newNumSamples);
+	};
+	
 };
 
 

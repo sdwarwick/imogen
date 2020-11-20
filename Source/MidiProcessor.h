@@ -76,20 +76,25 @@ public:
 			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
 			if (returnedmidipitch != -1) { harmonyNoteOff(returnedmidipitch); }
 		}
-		polyphonyManager.clear();
+		if(polyphonyManager.areAllVoicesOff() != true) {
+			polyphonyManager.clear();
+		} else {
+			midiPanningManager.reset();
+		}
 		stealingManager.clear();
-		midiPanningManager.reset();
 		latchManager.clear();
 	};
 
 	
 	void updateStereoWidth(float* newStereoWidth) {
 		midiPanningManager.updateStereoWidth(*newStereoWidth);
-	};
-	
-	
-	void refreshMidiPanVal (const int voiceNumber, const int indexToRead) {
-		harmonyEngine[voiceNumber]->changePanning(midiPanningManager.retrievePanVal(indexToRead));
+		int activeVoiceNumber = 0;
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
+			if(harmonyEngine[i]->voiceIsOn) {
+				harmonyEngine[i]->changePanning(midiPanningManager.retrievePanVal(activeVoiceNumber));
+				++activeVoiceNumber;
+			}
+		}
 	};
 	
 	

@@ -18,15 +18,16 @@ class PitchTracker
 	
 public:
 	
-	PitchTracker() {
+	PitchTracker(): bufferSize(512) {
 		yin.setSize(1, 512);
 	};
 	
 	
 	float returnPitch(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate)
 	{
-		if(yin.getNumSamples() != numSamples) {
+		if(bufferSize != numSamples) {
 			yin.setSize(1, numSamples);
+			bufferSize = numSamples;
 		}
 		
 		float pitch = calculatePitch(inputBuffer, inputChan, numSamples, samplerate);
@@ -38,6 +39,13 @@ public:
 		}
 		
 		return pitch;
+	};
+	
+	
+	void updateSettings(const int newBlockSize)
+	{
+		yin.setSize(1, newBlockSize);
+		bufferSize = newBlockSize;
 	};
 	
 	

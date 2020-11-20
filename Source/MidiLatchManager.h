@@ -23,6 +23,7 @@ public:
 		clear();
 	};
 
+	
 	void clear() {
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{

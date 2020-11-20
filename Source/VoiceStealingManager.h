@@ -22,6 +22,7 @@ public:
 		sentVoiceNumbers.clear();
 	};
 	
+	
 	void addSentVoice(const int sentVoiceNum) {
 		if(sentVoiceNumbers.contains(sentVoiceNum) != true) {
 			sentVoiceNumbers.add(sentVoiceNum);

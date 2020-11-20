@@ -30,6 +30,7 @@ public:
 		}
 	};
 	
+	
 	void updateStereoWidth(const int newStereoWidth) {
 		
 		const float rangeMultiplier = newStereoWidth/100.0f;

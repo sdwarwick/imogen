@@ -81,6 +81,8 @@ private:
 	double prevLastSampleRate;
 	int prevLastBlockSize;
 	
+	bool frameIsPitched;
+	
 	// variables for tracking GUI-changeable parameters
 		float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
 		float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
