@@ -226,5 +226,5 @@ void ImogenAudioProcessorEditor::buttonClicked(Button* button) {
 
 
 void ImogenAudioProcessorEditor::timerCallback() {
-	
+//	this->repaint();
 }

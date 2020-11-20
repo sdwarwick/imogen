@@ -74,11 +74,11 @@ private:
 			yinData[tau] = 0.0f;
 			for(int j = 0; j < bufferSize; ++j) {
 				delta = inputData[j] - inputData[j + tau];
-				yinData[tau] += (delta * delta);
+				yinData[tau] += delta * delta;
 			}
 			runningSum += yinData[tau];
 			if(runningSum != 0) {
-				yinData[tau] *= (tau/runningSum);
+				yinData[tau] *= tau / runningSum;
 			}
 			else {
 				yinData[tau] = 1.0;
