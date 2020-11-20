@@ -12,18 +12,24 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                       #endif
                        ),
+		numVoices(NUMBER_OF_VOICES),
+		numChannels(2),
+		voxCurrentPitch(0.0f),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
 		midiProcessor(harmEngine),
 		midiLatch(false),
+		lastSampleRate(44100), lastBlockSize(512), prevLastSampleRate(44100), prevLastBlockSize(512),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
-		previousStereoWidth(0.0f),
-		prevVelocitySens(0.0f),
-		prevPitchBendUp(0.0f), prevPitchBendDown(0.0f),
+		previousStereoWidth(100.0f),
+		prevVelocitySens(100.0f),
+		prevPitchBendUp(2.0f), prevPitchBendDown(2.0f),
 		latchIsOn(false), previousLatch(false),
 		stealingIsOn(true),
+		analysisShift(100), analysisShiftHalved(50), analysisLimit(461), windowLength(151), prevWindowLength(151),
 		previousmidipan(64),
 		previousMasterDryWet(100),
-		dryMultiplier(0.0f), wetMultiplier(1.0f)
+		dryMultiplier(0.0f), wetMultiplier(1.0f),
+		prevideb(0.0f), prevodeb(0.0f)
 
 #endif
 {
@@ -42,6 +48,11 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	epochLocations = new Array<int>;
 	
 	window = new Array<float>;
+	window->resize(100);
+	hanning.calcWindow(151, window);
+	
+	dryvoxpanningmults[0] = 0.5f;
+	dryvoxpanningmults[1] = 0.5f;
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -447,13 +458,14 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
 {
-	voxCurrentPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
+	const float newPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
+	if (newPitch > 0) { voxCurrentPitch = newPitch; }
 	analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
 	analysisShiftHalved = round(analysisShift/2);
 	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
-	windowLength = analysisShift + analysisShiftHalved + 1; 
+	windowLength = analysisShift + analysisShiftHalved + 1;
 	if(windowLength != prevWindowLength) {
-		hanning.calcWindow(windowLength, analysisShift, analysisShiftHalved, window);
+		hanning.calcWindow(windowLength, window);
 	}
 	epochs.findEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch, epochLocations);
 };

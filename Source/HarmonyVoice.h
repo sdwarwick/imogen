@@ -23,10 +23,18 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int thisVoiceNumber): voiceIsOn(false), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(thisVoiceNumber), prevPan(-1), panningMultR(0.5), panningMultL(0.5)
+	HarmonyVoice(const int voiceNum): voiceIsOn(false), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), midiPan(64), prevPan(64), panningMultR(0.5), panningMultL(0.5), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f)
 	{
 		shiftedBuffer.setSize(1, 512);
 		harmonyBuffer.setSize(2, 512);
+		panningMultipliers[0] = 0.5f;
+		panningMultipliers[1] = 0.5f;
+		
+		adsrParams.attack = 30;
+		adsrParams.decay = 75;
+		adsrParams.sustain = 0.8;
+		adsrParams.release = 15;
+		adsrEnv.setParameters(adsrParams);
 	};
 	
 	
@@ -51,12 +59,16 @@ public:
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
+		if(adsrEnv.isActive() == false) {
+			adsrEnv.noteOn();
+		}
 	};
 	
 	
 	void updateDSPsettings(const double newSampleRate, const int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
-		pitchShifter.updateDSPsettings(newSampleRate); 
+		pitchShifter.updateDSPsettings(newSampleRate);
+		checkBufferSizes(newBlockSize);
 	};
 	
 	
@@ -68,7 +80,7 @@ public:
 		adsrParams.release = *adsrReleaseTime;
 		adsrEnv.setParameters(adsrParams);
 		
-		midiVelocitySensitivity = (float)(*midiVelocitySensListener / 100);
+		midiVelocitySensitivity = *midiVelocitySensListener / 100.0f;
 	};
 	
 	
@@ -109,6 +121,7 @@ public:
 
 			if(adsrEnv.isActive() == false) {
 				voiceIsOn = false;
+				amplitudeMultiplier = 0.0f;
 			} else {
 				const float envelopedShiftedSignal = shiftedReader[sample] * amplitudeMultiplier * adsrEnv.getNextSample();
 

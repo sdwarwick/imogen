@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "MidiPanningManager.h"
+
 #ifndef NUMBER_OF_VOICES
 #define NUMBER_OF_VOICES 12
 #endif
@@ -22,7 +24,7 @@ class PolyphonyVoiceManager
 	
 public:
 	
-	PolyphonyVoiceManager() {
+	PolyphonyVoiceManager(MidiPanningManager& p): panningManager(p) {
 		clear();
 	};
 	
@@ -30,40 +32,45 @@ public:
 	void updatePitchCollection(const int voiceNumber, const int midiPitch)
 	{
 		harmonyPitches[voiceNumber] = midiPitch;
+		
+		if(midiPitch == -1)
+		{
+			if(areAllVoicesOff() == true) {
+				panningManager.reset();
+			}
+		}
 	};
 	
 	
 	int nextAvailableVoice() const {
-		
-		bool foundNextVoice = false;
+		int voiceNumber = -1;
 		int voiceTesting = 0;
-		while(foundNextVoice == false && voiceTesting < NUMBER_OF_VOICES)
+		while(voiceTesting < NUMBER_OF_VOICES)
 		{
 			if(harmonyPitches[voiceTesting] == -1) {
-				foundNextVoice = true;
-				return voiceTesting;
+				voiceNumber = voiceTesting;
 				break;
 			} else {
 				++voiceTesting;
 			}
 		}
-		if(foundNextVoice == false) { return -1; }
+		return voiceNumber; // returns -1 if no voices are available (ie, a voice must be "stolen")
 	};
 	
 	
-	int turnOffNote(const int noteNumber)
-	{
-		int voicetest = 0;
-		while(voicetest < NUMBER_OF_VOICES)
+	int getIndex(const int pitch) const {
+		int index = -1;
+		int testing = 0;
+		while(testing < NUMBER_OF_VOICES)
 		{
-			if(harmonyPitches[voicetest] == noteNumber) {
-				harmonyPitches[voicetest] = -1;
-				return voicetest;
+			if(harmonyPitches[testing] == pitch) {
+				index = testing;
 				break;
 			} else {
-				++voicetest;
+				++testing;
 			}
 		}
+		return index;
 	};
 	
 	
@@ -86,10 +93,38 @@ public:
 	
 	void clear() {
 		int i = 0;
-		while (i < NUMBER_OF_VOICES) { harmonyPitches[i] = -1; ++i; }
+		while (i < NUMBER_OF_VOICES)
+		{
+			harmonyPitches[i] = -1; ++i;
+		}
+		panningManager.reset();
+	};
+	
+	
+	bool areAllVoicesOff() const
+	{
+		bool allareoff = false;
+		
+		int numberOfOffVoices = 0;
+		
+		for (int i = 0; i < NUMBER_OF_VOICES; ++i)
+		{
+			if(harmonyPitches[i] == -1) {
+				++numberOfOffVoices;
+			}
+		}
+		
+		if(numberOfOffVoices == NUMBER_OF_VOICES)
+		{
+			allareoff = true;
+		}
+		
+		return allareoff;
 	};
 	
 	
 private:
 	int harmonyPitches[NUMBER_OF_VOICES];
+	
+	MidiPanningManager& panningManager;
 };

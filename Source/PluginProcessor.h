@@ -55,11 +55,11 @@ public:
 	
 	//==============================================================================
 	
-	static const int numVoices = NUMBER_OF_VOICES;  // global setting for how many instances of the harmony engine will be running concurrently
+	const int numVoices;  // global setting for how many instances of the harmony engine will be running concurrently
 	
-	static const int numChannels = 2; // declares 2 output channels (stereo). could conceivably be reconstructed to work with more sophisticated spatialization techniques in the future
+	const int numChannels; // declares 2 output channels (stereo). could conceivably be reconstructed to work with more sophisticated spatialization techniques in the future
 	
-	double voxCurrentPitch = 440.;  // a variable to store the modulator signal's current input pitch [as frequency!]
+	double voxCurrentPitch;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
 	AudioProcessorValueTreeState tree;
 	
@@ -78,8 +78,8 @@ private:
 	
 	double lastSampleRate;
 	int lastBlockSize;
-	double prevLastSampleRate = 0.0;
-	int prevLastBlockSize = 0;
+	double prevLastSampleRate;
+	int prevLastBlockSize;
 	
 	// variables for tracking GUI-changeable parameters
 		float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
@@ -111,6 +111,7 @@ private:
 		int* inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
 	
 	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
+	
 	int analysisShift;
 	int analysisShiftHalved;
 	int analysisLimit;

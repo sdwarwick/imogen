@@ -21,7 +21,7 @@ class MidiPanningManager
 {
 public:
 	
-	MidiPanningManager(): middleIndex(round(NUMBER_OF_VOICES / 2)), indexOfLastSentPanVal(0)
+	MidiPanningManager(): middleIndex(ceil(NUMBER_OF_VOICES / 2)), indexOfLastSentPanVal(0)
 	{
 		mapArrayIndexes();
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
@@ -32,32 +32,33 @@ public:
 	
 	void updateStereoWidth(const int newStereoWidth) {
 		
-	//	mapArrayIndexes(); may not need to re-call this function if called in constructor
-		
-		const float rangeMultiplier = newStereoWidth/100;
-		const float maxPan = 63.5 + (63.5 * rangeMultiplier);
-		const float minPan = 63.5 - (63.5 * rangeMultiplier);
+		const float rangeMultiplier = newStereoWidth/100.0f;
+		const float maxPan = 63.5f + (63.5f * rangeMultiplier);
+		const float minPan = 63.5f - (63.5f * rangeMultiplier);
 		const float increment = (maxPan - minPan) / NUMBER_OF_VOICES;
 		
 		// first, assign all possible, evenly spaced pan vals within range to an array
 		for (int i = 0; i < NUMBER_OF_VOICES - 1; ++i) {
-			const float panningVal = minPan + (i * increment) + (increment/2);
+			const float panningVal = minPan + (i * increment) + (increment/2.0f);
 			const int panning = round(panningVal);
 			possiblePanVals[i] = panning;
 		}
 		
 		// then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
 		for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-			panValsInAssigningOrder[i] = possiblePanVals[(arrayIndexesMapped[i])];
+			panValsInAssigningOrder[i] = possiblePanVals[arrayIndexesMapped[i]];
 		}
 	};
 	
 	
-	int getNextPanVal() {
+	int getNextPanVal() const {
 		const int indexReadingFrom = indexOfLastSentPanVal + 1;
-		if (indexReadingFrom <= NUMBER_OF_VOICES - 1) {
+		if (indexReadingFrom < NUMBER_OF_VOICES) {
 			return panValsInAssigningOrder[indexReadingFrom];
-			++indexOfLastSentPanVal;
+			indexOfLastSentPanVal = indexReadingFrom;
+			if (indexOfLastSentPanVal >= NUMBER_OF_VOICES) {
+				indexOfLastSentPanVal = 0;
+			}
 		} else {
 			return panValsInAssigningOrder[0];
 			indexOfLastSentPanVal = 0;
@@ -82,7 +83,7 @@ private:
 	int possiblePanVals[NUMBER_OF_VOICES];
 	int panValsInAssigningOrder[NUMBER_OF_VOICES];
 	int arrayIndexesMapped[NUMBER_OF_VOICES];
-	int indexOfLastSentPanVal;
+	mutable int indexOfLastSentPanVal;
 	
 	void mapArrayIndexes() {
 		/* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and index 11 the highest.

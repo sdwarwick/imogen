@@ -23,28 +23,26 @@ public:
 	};
 	
 	void addSentVoice(const int sentVoiceNum) {
-		sentVoiceNumbers.push_back(sentVoiceNum);
+		if(sentVoiceNumbers.contains(sentVoiceNum) != true) {
+			sentVoiceNumbers.add(sentVoiceNum);
+		}
 	};
 	
 	
 	void removeSentVoice(const int voiceNumRemoving) {
 		// removes voiceNumRemoving from the list of sent voice #s, regardless of where it is in the list, then moves all list elements together so there are no empty spaces
-		for (auto it = sentVoiceNumbers.begin(); it != sentVoiceNumbers.end(); ) {
-			if (*it == voiceNumRemoving) {
-				it = sentVoiceNumbers.erase(it);
-				break;
-			} else {
-				++it;
-			}
-		}
+		sentVoiceNumbers.removeFirstMatchingValue(voiceNumRemoving);
 	};
 	
 	
 	int voiceToSteal() {
 		// returns the first element in the list of sent voice #s, then removes that element from the list and moves all other elements up 1 index
-		const int voiceNumberToSteal = sentVoiceNumbers.front();
-		return voiceNumberToSteal;
-		sentVoiceNumbers.erase(sentVoiceNumbers.begin());
+		if(sentVoiceNumbers.isEmpty() != true) {
+			return sentVoiceNumbers.getUnchecked(0);
+			sentVoiceNumbers.remove(0);
+		} else {
+			return -1;
+		}
 	};
 	
 	
@@ -54,5 +52,6 @@ public:
 	
 	
 private:
-	std::vector <int> sentVoiceNumbers;
+
+	Array<int> sentVoiceNumbers;
 };

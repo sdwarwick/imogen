@@ -19,7 +19,7 @@ class Shifter {
 	
 public:
 	
-	Shifter() {
+	Shifter(): currentSampleRate(44100) {
 		workingBuffer.setSize(0, 1024);
 		workingBuffer.clear();
 	}

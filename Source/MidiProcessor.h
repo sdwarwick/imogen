@@ -26,12 +26,14 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), lastRecievedPitchBend(64) { };
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager), lastRecievedPitchBend(64), isStealingOn(true) { };
 	
 	
 	// the "MIDI CALLBACK" ::
 	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing)
 	{
+		isStealingOn = stealing;
+		
 		for (const MidiMessageMetadata meta : midiMessages)
 		{
 			const MidiMessage currentMessage = meta.getMessage();
@@ -41,12 +43,12 @@ public:
 			{
 				if(midiLatch == false) {
 					if(currentMessage.isNoteOn()) {
-						harmonyNoteOn(currentMessage, stealing);  // voice "stealing" is dealt with inside these functions.
+						harmonyNoteOn(currentMessage);  // voice "stealing" is dealt with inside these functions.
 					} else {
 						harmonyNoteOff(currentMessage.getNoteNumber());
 					}
 				} else {
-					processActiveLatch(currentMessage, stealing);
+					processActiveLatch(currentMessage);
 				}
 			}
 			else
@@ -107,29 +109,34 @@ private:
 	OwnedArray<HarmonyVoice>& harmonyEngine;
 	
 	PolyphonyVoiceManager polyphonyManager;
+	MidiLatchManager latchManager;
 	VoiceStealingManager stealingManager;
 	MidiPanningManager midiPanningManager;
-	MidiLatchManager latchManager;
 	
 	int lastRecievedPitchBend;
 	
+	bool isStealingOn;
+	
+	
 	// sends a note on out to the harmony engine
-	void harmonyNoteOn(const MidiMessage currentMessage, const bool stealingIsOn)
+	void harmonyNoteOn(const MidiMessage currentMessage)
 	{
 		const int newPitch = currentMessage.getNoteNumber();
 		const int newVelocity = currentMessage.getVelocity();
 		const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
 		
-		if(newVoiceNumber >= 0 && newVoiceNumber < NUMBER_OF_VOICES) {
+		if(newVoiceNumber > 0 && newVoiceNumber < NUMBER_OF_VOICES) {
 			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 			stealingManager.addSentVoice(newVoiceNumber);
 			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
 		} else {
-			if (stealingIsOn == true) {
+			if (isStealingOn == true) {
 				const int voiceToSteal = stealingManager.voiceToSteal();
-				polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
-				stealingManager.addSentVoice(voiceToSteal);
-				harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+				if(voiceToSteal > 0 && voiceToSteal < NUMBER_OF_VOICES) {
+					polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
+					stealingManager.addSentVoice(voiceToSteal);
+					harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+				}
 			}
 		}
 	};
@@ -137,19 +144,22 @@ private:
 	
 	// sends a note off out to the harmony engine
 	void harmonyNoteOff(const int pitch) {
-		const int voiceToTurnOff = polyphonyManager.turnOffNote(pitch);
-		stealingManager.removeSentVoice(voiceToTurnOff);
-		harmonyEngine[voiceToTurnOff]->stopNote();
+		const int voiceToTurnOff = polyphonyManager.getIndex(pitch);
+		if(voiceToTurnOff > 0 && voiceToTurnOff < NUMBER_OF_VOICES) {
+			polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
+			stealingManager.removeSentVoice(voiceToTurnOff);
+			harmonyEngine[voiceToTurnOff]->stopNote();
+		}
 	};
 	
 	
-	void processActiveLatch(const MidiMessage currentMessage, const bool stealing)
+	void processActiveLatch(const MidiMessage currentMessage)
 	{
 		const int midiPitch = currentMessage.getNoteNumber();
 		if(currentMessage.isNoteOn())
 		{
 			if (polyphonyManager.isPitchActive(midiPitch) == false) {
-				harmonyNoteOn(currentMessage, stealing);  // if note isn't already on (latched), then turn it on
+				harmonyNoteOn(currentMessage);  // if note isn't already on (latched), then turn it on
 			} else {
 				latchManager.noteOnRecieved(midiPitch);
 			}
@@ -158,3 +168,4 @@ private:
 		}
 	}; // processes note events that occur while midiLatch is active
 };
+

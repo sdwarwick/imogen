@@ -18,11 +18,15 @@ class PitchTracker
 	
 public:
 	
+	PitchTracker() {
+		yin.setSize(1, 512);
+	};
+	
+	
 	float returnPitch(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate)
 	{
-		if(bufferSize != numSamples) {
+		if(yin.getNumSamples() != numSamples) {
 			yin.setSize(1, numSamples);
-			bufferSize = numSamples;
 		}
 		
 		float pitch = calculatePitch(inputBuffer, inputChan, numSamples, samplerate);
@@ -57,10 +61,6 @@ private:
 		float* yinData = yin.getWritePointer(0);
 		const float* inputData = inputBuffer.getReadPointer(inputChan);
 		
-		if(yin.getNumSamples() != numSamples) {
-			yin.setSize(1, numSamples);
-		}
-		
 		yinData[0] = 1.0;
 		for(int tau = 1; tau < bufferSize; ++tau) {
 			yinData[tau] = 0.0f;
@@ -81,11 +81,12 @@ private:
 			}
 		}
 		
-		return quadraticPeakPosition(yin.getReadPointer(0), minElement(yin.getReadPointer(0)));
+		const float* readyin = yin.getReadPointer(0);
+		return quadraticPeakPosition(readyin, minElement(readyin));
 	};
 	
 	
-	float quadraticPeakPosition(const float* data, unsigned int pos) noexcept
+	float quadraticPeakPosition(const float* data, unsigned int pos) const
 	{
 		float s0, s1, s2;
 		unsigned int x0, x2;
@@ -97,12 +98,12 @@ private:
 		s0 = data[x0];
 		s1 = data[pos];
 		s2 = data[x2];
-		return pos + 0.5 * (s0 - s2) / (s0 - 2.* s1 + s2);
+		return pos + ((0.5 * (s0 - s2)) / (s0 - 2.* s1 + s2));
 	};
 	
 	
 	
-	unsigned int minElement (const float* data) noexcept
+	unsigned int minElement (const float* data) const
 	{
 		unsigned int j, pos = 0;
 		float tmp = data[0];
