@@ -31,7 +31,7 @@ public:
 		
 		const float* inputReadingfrom = inputBuffer.getReadPointer(inputChan);
 		
-		workingBuffer.clear();
+	//	workingBuffer.clear();
 		
 		// pitch shift factor = desired % change of fundamental frequency
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);

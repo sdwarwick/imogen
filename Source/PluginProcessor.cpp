@@ -537,7 +537,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
 		frameIsPitched = true;
 	} else {
-		voxCurrentPitch = 60.0f; // nneed to set to arbitrary value ??
+		voxCurrentPitch = 60.0f; // need to set to arbitrary value ??
 		analysisShift = 100;  // default grain size for unpitched parts of signal
 		frameIsPitched = false;
 	}

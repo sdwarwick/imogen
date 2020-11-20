@@ -18,26 +18,29 @@
       <FILE id="T4QvQh" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <GROUP id="{0EFF1E8A-88CB-E92D-C447-9B3488858F9C}" name="PSOLA">
+        <FILE id="SMlInG" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
+        <FILE id="JQ0SCd" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
+      </GROUP>
+      <GROUP id="{1A77E665-5B33-AAD8-E8A0-3DC100C8F1C2}" name="InputAnalysis">
+        <FILE id="Arrayc" name="inputPitchTracker.h" compile="0" resource="0"
+              file="Source/inputPitchTracker.h"/>
+        <FILE id="v54DAk" name="EpochExtractor.h" compile="0" resource="0"
+              file="Source/EpochExtractor.h"/>
+      </GROUP>
+      <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
+        <FILE id="yuBDuH" name="MidiProcessor.h" compile="0" resource="0" file="Source/MidiProcessor.h"/>
+        <FILE id="Z0nYva" name="PolyphonyVoiceManager.h" compile="0" resource="0"
+              file="Source/PolyphonyVoiceManager.h"/>
+        <FILE id="Zm4UOS" name="VoiceStealingManager.h" compile="0" resource="0"
+              file="Source/VoiceStealingManager.h"/>
+        <FILE id="GAxnNB" name="MidiPanningManager.h" compile="0" resource="0"
+              file="Source/MidiPanningManager.h"/>
+        <FILE id="ZY8pbE" name="MidiLatchManager.h" compile="0" resource="0"
+              file="Source/MidiLatchManager.h"/>
+      </GROUP>
+      <FILE id="Z8geCL" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
     </GROUP>
-    <FILE id="SMlInG" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
-    <FILE id="JQ0SCd" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
-    <FILE id="Arrayc" name="inputPitchTracker.h" compile="0" resource="0"
-          file="Source/inputPitchTracker.h"/>
-    <FILE id="v54DAk" name="EpochExtractor.h" compile="0" resource="0"
-          file="Source/EpochExtractor.h"/>
-    <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
-      <FILE id="yuBDuH" name="MidiProcessor.h" compile="0" resource="0" file="Source/MidiProcessor.h"/>
-      <FILE id="Z0nYva" name="PolyphonyVoiceManager.h" compile="0" resource="0"
-            file="Source/PolyphonyVoiceManager.h"/>
-      <FILE id="Zm4UOS" name="VoiceStealingManager.h" compile="0" resource="0"
-            file="Source/VoiceStealingManager.h"/>
-      <FILE id="GAxnNB" name="MidiPanningManager.h" compile="0" resource="0"
-            file="Source/MidiPanningManager.h"/>
-      <FILE id="ZY8pbE" name="MidiLatchManager.h" compile="0" resource="0"
-            file="Source/MidiLatchManager.h"/>
-    </GROUP>
-    <FILE id="AhOmu4" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
-    <FILE id="Z8geCL" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
