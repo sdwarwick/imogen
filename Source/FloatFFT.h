@@ -24,9 +24,8 @@ class FloatFFT {
 	
 public:
 	
-	FloatFFT(int size) {
-		// n = size of data
-		n = size;
+	FloatFFT(int size): n(size) {
+	
 		int ipsize;
 		ipsize = 2 + ceil(2 + (1 << (int)(log(n + 0.5) / log(2) / 2)));
 		ip = new int[ipsize];
@@ -76,10 +75,6 @@ private:
 	float* w;
 	int nw;
 	int nc;
-	float* wtable;
-	float* wtable_r;
-	float* bk1;
-	float bk2[];
 
 	
 	void cftbsub(int n, float a[], int ip[], int nw, float w[]) {
