@@ -15,23 +15,87 @@ class EpochExtractor {
 	
 public:
 	
-	void findEpochs(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate, const float inputFreq, Array<int>* epochLocations)
+	/*
+	 EXTRACT EPOCH INDICES
+	 
+	 uses a ZFR approach to save sample index #s of fundamental pitch epochs to an integer array
+	 */
+	
+	std::vector<int> extractEpochIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate)
 	{
-		// determine pitch epoch locations in time, referenced by sample # within input buffer, and write these sample number locations to an integer array
+		const int window_length = round(0.015 * samplerate);
 		
-		epochLocations->clear();
+		std::vector<int> epochs;
 		
-	//	const float* input = inputBuffer.getReadPointer(inputChan);
+		std::vector<float> y(numSamples);
+		std::vector<float> y2(numSamples);
+		std::vector<float> y3(numSamples);
 		
-		for(int sample = 0; sample < numSamples; ++sample)
-		{
-			
-			// check... and see if this sample is a pitch epoch
-			
-			// if an epoch is found at this sample val:
-			epochLocations->add(sample);
+		float mean_val;
+		float running_sum;
+		
+		const float* data = inputAudio.getReadPointer(inputChan);
+		
+		const float x0 = data[0];
+		const float x1 = data[1] - x0;
+		float y1_0 = x0;
+		float y1_1 = x1 + (2.0f * y1_0);
+		float x_i;
+		float y1_i;
+		y2[0] = y1_0;
+		y2[1] = y1_1 + (2.0f * y1_0);
+		for(int i = 2; i < numSamples; ++i) {
+			x_i = data[i] - data[i - 1];
+			y1_i = x_i + (2.0f * y1_1) - y1_0;
+			y2[i] = y1_i + (2.0f * y2[i - 1]) - y2[i - 2];
+			y1_0 = y1_1;
+			y1_1 = y1_i;
 		}
 		
+		// third stage
+		running_sum = std::accumulate(y2.begin(), y2.begin() + 2 * window_length + 2, 0.0);
+		mean_val = 0.0f;
+		for(int i = 0; i < numSamples; ++i) {
+			if((i - window_length < 0) || (i + window_length >= numSamples)) {
+				mean_val = y2[i];
+			} else if (i - window_length == 0) {
+				mean_val = running_sum / (2.0f * window_length + 1.0f);
+			} else {
+				running_sum -= y2[i - window_length - 1] - y2[i + window_length];
+				mean_val = running_sum / (2.0f * window_length + 1.0f);
+			}
+			y3[i] = y2[i] - mean_val;
+		}
+		
+		// fourth stage
+		running_sum = std::accumulate(y3.begin(), y3.begin() + 2 * window_length + 2, 0.0);
+		mean_val = 0.0f;
+		for(int i = 0; i < numSamples; ++i) {
+			if((i - window_length < 0) || (i + window_length >= numSamples)) {
+				mean_val = y3[i];
+			} else if (i - window_length == 0) {
+				mean_val = running_sum / (2.0f * window_length + 1.0f);
+			} else {
+				running_sum -= y3[i - window_length - 1] - y3[i + window_length];
+				mean_val = running_sum / (2.0f * window_length + 1.0f);
+			}
+			y[i] = y3[i] - mean_val;
+		}
+		
+		// last stage
+		float last = y[0];
+		float act;
+		epochs.push_back(0);
+		for(int i = 0; i < numSamples; ++i) {
+			act = y[i];
+			if(last < 0 and act > 0) {
+				epochs.push_back(i);
+			}
+			last = act;
+		}
+		epochs.push_back(numSamples - 1);
+		
+		return epochs;
 	};
 	
 private:

@@ -548,8 +548,8 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 		hanning.calcWindow(windowLength, window);
 	}
 	
-	epochs.findEpochs(input, inputChan, numSamples, lastSampleRate, voxCurrentPitch, epochLocations);
-	
+//	*epochLocations = epochs.extractEpochIndices(input, inputChan, numSamples, lastSampleRate);
+	// const int windowLength = epochIndices[i + numberOfEpochsInFrame] - epochIndices[i];
 };
 
 

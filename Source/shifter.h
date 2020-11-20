@@ -24,7 +24,9 @@ public:
 		workingBuffer.clear();
 	}
 	
-	
+	/*
+	 	a crude TD-PSOLA implementation that does not map pitch epochs
+	 */
 	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window, Array<int>* epochLocations) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
 		// shiftedBuffer is MONO !! only use channel 0
@@ -109,4 +111,62 @@ private:
 	
 	double currentSampleRate;
 	
+
+
+
+
+
+
+
+public:
+
+	/*
+	 	an ESOLA implementation
+	 */
+	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, Array<int> epochIndices, Array<float>* window, const float inputFreq, const float desiredFreq, const int numberOfEpochsInFrame) {
+		
+		Array<float> synthesizedWave;
+		
+		std::vector<float> windowVector;
+		
+		const float scalingFactor = 1.0f / ((inputFreq - desiredFreq)/desiredFreq);
+		
+		int targetLength = 0;
+		int lastEpochIndex = epochIndices[0];
+		const int epochSize = epochIndices.size();
+		
+		for(int i = 0; i < epochSize - numberOfEpochsInFrame; ++i) {
+			const int hop = epochIndices[i + 1] - epochIndices[i];
+			if(targetLength >= synthesizedWave.size()) {
+				const int frameLength = epochIndices[i + numberOfEpochsInFrame] - epochIndices[i];
+				// calculate hanning window of frameLength
+				
+				// audio slice:
+				// begin: epochIndices[i]
+				// end: epochIndices[i] + frameLength
+				// multiply by window function
+				
+				const int bufferIncrease = frameLength - synthesizedWave.size() + lastEpochIndex;
+				if (bufferIncrease > 0) {
+					// write audio slice TO:
+					// starting: synthesizedWave.end()
+					// ending:
+					const float* reading = inputBuffer.getReadPointer(inputChan);
+					int startingindex = epochIndices[i] - synthesizedWave.size() + lastEpochIndex;
+					int windowindex = window->size() - bufferIncrease;
+					for (int j = epochIndices[i]; j < epochIndices[i] + frameLength; ++j) {
+						synthesizedWave.add(reading[startingindex]);
+						++startingindex;
+						windowVector.push_back(window->getUnchecked(windowindex));
+						++windowindex;
+					}
+				}
+				lastEpochIndex += hop;
+			}
+			targetLength += hop * scalingFactor;
+		}
+	//	synthesizedWave /= max(windowVector, std::vector<float>(windowVector.size(), 1e-4));
+	};
+
+
 };
