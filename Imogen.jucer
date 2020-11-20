@@ -24,7 +24,6 @@
       </GROUP>
       <GROUP id="{1A77E665-5B33-AAD8-E8A0-3DC100C8F1C2}" name="InputAnalysis">
         <FILE id="wR01eS" name="Yin.h" compile="0" resource="0" file="Source/Yin.h"/>
-        <FILE id="O8rg0O" name="FloatFFT.h" compile="0" resource="0" file="Source/FloatFFT.h"/>
         <FILE id="v54DAk" name="EpochExtractor.h" compile="0" resource="0"
               file="Source/EpochExtractor.h"/>
       </GROUP>
@@ -39,9 +38,11 @@
         <FILE id="ZY8pbE" name="MidiLatchManager.h" compile="0" resource="0"
               file="Source/MidiLatchManager.h"/>
       </GROUP>
-      <FILE id="Z8geCL" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
+      <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
+        <FILE id="O8rg0O" name="FloatFFT.h" compile="0" resource="0" file="Source/FloatFFT.h"/>
+        <FILE id="Z8geCL" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
+      </GROUP>
     </GROUP>
-    <FILE id="Arrayc" name="oldPitchTracker" compile="0" resource="0" file="Source/oldPitchTracker"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
