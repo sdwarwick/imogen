@@ -54,6 +54,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
+	
+	Timer::startTimer(TIMER_RATE_MS);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -64,6 +66,8 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 	delete[] epochLocations;
 	
 	delete[] window;
+	
+	Timer::stopTimer();
 }
 
 
@@ -327,13 +331,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 		}
 		
-		// stereo width
-		{
-			if (previousStereoWidth != *stereoWidthListener) {
-				midiProcessor.updateStereoWidth(stereoWidthListener);
-			}
-		}
-		
 		// dry vox pan
 		{
 			if(*dryVoxPanListener != previousmidipan) {
@@ -575,3 +572,15 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 	
 };
 
+
+
+void ImogenAudioProcessor::timerCallback() {
+	
+	// update stereo width
+	{
+		if (previousStereoWidth != *stereoWidthListener) {
+			midiProcessor.updateStereoWidth(stereoWidthListener);
+		}
+	}
+	
+};

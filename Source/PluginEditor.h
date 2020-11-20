@@ -3,9 +3,13 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+#define FRAMERATE 60
+
 //==============================================================================
 
-class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor, public Button::Listener
+class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
+									public Button::Listener,
+									public Timer
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -15,6 +19,7 @@ public:
     void resized() override;
 	
 	void buttonClicked(Button* button) override;
+	void timerCallback() override;
 	
 //==============================================================================
 

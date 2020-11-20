@@ -12,16 +12,21 @@
 #define NUMBER_OF_VOICES 12
 #endif
 
+#define TIMER_RATE_MS 100
+
 //==============================================================================
 /**
 */
-class ImogenAudioProcessor  : public juce::AudioProcessor
+class ImogenAudioProcessor    : public juce::AudioProcessor,
+								public Timer
 {
 	
 public:
 	
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
+	
+	void timerCallback() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
