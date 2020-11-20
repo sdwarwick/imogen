@@ -4,6 +4,16 @@
     FloatFFT.h
     Created: 20 Nov 2020 4:32:42am
     Author:  Ben Vining
+ 
+ 	Computes 1D Discrete Fourier Transform (DFT) of complex and real, single precision data. The size of the data can be an arbitrary number.
+ 
+	Designed for use in conjunction with "Yin.h", to compute the YIN algorithm's difference function.
+ 
+	In this FFT implementation, complex numbers are stored as two float values in sequence: the real, then the imaginary part. The size of the input array must be at least 2*n.
+	@code
+ 		a[2*k] = Real[k];
+ 		a[2*k+1] = Imaginary[k];
+	@endcode
 
   ==============================================================================
 */
@@ -40,13 +50,21 @@ public:
 	};
 	
 	
+	/*
+	 	COMPLEX FORWARD
+	 	Computes 1D forward DFT of complex data
+	 */
 	void complexForward(float a[]) {
-		cftbsub(2 * n, a, 0, ip, nw, w);
+		cftbsub(2 * n, a, ip, nw, w);
 	};
 	
 	
+	/*
+	 	COMPLEX INVERSE
+	 	Computes 1D inverse DFT of complex data
+	 */
 	void complexInverse(float a[]) {
-		cftfsub(2 * n, a, 0, ip, nw, w);
+		cftfsub(2 * n, a, ip, nw, w);
 		scale(n, a, 0, true);
 	};
 	
@@ -64,62 +82,61 @@ private:
 	float bk2[];
 
 	
-	void cftbsub(int n, float a[], int offa, int ip[], int nw, float w[]) {
+	void cftbsub(int n, float a[], int ip[], int nw, float w[]) {
 		if (n > 8) {
 			if (n > 32) {
-				cftb1st(n, a, offa, w, nw - (n >> 2));
+				cftb1st(n, a, w, nw - (n >> 2));
 				if (n > 512) {
-					cftrec4(n, a, offa, nw, w);
+					cftrec4(n, a, nw, w);
 				} else if (n > 128) {
-					cftleaf(n, 1, a, offa, nw, w);
+					cftleaf(n, 1, a, 0, nw, w);
 				} else {
-					cftfx41(n, a, offa, nw, w);
+					cftfx41(n, a, 0, nw, w);
 				}
-				bitrv2conj(n, ip, a, offa);
+				bitrv2conj(n, ip, a, 0);
 			} else if (n == 32) {
-				cftf161(a, offa, w, nw - 8);
-				bitrv216neg(a, offa);
+				cftf161(a, 0, w, nw - 8);
+				bitrv216neg(a, 0);
 			} else {
-				cftf081(a, offa, w, 0);
-				bitrv208neg(a, offa);
+				cftf081(a, 0, w, 0);
+				bitrv208neg(a, 0);
 			}
 		} else if (n == 8) {
-			cftb040(a, offa);
+			cftb040(a, 0);
 		} else if (n == 4) {
-			cftxb020(a, offa);
+			cftxb020(a, 0);
 		}
 	};
 	
 	
-	void cftfsub(int n, float a[], int offa, int ip[], int nw, float w[]) {
+	void cftfsub(int n, float a[], int ip[], int nw, float w[]) {
 		if (n > 8) {
 			if (n > 32) {
-				cftf1st(n, a, offa, w, nw - (n >> 2));
+				cftf1st(n, a, 0, w, nw - (n >> 2));
 				if (n > 512) {
-					cftrec4(n, a, offa, nw, w);
+					cftrec4(n, a, nw, w);
 				} else if (n > 128) {
-					cftleaf(n, 1, a, offa, nw, w);
+					cftleaf(n, 1, a, 0, nw, w);
 				} else {
-					cftfx41(n, a, offa, nw, w);
+					cftfx41(n, a, 0, nw, w);
 				}
-				bitrv2(n, ip, a, offa);
+				bitrv2(n, ip, a, 0);
 			} else if (n == 32) {
-				cftf161(a, offa, w, nw - 8);
-				bitrv216(a, offa);
+				cftf161(a, 0, w, nw - 8);
+				bitrv216(a, 0);
 			} else {
-				cftf081(a, offa, w, 0);
-				bitrv208(a, offa);
+				cftf081(a, 0, w, 0);
+				bitrv208(a, 0);
 			}
 		} else if (n == 8) {
-			cftf040(a, offa);
+			cftf040(a, 0);
 		} else if (n == 4) {
-			cftxb020(a, offa);
+			cftxb020(a, 0);
 		}
 	};
 	
 	
-	
-	void cftb1st(int n, float a[], int offa, float w[], int startw) {
+	void cftb1st(int n, float a[], float w[], int startw) {
 		int j0, j1, j2, j3, k, m, mh;
 		float wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, wd1r, wd1i, wd3r, wd3i;
 		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i;
@@ -129,20 +146,20 @@ private:
 		j1 = m;
 		j2 = j1 + m;
 		j3 = j2 + m;
-		idx1 = offa + j1;
-		idx2 = offa + j2;
-		idx3 = offa + j3;
+		idx1 = j1;
+		idx2 = j2;
+		idx3 = j3;
 		
-		x0r = a[offa] + a[idx2];
-		x0i = -a[offa + 1] - a[idx2 + 1];
-		x1r = a[offa] - a[idx2];
-		x1i = -a[offa + 1] + a[idx2 + 1];
+		x0r = a[0] + a[idx2];
+		x0i = -a[1] - a[idx2 + 1];
+		x1r = a[0] - a[idx2];
+		x1i = -a[1] + a[idx2 + 1];
 		x2r = a[idx1] + a[idx3];
 		x2i = a[idx1 + 1] + a[idx3 + 1];
 		x3r = a[idx1] - a[idx3];
 		x3i = a[idx1 + 1] - a[idx3 + 1];
-		a[offa] = x0r + x2r;
-		a[offa + 1] = x0i - x2i;
+		a[0] = x0r + x2r;
+		a[1] = x0i - x2i;
 		a[idx1] = x0r - x2r;
 		a[idx1 + 1] = x0i + x2i;
 		a[idx2] = x1r + x3i;
@@ -171,13 +188,13 @@ private:
 			j1 = j + m;
 			j2 = j1 + m;
 			j3 = j2 + m;
-			idx1 = offa + j1;
-			idx2 = offa + j2;
-			idx3 = offa + j3;
-			idx5 = offa + j;
+			idx1 = j1;
+			idx2 = j2;
+			idx3 = j3;
+			idx5 = j;
 			x0r = a[idx5] + a[idx2];
 			x0i = -a[idx5 + 1] - a[idx2 + 1];
-			x1r = a[idx5] - a[offa + j2];
+			x1r = a[idx5] - a[j2];
 			x1i = -a[idx5 + 1] + a[idx2 + 1];
 			y0r = a[idx5 + 2] + a[idx2 + 2];
 			y0i = -a[idx5 + 3] - a[idx2 + 3];
@@ -219,10 +236,10 @@ private:
 			j1 = j0 + m;
 			j2 = j1 + m;
 			j3 = j2 + m;
-			idx0 = offa + j0;
-			idx1 = offa + j1;
-			idx2 = offa + j2;
-			idx3 = offa + j3;
+			idx0 = j0;
+			idx1 = j1;
+			idx2 = j2;
+			idx3 = j3;
 			x0r = a[idx0] + a[idx2];
 			x0i = -a[idx0 + 1] - a[idx2 + 1];
 			x1r = a[idx0] - a[idx2];
@@ -272,10 +289,10 @@ private:
 		j1 = j0 + m;
 		j2 = j1 + m;
 		j3 = j2 + m;
-		idx0 = offa + j0;
-		idx1 = offa + j1;
-		idx2 = offa + j2;
-		idx3 = offa + j3;
+		idx0 = j0;
+		idx1 = j1;
+		idx2 = j2;
+		idx3 = j3;
 		x0r = a[idx0 - 2] + a[idx2 - 2];
 		x0i = -a[idx0 - 1] - a[idx2 - 1];
 		x1r = a[idx0 - 2] - a[idx2 - 2];
@@ -339,21 +356,21 @@ private:
 	};
 	
 	
-	void cftrec4(int n, float a[], int offa, int nw, float w[]) {
+	void cftrec4(int n, float a[], int nw, float w[]) {
 		int isplt, j, k, m;
 		
 		m = n;
-		int idx1 = offa + n;
+		int idx1 = n;
 		while (m > 512) {
 			m >>= 2;
 			cftmdl1(m, a, idx1 - m, w, nw - (m >> 1));
 		}
 		cftleaf(m, 1, a, idx1 - m, nw, w);
 		k = 0;
-		int idx2 = offa - m;
+		int idx2 = 0 - m;
 		for (j = n - m; j > 0; j -= m) {
 			k++;
-			isplt = cfttree(m, j, k, a, offa, nw, w);
+			isplt = cfttree(m, j, k, a, nw, w);
 			cftleaf(m, isplt, a, idx2 + j, nw, w);
 		}
 	};
@@ -2569,9 +2586,9 @@ private:
 	};
 	
 	
-	int cfttree(int n, int j, int k, float a[], int offa, int nw, float w[]) {
+	int cfttree(int n, int j, int k, float a[], int nw, float w[]) {
 		int i, isplt, m;
-		int idx1 = offa - n;
+		int idx1 = 0 - n;
 		if ((k & 3) != 0) {
 			isplt = k & 1;
 			if (isplt != 0) {
@@ -2585,7 +2602,7 @@ private:
 				m <<= 2;
 			}
 			isplt = i & 1;
-			int idx2 = offa + j;
+			int idx2 = j;
 			if (isplt != 0) {
 				while (m > 128) {
 					cftmdl1(m, a, idx2 - m, w, nw - (m >> 1));
@@ -2600,7 +2617,6 @@ private:
 		}
 		return isplt;
 	};
-	
 	
 	
 };

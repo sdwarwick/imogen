@@ -4,6 +4,15 @@
     Yin.h
     Created: 20 Nov 2020 2:38:03am
     Author:  Ben Vining
+ 
+ 	This class implements the YIN pitch tracking algorithm, as described in "http://recherche.ircam.fr/equipes/pcm/cheveign/ps/2002_JASA_YIN_proof.pdf". This implementation uses an FFT to calculate the difference function in step 2 to increase performance and computational speed.
+ 
+ 	@see
+ 		"YIN, a fundamental frequency estimator for speech and music", by Alain de Cheveigne ́ and Hideki Kawahara, 2002
+ 
+ 	@dependencies
+ 		"FloatFFT.h", a custom implementation of an FFT process with complexForward and complexInverse operations.
+ 		In this FFT implementation, data is grouped in pairs of samples, such that fft[i] is the real component and fft[i+1] is the imaginary.
 
   ==============================================================================
 */
@@ -22,14 +31,21 @@ public:
 		yinBuffer.setSize(1, 256);
 	};
 	
-	
-	int pitchDetectionResult(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate) {
-		// returns a pitch value in Hz or -1 if no pitch is detected
+	/*
+	 	PITCH DETECTION RESULT
+	 	@brief	this function is the main flow of the YIN algorithm.
+	 	@param	inputBuffer		buffer to read audio from
+	 	@param	inputChan		channel # of inputBuffer to read audio from
+	 	@param	numSamples		inputBuffer length in samples
+	 	@param	samplerate		current samplerate in Hz
+	 	@return		current input pitch in Hz, or -1 if no pitch is detected
+	 */
+	float pitchDetectionResult(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate) {
 		
 		checkBufferSize(numSamples);
 		
 		int tauEstimate;
-		int pitchInHz;
+		float pitchInHz;
 		
 		difference(inputBuffer, inputChan, numSamples);
 		
@@ -38,19 +54,20 @@ public:
 		tauEstimate = absoluteThreshold();
 		
 		if(tauEstimate != -1) {
-			pitchInHz = round ( samplerate / parabolicInterpolation(tauEstimate) );
+			pitchInHz = samplerate / parabolicInterpolation(tauEstimate);
 		} else {
-			pitchInHz = -1;
+			pitchInHz = -1.0f;
+			isPitched = false;
 		}
 		
 		return pitchInHz;
 	};
 	
 	
+	// some helper functions ================//
 	bool isitPitched() {
 		return isPitched;
 	};
-	
 	
 	void checkBufferSize(const int newBlockSize) {
 		if(yinBufferSize != newBlockSize / 2) {
@@ -59,11 +76,10 @@ public:
 		}
 	};
 	
-	
 	void clearBuffer() {
 		yinBuffer.clear();
 	};
-	
+	//======================================//
 	
 	
 private:
@@ -75,17 +91,24 @@ private:
 	bool isPitched;				  // stores whether the current audio vector is determined to be pitched or unpitched
 	float probability;
 	
-	
-	void difference(AudioBuffer<float> inputBuffer, const int inputChan, const int inputBufferLength) {
+	/*
+	 THE DIFFERENCE FUNCTION
+	 @brief implements the difference function described in step 2 of the YIN paper, using an FFT to increase computational efficiency
+	 @param 	inputBuffer			reference to audio input buffer
+	 @param		inputChan			channel # to read audio from in input buffer
+	 @param		inputBufferLength	input buffer length, in samples
+	 */
+	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength) {
 		
 		const float* reading = inputBuffer.getReadPointer(inputChan);
 		
-		FloatFFT* fft;
+		FloatFFT* fft; // an FFT object to quickly calculate the difference function
 		fft = new FloatFFT(inputBufferLength);
 		
-		float fftBuffer[inputBufferLength * 2];
-		float kernel[inputBufferLength * 2];
-		float yinStyleACF[inputBufferLength * 2];
+		const int doubleInputLength = inputBufferLength * 2;
+		float fftBuffer[doubleInputLength];
+		float kernel[doubleInputLength];
+		float yinStyleACF[doubleInputLength];
 		
 		// POWER TERM CALCULATION
 		float powerTerms[yinBufferSize];
@@ -130,6 +153,13 @@ private:
 	};
 	
 	
+	/*
+	 CUMULATIVE MEAN NORMALIZED DIFFERENCE FUNCTION
+	 @brief implements the cumulative mean normalized difference function described in step 3 of the YIN paper
+	 @code
+	 	yinBuffer[0] == yinBuffer[1] == 1;
+	 @endcode
+	 */
 	void cumulativeMeanNormalizedDifference() const {
 		int tau;
 		yinBuffer.setSample(0, 0, 1);
@@ -142,6 +172,11 @@ private:
 	};
 	
 	
+	/*
+	 ABSOLUTE THRESHOLD
+	 @brief implements step 4 of the YIN paper, an absolute threshold
+	 @return 	tau value
+	 */
 	int absoluteThreshold() {
 		// implements step 4 of the YIN paper
 		int tau;
@@ -158,7 +193,9 @@ private:
 			}
 		}
 		
+		// if no pitch is detected, tau => -1
 		if(tau == yinBufferSize || yinBuffer.getSample(0, tau) >= THRESHOLD || probabilityEstimate > 1.0f) {
+			tau = -1;
 			isPitched = false;
 			probability = 0.0f;
 		} else {
@@ -170,6 +207,12 @@ private:
 	};
 	
 	
+	/*
+	 PARABOLIC INTERPOLATION
+	 @brief implements step 5 of the YIN paper, parabolic interpolation. This step refines the estimated tau value. This is needed to detect higher frequencies more precisely.
+	 @param 	tauEstimate		the estimated tau value returned from absoluteThreshold()
+	 @return	a more precise tau value, parabolically interpolated with local minima of d'(tau)
+	 */
 	float parabolicInterpolation(int tauEstimate) const {
 		float betterTau;
 		int x0;

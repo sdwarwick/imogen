@@ -24,8 +24,7 @@ public:
 		
 		for(int i = 0; i < length; ++i)
 		{
-			const float cos2 = ncos(2, i, length);
-			window->set(i, 0.5 - (0.5 * cos2));
+			window->set(i, 0.5 - (0.5 * ncos(2, i, length)));
 		}
 		
 	};
