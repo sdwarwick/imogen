@@ -4,8 +4,8 @@
 
 #include "HarmonyVoice.h"
 #include "MidiProcessor.h"
-#include "inputPitchTracker.h"
 #include "EpochExtractor.h"
+#include "Yin.h"
 #include "Window.h"
 
 #ifndef NUMBER_OF_VOICES
@@ -124,8 +124,8 @@ private:
 	int analysisLimit;
 	int windowLength;
 	int prevWindowLength;
-	PitchTracker pitchTracker;
 	void calcWindow(const int length);
+	Yin pitchTracker;
 	EpochExtractor epochs;
 	
 	Window hanning;

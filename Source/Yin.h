@@ -18,16 +18,15 @@ class Yin
 {
 public:
 	
-	Yin(): yinBufferSize(256), fft(8), isPitched(false), probability(0.0f) {
+	Yin(): yinBufferSize(256), isPitched(false), probability(0.0f) {
 		yinBuffer.setSize(1, 256);
-		fftBuffer.setSize(1, 1024);
-		kernel.setSize(1, 1024);
-		yinStyleACF.setSize(1, 1024);
 	};
 	
 	
-	int pitchDetectionResult(AudioBuffer<float> inputBuffer, const int inputChan, const int numSamples, const double samplerate) {
+	int pitchDetectionResult(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate) {
 		// returns a pitch value in Hz or -1 if no pitch is detected
+		
+		checkBufferSize(numSamples);
 		
 		int tauEstimate;
 		int pitchInHz;
@@ -48,6 +47,24 @@ public:
 	};
 	
 	
+	bool isitPitched() {
+		return isPitched;
+	};
+	
+	
+	void checkBufferSize(const int newBlockSize) {
+		if(yinBufferSize != newBlockSize / 2) {
+			yinBufferSize = round(newBlockSize / 2);
+			yinBuffer.setSize(1, yinBufferSize);
+		}
+	};
+	
+	
+	void clearBuffer() {
+		yinBuffer.clear();
+	};
+	
+	
 	
 private:
 	
@@ -59,19 +76,12 @@ private:
 	float probability;
 	
 	
-	void checkBufferSize(const int newBlockSize) {
-		if(yinBufferSize != newBlockSize / 2) {
-			yinBufferSize = round(newBlockSize / 2);
-			yinBuffer.setSize(1, yinBufferSize);
-		}
-	};
-	
-	
 	void difference(AudioBuffer<float> inputBuffer, const int inputChan, const int inputBufferLength) {
 		
 		const float* reading = inputBuffer.getReadPointer(inputChan);
 		
-		FloatFFT fft = new FloatFFT(inputBufferLength);
+		FloatFFT* fft;
+		fft = new FloatFFT(inputBufferLength);
 		
 		float fftBuffer[inputBufferLength * 2];
 		float kernel[inputBufferLength * 2];
@@ -93,7 +103,7 @@ private:
 			fftBuffer[2*j] = reading[j]; // real
 			fftBuffer[2*j+1] = 0; // imaginary
 		}
-		fft.complexForward(fftBuffer);
+		fft->complexForward(fftBuffer);
 		
 		// 2. half of the data, disguised as a convolution kernel
 		for(int j = 0; j < yinBufferSize; ++j) {
@@ -102,18 +112,18 @@ private:
 			kernel[2*j+inputBufferLength] = 0; // real
 			kernel[2*j+inputBufferLength+1] = 0; // imaginary
 		}
-		fft.complexForward(kernel);
+		fft->complexForward(kernel);
 		
 		// 3. convolution via complex multiplication
 		for (int j = 0; j < inputBufferLength; ++j) {
 			yinStyleACF[2*j] = fftBuffer[2*j] * kernel[2*j] - fftBuffer[2*j+1] * kernel[2*j+1]; // real
 			yinStyleACF[2*j+1] = fftBuffer[2*j+1] * kernel[2*j] + fftBuffer[2*j] * kernel[2*j+1]; // imaginary
 		}
-		fft.complexInverse(yinStyleACF);
+		fft->complexInverse(yinStyleACF);
 		
 		// CALCULATION OF DIFFERENCE FUNCTION
 		for(int j = 0; j < yinBufferSize; ++j) {
-			yinBuffer[j] = powerTerms[0] + powerTerms[j] - 2 * yinStyleACF[2 * (yinBufferSize - 1 + j)];
+			yinBuffer.setSample(0, j, powerTerms[0] + powerTerms[j] - 2 * yinStyleACF[2 * (yinBufferSize - 1 + j)]);
 		}
 		
 		delete fft;
@@ -122,11 +132,12 @@ private:
 	
 	void cumulativeMeanNormalizedDifference() const {
 		int tau;
-		yinBuffer[0] = 1;
+		yinBuffer.setSample(0, 0, 1);
 		float runningSum = 0.0f;
 		for(tau = 1; tau < yinBufferSize; ++tau) {
-			runningSum += yinBuffer[tau];
-			yinBuffer[tau] *= tau / runningSum; // runningSum will never be 0
+			runningSum += yinBuffer.getSample(0, tau);
+			const float newVal = yinBuffer.getSample(0, tau) * tau / runningSum;
+			yinBuffer.setSample(0, tau, newVal);
 		}
 	};
 	
@@ -138,16 +149,16 @@ private:
 		
 		// first two positions in yinBuffer are always 1
 		for(tau = 2; tau < yinBufferSize; ++tau) {
-			if(yinBuffer[tau] < THRESHOLD) {
-				while (tau + 1 < yinBufferSize && yinBuffer[tau + 1] < yinBuffer[tau]) {
+			if(yinBuffer.getSample(0, tau) < THRESHOLD) {
+				while (tau + 1 < yinBufferSize && yinBuffer.getSample(0, tau + 1) < yinBuffer.getSample(0, tau)) {
 					++tau;
 				}
-				probabilityEstimate = 1 - yinBuffer[tau];
+				probabilityEstimate = 1 - yinBuffer.getSample(0, tau);
 				break;
 			}
 		}
 		
-		if(tau == yinBufferSize || yinBuffer[tau]>= THRESHOLD || probabilityEstimate > 1.0f) {
+		if(tau == yinBufferSize || yinBuffer.getSample(0, tau) >= THRESHOLD || probabilityEstimate > 1.0f) {
 			isPitched = false;
 			probability = 0.0f;
 		} else {
@@ -177,22 +188,22 @@ private:
 		}
 		
 		if (x0 == tauEstimate) {
-			if(yinBuffer[tauEstimate] <= yinBuffer[x2]) {
+			if(yinBuffer.getSample(0, tauEstimate) <= yinBuffer.getSample(0, x2)) {
 				betterTau = tauEstimate;
 			} else {
 				betterTau = x2;
 			}
 		} else if (x2 == tauEstimate) {
-			if(yinBuffer[tauEstimate] <= yinBuffer[x0]) {
+			if(yinBuffer.getSample(0, tauEstimate) <= yinBuffer.getSample(0, x0)) {
 				betterTau = tauEstimate;
 			} else {
 				betterTau = x0;
 			}
 		} else {
 			float s0, s1, s2;
-			s0 = yinBuffer[x0];
-			s1 = yinBuffer[tauEstimate];
-			s2 = yinBuffer[x2];
+			s0 = yinBuffer.getSample(0, x0);
+			s1 = yinBuffer.getSample(0, tauEstimate);
+			s2 = yinBuffer.getSample(0, x2);
 			betterTau = tauEstimate + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
 		}
 		

@@ -161,7 +161,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 				harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
 			}
 			
-			pitchTracker.updateSettings(lastBlockSize);
+			pitchTracker.checkBufferSize(lastBlockSize);
 		}
 		prevLastSampleRate = lastSampleRate;
 		prevLastBlockSize = lastBlockSize;
@@ -527,17 +527,18 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
 {
-	const float newPitch = pitchTracker.returnPitch(input, inputChan, numSamples, lastSampleRate);
-	if (newPitch > 0.0f)
+	const int newPitch = pitchTracker.pitchDetectionResult(input, inputChan, numSamples, lastSampleRate);
+	
+	if (newPitch != -1)
 	{
 		voxCurrentPitch = newPitch;
 		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
-		frameIsPitched = true;
 	} else {
 		voxCurrentPitch = 60.0f; // need to set to arbitrary value ??
 		analysisShift = 100;  // default grain size for unpitched parts of signal
-		frameIsPitched = false;
 	}
+	
+	frameIsPitched = pitchTracker.isitPitched();
 	
 	analysisShiftHalved = round(analysisShift/2);
 	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1

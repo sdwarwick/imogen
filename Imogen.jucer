@@ -23,8 +23,8 @@
         <FILE id="JQ0SCd" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
       </GROUP>
       <GROUP id="{1A77E665-5B33-AAD8-E8A0-3DC100C8F1C2}" name="InputAnalysis">
-        <FILE id="Arrayc" name="inputPitchTracker.h" compile="0" resource="0"
-              file="Source/inputPitchTracker.h"/>
+        <FILE id="wR01eS" name="Yin.h" compile="0" resource="0" file="Source/Yin.h"/>
+        <FILE id="O8rg0O" name="FloatFFT.h" compile="0" resource="0" file="Source/FloatFFT.h"/>
         <FILE id="v54DAk" name="EpochExtractor.h" compile="0" resource="0"
               file="Source/EpochExtractor.h"/>
       </GROUP>
@@ -41,8 +41,7 @@
       </GROUP>
       <FILE id="Z8geCL" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
     </GROUP>
-    <FILE id="O8rg0O" name="FloatFFT.h" compile="0" resource="0" file="Source/FloatFFT.h"/>
-    <FILE id="wR01eS" name="Yin.h" compile="0" resource="0" file="Source/Yin.h"/>
+    <FILE id="Arrayc" name="oldPitchTracker" compile="0" resource="0" file="Source/oldPitchTracker"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>

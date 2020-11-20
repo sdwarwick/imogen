@@ -12,14 +12,14 @@
 
 class FloatFFT {
 	
-	// use SPLIT RADIX!!
-	
 public:
 	
 	FloatFFT(int size) {
 		// n = size of data
 		n = size;
-		ip = new int[2 + (int)ceil(2 + (1 << (int) (Math.log(n + 0.5) / Math.log(2)) / 2))];
+		int ipsize;
+		ipsize = 2 + ceil(2 + (1 << (int)(log(n + 0.5) / log(2) / 2)));
+		ip = new int[ipsize];
 		w = new float[n];
 		int twon = 2 * n;
 		nw = ip[0];
@@ -40,12 +40,12 @@ public:
 	};
 	
 	
-	void complexForward(float[] a) {
+	void complexForward(float a[]) {
 		cftbsub(2 * n, a, 0, ip, nw, w);
 	};
 	
 	
-	void complexInverse(float[] a) {
+	void complexInverse(float a[]) {
 		cftfsub(2 * n, a, 0, ip, nw, w);
 		scale(n, a, 0, true);
 	};
@@ -54,17 +54,17 @@ public:
 private:
 	
 	int n;
-	int[] ip;
-	float[] w;
+	int* ip;
+	float* w;
 	int nw;
 	int nc;
-	float[] wtable;
-	float[] wtable_r;
-	float[] bk1;
-	float[] bk2;
+	float* wtable;
+	float* wtable_r;
+	float* bk1;
+	float bk2[];
 
 	
-	void cftbsub(int n, float[] a, int offa, int[] ip, int nw, float[] w) {
+	void cftbsub(int n, float a[], int offa, int ip[], int nw, float w[]) {
 		if (n > 8) {
 			if (n > 32) {
 				cftb1st(n, a, offa, w, nw - (n >> 2));
@@ -91,7 +91,7 @@ private:
 	};
 	
 	
-	void cftfsub(int n, float[] a, int offa, int[] ip, int nw, float[] w) {
+	void cftfsub(int n, float a[], int offa, int ip[], int nw, float w[]) {
 		if (n > 8) {
 			if (n > 32) {
 				cftf1st(n, a, offa, w, nw - (n >> 2));
@@ -119,7 +119,7 @@ private:
 	
 	
 	
-	void cftb1st(int n, float[] a, int offa, float[] w, int startw) {
+	void cftb1st(int n, float a[], int offa, float w[], int startw) {
 		int j0, j1, j2, j3, k, m, mh;
 		float wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, wd1r, wd1i, wd3r, wd3i;
 		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i;
@@ -339,7 +339,7 @@ private:
 	};
 	
 	
-	void cftrec4(int n, float[] a, int offa, int nw, float[] w) {
+	void cftrec4(int n, float a[], int offa, int nw, float w[]) {
 		int isplt, j, k, m;
 		
 		m = n;
@@ -359,7 +359,7 @@ private:
 	};
 	
 	
-	void cftleaf(int n, int isplt, float[] a, int offa, int nw, float[] w) {
+	void cftleaf(int n, int isplt, float a[], int offa, int nw, float w[]) {
 		if (n == 512) {
 			cftmdl1(128, a, offa, w, nw - 64);
 			cftf161(a, offa, w, nw - 8);
@@ -416,7 +416,7 @@ private:
 	};
 	
 	
-	void cftfx41(int n, float[] a, int offa, int nw, float[] w) {
+	void cftfx41(int n, float a[], int offa, int nw, float w[]) {
 		if (n == 128) {
 			cftf161(a, offa, w, nw - 8);
 			cftf162(a, offa + 32, w, nw - 32);
@@ -431,7 +431,7 @@ private:
 	};
 	
 	
-	void bitrv2conj(int n, int[] ip, float[] a, int offa) {
+	void bitrv2conj(int n, int ip[], float a[], int offa) {
 		int j1, k1, l, m, nh, nm;
 		float xr, xi, yr, yi;
 		int idx0, idx1, idx2;
@@ -852,7 +852,7 @@ private:
 	};
 	
 	
-	void cftf161(float[] a, int offa, float[] w, int startw) {
+	void cftf161(float a[], int offa, float w[], int startw) {
 		float wn4r, wk1r, wk1i, x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i, y8r, y8i, y9r, y9i, y10r, y10i, y11r, y11i, y12r, y12i, y13r, y13i, y14r, y14i, y15r, y15i;
 		
 		wn4r = w[startw + 1];
@@ -1006,7 +1006,7 @@ private:
 	};
 	
 	
-	void bitrv216neg(float[] a, int offa) {
+	void bitrv216neg(float a[], int offa) {
 		float x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, x5r, x5i, x6r, x6i, x7r, x7i, x8r, x8i, x9r, x9i, x10r, x10i, x11r, x11i, x12r, x12i, x13r, x13i, x14r, x14i, x15r, x15i;
 		
 		x1r = a[offa + 2];
@@ -1072,7 +1072,7 @@ private:
 	};
 	
 	
-	void cftf081(float[] a, int offa, float[] w, int startw) {
+	void cftf081(float a[], int offa, float w[], int startw) {
 		float wn4r, x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i;
 		
 		wn4r = w[startw + 1];
@@ -1131,7 +1131,7 @@ private:
 	};
 	
 	
-	void bitrv208neg(float[] a, int offa) {
+	void bitrv208neg(float a[], int offa) {
 		float x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, x5r, x5i, x6r, x6i, x7r, x7i;
 		
 		x1r = a[offa + 2];
@@ -1165,7 +1165,7 @@ private:
 	};
 	
 	
-	void cftb040(float[] a, int offa) {
+	void cftb040(float a[], int offa) {
 		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 		
 		x0r = a[offa] + a[offa + 4];
@@ -1187,7 +1187,7 @@ private:
 	};
 	
 	
-	void cftxb020(float[] a, int offa) {
+	void cftxb020(float a[], int offa) {
 		float x0r, x0i;
 		
 		x0r = a[offa] - a[offa + 2];
@@ -1199,7 +1199,7 @@ private:
 	};
 	
 	
-	void cftf1st(int n, float[] a, int offa, float[] w, int startw) {
+	void cftf1st(int n, float a[], int offa, float w[], int startw) {
 		int j0, j1, j2, j3, k, m, mh;
 		float wn4r, csc1, csc3, wk1r, wk1i, wk3r, wk3i, wd1r, wd1i, wd3r, wd3i;
 		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i;
@@ -1418,7 +1418,7 @@ private:
 	};
 	
 	
-	void bitrv2(int n, int[] ip, float[] a, int offa) {
+	void bitrv2(int n, int ip[], float a[], int offa) {
 		int j1, k1, l, m, nh, nm;
 		float xr, xi, yr, yi;
 		int idx0, idx1, idx2;
@@ -1831,7 +1831,7 @@ private:
 	};
 	
 	
-	void bitrv216(float[] a, int offa) {
+	void bitrv216(float a[], int offa) {
 		float x1r, x1i, x2r, x2i, x3r, x3i, x4r, x4i, x5r, x5i, x7r, x7i, x8r, x8i, x10r, x10i, x11r, x11i, x12r, x12i, x13r, x13i, x14r, x14i;
 		
 		x1r = a[offa + 2];
@@ -1885,7 +1885,7 @@ private:
 	};
 	
 	
-	void bitrv208(float[] a, int offa) {
+	void bitrv208(float a[], int offa) {
 		float x1r, x1i, x3r, x3i, x4r, x4i, x6r, x6i;
 		
 		x1r = a[offa + 2];
@@ -1907,7 +1907,7 @@ private:
 	};
 	
 	
-	void cftf040(float[] a, int offa) {
+	void cftf040(float a[], int offa) {
 		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 		
 		x0r = a[offa] + a[offa + 4];
@@ -1948,8 +1948,8 @@ private:
 				w[3] = (float)sin(delta2);
 			} else if (nwh > 4) {
 				makeipt(nw);
-				w[2] = (float)(0.5 / Math.cos(delta2));
-				w[3] = (float)(0.5 / Math.cos(delta * 6));
+				w[2] = (float)(0.5 / cos(delta2));
+				w[3] = (float)(0.5 / cos(delta * 6));
 				for (j = 4; j < nwh; j += 4) {
 					deltaj = delta * j;
 					deltaj3 = 3 * deltaj;
@@ -2013,7 +2013,7 @@ private:
 	};
 	
 	
-	void makect(int nc, float[] c, int startc) {
+	void makect(int nc, float c[], int startc) {
 		int j, nch;
 		float delta, deltaj;
 		
@@ -2032,7 +2032,7 @@ private:
 	};
 	
 	
-	void scale(float m, float[] a, int offa, bool complex) {
+	void scale(float m, float a[], int offa, bool complex) {
 		float norm = (float)(1.0 / m);
 		int n2;
 		if (complex) {
@@ -2045,6 +2045,561 @@ private:
 		}
 	};
 	
+	
+	void cftmdl1(int n, float a[], int offa, float w[], int startw) {
+		int j0, j1, j2, j3, k, m, mh;
+		float wn4r, wk1r, wk1i, wk3r, wk3i;
+		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+		int idx0, idx1, idx2, idx3, idx4, idx5;
+		
+		mh = n >> 3;
+		m = 2 * mh;
+		j1 = m;
+		j2 = j1 + m;
+		j3 = j2 + m;
+		idx1 = offa + j1;
+		idx2 = offa + j2;
+		idx3 = offa + j3;
+		x0r = a[offa] + a[idx2];
+		x0i = a[offa + 1] + a[idx2 + 1];
+		x1r = a[offa] - a[idx2];
+		x1i = a[offa + 1] - a[idx2 + 1];
+		x2r = a[idx1] + a[idx3];
+		x2i = a[idx1 + 1] + a[idx3 + 1];
+		x3r = a[idx1] - a[idx3];
+		x3i = a[idx1 + 1] - a[idx3 + 1];
+		a[offa] = x0r + x2r;
+		a[offa + 1] = x0i + x2i;
+		a[idx1] = x0r - x2r;
+		a[idx1 + 1] = x0i - x2i;
+		a[idx2] = x1r - x3i;
+		a[idx2 + 1] = x1i + x3r;
+		a[idx3] = x1r + x3i;
+		a[idx3 + 1] = x1i - x3r;
+		wn4r = w[startw + 1];
+		k = 0;
+		for (int j = 2; j < mh; j += 2) {
+			k += 4;
+			idx4 = startw + k;
+			wk1r = w[idx4];
+			wk1i = w[idx4 + 1];
+			wk3r = w[idx4 + 2];
+			wk3i = w[idx4 + 3];
+			j1 = j + m;
+			j2 = j1 + m;
+			j3 = j2 + m;
+			idx1 = offa + j1;
+			idx2 = offa + j2;
+			idx3 = offa + j3;
+			idx5 = offa + j;
+			x0r = a[idx5] + a[idx2];
+			x0i = a[idx5 + 1] + a[idx2 + 1];
+			x1r = a[idx5] - a[idx2];
+			x1i = a[idx5 + 1] - a[idx2 + 1];
+			x2r = a[idx1] + a[idx3];
+			x2i = a[idx1 + 1] + a[idx3 + 1];
+			x3r = a[idx1] - a[idx3];
+			x3i = a[idx1 + 1] - a[idx3 + 1];
+			a[idx5] = x0r + x2r;
+			a[idx5 + 1] = x0i + x2i;
+			a[idx1] = x0r - x2r;
+			a[idx1 + 1] = x0i - x2i;
+			x0r = x1r - x3i;
+			x0i = x1i + x3r;
+			a[idx2] = wk1r * x0r - wk1i * x0i;
+			a[idx2 + 1] = wk1r * x0i + wk1i * x0r;
+			x0r = x1r + x3i;
+			x0i = x1i - x3r;
+			a[idx3] = wk3r * x0r + wk3i * x0i;
+			a[idx3 + 1] = wk3r * x0i - wk3i * x0r;
+			j0 = m - j;
+			j1 = j0 + m;
+			j2 = j1 + m;
+			j3 = j2 + m;
+			idx0 = offa + j0;
+			idx1 = offa + j1;
+			idx2 = offa + j2;
+			idx3 = offa + j3;
+			x0r = a[idx0] + a[idx2];
+			x0i = a[idx0 + 1] + a[idx2 + 1];
+			x1r = a[idx0] - a[idx2];
+			x1i = a[idx0 + 1] - a[idx2 + 1];
+			x2r = a[idx1] + a[idx3];
+			x2i = a[idx1 + 1] + a[idx3 + 1];
+			x3r = a[idx1] - a[idx3];
+			x3i = a[idx1 + 1] - a[idx3 + 1];
+			a[idx0] = x0r + x2r;
+			a[idx0 + 1] = x0i + x2i;
+			a[idx1] = x0r - x2r;
+			a[idx1 + 1] = x0i - x2i;
+			x0r = x1r - x3i;
+			x0i = x1i + x3r;
+			a[idx2] = wk1i * x0r - wk1r * x0i;
+			a[idx2 + 1] = wk1i * x0i + wk1r * x0r;
+			x0r = x1r + x3i;
+			x0i = x1i - x3r;
+			a[idx3] = wk3i * x0r + wk3r * x0i;
+			a[idx3 + 1] = wk3i * x0i - wk3r * x0r;
+		}
+		j0 = mh;
+		j1 = j0 + m;
+		j2 = j1 + m;
+		j3 = j2 + m;
+		idx0 = offa + j0;
+		idx1 = offa + j1;
+		idx2 = offa + j2;
+		idx3 = offa + j3;
+		x0r = a[idx0] + a[idx2];
+		x0i = a[idx0 + 1] + a[idx2 + 1];
+		x1r = a[idx0] - a[idx2];
+		x1i = a[idx0 + 1] - a[idx2 + 1];
+		x2r = a[idx1] + a[idx3];
+		x2i = a[idx1 + 1] + a[idx3 + 1];
+		x3r = a[idx1] - a[idx3];
+		x3i = a[idx1 + 1] - a[idx3 + 1];
+		a[idx0] = x0r + x2r;
+		a[idx0 + 1] = x0i + x2i;
+		a[idx1] = x0r - x2r;
+		a[idx1 + 1] = x0i - x2i;
+		x0r = x1r - x3i;
+		x0i = x1i + x3r;
+		a[idx2] = wn4r * (x0r - x0i);
+		a[idx2 + 1] = wn4r * (x0i + x0r);
+		x0r = x1r + x3i;
+		x0i = x1i - x3r;
+		a[idx3] = -wn4r * (x0r + x0i);
+		a[idx3 + 1] = -wn4r * (x0i - x0r);
+	};
+	
+	
+	void cftf162(float a[], int offa, float w[], int startw) {
+		float wn4r, wk1r, wk1i, wk2r, wk2i, wk3r, wk3i, x0r, x0i, x1r, x1i, x2r, x2i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i, y8r, y8i, y9r, y9i, y10r, y10i, y11r, y11i, y12r, y12i, y13r, y13i, y14r, y14i, y15r, y15i;
+		
+		wn4r = w[startw + 1];
+		wk1r = w[startw + 4];
+		wk1i = w[startw + 5];
+		wk3r = w[startw + 6];
+		wk3i = -w[startw + 7];
+		wk2r = w[startw + 8];
+		wk2i = w[startw + 9];
+		x1r = a[offa] - a[offa + 17];
+		x1i = a[offa + 1] + a[offa + 16];
+		x0r = a[offa + 8] - a[offa + 25];
+		x0i = a[offa + 9] + a[offa + 24];
+		x2r = wn4r * (x0r - x0i);
+		x2i = wn4r * (x0i + x0r);
+		y0r = x1r + x2r;
+		y0i = x1i + x2i;
+		y4r = x1r - x2r;
+		y4i = x1i - x2i;
+		x1r = a[offa] + a[offa + 17];
+		x1i = a[offa + 1] - a[offa + 16];
+		x0r = a[offa + 8] + a[offa + 25];
+		x0i = a[offa + 9] - a[offa + 24];
+		x2r = wn4r * (x0r - x0i);
+		x2i = wn4r * (x0i + x0r);
+		y8r = x1r - x2i;
+		y8i = x1i + x2r;
+		y12r = x1r + x2i;
+		y12i = x1i - x2r;
+		x0r = a[offa + 2] - a[offa + 19];
+		x0i = a[offa + 3] + a[offa + 18];
+		x1r = wk1r * x0r - wk1i * x0i;
+		x1i = wk1r * x0i + wk1i * x0r;
+		x0r = a[offa + 10] - a[offa + 27];
+		x0i = a[offa + 11] + a[offa + 26];
+		x2r = wk3i * x0r - wk3r * x0i;
+		x2i = wk3i * x0i + wk3r * x0r;
+		y1r = x1r + x2r;
+		y1i = x1i + x2i;
+		y5r = x1r - x2r;
+		y5i = x1i - x2i;
+		x0r = a[offa + 2] + a[offa + 19];
+		x0i = a[offa + 3] - a[offa + 18];
+		x1r = wk3r * x0r - wk3i * x0i;
+		x1i = wk3r * x0i + wk3i * x0r;
+		x0r = a[offa + 10] + a[offa + 27];
+		x0i = a[offa + 11] - a[offa + 26];
+		x2r = wk1r * x0r + wk1i * x0i;
+		x2i = wk1r * x0i - wk1i * x0r;
+		y9r = x1r - x2r;
+		y9i = x1i - x2i;
+		y13r = x1r + x2r;
+		y13i = x1i + x2i;
+		x0r = a[offa + 4] - a[offa + 21];
+		x0i = a[offa + 5] + a[offa + 20];
+		x1r = wk2r * x0r - wk2i * x0i;
+		x1i = wk2r * x0i + wk2i * x0r;
+		x0r = a[offa + 12] - a[offa + 29];
+		x0i = a[offa + 13] + a[offa + 28];
+		x2r = wk2i * x0r - wk2r * x0i;
+		x2i = wk2i * x0i + wk2r * x0r;
+		y2r = x1r + x2r;
+		y2i = x1i + x2i;
+		y6r = x1r - x2r;
+		y6i = x1i - x2i;
+		x0r = a[offa + 4] + a[offa + 21];
+		x0i = a[offa + 5] - a[offa + 20];
+		x1r = wk2i * x0r - wk2r * x0i;
+		x1i = wk2i * x0i + wk2r * x0r;
+		x0r = a[offa + 12] + a[offa + 29];
+		x0i = a[offa + 13] - a[offa + 28];
+		x2r = wk2r * x0r - wk2i * x0i;
+		x2i = wk2r * x0i + wk2i * x0r;
+		y10r = x1r - x2r;
+		y10i = x1i - x2i;
+		y14r = x1r + x2r;
+		y14i = x1i + x2i;
+		x0r = a[offa + 6] - a[offa + 23];
+		x0i = a[offa + 7] + a[offa + 22];
+		x1r = wk3r * x0r - wk3i * x0i;
+		x1i = wk3r * x0i + wk3i * x0r;
+		x0r = a[offa + 14] - a[offa + 31];
+		x0i = a[offa + 15] + a[offa + 30];
+		x2r = wk1i * x0r - wk1r * x0i;
+		x2i = wk1i * x0i + wk1r * x0r;
+		y3r = x1r + x2r;
+		y3i = x1i + x2i;
+		y7r = x1r - x2r;
+		y7i = x1i - x2i;
+		x0r = a[offa + 6] + a[offa + 23];
+		x0i = a[offa + 7] - a[offa + 22];
+		x1r = wk1i * x0r + wk1r * x0i;
+		x1i = wk1i * x0i - wk1r * x0r;
+		x0r = a[offa + 14] + a[offa + 31];
+		x0i = a[offa + 15] - a[offa + 30];
+		x2r = wk3i * x0r - wk3r * x0i;
+		x2i = wk3i * x0i + wk3r * x0r;
+		y11r = x1r + x2r;
+		y11i = x1i + x2i;
+		y15r = x1r - x2r;
+		y15i = x1i - x2i;
+		x1r = y0r + y2r;
+		x1i = y0i + y2i;
+		x2r = y1r + y3r;
+		x2i = y1i + y3i;
+		a[offa] = x1r + x2r;
+		a[offa + 1] = x1i + x2i;
+		a[offa + 2] = x1r - x2r;
+		a[offa + 3] = x1i - x2i;
+		x1r = y0r - y2r;
+		x1i = y0i - y2i;
+		x2r = y1r - y3r;
+		x2i = y1i - y3i;
+		a[offa + 4] = x1r - x2i;
+		a[offa + 5] = x1i + x2r;
+		a[offa + 6] = x1r + x2i;
+		a[offa + 7] = x1i - x2r;
+		x1r = y4r - y6i;
+		x1i = y4i + y6r;
+		x0r = y5r - y7i;
+		x0i = y5i + y7r;
+		x2r = wn4r * (x0r - x0i);
+		x2i = wn4r * (x0i + x0r);
+		a[offa + 8] = x1r + x2r;
+		a[offa + 9] = x1i + x2i;
+		a[offa + 10] = x1r - x2r;
+		a[offa + 11] = x1i - x2i;
+		x1r = y4r + y6i;
+		x1i = y4i - y6r;
+		x0r = y5r + y7i;
+		x0i = y5i - y7r;
+		x2r = wn4r * (x0r - x0i);
+		x2i = wn4r * (x0i + x0r);
+		a[offa + 12] = x1r - x2i;
+		a[offa + 13] = x1i + x2r;
+		a[offa + 14] = x1r + x2i;
+		a[offa + 15] = x1i - x2r;
+		x1r = y8r + y10r;
+		x1i = y8i + y10i;
+		x2r = y9r - y11r;
+		x2i = y9i - y11i;
+		a[offa + 16] = x1r + x2r;
+		a[offa + 17] = x1i + x2i;
+		a[offa + 18] = x1r - x2r;
+		a[offa + 19] = x1i - x2i;
+		x1r = y8r - y10r;
+		x1i = y8i - y10i;
+		x2r = y9r + y11r;
+		x2i = y9i + y11i;
+		a[offa + 20] = x1r - x2i;
+		a[offa + 21] = x1i + x2r;
+		a[offa + 22] = x1r + x2i;
+		a[offa + 23] = x1i - x2r;
+		x1r = y12r - y14i;
+		x1i = y12i + y14r;
+		x0r = y13r + y15i;
+		x0i = y13i - y15r;
+		x2r = wn4r * (x0r - x0i);
+		x2i = wn4r * (x0i + x0r);
+		a[offa + 24] = x1r + x2r;
+		a[offa + 25] = x1i + x2i;
+		a[offa + 26] = x1r - x2r;
+		a[offa + 27] = x1i - x2i;
+		x1r = y12r + y14i;
+		x1i = y12i - y14r;
+		x0r = y13r - y15i;
+		x0i = y13i + y15r;
+		x2r = wn4r * (x0r - x0i);
+		x2i = wn4r * (x0i + x0r);
+		a[offa + 28] = x1r - x2i;
+		a[offa + 29] = x1i + x2r;
+		a[offa + 30] = x1r + x2i;
+		a[offa + 31] = x1i - x2r;
+	};
+	
+	
+	void cftmdl2(int n, float a[], int offa, float w[], int startw) {
+		int j0, j1, j2, j3, k, kr, m, mh;
+		float wn4r, wk1r, wk1i, wk3r, wk3i, wd1r, wd1i, wd3r, wd3i;
+		float x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i, y0r, y0i, y2r, y2i;
+		int idx0, idx1, idx2, idx3, idx4, idx5, idx6;
+		
+		mh = n >> 3;
+		m = 2 * mh;
+		wn4r = w[startw + 1];
+		j1 = m;
+		j2 = j1 + m;
+		j3 = j2 + m;
+		idx1 = offa + j1;
+		idx2 = offa + j2;
+		idx3 = offa + j3;
+		x0r = a[offa] - a[idx2 + 1];
+		x0i = a[offa + 1] + a[idx2];
+		x1r = a[offa] + a[idx2 + 1];
+		x1i = a[offa + 1] - a[idx2];
+		x2r = a[idx1] - a[idx3 + 1];
+		x2i = a[idx1 + 1] + a[idx3];
+		x3r = a[idx1] + a[idx3 + 1];
+		x3i = a[idx1 + 1] - a[idx3];
+		y0r = wn4r * (x2r - x2i);
+		y0i = wn4r * (x2i + x2r);
+		a[offa] = x0r + y0r;
+		a[offa + 1] = x0i + y0i;
+		a[idx1] = x0r - y0r;
+		a[idx1 + 1] = x0i - y0i;
+		y0r = wn4r * (x3r - x3i);
+		y0i = wn4r * (x3i + x3r);
+		a[idx2] = x1r - y0i;
+		a[idx2 + 1] = x1i + y0r;
+		a[idx3] = x1r + y0i;
+		a[idx3 + 1] = x1i - y0r;
+		k = 0;
+		kr = 2 * m;
+		for (int j = 2; j < mh; j += 2) {
+			k += 4;
+			idx4 = startw + k;
+			wk1r = w[idx4];
+			wk1i = w[idx4 + 1];
+			wk3r = w[idx4 + 2];
+			wk3i = w[idx4 + 3];
+			kr -= 4;
+			idx5 = startw + kr;
+			wd1i = w[idx5];
+			wd1r = w[idx5 + 1];
+			wd3i = w[idx5 + 2];
+			wd3r = w[idx5 + 3];
+			j1 = j + m;
+			j2 = j1 + m;
+			j3 = j2 + m;
+			idx1 = offa + j1;
+			idx2 = offa + j2;
+			idx3 = offa + j3;
+			idx6 = offa + j;
+			x0r = a[idx6] - a[idx2 + 1];
+			x0i = a[idx6 + 1] + a[idx2];
+			x1r = a[idx6] + a[idx2 + 1];
+			x1i = a[idx6 + 1] - a[idx2];
+			x2r = a[idx1] - a[idx3 + 1];
+			x2i = a[idx1 + 1] + a[idx3];
+			x3r = a[idx1] + a[idx3 + 1];
+			x3i = a[idx1 + 1] - a[idx3];
+			y0r = wk1r * x0r - wk1i * x0i;
+			y0i = wk1r * x0i + wk1i * x0r;
+			y2r = wd1r * x2r - wd1i * x2i;
+			y2i = wd1r * x2i + wd1i * x2r;
+			a[idx6] = y0r + y2r;
+			a[idx6 + 1] = y0i + y2i;
+			a[idx1] = y0r - y2r;
+			a[idx1 + 1] = y0i - y2i;
+			y0r = wk3r * x1r + wk3i * x1i;
+			y0i = wk3r * x1i - wk3i * x1r;
+			y2r = wd3r * x3r + wd3i * x3i;
+			y2i = wd3r * x3i - wd3i * x3r;
+			a[idx2] = y0r + y2r;
+			a[idx2 + 1] = y0i + y2i;
+			a[idx3] = y0r - y2r;
+			a[idx3 + 1] = y0i - y2i;
+			j0 = m - j;
+			j1 = j0 + m;
+			j2 = j1 + m;
+			j3 = j2 + m;
+			idx0 = offa + j0;
+			idx1 = offa + j1;
+			idx2 = offa + j2;
+			idx3 = offa + j3;
+			x0r = a[idx0] - a[idx2 + 1];
+			x0i = a[idx0 + 1] + a[idx2];
+			x1r = a[idx0] + a[idx2 + 1];
+			x1i = a[idx0 + 1] - a[idx2];
+			x2r = a[idx1] - a[idx3 + 1];
+			x2i = a[idx1 + 1] + a[idx3];
+			x3r = a[idx1] + a[idx3 + 1];
+			x3i = a[idx1 + 1] - a[idx3];
+			y0r = wd1i * x0r - wd1r * x0i;
+			y0i = wd1i * x0i + wd1r * x0r;
+			y2r = wk1i * x2r - wk1r * x2i;
+			y2i = wk1i * x2i + wk1r * x2r;
+			a[idx0] = y0r + y2r;
+			a[idx0 + 1] = y0i + y2i;
+			a[idx1] = y0r - y2r;
+			a[idx1 + 1] = y0i - y2i;
+			y0r = wd3i * x1r + wd3r * x1i;
+			y0i = wd3i * x1i - wd3r * x1r;
+			y2r = wk3i * x3r + wk3r * x3i;
+			y2i = wk3i * x3i - wk3r * x3r;
+			a[idx2] = y0r + y2r;
+			a[idx2 + 1] = y0i + y2i;
+			a[idx3] = y0r - y2r;
+			a[idx3 + 1] = y0i - y2i;
+		}
+		wk1r = w[startw + m];
+		wk1i = w[startw + m + 1];
+		j0 = mh;
+		j1 = j0 + m;
+		j2 = j1 + m;
+		j3 = j2 + m;
+		idx0 = offa + j0;
+		idx1 = offa + j1;
+		idx2 = offa + j2;
+		idx3 = offa + j3;
+		x0r = a[idx0] - a[idx2 + 1];
+		x0i = a[idx0 + 1] + a[idx2];
+		x1r = a[idx0] + a[idx2 + 1];
+		x1i = a[idx0 + 1] - a[idx2];
+		x2r = a[idx1] - a[idx3 + 1];
+		x2i = a[idx1 + 1] + a[idx3];
+		x3r = a[idx1] + a[idx3 + 1];
+		x3i = a[idx1 + 1] - a[idx3];
+		y0r = wk1r * x0r - wk1i * x0i;
+		y0i = wk1r * x0i + wk1i * x0r;
+		y2r = wk1i * x2r - wk1r * x2i;
+		y2i = wk1i * x2i + wk1r * x2r;
+		a[idx0] = y0r + y2r;
+		a[idx0 + 1] = y0i + y2i;
+		a[idx1] = y0r - y2r;
+		a[idx1 + 1] = y0i - y2i;
+		y0r = wk1i * x1r - wk1r * x1i;
+		y0i = wk1i * x1i + wk1r * x1r;
+		y2r = wk1r * x3r - wk1i * x3i;
+		y2i = wk1r * x3i + wk1i * x3r;
+		a[idx2] = y0r - y2r;
+		a[idx2 + 1] = y0i - y2i;
+		a[idx3] = y0r + y2r;
+		a[idx3 + 1] = y0i + y2i;
+	};
+	
+	
+	void cftf082(float a[], int offa, float w[], int startw) {
+		float wn4r, wk1r, wk1i, x0r, x0i, x1r, x1i, y0r, y0i, y1r, y1i, y2r, y2i, y3r, y3i, y4r, y4i, y5r, y5i, y6r, y6i, y7r, y7i;
+		
+		wn4r = w[startw + 1];
+		wk1r = w[startw + 2];
+		wk1i = w[startw + 3];
+		y0r = a[offa] - a[offa + 9];
+		y0i = a[offa + 1] + a[offa + 8];
+		y1r = a[offa] + a[offa + 9];
+		y1i = a[offa + 1] - a[offa + 8];
+		x0r = a[offa + 4] - a[offa + 13];
+		x0i = a[offa + 5] + a[offa + 12];
+		y2r = wn4r * (x0r - x0i);
+		y2i = wn4r * (x0i + x0r);
+		x0r = a[offa + 4] + a[offa + 13];
+		x0i = a[offa + 5] - a[offa + 12];
+		y3r = wn4r * (x0r - x0i);
+		y3i = wn4r * (x0i + x0r);
+		x0r = a[offa + 2] - a[offa + 11];
+		x0i = a[offa + 3] + a[offa + 10];
+		y4r = wk1r * x0r - wk1i * x0i;
+		y4i = wk1r * x0i + wk1i * x0r;
+		x0r = a[offa + 2] + a[offa + 11];
+		x0i = a[offa + 3] - a[offa + 10];
+		y5r = wk1i * x0r - wk1r * x0i;
+		y5i = wk1i * x0i + wk1r * x0r;
+		x0r = a[offa + 6] - a[offa + 15];
+		x0i = a[offa + 7] + a[offa + 14];
+		y6r = wk1i * x0r - wk1r * x0i;
+		y6i = wk1i * x0i + wk1r * x0r;
+		x0r = a[offa + 6] + a[offa + 15];
+		x0i = a[offa + 7] - a[offa + 14];
+		y7r = wk1r * x0r - wk1i * x0i;
+		y7i = wk1r * x0i + wk1i * x0r;
+		x0r = y0r + y2r;
+		x0i = y0i + y2i;
+		x1r = y4r + y6r;
+		x1i = y4i + y6i;
+		a[offa] = x0r + x1r;
+		a[offa + 1] = x0i + x1i;
+		a[offa + 2] = x0r - x1r;
+		a[offa + 3] = x0i - x1i;
+		x0r = y0r - y2r;
+		x0i = y0i - y2i;
+		x1r = y4r - y6r;
+		x1i = y4i - y6i;
+		a[offa + 4] = x0r - x1i;
+		a[offa + 5] = x0i + x1r;
+		a[offa + 6] = x0r + x1i;
+		a[offa + 7] = x0i - x1r;
+		x0r = y1r - y3i;
+		x0i = y1i + y3r;
+		x1r = y5r - y7r;
+		x1i = y5i - y7i;
+		a[offa + 8] = x0r + x1r;
+		a[offa + 9] = x0i + x1i;
+		a[offa + 10] = x0r - x1r;
+		a[offa + 11] = x0i - x1i;
+		x0r = y1r + y3i;
+		x0i = y1i - y3r;
+		x1r = y5r + y7r;
+		x1i = y5i + y7i;
+		a[offa + 12] = x0r - x1i;
+		a[offa + 13] = x0i + x1r;
+		a[offa + 14] = x0r + x1i;
+		a[offa + 15] = x0i - x1r;
+	};
+	
+	
+	int cfttree(int n, int j, int k, float a[], int offa, int nw, float w[]) {
+		int i, isplt, m;
+		int idx1 = offa - n;
+		if ((k & 3) != 0) {
+			isplt = k & 1;
+			if (isplt != 0) {
+				cftmdl1(n, a, idx1 + j, w, nw - (n >> 1));
+			} else {
+				cftmdl2(n, a, idx1 + j, w, nw - n);
+			}
+		} else {
+			m = n;
+			for (i = k; (i & 3) == 0; i >>= 2) {
+				m <<= 2;
+			}
+			isplt = i & 1;
+			int idx2 = offa + j;
+			if (isplt != 0) {
+				while (m > 128) {
+					cftmdl1(m, a, idx2 - m, w, nw - (m >> 1));
+					m >>= 2;
+				}
+			} else {
+				while (m > 128) {
+					cftmdl2(m, a, idx2 - m, w, nw - m);
+					m >>= 2;
+				}
+			}
+		}
+		return isplt;
+	};
 	
 	
 	
