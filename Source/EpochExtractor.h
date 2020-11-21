@@ -4,6 +4,8 @@
     EpochExtractor.h
     Created: 17 Nov 2020 3:37:46am
     Author:  Ben Vining
+ 
+ 	This class detects the locations of maximum energy in the period of the input signal's fundamental frequency. The ESOLA algorithm attempts to center its analysis grains on these pitch marks, and stretch them closer together or farther apart to achieve the pitch scaling.
 
   ==============================================================================
 */
@@ -19,13 +21,15 @@ public:
 	 EXTRACT EPOCH INDICES
 	 
 	 uses a ZFR approach to save sample index #s of fundamental pitch epochs to an integer array
+	 
+	 @see : "Epoch Extraction From Speech Signals", by K. Sri Rama Murty and B. Yegnanarayana, 2008 : http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6D94C490DA889017DE4362D322E1A23C?doi=10.1.1.586.7214&rep=rep1&type=pdf
 	 */
 	
-	std::vector<int> extractEpochIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate)
+	Array<int> extractEpochIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate)
 	{
 		const int window_length = round(0.015 * samplerate);
 		
-		std::vector<int> epochs;
+		Array<int> epochs;
 		
 		std::vector<float> y(numSamples);
 		std::vector<float> y2(numSamples);
@@ -85,15 +89,15 @@ public:
 		// last stage
 		float last = y[0];
 		float act;
-		epochs.push_back(0);
+		epochs.add(0);
 		for(int i = 0; i < numSamples; ++i) {
 			act = y[i];
 			if(last < 0 and act > 0) {
-				epochs.push_back(i);
+				epochs.add(i);
 			}
 			last = act;
 		}
-		epochs.push_back(numSamples - 1);
+		epochs.add(numSamples - 1);
 		
 		return epochs;
 	};

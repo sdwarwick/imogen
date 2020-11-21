@@ -14,6 +14,9 @@
  		a[2*k] = Real[k];
  		a[2*k+1] = Imaginary[k];
 	@endcode
+ 
+ 	@see
+ 		custom FFT implementation in Java by Piotr Wendykier and Joren Six : http://www.github.com/JorenSix/TarsosDSP/blob/master/src/core/be/tarsos/dsp/util/fft/FloatFFT.java
 
   ==============================================================================
 */

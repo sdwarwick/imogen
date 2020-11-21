@@ -6,7 +6,6 @@
 #include "MidiProcessor.h"
 #include "EpochExtractor.h"
 #include "Yin.h"
-#include "Window.h"
 
 #ifndef NUMBER_OF_VOICES
 #define NUMBER_OF_VOICES 12
@@ -73,9 +72,7 @@ public:
 	MidiProcessor midiProcessor;
 	bool midiLatch;
 	
-	Array<int>* epochLocations;
-	
-	Array<float>* window;
+	Array<int> epochLocations;
 	
 //==============================================================================
 	
@@ -122,13 +119,9 @@ private:
 	int analysisShift;
 	int analysisShiftHalved;
 	int analysisLimit;
-	int windowLength;
-	int prevWindowLength;
-	void calcWindow(const int length);
+
 	Yin pitchTracker;
 	EpochExtractor epochs;
-	
-	Window hanning;
 	
 	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& dryBuffer, const int numSamples);
 	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));

@@ -5,7 +5,7 @@
     Created: 18 Nov 2020 1:16:01am
     Author:  Ben Vining
  
- 	Computes sample values for a Hanning window of variable length & writes to *window array
+ 	Computes sample values for a Hanning window of variable length & writes to external *window array
 
   ==============================================================================
 */

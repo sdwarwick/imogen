@@ -99,28 +99,29 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const double modInputFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window, Array<int>* epochLocations) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const double modInputFreq, Array<int> epochLocations) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
-		checkBufferSizes(numSamples);
+		if(adsrEnv.isActive() == false) {
+			voiceIsOn = false;
+			amplitudeMultiplier = 0.0f;
+			clearBuffers();
+		} else {
 		
-		// this function puts shifted samples into the mono shiftedBuffer
-		
-		
-		shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
-		
-		// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
-		const float* shiftedReader = shiftedBuffer.getReadPointer(0);
-		for(int channel = 0; channel < 2; ++channel)
-		{
-			float* writingTo = harmonyBuffer.getWritePointer(channel);
-			for(int sample = 0; sample < numSamples; ++sample)
+			checkBufferSizes(numSamples);
+			
+			// this function puts resynthesized shifted samples into the mono shiftedBuffer
+			pitchShifter.esola(inputBuffer, inputChannel, numSamples, epochLocations, float(modInputFreq), desiredFrequency, shiftedBuffer);
+			
+			shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
+			
+			// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
+			const float* shiftedReader = shiftedBuffer.getReadPointer(0);
+			for(int channel = 0; channel < 2; ++channel)
 			{
-				if(adsrEnv.isActive() == false) {
-					voiceIsOn = false;
-					amplitudeMultiplier = 0.0f;
-					clearBuffers();
-				} else {
+				float* writingTo = harmonyBuffer.getWritePointer(channel);
+				for(int sample = 0; sample < numSamples; ++sample)
+				{
 					writingTo[sample] = shiftedReader[sample] * adsrEnv.getNextSample() * panningMultipliers[channel];
 				}
 			}

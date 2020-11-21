@@ -5,7 +5,9 @@
     Created: 4 Nov 2020 6:41:49am
     Author:  Ben Vining
 
- stores list of possible midiPanning values based on desired stereo width of harmony signal
+ 		Stores list of possible midiPanning values based on the desired stereo width of the harmony signal.
+ 
+ 		Attempts to assign panning values from the "middle out" -- even with a selected stereo width of 100, the first MIDI panning value sent will be 64. The goal is for the sound to get wider as more polyphony voices are turned on.
  
   ==============================================================================
 */

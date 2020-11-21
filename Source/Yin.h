@@ -8,7 +8,13 @@
  	This class implements the YIN pitch tracking algorithm, as described in "http://recherche.ircam.fr/equipes/pcm/cheveign/ps/2002_JASA_YIN_proof.pdf". This implementation uses an FFT to calculate the difference function in step 2 to increase performance and computational speed.
  
  	@see
- 		"YIN, a fundamental frequency estimator for speech and music", by Alain de Cheveigne ́ and Hideki Kawahara, 2002
+ 		: "YIN, a fundamental frequency estimator for speech and music", by Alain de Cheveigne ́ and Hideki Kawahara, 2002
+ 
+ 	@see
+ 		: YIN implementation in Java by Matthias Mauch, Joren Six and Paul Brossier : http://www.github.com/JorenSix/TarsosDSP/blob/master/src/core/be/tarsos/dsp/pitch/FastYin.java
+ 
+ 	@see
+ 		: YIN implementation in Python by Patrice Guyot : http://www.github.com/patriceguyot/Yin/blob/master/yin.py
  
  	@dependencies
  		"FloatFFT.h", a custom implementation of an FFT process with complexForward and complexInverse operations.
@@ -31,15 +37,15 @@ public:
 		yinBuffer.setSize(1, 256);
 	};
 	
-	/*
+	/*===============================================================================================================================================
 	 	PITCH DETECTION RESULT
 	 	@brief	this function is the main flow of the YIN algorithm.
 	 	@param	inputBuffer		buffer to read audio from
 	 	@param	inputChan		channel # of inputBuffer to read audio from
 	 	@param	numSamples		inputBuffer length in samples
 	 	@param	samplerate		current samplerate in Hz
-	 	@return		current input pitch in Hz, or -1 if no pitch is detected
-	 */
+	 	@return	current input pitch in Hz, or -1 if no pitch is detected
+	 ==============================================================================================================================================*/
 	float pitchDetectionResult(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const double samplerate) {
 		
 		checkBufferSize(numSamples);

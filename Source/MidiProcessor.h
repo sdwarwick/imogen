@@ -6,6 +6,17 @@
     Author:  Ben Vining
  
  	This class processes incoming MIDI. Note ons and offs are routed to the appropriate functions of the PolhyphonyVoiceManager class (PolyphonyVoiceManager will actually DO the reporting/storing/recalling of voices), and resulting data is routed to the appropraite instance of HarmonyVoice.
+ 
+ 
+ 	HELPER CLASSES:
+ 
+ 		* PolyphonyVoiceManager.h	: keeps track of which instances of HarmonyVoice are currently active, and what pitches are being played by the active voices. Essentially a wrapper class for an array of size NUMBER_OF_VOICES containing midiPitch values. -1 is an inactive voice.
+ 
+ 		* VoiceStealingManager.h 	: voice "stealing" is the concept that if all available instances of HarmonyVoice are already active with a previous note when a new note on comes in, the Harmonizer can intelligently choose which HarmonyVoice instance to assign the new note to -- "stealing" that voice from its old note. VoiceStealingManager keeps track of which voie # has been on the LONGEST, so that the stolen voice will always be the oldest pitch
+ 
+ 		* MidiPanningManager.h 		: creates and stores a list of possible MIDIpanning values based on the user's selected "stereo width" parameter, and attempts to assign these values to newly activated voices from the "middle out".
+ 
+ 		* MidiLatchManager.h 		: processes incoming note events while MIDI LATCH is active (and allows latch to be turned OFF)
 
   ==============================================================================
 */

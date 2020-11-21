@@ -7,6 +7,8 @@
 
  	This class allocates, stores & retrieves incoming MIDI into 12 polyphonic harmony voices, which directly control the 12 instances of HarmonyVoice
  
+ 	Stores midiPitch values. -1 signifies an inactive voice.
+ 
   ==============================================================================
 */
 

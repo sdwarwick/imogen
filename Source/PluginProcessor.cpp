@@ -26,7 +26,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		prevPitchBendUp(2.0f), prevPitchBendDown(2.0f),
 		latchIsOn(false), previousLatch(false),
 		stealingIsOn(true),
-		analysisShift(100), analysisShiftHalved(50), analysisLimit(461), windowLength(151), prevWindowLength(151),
+		analysisShift(100), analysisShiftHalved(50), analysisLimit(461),
 		previousmidipan(64),
 		previousMasterDryWet(100),
 		dryMultiplier(0.0f), wetMultiplier(1.0f),
@@ -46,12 +46,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	dryvoxpanningmults[0] = 64;
 	dryvoxpanningmults[1] = 64;
 	
-	epochLocations = new Array<int>;
-	
-	window = new Array<float>;
-	window->resize(151);
-	hanning.calcWindow(151, window);
-	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
 	
@@ -62,10 +56,6 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 	for (int i = 0; i < numVoices; ++i) {
 		delete harmEngine[i];
 	}
-	
-	delete[] epochLocations;
-	
-	delete[] window;
 	
 	Timer::stopTimer();
 }
@@ -402,7 +392,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			// frameIsPitched ?
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, analysisShift, analysisShiftHalved, analysisLimit, window, epochLocations);
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations);
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)
@@ -476,7 +466,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		prevodeb = *outputGainListener;
 		previousLatch = latchIsOn;
 		stealingIsOn = *voiceStealingListener > 0.5f;
-		prevWindowLength = windowLength;
 	}
 }
 
@@ -532,24 +521,24 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	if (newPitch != -1.0f)
 	{
 		voxCurrentPitch = newPitch;
-		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
+//		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
 	} else {
 		voxCurrentPitch = 80.0f; // need to set to arbitrary value ??
-		analysisShift = 100;  // default grain size for unpitched parts of signal
+//		analysisShift = 100;  // default grain size for unpitched parts of signal
 		frameIsPitched = false;
 	}
 	
-	analysisShiftHalved = round(analysisShift/2);
-	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
+	epochLocations = epochs.extractEpochIndices(input, inputChan, numSamples, lastSampleRate);
 	
-	windowLength = analysisShift;
+//	analysisShiftHalved = round(analysisShift/2);
+//	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
+//
+//	windowLength = analysisShift;
 	// windowLength = analysisShift + analysisShiftHalved + 1;
-	if(windowLength != prevWindowLength) {
-		hanning.calcWindow(windowLength, window);
-	}
+//	if(windowLength != prevWindowLength) {
+//		hanning.calcWindow(windowLength, window);
+//	}
 	
-//	*epochLocations = epochs.extractEpochIndices(input, inputChan, numSamples, lastSampleRate);
-	// const int windowLength = epochIndices[i + numberOfEpochsInFrame] - epochIndices[i];
 };
 
 

@@ -6,6 +6,11 @@
     Author:  Ben Vining
  
  	This class hosts & performs the resynthesis at each of the desired output pitches.
+ 
+ 	@dependencies
+ 		:  For the esola() function, you need an integer array containing sample #s corresponding to the locations of fundamental frequency pitch peaks. There is a function implementing these calculations in { InputAnalysis -> "EpochExtractor.h" }
+ 
+ 		:  Any -SOLA based time or pitch scaling algorithm will have some degree of dependancy on detection of the input's fundamental frequency. This implementation's pitch tracking uses a version of the YIN algorithm, implemented in { InputAnalysis -> "Yin.h" }
 
   ==============================================================================
 */
@@ -49,9 +54,9 @@ public:
 	 		: example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
 	 ==============================================================================================================================================*/
 	
-	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int>* peaks, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer) {
+	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> peaks, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer) {
 		
-		const int numPeaks = peaks->size();
+		const int numPeaks = peaks.size();
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
 		const int newNumPeaks = round(numPeaks * scalingFactor);
 		
@@ -65,7 +70,7 @@ public:
 			const int left = floor(newPeaksRef[i]);
 			const int right = ceil(newPeaksRef[i]);
 			
-			const int newPeak = (peaks->getUnchecked(left) * (1 - weight) + peaks->getUnchecked(right) * weight);
+			const int newPeak = (peaks.getUnchecked(left) * (1 - weight) + peaks.getUnchecked(right) * weight);
 			newPeaks.set(i, newPeak);
 		}
 		
@@ -77,7 +82,7 @@ public:
 			
 			// first, find the corresponding old peak index
 			for(int k = 0; k < numPeaks; ++k) {
-				oldPeaks[k] = abs(peaks->getUnchecked(k) - newPeaks.getUnchecked(j));
+				oldPeaks[k] = abs(peaks.getUnchecked(k) - newPeaks.getUnchecked(j));
 			}
 			int i = int(std::distance(oldPeaks.begin(), std::min_element(oldPeaks.begin(), oldPeaks.end())));
 			
@@ -94,11 +99,11 @@ public:
 				P1_1 = newPeaks.getUnchecked(j + 1) - newPeaks.getUnchecked(j);
 			}
 			// edge case truncation
-			if(peaks->getUnchecked(i) - P1_0 < 0) {
-				P1_0 = peaks->getUnchecked(i);
+			if(peaks.getUnchecked(i) - P1_0 < 0) {
+				P1_0 = peaks.getUnchecked(i);
 			}
-			if(peaks->getUnchecked(i) + P1_1 > numSamples - 1) {
-				P1_1 = numSamples - 1 - peaks->getUnchecked(i);
+			if(peaks.getUnchecked(i) + P1_1 > numSamples - 1) {
+				P1_1 = numSamples - 1 - peaks.getUnchecked(i);
 			}
 			
 			// windowing function for OLA
@@ -108,7 +113,7 @@ public:
 			const float* addingto = newSignal.getReadPointer(0);
 			float* writingto = newSignal.getWritePointer(0);
 			const float* input = inputBuffer.getReadPointer(0);
-			int inputindex = peaks->getUnchecked(i) - P1_0;
+			int inputindex = peaks.getUnchecked(i) - P1_0;
 			int windowIndex = 0;
 			for (int s = newPeaks.getUnchecked(j) - P1_0; s < newPeaks.getUnchecked(j) + P1_1; ++s) {
 				writingto[s] = addingto[s] + (windowing->getUnchecked(windowIndex) * input[inputindex]);
