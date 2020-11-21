@@ -5,9 +5,7 @@
     Created: 2 Nov 2020 4:55:40pm
     Author:  Ben Vining
  
- 	This class will do the actual pitch shifting computations.
- 
- 	It should be fed the analysis data of the incoming modulator signal (grain creation) -- so all this class needs to do is the actual *manipulation* & playback of the grains, then resynthesis into the output audio signal.
+ 	This class hosts & performs the resynthesis at each of the desired output pitches.
 
   ==============================================================================
 */
@@ -24,21 +22,127 @@ public:
 		workingBuffer.clear();
 	}
 	
-	/*
-	 	a crude TD-PSOLA implementation that does not map pitch epochs
-	 */
-	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window, Array<int>* epochLocations) {
+	
+	/*===============================================================================================================================================
+	 a time-domain implementation of ESOLA : Epoch - Synchronous  Overlap - Add
+	 
+	 @param : inputBuffer	:	audio I/O buffer. The resynthesized signal is constructed in a new, locally hosted AudioBuffer before being transferred to the output.
+	 
+	 @param	: inputChan		:	input channel #
+	 
+	 		: numSamples	:	length of inputBuffer in samples
+	 
+	 		: peaks			:	pointer to an array containing sample index #s of pitch epoch locations within input signal { see InputAnalysis -> "EpochExtractor.h" }
+	 
+	 		: inputFreq		:	detected fundamental frequency of input in Hz
+	 
+	 		: desiredFreq	:	desired pitch to shift to, in Hz
+	 
+	 		: outputBuffer	:	AudioBuffer to write the final output signal to. This will be the HarmonyVoice instance's shiftedBuffer
+	 
+	 @return - writes output signal to HarmonyVoice's shiftedBuffer
+	 
+	 @see   : "Epoch-Synchronous Overlap-Add (ESOLA) for Time- and Pitch-Scale Modification of Speech Signals", by Sunil Rudresh, Aditya Vasisht, Karthika Vijayan, and Chandra Sekhar Seelamantula, 2018 : http://arxiv.org/pdf/1801.06492.pdf
+	 
+	 		: example of ESOLA implementation in Python by Sanna Wager : http://www.github.com/sannawag/TD-PSOLA/blob/master/td_psola.py
+	 
+	 		: example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
+	 ==============================================================================================================================================*/
+	
+	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int>* peaks, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer) {
+		
+		const int numPeaks = peaks->size();
+		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
+		const int newNumPeaks = round(numPeaks * scalingFactor);
+		
+		AudioBuffer<float> newSignal(1, numSamples);
+		
+		// respace epochs / pitch peaks for the new desired synthesis pitch periods
+		std::vector<float> newPeaksRef = LinearSpacedArray(0, numPeaks - 1, newNumPeaks);
+		Array<int> newPeaks(newNumPeaks);
+		for(int i = 0; i < newNumPeaks; ++i) {
+			const float weight = float(long(newPeaksRef[i]) % long(1));
+			const int left = floor(newPeaksRef[i]);
+			const int right = ceil(newPeaksRef[i]);
+			
+			const int newPeak = (peaks->getUnchecked(left) * (1 - weight) + peaks->getUnchecked(right) * weight);
+			newPeaks.set(i, newPeak);
+		}
+		
+		std::vector<float> oldPeaks(numPeaks);
+		Array<float>* windowing;
+		
+		// ESOLA
+		for(int j = 0; j < newNumPeaks; ++j) {
+			
+			// first, find the corresponding old peak index
+			for(int k = 0; k < numPeaks; ++k) {
+				oldPeaks[k] = abs(peaks->getUnchecked(k) - newPeaks.getUnchecked(j));
+			}
+			int i = int(std::distance(oldPeaks.begin(), std::min_element(oldPeaks.begin(), oldPeaks.end())));
+			
+			// get the distances to adjacent peaks
+			int P1_0, P1_1;
+			if(j == 0) {
+				P1_0 = newPeaks.getUnchecked(j);
+			} else {
+				P1_0 = newPeaks.getUnchecked(j) - newPeaks.getUnchecked(j - 1);
+			}
+			if(j == newNumPeaks - 1) {
+				P1_1 = numSamples - 1 - newPeaks.getUnchecked(j);
+			} else {
+				P1_1 = newPeaks.getUnchecked(j + 1) - newPeaks.getUnchecked(j);
+			}
+			// edge case truncation
+			if(peaks->getUnchecked(i) - P1_0 < 0) {
+				P1_0 = peaks->getUnchecked(i);
+			}
+			if(peaks->getUnchecked(i) + P1_1 > numSamples - 1) {
+				P1_1 = numSamples - 1 - peaks->getUnchecked(i);
+			}
+			
+			// windowing function for OLA
+			windowing = new Array<float>(P1_0 + P1_1);
+			calcWindow(P1_0 + P1_1, windowing);
+			
+			const float* addingto = newSignal.getReadPointer(0);
+			float* writingto = newSignal.getWritePointer(0);
+			const float* input = inputBuffer.getReadPointer(0);
+			int inputindex = peaks->getUnchecked(i) - P1_0;
+			int windowIndex = 0;
+			for (int s = newPeaks.getUnchecked(j) - P1_0; s < newPeaks.getUnchecked(j) + P1_1; ++s) {
+				writingto[s] = addingto[s] + (windowing->getUnchecked(windowIndex) * input[inputindex]);
+				++windowIndex;
+				++inputindex;
+			}
+		}
+		
+		// write from working buffer to output
+		const float* reading = newSignal.getReadPointer(0);
+		float* writing = outputBuffer.getWritePointer(0);
+		for(int i = 0; i < numSamples; ++i) {
+			writing[i] = reading[i];
+		}
+	};
+	
+	
+	
+	
+	/*===============================================================================================================================================
+	 	a more basic TD-PSOLA implementation that does not map pitch peaks to the new synthesis windows
+	 
+	 @see	:	"Pitch-Synchronous Waveform Processing Techniques For Text-To-Speech Synthesis Using Diphones", by Eric Moulines and Francis Charpentier : http://courses.grainger.illinois.edu/ece420/sp2017/PSOLA.pdf
+	 
+	 		:	TD-PSOLA implementation in C++ by Terry Kong : http://www.github.com/terrykong/Phase-Vocoder/blob/master/PSOLA/PSOLA.cpp
+	 ==============================================================================================================================================*/
+	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
 		// shiftedBuffer is MONO !! only use channel 0
 		
 		const float* inputReadingfrom = inputBuffer.getReadPointer(inputChan);
 		
-	//	workingBuffer.clear();
-		
 		// pitch shift factor = desired % change of fundamental frequency
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
-		
-	//	int epochIndex = 0; // index # in array of epoch locations
 		
 		// PSOLA constants
 		// analysisShift = ceil(lastSampleRate/voxCurrentPitch); the # of samples being processed in current frame
@@ -48,9 +152,6 @@ public:
 		int analysisBlockStart;
 		int analysisBlockEnd;
 		int synthesisBlockEnd;
-		
-	//	const int synthesisPitchPeriod = ceil(currentSampleRate/desiredFreq);
-		// distance between successive pitch epochs in synthesized signal should be equal to synthesisPitchPeriod
 		
 		// PSOLA algorithm
 		while (analysisIndex < analysisLimit) {
@@ -72,7 +173,6 @@ public:
 				++windowIndex;
 			}
 			// update pointers
-		//	++epochIndex;
 			analysisIndex += analysisShift; // or analysisIndex = epochLocations->getUnchecked(epochIndex) + 1
 			synthesisIndex += synthesisShift;
 		}
@@ -87,23 +187,6 @@ public:
 	};
 	
 	
-	void updateDSPsettings(const double newSampleRate) {
-		currentSampleRate = newSampleRate;
-	};
-	
-	
-	void checkBuffer(const int newBufferSize)
-	{
-		if(workingBuffer.getNumSamples() != newBufferSize * 2) {
-			workingBuffer.setSize(1, newBufferSize * 2);
-		}
-	};
-	
-	
-	void clearBuffer() {
-		workingBuffer.clear();
-	};
-	
 	
 private:
 	
@@ -112,61 +195,36 @@ private:
 	double currentSampleRate;
 	
 
-
-
-
-
-
-
-public:
-
-	/*
-	 	an ESOLA implementation
-	 */
-	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, Array<int> epochIndices, Array<float>* window, const float inputFreq, const float desiredFreq, const int numberOfEpochsInFrame) {
-		
-		Array<float> synthesizedWave;
-		
-		std::vector<float> windowVector;
-		
-		const float scalingFactor = 1.0f / ((inputFreq - desiredFreq)/desiredFreq);
-		
-		int targetLength = 0;
-		int lastEpochIndex = epochIndices[0];
-		const int epochSize = epochIndices.size();
-		
-		for(int i = 0; i < epochSize - numberOfEpochsInFrame; ++i) {
-			const int hop = epochIndices[i + 1] - epochIndices[i];
-			if(targetLength >= synthesizedWave.size()) {
-				const int frameLength = epochIndices[i + numberOfEpochsInFrame] - epochIndices[i];
-				// calculate hanning window of frameLength
-				
-				// audio slice:
-				// begin: epochIndices[i]
-				// end: epochIndices[i] + frameLength
-				// multiply by window function
-				
-				const int bufferIncrease = frameLength - synthesizedWave.size() + lastEpochIndex;
-				if (bufferIncrease > 0) {
-					// write audio slice TO:
-					// starting: synthesizedWave.end()
-					// ending:
-					const float* reading = inputBuffer.getReadPointer(inputChan);
-					int startingindex = epochIndices[i] - synthesizedWave.size() + lastEpochIndex;
-					int windowindex = window->size() - bufferIncrease;
-					for (int j = epochIndices[i]; j < epochIndices[i] + frameLength; ++j) {
-						synthesizedWave.add(reading[startingindex]);
-						++startingindex;
-						windowVector.push_back(window->getUnchecked(windowindex));
-						++windowindex;
-					}
-				}
-				lastEpochIndex += hop;
-			}
-			targetLength += hop * scalingFactor;
+	//===============================================================================================
+	// SOME HELPER FUNCTIONS :
+	
+	// returns a dynamically sized vector of evenly spaced values within the specified range
+	std::vector<float> LinearSpacedArray(const int a, const int b, std::size_t N) const {
+		float h = (b - a) / static_cast<float>(N-1);
+		std::vector<float> xs(N);
+		std::vector<float>::iterator x;
+		float val;
+		for (x = xs.begin(), val = a; x != xs.end(); ++x, val += h) {
+			*x = val;
 		}
-	//	synthesizedWave /= max(windowVector, std::vector<float>(windowVector.size(), 1e-4));
+		return xs;
 	};
-
+	
+	// calculates values for a variable-size Hanning window
+	void calcWindow(const int length, Array<float>* window) {
+		
+		if(window->size() != length) { window->resize(length); }
+		
+		for(int i = 0; i < length; ++i)
+		{
+			window->set(i, 0.5 - (0.5 * ncos(2, i, length)));
+		}
+		
+	};
+	
+	float ncos(const int order, const int i, const int size) const
+	{
+		return std::cos((order * i * MathConstants<float>::pi)/(size - 1));
+	};
 
 };

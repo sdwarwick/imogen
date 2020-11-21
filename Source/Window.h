@@ -35,6 +35,6 @@ private:
 	float ncos(const int order, const int i, const int size) const
 	{
 		return std::cos((order * i * MathConstants<float>::pi)/(size - 1));
-	}
+	};
 	
 };

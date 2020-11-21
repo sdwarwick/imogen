@@ -67,7 +67,6 @@ public:
 	
 	void updateDSPsettings(const double newSampleRate, const int newBlockSize) {
 		adsrEnv.setSampleRate(newSampleRate);
-		pitchShifter.updateDSPsettings(newSampleRate);
 		checkBufferSizes(newBlockSize);
 	};
 	
@@ -97,7 +96,6 @@ public:
 	void clearBuffers() {
 		shiftedBuffer.clear();
 		harmonyBuffer.clear();
-		pitchShifter.clearBuffer();
 	};
 	
 	
@@ -107,7 +105,7 @@ public:
 		checkBufferSizes(numSamples);
 		
 		// this function puts shifted samples into the mono shiftedBuffer
-		pitchShifter.doTheShifting(inputBuffer, inputChannel, shiftedBuffer, numSamples, modInputFreq, desiredFrequency, analysisShift, analysisShiftHalved, analysisLimit, window, epochLocations);
+		
 		
 		shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
 		
@@ -222,7 +220,6 @@ private:
 		if(harmonyBuffer.getNumSamples() != newNumSamples) {
 			harmonyBuffer.setSize(2, newNumSamples);
 		}
-		pitchShifter.checkBuffer(newNumSamples);
 	};
 	
 };
