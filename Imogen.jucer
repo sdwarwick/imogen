@@ -40,7 +40,6 @@
       </GROUP>
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
         <FILE id="O8rg0O" name="FloatFFT.h" compile="0" resource="0" file="Source/FloatFFT.h"/>
-        <FILE id="Z8geCL" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
       </GROUP>
     </GROUP>
   </MAINGROUP>
