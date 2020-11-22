@@ -97,14 +97,15 @@ private:
 	bool isPitched;				  // stores whether the current audio vector is determined to be pitched or unpitched
 	float probability;
 	
-	/*
-	 THE DIFFERENCE FUNCTION
-	 @brief implements the difference function described in step 2 of the YIN paper, using an FFT to increase computational efficiency
-	 @param 	inputBuffer			reference to audio input buffer
-	 @param		inputChan			channel # to read audio from in input buffer
-	 @param		inputBufferLength	input buffer length, in samples
-	 */
+
 	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength) {
+		/*
+		 THE DIFFERENCE FUNCTION
+		 @brief implements the difference function described in step 2 of the YIN paper, using an FFT to increase computational efficiency
+		 @param 	inputBuffer			reference to audio input buffer
+		 @param		inputChan			channel # to read audio from in input buffer
+		 @param		inputBufferLength	input buffer length, in samples
+		 */
 		
 		const float* reading = inputBuffer.getReadPointer(inputChan);
 		
