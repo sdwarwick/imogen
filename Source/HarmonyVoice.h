@@ -23,7 +23,7 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int voiceNum): voiceIsOn(false), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), midiPan(64), prevPan(64), panningMultR(0.5), panningMultL(0.5), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f)
+	HarmonyVoice(const int voiceNum): voiceIsOn(false), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f)
 	{
 		shiftedBuffer.setSize(1, 512);
 		harmonyBuffer.setSize(2, 512);
@@ -151,24 +151,21 @@ public:
 		}
 	};
 	
-	
+	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1] - only use channel 0
 	AudioBuffer<float> harmonyBuffer; // this buffer stores the harmony voice's actual output. STEREO BUFFER [step 2]
 	
 	
 	ADSR adsrEnv;
 	ADSR::Parameters adsrParams;
-	
+	int midiPan;
 	
 private:
-	
-	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1] - only use channel 0
 	
 	int pitchBendRangeUp;
 	int pitchBendRangeDown;
 	
 	const int thisVoiceNumber;
 	
-	int midiPan;
 	int prevPan;
 	int panning;
 	float panningMultR;

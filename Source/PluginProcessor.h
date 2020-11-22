@@ -6,6 +6,7 @@
 #include "MidiProcessor.h"
 #include "EpochExtractor.h"
 #include "Yin.h"
+#include "Duplicator.h"
 
 #ifndef NUMBER_OF_VOICES
 #define NUMBER_OF_VOICES 12
@@ -141,6 +142,8 @@ private:
 	
 	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
 	AudioBuffer<float> dryBuffer; // this buffer holds the original input signal, delayed for latency, so it can be mixed back together with the wet signal for the dry/wet effect
+	
+	Duplicator choirEffect;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

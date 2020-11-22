@@ -406,6 +406,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 				}
 			}
 			++activeVoices;
+			choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
 		}
 	}
 	
