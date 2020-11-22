@@ -294,10 +294,11 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	const int numSamples = buffer.getNumSamples();
 	
-	int inputChannel = *inputChannelListener;
-	if (inputChannel > buffer.getNumChannels()) {
-		inputChannel = buffer.getNumChannels() - 1;
+	int inpt = *inputChannelListener;
+	if (inpt > buffer.getNumChannels()) {
+		inpt = buffer.getNumChannels() - 1;
 	}
+	const int inputChannel = inpt;
 	
 	// update settings/parameters
 	{
@@ -378,7 +379,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
-	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain to input buffer
+	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
 	writeToDryBuffer(buffer, inputChannel, dryBuffer, numSamples); // write this frame's input to the stereo dryBuffer
 	
@@ -392,9 +393,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			// frameIsPitched ?
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3);
-			
-			// how to calculate numOfEpochsPerFrame parameter?
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3); // how to calculate numOfEpochsPerFrame parameter?
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)
@@ -403,21 +402,20 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 				float* output = wetBuffer.getWritePointer(channel);
 				
 				for(int sample = 0; sample < numSamples; ++sample) {
-					output[sample] = output[sample] + reading[sample];  // add value TO the wetBuffer instead of overwriting
+					output[sample] += reading[sample];  // add value TO the wetBuffer instead of overwriting
 				}
 			}
-			
 			++activeVoices;
 		}
 	}
 	
 	// divide wetBuffer's sample values by # of currently active voices:
 	if(activeVoices > 0) {
-		for(int channel = 0; channel < 2; ++ channel) {
-			const float* reading = wetBuffer.getWritePointer(channel);
-			float* writing = wetBuffer.getWritePointer(channel);
+		for(int channel = 0; channel < 2; ++channel) {
+			const float* r = wetBuffer.getWritePointer(channel);
+			float* w = wetBuffer.getWritePointer(channel);
 			for(int i = 0; i < numSamples; ++i) {
-				writing[i] = reading[i] / activeVoices;
+				w[i] = r[i] / activeVoices;
 			}
 		}
 	}
@@ -425,14 +423,15 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	// clear any extra channels present in I/O buffer
 	{
-		if (buffer.getNumChannels() > 2) {
-			for (int i = 3; i <= buffer.getNumChannels(); ++i) {
-				buffer.clear(i, 0, numSamples);
+		if (buffer.getNumChannels() > numChannels) {
+			for (int i = numChannels + 1; i <= buffer.getNumChannels(); ++i) {
+				buffer.clear(i - 1, 0, numSamples);
 			}
 		}
 	}
 	
-	// mix shifted & dry audio together & place into "buffer" for output
+	
+	// mix shifted & dry audio together & place into I/O buffer for output
 	for (int channel = 0; channel < numChannels; ++channel)
 	{
 		const float* wetreadPointer = wetBuffer.getReadPointer(channel);
@@ -441,10 +440,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		
 		for (int sample = 0; sample < numSamples; ++sample)
 		{
-			outputSample[sample] = ((wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier))/2.0f; // mix dry & wet signals together & output to speakers -- is /2 here necessary?
+			outputSample[sample] = (wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier); // mix dry & wet signals together & output to speakers -- is /2 here necessary?
 		}
 		
-		buffer.applyGain(channel, 0, numSamples, outputGainMultiplier);
+		buffer.applyGain(channel, 0, numSamples, outputGainMultiplier); // apply master output gain
 	}
 	
 	
