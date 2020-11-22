@@ -23,6 +23,8 @@ public:
 	 uses a ZFR approach to save sample index #s of fundamental pitch epochs to an integer array
 	 
 	 @see : "Epoch Extraction From Speech Signals", by K. Sri Rama Murty and B. Yegnanarayana, 2008 : http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6D94C490DA889017DE4362D322E1A23C?doi=10.1.1.586.7214&rep=rep1&type=pdf
+	 
+	 @see : example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
 	 */
 	
 	Array<int> extractEpochIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate)
@@ -101,6 +103,7 @@ public:
 		
 		return epochs;
 	};
+	
 	
 private:
 	

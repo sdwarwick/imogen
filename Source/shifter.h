@@ -22,47 +22,108 @@ class Shifter {
 	
 public:
 	
-	Shifter(): currentSampleRate(44100) {
-		workingBuffer.setSize(0, 1024);
-		workingBuffer.clear();
-	}
+	
+	/*===============================================================================================================================================
+	 		time-domain implementation of ESOLA : Epoch-Synchronous Overlap-Add
+	 
+			@see   	: "Epoch-Synchronous Overlap-Add (ESOLA) for Time- and Pitch-Scale Modification of Speech Signals", by Sunil Rudresh, Aditya Vasisht, Karthika Vijayan, and Chandra Sekhar Seelamantula, 2018 : http://arxiv.org/pdf/1801.06492.pdf
+	 
+	 		@see	: ESOLA implementation in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
+	 		@see	: ESOLA in Python by BaronVladziu : http://www.github.com/BaronVladziu/ESOLA-Implementation/blob/master/ESOLA.py
+	 		@see	: "fuzzy" ESOLA in MATLAB by Tim Roberts : http://www.github.com/zygurt/TSM/blob/master/Batch/FESOLA_batch.m
+	 ==============================================================================================================================================*/
+	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> epochLocations, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer, const int numOfEpochsPerFrame) {
+		
+		int targetLength = 0;
+		int highestIndexWrittenTo = -1;
+		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq); //  scalingFactor = 1 / scalingFactor ?
+		int lastEpochIndex = epochLocations.getUnchecked(0);
+		const int numOfEpochs = epochLocations.size();
+		
+		AudioBuffer<float> synthesis(1, numSamples);
+		Array<float> finalWindow;
+		
+		for(int i = 0; i < numOfEpochs - numOfEpochsPerFrame; ++i) {
+			const int hop = epochLocations.getUnchecked(i + 1) - epochLocations.getUnchecked(i);
+			
+			if(targetLength >= highestIndexWrittenTo) {
+				const int frameLength = epochLocations.getUnchecked(i + numOfEpochsPerFrame) - epochLocations.getUnchecked(i) - 1;
+				Array<float>* window;
+				window = new Array<float>(frameLength);
+				calcWindow(frameLength, window);
+				const int bufferIncrease = frameLength - highestIndexWrittenTo + lastEpochIndex;
+				
+				if(bufferIncrease > 0) {
+					const float* reading = inputBuffer.getReadPointer(inputChan);
+					float* writing = synthesis.getWritePointer(0);
+					int writingindex = highestIndexWrittenTo + 1;
+					int readingindex = epochLocations.getUnchecked(i) + frameLength - 1 - bufferIncrease;
+					int windowreading = frameLength - 1 - bufferIncrease;
+					
+					for(int s = 0; s < bufferIncrease; ++s) {
+						writing[writingindex] = reading[readingindex] * window->getUnchecked(s);
+						++writingindex;
+						++readingindex;
+						finalWindow.add(window->getUnchecked(windowreading));
+						++windowreading;
+					}
+					
+					highestIndexWrittenTo += frameLength - 1;
+				}
+				lastEpochIndex += hop;
+				delete window;
+			}
+			targetLength += ceil(hop * scalingFactor);
+		}
+		
+		// normalize & write to output
+		const float* r = synthesis.getReadPointer(0);
+		float* w = outputBuffer.getWritePointer(0);
+		
+		for(int s = 0; s < numSamples; ++s) {
+			w[s] = r[s] / std::max<float>(finalWindow.getUnchecked(s), 1e-4);
+		}
+		
+	};
+	
+	
+	
 	
 	
 	/*===============================================================================================================================================
-	 a time-domain implementation of ESOLA : Epoch - Synchronous  Overlap - Add
+	 a time-domain implementation of PSOLA : Pitch - Synchronous  Overlap - Add
+	 
+	 This algorithm respaces pitch peaks to the new desired fundamental frequency.
 	 
 	 @param : inputBuffer	:	audio I/O buffer. The resynthesized signal is constructed in a new, locally hosted AudioBuffer before being transferred to the output.
 	 
 	 @param	: inputChan		:	input channel #
 	 
-	 		: numSamples	:	length of inputBuffer in samples
+	 : numSamples	:	length of inputBuffer in samples
 	 
-	 		: peaks			:	pointer to an array containing sample index #s of pitch epoch locations within input signal { see InputAnalysis -> "EpochExtractor.h" }
+	 : peaks			:	pointer to an array containing sample index #s of pitch peak locations within input signal { see InputAnalysis -> "EpochExtractor.h" }
 	 
-	 		: inputFreq		:	detected fundamental frequency of input in Hz
+	 : inputFreq		:	detected fundamental frequency of input in Hz
 	 
-	 		: desiredFreq	:	desired pitch to shift to, in Hz
+	 : desiredFreq	:	desired pitch to shift to, in Hz
 	 
-	 		: outputBuffer	:	AudioBuffer to write the final output signal to. This will be the HarmonyVoice instance's shiftedBuffer
+	 : outputBuffer	:	AudioBuffer to write the final output signal to. This will be the HarmonyVoice instance's shiftedBuffer
 	 
 	 @return - writes output signal to HarmonyVoice's shiftedBuffer
 	 
-	 @see   : "Epoch-Synchronous Overlap-Add (ESOLA) for Time- and Pitch-Scale Modification of Speech Signals", by Sunil Rudresh, Aditya Vasisht, Karthika Vijayan, and Chandra Sekhar Seelamantula, 2018 : http://arxiv.org/pdf/1801.06492.pdf
-	 
-	 		: example of ESOLA implementation in Python by Sanna Wager : http://www.github.com/sannawag/TD-PSOLA/blob/master/td_psola.py
-	 
-	 		: example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
+	 : example of PSOLA implementation in Python by Sanna Wager : http://www.github.com/sannawag/TD-PSOLA/blob/master/td_psola.py
 	 ==============================================================================================================================================*/
 	
-	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> peaks, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer) {
+	void psola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> peaks, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer) {
+		
+		// respace pitch peaks for the new desired synthesis pitch periods
 		
 		const int numPeaks = peaks.size();
 		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq);
-		const int newNumPeaks = round(numPeaks * scalingFactor);
 		
 		AudioBuffer<float> newSignal(1, numSamples);
 		
-		// respace epochs / pitch peaks for the new desired synthesis pitch periods
+		const int newNumPeaks = round(numPeaks * scalingFactor);
 		std::vector<float> newPeaksRef = LinearSpacedArray(0, numPeaks - 1, newNumPeaks);
 		Array<int> newPeaks(newNumPeaks);
 		for(int i = 0; i < newNumPeaks; ++i) {
@@ -86,8 +147,8 @@ public:
 			}
 			int i = int(std::distance(oldPeaks.begin(), std::min_element(oldPeaks.begin(), oldPeaks.end())));
 			
-			// get the distances to adjacent peaks
-			int P1_0, P1_1;
+			// get the distances to adjacent peaks to determine appropriate length for this synthesis frame
+			int P1_0, P1_1; // left and right edge of synthesis frame
 			if(j == 0) {
 				P1_0 = newPeaks.getUnchecked(j);
 			} else {
@@ -110,6 +171,7 @@ public:
 			windowing = new Array<float>(P1_0 + P1_1);
 			calcWindow(P1_0 + P1_1, windowing);
 			
+			// resynthesis: center the window from the original signal at the new peak
 			const float* addingto = newSignal.getReadPointer(0);
 			float* writingto = newSignal.getWritePointer(0);
 			const float* input = inputBuffer.getReadPointer(0);
@@ -120,6 +182,7 @@ public:
 				++windowIndex;
 				++inputindex;
 			}
+			delete windowing;
 		}
 		
 		// write from working buffer to output
@@ -133,16 +196,23 @@ public:
 	
 	
 	
+	
+	
+	
 	/*===============================================================================================================================================
 	 	a more basic TD-PSOLA implementation that does not map pitch peaks to the new synthesis windows
+	 
+	 	this algorithm may prove useful for unpitched frames, as no peak finding algorithm is required, and the synthesis grains can be created based on a consistent ratio, regardless of the pitch of the input...
 	 
 	 @see	:	"Pitch-Synchronous Waveform Processing Techniques For Text-To-Speech Synthesis Using Diphones", by Eric Moulines and Francis Charpentier : http://courses.grainger.illinois.edu/ece420/sp2017/PSOLA.pdf
 	 
 	 		:	TD-PSOLA implementation in C++ by Terry Kong : http://www.github.com/terrykong/Phase-Vocoder/blob/master/PSOLA/PSOLA.cpp
 	 ==============================================================================================================================================*/
-	void doTheShifting(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window) {
+	void basicOLA(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
 		// shiftedBuffer is MONO !! only use channel 0
+		
+		AudioBuffer<float> workingBuffer;
 		
 		const float* inputReadingfrom = inputBuffer.getReadPointer(inputChan);
 		
@@ -194,10 +264,6 @@ public:
 	
 	
 private:
-	
-	AudioBuffer<float> workingBuffer;
-	
-	double currentSampleRate;
 	
 
 	//===============================================================================================
