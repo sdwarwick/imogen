@@ -26,17 +26,30 @@ public:
 	/*===============================================================================================================================================
 	 		time-domain implementation of ESOLA : Epoch-Synchronous Overlap-Add
 	 
+	 		@param	: inputBuffer			: reference to audio input buffer
+	 				: inputChan				: the channel within inputBuffer to read from
+	 				: numSamples			: size of inputBuffer, in samples
+	 				: epochLocations		: integer array containing sample #s referencing epoch locations within the current input audio vector. This function is designed to be fed epoch locations from the extractEpochIndices() function within { InputAnalysis -> "EpochExtractor.h" }
+	 				: inputFreq				: pitch of the input audio, in Hz
+	 				: desiredFreq			: desired output pitch, in Hz
+	 				: ouputBuffer			: reference to output buffer to write shifted samples to
+	 				: numOfEpochsPerFrame	: number of epoch points contained within each analysis frame that the input signal will be broken down into. It is desirable for the analysis frames to contain between two and four pitch periods of the input's fundamental frequency.
+	 
+	 		@return - writes output signal to HarmonyVoice's shiftedBuffer
+	 
 			@see   	: "Epoch-Synchronous Overlap-Add (ESOLA) for Time- and Pitch-Scale Modification of Speech Signals", by Sunil Rudresh, Aditya Vasisht, Karthika Vijayan, and Chandra Sekhar Seelamantula, 2018 : http://arxiv.org/pdf/1801.06492.pdf
 	 
-	 		@see	: ESOLA implementation in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
-	 		@see	: ESOLA in Python by BaronVladziu : http://www.github.com/BaronVladziu/ESOLA-Implementation/blob/master/ESOLA.py
-	 		@see	: "fuzzy" ESOLA in MATLAB by Tim Roberts : http://www.github.com/zygurt/TSM/blob/master/Batch/FESOLA_batch.m
+	 				: ESOLA implementation in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
+	 
+	 				: ESOLA in Python by BaronVladziu : http://www.github.com/BaronVladziu/ESOLA-Implementation/blob/master/ESOLA.py
+	 
+	 				: "fuzzy" ESOLA in MATLAB by Tim Roberts : http://www.github.com/zygurt/TSM/blob/master/Batch/FESOLA_batch.m
 	 ==============================================================================================================================================*/
 	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> epochLocations, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer, const int numOfEpochsPerFrame) {
 		
 		int targetLength = 0;
 		int highestIndexWrittenTo = -1;
-		const float scalingFactor = 1.0f + ((inputFreq - desiredFreq)/desiredFreq); //  scalingFactor = 1 / scalingFactor ?
+		const float scalingFactor = 1.0f / (1.0f + ((inputFreq - desiredFreq)/desiredFreq)); 
 		int lastEpochIndex = epochLocations.getUnchecked(0);
 		const int numOfEpochs = epochLocations.size();
 		
@@ -96,22 +109,16 @@ public:
 	 This algorithm respaces pitch peaks to the new desired fundamental frequency.
 	 
 	 @param : inputBuffer	:	audio I/O buffer. The resynthesized signal is constructed in a new, locally hosted AudioBuffer before being transferred to the output.
-	 
-	 @param	: inputChan		:	input channel #
-	 
-	 : numSamples	:	length of inputBuffer in samples
-	 
-	 : peaks			:	pointer to an array containing sample index #s of pitch peak locations within input signal { see InputAnalysis -> "EpochExtractor.h" }
-	 
-	 : inputFreq		:	detected fundamental frequency of input in Hz
-	 
-	 : desiredFreq	:	desired pitch to shift to, in Hz
-	 
-	 : outputBuffer	:	AudioBuffer to write the final output signal to. This will be the HarmonyVoice instance's shiftedBuffer
+	 		: inputChan		:	input channel #
+	 		: numSamples	:	length of inputBuffer in samples
+	 		: peaks			:	pointer to an array containing sample index #s of pitch peak locations within input signal. This function is designed to be fed pitch peak locations from the findPeaks() function within { InputAnalysis -> "EpochExtractor.h" }
+	 		: inputFreq		:	detected fundamental frequency of input in Hz
+	 		: desiredFreq	:	desired pitch to shift to, in Hz
+	 		: outputBuffer	:	AudioBuffer to write the final output signal to. This will be the HarmonyVoice instance's shiftedBuffer
 	 
 	 @return - writes output signal to HarmonyVoice's shiftedBuffer
 	 
-	 : example of PSOLA implementation in Python by Sanna Wager : http://www.github.com/sannawag/TD-PSOLA/blob/master/td_psola.py
+	 @see	: example of PSOLA implementation in Python by Sanna Wager : http://www.github.com/sannawag/TD-PSOLA/blob/master/td_psola.py
 	 ==============================================================================================================================================*/
 	
 	void psola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> peaks, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer) {
@@ -138,7 +145,7 @@ public:
 		std::vector<float> oldPeaks(numPeaks);
 		Array<float>* windowing;
 		
-		// ESOLA
+		// PSOLA
 		for(int j = 0; j < newNumPeaks; ++j) {
 			
 			// first, find the corresponding old peak index

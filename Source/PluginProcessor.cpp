@@ -392,7 +392,9 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			// frameIsPitched ?
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations);
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3);
+			
+			// how to calculate numOfEpochsPerFrame parameter?
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)

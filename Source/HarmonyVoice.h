@@ -99,7 +99,7 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const float modInputFreq, Array<int> epochLocations) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const float modInputFreq, Array<int> epochLocations, const int numOfEpochsPerFrame) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
 		if(adsrEnv.isActive() == false) {
@@ -111,7 +111,7 @@ public:
 			checkBufferSizes(numSamples);
 			
 			// this function puts resynthesized shifted samples into the mono shiftedBuffer
-			pitchShifter.esola(inputBuffer, inputChannel, numSamples, epochLocations, modInputFreq, desiredFrequency, shiftedBuffer, 3);
+			pitchShifter.esola(inputBuffer, inputChannel, numSamples, epochLocations, modInputFreq, desiredFrequency, shiftedBuffer, numOfEpochsPerFrame);
 			
 			shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
 			

@@ -20,7 +20,9 @@ public:
 	/*
 	 EXTRACT EPOCH INDICES
 	 
-	 uses a ZFR approach to save sample index #s of fundamental pitch epochs to an integer array
+	 uses a ZFR approach to save sample index #s of epoch locations to an integer array
+	 
+	 the output array is designed to be fed into the esola() algorithm within { PSOLA -> "shifter.h" }
 	 
 	 @see : "Epoch Extraction From Speech Signals", by K. Sri Rama Murty and B. Yegnanarayana, 2008 : http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6D94C490DA889017DE4362D322E1A23C?doi=10.1.1.586.7214&rep=rep1&type=pdf
 	 
@@ -105,6 +107,97 @@ public:
 	};
 	
 	
+	
+	/*
+	 	locates sample indices of pitch peak locations in input audio vector. the output array is designed to be fed into the psola() function within { PSOLA -> "shifter.h" }
+	 
+	 	@TODO	complete implementation of computePeriodsPerSequence() with FFT nonsense & etc...
+	 */
+	Array<int> findPeaks(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate, const int minHz, const int maxHz, const int analysisWinMs, const float maxChange, const float minChange) {
+		// finds sample indices of pitch peaks of input signal's fundamenal frequency
+		
+		int minPeriod = floor(samplerate/maxHz);
+		int maxPeriod = floor(samplerate/minHz);
+		
+		int sequence = analysisWinMs / 1000 * samplerate;
+		
+		Array<int> periods = computePeriodsPerSequence(inputAudio, inputChan, numSamples, sequence, minPeriod, maxPeriod);
+		
+		// hack to avoid octave error : assume that period shouldn't vary widely; restrict range
+		float runningsum = 0.0f;
+		for(int i = 0; i < periods.size(); ++i) {
+			runningsum += periods.getUnchecked(i);
+		}
+		const float meanPeriod = runningsum/periods.size();
+		minPeriod = round(meanPeriod * 0.9f);
+		maxPeriod = round(meanPeriod * 1.1f);
+		
+		periods = computePeriodsPerSequence(inputAudio, inputChan, numSamples, sequence, minPeriod, maxPeriod);
+		
+		// find the peaks
+		const int tsmaxindex = round(periods.getUnchecked(0) * 1.1f) - 1;
+		Array<float> testingsignal;
+		const float* input = inputAudio.getReadPointer(inputChan);
+		for(int i = 0; i < tsmaxindex; ++i) {
+			testingsignal.add(input[i]);
+		}
+		
+		Array<int> peaks(maxVal(testingsignal));
+		
+		while(true) {
+			const int prev = peaks.getLast();
+			const int idx = floor(prev / sequence);
+			if (prev + round(periods.getUnchecked(idx) * maxChange) >= numSamples) { break; }
+			
+			Array<float> testingsig;
+			const float* reading = inputAudio.getReadPointer(inputChan);
+			for(int i = prev + round(periods.getUnchecked(idx) * minChange); i < prev + round(periods.getUnchecked(idx) * maxChange); ++i) {
+				testingsig.add(reading[i]);
+			}
+			const float appendedVal = prev + int(periods[idx] * minChange) + maxVal(testingsig);
+			peaks.add(appendedVal);
+		}
+		
+		return peaks;
+	};
+	
+	
 private:
+	
+	Array<int> computePeriodsPerSequence(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const int sequenceLength, const int minPeriod, const int maxPeriod) {
+		// computes periodicity of time domain signal using autocorrelation . helper function for findPeaks()
+		
+		int offset = 0;
+		Array<int> periods;
+		
+		while (offset < numSamples)
+		{
+			
+			//pseudocode from python:
+//			fourier = fft(signal[offset: offset + sequence])
+//			fourier[0] = 0  # remove DC component
+//			autoc = ifft(fourier * np.conj(fourier)).real
+//			autoc_peak = min_period + np.argmax(autoc[min_period: max_period])
+//			periods.append(autoc_peak)
+			
+			offset += sequenceLength;
+		}
+		
+		return periods;
+	};
+	
+	
+	// finds max value in an array
+	float maxVal(Array<float> input) {
+		
+		float currentMax = 0.0f;
+		
+		for(int i = 0; i < input.size(); ++i) {
+			if(input.getUnchecked(i) > currentMax) {
+				currentMax = input.getUnchecked(i);
+			}
+		}
+		return currentMax;
+	};
 	
 };
