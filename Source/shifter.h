@@ -80,9 +80,25 @@ public:
 						finalWindow.add(window->getUnchecked(windowreading));
 						++windowreading;
 					}
-					
 					highestIndexWrittenTo += frameLength - 1;
 				}
+				
+				// OLA
+				{
+				 int olaindex = epochLocations.getUnchecked(i);
+				 const float* olar = synthesis.getReadPointer(0);
+				 float* olaw = synthesis.getWritePointer(0);
+				 int wolaindex = 0;
+				 
+				 for(int s = lastEpochIndex; s < lastEpochIndex + frameLength - bufferIncrease; ++s) {
+				 	olaw[s] = olar[s] + olar[olaindex];
+				 	++olaindex;
+				 	const float newfinalwindow = finalWindow.getUnchecked(s) + finalWindow.getUnchecked(wolaindex);
+				 	finalWindow.set(s, newfinalwindow);
+				 	++wolaindex;
+				 }
+				}
+				
 				lastEpochIndex += hop;
 				delete window;
 			}

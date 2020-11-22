@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="MrjZks" name="Imogen" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
-              companyName="Ben Vining Music Software" companyWebsite="http://www.gumroad.com/benvining"
-              companyEmail="ben.the.vining@gmail.com" pluginCharacteristicsValue="pluginWantsMidiIn"
-              pluginName="Imogen" pluginDesc="vocal harmonizer" pluginManufacturer="Ben Vining Music Software"
+              addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" companyName="Ben Vining Music Software"
+              companyWebsite="http://www.gumroad.com/benvining" companyEmail="ben.the.vining@gmail.com"
+              pluginCharacteristicsValue="pluginWantsMidiIn" pluginName="Imogen"
+              pluginDesc="vocal harmonizer" pluginManufacturer="Ben Vining Music Software"
               pluginVST3Category="Fx,Pitch Shift" pluginRTASCategory="4,64"
               pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
               pluginFormats="buildAU,buildVST3" pluginManufacturerCode="BenV"
-              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/">
+              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/"
+              displaySplashScreen="1">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
       <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"
