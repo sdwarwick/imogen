@@ -207,13 +207,13 @@ public:
 	
 	
 	/*===============================================================================================================================================
-	 	a more basic TD-PSOLA implementation that does not map pitch peaks to the new synthesis windows
+	 	a more basic TD-OLA implementation that does not map pitch peaks to the new synthesis windows
 	 
 	 	this algorithm may prove useful for unpitched frames, as no peak finding algorithm is required, and the synthesis grains can be created based on a consistent ratio, regardless of the pitch of the input...
 	 
 	 @see	:	"Pitch-Synchronous Waveform Processing Techniques For Text-To-Speech Synthesis Using Diphones", by Eric Moulines and Francis Charpentier : http://courses.grainger.illinois.edu/ece420/sp2017/PSOLA.pdf
 	 
-	 		:	TD-PSOLA implementation in C++ by Terry Kong : http://www.github.com/terrykong/Phase-Vocoder/blob/master/PSOLA/PSOLA.cpp
+	 		:	TD-OLA implementation in C++ by Terry Kong : http://www.github.com/terrykong/Phase-Vocoder/blob/master/PSOLA/PSOLA.cpp
 	 ==============================================================================================================================================*/
 	void basicOLA(AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& shiftedBuffer, const int numSamples, const double inputFreq, const float desiredFreq, const int analysisShift, const int analysisShiftHalved, const int analysisLimit, Array<float>* window) {
 		// this function should fill shiftedBuffer with pitch shifted samples from inputBuffer
