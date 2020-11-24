@@ -168,6 +168,28 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			inputChannelLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel);
 			inputChannel.setValue(0);
 		}
+		
+		// output limiter
+		{
+			// threshold
+			{
+				limiterThresh.setSliderStyle(Slider::SliderStyle::LinearVertical);
+				limiterThresh.setRange(-60.0f, 0.0f);
+				limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+				addAndMakeVisible(&limiterThresh);
+				limiterThreshLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh);
+				limiterThresh.setValue(-2.0f);
+			}
+			// release
+			{
+				limiterRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+				limiterRelease.setRange(1, 250);
+				limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+				addAndMakeVisible(&limiterRelease);
+				limiterReleaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease);
+				limiterRelease.setValue(10);
+			}
+		}
 	}
 }
 

@@ -83,6 +83,13 @@ private:
 	// set input channel [plugin only accepts a single mono input source]
 	Slider inputChannel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
+	
+	// output limiter threshold, in dBFS
+	Slider limiterThresh;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
+	// limiter release time, in ms
+	Slider limiterRelease;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

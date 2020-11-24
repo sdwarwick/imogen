@@ -135,6 +135,10 @@ private:
 	float prevideb;
 	float prevodeb;
 	
+	dsp::Limiter<float> limiter;
+	float* limiterThreshListener = (float*)(tree.getRawParameterValue("limiterThresh"));
+	int* limiterReleaseListener = (int*)(tree.getRawParameterValue("limiterRelease"));
+	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
 	

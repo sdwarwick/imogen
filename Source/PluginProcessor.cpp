@@ -75,11 +75,13 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100));
 	params.push_back(std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2));
 	params.push_back(std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2));
-	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f), 0.0));
-	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0));
+	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f), 0.0f));
+	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0f));
 	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch", false));
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
 	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 99, 0));
+	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f), -2.0f));
+	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
 	
 	return { params.begin(), params.end() };
 }
@@ -240,7 +242,15 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		previousLatch = latchIsOn;
 	}
 	
-	stealingIsOn = *voiceStealingListener > 0.5f;
+	stealingIsOn = *voiceStealingListener > 0.5f; // voice stealing on/off
+	
+	dsp::ProcessSpec spec;
+	spec.sampleRate = sampleRate;
+	spec.maximumBlockSize = MAX_BUFFERSIZE;
+	spec.numChannels = 2;
+	limiter.prepare(spec);
+	limiter.setThreshold(*limiterThreshListener);
+	limiter.setRelease(*limiterReleaseListener);
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -251,7 +261,7 @@ void ImogenAudioProcessor::releaseResources() {
 		harmEngine[i]->clearBuffers();
 	}
 	pitchTracker.clearBuffer();
-	
+	limiter.reset(); // ??
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -281,6 +291,31 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 /*===========================================================================================================================
 ============================================================================================================================*/
+
+
+void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+	
+	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
+	
+	int inpt = *inputChannelListener;
+	if (inpt > buffer.getNumChannels()) {
+		inpt = buffer.getNumChannels() - 1;
+	}
+	const int inputChannel = inpt;
+	
+	int samplesLeft = buffer.getNumSamples();
+	// int numElapsedLoops = 0;
+	while (samplesLeft > 0)
+	{
+		const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
+		AudioBuffer<float> proxy (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
+		processBlockPrivate(proxy, numSamples, inputChannel);
+		samplesLeft -= numSamples;
+		// ++numElapsedLoops
+	}
+	// numElapsedLoops represents the number of times processBlockPrivate() was run, and can be used for latency calculations
+}
 
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int numSamples, const int inputChannel)
@@ -354,6 +389,13 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			latchIsOn = *midiLatchListener > 0.5f;
 			if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
 		}
+		
+		// voice stealing
+		stealingIsOn = *voiceStealingListener > 0.5f;
+		
+		// limiter settings
+		limiter.setThreshold(*limiterThreshListener);
+		limiter.setRelease(*limiterReleaseListener);
 	}
 	
 	
@@ -365,7 +407,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	analyzeInput(buffer, inputChannel, numSamples);
 	
-	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio:
+	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio, writing it to wetBuffer:
 	int activeVoices = 0;
 	for (int i = 0; i < numVoices; ++i) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
@@ -386,7 +428,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 				}
 			}
 			++activeVoices;
-		//	choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
+			//	choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
 		}
 	}
 	
@@ -425,6 +467,9 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		buffer.applyGain(channel, 0, numSamples, outputGainMultiplier); // apply master output gain
 	}
 	
+	dsp::AudioBlock<float> limiterBlock (buffer);
+	limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
+	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
 	
@@ -444,32 +489,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		prevideb = *inputGainListener;
 		prevodeb = *outputGainListener;
 		previousLatch = latchIsOn;
-		stealingIsOn = *voiceStealingListener > 0.5f;
 	}
 };
-
-
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
-{
-	
-	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
-	
-	int inpt = *inputChannelListener;
-	if (inpt > buffer.getNumChannels()) {
-		inpt = buffer.getNumChannels() - 1;
-	}
-	const int inputChannel = inpt;
-	
-	int samplesLeft = buffer.getNumSamples();
-	while (samplesLeft > 0)
-	{
-		const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
-	//	AudioBuffer<float> proxy (buffer, buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
-	//	processBlockPrivate(proxy, numSamples, inputChannel);
-		samplesLeft -= numSamples;
-	}
-	
-}
 
 
 /*===========================================================================================================================
