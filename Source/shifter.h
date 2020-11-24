@@ -17,10 +17,21 @@
 
 #pragma once
 
+#ifndef MAX_BUFFERSIZE
+#define MAX_BUFFERSIZE 1024
+#endif
+
 
 class Shifter {
 	
 public:
+	
+	Shifter() {
+		synthesis.setSize(1, MAX_BUFFERSIZE);
+		synthesis.clear();
+		finalWindow.ensureStorageAllocated(MAX_BUFFERSIZE);
+		window.ensureStorageAllocated(MAX_BUFFERSIZE); // the actual windows between frames of epochs will be smaller, but this is just for safety
+	};
 	
 	
 	/*===============================================================================================================================================
@@ -53,16 +64,17 @@ public:
 		int lastEpochIndex = epochLocations.getUnchecked(0);
 		const int numOfEpochs = epochLocations.size();
 		
-		AudioBuffer<float> synthesis(1, numSamples);
-		Array<float> finalWindow;
+		if(synthesis.getNumSamples() != numSamples) {
+			synthesis.setSize(1, numSamples, false, false, true);
+		}
+		finalWindow.clearQuick();
 		
 		for(int i = 0; i < numOfEpochs - numOfEpochsPerFrame; ++i) {
 			const int hop = epochLocations.getUnchecked(i + 1) - epochLocations.getUnchecked(i);
 			
 			if(targetLength >= highestIndexWrittenTo) {
 				const int frameLength = epochLocations.getUnchecked(i + numOfEpochsPerFrame) - epochLocations.getUnchecked(i) - 1;
-				Array<float>* window;
-				window = new Array<float>(frameLength);
+				window.clearQuick();
 				calcWindow(frameLength, window);
 				const int bufferIncrease = frameLength - highestIndexWrittenTo + lastEpochIndex;
 				
@@ -74,10 +86,10 @@ public:
 					int windowreading = frameLength - 1 - bufferIncrease;
 					
 					for(int s = 0; s < bufferIncrease; ++s) {
-						writing[writingindex] = reading[readingindex] * window->getUnchecked(s);
+						writing[writingindex] = reading[readingindex] * window.getUnchecked(s);
 						++writingindex;
 						++readingindex;
-						finalWindow.add(window->getUnchecked(windowreading));
+						finalWindow.add(window.getUnchecked(windowreading));
 						++windowreading;
 					}
 					highestIndexWrittenTo += frameLength - 1;
@@ -100,7 +112,6 @@ public:
 				}
 				
 				lastEpochIndex += hop;
-				delete window;
 			}
 			targetLength += ceil(hop * scalingFactor);
 		}
@@ -192,7 +203,7 @@ public:
 			
 			// windowing function for OLA
 			windowing = new Array<float>(P1_0 + P1_1);
-			calcWindow(P1_0 + P1_1, windowing);
+		//	calcWindow(P1_0 + P1_1, windowing);
 			
 			// resynthesis: center the window from the original signal at the new peak
 			const float* addingto = newSignal.getReadPointer(0);
@@ -288,6 +299,10 @@ public:
 	
 private:
 	
+	AudioBuffer<float> synthesis;
+	Array<float> window;
+	Array<float> finalWindow;
+	
 
 	//===============================================================================================
 	// SOME HELPER FUNCTIONS :
@@ -305,13 +320,13 @@ private:
 	};
 	
 	// calculates values for a variable-size Hanning window
-	void calcWindow(const int length, Array<float>* window) {
+	void calcWindow(const int length, Array<float>& window) {
 		
-		if(window->size() != length) { window->resize(length); }
+	//	if(window.size() != length) { window.resize(length); }
 		
 		for(int i = 0; i < length; ++i)
 		{
-			window->set(i, 0.5 - (0.5 * ncos(2, i, length)));
+			window.add(0.5 - (0.5 * ncos(2, i, length)));
 		}
 		
 	};
@@ -322,3 +337,5 @@ private:
 	};
 
 };
+
+

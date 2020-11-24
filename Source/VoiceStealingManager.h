@@ -12,6 +12,10 @@
 
 #pragma once
 
+#ifndef NUMBER_OF_VOICES
+#define NUMBER_OF_VOICES 12
+#endif
+
 
 class VoiceStealingManager
 {
@@ -19,7 +23,8 @@ class VoiceStealingManager
 public:
 	
 	VoiceStealingManager() {
-		sentVoiceNumbers.clear();
+		sentVoiceNumbers.ensureStorageAllocated(NUMBER_OF_VOICES);
+		sentVoiceNumbers.clearQuick();
 	};
 	
 	
@@ -48,7 +53,7 @@ public:
 	
 	
 	void clear() {
-		sentVoiceNumbers.clear();
+		sentVoiceNumbers.clearQuick();
 	};
 	
 	

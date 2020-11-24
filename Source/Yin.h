@@ -29,12 +29,21 @@
 
 #define THRESHOLD 0.15 // between 0.10 ~ 0.15
 
+#ifndef MAX_BUFFERSIZE
+#define MAX_BUFFERSIZE 1024 // this value is the global maximum size of one signal vector frame. the yin buffer size will be half this value at its maximum
+#endif
+
+#define MIN_HZ 50 // simple max/min bounds on detected fundamental frequency
+#define MAX_HZ 2000
+
+
 class Yin
 {
 public:
 	
-	Yin(): yinBufferSize(256), isPitched(false), probability(0.0f) {
-		yinBuffer.setSize(1, 256);
+	Yin(): yinBufferSize(MAX_BUFFERSIZE/2), isPitched(false) {
+		yinBuffer.setSize(1, MAX_BUFFERSIZE/2); // yin buffer size is half the size of the input buffer in samples
+		yinBuffer.clear();
 	};
 	
 	/*===============================================================================================================================================
@@ -61,6 +70,12 @@ public:
 		
 		if(tauEstimate != -1) {
 			pitchInHz = samplerate / parabolicInterpolation(tauEstimate);
+			if(pitchInHz >= MIN_HZ && pitchInHz <= MAX_HZ) {
+				isPitched = true;
+			} else {
+				pitchInHz = -1.0f;
+				isPitched = false;
+			}
 		} else {
 			pitchInHz = -1.0f;
 			isPitched = false;
@@ -76,9 +91,9 @@ public:
 	};
 	
 	void checkBufferSize(const int newBlockSize) {
-		if(yinBufferSize != newBlockSize / 2) {
+		if(yinBufferSize != round(newBlockSize / 2)) {
 			yinBufferSize = round(newBlockSize / 2);
-			yinBuffer.setSize(1, yinBufferSize);
+			yinBuffer.setSize(1, yinBufferSize, false, true, true);
 		}
 	};
 	
@@ -93,9 +108,7 @@ private:
 	mutable AudioBuffer<float> yinBuffer; // stores the calculated values. half the size of the input audio buffer
 	int yinBufferSize; 			  // stores current size of yinBuffer
 	
-	
 	bool isPitched;				  // stores whether the current audio vector is determined to be pitched or unpitched
-	float probability;
 	
 
 	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength) {
@@ -152,8 +165,9 @@ private:
 		fft->complexInverse(yinStyleACF);
 		
 		// CALCULATION OF DIFFERENCE FUNCTION
+		float* w = yinBuffer.getWritePointer(0);
 		for(int j = 0; j < yinBufferSize; ++j) {
-			yinBuffer.setSample(0, j, powerTerms[0] + powerTerms[j] - 2 * yinStyleACF[2 * (yinBufferSize - 1 + j)]);
+			w[j] = powerTerms[0] + powerTerms[j] - 2 * yinStyleACF[2 * (yinBufferSize - 1 + j)];
 		}
 		
 		delete fft;
@@ -169,12 +183,13 @@ private:
 	 */
 	void cumulativeMeanNormalizedDifference() const {
 		int tau;
-		yinBuffer.setSample(0, 0, 1);
+		float* w = yinBuffer.getWritePointer(0);
+		const float* r = yinBuffer.getReadPointer(0);
+		w[0] = 1;
 		float runningSum = 0.0f;
 		for(tau = 1; tau < yinBufferSize; ++tau) {
-			runningSum += yinBuffer.getSample(0, tau);
-			const float newVal = yinBuffer.getSample(0, tau) * tau / runningSum;
-			yinBuffer.setSample(0, tau, newVal);
+			runningSum += r[tau];
+			w[tau] = r[tau] * tau / runningSum;
 		}
 	};
 	
@@ -188,26 +203,25 @@ private:
 		// implements step 4 of the YIN paper
 		int tau;
 		float probabilityEstimate;
+		const float* read = yinBuffer.getReadPointer(0);
 		
 		// first two positions in yinBuffer are always 1
 		for(tau = 2; tau < yinBufferSize; ++tau) {
-			if(yinBuffer.getSample(0, tau) < THRESHOLD) {
-				while (tau + 1 < yinBufferSize && yinBuffer.getSample(0, tau + 1) < yinBuffer.getSample(0, tau)) {
+			if(read[tau] < THRESHOLD) {
+				while (tau + 1 < yinBufferSize && read[tau + 1] < read[tau]) {
 					++tau;
 				}
-				probabilityEstimate = 1 - yinBuffer.getSample(0, tau);
+				probabilityEstimate = 1 - read[tau];
 				break;
 			}
 		}
 		
 		// if no pitch is detected, tau => -1
-		if(tau == yinBufferSize || yinBuffer.getSample(0, tau) >= THRESHOLD || probabilityEstimate > 1.0f) {
+		if(tau == yinBufferSize || read[tau] >= THRESHOLD || probabilityEstimate > 1.0f) {
 			tau = -1;
 			isPitched = false;
-			probability = 0.0f;
 		} else {
 			isPitched = true;
-			probability = probabilityEstimate;
 		}
 		
 		return tau;
@@ -238,22 +252,25 @@ private:
 		}
 		
 		if (x0 == tauEstimate) {
-			if(yinBuffer.getSample(0, tauEstimate) <= yinBuffer.getSample(0, x2)) {
+			const float* r = yinBuffer.getReadPointer(0);
+			if(r[tauEstimate] <= r[x2]) {
 				betterTau = tauEstimate;
 			} else {
 				betterTau = x2;
 			}
 		} else if (x2 == tauEstimate) {
-			if(yinBuffer.getSample(0, tauEstimate) <= yinBuffer.getSample(0, x0)) {
+			const float* r = yinBuffer.getReadPointer(0);
+			if(r[tauEstimate] <= r[x0]) {
 				betterTau = tauEstimate;
 			} else {
 				betterTau = x0;
 			}
 		} else {
+			const float* r = yinBuffer.getReadPointer(0);
 			float s0, s1, s2;
-			s0 = yinBuffer.getSample(0, x0);
-			s1 = yinBuffer.getSample(0, tauEstimate);
-			s2 = yinBuffer.getSample(0, x2);
+			s0 = r[x0];
+			s1 = r[tauEstimate];
+			s2 = r[x2];
 			betterTau = tauEstimate + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
 		}
 		

@@ -12,6 +12,10 @@
 #define NUMBER_OF_VOICES 12
 #endif
 
+#ifndef MAX_BUFFERSIZE
+#define MAX_BUFFERSIZE 1024
+#endif
+
 #define TIMER_RATE_MS 100
 
 //==============================================================================
@@ -36,6 +40,7 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+	void processBlockPrivate(AudioBuffer<float>&, const int numSamples, const int inputChannel);
 	
 	void killAllMidi();
 

@@ -15,6 +15,10 @@
 
 #include "shifter.h"
 
+#ifndef MAX_BUFFERSIZE
+#define MAX_BUFFERSIZE 1024
+#endif
+
 
 class HarmonyVoice {
 	
@@ -25,8 +29,8 @@ public:
 	
 	HarmonyVoice(const int voiceNum): voiceIsOn(false), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f)
 	{
-		shiftedBuffer.setSize(1, 512);
-		harmonyBuffer.setSize(2, 512);
+		shiftedBuffer.setSize(1, MAX_BUFFERSIZE);
+		harmonyBuffer.setSize(2, MAX_BUFFERSIZE);
 		panningMultipliers[0] = 0.5f;
 		panningMultipliers[1] = 0.5f;
 		
@@ -213,10 +217,10 @@ private:
 	
 	void checkBufferSizes(const int newNumSamples) {
 		if(shiftedBuffer.getNumSamples() != newNumSamples) {
-			shiftedBuffer.setSize(1, newNumSamples);
+			shiftedBuffer.setSize(1, newNumSamples, false, false, true);
 		}
 		if(harmonyBuffer.getNumSamples() != newNumSamples) {
-			harmonyBuffer.setSize(2, newNumSamples);
+			harmonyBuffer.setSize(2, newNumSamples, false, false, true);
 		}
 	};
 	

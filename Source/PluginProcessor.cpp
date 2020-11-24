@@ -40,8 +40,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		harmEngine.add(new HarmonyVoice(i));
 	}
 	
-	wetBuffer.setSize(2, 512);
-	dryBuffer.setSize(2, 512);
+	wetBuffer.setSize(2, MAX_BUFFERSIZE);
+	dryBuffer.setSize(2, MAX_BUFFERSIZE);
 	
 	dryvoxpanningmults[0] = 64;
 	dryvoxpanningmults[1] = 64;
@@ -155,12 +155,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		}
 		prevLastSampleRate = lastSampleRate;
 		prevLastBlockSize = lastBlockSize;
-		if (wetBuffer.getNumSamples() != samplesPerBlock) {
-			wetBuffer.setSize(2, samplesPerBlock);
-		}
-		if(dryBuffer.getNumSamples() != samplesPerBlock) {
-			dryBuffer.setSize(2, samplesPerBlock);
-		}
 	}
 	
 	// ADSR settings
@@ -289,16 +283,14 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 ============================================================================================================================*/
 
 
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int numSamples, const int inputChannel)
 {
-	
-	const int numSamples = buffer.getNumSamples();
-	
-	int inpt = *inputChannelListener;
-	if (inpt > buffer.getNumChannels()) {
-		inpt = buffer.getNumChannels() - 1;
+	if(wetBuffer.getNumSamples() != numSamples) {
+		wetBuffer.setSize(2, numSamples, true, false, true);
 	}
-	const int inputChannel = inpt;
+	if(dryBuffer.getNumSamples() != numSamples) {
+		dryBuffer.setSize(2, numSamples, true, false, true);
+	}
 	
 	// update settings/parameters
 	{
@@ -365,18 +357,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	
 	
-	// check buffer sizes
-	{
-		if (wetBuffer.getNumSamples() != numSamples) {
-			wetBuffer.setSize(2, numSamples);
-		}
-		if(dryBuffer.getNumSamples() != numSamples) {
-			dryBuffer.setSize(2, numSamples);
-		}
-	}
-	
-	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
-	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
@@ -406,7 +386,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 				}
 			}
 			++activeVoices;
-			choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
+		//	choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
 		}
 	}
 	
@@ -421,7 +401,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		}
 	}
 	
-	
 	// clear any extra channels present in I/O buffer
 	{
 		if (buffer.getNumChannels() > numChannels) {
@@ -430,7 +409,6 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 			}
 		}
 	}
-	
 	
 	// mix shifted & dry audio together & place into I/O buffer for output
 	for (int channel = 0; channel < numChannels; ++channel)
@@ -447,11 +425,10 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		buffer.applyGain(channel, 0, numSamples, outputGainMultiplier); // apply master output gain
 	}
 	
-	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
 	
-	// update storage of previous frame's parameters, for comparison when the NEXT frame comes in...
+	// update storage of previous frame's parameters, for comparison when the next frame comes in...
 	{
 		prevAttack = *adsrAttackListener;
 		prevDecay = *adsrDecayListener;
@@ -469,6 +446,29 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		previousLatch = latchIsOn;
 		stealingIsOn = *voiceStealingListener > 0.5f;
 	}
+};
+
+
+void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+	
+	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
+	
+	int inpt = *inputChannelListener;
+	if (inpt > buffer.getNumChannels()) {
+		inpt = buffer.getNumChannels() - 1;
+	}
+	const int inputChannel = inpt;
+	
+	int samplesLeft = buffer.getNumSamples();
+	while (samplesLeft > 0)
+	{
+		const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
+	//	AudioBuffer<float> proxy (buffer, buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
+	//	processBlockPrivate(proxy, numSamples, inputChannel);
+		samplesLeft -= numSamples;
+	}
+	
 }
 
 

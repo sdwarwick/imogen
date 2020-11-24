@@ -12,10 +12,26 @@
 
 #pragma once
 
+#ifndef MAX_BUFFERSIZE
+#define MAX_BUFFERSIZE 1024
+#endif
+
+#ifndef MAX_NUMEPOCHS
+#define MAX_NUMEPOCHS 1024
+#endif
+
 
 class EpochExtractor {
 	
 public:
+	
+	EpochExtractor() {
+		epochs.ensureStorageAllocated(MAX_NUMEPOCHS);
+		y.reserve(MAX_BUFFERSIZE);
+		y2.reserve(MAX_BUFFERSIZE);
+		y3.reserve(MAX_BUFFERSIZE);
+	};
+	
 	
 	/*
 	 EXTRACT EPOCH INDICES
@@ -33,11 +49,10 @@ public:
 	{
 		const int window_length = round(0.015 * samplerate);
 		
-		Array<int> epochs;
-		
-		std::vector<float> y(numSamples);
-		std::vector<float> y2(numSamples);
-		std::vector<float> y3(numSamples);
+		epochs.clearQuick();
+		y.resize(numSamples);
+		y2.resize(numSamples);
+		y3.resize(numSamples);
 		
 		float mean_val;
 		float running_sum;
@@ -164,6 +179,12 @@ public:
 	
 private:
 	
+	Array<int> epochs;
+	std::vector<float> y;
+	std::vector<float> y2;
+	std::vector<float> y3;
+	
+	
 	Array<int> computePeriodsPerSequence(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const int sequenceLength, const int minPeriod, const int maxPeriod) {
 		// computes periodicity of time domain signal using autocorrelation . helper function for findPeaks()
 		
@@ -188,7 +209,7 @@ private:
 	
 	
 	// finds max value in an array
-	float maxVal(Array<float> input) {
+	float maxVal(Array<float>& input) {
 		
 		float currentMax = 0.0f;
 		
