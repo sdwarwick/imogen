@@ -14,11 +14,8 @@
 
 #pragma once
 
+#include "GlobalDefinitions.h"
 #include "MidiPanningManager.h"
-
-#ifndef NUMBER_OF_VOICES
-#define NUMBER_OF_VOICES 12
-#endif
 
 
 class PolyphonyVoiceManager

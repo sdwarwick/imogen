@@ -2,19 +2,12 @@
 
 #include <JuceHeader.h>
 
+#include "GlobalDefinitions.h"
 #include "HarmonyVoice.h"
 #include "MidiProcessor.h"
 #include "EpochExtractor.h"
 #include "Yin.h"
 #include "Duplicator.h"
-
-#ifndef NUMBER_OF_VOICES
-#define NUMBER_OF_VOICES 12
-#endif
-
-#ifndef MAX_BUFFERSIZE
-#define MAX_BUFFERSIZE 1024
-#endif
 
 #define TIMER_RATE_MS 100
 

@@ -12,9 +12,7 @@
 
 #pragma once
 
-#ifndef MAX_BUFFERSIZE
-#define MAX_BUFFERSIZE 1024
-#endif
+#include "GlobalDefinitions.h"
 
 #ifndef MAX_NUMEPOCHS
 #define MAX_NUMEPOCHS 1024

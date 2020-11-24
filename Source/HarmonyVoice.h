@@ -14,10 +14,7 @@
 #pragma once
 
 #include "shifter.h"
-
-#ifndef MAX_BUFFERSIZE
-#define MAX_BUFFERSIZE 1024
-#endif
+#include "GlobalDefinitions.h"
 
 
 class HarmonyVoice {

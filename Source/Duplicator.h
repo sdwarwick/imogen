@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "GlobalDefinitions.h"
+
 
 class Duplicator {
 	

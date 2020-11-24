@@ -26,12 +26,9 @@
 #pragma once
 
 #include "FloatFFT.h"
+#include "GlobalDefinitions.h"
 
 #define THRESHOLD 0.15 // between 0.10 ~ 0.15
-
-#ifndef MAX_BUFFERSIZE
-#define MAX_BUFFERSIZE 1024 // this value is the global maximum size of one signal vector frame. the yin buffer size will be half this value at its maximum
-#endif
 
 #define MIN_HZ 50 // simple max/min bounds on detected fundamental frequency
 #define MAX_HZ 2000

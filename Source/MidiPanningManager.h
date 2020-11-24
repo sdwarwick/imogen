@@ -14,9 +14,7 @@
 
 #pragma once
 
-#ifndef NUMBER_OF_VOICES
-#define NUMBER_OF_VOICES 12
-#endif
+#include "GlobalDefinitions.h"
 
 
 class MidiPanningManager

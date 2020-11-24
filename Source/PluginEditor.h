@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "GlobalDefinitions.h"
 #include "PluginProcessor.h"
 
 #define FRAMERATE 60
