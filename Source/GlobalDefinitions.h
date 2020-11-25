@@ -17,6 +17,12 @@
 #define NUMBER_OF_VOICES 12 // the number of instances of the harmony algorithm running concurrently
 #endif
 
+
 #ifndef MAX_BUFFERSIZE
 #define MAX_BUFFERSIZE 1024 // an arbitrary maximum size, in samples, for the input audio buffer. If an audio vector is recieved from the host that is larger than this size, it will be sliced into a series of smaller vectors that are MAX_BUFFERSIZE or smaller.
+#endif
+
+
+#ifndef FRAMERATE
+#define FRAMERATE 60 // the framerate, in ms, of the graphics processing 
 #endif

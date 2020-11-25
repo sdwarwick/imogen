@@ -38,8 +38,8 @@ class Yin
 {
 public:
 	
-	Yin(): yinBufferSize(MAX_BUFFERSIZE/2), isPitched(false) {
-		yinBuffer.setSize(1, MAX_BUFFERSIZE/2); // yin buffer size is half the size of the input buffer in samples
+	Yin(): yinBufferSize(round(MAX_BUFFERSIZE/2)), isPitched(false) {
+		yinBuffer.setSize(1, round(MAX_BUFFERSIZE/2)); // yin buffer size is half the size of the input buffer in samples
 		yinBuffer.clear();
 	};
 	
@@ -122,6 +122,12 @@ private:
 		FloatFFT* fft; // an FFT object to quickly calculate the difference function
 		fft = new FloatFFT(inputBufferLength);
 		
+//		const int fftOrder = 8;
+//		dsp::FFT fft(fftOrder);
+//		const int fftSize = fft.getSize();
+//		dsp::Complex<float> fftBufferInput (fftSize);
+//		dsp::Complex<float> fftBufferOutput (fftSize);
+		
 		const int doubleInputLength = inputBufferLength * 2;
 		float fftBuffer[doubleInputLength];
 		float kernel[doubleInputLength];
@@ -140,10 +146,15 @@ private:
 		// YIN-STYLE AUTOCORRELATION VIA FFT
 		// 1. data
 		for(int j = 0; j < inputBuffer.getNumSamples(); ++j) {
+			
+//			fftBufferInput[j] = { reading[j], 0 };
+
 			fftBuffer[2*j] = reading[j]; // real
 			fftBuffer[2*j+1] = 0; // imaginary
 		}
 		fft->complexForward(fftBuffer);
+		
+//		fft.perform(fftBufferInput, fftBufferOutput);
 		
 		// 2. half of the data, disguised as a convolution kernel
 		for(int j = 0; j < yinBufferSize; ++j) {
