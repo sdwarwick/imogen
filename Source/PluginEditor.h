@@ -38,6 +38,9 @@ private:
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> decayLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> sustainLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> releaseLink;
+	// on/off toggle
+	ToggleButton adsrOnOff;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> adsrOnOffLink;
 	
 	// stereo width of harmony output
 	Slider stereoWidth;
@@ -90,6 +93,10 @@ private:
 	// limiter release time, in ms
 	Slider limiterRelease;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
+	
+	
+	// array to store currently active harmony pitches
+	Array<int> currentPitches;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

@@ -100,7 +100,7 @@ public:
 	};
 	
 	
-	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const float modInputFreq, Array<int> epochLocations, const int numOfEpochsPerFrame) {
+	void renderNextBlock (AudioBuffer <float>& inputBuffer, const int numSamples, const int inputChannel, const float modInputFreq, Array<int> epochLocations, const int numOfEpochsPerFrame, const bool adsrIsOn) {
 		// this function needs to write shifted samples to the stereo harmonyBuffer
 		
 		if(adsrEnv.isActive() == false) {
@@ -120,10 +120,16 @@ public:
 			const float* shiftedReader = shiftedBuffer.getReadPointer(0);
 			for(int channel = 0; channel < 2; ++channel)
 			{
+				float adsrMultiplier = 1.0f;
 				float* writingTo = harmonyBuffer.getWritePointer(channel);
 				for(int sample = 0; sample < numSamples; ++sample)
 				{
-					writingTo[sample] = shiftedReader[sample] * adsrEnv.getNextSample() * panningMultipliers[channel];
+					if(adsrIsOn) {
+						adsrMultiplier = adsrEnv.getNextSample();
+					} else {
+						adsrMultiplier = 1.0f;
+					}
+					writingTo[sample] = shiftedReader[sample] * adsrMultiplier * panningMultipliers[channel];
 				}
 			}
 		}

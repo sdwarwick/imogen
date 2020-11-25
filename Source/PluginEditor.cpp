@@ -6,6 +6,8 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 {
     setSize (400, 300);
 	
+	currentPitches.ensureStorageAllocated(NUMBER_OF_VOICES);
+	
 	Timer::startTimerHz(FRAMERATE);
 	
 	// set up GUI elements
@@ -39,6 +41,11 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			addAndMakeVisible(&adsrRelease);
 			releaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease);
 			adsrRelease.setValue(0.1f);
+			
+			adsrOnOff.setButtonText("ADSR on/off");
+			addAndMakeVisible(&adsrOnOff);
+			adsrOnOffLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff);
+			adsrOnOff.setToggleState(true, true);
 		}
 		
 		// stereo width
@@ -138,7 +145,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 		
 		// midi latch toggle
 		{
-			midiLatch.setButtonText("MIDI latch");
+			midiLatch.setButtonText("MIDI latch on/off");
 			addAndMakeVisible(&midiLatch);
 			midiLatchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "midiLatch", midiLatch);
 			midiLatch.setToggleState(false, true);
@@ -249,4 +256,18 @@ void ImogenAudioProcessorEditor::buttonClicked(Button* button) {
 
 void ImogenAudioProcessorEditor::timerCallback() {
 //	this->repaint();
+	
+	Array<int> returnedpitches = audioProcessor.returnActivePitches();
+	
+	if(returnedpitches.getUnchecked(0) == -1) {
+		// no pitches are currently active
+		currentPitches.clearQuick();
+		currentPitches.add(-1);
+	} else {
+		currentPitches.clearQuick();
+		for(int i = 0; i < returnedpitches.size(); ++i) {
+			currentPitches.add(returnedpitches.getUnchecked(i));
+		}
+	}
+	
 }

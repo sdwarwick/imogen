@@ -20,6 +20,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		midiLatch(false),
 		lastSampleRate(44100), lastBlockSize(512), prevLastSampleRate(44100), prevLastBlockSize(512),
 		frameIsPitched(false),
+		adsrIsOn(true),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
 		previousStereoWidth(100.0f),
 		prevVelocitySens(100.0f),
@@ -69,6 +70,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat> ("adsrDecay", "ADSR Decay", NormalisableRange<float> (0.01f, 1.0f), 0.06f));
 	params.push_back(std::make_unique<AudioParameterFloat> ("adsrSustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f), 0.8f));
 	params.push_back(std::make_unique<AudioParameterFloat> ("adsrRelease", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f));
+	params.push_back(std::make_unique<AudioParameterBool>("adsrOnOff", "ADSR on/off", true));
 	params.push_back(std::make_unique<AudioParameterFloat> ("stereoWidth", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100));
 	params.push_back(std::make_unique<AudioParameterInt>("dryPan", "Dry vox pan", 0, 127, 64));
 	params.push_back(std::make_unique<AudioParameterInt>("masterDryWet", "% wet", 0, 100, 100));
@@ -77,7 +79,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2));
 	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f), 0.0f));
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0f));
-	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch", false));
+	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch on/off", false));
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
 	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 99, 0));
 	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f), -2.0f));
@@ -161,6 +163,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// ADSR settings
 	{
+		adsrIsOn = *adsrOnOffListener > 0.5f;
+		
 		if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
 		{
 			for (int i = 0; i < numVoices; ++i) {
@@ -331,6 +335,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	{
 		// ADSR settings
 		{
+			adsrIsOn = *adsrOnOffListener > 0.5f;
+			
 			if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
 			{
 				for (int i = 0; i < numVoices; ++i) {
@@ -415,7 +421,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			// frameIsPitched ?
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3); // how to calculate numOfEpochsPerFrame parameter?
+			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
 			
 			// writes shifted sample values to wetBuffer
 			for (int channel = 0; channel < numChannels; ++channel)
@@ -541,7 +547,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 {
 	const float newPitch = pitchTracker.pitchDetectionResult(input, inputChan, numSamples, lastSampleRate);
 	frameIsPitched = pitchTracker.isitPitched();
-	if (newPitch != -1.0f)
+	if (newPitch > 0.0f)
 	{
 		voxCurrentPitch = newPitch;
 //		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
@@ -596,3 +602,12 @@ void ImogenAudioProcessor::timerCallback() {
 	}
 	
 };
+
+
+Array<int> ImogenAudioProcessor::returnActivePitches() {
+	
+	return midiProcessor.getActivePitches();
+	
+};
+
+

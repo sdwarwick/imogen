@@ -24,6 +24,8 @@ public:
     ~ImogenAudioProcessor() override;
 	
 	void timerCallback() override;
+	
+	Array<int> returnActivePitches();
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -89,6 +91,8 @@ private:
 		float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
 		float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
 		float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
+		float* adsrOnOffListener = (float*)(tree.getRawParameterValue("adsrOnOff"));
+		bool adsrIsOn;
 		float prevAttack;
 		float prevDecay;
 		float prevSustain;

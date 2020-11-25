@@ -35,7 +35,10 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager), lastRecievedPitchBend(64), isStealingOn(true) { };
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager), lastRecievedPitchBend(64), isStealingOn(true)
+	{
+		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
+	};
 	
 	
 	// the "MIDI CALLBACK" ::
@@ -118,6 +121,31 @@ public:
 	};
 	
 	
+	Array<int> getActivePitches()
+	{
+		activePitches.clearQuick();
+		
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
+		{
+			const int testpitch = polyphonyManager.pitchAtIndex(i);
+			if(testpitch != -1) {
+				activePitches.add(testpitch);
+			}
+		}
+		
+		activePitches.removeAllInstancesOf(-1);
+		
+		if(activePitches.isEmpty() == false)
+		{
+			activePitches.sort();
+		} else {
+			activePitches.add(-1);
+		}
+		
+		return activePitches;
+	};
+	
+	
 	
 private:
 	OwnedArray<HarmonyVoice>& harmonyEngine;
@@ -128,8 +156,9 @@ private:
 	MidiPanningManager midiPanningManager;
 	
 	int lastRecievedPitchBend;
-	
+	Array<int> activePitches;
 	bool isStealingOn;
+	
 	
 	
 	// sends a note on out to the harmony engine
