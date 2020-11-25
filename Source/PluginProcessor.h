@@ -126,7 +126,7 @@ private:
 	Yin pitchTracker;
 	EpochExtractor epochs;
 	
-	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& dryBuffer, const int numSamples);
+	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples);
 	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
 	int previousmidipan;
 	int dryvoxpanningmults[2];

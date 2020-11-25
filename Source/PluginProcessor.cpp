@@ -409,12 +409,12 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
-	writeToDryBuffer(buffer, inputChannel, dryBuffer, numSamples); // write this frame's input to the stereo dryBuffer
+	writeToDryBuffer(buffer, inputChannel, numSamples); // write this frame's input to the stereo dryBuffer
 	
 	analyzeInput(buffer, inputChannel, numSamples);
 	
 	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio, writing it to wetBuffer:
-	int activeVoices = 0;
+
 	for (int i = 0; i < numVoices; ++i) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
@@ -424,28 +424,10 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
 			
 			// writes shifted sample values to wetBuffer
-			for (int channel = 0; channel < numChannels; ++channel)
-			{
-				const float* reading = harmEngine[i]->harmonyBuffer.getReadPointer(channel);
-				float* output = wetBuffer.getWritePointer(channel);
-				
-				for(int sample = 0; sample < numSamples; ++sample) {
-					output[sample] += reading[sample];  // add value TO the wetBuffer instead of overwriting
-				}
-			}
-			++activeVoices;
+			wetBuffer.addFrom(0, 0, harmEngine[i]->harmonyBuffer, 0, 0, numSamples);
+			wetBuffer.addFrom(1, 0, harmEngine[i]->harmonyBuffer, 1, 0, numSamples);
+			
 			//	choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
-		}
-	}
-	
-	// divide wetBuffer's sample values by # of currently active voices:
-	if(activeVoices > 0) {
-		for(int channel = 0; channel < 2; ++channel) {
-			const float* r = wetBuffer.getWritePointer(channel);
-			float* w = wetBuffer.getWritePointer(channel);
-			for(int i = 0; i < numSamples; ++i) {
-				w[i] = r[i] / activeVoices;
-			}
 		}
 	}
 	
@@ -458,21 +440,17 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		}
 	}
 	
-	// mix shifted & dry audio together & place into I/O buffer for output
-	for (int channel = 0; channel < numChannels; ++channel)
-	{
-		const float* wetreadPointer = wetBuffer.getReadPointer(channel);
-		const float* dryreadPointer = dryBuffer.getReadPointer(channel);
-		float* outputSample = buffer.getWritePointer(channel);
-		
-		for (int sample = 0; sample < numSamples; ++sample)
-		{
-			outputSample[sample] = (wetreadPointer[sample] * wetMultiplier) + (dryreadPointer[sample] * dryMultiplier); // mix dry & wet signals together & output to speakers -- is /2 here necessary?
-		}
-		
-		buffer.applyGain(channel, 0, numSamples, outputGainMultiplier); // apply master output gain
-	}
+	wetBuffer.applyGain(0, numSamples, wetMultiplier);
+	dryBuffer.applyGain(0, numSamples, dryMultiplier);
 	
+	buffer.copyFrom(0, 0, wetBuffer, 0, 0, numSamples);
+	buffer.copyFrom(1, 0, wetBuffer, 1, 0, numSamples);
+	buffer.addFrom(0, 0, dryBuffer, 0, 0, numSamples);
+	buffer.addFrom(1, 0, dryBuffer, 1, 0, numSamples);
+	
+	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gai
+	
+	// output limiter
 	dsp::AudioBlock<float> limiterBlock (buffer);
 	limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
 	
@@ -573,21 +551,14 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 
 
 //// write dry input to dryBuffer so it can be mixed w wet signal for output
-void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, AudioBuffer<float>& dryBuffer, const int numSamples) {
-	
+void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples) {
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
-	
 	// NEED TO ACCOUNT FOR LATENCY OF THE HARMONY ALGORITHM !!!
 
-	const float* readingPointer = inputBuffer.getReadPointer(inputChan);
-	
-	for(int channel = 0; channel < 2; ++channel) {
-		float* drywriting = dryBuffer.getWritePointer(channel);
-		for (int sample = 0; sample < numSamples; ++sample) {
-			drywriting[sample] = readingPointer[sample] * dryvoxpanningmults[channel];
-		}
-	}
-	
+	dryBuffer.copyFrom(0, 0, inputBuffer, inputChan, 0, numSamples);
+	dryBuffer.copyFrom(1, 0, inputBuffer, inputChan, 0, numSamples);
+	dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
+	dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
 };
 
 
