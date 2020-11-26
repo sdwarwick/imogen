@@ -25,7 +25,6 @@
 
 #pragma once
 
-#include "FloatFFT.h"
 #include "GlobalDefinitions.h"
 
 #define THRESHOLD 0.15 // between 0.10 ~ 0.15
@@ -39,8 +38,10 @@ class Yin
 public:
 	
 	Yin(): yinBufferSize(round(MAX_BUFFERSIZE/2)), isPitched(false) {
-		yinBuffer.setSize(1, round(MAX_BUFFERSIZE/2)); // yin buffer size is half the size of the input buffer in samples
+		yinBuffer.setSize(1, yinBufferSize); // yin buffer size is half the size of the input buffer in samples
 		yinBuffer.clear();
+		powerTerms.ensureStorageAllocated(yinBufferSize);
+		powerTerms.clearQuick();
 	};
 	
 	/*===============================================================================================================================================
@@ -103,6 +104,7 @@ public:
 private:
 	
 	mutable AudioBuffer<float> yinBuffer; // stores the calculated values. half the size of the input audio buffer
+	Array<float> powerTerms;
 	int yinBufferSize; 			  // stores current size of yinBuffer
 	
 	bool isPitched;				  // stores whether the current audio vector is determined to be pitched or unpitched
@@ -119,66 +121,65 @@ private:
 		
 		const float* reading = inputBuffer.getReadPointer(inputChan);
 		
-		FloatFFT* fft; // an FFT object to quickly calculate the difference function
-		fft = new FloatFFT(inputBufferLength);
+	//	FloatFFT* fft; // an FFT object to quickly calculate the difference function
+	//	fft = new FloatFFT(inputBufferLength);
 		
-//		const int fftOrder = 8;
-//		dsp::FFT fft(fftOrder);
-//		const int fftSize = fft.getSize();
 //		dsp::Complex<float> fftBufferInput (fftSize);
 //		dsp::Complex<float> fftBufferOutput (fftSize);
 		
-		const int doubleInputLength = inputBufferLength * 2;
-		float fftBuffer[doubleInputLength];
-		float kernel[doubleInputLength];
-		float yinStyleACF[doubleInputLength];
+		// 2^fftOrder = doubleInputLength
+		// fftOrder = log(2, doubleInputLength)
+		const int fftOrder = log2(inputBufferLength);
+		
+		dsp::FFT fft(fftOrder);
+		
+		dsp::Complex<float> fftBufferIn[inputBufferLength];
+		dsp::Complex<float> fftBufferOut[inputBufferLength];
+		dsp::Complex<float> kernelIn[inputBufferLength];
+		dsp::Complex<float> kernelOut[inputBufferLength];
+		dsp::Complex<float> yinStyleACFin[inputBufferLength];
+		dsp::Complex<float> yinStyleACFout[inputBufferLength];
 		
 		// POWER TERM CALCULATION
-		float powerTerms[yinBufferSize];
+		powerTerms.clearQuick();
+		powerTerms.add(0.0f);
 		for(int j = 0; j < yinBufferSize; ++j) { // first, calculate the first power term value...
-			powerTerms[0] += reading[j] * reading[j];
+			powerTerms.set(0, powerTerms.getUnchecked(0) + reading[j] * reading[j]);
 		}
 		// ... then iteratively calculate all others
 		for(int i = 1; i < yinBufferSize; ++i) {
-			powerTerms[i] = powerTerms[i - 1] - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize];
+		//	powerTerms[i] = powerTerms[i - 1] - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize];
+			powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize]);
 		}
 		
 		// YIN-STYLE AUTOCORRELATION VIA FFT
 		// 1. data
 		for(int j = 0; j < inputBuffer.getNumSamples(); ++j) {
-			
-//			fftBufferInput[j] = { reading[j], 0 };
-
-			fftBuffer[2*j] = reading[j]; // real
-			fftBuffer[2*j+1] = 0; // imaginary
+			fftBufferIn[j] = { reading[j], 0 };
+			fftBufferIn[j + inputBufferLength] = { 0, 0 };
 		}
-		fft->complexForward(fftBuffer);
-		
-//		fft.perform(fftBufferInput, fftBufferOutput);
+		fft.perform(fftBufferIn, fftBufferOut, false);
 		
 		// 2. half of the data, disguised as a convolution kernel
 		for(int j = 0; j < yinBufferSize; ++j) {
-			kernel[2*j] = reading[(yinBufferSize-1)-j]; // real
-			kernel[2*j+1] = 0; // imaginary
-			kernel[2*j+inputBufferLength] = 0; // real
-			kernel[2*j+inputBufferLength+1] = 0; // imaginary
+			kernelIn[j] = { reading[(yinBufferSize-1)-j], 0 };
 		}
-		fft->complexForward(kernel);
+		fft.perform(kernelIn, kernelOut, false);
 		
 		// 3. convolution via complex multiplication
 		for (int j = 0; j < inputBufferLength; ++j) {
-			yinStyleACF[2*j] = fftBuffer[2*j] * kernel[2*j] - fftBuffer[2*j+1] * kernel[2*j+1]; // real
-			yinStyleACF[2*j+1] = fftBuffer[2*j+1] * kernel[2*j] + fftBuffer[2*j] * kernel[2*j+1]; // imaginary
+			
+			yinStyleACFin[j] = { fftBufferOut[j].real() * kernelOut[j].real() - fftBufferOut[j+1].real() * kernelOut[j+1].real(), fftBufferOut[j].imag() * kernelOut[j].imag() + fftBufferOut[j+1].imag() * kernelOut[j+1].imag() };
+			
 		}
-		fft->complexInverse(yinStyleACF);
+		fft.perform(yinStyleACFin, yinStyleACFout, true);
 		
 		// CALCULATION OF DIFFERENCE FUNCTION
 		float* w = yinBuffer.getWritePointer(0);
 		for(int j = 0; j < yinBufferSize; ++j) {
-			w[j] = powerTerms[0] + powerTerms[j] - 2 * yinStyleACF[2 * (yinBufferSize - 1 + j)];
+			w[j] = powerTerms.getUnchecked(0) + powerTerms.getUnchecked(j) - 2 * yinStyleACFout[yinBufferSize - 1 + j].real() / fft.getSize();
 		}
 		
-		delete fft;
 	};
 	
 	
