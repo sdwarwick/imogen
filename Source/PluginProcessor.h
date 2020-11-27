@@ -7,7 +7,6 @@
 #include "MidiProcessor.h"
 #include "EpochExtractor.h"
 #include "Yin.h"
-#include "Duplicator.h"
 
 #define TIMER_RATE_MS 150
 
@@ -151,8 +150,6 @@ private:
 	AudioBuffer<float> dryBuffer; // this buffer holds the original input signal, delayed for latency, so it can be mixed back together with the wet signal for the dry/wet effect
 	int dryBufferWritePosition;
 	int dryBufferReadPosition;
-	
-	Duplicator choirEffect;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
