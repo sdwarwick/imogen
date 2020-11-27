@@ -13,7 +13,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                       #endif
                        ),
 		numVoices(NUMBER_OF_VOICES),
-		numChannels(2),
 		voxCurrentPitch(0.0f),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
 		midiProcessor(harmEngine),
@@ -441,31 +440,28 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
-	writeToDryBuffer(buffer, inputChannel, numSamples); // write this frame's input to the stereo dryBuffer
+	writeToDryBuffer(buffer, inputChannel, numSamples); // write this frame's input to the stereo, circular dryBuffer
 	
-	analyzeInput(buffer, inputChannel, numSamples);
+	analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
 	
-	// this for loop steps through each of the 12 instances of HarmonyVoice to render their audio, writing it to wetBuffer:
-
 	for (int i = 0; i < numVoices; ++i) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
-			
-			// frameIsPitched ?
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
 			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
 			
 			// writes shifted sample values to wetBuffer
-			wetBuffer.addFrom(0, 0, harmEngine[i]->harmonyBuffer, 0, 0, numSamples);
-			wetBuffer.addFrom(1, 0, harmEngine[i]->harmonyBuffer, 1, 0, numSamples);
-	
+			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+			{
+				wetBuffer.addFrom(channel, 0, harmEngine[i]->harmonyBuffer, channel, 0, numSamples);
+			}
 		}
 	}
 	
 	// clear any extra channels present in I/O buffer
 	{
-		if (buffer.getNumChannels() > numChannels) {
-			for (int i = numChannels + 1; i <= buffer.getNumChannels(); ++i) {
+		if (buffer.getNumChannels() > NUMBER_OF_CHANNELS) {
+			for (int i = NUMBER_OF_CHANNELS + 1; i <= buffer.getNumChannels(); ++i) {
 				buffer.clear(i - 1, 0, numSamples);
 			}
 		}
@@ -473,8 +469,10 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 
 	// write from wetBuffer to I/O buffer
 	wetBuffer.applyGain(0, numSamples, wetMultiplier);
-	buffer.copyFrom(0, 0, wetBuffer, 0, 0, numSamples);
-	buffer.copyFrom(1, 0, wetBuffer, 1, 0, numSamples);
+	for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+	{
+		buffer.copyFrom(channel, 0, wetBuffer, channel, 0, numSamples);
+	}
 	
 	// write from dryBuffer to I/O buffer, accounting for latency of harmony algorithm
 	{
@@ -489,13 +487,15 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		if(dryBufferReadPosition + numSamples <= dryBuffer.getNumSamples())
 		{
 			dryBuffer.applyGain(dryBufferReadPosition, numSamples, dryMultiplier);
-			buffer.addFrom(0, 0, dryBuffer, 0, dryBufferReadPosition, numSamples);
-			buffer.addFrom(1, 0, dryBuffer, 1, dryBufferReadPosition, numSamples);
+			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+			{
+				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, numSamples);
+			}
 		}
 		else
 		{
 			const int midPos = dryBuffer.getNumSamples() - dryBufferReadPosition;
-			for(int channel = 0; channel < 2; ++channel)
+			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
 			{
 				dryBuffer.applyGain(channel, dryBufferReadPosition, midPos, dryMultiplier);
 				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, midPos);
@@ -603,7 +603,7 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
 	// NEED TO ACCOUNT FOR LATENCY OF THE HARMONY ALGORITHM !!!
 
-	for(int channel = 0; channel < 2; ++channel)
+	for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
 	{
 		if(dryBufferWritePosition + numSamples <= dryBuffer.getNumSamples())
 		{

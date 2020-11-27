@@ -117,10 +117,11 @@ public:
 			shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
 			
 			// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
-			harmonyBuffer.copyFrom(0, 0, shiftedBuffer, 0, 0, numSamples);
-			harmonyBuffer.copyFrom(1, 0, shiftedBuffer, 0, 0, numSamples);
-			harmonyBuffer.applyGain(0, 0, numSamples, panningMultipliers[0]);
-			harmonyBuffer.applyGain(1, 0, numSamples, panningMultipliers[1]);
+			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+			{
+				harmonyBuffer.copyFrom(channel, 0, shiftedBuffer, 0, 0, numSamples);
+				harmonyBuffer.applyGain(channel, 0, numSamples, panningMultipliers[channel]);
+			}
 			
 			if(adsrIsOn) {
 				adsrEnv.applyEnvelopeToBuffer(harmonyBuffer, 0, numSamples);

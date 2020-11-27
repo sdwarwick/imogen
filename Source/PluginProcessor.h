@@ -62,8 +62,6 @@ public:
 	
 	const int numVoices;  // global setting for how many instances of the harmony engine will be running concurrently
 	
-	const int numChannels; // declares 2 output channels (stereo). could conceivably be reconstructed to work with more sophisticated spatialization techniques in the future
-	
 	double voxCurrentPitch;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
 	AudioProcessorValueTreeState tree;
