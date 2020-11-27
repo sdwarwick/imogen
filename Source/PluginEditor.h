@@ -8,7 +8,6 @@
 //==============================================================================
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
-									public Button::Listener,
 									public Timer
 {
 public:
@@ -18,7 +17,6 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 	
-	void buttonClicked(Button* button) override;
 	void timerCallback() override;
 	
 //==============================================================================

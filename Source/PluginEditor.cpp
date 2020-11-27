@@ -162,7 +162,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 		// kill all midi button
 		{
 			midiKill.setButtonText("Kill all MIDI");
-			midiKill.addListener(this);
+			midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
 			addAndMakeVisible(&midiKill);
 		}
 		
@@ -245,13 +245,6 @@ void ImogenAudioProcessorEditor::resized()
 	
 }
 
-
-void ImogenAudioProcessorEditor::buttonClicked(Button* button) {
-	if (button == &midiKill) {
-		audioProcessor.killAllMidi();
-		// make this also CLEAR the notes display
-	}
-}
 
 
 void ImogenAudioProcessorEditor::timerCallback() {
