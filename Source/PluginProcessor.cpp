@@ -12,7 +12,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                       #endif
                        ),
-		numVoices(NUMBER_OF_VOICES),
 		voxCurrentPitch(0.0f),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
 		midiProcessor(harmEngine),
@@ -37,13 +36,13 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 {
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
-	for (int i = 0; i < numVoices; ++i) {
+	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 		harmEngine.add(new HarmonyVoice(i));
 	}
 	
-	wetBuffer.setSize(2, MAX_BUFFERSIZE);
+	wetBuffer.setSize(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE);
 	wetBuffer.clear();
-	dryBuffer.setSize(2, MAX_BUFFERSIZE);
+	dryBuffer.setSize(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE);
 	dryBuffer.clear();
 	
 	dryvoxpanningmults[0] = 64;
@@ -56,7 +55,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
-	for (int i = 0; i < numVoices; ++i) {
+	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 		delete harmEngine[i];
 	}
 	
@@ -158,19 +157,19 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	{
 		if (prevLastSampleRate != lastSampleRate || prevLastBlockSize != lastBlockSize)
 		{
-			for (int i = 0; i < numVoices; ++i) {
+			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
 			}
 			
 			pitchTracker.checkBufferSize(lastBlockSize);
 			if(wetBuffer.getNumSamples() != lastBlockSize || wetBuffer.hasBeenCleared()) {
-				wetBuffer.setSize(2, lastBlockSize, true, false, true);
+				wetBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, false, true);
 			}
 			
 			const int numSeconds = 1;
 			const int drybuffersize = sampleRate * samplesPerBlock * numSeconds; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
 			if(dryBuffer.getNumSamples() != drybuffersize || dryBuffer.hasBeenCleared()) {
-				dryBuffer.setSize(2, drybuffersize, true, true, true);
+				dryBuffer.setSize(NUMBER_OF_CHANNELS, drybuffersize, true, true, true);
 			}
 			
 		}
@@ -184,7 +183,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		
 		if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
 		{
-			for (int i = 0; i < numVoices; ++i) {
+			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
 			}
 			prevAttack = *adsrAttackListener;
@@ -198,7 +197,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	// MIDI velocity sensitivity
 	{
 		if(prevVelocitySens != *midiVelocitySensListener) {
-			for(int i = 0; i < numVoices; ++i)
+			for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 			{
 				harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
 			}
@@ -229,7 +228,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	// pitch bend settings
 	{
 		if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
-			for (int i = 0; i < numVoices; ++i) {
+			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 			}
 			prevPitchBendUp = *pitchBendUpListener;
@@ -283,7 +282,7 @@ void ImogenAudioProcessor::releaseResources() {
 	
 	wetBuffer.clear();
 	dryBuffer.clear();
-	for(int i = 0; i < numVoices; ++i) {
+	for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 		harmEngine[i]->clearBuffers();
 	}
 	pitchTracker.clearBuffer();
@@ -359,7 +358,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int numSamples, const int inputChannel)
 {
 	if(wetBuffer.getNumSamples() != numSamples) {
-		wetBuffer.setSize(2, numSamples, true, false, true);
+		wetBuffer.setSize(NUMBER_OF_CHANNELS, numSamples, true, false, true);
 	}
 	
 	// update settings/parameters
@@ -370,7 +369,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			
 			if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
 			{
-				for (int i = 0; i < numVoices; ++i) {
+				for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 					harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
 				}
 			}
@@ -379,7 +378,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		// MIDI velocity sensitivity
 		{
 			if(prevVelocitySens != *midiVelocitySensListener) {
-				for(int i = 0; i < numVoices; ++i)
+				for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 				{
 					harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
 				}
@@ -399,7 +398,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		// pitch bend settings
 		{
 			if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
-				for (int i = 0; i < numVoices; ++i) {
+				for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 					harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 				}
 			}
@@ -444,7 +443,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
 	
-	for (int i = 0; i < numVoices; ++i) {  // i = the harmony voice # currently being processed
+	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer

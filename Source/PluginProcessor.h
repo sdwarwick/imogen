@@ -60,8 +60,6 @@ public:
 	
 	//==============================================================================
 	
-	const int numVoices;  // global setting for how many instances of the harmony engine will be running concurrently
-	
 	double voxCurrentPitch;  // a variable to store the modulator signal's current input pitch [as frequency!]
 	
 	AudioProcessorValueTreeState tree;
