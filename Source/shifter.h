@@ -62,7 +62,7 @@ public:
 		int lastEpochIndex = epochLocations.getUnchecked(0);
 		const int numOfEpochs = epochLocations.size();
 		
-		if(synthesis.getNumSamples() != numSamples) {
+		if(synthesis.getNumSamples() != numSamples || synthesis.hasBeenCleared()) {
 			synthesis.setSize(1, numSamples, false, false, true);
 		}
 		finalWindow.clearQuick();

@@ -15,10 +15,6 @@
  
  	@see
  		: YIN implementation in Python by Patrice Guyot : http://www.github.com/patriceguyot/Yin/blob/master/yin.py
- 
- 	@dependencies
- 		"FloatFFT.h", a custom implementation of an FFT process with complexForward and complexInverse operations.
- 		In this FFT implementation, data is grouped in pairs of samples, such that fft[i] is the real component and fft[i+1] is the imaginary.
 
   ==============================================================================
 */

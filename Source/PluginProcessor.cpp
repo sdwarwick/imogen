@@ -31,7 +31,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		previousmidipan(64),
 		previousMasterDryWet(100),
 		dryMultiplier(0.0f), wetMultiplier(1.0f),
-		prevideb(0.0f), prevodeb(0.0f)
+		prevideb(0.0f), prevodeb(0.0f),
+		dryBufferWritePosition(0), dryBufferReadPosition(0)
 
 #endif
 {
@@ -42,7 +43,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	}
 	
 	wetBuffer.setSize(2, MAX_BUFFERSIZE);
+	wetBuffer.clear();
 	dryBuffer.setSize(2, MAX_BUFFERSIZE);
+	dryBuffer.clear();
 	
 	dryvoxpanningmults[0] = 64;
 	dryvoxpanningmults[1] = 64;
@@ -145,7 +148,12 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock) {
 	
 	lastSampleRate = sampleRate;
-	lastBlockSize = samplesPerBlock;
+	
+	if(samplesPerBlock >= MAX_BUFFERSIZE) {
+		lastBlockSize = MAX_BUFFERSIZE;
+	} else {
+		lastBlockSize = samplesPerBlock;
+	}
 	
 	// DSP settings
 	{
@@ -156,6 +164,16 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			}
 			
 			pitchTracker.checkBufferSize(lastBlockSize);
+			if(wetBuffer.getNumSamples() != lastBlockSize || wetBuffer.hasBeenCleared()) {
+				wetBuffer.setSize(2, lastBlockSize, true, false, true);
+			}
+			
+			const int numSeconds = 1;
+			const int drybuffersize = sampleRate * samplesPerBlock * numSeconds; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
+			if(dryBuffer.getNumSamples() != drybuffersize || dryBuffer.hasBeenCleared()) {
+				dryBuffer.setSize(2, drybuffersize, true, true, true);
+			}
+			
 		}
 		prevLastSampleRate = lastSampleRate;
 		prevLastBlockSize = lastBlockSize;
@@ -255,6 +273,11 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	limiter.prepare(spec);
 	limiter.setThreshold(*limiterThreshListener);
 	limiter.setRelease(*limiterReleaseListener);
+	
+	if(Timer::isTimerRunning() == false)
+	{
+		Timer::startTimer(TIMER_RATE_MS);
+	}
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -266,6 +289,7 @@ void ImogenAudioProcessor::releaseResources() {
 	}
 	pitchTracker.clearBuffer();
 	limiter.reset(); // ??
+	Timer::stopTimer();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -304,15 +328,26 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	
 	int inpt = *inputChannelListener;
 	if (inpt > buffer.getNumChannels()) {
-		inpt = buffer.getNumChannels() - 1;
+		inpt = buffer.getNumChannels();
 	}
-	const int inputChannel = inpt;
+	const int inputChannel = inpt - 1; // if the user enters "channel 1", that's actually channel 0 in an audioBuffer
 	
 	int samplesLeft = buffer.getNumSamples();
 	// int numElapsedLoops = 0;
 	while (samplesLeft > 0)
 	{
-		const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
+		// const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
+		
+		// slice input buffer into frames of length MAX_BUFFERSIZE or smaller
+		int samps;
+		if(samplesLeft >= MAX_BUFFERSIZE) {
+			samps = MAX_BUFFERSIZE;
+		}
+		else {
+			samps = samplesLeft;
+		}
+		const int numSamples = samps; // number of samples in this frame / slice
+		
 		AudioBuffer<float> proxy (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
 		processBlockPrivate(proxy, numSamples, inputChannel);
 		samplesLeft -= numSamples;
@@ -326,9 +361,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 {
 	if(wetBuffer.getNumSamples() != numSamples) {
 		wetBuffer.setSize(2, numSamples, true, false, true);
-	}
-	if(dryBuffer.getNumSamples() != numSamples) {
-		dryBuffer.setSize(2, numSamples, true, false, true);
 	}
 	
 	// update settings/parameters
@@ -426,8 +458,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			// writes shifted sample values to wetBuffer
 			wetBuffer.addFrom(0, 0, harmEngine[i]->harmonyBuffer, 0, 0, numSamples);
 			wetBuffer.addFrom(1, 0, harmEngine[i]->harmonyBuffer, 1, 0, numSamples);
-			
-			//	choirEffect.process(harmEngine[i]->shiftedBuffer, numSamples, wetBuffer, 4, harmEngine[i]->midiPan);
+	
 		}
 	}
 	
@@ -439,16 +470,44 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			}
 		}
 	}
-	
+
+	// write from wetBuffer to I/O buffer
 	wetBuffer.applyGain(0, numSamples, wetMultiplier);
-	dryBuffer.applyGain(0, numSamples, dryMultiplier);
-	
 	buffer.copyFrom(0, 0, wetBuffer, 0, 0, numSamples);
 	buffer.copyFrom(1, 0, wetBuffer, 1, 0, numSamples);
-	buffer.addFrom(0, 0, dryBuffer, 0, 0, numSamples);
-	buffer.addFrom(1, 0, dryBuffer, 1, 0, numSamples);
 	
-	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gai
+	// write from dryBuffer to I/O buffer, accounting for latency of harmony algorithm
+	{
+		const int harmonyLatency = 0; // latency in samples of the harmony algorithm, used to realign the dry signal w the wet
+		
+		dryBufferReadPosition = dryBufferWritePosition - numSamples - harmonyLatency;
+		
+		if (dryBufferReadPosition < 0) {
+			dryBufferReadPosition += dryBuffer.getNumSamples();
+		}
+		
+		if(dryBufferReadPosition + numSamples <= dryBuffer.getNumSamples())
+		{
+			dryBuffer.applyGain(dryBufferReadPosition, numSamples, dryMultiplier);
+			buffer.addFrom(0, 0, dryBuffer, 0, dryBufferReadPosition, numSamples);
+			buffer.addFrom(1, 0, dryBuffer, 1, dryBufferReadPosition, numSamples);
+		}
+		else
+		{
+			const int midPos = dryBuffer.getNumSamples() - dryBufferReadPosition;
+			for(int channel = 0; channel < 2; ++channel)
+			{
+				dryBuffer.applyGain(channel, dryBufferReadPosition, midPos, dryMultiplier);
+				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, midPos);
+				dryBuffer.applyGain(channel, 0, numSamples - midPos, dryMultiplier);
+				buffer.addFrom(channel, midPos, dryBuffer, channel, 0, numSamples - midPos);
+			}
+		}
+		dryBufferReadPosition += numSamples; // these two lines may be redundant, since dryBufferReadPosition is calculated each frame based on dryBufferWritePosition & the latency offset...
+		dryBufferReadPosition %= dryBuffer.getNumSamples();
+	}
+	
+	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
 	// output limiter
 	dsp::AudioBlock<float> limiterBlock (buffer);
@@ -528,23 +587,12 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	if (newPitch > 0.0f)
 	{
 		voxCurrentPitch = newPitch;
-//		analysisShift = ceil(lastSampleRate/voxCurrentPitch); // size of analysis grains = 1 fundamental pitch period
 	} else {
 		voxCurrentPitch = 80.0f; // need to set to arbitrary value ??
-//		analysisShift = 100;  // default grain size for unpitched parts of signal
 		frameIsPitched = false;
 	}
 	
 	epochLocations = epochs.extractEpochIndices(input, inputChan, numSamples, lastSampleRate);
-	
-//	analysisShiftHalved = round(analysisShift/2);
-//	analysisLimit = numSamples - analysisShiftHalved - 1;  // original was numSamples - analysisShift - 1
-//
-//	windowLength = analysisShift;
-	// windowLength = analysisShift + analysisShiftHalved + 1;
-//	if(windowLength != prevWindowLength) {
-//		hanning.calcWindow(windowLength, window);
-//	}
 	
 };
 
@@ -555,10 +603,25 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
 	// NEED TO ACCOUNT FOR LATENCY OF THE HARMONY ALGORITHM !!!
 
-	dryBuffer.copyFrom(0, 0, inputBuffer, inputChan, 0, numSamples);
-	dryBuffer.copyFrom(1, 0, inputBuffer, inputChan, 0, numSamples);
-	dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
-	dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
+	for(int channel = 0; channel < 2; ++channel)
+	{
+		if(dryBufferWritePosition + numSamples <= dryBuffer.getNumSamples())
+		{
+			dryBuffer.copyFrom(channel, dryBufferWritePosition, inputBuffer, inputChan, 0, numSamples);
+			dryBuffer.applyGain(channel, dryBufferWritePosition, numSamples, dryvoxpanningmults[channel]);
+		}
+		else
+		{
+			const int midPos = dryBuffer.getNumSamples() - dryBufferWritePosition;
+			dryBuffer.copyFrom(channel, dryBufferWritePosition, inputBuffer, inputChan, 0, midPos);
+			dryBuffer.applyGain(channel, dryBufferWritePosition, midPos, dryvoxpanningmults[channel]);
+			dryBuffer.copyFrom(channel, 0, inputBuffer, inputChan, midPos, numSamples - midPos);
+			dryBuffer.applyGain(channel, 0, numSamples - midPos, dryvoxpanningmults[channel]);
+		}
+	}
+	dryBufferWritePosition += numSamples;
+	dryBufferWritePosition %= dryBuffer.getNumSamples();
+	
 };
 
 
@@ -575,10 +638,9 @@ void ImogenAudioProcessor::timerCallback() {
 };
 
 
+
 Array<int> ImogenAudioProcessor::returnActivePitches() {
-	
 	return midiProcessor.getActivePitches();
-	
 };
 
 

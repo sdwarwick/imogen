@@ -212,10 +212,10 @@ private:
 	
 	
 	void checkBufferSizes(const int newNumSamples) {
-		if(shiftedBuffer.getNumSamples() != newNumSamples) {
+		if(shiftedBuffer.getNumSamples() != newNumSamples || shiftedBuffer.hasBeenCleared()) {
 			shiftedBuffer.setSize(1, newNumSamples, false, false, true);
 		}
-		if(harmonyBuffer.getNumSamples() != newNumSamples) {
+		if(harmonyBuffer.getNumSamples() != newNumSamples || harmonyBuffer.hasBeenCleared()) {
 			harmonyBuffer.setSize(2, newNumSamples, false, false, true);
 		}
 	};
