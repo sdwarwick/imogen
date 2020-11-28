@@ -28,6 +28,8 @@ public:
 			possiblePanVals[i] = 64;
 			panValsInAssigningOrder[i] = 64;
 		}
+		newPanValAbsDist.ensureStorageAllocated(NUMBER_OF_VOICES);
+		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
 	};
 	
 	
@@ -49,20 +51,25 @@ public:
 		for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			panValsInAssigningOrder[i] = possiblePanVals[arrayIndexesMapped[i]];
 		}
+		
+		newPanValsLeft.clearQuick();
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
+			newPanValsLeft.add(panValsInAssigningOrder[i]);
+		}
 	};
 	
 	
 	int getNextPanVal() const {
 		const int indexReadingFrom = indexOfLastSentPanVal + 1;
 		if (indexReadingFrom < NUMBER_OF_VOICES) {
-			return panValsInAssigningOrder[indexReadingFrom];
 			indexOfLastSentPanVal = indexReadingFrom;
 			if (indexOfLastSentPanVal >= NUMBER_OF_VOICES) {
 				indexOfLastSentPanVal = 0;
 			}
+			return panValsInAssigningOrder[indexReadingFrom];
 		} else {
-			return panValsInAssigningOrder[0];
 			indexOfLastSentPanVal = 0;
+			return panValsInAssigningOrder[0];
 		}
 	};
 	
@@ -75,6 +82,39 @@ public:
 	int retrievePanVal(const int index) const {
 		return panValsInAssigningOrder[index];
 	};
+	
+	
+	int getClosestNewPanVal(const int prevPan)
+	{
+		newPanValAbsDist.clearQuick();
+		for(int i = 0; i < newPanValsLeft.size(); ++i) {
+			const int distance = prevPan - newPanValsLeft.getUnchecked(i);
+			newPanValAbsDist.add(abs(distance));
+		}
+		int min = newPanValAbsDist.getUnchecked(0);
+		for(int i = 1; i < newPanValAbsDist.size(); ++i) {
+			if(newPanValAbsDist.getUnchecked(i) < min) {
+				min = newPanValAbsDist.getUnchecked(i);
+			}
+		}
+		const int newpanindex = newPanValAbsDist.indexOf(min);
+		const int newpan = newPanValsLeft.getUnchecked(newpanindex);
+		newPanValsLeft.remove(newpanindex);
+		return newpan;
+	};
+	
+	
+	void updateindexOfLastSent(const int lastSentPan)
+	{
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
+		{
+			if(panValsInAssigningOrder[i] == lastSentPan)
+			{
+				indexOfLastSentPanVal = i;
+				break;
+			}
+		}
+	};
 								   							
 	
 private:
@@ -85,6 +125,9 @@ private:
 	int panValsInAssigningOrder[NUMBER_OF_VOICES];
 	int arrayIndexesMapped[NUMBER_OF_VOICES];
 	mutable int indexOfLastSentPanVal;
+	
+	Array<int> newPanValAbsDist;
+	Array<int> newPanValsLeft;
 	
 	void mapArrayIndexes() {
 		/* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and index 11 the highest.

@@ -35,7 +35,7 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager), lastRecievedPitchBend(64), isStealingOn(true)
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 	};
@@ -90,22 +90,25 @@ public:
 		}
 		if(polyphonyManager.areAllVoicesOff() != true) {
 			polyphonyManager.clear();
-		} else {
-			midiPanningManager.reset();
-		}
-		stealingManager.clear();
-		latchManager.clear();
+		} 
 	};
 
 	
 	void updateStereoWidth(float* newStereoWidth) {
 		midiPanningManager.updateStereoWidth(*newStereoWidth);
-		int activeVoiceNumber = 0;
+		int lastsent;
+		int active = 0;
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if(harmonyEngine[i]->voiceIsOn) {
-				harmonyEngine[i]->changePanning(midiPanningManager.retrievePanVal(activeVoiceNumber));
-				++activeVoiceNumber;
+				const int newPan = midiPanningManager.getClosestNewPanVal(harmonyEngine[i]->reportPan());
+				harmonyEngine[i]->changePanning(newPan);
+				lastsent = newPan;
+				++active;
 			}
+		}
+		if(active > 0)
+		{
+			midiPanningManager.updateindexOfLastSent(lastsent);
 		}
 	};
 	
@@ -132,8 +135,6 @@ public:
 				activePitches.add(testpitch);
 			}
 		}
-		
-		activePitches.removeAllInstancesOf(-1);
 		
 		if(activePitches.isEmpty() == false)
 		{
@@ -210,5 +211,9 @@ private:
 			latchManager.noteOffRecieved(midiPitch);
 		}
 	}; // processes note events that occur while midiLatch is active
+	
+
 };
+
+
 

@@ -16,6 +16,8 @@
 
 #include "GlobalDefinitions.h"
 #include "MidiPanningManager.h"
+#include "VoiceStealingManager.h"
+#include "MidiLatchManager.h"
 
 
 class PolyphonyVoiceManager
@@ -23,7 +25,7 @@ class PolyphonyVoiceManager
 	
 public:
 	
-	PolyphonyVoiceManager(MidiPanningManager& p): panningManager(p) {
+	PolyphonyVoiceManager(MidiPanningManager& p, VoiceStealingManager& v, MidiLatchManager& l): panningManager(p), stealingManager(v), latchManager(l) {
 		clear();
 	};
 	
@@ -36,6 +38,8 @@ public:
 		{
 			if(areAllVoicesOff() == true) {
 				panningManager.reset();
+				stealingManager.clear();
+				latchManager.clear();
 			}
 		}
 	};
@@ -94,28 +98,25 @@ public:
 		int i = 0;
 		while (i < NUMBER_OF_VOICES)
 		{
-			harmonyPitches[i] = -1; ++i;
+			harmonyPitches[i] = -1;
+			++i;
 		}
 		panningManager.reset();
+		stealingManager.clear();
+		latchManager.clear();
 	};
 	
 	
 	bool areAllVoicesOff() const
 	{
-		bool allareoff = false;
-		
-		int numberOfOffVoices = 0;
+		bool allareoff = true;
 		
 		for (int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
-			if(harmonyPitches[i] == -1) {
-				++numberOfOffVoices;
+			if(harmonyPitches[i] != -1) {
+				allareoff = false;
+				break;
 			}
-		}
-		
-		if(numberOfOffVoices == NUMBER_OF_VOICES)
-		{
-			allareoff = true;
 		}
 		
 		return allareoff;
@@ -126,4 +127,6 @@ private:
 	int harmonyPitches[NUMBER_OF_VOICES];
 	
 	MidiPanningManager& panningManager;
+	VoiceStealingManager& stealingManager;
+	MidiLatchManager& latchManager;
 };
