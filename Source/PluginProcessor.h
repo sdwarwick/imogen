@@ -95,6 +95,8 @@ private:
 		float prevRelease;
 		float* stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
 		float previousStereoWidth;
+		float* lowestPanListener = (float*)(tree.getRawParameterValue("lowestPan"));
+		int lowestPannedNote;
 		float* midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
 		float prevVelocitySens;
 		float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));

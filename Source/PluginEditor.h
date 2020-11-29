@@ -42,6 +42,9 @@ private:
 	// stereo width of harmony output
 	Slider stereoWidth;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
+	// sets threshold for lowest panned midiPitch. set to 0 to turn off (pan all notes); set to 127 to bypass panning entirely (pan no notes)
+	Slider lowestPan;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowestPanLink;
 	
 	// dry vox (modulator) pan (in midiPan)
 	Slider dryPan;

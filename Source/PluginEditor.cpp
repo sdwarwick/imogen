@@ -57,6 +57,15 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			stereoWidthLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth);
 			stereoWidth.setValue(100);
 		}
+		// lowest panned midiPitch threshold
+		{
+			lowestPan.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
+			lowestPan.setRange(0, 127);
+			lowestPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+			addAndMakeVisible(&lowestPan);
+			lowestPanLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan);
+			lowestPan.setValue(0);
+		}
 		
 		// dry pan
 		{

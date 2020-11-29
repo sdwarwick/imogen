@@ -35,16 +35,17 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true)
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 	};
 	
 	
 	// the "MIDI CALLBACK" ::
-	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing)
+	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch)
 	{
 		isStealingOn = stealing;
+		lowestPannedNote = lowestPannedMidipitch;
 		
 		for (const MidiMessageMetadata meta : midiMessages)
 		{
@@ -159,7 +160,7 @@ private:
 	int lastRecievedPitchBend;
 	Array<int> activePitches;
 	bool isStealingOn;
-	
+	int lowestPannedNote;
 	
 	
 	// sends a note on out to the harmony engine
@@ -168,18 +169,26 @@ private:
 		const int newPitch = currentMessage.getNoteNumber();
 		const int newVelocity = currentMessage.getVelocity();
 		const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
+		int panningvalue = 64;
+		
+		if(newPitch >= lowestPannedNote) {
+			panningvalue = midiPanningManager.getNextPanVal();
+		} else {
+			panningvalue = 64;
+		}
+		const int panval = panningvalue;
 		
 		if(newVoiceNumber > 0 && newVoiceNumber < NUMBER_OF_VOICES) {
 			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 			stealingManager.addSentVoice(newVoiceNumber);
-			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
 		} else {
 			if (isStealingOn == true) {
 				const int voiceToSteal = stealingManager.voiceToSteal();
 				if(voiceToSteal > 0 && voiceToSteal < NUMBER_OF_VOICES) {
 					polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
 					stealingManager.addSentVoice(voiceToSteal);
-					harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, midiPanningManager.getNextPanVal(), lastRecievedPitchBend);
+					harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
 				}
 			}
 		}

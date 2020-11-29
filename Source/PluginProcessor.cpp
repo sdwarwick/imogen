@@ -21,6 +21,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		adsrIsOn(true),
 		prevAttack(0.0f), prevDecay(0.0f), prevSustain(0.0f), prevRelease(0.0f),
 		previousStereoWidth(100.0f),
+		lowestPannedNote(0),
 		prevVelocitySens(100.0f),
 		prevPitchBendUp(2.0f), prevPitchBendDown(2.0f),
 		latchIsOn(false), previousLatch(false),
@@ -30,8 +31,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		previousMasterDryWet(100),
 		dryMultiplier(0.0f), wetMultiplier(1.0f),
 		prevideb(0.0f), prevodeb(0.0f),
-		dryBufferWritePosition(0), dryBufferReadPosition(0),
-		limiterIsOn(true)
+		limiterIsOn(true),
+		dryBufferWritePosition(0), dryBufferReadPosition(0)
 
 #endif
 {
@@ -74,6 +75,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat> ("adsrRelease", "ADSR Release", NormalisableRange<float> (0.01f, 1.0f), 0.1f));
 	params.push_back(std::make_unique<AudioParameterBool>("adsrOnOff", "ADSR on/off", true));
 	params.push_back(std::make_unique<AudioParameterFloat> ("stereoWidth", "Stereo Width", NormalisableRange<float> (0.0, 100.0), 100));
+	params.push_back(std::make_unique<AudioParameterInt>("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
 	params.push_back(std::make_unique<AudioParameterInt>("dryPan", "Dry vox pan", 0, 127, 64));
 	params.push_back(std::make_unique<AudioParameterInt>("masterDryWet", "% wet", 0, 100, 100));
 	params.push_back(std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100));
@@ -213,6 +215,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			midiProcessor.updateStereoWidth(stereoWidthListener);
 			previousStereoWidth = *stereoWidthListener;
 		}
+		lowestPannedNote = round(*lowestPanListener);
 	}
 	
 	// dry vox pan
@@ -324,8 +327,8 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-	
-	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn);
+	lowestPannedNote = round(*lowestPanListener);
+	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote);
 	
 	int inpt = *inputChannelListener;
 	if (inpt > buffer.getNumChannels()) {
