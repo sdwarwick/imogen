@@ -170,29 +170,31 @@ private:
 	// sends a note on out to the harmony engine
 	void harmonyNoteOn(const MidiMessage currentMessage)
 	{
-		const int newPitch = currentMessage.getNoteNumber();
-		const int newVelocity = currentMessage.getVelocity();
-		const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
-		int panningvalue = 64;
+		if(currentMessage.isNoteOn()) {
+			const int newPitch = currentMessage.getNoteNumber();
+			const int newVelocity = currentMessage.getVelocity();
+			const int newVoiceNumber = polyphonyManager.nextAvailableVoice();  // returns -1 if no voices are available
+			int panningvalue = 64;
 		
-		if(newPitch >= lowestPannedNote) {
-			panningvalue = midiPanningManager.getNextPanVal();
-		} else {
-			panningvalue = 64;
-		}
-		const int panval = panningvalue;
+			if(newPitch >= lowestPannedNote) {
+				panningvalue = midiPanningManager.getNextPanVal();
+			} else {
+				panningvalue = 64;
+			}
+			const int panval = panningvalue;
 		
-		if(newVoiceNumber > 0 && newVoiceNumber < NUMBER_OF_VOICES) {
-			polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
-			stealingManager.addSentVoice(newVoiceNumber);
-			harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
-		} else {
-			if (isStealingOn == true) {
-				const int voiceToSteal = stealingManager.voiceToSteal();
-				if(voiceToSteal > 0 && voiceToSteal < NUMBER_OF_VOICES) {
-					polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
-					stealingManager.addSentVoice(voiceToSteal);
-					harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
+			if(newVoiceNumber > 0 && newVoiceNumber < NUMBER_OF_VOICES) {
+				polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
+				stealingManager.addSentVoice(newVoiceNumber);
+				harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
+			} else {
+				if (isStealingOn == true) {
+					const int voiceToSteal = stealingManager.voiceToSteal();
+					if(voiceToSteal > 0 && voiceToSteal < NUMBER_OF_VOICES) {
+						polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
+						stealingManager.addSentVoice(voiceToSteal);
+						harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
+					}
 				}
 			}
 		}
@@ -227,8 +229,8 @@ private:
 	}; // processes note events that occur while midiLatch is active
 	
 	
-	
 	void pedalPitch(const int thresholdPitch) {
+		// this function doubles the lowest currently active midiPitch an octave lower. the argument is the "threshold", ie the highest midiPitch that will be doubled 8vb. the lowest pitch that will be doubled is 0.
 		const int lowestActive = polyphonyManager.getLowestActiveNote();
 		if(lowestActive > -1) {
 			if(lowestActive <= thresholdPitch) {
@@ -236,7 +238,8 @@ private:
 				if(newpedalpitch >= 0) {
 					if(newpedalpitch != prevPedalPitch) {
 						if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
-						harmonyNoteOn(newpedalpitch);
+						auto newNoteOn = juce::MidiMessage::noteOn(1, newpedalpitch, (juce::uint8) 127);
+						harmonyNoteOn(newNoteOn);
 						prevPedalPitch = newpedalpitch;
 					}
 				} else {
