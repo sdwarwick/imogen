@@ -53,7 +53,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
 	
-	Timer::startTimer(TIMER_RATE_MS);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
@@ -61,7 +60,6 @@ ImogenAudioProcessor::~ImogenAudioProcessor() {
 		delete harmEngine[i];
 	}
 	
-	Timer::stopTimer();
 }
 
 
@@ -278,10 +276,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	limiter.setRelease(*limiterReleaseListener);
 	limiterIsOn = *limiterToggleListener > 0.5f;
 	
-	if(Timer::isTimerRunning() == false)
-	{
-		Timer::startTimer(TIMER_RATE_MS);
-	}
 }
 
 void ImogenAudioProcessor::releaseResources() {
@@ -293,7 +287,6 @@ void ImogenAudioProcessor::releaseResources() {
 	}
 	pitchTracker.clearBuffer();
 	limiter.reset(); // ??
-	Timer::stopTimer();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -327,6 +320,9 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+	if (previousStereoWidth != *stereoWidthListener) {
+		midiProcessor.updateStereoWidth(stereoWidthListener);
+	}
 	lowestPannedNote = round(*lowestPanListener);
 	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote);
 	
@@ -632,18 +628,6 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 	
 };
 
-
-
-void ImogenAudioProcessor::timerCallback() {
-	
-	// update stereo width
-	{
-		if (previousStereoWidth != *stereoWidthListener) {
-			midiProcessor.updateStereoWidth(stereoWidthListener);
-		}
-	}
-	
-};
 
 
 

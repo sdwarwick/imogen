@@ -14,16 +14,14 @@
 //==============================================================================
 /**
 */
-class ImogenAudioProcessor    : public juce::AudioProcessor,
-								public Timer
+class ImogenAudioProcessor    : public juce::AudioProcessor
+
 {
 	
 public:
 	
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
-	
-	void timerCallback() override;
 	
 	Array<int> returnActivePitches();
 

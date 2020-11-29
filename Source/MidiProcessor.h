@@ -97,19 +97,11 @@ public:
 	
 	void updateStereoWidth(float* newStereoWidth) {
 		midiPanningManager.updateStereoWidth(*newStereoWidth);
-		int lastsent;
-		int active = 0;
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if(harmonyEngine[i]->voiceIsOn) {
 				const int newPan = midiPanningManager.getClosestNewPanVal(harmonyEngine[i]->reportPan());
 				harmonyEngine[i]->changePanning(newPan);
-				lastsent = newPan;
-				++active;
 			}
-		}
-		if(active > 0)
-		{
-			midiPanningManager.updateindexOfLastSent(lastsent);
 		}
 	};
 	
@@ -201,6 +193,7 @@ private:
 		if(voiceToTurnOff > 0 && voiceToTurnOff < NUMBER_OF_VOICES) {
 			polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 			stealingManager.removeSentVoice(voiceToTurnOff);
+			midiPanningManager.turnedoffPanVal(harmonyEngine[voiceToTurnOff]->reportPan());
 			harmonyEngine[voiceToTurnOff]->stopNote();
 		}
 	};

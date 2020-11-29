@@ -21,7 +21,7 @@ class MidiPanningManager
 {
 public:
 	
-	MidiPanningManager(): middleIndex(ceil(NUMBER_OF_VOICES / 2)), indexOfLastSentPanVal(0)
+	MidiPanningManager(): middleIndex(ceil(NUMBER_OF_VOICES / 2)), lastsentoverflow(0)
 	{
 		mapArrayIndexes();
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
@@ -30,6 +30,9 @@ public:
 		}
 		newPanValAbsDist.ensureStorageAllocated(NUMBER_OF_VOICES);
 		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
+		availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES);
+		
+		updateStereoWidth(100);
 	};
 	
 	
@@ -53,29 +56,52 @@ public:
 		}
 		
 		newPanValsLeft.clearQuick();
+		availablePanValIndexes.clearQuick();
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			newPanValsLeft.add(panValsInAssigningOrder[i]);
+			availablePanValIndexes.add(i);
 		}
 	};
 	
 	
-	int getNextPanVal() const {
-		const int indexReadingFrom = indexOfLastSentPanVal + 1;
-		if (indexReadingFrom < NUMBER_OF_VOICES) {
-			indexOfLastSentPanVal = indexReadingFrom;
-			if (indexOfLastSentPanVal >= NUMBER_OF_VOICES) {
-				indexOfLastSentPanVal = 0;
-			}
+	int getNextPanVal() {
+		if(availablePanValIndexes.isEmpty() == false) {
+			lastsentoverflow = 0;
+			availablePanValIndexes.sort();
+			const int indexReadingFrom = availablePanValIndexes.getUnchecked(0);
+			availablePanValIndexes.remove(0);
 			return panValsInAssigningOrder[indexReadingFrom];
 		} else {
-			indexOfLastSentPanVal = 0;
-			return panValsInAssigningOrder[0];
+			return panValsInAssigningOrder[lastsentoverflow];
+			++lastsentoverflow;
+		}
+	};
+	
+	
+	
+	void turnedoffPanVal(const int newAvailPanVal)
+	{
+		int newindex = -1;
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
+			if(panValsInAssigningOrder[i] == newAvailPanVal) {
+				newindex = i;
+				break;
+			}
+		}
+		
+		if(newindex >= 0) {
+			availablePanValIndexes.add(newindex);
+			availablePanValIndexes.sort();
 		}
 	};
 	
 	
 	void reset() {  // run this function when all voices are cleared
-		indexOfLastSentPanVal = 0;
+		availablePanValIndexes.clearQuick();
+		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
+			availablePanValIndexes.add(i);
+		}
+		lastsentoverflow = 0;
 	};
 	
 	
@@ -104,17 +130,7 @@ public:
 	};
 	
 	
-	void updateindexOfLastSent(const int lastSentPan)
-	{
-		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
-		{
-			if(panValsInAssigningOrder[i] == lastSentPan)
-			{
-				indexOfLastSentPanVal = i;
-				break;
-			}
-		}
-	};
+	
 								   							
 	
 private:
@@ -124,10 +140,12 @@ private:
 	int possiblePanVals[NUMBER_OF_VOICES];
 	int panValsInAssigningOrder[NUMBER_OF_VOICES];
 	int arrayIndexesMapped[NUMBER_OF_VOICES];
-	mutable int indexOfLastSentPanVal;
 	
 	Array<int> newPanValAbsDist;
 	Array<int> newPanValsLeft;
+	Array<int> availablePanValIndexes;
+	
+	int lastsentoverflow;
 	
 	void mapArrayIndexes() {
 		/* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and index 11 the highest.
