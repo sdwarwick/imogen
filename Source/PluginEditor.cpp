@@ -196,6 +196,13 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 				limiterReleaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease);
 				limiterRelease.setValue(10);
 			}
+			// toggle on/off
+			{
+				limiterToggle.setButtonText("Limiter on/off");
+				addAndMakeVisible(&limiterToggle);
+				limiterToggleLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle);
+				limiterToggle.setToggleState(true, true);
+			}
 		}
 	}
 }

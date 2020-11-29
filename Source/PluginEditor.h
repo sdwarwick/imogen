@@ -90,7 +90,9 @@ private:
 	// limiter release time, in ms
 	Slider limiterRelease;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
-	
+	// toggle limiter on/off
+	ToggleButton limiterToggle;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
 	
 	// array to store currently active harmony pitches
 	Array<int> currentPitches;

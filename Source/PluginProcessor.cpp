@@ -30,7 +30,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		previousMasterDryWet(100),
 		dryMultiplier(0.0f), wetMultiplier(1.0f),
 		prevideb(0.0f), prevodeb(0.0f),
-		dryBufferWritePosition(0), dryBufferReadPosition(0)
+		dryBufferWritePosition(0), dryBufferReadPosition(0),
+		limiterIsOn(true)
 
 #endif
 {
@@ -85,6 +86,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 99, 0));
 	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f), -2.0f));
 	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
+	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));
 	
 	return { params.begin(), params.end() };
 }
@@ -271,6 +273,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	limiter.prepare(spec);
 	limiter.setThreshold(*limiterThreshListener);
 	limiter.setRelease(*limiterReleaseListener);
+	limiterIsOn = *limiterToggleListener > 0.5f;
 	
 	if(Timer::isTimerRunning() == false)
 	{
@@ -432,6 +435,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		// limiter settings
 		limiter.setThreshold(*limiterThreshListener);
 		limiter.setRelease(*limiterReleaseListener);
+		limiterIsOn = *limiterToggleListener > 0.5f;
 	}
 	
 	
@@ -509,8 +513,10 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
 	// output limiter
-	dsp::AudioBlock<float> limiterBlock (buffer);
-	limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
+	if(limiterIsOn) {
+		dsp::AudioBlock<float> limiterBlock (buffer);
+		limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
+	}
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	

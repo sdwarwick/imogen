@@ -138,6 +138,8 @@ private:
 	dsp::Limiter<float> limiter;
 	float* limiterThreshListener = (float*)(tree.getRawParameterValue("limiterThresh"));
 	int* limiterReleaseListener = (int*)(tree.getRawParameterValue("limiterRelease"));
+	bool limiterIsOn;
+	float* limiterToggleListener = (float*)(tree.getRawParameterValue("limiterIsOn"));
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
