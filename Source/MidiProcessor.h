@@ -84,7 +84,7 @@ public:
 			pedalPitch(pedalPitchThresh); // doubles the lowest active note an octave below
 		} else {
 			if(prevPedalPitchOnOff) {
-				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 			}
 		}
 		prevPedalPitchOnOff = isPedalPitchOn;
@@ -243,19 +243,18 @@ private:
 						prevPedalPitch = newpedalpitch;
 					}
 				} else {
-					if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+					if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 				}
 			} else {
-				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 				prevPedalPitch = 128;
 			}
 		} else {
-			if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+			if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 			prevPedalPitch = 128;
 		}
 	}; // doubles the lowest active note an octave below
 	
-
 };
 
 
