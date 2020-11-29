@@ -35,14 +35,14 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0)
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitch(128)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 	};
 	
 	
 	// the "MIDI CALLBACK" ::
-	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch)
+	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch, const bool isPedalPitchOn, const int pedalPitchThresh)
 	{
 		isStealingOn = stealing;
 		lowestPannedNote = lowestPannedMidipitch;
@@ -79,6 +79,15 @@ public:
 			
 			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) { killAll(); }
 		}
+		
+		if(isPedalPitchOn) {
+			pedalPitch(pedalPitchThresh); // doubles the lowest active note an octave below
+		} else {
+			if(prevPedalPitchOnOff) {
+				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+			}
+		}
+		prevPedalPitchOnOff = isPedalPitchOn;
 	};
 	// :: END MIDI CALLBACK
 	
@@ -91,7 +100,8 @@ public:
 		}
 		if(polyphonyManager.areAllVoicesOff() != true) {
 			polyphonyManager.clear();
-		} 
+		}
+		prevPedalPitch = 128;
 	};
 
 	
@@ -152,7 +162,9 @@ private:
 	int lastRecievedPitchBend;
 	Array<int> activePitches;
 	bool isStealingOn;
+	bool prevPedalPitchOnOff;
 	int lowestPannedNote;
+	int prevPedalPitch;
 	
 	
 	// sends a note on out to the harmony engine
@@ -213,6 +225,32 @@ private:
 			latchManager.noteOffRecieved(midiPitch);
 		}
 	}; // processes note events that occur while midiLatch is active
+	
+	
+	
+	void pedalPitch(const int thresholdPitch) {
+		const int lowestActive = polyphonyManager.getLowestActiveNote();
+		if(lowestActive > -1) {
+			if(lowestActive <= thresholdPitch) {
+				const int newpedalpitch = lowestActive - 12;
+				if(newpedalpitch >= 0) {
+					if(newpedalpitch != prevPedalPitch) {
+						if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+						harmonyNoteOn(newpedalpitch);
+						prevPedalPitch = newpedalpitch;
+					}
+				} else {
+					if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+				}
+			} else {
+				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+				prevPedalPitch = 128;
+			}
+		} else {
+			if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
+			prevPedalPitch = 128;
+		}
+	}; // doubles the lowest active note an octave below
 	
 
 };

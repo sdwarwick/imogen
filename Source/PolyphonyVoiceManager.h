@@ -123,6 +123,29 @@ public:
 	};
 	
 	
+	int getLowestActiveNote() const {
+		if(areAllVoicesOff() == false) {
+			int lowestpitch = 128;
+			for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
+				if(harmonyPitches[i] > -1) {
+					const int testingpitch = harmonyPitches[i];
+					if(testingpitch < lowestpitch) {
+						lowestpitch = testingpitch;
+					}
+				}
+			}
+			if(lowestpitch < 128)
+			{
+				return lowestpitch;
+			} else {
+				return -1;
+			}
+		} else {
+			return -1;
+		}
+	};
+	
+	
 private:
 	int harmonyPitches[NUMBER_OF_VOICES];
 	

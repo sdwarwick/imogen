@@ -101,6 +101,10 @@ private:
 		float prevPitchBendUp;
 		float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
 		float prevPitchBendDown;
+		float* pedalPitchToggleListener = (float*)(tree.getRawParameterValue("pedalPitchToggle"));
+		bool pedalPitchToggle;
+		float* pedalPitchThreshListener = (float*)(tree.getRawParameterValue("pedalPitchThresh"));
+		int pedalPitchThresh;
 		float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
 		float inputGainMultiplier;
 		float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));

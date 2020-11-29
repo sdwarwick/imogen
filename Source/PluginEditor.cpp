@@ -132,6 +132,26 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			pitchBendDown.setSelectedId(2);
 		}
 		
+		// MIDI PEDAL PITCH settings
+		{
+			// toggle on/off
+			{
+				pedalPitch.setButtonText("Pedal pitch on/off");
+				addAndMakeVisible(&pedalPitch);
+				pedalPitchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitch);
+				pedalPitch.setToggleState(false, true);
+			}
+			// threshold
+			{
+				pedalPitchThresh.setSliderStyle(Slider::SliderStyle::LinearVertical);
+				pedalPitchThresh.setRange(0, 127);
+				pedalPitchThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+				addAndMakeVisible(&pedalPitchThresh);
+				pedalPitchThreshLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThresh);
+				pedalPitchThresh.setValue(127);
+			}
+		}
+		
 		// input gain
 		{
 			inputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);

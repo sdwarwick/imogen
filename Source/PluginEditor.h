@@ -64,6 +64,14 @@ private:
 	ComboBox pitchBendDown;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendDownLink;
 	
+	// MIDI PEDAL PITCH: doubles the lowest played pitch an octave lower, if lowest active pitch is below a certain threshold
+	// toggle on/off
+	ToggleButton pedalPitch;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> pedalPitchLink;
+	// set the highest pitch that will be doubled @ 8vb
+	Slider pedalPitchThresh;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> pedalPitchThreshLink;
+	
 	// modulator input gain (gain applied before mod signal is sent into harmony algorithm
 	Slider inputGain;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputGainLink;

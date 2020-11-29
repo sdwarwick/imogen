@@ -24,6 +24,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		lowestPannedNote(0),
 		prevVelocitySens(100.0f),
 		prevPitchBendUp(2.0f), prevPitchBendDown(2.0f),
+		pedalPitchToggle(false),
+		pedalPitchThresh(127),
 		latchIsOn(false), previousLatch(false),
 		stealingIsOn(true),
 		analysisShift(100), analysisShiftHalved(50), analysisLimit(461),
@@ -79,6 +81,8 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", NormalisableRange<float> (0.0, 100.0), 100));
 	params.push_back(std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2));
 	params.push_back(std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2));
+	params.push_back(std::make_unique<AudioParameterBool>("pedalPitchToggle", "Pedal pitch on/off", false));
+	params.push_back(std::make_unique<AudioParameterInt>("pedalPitchThresh", "Pedal pitch threshold", 0, 127, 127));
 	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f), 0.0f));
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0f));
 	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch on/off", false));
@@ -239,6 +243,12 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		}
 	}
 	
+	// MIDI pedal pitch
+	{
+		pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
+		pedalPitchThresh = round(*pedalPitchThreshListener);
+	}
+	
 	// master dry/wet
 	{
 		if(*masterDryWetListener != previousMasterDryWet) {
@@ -324,7 +334,9 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		midiProcessor.updateStereoWidth(stereoWidthListener);
 	}
 	lowestPannedNote = round(*lowestPanListener);
-	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote);
+	pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
+	pedalPitchThresh = round(*pedalPitchThreshListener);
+	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote, pedalPitchToggle, pedalPitchThresh);
 	
 	int inpt = *inputChannelListener;
 	if (inpt > buffer.getNumChannels()) {
