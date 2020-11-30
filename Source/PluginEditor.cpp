@@ -7,6 +7,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     setSize (400, 300);
 	
 	currentPitches.ensureStorageAllocated(NUMBER_OF_VOICES);
+	currentPitches.clearQuick();
 	
 	addAndMakeVisible(&midiPanel);
 	
@@ -21,7 +22,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			dryPan.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			dryPan.setRange(0, 127);
 			dryPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			addAndMakeVisible(&dryPan);
+		//	addAndMakeVisible(&dryPan);
 			dryPanLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan);
 			dryPan.setValue(64);
 		}
@@ -31,7 +32,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			masterDryWet.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			masterDryWet.setRange(0, 100);
 			masterDryWet.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			addAndMakeVisible(&masterDryWet);
+		//	addAndMakeVisible(&masterDryWet);
 			masterDryWetLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "masterDryWet", masterDryWet);
 			masterDryWet.setValue(100);
 		}
@@ -41,7 +42,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			inputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
 			inputGain.setRange(-60.0f, 0.0f);
 			inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			addAndMakeVisible(&inputGain);
+		//	addAndMakeVisible(&inputGain);
 			inputGainLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain);
 			inputGain.setValue(0.0f);
 		}
@@ -51,7 +52,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			outputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
 			outputGain.setRange(-60.0f, 0.0f);
 			outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			addAndMakeVisible(&outputGain);
+		//	addAndMakeVisible(&outputGain);
 			outputGainLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain);
 			outputGain.setValue(-4.0f);
 		}
@@ -61,7 +62,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 			inputChannel.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
 			inputChannel.setRange(0, 99);
 			inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			addAndMakeVisible(&inputChannel);
+		//	addAndMakeVisible(&inputChannel);
 			inputChannelLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel);
 			inputChannel.setValue(0);
 		}
@@ -73,7 +74,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 				limiterThresh.setSliderStyle(Slider::SliderStyle::LinearVertical);
 				limiterThresh.setRange(-60.0f, 0.0f);
 				limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-				addAndMakeVisible(&limiterThresh);
+		//		addAndMakeVisible(&limiterThresh);
 				limiterThreshLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh);
 				limiterThresh.setValue(-2.0f);
 			}
@@ -82,14 +83,14 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 				limiterRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 				limiterRelease.setRange(1, 250);
 				limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-				addAndMakeVisible(&limiterRelease);
+			//	addAndMakeVisible(&limiterRelease);
 				limiterReleaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease);
 				limiterRelease.setValue(10);
 			}
 			// toggle on/off
 			{
 				limiterToggle.setButtonText("Limiter on/off");
-				addAndMakeVisible(&limiterToggle);
+		//		addAndMakeVisible(&limiterToggle);
 				limiterToggleLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle);
 				limiterToggle.setToggleState(true, true);
 			}
@@ -116,14 +117,14 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 void ImogenAudioProcessorEditor::resized()
 {
 	
-	dryPan.setBounds(10, 100, 75, 75);
+//	dryPan.setBounds(10, 100, 75, 75);
 	
-	inputGain.setBounds(170, 100, 50, 150);
-	outputGain.setBounds(250, 100, 50, 150);
+//	inputGain.setBounds(170, 100, 50, 150);
+//	outputGain.setBounds(250, 100, 50, 150);
 	
-	inputChannel.setBounds(190, 250, 75, 35);
+//	inputChannel.setBounds(190, 250, 75, 35);
 	
-	//midiPanel.setBounds();
+	midiPanel.setBounds(0, 0, 350, 500);
 	
 }
 
