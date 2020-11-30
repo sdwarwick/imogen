@@ -168,14 +168,13 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			}
 			
 			pitchTracker.checkBufferSize(lastBlockSize);
-			if(wetBuffer.getNumSamples() != lastBlockSize || wetBuffer.hasBeenCleared()) {
+			if(wetBuffer.getNumSamples() != lastBlockSize) {
 				wetBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, false, true);
 			}
 			
-			const int numSeconds = 1;
-			const int drybuffersize = sampleRate * samplesPerBlock * numSeconds; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
-			if(dryBuffer.getNumSamples() != drybuffersize || dryBuffer.hasBeenCleared()) {
-				dryBuffer.setSize(NUMBER_OF_CHANNELS, drybuffersize, true, true, true);
+		//	const int drybuffersize = sampleRate * samplesPerBlock; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
+			if(dryBuffer.getNumSamples() != lastBlockSize) {
+				dryBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, true, true);
 			}
 			
 		}
@@ -217,13 +216,15 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			midiProcessor.updateStereoWidth(stereoWidthListener);
 			previousStereoWidth = *stereoWidthListener;
 		}
-		lowestPannedNote = round(*lowestPanListener);
+		const float lowestpannotelistener = *lowestPanListener;
+		lowestPannedNote = round(lowestpannotelistener);
 	}
 	
 	// dry vox pan
 	{
 		if(*dryVoxPanListener != previousmidipan) {
-			const float panR = (*dryVoxPanListener)/127.0f;
+			const int dryvoxpanning = *dryVoxPanListener;
+			const float panR = dryvoxpanning/127.0f;
 			const float panL = 1.0f - panR;
 			dryvoxpanningmults[0] = panL;
 			dryvoxpanningmults[1] = panR;
@@ -246,13 +247,14 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	// MIDI pedal pitch
 	{
 		pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
-		pedalPitchThresh = round(*pedalPitchThreshListener);
+		pedalPitchThresh = *pedalPitchThreshListener;
 	}
 	
 	// master dry/wet
 	{
 		if(*masterDryWetListener != previousMasterDryWet) {
-			wetMultiplier = (*masterDryWetListener)/100.0f;
+			const float masterdrywetval = *masterDryWetListener;
+			wetMultiplier = masterdrywetval/100.0f;
 			dryMultiplier = 1.0f - wetMultiplier;
 			previousMasterDryWet = *masterDryWetListener;
 		}
@@ -261,8 +263,10 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	// input & output gain
 	{
 		if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
-			inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
-			outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
+			const float inputgainval = *inputGainListener;
+			inputGainMultiplier = Decibels::decibelsToGain(inputgainval);
+			const float outputgainval = *outputGainListener;
+			outputGainMultiplier = Decibels::decibelsToGain(outputgainval);
 		}
 		prevideb = *inputGainListener;
 		prevodeb = *outputGainListener;
@@ -282,8 +286,10 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	spec.maximumBlockSize = MAX_BUFFERSIZE;
 	spec.numChannels = 2;
 	limiter.prepare(spec);
-	limiter.setThreshold(*limiterThreshListener);
-	limiter.setRelease(*limiterReleaseListener);
+	const float newlimiterthreshold = *limiterThreshListener;
+	limiter.setThreshold(newlimiterthreshold);
+	const float newlimiterrelease = *limiterReleaseListener;
+	limiter.setRelease(newlimiterrelease);
 	limiterIsOn = *limiterToggleListener > 0.5f;
 	
 }
@@ -348,17 +354,17 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	// int numElapsedLoops = 0;
 	while (samplesLeft > 0)
 	{
-		// const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
+		const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
 		
 		// slice input buffer into frames of length MAX_BUFFERSIZE or smaller
-		int samps;
-		if(samplesLeft >= MAX_BUFFERSIZE) {
-			samps = MAX_BUFFERSIZE;
-		}
-		else {
-			samps = samplesLeft;
-		}
-		const int numSamples = samps; // number of samples in this frame / slice
+//		int samps;
+//		if(samplesLeft >= MAX_BUFFERSIZE) {
+//			samps = MAX_BUFFERSIZE;
+//		}
+//		else {
+//			samps = samplesLeft;
+//		}
+//		const int numSamples = samps; // number of samples in this frame / slice
 		
 		AudioBuffer<float> proxy (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
 		processBlockPrivate(proxy, numSamples, inputChannel);
@@ -524,10 +530,10 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
 	// output limiter
-	if(limiterIsOn) {
-		dsp::AudioBlock<float> limiterBlock (buffer);
-		limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
-	}
+//	if(limiterIsOn) {
+//		dsp::AudioBlock<float> limiterBlock (buffer);
+//		limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
+//	}
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	

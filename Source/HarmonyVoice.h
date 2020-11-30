@@ -36,6 +36,7 @@ public:
 		adsrParams.sustain = 0.8;
 		adsrParams.release = 15;
 		adsrEnv.setParameters(adsrParams);
+		adsrEnv.setSampleRate(44100);
 	};
 	
 	
