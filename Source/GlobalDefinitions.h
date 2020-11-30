@@ -13,18 +13,22 @@
 #pragma once
 
 
-// the number of instances of the harmony algorithm running concurrently
 #define NUMBER_OF_VOICES 12
+// the number of instances of the harmony algorithm running concurrently
 
 
-// an arbitrary maximum size, in samples, for the input audio buffer. If an audio vector is recieved from the host that is larger than this size, it will be sliced into a series of smaller vectors that are MAX_BUFFERSIZE or smaller.
 #define MAX_BUFFERSIZE 1024
+// an arbitrary maximum size, in samples, for the input audio buffer. If an audio vector is recieved from the host that is larger than this size, it will be sliced into a series of smaller vectors that are MAX_BUFFERSIZE or smaller.
 
 
-// the framerate, in ms, of the graphics processing
 #define FRAMERATE 60
+// the framerate, in ms, of the graphics processing
 
 
 #define NUMBER_OF_CHANNELS 2
 // as of now, Imogen is set up to output a stereo signal to channels 0 and 1.
+
+
+#define CONCERT_PITCH_HZ 440.0f
+// the pitch, in Hz, that Midi note 69 (the A above middle C) will be tuned to. Change this to essentially detune the entire Harmonizer.
 
