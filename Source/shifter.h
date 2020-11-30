@@ -56,11 +56,11 @@ public:
 	 
 	 				: "fuzzy" ESOLA in MATLAB by Tim Roberts : http://www.github.com/zygurt/TSM/blob/master/Batch/FESOLA_batch.m
 	 ==============================================================================================================================================*/
-	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> epochLocations, const float inputFreq, const float desiredFreq, AudioBuffer<float>& outputBuffer, const int numOfEpochsPerFrame) {
+	void esola(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, Array<int> epochLocations, AudioBuffer<float>& outputBuffer, const int numOfEpochsPerFrame, const float scalingFactor) {
 		
 		int targetLength = 0;
 		int highestIndexWrittenTo = -1;
-		const float scalingFactor = 1.0f / (1.0f + ((inputFreq - desiredFreq)/desiredFreq)); 
+		
 		int lastEpochIndex = epochLocations.getUnchecked(0);
 		const int numOfEpochs = epochLocations.size();
 		

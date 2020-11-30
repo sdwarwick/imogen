@@ -3,6 +3,8 @@
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
 #include "PluginProcessor.h"
+#include "StaffDisplay.h"
+#include "MidiControlPanel.h"
 
 
 //==============================================================================

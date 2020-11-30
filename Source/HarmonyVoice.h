@@ -115,8 +115,10 @@ public:
 		
 			checkBufferSizes(numSamples);
 			
+			const float scalingFactor = 1.0f / (1.0f + ((modInputFreq - desiredFrequency)/desiredFrequency));
+			
 			// this function puts resynthesized shifted samples into the mono shiftedBuffer
-			pitchShifter.esola(inputBuffer, inputChannel, numSamples, epochLocations, modInputFreq, desiredFrequency, shiftedBuffer, numOfEpochsPerFrame);
+			pitchShifter.esola(inputBuffer, inputChannel, numSamples, epochLocations, shiftedBuffer, numOfEpochsPerFrame, scalingFactor);
 			
 			shiftedBuffer.applyGain(0, 0, numSamples, amplitudeMultiplier); // apply MIDI velocity multiplier
 			
