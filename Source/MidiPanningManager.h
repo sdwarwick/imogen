@@ -29,6 +29,7 @@ public:
 			panValsInAssigningOrder[i] = 64;
 		}
 		newPanValAbsDist.ensureStorageAllocated(NUMBER_OF_VOICES);
+		newPanValAbsDist.clearQuick();
 		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
 		availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES);
 		
@@ -65,18 +66,21 @@ public:
 	
 	
 	int getNextPanVal() {
-		if(availablePanValIndexes.isEmpty() == false) {
+		if(availablePanValIndexes.isEmpty() == false)
+		{
 			lastsentoverflow = 0;
 			availablePanValIndexes.sort();
 			const int indexReadingFrom = availablePanValIndexes.getUnchecked(0);
 			availablePanValIndexes.remove(0);
 			return panValsInAssigningOrder[indexReadingFrom];
-		} else {
-			return panValsInAssigningOrder[lastsentoverflow];
+		}
+		else
+		{
+			const int returnpan = panValsInAssigningOrder[lastsentoverflow];
 			++lastsentoverflow;
+			return returnpan;
 		}
 	};
-	
 	
 	
 	void turnedoffPanVal(const int newAvailPanVal)
@@ -89,7 +93,7 @@ public:
 			}
 		}
 		
-		if(newindex >= 0) {
+		if(newindex > -1) {
 			availablePanValIndexes.add(newindex);
 			availablePanValIndexes.sort();
 		}
@@ -105,27 +109,26 @@ public:
 	};
 	
 	
-	int retrievePanVal(const int index) const {
-		return panValsInAssigningOrder[index];
-	};
-	
-	
 	int getClosestNewPanVal(const int prevPan)
 	{
+		// find the value in list of new pan values whose absolute value of its distance from the voice's old pan val is the smallest
 		newPanValAbsDist.clearQuick();
 		for(int i = 0; i < newPanValsLeft.size(); ++i) {
 			const int distance = prevPan - newPanValsLeft.getUnchecked(i);
 			newPanValAbsDist.add(abs(distance));
 		}
+		
 		int min = newPanValAbsDist.getUnchecked(0);
 		for(int i = 1; i < newPanValAbsDist.size(); ++i) {
 			if(newPanValAbsDist.getUnchecked(i) < min) {
 				min = newPanValAbsDist.getUnchecked(i);
 			}
 		}
+		
 		const int newpanindex = newPanValAbsDist.indexOf(min);
 		const int newpan = newPanValsLeft.getUnchecked(newpanindex);
 		newPanValsLeft.remove(newpanindex);
+		availablePanValIndexes.remove(availablePanValIndexes.indexOf(newpan));
 		return newpan;
 	};
 	
@@ -179,4 +182,5 @@ private:
 			++i;
 		}
 	};
+	
 };

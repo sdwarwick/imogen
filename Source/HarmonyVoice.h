@@ -24,7 +24,7 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int voiceNum): voiceIsOn(false), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f)
+	HarmonyVoice(const int voiceNum): voiceIsOn(false), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), lastRecievedVelocity(0), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f), lastRecievedPitchbend(64)
 	{
 		shiftedBuffer.setSize(1, MAX_BUFFERSIZE);
 		harmonyBuffer.setSize(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE);
@@ -42,10 +42,12 @@ public:
 	void startNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend)
 	{
 		lastNoteRecieved = midiPitch;
+		lastRecievedVelocity = velocity;
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
 		adsrEnv.noteOn();
+		lastRecievedPitchbend = lastPitchBend;
 	};
 	
 	
@@ -57,12 +59,14 @@ public:
 	
 	void changeNote (const int midiPitch, const int velocity, const int midiPan, const int lastPitchBend) {  // run this function to change the assigned midi pitch without retriggering the ADSR
 		lastNoteRecieved = midiPitch;
+		lastRecievedVelocity = velocity;
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
 		if(adsrEnv.isActive() == false) {
 			adsrEnv.noteOn();
 		}
+		lastRecievedPitchbend = lastPitchBend;
 	};
 	
 	
@@ -81,7 +85,6 @@ public:
 		adsrEnv.setParameters(adsrParams);
 	};
 	
-	
 	void midiVelocitySensitivityListener(float* midiVelocitySensListener)
 	{
 		midiVelocitySensitivity = *midiVelocitySensListener / 100.0f;
@@ -91,6 +94,7 @@ public:
 	void pitchBendSettingsListener(float* rangeUp, float* rangeDown) {
 		pitchBendRangeUp = *rangeUp;
 		pitchBendRangeDown = *rangeDown;
+		pitchBend(lastRecievedPitchbend);
 	};
 	
 	
@@ -150,41 +154,44 @@ public:
 		} else if (pitchBend == 64) {
 			desiredFrequency = mtof(lastNoteRecieved);
 		}
+		lastRecievedPitchbend = pitchBend;
 	};
 	
-	int reportPan() {
+	
+	int reportPan() const {
 		return midiPan;
+	};
+	
+	int reportVelocity() const {
+		return lastRecievedVelocity;
 	};
 	
 	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1] - only use channel 0
 	AudioBuffer<float> harmonyBuffer; // this buffer stores the harmony voice's actual output. STEREO BUFFER [step 2]
 	
 	
-	ADSR adsrEnv;
-	ADSR::Parameters adsrParams;
-	int midiPan;
-	
 private:
 	
+	ADSR adsrEnv;
+	ADSR::Parameters adsrParams;
+	
+	int midiPan;
 	int pitchBendRangeUp;
 	int pitchBendRangeDown;
-	
 	const int thisVoiceNumber;
-	
 	int prevPan;
-	int panning;
 	float panningMultR;
 	float panningMultL;
 	float panningMultipliers[2];
-	
-	float midiVelocitySensitivity;  
-	
+	int lastRecievedVelocity;
+	float midiVelocitySensitivity;
 	float desiredFrequency;
 	int lastNoteRecieved;
-	
 	float amplitudeMultiplier;
+	int lastRecievedPitchbend;
 	
 	Shifter pitchShifter;
+	
 	
 	void calculatePanningChannelMultipliers(const int midipanning) {
 		panningMultR = midipanning / 127.0;
@@ -217,10 +224,10 @@ private:
 	
 	
 	void checkBufferSizes(const int newNumSamples) {
-		if(shiftedBuffer.getNumSamples() != newNumSamples || shiftedBuffer.hasBeenCleared()) {
+		if(shiftedBuffer.getNumSamples() != newNumSamples) {
 			shiftedBuffer.setSize(1, newNumSamples, false, false, true);
 		}
-		if(harmonyBuffer.getNumSamples() != newNumSamples || harmonyBuffer.hasBeenCleared()) {
+		if(harmonyBuffer.getNumSamples() != newNumSamples) {
 			harmonyBuffer.setSize(NUMBER_OF_CHANNELS, newNumSamples, false, false, true);
 		}
 	};

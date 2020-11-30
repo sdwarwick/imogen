@@ -28,7 +28,9 @@ public:
 		synthesis.setSize(1, MAX_BUFFERSIZE);
 		synthesis.clear();
 		finalWindow.ensureStorageAllocated(MAX_BUFFERSIZE);
+		finalWindow.clearQuick();
 		window.ensureStorageAllocated(MAX_BUFFERSIZE); // the actual windows between frames of epochs will be smaller, but this is just for safety
+		window.clearQuick();
 	};
 	
 	
@@ -62,7 +64,7 @@ public:
 		int lastEpochIndex = epochLocations.getUnchecked(0);
 		const int numOfEpochs = epochLocations.size();
 		
-		if(synthesis.getNumSamples() != numSamples || synthesis.hasBeenCleared()) {
+		if(synthesis.getNumSamples() != numSamples) {
 			synthesis.setSize(1, numSamples, false, false, true);
 		}
 		finalWindow.clearQuick();
@@ -319,9 +321,7 @@ private:
 	
 	// calculates values for a variable-size Hanning window
 	void calcWindow(const int length, Array<float>& window) {
-		
-	//	if(window.size() != length) { window.resize(length); }
-		
+		window.clearQuick();
 		for(int i = 0; i < length; ++i)
 		{
 			window.add(0.5 - (0.5 * ncos(2, i, length)));

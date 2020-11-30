@@ -117,14 +117,6 @@ private:
 		
 		const float* reading = inputBuffer.getReadPointer(inputChan);
 		
-	//	FloatFFT* fft; // an FFT object to quickly calculate the difference function
-	//	fft = new FloatFFT(inputBufferLength);
-		
-//		dsp::Complex<float> fftBufferInput (fftSize);
-//		dsp::Complex<float> fftBufferOutput (fftSize);
-		
-		// 2^fftOrder = doubleInputLength
-		// fftOrder = log(2, doubleInputLength)
 		const int fftOrder = log2(inputBufferLength);
 		
 		dsp::FFT fft(fftOrder);
@@ -137,38 +129,39 @@ private:
 		dsp::Complex<float> yinStyleACFout[inputBufferLength];
 		
 		// POWER TERM CALCULATION
-		powerTerms.clearQuick();
-		powerTerms.add(0.0f);
-		for(int j = 0; j < yinBufferSize; ++j) { // first, calculate the first power term value...
-			powerTerms.set(0, powerTerms.getUnchecked(0) + reading[j] * reading[j]);
-		}
-		// ... then iteratively calculate all others
-		for(int i = 1; i < yinBufferSize; ++i) {
-		//	powerTerms[i] = powerTerms[i - 1] - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize];
-			powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize]);
+		{
+			powerTerms.clearQuick();
+			for(int j = 0; j < yinBufferSize; ++j) { // first, calculate the first power term value...
+				powerTerms.add(reading[j] * reading[j]);
+			}
+			// ... then iteratively calculate all others
+			for(int i = 1; i < yinBufferSize; ++i) {
+				powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize]);
+			}
 		}
 		
 		// YIN-STYLE AUTOCORRELATION VIA FFT
-		// 1. data
-		for(int j = 0; j < inputBuffer.getNumSamples(); ++j) {
-			fftBufferIn[j] = { reading[j], 0 };
-			fftBufferIn[j + inputBufferLength] = { 0, 0 };
-		}
-		fft.perform(fftBufferIn, fftBufferOut, false);
-		
-		// 2. half of the data, disguised as a convolution kernel
-		for(int j = 0; j < yinBufferSize; ++j) {
-			kernelIn[j] = { reading[(yinBufferSize-1)-j], 0 };
-		}
-		fft.perform(kernelIn, kernelOut, false);
-		
-		// 3. convolution via complex multiplication
-		for (int j = 0; j < inputBufferLength; ++j) {
+		{
+			// 1. data
+			for(int j = 0; j < inputBufferLength; ++j) {
+				fftBufferIn[j] = { reading[j], 0 };
+			}
+			fft.perform(fftBufferIn, fftBufferOut, false);
 			
-			yinStyleACFin[j] = { fftBufferOut[j].real() * kernelOut[j].real() - fftBufferOut[j+1].real() * kernelOut[j+1].real(), fftBufferOut[j].imag() * kernelOut[j].imag() + fftBufferOut[j+1].imag() * kernelOut[j+1].imag() };
+			// 2. half of the data, disguised as a convolution kernel
+			for(int j = 0; j < yinBufferSize; ++j) {
+				kernelIn[j] = { reading[(yinBufferSize-1)-j], 0 };
+			}
+			fft.perform(kernelIn, kernelOut, false);
 			
+			// 3. convolution via complex multiplication
+			for (int j = 0; j < inputBufferLength; ++j) {
+				
+				yinStyleACFin[j] = { fftBufferOut[j].real() * kernelOut[j].real() - fftBufferOut[j+1].real() * kernelOut[j+1].real(), fftBufferOut[j].imag() * kernelOut[j].imag() + fftBufferOut[j+1].imag() * kernelOut[j+1].imag() };
+				
+			}
+			fft.perform(yinStyleACFin, yinStyleACFout, true);
 		}
-		fft.perform(yinStyleACFin, yinStyleACFout, true);
 		
 		// CALCULATION OF DIFFERENCE FUNCTION
 		float* w = yinBuffer.getWritePointer(0);
@@ -179,14 +172,14 @@ private:
 	};
 	
 	
-	/*
-	 CUMULATIVE MEAN NORMALIZED DIFFERENCE FUNCTION
-	 @brief implements the cumulative mean normalized difference function described in step 3 of the YIN paper
-	 @code
-	 	yinBuffer[0] == yinBuffer[1] == 1;
-	 @endcode
-	 */
 	void cumulativeMeanNormalizedDifference() const {
+		/*
+		 CUMULATIVE MEAN NORMALIZED DIFFERENCE FUNCTION
+		 @brief implements the cumulative mean normalized difference function described in step 3 of the YIN paper
+		 @code
+		 yinBuffer[0] == yinBuffer[1] == 1;
+		 @endcode
+		 */
 		int tau;
 		float* w = yinBuffer.getWritePointer(0);
 		const float* r = yinBuffer.getReadPointer(0);
@@ -199,13 +192,12 @@ private:
 	};
 	
 	
-	/*
-	 ABSOLUTE THRESHOLD
-	 @brief implements step 4 of the YIN paper, an absolute threshold
-	 @return 	tau value
-	 */
 	int absoluteThreshold() {
-		// implements step 4 of the YIN paper
+		/*
+		 ABSOLUTE THRESHOLD
+		 @brief implements step 4 of the YIN paper, an absolute threshold
+		 @return 	tau value
+		 */
 		int tau;
 		float probabilityEstimate;
 		const float* read = yinBuffer.getReadPointer(0);
@@ -233,13 +225,14 @@ private:
 	};
 	
 	
+	
+	float parabolicInterpolation(int tauEstimate) const {
 	/*
 	 PARABOLIC INTERPOLATION
 	 @brief implements step 5 of the YIN paper, parabolic interpolation. This step refines the estimated tau value. This is needed to detect higher frequencies more precisely.
 	 @param 	tauEstimate		the estimated tau value returned from absoluteThreshold()
 	 @return	a more precise tau value, parabolically interpolated with local minima of d'(tau)
 	 */
-	float parabolicInterpolation(int tauEstimate) const {
 		float betterTau;
 		int x0;
 		int x2;

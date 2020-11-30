@@ -113,7 +113,7 @@ public:
 		
 		for (int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
-			if(harmonyPitches[i] != -1) {
+			if(harmonyPitches[i] > -1) {
 				allareoff = false;
 				break;
 			}
@@ -124,7 +124,8 @@ public:
 	
 	
 	int getLowestActiveNote() const {
-		if(areAllVoicesOff() == false) {
+		if(areAllVoicesOff() == false)
+		{
 			int lowestpitch = 128;
 			for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				if(harmonyPitches[i] > -1) {
@@ -134,14 +135,17 @@ public:
 					}
 				}
 			}
+			
 			if(lowestpitch < 128)
 			{
 				return lowestpitch;
 			} else {
-				return -1;
+				return -1; // some error encountered - no lowest note found
 			}
-		} else {
-			return -1;
+			
+		}
+		else {
+			return -1; // no notes are active
 		}
 	};
 	

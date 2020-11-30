@@ -14,17 +14,14 @@
 
 #include "GlobalDefinitions.h"
 
-#ifndef MAX_NUMEPOCHS
-#define MAX_NUMEPOCHS 1024
-#endif
-
 
 class EpochExtractor {
 	
 public:
 	
 	EpochExtractor() {
-		epochs.ensureStorageAllocated(MAX_NUMEPOCHS);
+		epochs.ensureStorageAllocated(MAX_BUFFERSIZE);
+		epochs.clearQuick();
 		y.reserve(MAX_BUFFERSIZE);
 		y2.reserve(MAX_BUFFERSIZE);
 		y3.reserve(MAX_BUFFERSIZE);
@@ -121,7 +118,7 @@ public:
 	
 	
 	
-	/*
+	/* USED FOR PSOLA
 	 	locates sample indices of pitch peak locations in input audio vector. the output array is designed to be fed into the psola() function within { PSOLA -> "shifter.h" }
 	 
 	 	@TODO	complete implementation of computePeriodsPerSequence() with FFT nonsense & etc...
@@ -183,6 +180,7 @@ private:
 	std::vector<float> y3;
 	
 	
+	//used for psola
 	Array<int> computePeriodsPerSequence(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const int sequenceLength, const int minPeriod, const int maxPeriod) {
 		// computes periodicity of time domain signal using autocorrelation . helper function for findPeaks()
 		
@@ -207,7 +205,7 @@ private:
 	
 	
 	// finds max value in an array
-	float maxVal(Array<float>& input) {
+	float maxVal(Array<float>& input) const {
 		
 		float currentMax = 0.0f;
 		

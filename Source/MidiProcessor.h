@@ -35,9 +35,10 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitch(128)
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitchOnOff(false), prevPedalPitch(128)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
+		activePitches.clearQuick();
 	};
 	
 	
@@ -64,18 +65,18 @@ public:
 					processActiveLatch(currentMessage);
 				}
 			}
-			else
+		
+			if(currentMessage.isPitchWheel())
 			{
-				if(currentMessage.isPitchWheel())
-				{
-					const int pitchBend = currentMessage.getPitchWheelValue();
-					for(int i = 0; i < NUMBER_OF_VOICES; ++i) { harmonyEngine[i]->pitchBend(pitchBend); }
-					lastRecievedPitchBend = pitchBend;
-				} else {
-					// non-note events go to here...
-					// sustain pedal, aftertouch, key pressure, etc...
-				}
+				const int pitchBend = currentMessage.getPitchWheelValue();
+				for(int i = 0; i < NUMBER_OF_VOICES; ++i) { harmonyEngine[i]->pitchBend(pitchBend); }
+				lastRecievedPitchBend = pitchBend;
 			}
+			else {
+				// non-note events go to here...
+				// sustain pedal, aftertouch, key pressure, etc...
+			}
+			
 			
 			if (currentMessage.isAllNotesOff() || currentMessage.isAllSoundOff()) { killAll(); }
 		}
@@ -84,7 +85,7 @@ public:
 			pedalPitch(pedalPitchThresh); // doubles the lowest active note an octave below
 		} else {
 			if(prevPedalPitchOnOff) {
-				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
+				if(prevPedalPitch < 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 			}
 		}
 		prevPedalPitchOnOff = isPedalPitchOn;
@@ -121,7 +122,7 @@ public:
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
 			const int returnedVal = latchManager.noteAtIndex(i);
-			if(returnedVal != -1) { harmonyNoteOff(returnedVal); }
+			if(returnedVal > -1) { harmonyNoteOff(returnedVal); }
 		}
 		latchManager.clear();
 	};
@@ -134,7 +135,7 @@ public:
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
 			const int testpitch = polyphonyManager.pitchAtIndex(i);
-			if(testpitch != -1) {
+			if(testpitch > -1) {
 				activePitches.add(testpitch);
 			}
 		}
@@ -152,6 +153,7 @@ public:
 	
 	
 private:
+	
 	OwnedArray<HarmonyVoice>& harmonyEngine;
 	
 	PolyphonyVoiceManager polyphonyManager;
@@ -162,8 +164,8 @@ private:
 	int lastRecievedPitchBend;
 	Array<int> activePitches;
 	bool isStealingOn;
-	bool prevPedalPitchOnOff;
 	int lowestPannedNote;
+	bool prevPedalPitchOnOff;
 	int prevPedalPitch;
 	
 	
@@ -183,14 +185,14 @@ private:
 			}
 			const int panval = panningvalue;
 		
-			if(newVoiceNumber > 0 && newVoiceNumber < NUMBER_OF_VOICES) {
+			if(newVoiceNumber > -1 && newVoiceNumber < NUMBER_OF_VOICES) {
 				polyphonyManager.updatePitchCollection(newVoiceNumber, newPitch);
 				stealingManager.addSentVoice(newVoiceNumber);
 				harmonyEngine[newVoiceNumber]->startNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
 			} else {
 				if (isStealingOn == true) {
 					const int voiceToSteal = stealingManager.voiceToSteal();
-					if(voiceToSteal > 0 && voiceToSteal < NUMBER_OF_VOICES) {
+					if(voiceToSteal > -1 && voiceToSteal < NUMBER_OF_VOICES) {
 						polyphonyManager.updatePitchCollection(voiceToSteal, newPitch);
 						stealingManager.addSentVoice(voiceToSteal);
 						harmonyEngine[voiceToSteal]->changeNote(newPitch, newVelocity, panval, lastRecievedPitchBend);
@@ -204,7 +206,7 @@ private:
 	// sends a note off out to the harmony engine
 	void harmonyNoteOff(const int pitch) {
 		const int voiceToTurnOff = polyphonyManager.getIndex(pitch);
-		if(voiceToTurnOff > 0 && voiceToTurnOff < NUMBER_OF_VOICES) {
+		if(voiceToTurnOff > -1 && voiceToTurnOff < NUMBER_OF_VOICES) {
 			polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
 			stealingManager.removeSentVoice(voiceToTurnOff);
 			midiPanningManager.turnedoffPanVal(harmonyEngine[voiceToTurnOff]->reportPan());
@@ -237,21 +239,22 @@ private:
 				const int newpedalpitch = lowestActive - 12;
 				if(newpedalpitch >= 0) {
 					if(newpedalpitch != prevPedalPitch) {
-						if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); }
-						auto newNoteOn = juce::MidiMessage::noteOn(1, newpedalpitch, (juce::uint8) 127);
+						if(prevPedalPitch < 128) { harmonyNoteOff(prevPedalPitch); }
+						const int newvelocity = harmonyEngine[polyphonyManager.getIndex(lowestActive)]->reportVelocity();
+						auto newNoteOn = juce::MidiMessage::noteOn(1, newpedalpitch, (juce::uint8)newvelocity);
 						harmonyNoteOn(newNoteOn);
 						prevPedalPitch = newpedalpitch;
+					} else {
+						// same pedal pitch retriggered !
 					}
 				} else {
-					if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
+					if(prevPedalPitch < 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 				}
 			} else {
-				if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
-				prevPedalPitch = 128;
+				if(prevPedalPitch < 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 			}
 		} else {
-			if(prevPedalPitch != 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
-			prevPedalPitch = 128;
+			if(prevPedalPitch < 128) { harmonyNoteOff(prevPedalPitch); prevPedalPitch = 128; }
 		}
 	}; // doubles the lowest active note an octave below
 	

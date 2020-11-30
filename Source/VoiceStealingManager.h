@@ -27,7 +27,7 @@ public:
 	
 	
 	void addSentVoice(const int sentVoiceNum) {
-		if(sentVoiceNumbers.contains(sentVoiceNum) != true) {
+		if(sentVoiceNumbers.contains(sentVoiceNum) == false) {
 			sentVoiceNumbers.add(sentVoiceNum);
 		}
 	};
@@ -42,8 +42,9 @@ public:
 	int voiceToSteal() {
 		// returns the first element in the list of sent voice #s, then removes that element from the list and moves all other elements up 1 index
 		if(sentVoiceNumbers.isEmpty() != true) {
-			return sentVoiceNumbers.getUnchecked(0);
+			const int stealingvoice = sentVoiceNumbers.getUnchecked(0);
 			sentVoiceNumbers.remove(0);
+			return stealingvoice;
 		} else {
 			return -1;
 		}
@@ -55,7 +56,7 @@ public:
 	};
 	
 	
+	
 private:
-
 	Array<int> sentVoiceNumbers;
 };

@@ -48,6 +48,10 @@
       <FILE id="zE12pr" name="StaffDisplay.cpp" compile="1" resource="0"
             file="Source/Graphics/StaffDisplay.cpp"/>
       <FILE id="qgg0VY" name="StaffDisplay.h" compile="0" resource="0" file="Source/Graphics/StaffDisplay.h"/>
+      <FILE id="CSuczt" name="MidiControlPanel.cpp" compile="1" resource="0"
+            file="Source/Graphics/MidiControlPanel.cpp"/>
+      <FILE id="pfhfAd" name="MidiControlPanel.h" compile="0" resource="0"
+            file="Source/Graphics/MidiControlPanel.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
