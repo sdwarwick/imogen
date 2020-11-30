@@ -24,13 +24,9 @@ class Shifter {
 	
 public:
 	
-	Shifter() {
-		synthesis.setSize(1, MAX_BUFFERSIZE);
-		synthesis.clear();
+	Shifter(): synthesis(1, MAX_BUFFERSIZE) {
 		finalWindow.ensureStorageAllocated(MAX_BUFFERSIZE);
-		finalWindow.clearQuick();
 		window.ensureStorageAllocated(MAX_BUFFERSIZE); // the actual windows between frames of epochs will be smaller, but this is just for safety
-		window.clearQuick();
 	};
 	
 	

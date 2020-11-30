@@ -24,10 +24,8 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int voiceNum): voiceIsOn(false), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), lastRecievedVelocity(0), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f), lastRecievedPitchbend(64)
+	HarmonyVoice(const int voiceNum): voiceIsOn(false), shiftedBuffer(1, MAX_BUFFERSIZE), harmonyBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), lastRecievedVelocity(0), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f), lastRecievedPitchbend(64)
 	{
-		shiftedBuffer.setSize(1, MAX_BUFFERSIZE);
-		harmonyBuffer.setSize(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE);
 		panningMultipliers[0] = 0.5f;
 		panningMultipliers[1] = 0.5f;
 		
@@ -228,10 +226,10 @@ private:
 	
 	void checkBufferSizes(const int newNumSamples) {
 		if(shiftedBuffer.getNumSamples() != newNumSamples) {
-			shiftedBuffer.setSize(1, newNumSamples, false, false, true);
+			shiftedBuffer.setSize(1, newNumSamples, false, true, true);
 		}
 		if(harmonyBuffer.getNumSamples() != newNumSamples) {
-			harmonyBuffer.setSize(NUMBER_OF_CHANNELS, newNumSamples, false, false, true);
+			harmonyBuffer.setSize(NUMBER_OF_CHANNELS, newNumSamples, false, true, true);
 		}
 	};
 	

@@ -81,41 +81,41 @@ private:
 	bool frameIsPitched;
 	
 	// variables for tracking GUI-changeable parameters
-		float* adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
-		float* adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
-		float* adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
-		float* adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
-		float* adsrOnOffListener = (float*)(tree.getRawParameterValue("adsrOnOff"));
+		float* adsrAttackListener;
+		float* adsrDecayListener;
+		float* adsrSustainListener;
+		float* adsrReleaseListener;
+		float* adsrOnOffListener;
 		bool adsrIsOn;
 		float prevAttack;
 		float prevDecay;
 		float prevSustain;
 		float prevRelease;
-		float* stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
+		float* stereoWidthListener;
 		float previousStereoWidth;
-		float* lowestPanListener = (float*)(tree.getRawParameterValue("lowestPan"));
+		float* lowestPanListener;
 		int lowestPannedNote;
-		float* midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
+		float* midiVelocitySensListener;
 		float prevVelocitySens;
-		float* pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
+		float* pitchBendUpListener;
 		float prevPitchBendUp;
-		float* pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
+		float* pitchBendDownListener;
 		float prevPitchBendDown;
-		float* pedalPitchToggleListener = (float*)(tree.getRawParameterValue("pedalPitchToggle"));
+		float* pedalPitchToggleListener;
 		bool pedalPitchToggle;
-		float* pedalPitchThreshListener = (float*)(tree.getRawParameterValue("pedalPitchThresh"));
+		float* pedalPitchThreshListener;
 		int pedalPitchThresh;
-		float* inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
+		float* inputGainListener;
 		float inputGainMultiplier;
-		float* outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
+		float* outputGainListener;
 		float outputGainMultiplier;
-		float* midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
+		float* midiLatchListener;
 		bool latchIsOn;
 		bool previousLatch;
-		float* voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
+		float* voiceStealingListener;
 		bool stealingIsOn;
 	
-		int* inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
+		int* inputChannelListener;
 	
 	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
 	
@@ -127,11 +127,11 @@ private:
 	EpochExtractor epochs;
 	
 	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples);
-	int* dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
+	int* dryVoxPanListener;
 	int previousmidipan;
 	int dryvoxpanningmults[2];
 	
-	int* masterDryWetListener = (int*)(tree.getRawParameterValue("masterdryWet"));
+	int* masterDryWetListener;
 	int previousMasterDryWet;
 	float dryMultiplier;
 	float wetMultiplier;
@@ -140,10 +140,10 @@ private:
 	float prevodeb;
 	
 	dsp::Limiter<float> limiter;
-	float* limiterThreshListener = (float*)(tree.getRawParameterValue("limiterThresh"));
-	int* limiterReleaseListener = (int*)(tree.getRawParameterValue("limiterRelease"));
+	float* limiterThreshListener;
+	int* limiterReleaseListener;
 	bool limiterIsOn;
-	float* limiterToggleListener = (float*)(tree.getRawParameterValue("limiterIsOn"));
+	float* limiterToggleListener;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();

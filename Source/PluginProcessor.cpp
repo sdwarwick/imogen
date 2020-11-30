@@ -34,6 +34,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		dryMultiplier(0.0f), wetMultiplier(1.0f),
 		prevideb(0.0f), prevodeb(0.0f),
 		limiterIsOn(true),
+		wetBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE),
+		dryBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE),
 		dryBufferWritePosition(0), dryBufferReadPosition(0)
 
 #endif
@@ -41,13 +43,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-		harmEngine.add(new HarmonyVoice(i));
+		HarmonyVoice* newvoice = new HarmonyVoice(i);
+		harmEngine.add(newvoice);
 	}
-	
-	wetBuffer.setSize(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE);
-	wetBuffer.clear();
-	dryBuffer.setSize(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE);
-	dryBuffer.clear();
 	
 	dryvoxpanningmults[0] = 64;
 	dryvoxpanningmults[1] = 64;
@@ -55,13 +53,33 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
 	
+	adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
+	adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
+	adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
+	adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
+	adsrOnOffListener = (float*)(tree.getRawParameterValue("adsrOnOff"));
+	stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
+	lowestPanListener = (float*)(tree.getRawParameterValue("lowestPan"));
+	midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
+	pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
+	pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
+	pedalPitchToggleListener = (float*)(tree.getRawParameterValue("pedalPitchToggle"));
+	pedalPitchThreshListener = (float*)(tree.getRawParameterValue("pedalPitchThresh"));
+	inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
+	outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
+	midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
+	voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
+	inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
+	dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
+	masterDryWetListener = (int*)(tree.getRawParameterValue("masterDryWet"));
+	limiterThreshListener = (float*)(tree.getRawParameterValue("limiterThresh"));
+	limiterReleaseListener = (int*)(tree.getRawParameterValue("limiterRelease"));
+	limiterToggleListener = (float*)(tree.getRawParameterValue("limiterIsOn"));
+	
+	epochLocations.ensureStorageAllocated(MAX_BUFFERSIZE);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
-	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-		delete harmEngine[i];
-	}
-	
 }
 
 
@@ -166,10 +184,9 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				harmEngine[i]->updateDSPsettings(lastSampleRate, lastBlockSize);
 			}
-			
 			pitchTracker.checkBufferSize(lastBlockSize);
 			if(wetBuffer.getNumSamples() != lastBlockSize) {
-				wetBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, false, true);
+				wetBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, true, true);
 			}
 			
 		//	const int drybuffersize = sampleRate * samplesPerBlock; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
@@ -184,7 +201,9 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// ADSR settings
 	{
-		adsrIsOn = *adsrOnOffListener > 0.5f;
+		//adsrIsOn = *adsrOnOffListener > 0.5f;
+		if(*adsrOnOffListener > 0.5f) { adsrIsOn = true; }
+		else { adsrIsOn = false; }
 		
 		if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
 		{
@@ -246,7 +265,9 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// MIDI pedal pitch
 	{
-		pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
+		//pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
+		if(*pedalPitchToggleListener > 0.5f) { pedalPitchToggle = true; }
+		else { pedalPitchToggle = false; }
 		pedalPitchThresh = *pedalPitchThreshListener;
 	}
 	
@@ -274,12 +295,17 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// MIDI latch
 	{
-		latchIsOn = *midiLatchListener > 0.5f;
+		//latchIsOn = *midiLatchListener > 0.5f;
+		if(*midiLatchListener > 0.5f) { latchIsOn = true; }
+		else { latchIsOn = false; }
 		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
 		previousLatch = latchIsOn;
 	}
 	
-	stealingIsOn = *voiceStealingListener > 0.5f; // voice stealing on/off
+	//stealingIsOn = *voiceStealingListener > 0.5f; // voice stealing on/off
+	if(*voiceStealingListener > 0.5f) { stealingIsOn = true; }
+	else { stealingIsOn = false; }
+	
 	
 	dsp::ProcessSpec spec;
 	spec.sampleRate = sampleRate;
@@ -290,7 +316,9 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	limiter.setThreshold(newlimiterthreshold);
 	const float newlimiterrelease = *limiterReleaseListener;
 	limiter.setRelease(newlimiterrelease);
-	limiterIsOn = *limiterToggleListener > 0.5f;
+	//limiterIsOn = *limiterToggleListener > 0.5f;
+	if(*limiterToggleListener > 0.5f) { limiterIsOn = true; }
+	else { limiterIsOn = false; }
 	
 }
 
@@ -340,7 +368,9 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		midiProcessor.updateStereoWidth(stereoWidthListener);
 	}
 	lowestPannedNote = round(*lowestPanListener);
-	pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
+	//pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
+	if(*pedalPitchToggleListener > 0.5f) { pedalPitchToggle = true; }
+	else { pedalPitchToggle = false; }
 	pedalPitchThresh = round(*pedalPitchThreshListener);
 	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote, pedalPitchToggle, pedalPitchThresh);
 	
@@ -348,23 +378,23 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	if (inpt > buffer.getNumChannels()) {
 		inpt = buffer.getNumChannels();
 	}
-	const int inputChannel = inpt - 1; // if the user enters "channel 1", that's actually channel 0 in an audioBuffer
+	const int inputChannel = inpt;
 	
 	int samplesLeft = buffer.getNumSamples();
 	// int numElapsedLoops = 0;
 	while (samplesLeft > 0)
 	{
-		const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
+		//const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
 		
 		// slice input buffer into frames of length MAX_BUFFERSIZE or smaller
-//		int samps;
-//		if(samplesLeft >= MAX_BUFFERSIZE) {
-//			samps = MAX_BUFFERSIZE;
-//		}
-//		else {
-//			samps = samplesLeft;
-//		}
-//		const int numSamples = samps; // number of samples in this frame / slice
+		int samps;
+		if(samplesLeft >= MAX_BUFFERSIZE) {
+			samps = MAX_BUFFERSIZE;
+		}
+		else {
+			samps = samplesLeft;
+		}
+		const int numSamples = samps; // number of samples in this frame / slice
 		
 		AudioBuffer<float> proxy (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
 		processBlockPrivate(proxy, numSamples, inputChannel);
@@ -442,17 +472,23 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		// MIDI latch
 		{
-			latchIsOn = *midiLatchListener > 0.5f;
+			//latchIsOn = *midiLatchListener > 0.5f;
+			if(*midiLatchListener > 0.5f) { latchIsOn = true; }
+			else { latchIsOn = false; }
 			if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
 		}
 		
 		// voice stealing
-		stealingIsOn = *voiceStealingListener > 0.5f;
+		//stealingIsOn = *voiceStealingListener > 0.5f;
+		if(*voiceStealingListener > 0.5f) { stealingIsOn = true; }
+		else { stealingIsOn = false; }
 		
 		// limiter settings
 		limiter.setThreshold(*limiterThreshListener);
 		limiter.setRelease(*limiterReleaseListener);
-		limiterIsOn = *limiterToggleListener > 0.5f;
+		//limiterIsOn = *limiterToggleListener > 0.5f;
+		if(*limiterToggleListener > 0.5f) { limiterIsOn = true; }
+		else { limiterIsOn = false; }
 	}
 	
 	

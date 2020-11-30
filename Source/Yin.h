@@ -33,9 +33,7 @@ class Yin
 {
 public:
 	
-	Yin(): yinBufferSize(round(MAX_BUFFERSIZE/2)), isPitched(false) {
-		yinBuffer.setSize(1, yinBufferSize); // yin buffer size is half the size of the input buffer in samples
-		yinBuffer.clear();
+	Yin(): yinBufferSize(round(MAX_BUFFERSIZE/2)), yinBuffer(1, yinBufferSize), isPitched(false) {
 		powerTerms.ensureStorageAllocated(yinBufferSize);
 		powerTerms.clearQuick();
 	};
@@ -98,10 +96,9 @@ public:
 	
 	
 private:
-	
+	int yinBufferSize; 			  // stores current size of yinBuffer
 	mutable AudioBuffer<float> yinBuffer; // stores the calculated values. half the size of the input audio buffer
 	Array<float> powerTerms;
-	int yinBufferSize; 			  // stores current size of yinBuffer
 	
 	bool isPitched;				  // stores whether the current audio vector is determined to be pitched or unpitched
 	
