@@ -35,9 +35,9 @@
     </GROUP>
     <GROUP id="{27897AB0-D6F3-54AD-89AC-1DAFE19D8DDF}" name="Graphics">
       <GROUP id="{5B685E86-D1DA-2F32-AF0D-2A7394AFCFDA}" name="StaffDisplay">
-        <FILE id="qgg0VY" name="StaffDisplay.h" compile="0" resource="0" file="Source/Graphics/StaffDisplay.h"/>
         <FILE id="zE12pr" name="StaffDisplay.cpp" compile="1" resource="0"
               file="Source/Graphics/StaffDisplay.cpp"/>
+        <FILE id="qgg0VY" name="StaffDisplay.h" compile="0" resource="0" file="Source/Graphics/StaffDisplay.h"/>
       </GROUP>
       <GROUP id="{0D309468-25F3-C3AC-4E02-8E5E50275F85}" name="MidiControlPanel">
         <FILE id="CSuczt" name="MidiControlPanel.cpp" compile="1" resource="0"
@@ -47,15 +47,15 @@
       </GROUP>
     </GROUP>
     <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
-      <FILE id="XomsaL" name="MidiLatchManager.h" compile="0" resource="0"
-            file="Source/Midi/MidiLatchManager.h"/>
-      <FILE id="H64T9m" name="MidiPanningManager.h" compile="0" resource="0"
-            file="Source/Midi/MidiPanningManager.h"/>
       <FILE id="miD8GM" name="MidiProcessor.h" compile="0" resource="0" file="Source/Midi/MidiProcessor.h"/>
       <FILE id="QTabwq" name="PolyphonyVoiceManager.h" compile="0" resource="0"
             file="Source/Midi/PolyphonyVoiceManager.h"/>
       <FILE id="jfWt6A" name="VoiceStealingManager.h" compile="0" resource="0"
             file="Source/Midi/VoiceStealingManager.h"/>
+      <FILE id="XomsaL" name="MidiLatchManager.h" compile="0" resource="0"
+            file="Source/Midi/MidiLatchManager.h"/>
+      <FILE id="H64T9m" name="MidiPanningManager.h" compile="0" resource="0"
+            file="Source/Midi/MidiPanningManager.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
