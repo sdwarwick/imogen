@@ -28,12 +28,15 @@ public:
 			possiblePanVals[i] = 64;
 			panValsInAssigningOrder[i] = 64;
 		}
-		newPanValAbsDist.ensureStorageAllocated(NUMBER_OF_VOICES);
-		newPanValAbsDist.fill(0);
-		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
-		newPanValsLeft.fill(0);
 		availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES);
 		availablePanValIndexes.clearQuick();
+		newPanValAbsDist.ensureStorageAllocated(NUMBER_OF_VOICES);
+		newPanValAbsDist.clearQuick();
+		newPanValAbsDist.fill(0);
+		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
+		newPanValsLeft.clearQuick();
+		newPanValsLeft.fill(0);
+		updateStereoWidth(100);
 		reset();
 	};
 	
@@ -63,6 +66,7 @@ public:
 			newPanValsLeft.add(panValsInAssigningOrder[i]);
 			availablePanValIndexes.add(i);
 		}
+		lastsentoverflow = 0;
 	};
 	
 	
@@ -77,8 +81,10 @@ public:
 		}
 		else
 		{
+			if (lastsentoverflow >= NUMBER_OF_VOICES) { lastsentoverflow = 0; };
 			const int returnpan = panValsInAssigningOrder[lastsentoverflow];
 			++lastsentoverflow;
+			if (lastsentoverflow >= NUMBER_OF_VOICES) { lastsentoverflow = 0; };
 			return returnpan;
 		}
 	};
@@ -103,8 +109,6 @@ public:
 	
 	void reset() {  // run this function when all voices are cleared
 		availablePanValIndexes.clearQuick();
-		
-		if(availablePanValIndexes.size() != NUMBER_OF_VOICES) { availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES); };
 		
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			availablePanValIndexes.add(i);
