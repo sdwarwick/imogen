@@ -38,7 +38,8 @@ public:
 	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitchOnOff(false), prevPedalPitch(128)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
-		activePitches.fill(-1);
+		activePitches.clearQuick();
+		activePitches.add(-1);
 	};
 	
 	

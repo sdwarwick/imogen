@@ -35,6 +35,7 @@ public:
 	
 	Yin(): yinBufferSize(round(MAX_BUFFERSIZE/2)), yinBuffer(1, yinBufferSize), isPitched(false) {
 		powerTerms.ensureStorageAllocated(yinBufferSize);
+		powerTerms.clearQuick();
 		powerTerms.fill(0);
 	};
 	

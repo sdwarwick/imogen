@@ -26,7 +26,12 @@ class PolyphonyVoiceManager
 public:
 	
 	PolyphonyVoiceManager(MidiPanningManager& p, VoiceStealingManager& v, MidiLatchManager& l): panningManager(p), stealingManager(v), latchManager(l) {
-		clear();
+		int i = 0;
+		while (i < NUMBER_OF_VOICES)
+		{
+			harmonyPitches[i] = -1;
+			++i;
+		}
 	};
 	
 	

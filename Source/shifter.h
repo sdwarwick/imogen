@@ -26,8 +26,10 @@ public:
 	
 	Shifter(): synthesis(1, MAX_BUFFERSIZE) {
 		finalWindow.ensureStorageAllocated(MAX_BUFFERSIZE);
+		finalWindow.clearQuick();
 		finalWindow.fill(0);
 		window.ensureStorageAllocated(MAX_BUFFERSIZE); // the actual windows between frames of epochs will be smaller, but this is just for safety
+		window.clearQuick();
 		window.fill(0);
 	};
 	

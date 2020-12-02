@@ -21,6 +21,7 @@ public:
 	
 	EpochExtractor() {
 		epochs.ensureStorageAllocated(MAX_BUFFERSIZE);
+		epochs.clearQuick();
 		epochs.fill(0);
 		y.reserve(MAX_BUFFERSIZE);
 		y2.reserve(MAX_BUFFERSIZE);

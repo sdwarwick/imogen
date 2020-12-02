@@ -77,6 +77,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	limiterToggleListener = (float*)(tree.getRawParameterValue("limiterIsOn"));
 	
 	epochLocations.ensureStorageAllocated(MAX_BUFFERSIZE);
+	epochLocations.clearQuick();
 	epochLocations.fill(0);
 }
 
