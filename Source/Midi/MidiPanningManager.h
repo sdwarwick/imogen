@@ -29,11 +29,13 @@ public:
 			panValsInAssigningOrder[i] = 64;
 		}
 		newPanValAbsDist.ensureStorageAllocated(NUMBER_OF_VOICES);
-		newPanValAbsDist.clearQuick();
+		newPanValAbsDist.fill(0);
 		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
+		newPanValsLeft.fill(0);
 		availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES);
+		availablePanValIndexes.fill(0);
 		
-		updateStereoWidth(100);
+		reset();
 	};
 	
 	

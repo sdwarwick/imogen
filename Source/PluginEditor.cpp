@@ -7,6 +7,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     setSize (400, 300);
 	
 	currentPitches.ensureStorageAllocated(NUMBER_OF_VOICES);
+	currentPitches.fill(0);
 	
 	addAndMakeVisible(&midiPanel);
 	
