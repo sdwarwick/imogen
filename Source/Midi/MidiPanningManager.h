@@ -33,8 +33,7 @@ public:
 		newPanValsLeft.ensureStorageAllocated(NUMBER_OF_VOICES);
 		newPanValsLeft.fill(0);
 		availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES);
-		availablePanValIndexes.fill(0);
-		
+		availablePanValIndexes.clearQuick();
 		reset();
 	};
 	
@@ -104,6 +103,9 @@ public:
 	
 	void reset() {  // run this function when all voices are cleared
 		availablePanValIndexes.clearQuick();
+		
+		if(availablePanValIndexes.size() != NUMBER_OF_VOICES) { availablePanValIndexes.ensureStorageAllocated(NUMBER_OF_VOICES); };
+		
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			availablePanValIndexes.add(i);
 		}
