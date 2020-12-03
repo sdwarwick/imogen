@@ -121,7 +121,7 @@ public:
 		float* w = outputBuffer.getWritePointer(0);
 		
 		for(int s = 0; s < numSamples; ++s) {
-			w[s] = r[s] / std::max<float>(finalWindow.getUnchecked(s), 1e-4);
+	//		w[s] = r[s] / std::max<float>(finalWindow.getUnchecked(s), 1e-4);
 		}
 		
 	};

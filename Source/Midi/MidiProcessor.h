@@ -35,7 +35,7 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitchOnOff(false), prevPedalPitch(128)
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitchOnOff(false), prevPedalPitch(128), midiVelocityMultiplier(1.0f)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 		activePitches.clearQuick();
@@ -44,10 +44,11 @@ public:
 	
 	
 	// the "MIDI CALLBACK" ::
-	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch, const bool isPedalPitchOn, const int pedalPitchThresh)
+	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch, const bool isPedalPitchOn, const int pedalPitchThresh, const float midiVelocitySens)
 	{
 		isStealingOn = stealing;
 		lowestPannedNote = lowestPannedMidipitch;
+		midiVelocityMultiplier = midiVelocitySens / 100.0f;
 		ioMidiBuffer.clear();
 		
 		for (const MidiMessageMetadata meta : midiMessages)
@@ -59,16 +60,17 @@ public:
 			{
 				if(midiLatch == false)
 				{
-					ioMidiBuffer.addEvent(currentMessage, samplePos);
 					if(currentMessage.isNoteOn()) {
 						harmonyNoteOn(currentMessage);  // voice "stealing" is dealt with inside these functions.
+						outputMidiNoteOn(currentMessage, samplePos);
 					} else {
 						harmonyNoteOff(currentMessage.getNoteNumber());
+						ioMidiBuffer.addEvent(currentMessage, samplePos);
 					}
 				} else {
 					processActiveLatch(currentMessage);
 					if(currentMessage.isNoteOn()) {
-						ioMidiBuffer.addEvent(currentMessage, samplePos);
+						outputMidiNoteOn(currentMessage, samplePos);
 					}
 				}
 			}
@@ -186,6 +188,8 @@ private:
 	bool prevPedalPitchOnOff;
 	int prevPedalPitch;
 	
+	float midiVelocityMultiplier;
+	
 	
 	// sends a note on out to the harmony engine
 	void harmonyNoteOn(const MidiMessage currentMessage)
@@ -261,7 +265,7 @@ private:
 						const int newvelocity = harmonyEngine[polyphonyManager.getIndex(lowestActive)]->reportVelocity();
 						auto newNoteOn = juce::MidiMessage::noteOn(1, newpedalpitch, (juce::uint8)newvelocity);
 						harmonyNoteOn(newNoteOn);
-						ioMidiBuffer.addEvent(newNoteOn, 0);
+						outputMidiNoteOn(newNoteOn, 0);
 						prevPedalPitch = newpedalpitch;
 					} else {
 						// same pedal pitch retriggered !
@@ -276,6 +280,20 @@ private:
 			if(prevPedalPitch < 128) { harmonyNoteOff(prevPedalPitch); ioMidiBuffer.addEvent(MidiMessage::noteOff(1, prevPedalPitch, 0.0f), 0); prevPedalPitch = 128; }
 		}
 	}; // doubles the lowest active note an octave below
+	
+	
+	void outputMidiNoteOn(const MidiMessage& tooutput, const int samplePosition) {
+		const int oldvelocity = tooutput.getVelocity();
+		const int scaledVelocity = round(oldvelocity * calcVelocityMultiplier(oldvelocity));
+		MidiMessage noteon = MidiMessage::noteOn(1, tooutput.getNoteNumber(), (uint8)scaledVelocity);
+		ioMidiBuffer.addEvent(noteon, samplePosition);
+	};
+	
+	
+	float calcVelocityMultiplier(const int midiVelocity) const {
+		const float initialMutiplier = midiVelocity / 127.0; // what the multiplier would be without any sensitivity calculations...
+		return ((1 - initialMutiplier) * (1 - midiVelocityMultiplier) + initialMutiplier);
+	};
 	
 };
 

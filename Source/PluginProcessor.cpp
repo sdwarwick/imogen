@@ -374,7 +374,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	if(*pedalPitchToggleListener > 0.5f) { pedalPitchToggle = true; }
 	else { pedalPitchToggle = false; }
 	pedalPitchThresh = round(*pedalPitchThreshListener);
-	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote, pedalPitchToggle, pedalPitchThresh);
+	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote, pedalPitchToggle, pedalPitchThresh, *midiVelocitySensListener);
 	
 	int inpt = *inputChannelListener;
 	if (inpt > buffer.getNumChannels()) {
