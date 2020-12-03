@@ -404,6 +404,8 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 		// ++numElapsedLoops
 	}
 	// numElapsedLoops represents the number of times processBlockPrivate() was run, and can be used for latency calculations
+	
+	midiMessages.swapWith(midiProcessor.ioMidiBuffer);
 }
 
 
