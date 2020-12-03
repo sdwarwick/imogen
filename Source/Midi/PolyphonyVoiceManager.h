@@ -39,13 +39,11 @@ public:
 	{
 		harmonyPitches[voiceNumber] = midiPitch;
 		
-		if(midiPitch == -1)
+		if(midiPitch == -1 && areAllVoicesOff())
 		{
-			if(areAllVoicesOff() == true) {
-				panningManager.reset();
-				stealingManager.clear();
-				latchManager.clear();
-			}
+			panningManager.reset();
+			stealingManager.clear();
+			latchManager.clear();
 		}
 	};
 	

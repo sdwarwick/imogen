@@ -148,12 +148,12 @@ private:
 			
 			// 2. half of the data, disguised as a convolution kernel
 			for(int j = 0; j < yinBufferSize; ++j) {
-				kernelIn[j] = { reading[(yinBufferSize-1)-j], 0 };
+				kernelIn[j] = { reading[yinBufferSize-j], 0 }; // yinBufferSize-j-1 ?
 			}
 			fft.perform(kernelIn, kernelOut, false);
 			
 			// 3. convolution via complex multiplication
-			for (int j = 0; j < inputBufferLength; ++j) {
+			for (int j = 0; j < inputBufferLength; ++j) { // limit range to inputBufferLength - 1 ?
 				
 				yinStyleACFin[j] = { fftBufferOut[j].real() * kernelOut[j].real() - fftBufferOut[j+1].real() * kernelOut[j+1].real(), fftBufferOut[j].imag() * kernelOut[j].imag() + fftBufferOut[j+1].imag() * kernelOut[j+1].imag() };
 				
@@ -201,7 +201,7 @@ private:
 		const float* read = yinBuffer.getReadPointer(0);
 		
 		// first two positions in yinBuffer are always 1
-		for(tau = 2; tau < yinBufferSize; ++tau) {
+		for(tau = 2; tau < yinBufferSize; ++tau) { // limit range to yinBufferSize - 1 ?
 			if(read[tau] < THRESHOLD) {
 				while (tau + 1 < yinBufferSize && read[tau + 1] < read[tau]) {
 					++tau;

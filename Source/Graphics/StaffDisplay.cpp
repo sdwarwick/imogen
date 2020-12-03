@@ -92,10 +92,13 @@ void StaffDisplay::drawPitches(Array<int> activePitches)
 		
 		for(int n = 0; n < yCoordsOfActiveNotes.size(); ++n)
 		{
-			const int yCoord = yCoordsOfActiveNotes.getUnchecked(n);
 			
+			const int yCoord = yCoordsOfActiveNotes.getUnchecked(n);
 			const float halfTheStafflineHeight = 10.0f;
-			if(yCoordsOfActiveNotes.getUnchecked(n + 1) - yCoord > halfTheStafflineHeight) { xOffset = 0; };
+			
+			if(n == yCoordsOfActiveNotes.size() - 1) {
+				xOffset = 0;
+			} else if(yCoordsOfActiveNotes.getUnchecked(n + 1) - yCoord > halfTheStafflineHeight) { xOffset = 0; }; // bc of the n+1 here
 			
 			const int xCoord = xOffset * someScaleFactor + baseXCoord;
 			
@@ -108,6 +111,7 @@ void StaffDisplay::drawPitches(Array<int> activePitches)
 			}
 			
 			xOffset ^= 1;
+			
 		}
 	}
 };
