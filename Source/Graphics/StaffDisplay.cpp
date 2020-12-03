@@ -24,7 +24,15 @@ StaffDisplay::StaffDisplay(): useFlats(false)
 	yCoordLookupTable[0] = 0;
 	for(int n = 1; n < 128; ++n)
 	{
-		yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
+		const int modulo = n % 12;
+		if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
+		{
+			yCoordLookupTable[n] = yCoordLookupTable[n - 1];
+		}
+		else
+		{
+			yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
+		}
 	}
 }
 
@@ -73,7 +81,9 @@ void StaffDisplay::drawPitches(Array<int> activePitches)
 		yCoordsOfActiveNotes.clearQuick();
 		for(int n = 0; n < activePitches.size(); ++n)
 		{
+			if(activePitches.getUnchecked(n) > -1) {
 			yCoordsOfActiveNotes.add(yCoordLookupTable[activePitches.getUnchecked(n)]);
+			}
 		}
 		
 		int xOffset = 0;
