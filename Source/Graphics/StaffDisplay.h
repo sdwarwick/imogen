@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "GlobalDefinitions.h"
 
 //==============================================================================
 /*
@@ -23,7 +24,18 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+	
+	void displayFlats(const bool displayingFlats);
 
 private:
+	
+	Array<int> yCoordsOfActiveNotes;
+	int yCoordLookupTable[128];
+	bool useFlats;
+	
+	void drawPitches(Array<int> activePitches);
+	void drawNotehead(const int x, const int y);
+	void drawAccidental(const int x, const int y);
+	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StaffDisplay)
 };
