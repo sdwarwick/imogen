@@ -4,11 +4,11 @@
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), midiPanel(p)
 {
-    setSize (400, 300);
+    setSize (1130, 700);
 	
 	currentPitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 	currentPitches.clearQuick();
-	currentPitches.fill(0);
+	currentPitches.add(-1);
 	
 	addAndMakeVisible(&midiPanel);
 	
@@ -108,10 +108,6 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
 	
 }
 
@@ -125,7 +121,7 @@ void ImogenAudioProcessorEditor::resized()
 	
 //	inputChannel.setBounds(190, 250, 75, 35);
 	
-	midiPanel.setBounds(0, 0, 350, 500);
+	midiPanel.setBounds(0, 0, 350, 350);
 	
 }
 

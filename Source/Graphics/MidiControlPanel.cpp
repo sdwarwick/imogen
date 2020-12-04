@@ -18,10 +18,11 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 	{
 		adsrAttack.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 		adsrAttack.setRange(0.01f, 1.0f);
-		adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-	//	addAndMakeVisible(&adsrAttack);
+		adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
+		addAndMakeVisible(&adsrAttack);
 		attackLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack);
 		adsrAttack.setValue(0.035f);
+		
 		
 		adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 		adsrDecay.setRange(0.01f, 1.0f);
@@ -132,6 +133,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			pedalPitchThresh.setValue(127);
 		}
 	}
+	
 	// midi latch toggle
 	{
 		midiLatch.setButtonText("MIDI latch on/off");
@@ -163,27 +165,14 @@ MidiControlPanel::~MidiControlPanel()
 
 void MidiControlPanel::paint (juce::Graphics& g)
 {
-    /* This demo code just fills the component's background and
-       draws some placeholder text to get you started.
-
-       You should replace everything in this method with your own
-       drawing code..
-    */
-
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
-    g.setColour (juce::Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
-    g.setColour (juce::Colours::white);
-    g.setFont (14.0f);
-    g.drawText ("MidiControlPanel", getLocalBounds(),
-                juce::Justification::centred, true);   // draw some placeholder text
+	g.setColour(juce::Colours::white);
 }
 
 void MidiControlPanel::resized()
 {
-//	adsrAttack.setBounds(10, 10, 75, 75);
+	adsrAttack.setBounds(0, 0, 75, 75);
+	adsrAttack.setNumDecimalPlacesToDisplay(5);
 //	adsrDecay.setBounds(90, 10, 75, 75);
 //	adsrSustain.setBounds(170, 10, 75, 75);
 //	adsrRelease.setBounds(250, 10, 75, 75);
