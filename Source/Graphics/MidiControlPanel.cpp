@@ -19,6 +19,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		adsrAttack.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 		adsrAttack.setRange(0.01f, 1.0f);
 		adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
+		adsrAttack.setNumDecimalPlacesToDisplay(5);
 		addAndMakeVisible(&adsrAttack);
 		attackLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack);
 		adsrAttack.setValue(0.035f);
@@ -172,7 +173,6 @@ void MidiControlPanel::paint (juce::Graphics& g)
 void MidiControlPanel::resized()
 {
 	adsrAttack.setBounds(0, 0, 75, 75);
-	adsrAttack.setNumDecimalPlacesToDisplay(5);
 //	adsrDecay.setBounds(90, 10, 75, 75);
 //	adsrSustain.setBounds(170, 10, 75, 75);
 //	adsrRelease.setBounds(250, 10, 75, 75);
