@@ -44,7 +44,7 @@ public:
 	
 	
 	// the "MIDI CALLBACK" ::
-	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch, const bool isPedalPitchOn, const int pedalPitchThresh, const float midiVelocitySens)
+	void processIncomingMidi (MidiBuffer& midiMessages, const bool midiLatch, const bool stealing, const int lowestPannedMidipitch, const bool isPedalPitchOn, const int pedalPitchThresh, const std::atomic<float>& midiVelocitySens)
 	{
 		isStealingOn = stealing;
 		lowestPannedNote = lowestPannedMidipitch;
@@ -121,8 +121,8 @@ public:
 	};
 
 	
-	void updateStereoWidth(float* newStereoWidth) {
-		midiPanningManager.updateStereoWidth(*newStereoWidth);
+	void updateStereoWidth(const std::atomic<float>& newStereoWidth) {
+		midiPanningManager.updateStereoWidth(newStereoWidth);
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if(harmonyEngine[i]->voiceIsOn) {
 				const int newPan = midiPanningManager.getClosestNewPanVal(harmonyEngine[i]->reportPan());

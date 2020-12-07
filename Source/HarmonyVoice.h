@@ -75,24 +75,24 @@ public:
 	};
 	
 	
-	void adsrSettingsListener(float* adsrAttackTime, float* adsrDecayTime, float* adsrSustainRatio, float* adsrReleaseTime) {
+	void adsrSettingsListener(const std::atomic<float>& adsrAttackTime, const std::atomic<float>& adsrDecayTime, const std::atomic<float>& adsrSustainRatio, const std::atomic<float>& adsrReleaseTime) {
 		// attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
-		adsrParams.attack = *adsrAttackTime;
-		adsrParams.decay = *adsrDecayTime;
-		adsrParams.sustain = *adsrSustainRatio;
-		adsrParams.release = *adsrReleaseTime;
+		adsrParams.attack = adsrAttackTime;
+		adsrParams.decay = adsrDecayTime;
+		adsrParams.sustain = adsrSustainRatio;
+		adsrParams.release = adsrReleaseTime;
 		adsrEnv.setParameters(adsrParams);
 	};
 	
-	void midiVelocitySensitivityListener(float* midiVelocitySensListener)
+	void midiVelocitySensitivityListener(const std::atomic<float>& midiVelocitySensListener)
 	{
-		midiVelocitySensitivity = *midiVelocitySensListener / 100.0f;
+		midiVelocitySensitivity = midiVelocitySensListener / 100.0f;
 	};
 	
 	
-	void pitchBendSettingsListener(float* rangeUp, float* rangeDown) {
-		pitchBendRangeUp = *rangeUp;
-		pitchBendRangeDown = *rangeDown;
+	void pitchBendSettingsListener(const std::atomic<float>& rangeUp, const std::atomic<float>& rangeDown) {
+		pitchBendRangeUp = rangeUp;
+		pitchBendRangeDown = rangeDown;
 		pitchBend(lastRecievedPitchbend);
 	};
 	

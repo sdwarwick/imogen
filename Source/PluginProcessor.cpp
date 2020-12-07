@@ -36,7 +36,29 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		limiterIsOn(true),
 		wetBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE),
 		dryBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE),
-		dryBufferWritePosition(0), dryBufferReadPosition(0)
+		dryBufferWritePosition(0), dryBufferReadPosition(0),
+		adsrAttackListener(*tree.getRawParameterValue("adsrAttack")),
+		adsrDecayListener(*tree.getRawParameterValue("adsrDecay")),
+		adsrSustainListener(*tree.getRawParameterValue("adsrSustain")),
+		adsrReleaseListener(*tree.getRawParameterValue("adsrRelease")),
+		adsrOnOffListener(*tree.getRawParameterValue("adsrOnOff")),
+		stereoWidthListener(*tree.getRawParameterValue("stereoWidth")),
+		lowestPanListener(*tree.getRawParameterValue("lowestPan")),
+		midiVelocitySensListener(*tree.getRawParameterValue("midiVelocitySensitivity")),
+		pitchBendUpListener(*tree.getRawParameterValue("PitchBendUpRange")),
+		pitchBendDownListener(*tree.getRawParameterValue("PitchBendDownRange")),
+		pedalPitchToggleListener(*tree.getRawParameterValue("pedalPitchToggle")),
+		pedalPitchThreshListener(*tree.getRawParameterValue("pedalPitchThresh")),
+		inputGainListener(*tree.getRawParameterValue("inputGain")),
+		outputGainListener(*tree.getRawParameterValue("outputGain")),
+		midiLatchListener(*tree.getRawParameterValue("midiLatch")),
+		voiceStealingListener(*tree.getRawParameterValue("voiceStealing")),
+		inputChannelListener(*tree.getRawParameterValue("inputChan")),
+		dryVoxPanListener(*tree.getRawParameterValue("dryPan")),
+		masterDryWetListener(*tree.getRawParameterValue("masterDryWet")),
+		limiterThreshListener(*tree.getRawParameterValue("limiterThresh")),
+		limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
+		limiterToggleListener(*tree.getRawParameterValue("limiterIsOn"))
 
 #endif
 {
@@ -52,29 +74,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
-	
-	adsrAttackListener = (float*)(tree.getRawParameterValue("adsrAttack"));
-	adsrDecayListener = (float*)(tree.getRawParameterValue("adsrDecay"));
-	adsrSustainListener = (float*)(tree.getRawParameterValue("adsrSustain"));
-	adsrReleaseListener = (float*)(tree.getRawParameterValue("adsrRelease"));
-	adsrOnOffListener = (float*)(tree.getRawParameterValue("adsrOnOff"));
-	stereoWidthListener = (float*)(tree.getRawParameterValue("stereoWidth"));
-	lowestPanListener = (float*)(tree.getRawParameterValue("lowestPan"));
-	midiVelocitySensListener = (float*)(tree.getRawParameterValue("midiVelocitySensitivity"));
-	pitchBendUpListener = (float*)(tree.getRawParameterValue("PitchBendUpRange"));
-	pitchBendDownListener = (float*)(tree.getRawParameterValue("PitchBendDownRange"));
-	pedalPitchToggleListener = (float*)(tree.getRawParameterValue("pedalPitchToggle"));
-	pedalPitchThreshListener = (float*)(tree.getRawParameterValue("pedalPitchThresh"));
-	inputGainListener = (float*)(tree.getRawParameterValue("inputGain"));
-	outputGainListener = (float*)(tree.getRawParameterValue("outputGain"));
-	midiLatchListener = (float*)(tree.getRawParameterValue("midiLatch"));
-	voiceStealingListener = (float*)(tree.getRawParameterValue("voiceStealing"));
-	inputChannelListener = (int*)(tree.getRawParameterValue("inputChan"));
-	dryVoxPanListener = (int*)(tree.getRawParameterValue("dryPan"));
-	masterDryWetListener = (int*)(tree.getRawParameterValue("masterDryWet"));
-	limiterThreshListener = (float*)(tree.getRawParameterValue("limiterThresh"));
-	limiterReleaseListener = (int*)(tree.getRawParameterValue("limiterRelease"));
-	limiterToggleListener = (float*)(tree.getRawParameterValue("limiterIsOn"));
 	
 	epochLocations.ensureStorageAllocated(MAX_BUFFERSIZE);
 	epochLocations.clearQuick();
@@ -191,136 +190,120 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 				wetBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, true, true);
 			}
 			
-		//	const int drybuffersize = sampleRate * samplesPerBlock; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
+			//const int drybuffersize = sampleRate * lastBlockSize; // size of circular dryBuffer. won't update dynamically within processBlock, size is set only here!
 			if(dryBuffer.getNumSamples() != lastBlockSize) {
 				dryBuffer.setSize(NUMBER_OF_CHANNELS, lastBlockSize, true, true, true);
 			}
-			
+			prevLastSampleRate = lastSampleRate;
+			prevLastBlockSize = lastBlockSize;
 		}
-		prevLastSampleRate = lastSampleRate;
-		prevLastBlockSize = lastBlockSize;
 	}
 	
 	// ADSR settings
 	{
-		//adsrIsOn = *adsrOnOffListener > 0.5f;
-		if(*adsrOnOffListener > 0.5f) { adsrIsOn = true; }
-		else { adsrIsOn = false; }
+		adsrIsOn = adsrOnOffListener > 0.5f;
 		
-		if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
+		if (prevAttack != adsrAttackListener || prevDecay != adsrDecayListener || prevSustain != adsrSustainListener || prevRelease != adsrReleaseListener)
 		{
 			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
 			}
-			prevAttack = *adsrAttackListener;
-			prevDecay = *adsrDecayListener;
-			prevSustain = *adsrSustainListener;
-			prevRelease = *adsrReleaseListener;
-			prevVelocitySens = *midiVelocitySensListener;
-	}
+			prevAttack = adsrAttackListener;
+			prevDecay = adsrDecayListener;
+			prevSustain = adsrSustainListener;
+			prevRelease = adsrReleaseListener;
+		}
 	}
 	
 	// MIDI velocity sensitivity
 	{
-		if(prevVelocitySens != *midiVelocitySensListener) {
+		if(prevVelocitySens != midiVelocitySensListener) {
 			for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 			{
 				harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
 			}
+			prevVelocitySens = midiVelocitySensListener;
 		}
-		prevVelocitySens = *midiVelocitySensListener;
 	}
 	
 	// stereo width
 	{
-		if (previousStereoWidth != *stereoWidthListener) {
+		if (previousStereoWidth != stereoWidthListener) {
 			midiProcessor.updateStereoWidth(stereoWidthListener);
-			previousStereoWidth = *stereoWidthListener;
+			previousStereoWidth = stereoWidthListener;
 		}
-		const float lowestpannotelistener = *lowestPanListener;
-		lowestPannedNote = round(lowestpannotelistener);
+		lowestPannedNote = round(lowestPanListener);
 	}
 	
 	// dry vox pan
 	{
-		if(*dryVoxPanListener != previousmidipan) {
-			const int dryvoxpanning = *dryVoxPanListener;
-			const float panR = dryvoxpanning/127.0f;
-			const float panL = 1.0f - panR;
-			dryvoxpanningmults[0] = panL;
-			dryvoxpanningmults[1] = panR;
-			
-			previousmidipan = *dryVoxPanListener;
+		if(dryVoxPanListener != previousmidipan) {
+			dryvoxpanningmults[1] = dryVoxPanListener / 127.0f;
+			dryvoxpanningmults[0] = 1.0f - dryvoxpanningmults[1];
+			previousmidipan = dryVoxPanListener;
 		}
 	}
 	
 	// pitch bend settings
 	{
-		if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
+		if (prevPitchBendUp != pitchBendUpListener || prevPitchBendDown != pitchBendDownListener) {
 			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 				harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 			}
-			prevPitchBendUp = *pitchBendUpListener;
-			prevPitchBendDown = *pitchBendDownListener;
+			prevPitchBendUp = pitchBendUpListener;
+			prevPitchBendDown = pitchBendDownListener;
 		}
 	}
 	
 	// MIDI pedal pitch
 	{
-		//pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
-		if(*pedalPitchToggleListener > 0.5f) { pedalPitchToggle = true; }
-		else { pedalPitchToggle = false; }
-		pedalPitchThresh = *pedalPitchThreshListener;
+		pedalPitchToggle = pedalPitchToggleListener > 0.5f;
+		pedalPitchThresh = round(pedalPitchThreshListener);
 	}
 	
 	// master dry/wet
 	{
-		if(*masterDryWetListener != previousMasterDryWet) {
-			const float masterdrywetval = *masterDryWetListener;
-			wetMultiplier = masterdrywetval/100.0f;
+		if(masterDryWetListener != previousMasterDryWet) {
+			wetMultiplier = masterDryWetListener / 100.0f;
 			dryMultiplier = 1.0f - wetMultiplier;
-			previousMasterDryWet = *masterDryWetListener;
+			previousMasterDryWet = masterDryWetListener;
 		}
 	}
 	
 	// input & output gain
 	{
-		if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
-			const float inputgainval = *inputGainListener;
-			inputGainMultiplier = Decibels::decibelsToGain(inputgainval);
-			const float outputgainval = *outputGainListener;
-			outputGainMultiplier = Decibels::decibelsToGain(outputgainval);
+		if(inputGainListener != prevideb) {
+			const float igv = inputGainListener;
+			inputGainMultiplier = Decibels::decibelsToGain(igv);
+			prevideb = inputGainListener;
 		}
-		prevideb = *inputGainListener;
-		prevodeb = *outputGainListener;
+		if(outputGainListener != prevodeb) {
+			const float ogv = outputGainListener;
+			outputGainMultiplier = Decibels::decibelsToGain(ogv);
+			prevodeb = outputGainListener;
+		}
 	}
 	
 	// MIDI latch
 	{
-		//latchIsOn = *midiLatchListener > 0.5f;
-		if(*midiLatchListener > 0.5f) { latchIsOn = true; }
-		else { latchIsOn = false; }
+		latchIsOn = midiLatchListener > 0.5f;
 		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
 		previousLatch = latchIsOn;
 	}
 	
-	//stealingIsOn = *voiceStealingListener > 0.5f; // voice stealing on/off
-	if(*voiceStealingListener > 0.5f) { stealingIsOn = true; }
-	else { stealingIsOn = false; }
+	stealingIsOn = voiceStealingListener > 0.5f; // voice stealing on/off
 	
-	
-	dsp::ProcessSpec spec;
-	spec.sampleRate = sampleRate;
-	spec.maximumBlockSize = MAX_BUFFERSIZE;
-	spec.numChannels = 2;
-	limiter.prepare(spec);
-	const float newlimiterthreshold = *limiterThreshListener;
-	limiter.setThreshold(newlimiterthreshold);
-	const float newlimiterrelease = *limiterReleaseListener;
-	limiter.setRelease(newlimiterrelease);
-	//limiterIsOn = *limiterToggleListener > 0.5f;
-	if(*limiterToggleListener > 0.5f) { limiterIsOn = true; }
-	else { limiterIsOn = false; }
+	// limiter setup
+	{
+		dsp::ProcessSpec spec;
+		spec.sampleRate = sampleRate;
+		spec.maximumBlockSize = MAX_BUFFERSIZE;
+		spec.numChannels = 2;
+		limiter.prepare(spec);
+		limiter.setThreshold(limiterThreshListener);
+		limiter.setRelease(limiterReleaseListener);
+		limiterIsOn = limiterToggleListener > 0.5f;
+	}
 	
 }
 
@@ -332,7 +315,6 @@ void ImogenAudioProcessor::releaseResources() {
 		harmEngine[i]->clearBuffers();
 	}
 	pitchTracker.clearBuffer();
-	limiter.reset(); // ??
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -366,21 +348,23 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-	if (previousStereoWidth != *stereoWidthListener) {
-		midiProcessor.updateStereoWidth(stereoWidthListener);
+	// MIDI
+	{
+		if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
+		if (previousStereoWidth != stereoWidthListener) { midiProcessor.updateStereoWidth(stereoWidthListener); }
+		lowestPannedNote = round(lowestPanListener);
+		pedalPitchToggle = pedalPitchToggleListener > 0.5f;
+		pedalPitchThresh = round(pedalPitchThreshListener);
+		latchIsOn = midiLatchListener > 0.5f;
+		stealingIsOn = voiceStealingListener > 0.5f;
+		midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote, pedalPitchToggle, pedalPitchThresh, midiVelocitySensListener);
 	}
-	lowestPannedNote = round(*lowestPanListener);
-	//pedalPitchToggle = *pedalPitchToggleListener > 0.5f;
-	if(*pedalPitchToggleListener > 0.5f) { pedalPitchToggle = true; }
-	else { pedalPitchToggle = false; }
-	pedalPitchThresh = round(*pedalPitchThreshListener);
-	midiProcessor.processIncomingMidi(midiMessages, latchIsOn, stealingIsOn, lowestPannedNote, pedalPitchToggle, pedalPitchThresh, *midiVelocitySensListener);
 	
-	int inpt = *inputChannelListener;
-	if (inpt > buffer.getNumChannels()) {
-		inpt = buffer.getNumChannels();
+	int inptchn = inputChannelListener;
+	if (inputChannelListener > buffer.getNumChannels()) {
+		inptchn = buffer.getNumChannels();
 	}
-	const int inputChannel = inpt;
+	const int inputChannel = inptchn;
 	
 	int samplesLeft = buffer.getNumSamples();
 	// int numElapsedLoops = 0;
@@ -419,9 +403,9 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	{
 		// ADSR settings
 		{
-			adsrIsOn = *adsrOnOffListener > 0.5f;
+			adsrIsOn = adsrOnOffListener > 0.5f;
 			
-			if (prevAttack != *adsrAttackListener || prevDecay != *adsrDecayListener || prevSustain != *adsrSustainListener || prevRelease != *adsrReleaseListener)
+			if (prevAttack != adsrAttackListener || prevDecay != adsrDecayListener || prevSustain != adsrSustainListener || prevRelease != adsrReleaseListener)
 			{
 				for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 					harmEngine[i]->adsrSettingsListener(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
@@ -431,7 +415,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		// MIDI velocity sensitivity
 		{
-			if(prevVelocitySens != *midiVelocitySensListener) {
+			if(prevVelocitySens != midiVelocitySensListener) {
 				for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 				{
 					harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
@@ -441,17 +425,15 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		// dry vox pan
 		{
-			if(*dryVoxPanListener != previousmidipan) {
-				const float panR = (*dryVoxPanListener)/127.0f;
-				const float panL = 1.0f - panR;
-				dryvoxpanningmults[0] = panL;
-				dryvoxpanningmults[1] = panR;
+			if(dryVoxPanListener != previousmidipan) {
+				dryvoxpanningmults[1] = dryVoxPanListener / 127.0f;
+				dryvoxpanningmults[0] = 1.0f - dryvoxpanningmults[1];
 			}
 		}
 		
 		// pitch bend settings
 		{
-			if (prevPitchBendUp != *pitchBendUpListener || prevPitchBendDown != * pitchBendDownListener) {
+			if (prevPitchBendUp != pitchBendUpListener || prevPitchBendDown != pitchBendDownListener) {
 				for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
 					harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
 				}
@@ -460,39 +442,30 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		// master dry/wet
 		{
-			if(*masterDryWetListener != previousMasterDryWet) {
-				wetMultiplier = (*masterDryWetListener)/100.0f;
+			if(masterDryWetListener != previousMasterDryWet) {
+				wetMultiplier = (masterDryWetListener)/100.0f;
 				dryMultiplier = 1.0f - wetMultiplier;
 			}
 		}
 		
 		// input & output gain
 		{
-			if(*inputGainListener != prevideb || *outputGainListener != prevodeb) {
-				inputGainMultiplier = Decibels::decibelsToGain(*inputGainListener);
-				outputGainMultiplier = Decibels::decibelsToGain(*outputGainListener);
+			if(inputGainListener != prevideb) {
+				const float igv = inputGainListener;
+				inputGainMultiplier = Decibels::decibelsToGain(igv);
+			}
+			if(outputGainListener != prevodeb) {
+				const float ogv = outputGainListener;
+				outputGainMultiplier = Decibels::decibelsToGain(ogv);
 			}
 		}
 		
-		// MIDI latch
-		{
-			//latchIsOn = *midiLatchListener > 0.5f;
-			if(*midiLatchListener > 0.5f) { latchIsOn = true; }
-			else { latchIsOn = false; }
-			if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
-		}
-		
-		// voice stealing
-		//stealingIsOn = *voiceStealingListener > 0.5f;
-		if(*voiceStealingListener > 0.5f) { stealingIsOn = true; }
-		else { stealingIsOn = false; }
-		
 		// limiter settings
-		limiter.setThreshold(*limiterThreshListener);
-		limiter.setRelease(*limiterReleaseListener);
-		//limiterIsOn = *limiterToggleListener > 0.5f;
-		if(*limiterToggleListener > 0.5f) { limiterIsOn = true; }
-		else { limiterIsOn = false; }
+		{
+			limiter.setThreshold(limiterThreshListener);
+			limiter.setRelease(limiterReleaseListener);
+			limiterIsOn = limiterToggleListener > 0.5f;
+		}
 	}
 	
 	
@@ -580,19 +553,19 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	// update storage of previous frame's parameters, for comparison when the next frame comes in...
 	{
-		prevAttack = *adsrAttackListener;
-		prevDecay = *adsrDecayListener;
-		prevSustain = *adsrSustainListener;
-		prevRelease = *adsrReleaseListener;
-		prevVelocitySens = *midiVelocitySensListener;
-		prevVelocitySens = *midiVelocitySensListener;
-		previousStereoWidth = *stereoWidthListener;
-		previousmidipan = *dryVoxPanListener;
-		prevPitchBendUp = *pitchBendUpListener;
-		prevPitchBendDown = *pitchBendDownListener;
-		previousMasterDryWet = *masterDryWetListener;
-		prevideb = *inputGainListener;
-		prevodeb = *outputGainListener;
+		prevAttack = adsrAttackListener;
+		prevDecay = adsrDecayListener;
+		prevSustain = adsrSustainListener;
+		prevRelease = adsrReleaseListener;
+		prevVelocitySens = midiVelocitySensListener;
+		prevVelocitySens = midiVelocitySensListener;
+		previousStereoWidth = stereoWidthListener;
+		previousmidipan = dryVoxPanListener;
+		prevPitchBendUp = pitchBendUpListener;
+		prevPitchBendDown = pitchBendDownListener;
+		previousMasterDryWet = masterDryWetListener;
+		prevideb = inputGainListener;
+		prevodeb = outputGainListener;
 		previousLatch = latchIsOn;
 	}
 };

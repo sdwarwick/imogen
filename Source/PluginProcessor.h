@@ -81,41 +81,24 @@ private:
 	bool frameIsPitched;
 	
 	// variables for tracking GUI-changeable parameters
-		float* adsrAttackListener;
-		float* adsrDecayListener;
-		float* adsrSustainListener;
-		float* adsrReleaseListener;
-		float* adsrOnOffListener;
+
 		bool adsrIsOn;
 		float prevAttack;
 		float prevDecay;
 		float prevSustain;
 		float prevRelease;
-		float* stereoWidthListener;
 		float previousStereoWidth;
-		float* lowestPanListener;
 		int lowestPannedNote;
-		float* midiVelocitySensListener;
 		float prevVelocitySens;
-		float* pitchBendUpListener;
 		float prevPitchBendUp;
-		float* pitchBendDownListener;
 		float prevPitchBendDown;
-		float* pedalPitchToggleListener;
 		bool pedalPitchToggle;
-		float* pedalPitchThreshListener;
 		int pedalPitchThresh;
-		float* inputGainListener;
 		float inputGainMultiplier;
-		float* outputGainListener;
 		float outputGainMultiplier;
-		float* midiLatchListener;
 		bool latchIsOn;
 		bool previousLatch;
-		float* voiceStealingListener;
 		bool stealingIsOn;
-	
-		int* inputChannelListener;
 	
 	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
 	
@@ -127,11 +110,10 @@ private:
 	EpochExtractor epochs;
 	
 	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples);
-	int* dryVoxPanListener;
-	int previousmidipan;
-	int dryvoxpanningmults[2];
 	
-	int* masterDryWetListener;
+	int previousmidipan;
+	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.
+	
 	int previousMasterDryWet;
 	float dryMultiplier;
 	float wetMultiplier;
@@ -140,10 +122,7 @@ private:
 	float prevodeb;
 	
 	dsp::Limiter<float> limiter;
-	float* limiterThreshListener;
-	int* limiterReleaseListener;
 	bool limiterIsOn;
-	float* limiterToggleListener;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	void grabCurrentParameterValues();
@@ -152,6 +131,29 @@ private:
 	AudioBuffer<float> dryBuffer; // this buffer holds the original input signal, delayed for latency, so it can be mixed back together with the wet signal for the dry/wet effect
 	int dryBufferWritePosition;
 	int dryBufferReadPosition;
+	
+		const std::atomic<float>& adsrAttackListener;
+		const std::atomic<float>& adsrDecayListener;
+		const std::atomic<float>& adsrSustainListener;
+		const std::atomic<float>& adsrReleaseListener;
+		const std::atomic<float>& adsrOnOffListener;
+		const std::atomic<float>& stereoWidthListener;
+		const std::atomic<float>& lowestPanListener;
+		const std::atomic<float>& midiVelocitySensListener;
+		const std::atomic<float>& pitchBendUpListener;
+		const std::atomic<float>& pitchBendDownListener;
+		const std::atomic<float>& pedalPitchToggleListener;
+		const std::atomic<float>& pedalPitchThreshListener;
+		const std::atomic<float>& inputGainListener;
+		const std::atomic<float>& outputGainListener;
+		const std::atomic<float>& midiLatchListener;
+		const std::atomic<float>& voiceStealingListener;
+		const std::atomic<float>& inputChannelListener;
+		const std::atomic<float>& dryVoxPanListener;
+		const std::atomic<float>& masterDryWetListener;
+		const std::atomic<float>& limiterThreshListener;
+		const std::atomic<float>& limiterReleaseListener;
+		const std::atomic<float>& limiterToggleListener;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
