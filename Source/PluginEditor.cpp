@@ -93,7 +93,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 				limiterToggle.setButtonText("Limiter on/off");
 		//		addAndMakeVisible(&limiterToggle);
 				limiterToggleLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle);
-				limiterToggle.setToggleState(true, true);
+				limiterToggle.triggerClick();
 			}
 		}
 	}
@@ -121,7 +121,7 @@ void ImogenAudioProcessorEditor::resized()
 	
 //	inputChannel.setBounds(190, 250, 75, 35);
 	
-	midiPanel.setBounds(0, 0, 390, 380);
+	midiPanel.setBounds(0, 0, 300, 415); 
 	
 }
 

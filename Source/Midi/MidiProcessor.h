@@ -57,7 +57,11 @@ public:
 			{
 				if(harmonyEngine[i]->voiceIsOn)
 				{
-					if(harmonyEngine[i]->reportLastPitch() < prevLowestpannednote)
+					if(harmonyEngine[i]->reportLastPitch() < lowestPannedNote)
+					{
+						harmonyEngine[i]->changePanning(64);
+					}
+					else if(harmonyEngine[i]->reportLastPitch() >= lowestPannedNote)
 					{
 						harmonyEngine[i]->changePanning(midiPanningManager.getNextPanVal());
 					}

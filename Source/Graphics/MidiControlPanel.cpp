@@ -81,7 +81,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			adsrOnOff.setButtonText("MIDI-triggered ADSR");
 			addAndMakeVisible(adsrOnOff);
 			adsrOnOffLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff);
-			adsrOnOff.setToggleState(true, true);
+			adsrOnOff.triggerClick();
 		}
 	}
 	
@@ -98,10 +98,11 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		{
 			stereoWidth.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			stereoWidth.setRange(0, 100);
-			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
 			addAndMakeVisible(stereoWidth);
 			stereoWidthLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth);
 			stereoWidth.setValue(100);
+			stereoWidth.setNumDecimalPlacesToDisplay(0);
 			stereowidthLabel.setFont(juce::Font(14.0f, juce::Font::bold));
 			stereowidthLabel.setJustificationType(juce::Justification::centred);
 			stereowidthLabel.setColour(juce::Label::textColourId, juce::Colours::white);
@@ -120,7 +121,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			lowestpanLabel.setFont(juce::Font(14.0f, juce::Font::bold));
 			lowestpanLabel.setJustificationType(juce::Justification::centred);
 			lowestpanLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			lowestpanLabel.setText("Lowest panned MIDI pitch", juce::dontSendNotification);
+			lowestpanLabel.setText("Lowest panned pitch", juce::dontSendNotification);
 			addAndMakeVisible(lowestpanLabel);
 		}
 	}
@@ -192,7 +193,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			pedalPitch.setButtonText("MIDI pedal pitch");
 			addAndMakeVisible(pedalPitch);
 			pedalPitchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitch);
-			pedalPitch.setToggleState(false, true);
 		}
 		// threshold
 		{
@@ -215,7 +215,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		midiLatch.setButtonText("MIDI latch");
 		addAndMakeVisible(midiLatch);
 		midiLatchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "midiLatch", midiLatch);
-		midiLatch.setToggleState(false, true);
 	}
 	
 	// voice stealing on/off
@@ -223,7 +222,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		voiceStealing.setButtonText("Voice stealing");
 		addAndMakeVisible(voiceStealing);
 		voiceStealingLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing);
-		voiceStealing.setToggleState(true, true);
+		voiceStealing.triggerClick();
 	}
 
 }
@@ -238,16 +237,16 @@ void MidiControlPanel::paint (juce::Graphics& g)
 	
 	g.setColour(juce::Colours::steelblue);
 	
-	juce::Rectangle<int> adsrPanel (5, 5, 260, 125);
+	juce::Rectangle<int> adsrPanel (5, 110, 290, 125);
 	g.fillRect(adsrPanel);
 	
-	juce::Rectangle<int> stereoWidthPanel (5, 135, 190, 100);
+	juce::Rectangle<int> stereoWidthPanel (150, 310, 145, 100);
 	g.fillRect(stereoWidthPanel);
 	
-	juce::Rectangle<int> midiVelocitysensPanel (200, 135, 95, 100);
+	juce::Rectangle<int> midiVelocitysensPanel (5, 5, 85, 100);
 	g.fillRect(midiVelocitysensPanel);
 	
-	juce::Rectangle<int> pitchbendPanel (5, 240, 275, 65);
+	juce::Rectangle<int> pitchbendPanel (5, 240, 290, 65);
 	g.fillRect(pitchbendPanel);
 	
 	juce::Rectangle<int> pedalpitchPanel (5, 310, 140, 65);
@@ -258,57 +257,57 @@ void MidiControlPanel::resized()
 {
 	// adsr
 	{
-		attackLabel.setBounds(0, 25, 75, 35);
-		adsrAttack.setBounds(0, 50, 75, 75);
+		attackLabel.setBounds	(5, 130, 75, 35);
+		adsrAttack.setBounds	(5, 152, 75, 75);
 		
-		decayLabel.setBounds(65, 25, 75, 35);
-		adsrDecay.setBounds(65, 50, 75, 75);
+		decayLabel.setBounds	(78, 130, 75, 35);
+		adsrDecay.setBounds		(78, 152, 75, 75);
 		
-		sustainLabel.setBounds(130, 25, 75, 35);
-		adsrSustain.setBounds(130, 50, 75, 75);
+		sustainLabel.setBounds	(148, 130, 75, 35);
+		adsrSustain.setBounds	(148, 152, 75, 75);
 		
-		releaseLabel.setBounds(195, 25, 75, 35);
-		adsrRelease.setBounds(195, 50, 75, 75);
+		releaseLabel.setBounds	(220, 130, 75, 35);
+		adsrRelease.setBounds	(220, 152, 75, 75);
 		
-		adsrOnOff.setBounds(50, 0, 175, 35);
+		adsrOnOff.setBounds		(70, 110, 175, 35);
 	}
 	
 	// stereo width
 	{
-		stereowidthLabel.setBounds(10, 130, 85, 35);
-		stereoWidth.setBounds(15, 155, 75, 75);
+		stereowidthLabel.setBounds	(165, 302, 50, 50);
+		stereoWidth.setBounds		(153, 335, 75, 75);
 		
-		lowestpanLabel.setBounds(100, 130, 90, 50);
-		lowestPan.setBounds(128, 180, 35, 35);
+		lowestpanLabel.setBounds	(240, 310, 50, 50);
+		lowestPan.setBounds			(248, 365, 35, 35);
 	}
 	
 	// midi velocity sensitivity
 	{
-		midivelocitysensLabel.setBounds(205, 140, 85, 35);
-		midiVelocitySens.setBounds(230, 180, 35, 35);
+		midivelocitysensLabel.setBounds(5, 10, 85, 35);
+		midiVelocitySens.setBounds(25, 50, 45, 45);
 	}
 	
 	// pitch bend
 	{
-		pitchbendUpLabel.setBounds(10, 235, 125, 35);
-		pitchBendUp.setBounds(10, 265, 125, 30);
+		pitchbendUpLabel.setBounds	(15, 235, 130, 35);
+		pitchBendUp.setBounds		(15, 265, 130, 30);
 		
-		pitchbendDownLabel.setBounds(145, 235, 125, 35);
-		pitchBendDown.setBounds(145, 265, 125, 30);
+		pitchbendDownLabel.setBounds(150, 235, 140, 35);
+		pitchBendDown.setBounds		(155, 265, 130, 30);
 	}
 	
 	// pedal pitch
 	{
-		pedalPitch.setBounds(15, 305, 125, 35);
+		pedalPitch.setBounds(10, 305, 125, 35);
 		
 		pedalpitchThreshLabel.setBounds(25, 335, 75, 35);
 		pedalPitchThresh.setBounds(100, 335, 35, 35);
 	}
 	
-	midiKill.setBounds(280, 10, 100, 35);
+	midiKill.setBounds(145, 5, 100, 35);
 	
-	voiceStealing.setBounds(270, 50, 125, 35);
+	voiceStealing.setBounds(135, 40, 125, 35);
 	
-	midiLatch.setBounds(270, 80, 125, 35);
+	midiLatch.setBounds(135, 70, 125, 35);
 
 }
