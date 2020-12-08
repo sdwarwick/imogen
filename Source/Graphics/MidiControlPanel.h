@@ -26,34 +26,42 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 	
-	// elements for control of harmony ADSR's
+	// MIDI-triggered ADSR
 	Slider adsrAttack;
+	Label attackLabel;
 	Slider adsrDecay;
+	Label decayLabel;
 	Slider adsrSustain;
+	Label sustainLabel;
 	Slider adsrRelease;
+	Label releaseLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> attackLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> decayLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> sustainLink;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> releaseLink;
-	// adsr on/off toggle
 	ToggleButton adsrOnOff;
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> adsrOnOffLink;
 	
 	// stereo width of harmony output
 	Slider stereoWidth;
+	Label stereowidthLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
 	// sets threshold for lowest panned midiPitch. set to 0 to turn off (pan all notes); set to 127 to bypass panning entirely (pan no notes)
 	Slider lowestPan;
+	Label lowestpanLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowestPanLink;
 	
 	// MIDI velocity sensitivity dial
 	Slider midiVelocitySens;
+	Label midivelocitysensLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
 	
 	// MIDI pitch bend range up/down controls
 	ComboBox pitchBendUp;
+	Label pitchbendUpLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendUpLink;
 	ComboBox pitchBendDown;
+	Label pitchbendDownLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendDownLink;
 	
 	// MIDI PEDAL PITCH: doubles the lowest played pitch an octave lower, if lowest active pitch is below a certain threshold
@@ -62,6 +70,7 @@ public:
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> pedalPitchLink;
 	// set the highest pitch that will be doubled @ 8vb
 	Slider pedalPitchThresh;
+	Label pedalpitchThreshLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> pedalPitchThreshLink;
 	
 	// midi latch on/off toggle

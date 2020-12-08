@@ -121,7 +121,7 @@ void ImogenAudioProcessorEditor::resized()
 	
 //	inputChannel.setBounds(190, 250, 75, 35);
 	
-	midiPanel.setBounds(0, 0, 350, 350);
+	midiPanel.setBounds(0, 0, 390, 380);
 	
 }
 
