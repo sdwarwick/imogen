@@ -35,7 +35,7 @@ class MidiProcessor
 	
 public:
 	
-	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevPedalPitchOnOff(false), prevPedalPitch(128), midiVelocityMultiplier(1.0f)
+	MidiProcessor(OwnedArray<HarmonyVoice>& h): harmonyEngine(h), polyphonyManager(midiPanningManager, stealingManager, latchManager), lastRecievedPitchBend(64), isStealingOn(true), lowestPannedNote(0), prevLowestpannednote(0), prevPedalPitchOnOff(false), prevPedalPitch(128), midiVelocityMultiplier(1.0f)
 	{
 		activePitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 		activePitches.clearQuick();
@@ -50,6 +50,20 @@ public:
 		lowestPannedNote = lowestPannedMidipitch;
 		midiVelocityMultiplier = midiVelocitySens / 100.0f;
 		ioMidiBuffer.clear();
+		
+		if(lowestPannedNote != prevLowestpannednote)
+		{
+			for(int i = 0; i < NUMBER_OF_VOICES; ++i)
+			{
+				if(harmonyEngine[i]->voiceIsOn)
+				{
+					if(harmonyEngine[i]->reportLastPitch() < prevLowestpannednote)
+					{
+						harmonyEngine[i]->changePanning(midiPanningManager.getNextPanVal());
+					}
+				}
+			}
+		}
 		
 		for (const MidiMessageMetadata meta : midiMessages)
 		{
@@ -98,7 +112,7 @@ public:
 			}
 		}
 		prevPedalPitchOnOff = isPedalPitchOn;
-	
+		prevLowestpannednote = lowestPannedNote;
 	};
 	// :: END MIDI CALLBACK
 	
@@ -185,6 +199,7 @@ private:
 	Array<int> activePitches;
 	bool isStealingOn;
 	int lowestPannedNote;
+	int prevLowestpannednote;
 	bool prevPedalPitchOnOff;
 	int prevPedalPitch;
 	

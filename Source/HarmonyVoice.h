@@ -167,6 +167,10 @@ public:
 		return lastRecievedVelocity;
 	};
 	
+	int reportLastPitch() const {
+		return lastNoteRecieved;
+	};
+	
 	AudioBuffer<float> shiftedBuffer; // this audio buffer will store the shifted signal. MONO BUFFER [step 1] - only use channel 0
 	AudioBuffer<float> harmonyBuffer; // this buffer stores the harmony voice's actual output. STEREO BUFFER [step 2]
 	
