@@ -20,33 +20,38 @@
 class LimiterControlPanel  : public juce::Component
 {
 public:
-	LimiterControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
+	ImogenAudioProcessor& audioProcessor;
+	LimiterControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
+		limiterThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
+		limiterReleaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
+		limiterToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
 		// threshold
 		{
 			limiterThresh.setSliderStyle(Slider::SliderStyle::LinearVertical);
 			limiterThresh.setRange(-60.0f, 0.0f);
-			limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			//		addAndMakeVisible(&limiterThresh);
-			limiterThreshLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh);
+			limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
+			addAndMakeVisible(limiterThresh);
 			limiterThresh.setValue(-2.0f);
+			initializeLabel(threshLabel, "Threshold");
+			addAndMakeVisible(threshLabel);
 		}
 		
 		// release
 		{
-			limiterRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+			limiterRelease.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
 			limiterRelease.setRange(1, 250);
 			limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			//	addAndMakeVisible(&limiterRelease);
-			limiterReleaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease);
+			addAndMakeVisible(limiterRelease);
 			limiterRelease.setValue(10);
+			initializeLabel(releaseLabel, "Release time");
+			addAndMakeVisible(releaseLabel);
 		}
 		
-		// toggle on/off
+		// toggle
 		{
-			limiterToggle.setButtonText("Limiter on/off");
-			//		addAndMakeVisible(&limiterToggle);
-			limiterToggleLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle);
+			limiterToggle.setButtonText("Output limiter");
+			addAndMakeVisible(limiterToggle);
 			limiterToggle.triggerClick();
 		}
     }
@@ -57,10 +62,12 @@ public:
 	
 	// threshold, in dBFS
 	Slider limiterThresh;
+	Label threshLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
 	
 	// release time, in ms
 	Slider limiterRelease;
+	Label releaseLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
 	
 	// toggle limiter on/off
@@ -76,10 +83,24 @@ public:
 
     void resized() override
     {
+		limiterToggle.setBounds(90, 0, 200, 35);
 		
+		threshLabel.setBounds  (10, 50, 75, 35);
+		limiterThresh.setBounds(65, 25, 50, 95);
+		
+		releaseLabel.setBounds  (165, 30, 100, 35);
+		limiterRelease.setBounds(195, 60, 35, 35);
     }
 
 private:
-	ImogenAudioProcessor& audioProcessor;
+	
+	void initializeLabel(Label& label, String labelText)
+	{
+		label.setFont(juce::Font(14.0f, juce::Font::bold));
+		label.setJustificationType(juce::Justification::centred);
+		label.setColour(juce::Label::textColourId, juce::Colours::black);
+		label.setText(labelText, juce::dontSendNotification);
+	};
+	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LimiterControlPanel)
 };

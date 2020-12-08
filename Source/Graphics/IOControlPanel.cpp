@@ -12,7 +12,11 @@
 #include "IOControlPanel.h"
 
 //==============================================================================
-IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
+IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryPanLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
+	masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "masterDryWet", masterDryWet)),
+	inputGainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
+	outputGainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
+	inputChannelLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel))
 {
 	// dry pan
 	{
@@ -20,7 +24,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		dryPan.setRange(0, 127);
 		dryPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(dryPan);
-		dryPanLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan);
 		dryPan.setValue(64);
 		initializeLabel(drypanLabel, "Modulator pan");
 		addAndMakeVisible(drypanLabel);
@@ -32,7 +35,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		masterDryWet.setRange(0, 100);
 		masterDryWet.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(masterDryWet);
-		masterDryWetLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "masterDryWet", masterDryWet);
 		masterDryWet.setValue(100);
 		initializeLabel(drywetLabel, "% wet signal");
 		addAndMakeVisible(drywetLabel);
@@ -44,7 +46,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		inputGain.setRange(-60.0f, 0.0f);
 		inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 		addAndMakeVisible(inputGain);
-		inputGainLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain);
 		inputGain.setValue(0.0f);
 		initializeLabel(inputGainLabel, "Input gain");
 		addAndMakeVisible(inputGainLabel);
@@ -56,7 +57,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		outputGain.setRange(-60.0f, 0.0f);
 		outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
 		addAndMakeVisible(outputGain);
-		outputGainLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain);
 		outputGain.setValue(-4.0f);
 		initializeLabel(outputgainLabel, "Output gain");
 		addAndMakeVisible(outputgainLabel);
@@ -68,7 +68,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		inputChannel.setRange(0, 16, 1);
 		inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(inputChannel);
-		inputChannelLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel);
 		inputChannel.setValue(0);
 		initializeLabel(inputChannelLabel, "Input channel");
 		addAndMakeVisible(inputChannelLabel);

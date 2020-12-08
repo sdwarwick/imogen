@@ -12,7 +12,21 @@
 #include "MidiControlPanel.h"
 
 //==============================================================================
-MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
+MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
+	attackLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),
+	decayLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay)),
+	sustainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
+	releaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
+	adsrOnOffLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
+	stereoWidthLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
+	lowestPanLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
+	midiVelocitySensLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
+	pitchBendUpLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
+	pitchBendDownLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
+	pedalPitchLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitch)),
+	pedalPitchThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThresh)),
+	midiLatchLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "midiLatch", midiLatch)),
+	voiceStealingLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing))
 {
 	// ADSR
 	{
@@ -22,7 +36,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			adsrAttack.setRange(0.01f, 1.0f);
 			adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
 			addAndMakeVisible(adsrAttack);
-			attackLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack);
 			adsrAttack.setValue(0.035f);
 			initializeLabel(attackLabel, "Attack");
 			addAndMakeVisible(attackLabel);
@@ -34,7 +47,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			adsrDecay.setRange(0.01f, 1.0f);
 			adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(adsrDecay);
-			decayLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay);
 			adsrDecay.setValue(0.06f);
 			initializeLabel(decayLabel, "Decay");
 			addAndMakeVisible(decayLabel);
@@ -46,7 +58,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			adsrSustain.setRange(0.01f, 1.0f);
 			adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(adsrSustain);
-			sustainLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain);
 			adsrSustain.setValue(0.8f);
 			initializeLabel(sustainLabel, "Sustain");
 			addAndMakeVisible(sustainLabel);
@@ -58,7 +69,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			adsrRelease.setRange(0.01f, 1.0f);
 			adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(adsrRelease);
-			releaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease);
 			adsrRelease.setValue(0.1f);
 			initializeLabel(releaseLabel, "Release");
 			addAndMakeVisible(releaseLabel);
@@ -68,7 +78,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		{
 			adsrOnOff.setButtonText("MIDI-triggered ADSR");
 			addAndMakeVisible(adsrOnOff);
-			adsrOnOffLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff);
 			adsrOnOff.triggerClick();
 		}
 	}
@@ -88,7 +97,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			stereoWidth.setRange(0, 100);
 			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
 			addAndMakeVisible(stereoWidth);
-			stereoWidthLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth);
 			stereoWidth.setValue(100);
 			stereoWidth.setNumDecimalPlacesToDisplay(0);
 			initializeLabel(stereowidthLabel, "Stereo width");
@@ -101,7 +109,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			lowestPan.setRange(0, 127);
 			lowestPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(lowestPan);
-			lowestPanLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan);
 			lowestPan.setValue(0);
 			initializeLabel(lowestpanLabel, "Lowest panned pitch");
 			addAndMakeVisible(lowestpanLabel);
@@ -114,7 +121,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		midiVelocitySens.setRange(0, 100);
 		midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(midiVelocitySens);
-		midiVelocitySensLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
 		midiVelocitySens.setValue(100);
 		initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
 		addAndMakeVisible(midivelocitysensLabel);
@@ -122,41 +128,43 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 	
 	// pitch bend settings
 	{
-		pitchBendUp.addItem("Minor Second", 1);
-		pitchBendUp.addItem("Major Second", 2);
-		pitchBendUp.addItem("Minor Third", 3);
-		pitchBendUp.addItem("Major Third", 4);
-		pitchBendUp.addItem("Perfect Fourth", 5);
-		pitchBendUp.addItem("Aug Fourth/Dim Fifth", 6);
-		pitchBendUp.addItem("Perfect Fifth", 7);
-		pitchBendUp.addItem("Minor Sixth", 8);
-		pitchBendUp.addItem("Major Sixth", 9);
-		pitchBendUp.addItem("Minor Seventh", 10);
-		pitchBendUp.addItem("Major Seventh", 11);
-		pitchBendUp.addItem("Octave", 12);
-		addAndMakeVisible(pitchBendUp);
-		pitchBendUpLink = std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp);
-		pitchBendUp.setSelectedId(2);
-		initializeLabel(pitchbendUpLabel, "Pitch bend range up");
-		addAndMakeVisible(pitchbendUpLabel);
+		{
+			pitchBendUp.addItem("Minor Second", 1);
+			pitchBendUp.addItem("Major Second", 2);
+			pitchBendUp.addItem("Minor Third", 3);
+			pitchBendUp.addItem("Major Third", 4);
+			pitchBendUp.addItem("Perfect Fourth", 5);
+			pitchBendUp.addItem("Aug Fourth/Dim Fifth", 6);
+			pitchBendUp.addItem("Perfect Fifth", 7);
+			pitchBendUp.addItem("Minor Sixth", 8);
+			pitchBendUp.addItem("Major Sixth", 9);
+			pitchBendUp.addItem("Minor Seventh", 10);
+			pitchBendUp.addItem("Major Seventh", 11);
+			pitchBendUp.addItem("Octave", 12);
+			pitchBendUp.setSelectedId(2);
+			addAndMakeVisible(pitchBendUp);
+			initializeLabel(pitchbendUpLabel, "Pitch bend range up");
+			addAndMakeVisible(pitchbendUpLabel);
+		}
 		
-		pitchBendDown.addItem("Minor Second", 1);
-		pitchBendDown.addItem("Major Second", 2);
-		pitchBendDown.addItem("Minor Third", 3);
-		pitchBendDown.addItem("Major Third", 4);
-		pitchBendDown.addItem("Perfect Fourth", 5);
-		pitchBendDown.addItem("Aug Fourth/Dim Fifth", 6);
-		pitchBendDown.addItem("Perfect Fifth", 7);
-		pitchBendDown.addItem("Minor Sixth", 8);
-		pitchBendDown.addItem("Major Sixth", 9);
-		pitchBendDown.addItem("Minor Seventh", 10);
-		pitchBendDown.addItem("Major Seventh", 11);
-		pitchBendDown.addItem("Octave", 12);
-		addAndMakeVisible(pitchBendDown);
-		pitchBendDownLink = std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown);
-		pitchBendDown.setSelectedId(2);
-		initializeLabel(pitchbendDownLabel, "Pitch bend range down");
-		addAndMakeVisible(pitchbendDownLabel);
+		{
+			pitchBendDown.addItem("Minor Second", 1);
+			pitchBendDown.addItem("Major Second", 2);
+			pitchBendDown.addItem("Minor Third", 3);
+			pitchBendDown.addItem("Major Third", 4);
+			pitchBendDown.addItem("Perfect Fourth", 5);
+			pitchBendDown.addItem("Aug Fourth/Dim Fifth", 6);
+			pitchBendDown.addItem("Perfect Fifth", 7);
+			pitchBendDown.addItem("Minor Sixth", 8);
+			pitchBendDown.addItem("Major Sixth", 9);
+			pitchBendDown.addItem("Minor Seventh", 10);
+			pitchBendDown.addItem("Major Seventh", 11);
+			pitchBendDown.addItem("Octave", 12);
+			addAndMakeVisible(pitchBendDown);
+			pitchBendDown.setSelectedId(2);
+			initializeLabel(pitchbendDownLabel, "Pitch bend range down");
+			addAndMakeVisible(pitchbendDownLabel);
+		}
 	}
 	
 	// MIDI PEDAL PITCH settings
@@ -165,7 +173,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		{
 			pedalPitch.setButtonText("MIDI pedal pitch");
 			addAndMakeVisible(pedalPitch);
-			pedalPitchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitch);
 		}
 		// threshold
 		{
@@ -173,7 +180,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			pedalPitchThresh.setRange(0, 127);
 			pedalPitchThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(pedalPitchThresh);
-			pedalPitchThreshLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThresh);
 			pedalPitchThresh.setValue(127);
 			initializeLabel(pedalpitchThreshLabel, "Threshold");
 			addAndMakeVisible(pedalpitchThreshLabel);
@@ -184,14 +190,12 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 	{
 		midiLatch.setButtonText("MIDI latch");
 		addAndMakeVisible(midiLatch);
-		midiLatchLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "midiLatch", midiLatch);
 	}
 	
 	// voice stealing on/off
 	{
 		voiceStealing.setButtonText("Voice stealing");
 		addAndMakeVisible(voiceStealing);
-		voiceStealingLink = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing);
 		voiceStealing.triggerClick();
 	}
 

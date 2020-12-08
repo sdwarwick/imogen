@@ -20,6 +20,7 @@
 class IOControlPanel  : public juce::Component
 {
 public:
+	ImogenAudioProcessor& audioProcessor;
     IOControlPanel(ImogenAudioProcessor& p);
     ~IOControlPanel() override;
 
@@ -54,6 +55,5 @@ public:
 
 private:
 	void initializeLabel(Label& label, String labelText);
-	ImogenAudioProcessor& audioProcessor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IOControlPanel)
 };

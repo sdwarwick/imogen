@@ -20,6 +20,7 @@
 class MidiControlPanel  : public juce::Component
 {
 public:
+	ImogenAudioProcessor& audioProcessor;
     MidiControlPanel(ImogenAudioProcessor& p);
     ~MidiControlPanel() override;
 
@@ -86,6 +87,5 @@ public:
 
 private:
 	void initializeLabel(Label& label, String labelText);
-	ImogenAudioProcessor& audioProcessor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };
