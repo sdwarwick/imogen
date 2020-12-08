@@ -13,6 +13,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(midiPanel);
 	addAndMakeVisible(ioPanel);
 	addAndMakeVisible(limiterPanel);
+	addAndMakeVisible(staffDisplay);
 	
 	Timer::startTimerHz(FRAMERATE);
 	
@@ -33,6 +34,7 @@ void ImogenAudioProcessorEditor::resized()
 	midiPanel.setBounds(10, 10, 300, 415);
 	ioPanel.setBounds(10, 435, 300, 255);
 	limiterPanel.setBounds(320, 570, 300, 120);
+	staffDisplay.setBounds(320, 10, 300, 550);
 }
 
 

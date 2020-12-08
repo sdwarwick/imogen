@@ -76,9 +76,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-		g.fillAll (juce::Colours::burlywood);
-		
-		g.setColour(juce::Colours::steelblue);
+		g.fillAll (juce::Colours::steelblue);
     }
 
     void resized() override

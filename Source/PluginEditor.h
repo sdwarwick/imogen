@@ -36,6 +36,7 @@ private:
 	MidiControlPanel midiPanel;
 	IOControlPanel ioPanel;
 	LimiterControlPanel limiterPanel;
+	StaffDisplay staffDisplay;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
