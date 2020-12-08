@@ -45,6 +45,12 @@
         <FILE id="pfhfAd" name="MidiControlPanel.h" compile="0" resource="0"
               file="Source/Graphics/MidiControlPanel.h"/>
       </GROUP>
+      <GROUP id="{501E3718-40B7-047D-42CD-8FBF33890D22}" name="IOControlPanel">
+        <FILE id="iuy3kM" name="IOControlPanel.cpp" compile="1" resource="0"
+              file="Source/Graphics/IOControlPanel.cpp"/>
+        <FILE id="WxQPWJ" name="IOControlPanel.h" compile="0" resource="0"
+              file="Source/Graphics/IOControlPanel.h"/>
+      </GROUP>
     </GROUP>
     <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
       <FILE id="miD8GM" name="MidiProcessor.h" compile="0" resource="0" file="Source/Midi/MidiProcessor.h"/>
