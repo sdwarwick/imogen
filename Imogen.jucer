@@ -50,6 +50,8 @@
               file="Source/Graphics/IOControlPanel.cpp"/>
         <FILE id="WxQPWJ" name="IOControlPanel.h" compile="0" resource="0"
               file="Source/Graphics/IOControlPanel.h"/>
+        <FILE id="OK081y" name="LimiterControlPanel.h" compile="0" resource="0"
+              file="Source/Graphics/LimiterControlPanel.h"/>
       </GROUP>
     </GROUP>
     <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">

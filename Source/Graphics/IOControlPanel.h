@@ -28,35 +28,32 @@ public:
 	
 	// dry vox (modulator) pan (in midiPan)
 	Slider dryPan;
+	Label drypanLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
 	
 	// master dry/wet
 	Slider masterDryWet;
+	Label drywetLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
 	
 	// modulator input gain (gain applied before mod signal is sent into harmony algorithm
 	Slider inputGain;
+	Label inputGainLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
 	
 	// master output gain
 	Slider outputGain;
+	Label outputgainLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
 	
 	// set input channel [plugin only accepts a single mono input source]
 	Slider inputChannel;
+	Label inputChannelLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
-	
-	// output limiter threshold, in dBFS
-	Slider limiterThresh;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
-	// limiter release time, in ms
-	Slider limiterRelease;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
-	// toggle limiter on/off
-	ToggleButton limiterToggle;
-	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
+
 
 private:
+	void initializeLabel(Label& label, String labelText);
 	ImogenAudioProcessor& audioProcessor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IOControlPanel)
 };

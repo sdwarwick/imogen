@@ -6,7 +6,7 @@
 #include "StaffDisplay.h"
 #include "MidiControlPanel.h"
 #include "IOControlPanel.h"
-
+#include "LimiterControlPanel.h"
 
 //==============================================================================
 
@@ -35,6 +35,7 @@ private:
 	
 	MidiControlPanel midiPanel;
 	IOControlPanel ioPanel;
+	LimiterControlPanel limiterPanel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

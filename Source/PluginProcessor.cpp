@@ -106,7 +106,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f), -4.0f));
 	params.push_back(std::make_unique<AudioParameterBool>("midiLatch", "MIDI Latch on/off", false));
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
-	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 99, 0));
+	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 16, 0));
 	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f), -2.0f));
 	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
 	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));
@@ -361,9 +361,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	
 	int inptchn = inputChannelListener;
-	if (inputChannelListener > buffer.getNumChannels()) {
-		inptchn = buffer.getNumChannels();
-	}
+	if (inputChannelListener > buffer.getNumChannels()) { inptchn = buffer.getNumChannels() - 1; }
 	const int inputChannel = inptchn;
 	
 	int samplesLeft = buffer.getNumSamples();

@@ -24,10 +24,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			addAndMakeVisible(adsrAttack);
 			attackLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack);
 			adsrAttack.setValue(0.035f);
-			attackLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			attackLabel.setJustificationType(juce::Justification::centred);
-			attackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			attackLabel.setText("Attack", juce::dontSendNotification);
+			initializeLabel(attackLabel, "Attack");
 			addAndMakeVisible(attackLabel);
 		}
 		
@@ -39,10 +36,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			addAndMakeVisible(adsrDecay);
 			decayLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay);
 			adsrDecay.setValue(0.06f);
-			decayLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			decayLabel.setJustificationType(juce::Justification::centred);
-			decayLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			decayLabel.setText("Decay", juce::dontSendNotification);
+			initializeLabel(decayLabel, "Decay");
 			addAndMakeVisible(decayLabel);
 		}
 		
@@ -54,10 +48,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			addAndMakeVisible(adsrSustain);
 			sustainLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain);
 			adsrSustain.setValue(0.8f);
-			sustainLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			sustainLabel.setJustificationType(juce::Justification::centred);
-			sustainLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			sustainLabel.setText("Sustain", juce::dontSendNotification);
+			initializeLabel(sustainLabel, "Sustain");
 			addAndMakeVisible(sustainLabel);
 		}
 		
@@ -69,10 +60,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			addAndMakeVisible(adsrRelease);
 			releaseLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease);
 			adsrRelease.setValue(0.1f);
-			releaseLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			releaseLabel.setJustificationType(juce::Justification::centred);
-			releaseLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			releaseLabel.setText("Release", juce::dontSendNotification);
+			initializeLabel(releaseLabel, "Release");
 			addAndMakeVisible(releaseLabel);
 		}
 		
@@ -103,10 +91,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			stereoWidthLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth);
 			stereoWidth.setValue(100);
 			stereoWidth.setNumDecimalPlacesToDisplay(0);
-			stereowidthLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			stereowidthLabel.setJustificationType(juce::Justification::centred);
-			stereowidthLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			stereowidthLabel.setText("Stereo width", juce::dontSendNotification);
+			initializeLabel(stereowidthLabel, "Stereo width");
 			addAndMakeVisible(stereowidthLabel);
 		}
 		
@@ -118,10 +103,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			addAndMakeVisible(lowestPan);
 			lowestPanLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan);
 			lowestPan.setValue(0);
-			lowestpanLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			lowestpanLabel.setJustificationType(juce::Justification::centred);
-			lowestpanLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			lowestpanLabel.setText("Lowest panned pitch", juce::dontSendNotification);
+			initializeLabel(lowestpanLabel, "Lowest panned pitch");
 			addAndMakeVisible(lowestpanLabel);
 		}
 	}
@@ -134,10 +116,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		addAndMakeVisible(midiVelocitySens);
 		midiVelocitySensLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens);
 		midiVelocitySens.setValue(100);
-		midivelocitysensLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-		midivelocitysensLabel.setJustificationType(juce::Justification::centred);
-		midivelocitysensLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-		midivelocitysensLabel.setText("MIDI velocity sensitivity", juce::dontSendNotification);
+		initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
 		addAndMakeVisible(midivelocitysensLabel);
 	}
 	
@@ -158,10 +137,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		addAndMakeVisible(pitchBendUp);
 		pitchBendUpLink = std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp);
 		pitchBendUp.setSelectedId(2);
-		pitchbendUpLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-		pitchbendUpLabel.setJustificationType(juce::Justification::centred);
-		pitchbendUpLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-		pitchbendUpLabel.setText("Pitch bend range up", juce::dontSendNotification);
+		initializeLabel(pitchbendUpLabel, "Pitch bend range up");
 		addAndMakeVisible(pitchbendUpLabel);
 		
 		pitchBendDown.addItem("Minor Second", 1);
@@ -179,10 +155,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 		addAndMakeVisible(pitchBendDown);
 		pitchBendDownLink = std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown);
 		pitchBendDown.setSelectedId(2);
-		pitchbendDownLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-		pitchbendDownLabel.setJustificationType(juce::Justification::centred);
-		pitchbendDownLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-		pitchbendDownLabel.setText("Pitch bend range down", juce::dontSendNotification);
+		initializeLabel(pitchbendDownLabel, "Pitch bend range down");
 		addAndMakeVisible(pitchbendDownLabel);
 	}
 	
@@ -202,10 +175,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p)
 			addAndMakeVisible(pedalPitchThresh);
 			pedalPitchThreshLink = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThresh);
 			pedalPitchThresh.setValue(127);
-			pedalpitchThreshLabel.setFont(juce::Font(14.0f, juce::Font::bold));
-			pedalpitchThreshLabel.setJustificationType(juce::Justification::centred);
-			pedalpitchThreshLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-			pedalpitchThreshLabel.setText("Threshold", juce::dontSendNotification);
+			initializeLabel(pedalpitchThreshLabel, "Threshold");
 			addAndMakeVisible(pedalpitchThreshLabel);
 		}
 	}
@@ -311,3 +281,11 @@ void MidiControlPanel::resized()
 	midiLatch.setBounds(135, 70, 125, 35);
 
 }
+
+void MidiControlPanel::initializeLabel(Label& label, String labelText)
+{
+	label.setFont(juce::Font(14.0f, juce::Font::bold));
+	label.setJustificationType(juce::Justification::centred);
+	label.setColour(juce::Label::textColourId, juce::Colours::white);
+	label.setText(labelText, juce::dontSendNotification);
+};

@@ -85,6 +85,7 @@ public:
 	TextButton midiKill;
 
 private:
+	void initializeLabel(Label& label, String labelText);
 	ImogenAudioProcessor& audioProcessor;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };
