@@ -2,9 +2,9 @@
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), midiPanel(p), ioPanel(p), limiterPanel(p)
+    : AudioProcessorEditor (&p), audioProcessor (p), midiPanel(p), ioPanel(p)
 {
-    setSize (1130, 700);
+    setSize (940, 435);
 	
 	currentPitches.ensureStorageAllocated(NUMBER_OF_VOICES);
 	currentPitches.clearQuick();
@@ -12,7 +12,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	
 	addAndMakeVisible(midiPanel);
 	addAndMakeVisible(ioPanel);
-	addAndMakeVisible(limiterPanel);
 	addAndMakeVisible(staffDisplay);
 	
 	Timer::startTimerHz(FRAMERATE);
@@ -32,9 +31,8 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 void ImogenAudioProcessorEditor::resized()
 {
 	midiPanel.setBounds(10, 10, 300, 415);
-	ioPanel.setBounds(10, 435, 300, 255);
-	limiterPanel.setBounds(320, 570, 300, 120);
-	staffDisplay.setBounds(320, 10, 300, 550);
+	ioPanel.setBounds(320, 10, 300, 415);
+	staffDisplay.setBounds(630, 10, 300, 415);
 }
 
 

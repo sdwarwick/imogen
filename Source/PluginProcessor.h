@@ -8,8 +8,6 @@
 #include "EpochExtractor.h"
 #include "Yin.h"
 
-#define TIMER_RATE_MS 150
-
 
 //==============================================================================
 /**

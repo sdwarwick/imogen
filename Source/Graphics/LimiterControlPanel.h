@@ -83,11 +83,11 @@ public:
     {
 		limiterToggle.setBounds(90, 0, 200, 35);
 		
-		threshLabel.setBounds  (10, 50, 75, 35);
-		limiterThresh.setBounds(65, 25, 50, 95);
+		threshLabel.setBounds  (45, 25, 75, 35);
+		limiterThresh.setBounds(60, 45, 50, 95);
 		
-		releaseLabel.setBounds  (165, 30, 100, 35);
-		limiterRelease.setBounds(195, 60, 35, 35);
+		releaseLabel.setBounds  (150, 25, 100, 35);
+		limiterRelease.setBounds(180, 55, 35, 35);
     }
 
 private:

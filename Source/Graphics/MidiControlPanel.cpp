@@ -223,7 +223,7 @@ void MidiControlPanel::paint (juce::Graphics& g)
 	juce::Rectangle<int> pitchbendPanel (5, 240, 290, 65);
 	g.fillRect(pitchbendPanel);
 	
-	juce::Rectangle<int> pedalpitchPanel (5, 310, 140, 65);
+	juce::Rectangle<int> pedalpitchPanel (5, 320, 140, 75);
 	g.fillRect(pedalpitchPanel);
 }
 
@@ -272,10 +272,10 @@ void MidiControlPanel::resized()
 	
 	// pedal pitch
 	{
-		pedalPitch.setBounds(10, 305, 125, 35);
+		pedalPitch.setBounds(10, 320, 125, 35);
 		
-		pedalpitchThreshLabel.setBounds(25, 335, 75, 35);
-		pedalPitchThresh.setBounds(100, 335, 35, 35);
+		pedalpitchThreshLabel.setBounds(25, 350, 75, 35);
+		pedalPitchThresh.setBounds(100, 350, 35, 35);
 	}
 	
 	midiKill.setBounds(145, 5, 100, 35);

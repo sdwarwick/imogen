@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "GlobalDefinitions.h"
+#include "LimiterControlPanel.h"
 
 //==============================================================================
 /*
@@ -52,6 +53,7 @@ public:
 	Label inputChannelLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
 
+	LimiterControlPanel limiterPanel;
 
 private:
 	void initializeLabel(Label& label, String labelText);

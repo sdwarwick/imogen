@@ -16,7 +16,8 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 	masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "masterDryWet", masterDryWet)),
 	inputGainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
 	outputGainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
-	inputChannelLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel))
+	inputChannelLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel)),
+	limiterPanel(p)
 {
 	// dry pan
 	{
@@ -73,6 +74,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 		addAndMakeVisible(inputChannelLabel);
 	}
 	
+	addAndMakeVisible(limiterPanel);
 }
 
 IOControlPanel::~IOControlPanel()
@@ -88,7 +90,7 @@ void IOControlPanel::paint (juce::Graphics& g)
 	juce::Rectangle<int> inputControlPanel (5, 5, 290, 125);
 	g.fillRect(inputControlPanel);
 	
-	juce::Rectangle<int> outputControlPanel (5, 135, 290, 115);
+	juce::Rectangle<int> outputControlPanel (5, 135, 290, 125);
 	g.fillRect(outputControlPanel);
 }
 
@@ -120,9 +122,11 @@ void IOControlPanel::resized()
 	
 	// output gain
 	{
-		outputgainLabel.setBounds(165, 130, 75, 35);
-		outputGain.setBounds	 (177, 155, 50, 90);
+		outputgainLabel.setBounds(165, 138, 75, 35);
+		outputGain.setBounds	 (177, 160, 50, 90);
 	}
+	
+	limiterPanel.setBounds(5, 265, 290, 145);
 }
 
 void IOControlPanel::initializeLabel(Label& label, String labelText)
