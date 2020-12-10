@@ -6,6 +6,7 @@
 #include "StaffDisplay.h"
 #include "MidiControlPanel.h"
 #include "IOControlPanel.h"
+#include "HelpScreen.h"
 #include "LookAndFeel.h"
 
 //==============================================================================
@@ -35,6 +36,10 @@ private:
 	MidiControlPanel midiPanel;
 	IOControlPanel ioPanel;
 	StaffDisplay staffDisplay;
+	
+	HelpScreen helpScreen;
+	
+	bool viewHelp;  // bool to control visibility of help/documentation screen
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

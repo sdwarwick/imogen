@@ -55,6 +55,10 @@
               file="Source/Graphics/LimiterControlPanel.h"/>
       </GROUP>
     </GROUP>
+    <GROUP id="{F81918AC-7CE6-FBD9-9B56-1F21E32B78DE}" name="HelpScreen">
+      <FILE id="gLZAFp" name="HelpScreen.cpp" compile="1" resource="0" file="Source/Graphics/HelpScreen.cpp"/>
+      <FILE id="VWHuqH" name="HelpScreen.h" compile="0" resource="0" file="Source/Graphics/HelpScreen.h"/>
+    </GROUP>
     <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
       <FILE id="miD8GM" name="MidiProcessor.h" compile="0" resource="0" file="Source/Midi/MidiProcessor.h"/>
       <FILE id="QTabwq" name="PolyphonyVoiceManager.h" compile="0" resource="0"
