@@ -10,9 +10,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	currentPitches.clearQuick();
 	currentPitches.add(-1);
 	
-	lookAndFeel.setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::mediumslateblue);
-	lookAndFeel.setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
-	lookAndFeel.setColour(Slider::ColourIds::thumbColourId, juce::Colours::darkgrey);
+	initializeLookAndFeel(lookAndFeel);
 	
 	addAndMakeVisible(midiPanel);
 	midiPanel.setLookAndFeel(&lookAndFeel);
@@ -26,13 +24,14 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
+	setLookAndFeel(nullptr);
 	Timer::stopTimer();
 }
 
 //==============================================================================
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+	g.fillAll (juce::Colours::dimgrey);
 }
 
 void ImogenAudioProcessorEditor::resized()
@@ -61,3 +60,15 @@ void ImogenAudioProcessorEditor::timerCallback() {
 	}
 	
 }
+
+
+void ImogenAudioProcessorEditor::initializeLookAndFeel(ImogenLookAndFeel& lookAndFeel)
+{
+	lookAndFeel.setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::royalblue);
+	lookAndFeel.setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+	lookAndFeel.setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
+	
+	lookAndFeel.setColour(Label::ColourIds::textColourId, juce::Colours::black);
+	
+	lookAndFeel.setColour(TextButton::buttonColourId, juce::Colours::black);
+};

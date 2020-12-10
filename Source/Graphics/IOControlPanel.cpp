@@ -79,6 +79,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 
 IOControlPanel::~IOControlPanel()
 {
+	setLookAndFeel(nullptr);
 }
 
 void IOControlPanel::paint (juce::Graphics& g)
@@ -133,6 +134,5 @@ void IOControlPanel::initializeLabel(Label& label, String labelText)
 {
 	label.setFont(juce::Font(14.0f, juce::Font::bold));
 	label.setJustificationType(juce::Justification::centred);
-	label.setColour(juce::Label::textColourId, juce::Colours::black);
 	label.setText(labelText, juce::dontSendNotification);
 };

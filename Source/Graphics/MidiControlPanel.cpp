@@ -203,6 +203,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 
 MidiControlPanel::~MidiControlPanel()
 {
+	setLookAndFeel(nullptr);
 }
 
 void MidiControlPanel::paint (juce::Graphics& g)
@@ -280,9 +281,9 @@ void MidiControlPanel::resized()
 	
 	midiKill.setBounds(145, 5, 100, 35);
 	
-	voiceStealing.setBounds(135, 40, 125, 35);
+	voiceStealing.setBounds(135, 70, 125, 35);
 	
-	midiLatch.setBounds(135, 70, 125, 35);
+	midiLatch.setBounds(135, 40, 125, 35);
 
 }
 
@@ -290,6 +291,5 @@ void MidiControlPanel::initializeLabel(Label& label, String labelText)
 {
 	label.setFont(juce::Font(14.0f, juce::Font::bold));
 	label.setJustificationType(juce::Justification::centred);
-	label.setColour(juce::Label::textColourId, juce::Colours::white);
 	label.setText(labelText, juce::dontSendNotification);
 };

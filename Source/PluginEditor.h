@@ -30,6 +30,7 @@ private:
     ImogenAudioProcessor& audioProcessor;
 	
 	ImogenLookAndFeel lookAndFeel;
+	void initializeLookAndFeel(ImogenLookAndFeel& lookAndFeel);
 	
 	// array to store currently active harmony pitches
 	Array<int> currentPitches;

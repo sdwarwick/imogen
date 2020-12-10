@@ -38,6 +38,7 @@ StaffDisplay::StaffDisplay(): useFlats(false)
 
 StaffDisplay::~StaffDisplay()
 {
+	setLookAndFeel(nullptr);
 }
 
 void StaffDisplay::paint (juce::Graphics& g)

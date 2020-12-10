@@ -18,7 +18,6 @@ class ImogenLookAndFeel : public juce::LookAndFeel_V4
 public:
 	ImogenLookAndFeel()
 	{
-		
 	};
 	
 	~ImogenLookAndFeel()
@@ -53,6 +52,42 @@ public:
 		
 		g.setColour (this->findColour(Slider::ColourIds::thumbColourId));
 		g.fillPath (p);
+	};
+	
+	
+	void drawToggleButton (Graphics& g, ToggleButton& b, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+	{
+		const auto fontSize = jmin (15.0f, (float) b.getHeight() * 0.75f);
+		const auto tickWidth = fontSize * 1.1f;
+		
+		drawCheckbox(g, 4.0f, ((float) b.getHeight() - tickWidth) * 0.5f,
+					 tickWidth, tickWidth, b.getToggleState());
+		
+		g.setColour (this->findColour(TextButton::buttonColourId));
+		g.setFont (fontSize);
+		
+		if (! b.isEnabled())
+			g.setOpacity (0.5f);
+		
+		g.drawFittedText (b.getButtonText(),
+						  b.getLocalBounds().withTrimmedLeft (roundToInt (tickWidth) + 10)
+						  .withTrimmedRight (2),
+						  Justification::centredLeft, 10);
+	};
+	
+	void drawCheckbox(Graphics& g, float x, float y, float w, float h, bool ticked) // draws tick box for toggleButtons
+	{
+		Rectangle<float> tickBounds (x, y, w, h);
+		
+		g.setColour (this->findColour(TextButton::buttonColourId));
+		g.drawRoundedRectangle (tickBounds, 4.0f, 1.0f);
+		
+		if (ticked)
+		{
+			g.setColour (this->findColour(TextButton::buttonColourId));
+			const auto tick = getTickShape (0.75f);
+			g.fillPath (tick, tick.getTransformToScaleToFit (tickBounds.reduced (4, 5).toFloat(), false));
+		}
 	};
 	
 };

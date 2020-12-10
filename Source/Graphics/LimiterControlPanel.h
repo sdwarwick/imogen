@@ -58,6 +58,7 @@ public:
 
     ~LimiterControlPanel() override
     {
+		setLookAndFeel(nullptr);
     }
 	
 	// threshold, in dBFS
@@ -96,7 +97,6 @@ private:
 	{
 		label.setFont(juce::Font(14.0f, juce::Font::bold));
 		label.setJustificationType(juce::Justification::centred);
-		label.setColour(juce::Label::textColourId, juce::Colours::black);
 		label.setText(labelText, juce::dontSendNotification);
 	};
 	
