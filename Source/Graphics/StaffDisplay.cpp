@@ -12,10 +12,12 @@
 #include "StaffDisplay.h"
 
 //==============================================================================
-StaffDisplay::StaffDisplay(): useFlats(false)
+StaffDisplay::StaffDisplay(ImogenAudioProcessor& p): audioProcessor(p), useFlats(false), halfTheStafflineHeight(10.0f), accidentalXoffset(10)
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+	displayFlats.addItem("Display flats", 1);
+	displayFlats.addItem("Display sharps", 2);
+	displayFlats.setSelectedId(2);
+	addAndMakeVisible(displayFlats);
 
 	yCoordsOfActiveNotes.ensureStorageAllocated(NUMBER_OF_VOICES);
 	yCoordsOfActiveNotes.clearQuick();
@@ -46,72 +48,81 @@ void StaffDisplay::paint (juce::Graphics& g)
 	
     g.fillAll (juce::Colours::ivory);
 
+	drawPitches(audioProcessor.returnActivePitches(), g);
+	
 }
 
 void StaffDisplay::resized()
 {
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
-
+	displayFlats.setBounds(80, 375, 140, 35);
 }
 
 
-void StaffDisplay::displayFlats(const bool displayingFlats)
+void StaffDisplay::drawPitches(Array<int> activePitches, Graphics& g)
 {
-	useFlats = displayingFlats;
-};
-
-
-void StaffDisplay::drawPitches(Array<int> activePitches)
-{
+	if(displayFlats.getSelectedId() == 1) { useFlats = true; }
+	else (useFlats = false);
+	
 	if(activePitches.isEmpty() == false)
 	{
 		yCoordsOfActiveNotes.clearQuick();
 		for(int n = 0; n < activePitches.size(); ++n)
 		{
-			if(activePitches.getUnchecked(n) > -1) {
-			yCoordsOfActiveNotes.add(yCoordLookupTable[activePitches.getUnchecked(n)]);
+			if(const int returnedpitch = activePitches.getUnchecked(n); returnedpitch > -1)
+			{
+				yCoordsOfActiveNotes.add(yCoordLookupTable[returnedpitch]);
 			}
 		}
 		
-		int xOffset = 0;
-		float someScaleFactor = 28.0f; // the scaleing factor applied to the incremented "x offset" value (ie, the amount that "1 offset" equals)
-		const int baseXCoord = 35; // the base x coordinate to which the offset value is added
-		
-		for(int n = 0; n < yCoordsOfActiveNotes.size(); ++n)
+		if(yCoordsOfActiveNotes.isEmpty() == false)
 		{
+			int xOffset = 0;
+			float someScaleFactor = 28.0f; // the scaleing factor applied to the incremented "x offset" value (ie, the amount that "1 offset" equals)
+			const int baseXCoord = 35; // the base x coordinate to which the offset value is added
 			
-			const int yCoord = yCoordsOfActiveNotes.getUnchecked(n);
-			const float halfTheStafflineHeight = 10.0f;
-			
-			if(n == yCoordsOfActiveNotes.size() - 1) {
-				xOffset = 0;
-			} else if(yCoordsOfActiveNotes.getUnchecked(n + 1) - yCoord > halfTheStafflineHeight) { xOffset = 0; }; // bc of the n+1 here
-			
-			const int xCoord = xOffset * someScaleFactor + baseXCoord;
-			
-			drawNotehead(xCoord, yCoord);
-			
-			const int atester = activePitches.getUnchecked(n) % 12;
-			if(atester == 1 || atester == 3 || atester == 6 || atester == 8 || atester == 10)
+			for(int n = 0; n < yCoordsOfActiveNotes.size(); ++n)
 			{
-				drawAccidental(xCoord, yCoord);
+				
+				const int yCoord = yCoordsOfActiveNotes.getUnchecked(n);
+				
+				if(n == yCoordsOfActiveNotes.size() - 1) {
+					xOffset = 0;
+				}
+				if(n < yCoordsOfActiveNotes.size() - 2) {
+					if(yCoordsOfActiveNotes.getUnchecked(n + 1) - yCoord > halfTheStafflineHeight) { xOffset = 0; };
+				}
+				
+				const int xCoord = xOffset * someScaleFactor + baseXCoord;
+				
+				drawNotehead(xCoord, yCoord, g);
+				
+				const int atester = activePitches.getUnchecked(n) % 12;
+				if(atester == 1 || atester == 3 || atester == 6 || atester == 8 || atester == 10)
+				{
+					drawAccidental(xCoord - accidentalXoffset, yCoord, g);
+				}
+				
+				xOffset ^= 1;
+				
 			}
-			
-			xOffset ^= 1;
-			
 		}
 	}
 };
 
 
-void StaffDisplay::drawNotehead(const int x, const int y)
+void StaffDisplay::drawNotehead(const int x, const int y, Graphics& g)
 {
-	// x & y coords should be the center of the notehead.
+	// x & y coords are the center of the notehead.
+	
+	g.setColour(juce::Colours::black);
+	
 };
 
-void StaffDisplay::drawAccidental(const int x, const int y)
+
+void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
 {
+	g.setColour(juce::Colours::black);
+	
 	// x & y coords are the center of the accidental symbol
 	if(useFlats)
 	{
@@ -121,4 +132,5 @@ void StaffDisplay::drawAccidental(const int x, const int y)
 	{
 		
 	}
+	
 };

@@ -658,8 +658,6 @@ void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, co
 };
 
 
-
-
 Array<int> ImogenAudioProcessor::returnActivePitches() {
 	return midiProcessor.getActivePitches();
 };

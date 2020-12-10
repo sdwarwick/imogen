@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
+#include "PluginProcessor.h"
 
 //==============================================================================
 /*
@@ -19,13 +20,14 @@
 class StaffDisplay  : public juce::Component
 {
 public:
-    StaffDisplay();
+	ImogenAudioProcessor& audioProcessor;
+    StaffDisplay(ImogenAudioProcessor& p);
     ~StaffDisplay() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 	
-	void displayFlats(const bool displayingFlats);
+	ComboBox displayFlats;
 
 private:
 	
@@ -33,9 +35,12 @@ private:
 	int yCoordLookupTable[128];
 	bool useFlats;
 	
-	void drawPitches(Array<int> activePitches);
-	void drawNotehead(const int x, const int y);
-	void drawAccidental(const int x, const int y);
+	void drawPitches(Array<int> activePitches, Graphics& g);
+	void drawNotehead(const int x, const int y, Graphics& g);
+	void drawAccidental(const int x, const int y, Graphics& g);
+	
+	const float halfTheStafflineHeight;
+	const int accidentalXoffset;
 	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StaffDisplay)
 };
