@@ -128,8 +128,8 @@ public:
 		
 		int min = newPanValAbsDist.getUnchecked(0);
 		for(int i = 1; i < newPanValAbsDist.size(); ++i) {
-			if(newPanValAbsDist.getUnchecked(i) < min) {
-				min = newPanValAbsDist.getUnchecked(i);
+			if(const int val = newPanValAbsDist.getUnchecked(i); val < min) {
+				min = val;
 			}
 		}
 		

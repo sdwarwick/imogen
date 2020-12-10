@@ -54,12 +54,12 @@ public:
 			addAndMakeVisible(limiterToggle);
 			limiterToggle.triggerClick();
 		}
-    }
+	};
 
     ~LimiterControlPanel() override
     {
 		setLookAndFeel(nullptr);
-    }
+	};
 	
 	// threshold, in dBFS
 	Slider limiterThresh;
@@ -78,7 +78,7 @@ public:
     void paint (juce::Graphics& g) override
     {
 		g.fillAll (juce::Colours::steelblue);
-    }
+	};
 
     void resized() override
     {
@@ -89,7 +89,7 @@ public:
 		
 		releaseLabel.setBounds  (150, 25, 100, 35);
 		limiterRelease.setBounds(180, 55, 35, 35);
-    }
+	};
 
 private:
 	

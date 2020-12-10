@@ -131,11 +131,9 @@ public:
 		{
 			int lowestpitch = 128;
 			for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
-				if(harmonyPitches[i] > -1) {
-					const int testingpitch = harmonyPitches[i];
-					if(testingpitch < lowestpitch) {
-						lowestpitch = testingpitch;
-					}
+				if(const int testingpitch = harmonyPitches[i]; testingpitch > -1 && testingpitch < lowestpitch)
+				{
+					lowestpitch = testingpitch;
 				}
 			}
 			

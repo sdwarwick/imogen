@@ -75,12 +75,12 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 	}
 	
 	addAndMakeVisible(limiterPanel);
-}
+};
 
 IOControlPanel::~IOControlPanel()
 {
 	setLookAndFeel(nullptr);
-}
+};
 
 void IOControlPanel::paint (juce::Graphics& g)
 {
@@ -93,7 +93,7 @@ void IOControlPanel::paint (juce::Graphics& g)
 	
 	juce::Rectangle<int> outputControlPanel (5, 135, 290, 125);
 	g.fillRect(outputControlPanel);
-}
+};
 
 void IOControlPanel::resized()
 {
@@ -128,7 +128,7 @@ void IOControlPanel::resized()
 	}
 	
 	limiterPanel.setBounds(5, 265, 290, 145);
-}
+};
 
 void IOControlPanel::initializeLabel(Label& label, String labelText)
 {

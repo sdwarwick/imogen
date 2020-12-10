@@ -78,10 +78,10 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	epochLocations.ensureStorageAllocated(MAX_BUFFERSIZE);
 	epochLocations.clearQuick();
 	epochLocations.fill(0);
-}
+};
 
 ImogenAudioProcessor::~ImogenAudioProcessor() {
-}
+};
 
 
 AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
@@ -112,13 +112,13 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));
 	
 	return { params.begin(), params.end() };
-}
+};
 
 
 //==============================================================================
 const juce::String ImogenAudioProcessor::getName() const {
     return JucePlugin_Name;
-}
+};
 
 bool ImogenAudioProcessor::acceptsMidi() const {
    #if JucePlugin_WantsMidiInput
@@ -126,7 +126,7 @@ bool ImogenAudioProcessor::acceptsMidi() const {
    #else
     return false;
    #endif
-}
+};
 
 bool ImogenAudioProcessor::producesMidi() const {
    #if JucePlugin_ProducesMidiOutput
@@ -134,7 +134,7 @@ bool ImogenAudioProcessor::producesMidi() const {
    #else
     return false;
    #endif
-}
+};
 
 bool ImogenAudioProcessor::isMidiEffect() const {
    #if JucePlugin_IsMidiEffect
@@ -142,30 +142,30 @@ bool ImogenAudioProcessor::isMidiEffect() const {
    #else
     return false;
    #endif
-}
+};
 
 double ImogenAudioProcessor::getTailLengthSeconds() const {
     return 0.0;
-}
+};
 
 int ImogenAudioProcessor::getNumPrograms() {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
-}
+};
 
 int ImogenAudioProcessor::getCurrentProgram() {
     return 0;
-}
+};
 
 void ImogenAudioProcessor::setCurrentProgram (int index) {
-}
+};
 
 const juce::String ImogenAudioProcessor::getProgramName (int index) {
     return {};
-}
+};
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName) {
-}
+};
 
 //==============================================================================
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock) {
@@ -305,7 +305,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		limiterIsOn = limiterToggleListener > 0.5f;
 	}
 	
-}
+};
 
 void ImogenAudioProcessor::releaseResources() {
 	
@@ -315,7 +315,7 @@ void ImogenAudioProcessor::releaseResources() {
 		harmEngine[i]->clearBuffers();
 	}
 	pitchTracker.clearBuffer();
-}
+};
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -388,7 +388,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	// numElapsedLoops represents the number of times processBlockPrivate() was run, and can be used for latency calculations
 	
 	midiMessages.swapWith(midiProcessor.ioMidiBuffer);
-}
+};
 
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int numSamples, const int inputChannel)
@@ -580,11 +580,11 @@ void ImogenAudioProcessor::killAllMidi() {
 
 bool ImogenAudioProcessor::hasEditor() const {
     return true; // (change this to false if you choose to not supply an editor)
-}
+};
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor() {
     return new ImogenAudioProcessorEditor (*this);
-}
+};
 
 //==============================================================================
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
@@ -592,20 +592,20 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
-}
+};
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
-}
+};
 
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ImogenAudioProcessor();
-}
+};
 
 
 

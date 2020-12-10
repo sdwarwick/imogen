@@ -17,34 +17,32 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	
 	Timer::startTimerHz(FRAMERATE);
 	
-}
+};
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
 	setLookAndFeel(nullptr);
 	Timer::stopTimer();
-}
+};
 
 //==============================================================================
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
 	g.fillAll (juce::Colours::dimgrey);
-}
+};
 
 void ImogenAudioProcessorEditor::resized()
 {
 	midiPanel.setBounds(10, 10, 300, 415);
 	ioPanel.setBounds(320, 10, 300, 415);
 	staffDisplay.setBounds(630, 10, 300, 415);
-}
+};
 
 
 
 void ImogenAudioProcessorEditor::timerCallback()
 {
-	
-//	this->repaint();
-	
-}
+	staffDisplay.repaint();
+};
 
 
 void ImogenAudioProcessorEditor::initializeLookAndFeel(ImogenLookAndFeel& lookAndFeel)

@@ -124,8 +124,7 @@ public:
 	// run this function to kill all active harmony notes:
 	void killAll() {  // run this function to clear all held / turned on midi notes
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
-			const int returnedmidipitch = polyphonyManager.pitchAtIndex(i);
-			if (returnedmidipitch != -1)
+			if (const int returnedmidipitch = polyphonyManager.pitchAtIndex(i); returnedmidipitch != -1)
 			{
 				harmonyNoteOff(returnedmidipitch);
 				ioMidiBuffer.addEvent(MidiMessage::noteOff(1, returnedmidipitch, 0.0f), 0);
@@ -154,8 +153,7 @@ public:
 	{
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
-			const int returnedVal = latchManager.noteAtIndex(i);
-			if(returnedVal > -1)
+			if(const int returnedVal = latchManager.noteAtIndex(i); returnedVal > -1)
 			{
 				harmonyNoteOff(returnedVal);
 				ioMidiBuffer.addEvent(MidiMessage::noteOff(1, returnedVal, 0.0f), 0);
@@ -171,8 +169,7 @@ public:
 		
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
-			const int testpitch = polyphonyManager.pitchAtIndex(i);
-			if(testpitch > -1) {
+			if(const int testpitch = polyphonyManager.pitchAtIndex(i); testpitch > -1) {
 				activePitches.add(testpitch);
 			}
 		}

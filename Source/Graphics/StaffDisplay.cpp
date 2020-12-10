@@ -26,8 +26,7 @@ StaffDisplay::StaffDisplay(ImogenAudioProcessor& p): audioProcessor(p), useFlats
 	yCoordLookupTable[0] = 0;
 	for(int n = 1; n < 128; ++n)
 	{
-		const int modulo = n % 12;
-		if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
+		if(const int modulo = n % 12; modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
 		{
 			yCoordLookupTable[n] = yCoordLookupTable[n - 1];
 		}
@@ -36,12 +35,12 @@ StaffDisplay::StaffDisplay(ImogenAudioProcessor& p): audioProcessor(p), useFlats
 			yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
 		}
 	}
-}
+};
 
 StaffDisplay::~StaffDisplay()
 {
 	setLookAndFeel(nullptr);
-}
+};
 
 void StaffDisplay::paint (juce::Graphics& g)
 {
@@ -50,18 +49,17 @@ void StaffDisplay::paint (juce::Graphics& g)
 
 	drawPitches(audioProcessor.returnActivePitches(), g);
 	
-}
+};
 
 void StaffDisplay::resized()
 {
 	displayFlats.setBounds(80, 375, 140, 35);
-}
+};
 
 
 void StaffDisplay::drawPitches(Array<int> activePitches, Graphics& g)
 {
-	if(displayFlats.getSelectedId() == 1) { useFlats = true; }
-	else (useFlats = false);
+	if(displayFlats.getSelectedId() == 1) { useFlats = true; } else (useFlats = false);
 	
 	if(activePitches.isEmpty() == false)
 	{
@@ -96,8 +94,7 @@ void StaffDisplay::drawPitches(Array<int> activePitches, Graphics& g)
 				
 				drawNotehead(xCoord, yCoord, g);
 				
-				const int atester = activePitches.getUnchecked(n) % 12;
-				if(atester == 1 || atester == 3 || atester == 6 || atester == 8 || atester == 10)
+				if(const int atester = activePitches.getUnchecked(n) % 12; atester == 1 || atester == 3 || atester == 6 || atester == 8 || atester == 10)
 				{
 					drawAccidental(xCoord - accidentalXoffset, yCoord, g);
 				}

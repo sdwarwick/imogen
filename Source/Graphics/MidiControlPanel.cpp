@@ -199,12 +199,12 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 		voiceStealing.triggerClick();
 	}
 
-}
+};
 
 MidiControlPanel::~MidiControlPanel()
 {
 	setLookAndFeel(nullptr);
-}
+};
 
 void MidiControlPanel::paint (juce::Graphics& g)
 {
@@ -226,7 +226,7 @@ void MidiControlPanel::paint (juce::Graphics& g)
 	
 	juce::Rectangle<int> pedalpitchPanel (5, 320, 140, 75);
 	g.fillRect(pedalpitchPanel);
-}
+};
 
 void MidiControlPanel::resized()
 {
@@ -285,7 +285,7 @@ void MidiControlPanel::resized()
 	
 	midiLatch.setBounds(135, 40, 125, 35);
 
-}
+};
 
 void MidiControlPanel::initializeLabel(Label& label, String labelText)
 {
