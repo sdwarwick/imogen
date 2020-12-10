@@ -24,6 +24,9 @@ public:
 	{
 	};
 	
+	enum Skin { design1, design2, design3 };
+	
+	
 	void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
 						   const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider&) override 
 	{
@@ -89,5 +92,57 @@ public:
 			g.fillPath (tick, tick.getTransformToScaleToFit (tickBounds.reduced (4, 5).toFloat(), false));
 		}
 	};
+	
+	
+	void changeSkin(Skin& newskin)
+	{
+		switch(newskin)
+		{
+			case(design1):
+				// rotary sliders
+				this->setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::royalblue);
+				this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+				this->setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
+				
+				// labels
+				this->setColour(Label::ColourIds::textColourId, juce::Colours::black);
+				
+				// buttons
+				this->setColour(TextButton::buttonColourId, juce::Colours::black);
+				
+				break;
+				
+			case(design2):
+				// rotary sliders
+				this->setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::darkred);
+				this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+				this->setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
+				
+				// labels
+				this->setColour(Label::ColourIds::textColourId, juce::Colours::black);
+				
+				// buttons
+				this->setColour(TextButton::buttonColourId, juce::Colours::black);
+				
+				break;
+				
+			case(design3):
+				// rotary sliders
+				this->setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::darkred);
+				this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+				this->setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
+				
+				// labels
+				this->setColour(Label::ColourIds::textColourId, juce::Colours::black);
+				
+				// buttons
+				this->setColour(TextButton::buttonColourId, juce::Colours::black);
+				
+				break;
+		}
+	};
+	
+	
+private:
 	
 };

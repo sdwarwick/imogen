@@ -31,7 +31,8 @@ private:
     ImogenAudioProcessor& audioProcessor;
 	
 	ImogenLookAndFeel lookAndFeel;
-	void initializeLookAndFeel(ImogenLookAndFeel& lookAndFeel);
+	ImogenLookAndFeel::Skin currentSkin;
+	ImogenLookAndFeel::Skin prevSkin;
 	
 	MidiControlPanel midiPanel;
 	IOControlPanel ioPanel;
@@ -40,6 +41,10 @@ private:
 	HelpScreen helpScreen;
 	
 	bool viewHelp;  // bool to control visibility of help/documentation screen
+	
+	ComboBox selectSkin;
+	
+	void skinSelectorChanged();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
