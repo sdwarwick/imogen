@@ -361,7 +361,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 	}
 	
 	int inptchn = inputChannelListener;
-	if (inputChannelListener > buffer.getNumChannels()) { inptchn = buffer.getNumChannels() - 1; }
+	if (inputChannelListener >= buffer.getNumChannels()) { inptchn = buffer.getNumChannels() - 1; }
 	const int inputChannel = inptchn;
 	
 	int samplesLeft = buffer.getNumSamples();

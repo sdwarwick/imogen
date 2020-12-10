@@ -10,9 +10,16 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	currentPitches.clearQuick();
 	currentPitches.add(-1);
 	
+	lookAndFeel.setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::mediumslateblue);
+	lookAndFeel.setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+	lookAndFeel.setColour(Slider::ColourIds::thumbColourId, juce::Colours::darkgrey);
+	
 	addAndMakeVisible(midiPanel);
+	midiPanel.setLookAndFeel(&lookAndFeel);
 	addAndMakeVisible(ioPanel);
+	ioPanel.setLookAndFeel(&lookAndFeel);
 	addAndMakeVisible(staffDisplay);
+	staffDisplay.setLookAndFeel(&lookAndFeel);
 	
 	Timer::startTimerHz(FRAMERATE);
 	

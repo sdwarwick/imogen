@@ -6,6 +6,7 @@
 #include "StaffDisplay.h"
 #include "MidiControlPanel.h"
 #include "IOControlPanel.h"
+#include "LookAndFeel.h"
 
 //==============================================================================
 
@@ -28,6 +29,7 @@ private:
     // access the processor object that created it.
     ImogenAudioProcessor& audioProcessor;
 	
+	ImogenLookAndFeel lookAndFeel;
 	
 	// array to store currently active harmony pitches
 	Array<int> currentPitches;
