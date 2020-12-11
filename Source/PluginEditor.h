@@ -45,6 +45,10 @@ private:
 	ComboBox selectSkin;
 	
 	void skinSelectorChanged();
+	
+	TextButton helpButton;
+	
+	void helpButtonClicked();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

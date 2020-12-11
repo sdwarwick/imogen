@@ -99,57 +99,15 @@ public:
 		switch(newskin)
 		{
 			case(design1):
-				// rotary sliders
-				this->setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::royalblue);
-				this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
-				this->setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
-				
-				// labels
-				this->setColour(Label::ColourIds::textColourId, juce::Colours::black);
-				
-				// buttons
-				this->setColour(TextButton::buttonColourId, juce::Colours::black);
-				
-				// gui panels
-				this->setColour(uiColourIds::backgroundPanelColourId, juce::Colours::burlywood);
-				this->setColour(uiColourIds::insetPanelColourId, juce::Colours::steelblue);
-				
+				goDesign1();
 				break;
 				
 			case(design2):
-				// rotary sliders
-				this->setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::darkred);
-				this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
-				this->setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
-				
-				// labels
-				this->setColour(Label::ColourIds::textColourId, juce::Colours::black);
-				
-				// buttons
-				this->setColour(TextButton::buttonColourId, juce::Colours::black);
-				
-				// gui panels
-				this->setColour(uiColourIds::backgroundPanelColourId, juce::Colours::rosybrown);
-				this->setColour(uiColourIds::insetPanelColourId, juce::Colours::slateblue);
-				
+				goDesign2();
 				break;
 				
 			case(design3):
-				// rotary sliders
-				this->setColour(Slider::ColourIds::rotarySliderFillColourId, juce::Colours::darkred);
-				this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
-				this->setColour(Slider::ColourIds::thumbColourId, juce::Colours::black);
-				
-				// labels
-				this->setColour(Label::ColourIds::textColourId, juce::Colours::black);
-				
-				// buttons
-				this->setColour(TextButton::buttonColourId, juce::Colours::black);
-				
-				// gui panels
-				this->setColour(uiColourIds::backgroundPanelColourId, juce::Colours::burlywood);
-				this->setColour(uiColourIds::insetPanelColourId, juce::Colours::steelblue);
-				
+				goDesign3();
 				break;
 		}
 	};
@@ -165,11 +123,84 @@ public:
 	
 	enum uiColourIds
 	{
-		backgroundPanelColourId     = uint32_t(0),
-		insetPanelColourId          = uint32_t(1)
+		backgroundPanelColourId     	= uint32_t(0),
+		insetPanelColourId          	= uint32_t(1),
+		blankCanvasColourId				= uint32_t(2),
+		staffDisplayBackgroundColourId	= uint32_t(3)
 	};
 	
 	
 private:
+	
+	void goDesign1()
+	{
+		// GUI background
+		this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
+		
+		// rotary sliders
+		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::royalblue);
+		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+		
+		// labels
+		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
+		
+		// buttons
+		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		
+		// gui panels
+		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::burlywood);
+		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::steelblue);
+		
+		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::ivory);
+	};
+	
+	
+	void goDesign2()
+	{
+		// GUI background
+		this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
+		
+		// rotary sliders
+		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
+		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+		
+		// labels
+		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
+		
+		// buttons
+		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		
+		// gui panels
+		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::rosybrown);
+		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::slateblue);
+		
+		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::ivory);
+	};
+	
+	
+	void goDesign3()
+	{
+		// GUI background
+		this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
+		
+		// rotary sliders
+		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
+		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+		
+		// labels
+		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
+		
+		// buttons
+		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		
+		// gui panels
+		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::burlywood);
+		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::steelblue);
+		
+		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::ivory);
+	};
 	
 };

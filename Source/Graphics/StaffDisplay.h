@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
 #include "PluginProcessor.h"
+#include "LookAndFeel.h"
 
 //==============================================================================
 /*
@@ -21,7 +22,8 @@ class StaffDisplay  : public juce::Component
 {
 public:
 	ImogenAudioProcessor& audioProcessor;
-    StaffDisplay(ImogenAudioProcessor& p);
+	ImogenLookAndFeel& lookAndFeel;
+	StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l);
     ~StaffDisplay() override;
 
     void paint (juce::Graphics&) override;
@@ -30,6 +32,9 @@ public:
 	ComboBox displayFlats;
 
 private:
+	
+	Image grandStaff;
+	ImageComponent staffImage;
 	
 	Array<int> yCoordsOfActiveNotes;
 	int yCoordLookupTable[128];

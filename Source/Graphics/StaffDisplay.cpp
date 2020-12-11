@@ -12,7 +12,8 @@
 #include "StaffDisplay.h"
 
 //==============================================================================
-StaffDisplay::StaffDisplay(ImogenAudioProcessor& p): audioProcessor(p), useFlats(false), halfTheStafflineHeight(10.0f), accidentalXoffset(10)
+StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audioProcessor(p), lookAndFeel(l),  grandStaff(ImageCache::getFromMemory(BinaryData::grandStaff_png, BinaryData::grandStaff_pngSize)),
+		useFlats(false), halfTheStafflineHeight(10.0f), accidentalXoffset(10)
 {
 	displayFlats.addItem("Display flats", 1);
 	displayFlats.addItem("Display sharps", 2);
@@ -35,6 +36,9 @@ StaffDisplay::StaffDisplay(ImogenAudioProcessor& p): audioProcessor(p), useFlats
 			yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
 		}
 	}
+	
+	staffImage.setImage(grandStaff);
+	addAndMakeVisible(staffImage);
 };
 
 StaffDisplay::~StaffDisplay()
@@ -45,7 +49,7 @@ StaffDisplay::~StaffDisplay()
 void StaffDisplay::paint (juce::Graphics& g)
 {
 	
-    g.fillAll (juce::Colours::ivory);
+	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::staffDisplayBackgroundColourId));
 
 	drawPitches(audioProcessor.returnActivePitches(), g);
 	
@@ -53,7 +57,8 @@ void StaffDisplay::paint (juce::Graphics& g)
 
 void StaffDisplay::resized()
 {
-	displayFlats.setBounds(80, 375, 140, 35);
+	staffImage.setBounds(17, 40, 265, 197);
+	displayFlats.setBounds(80, 300, 140, 35);
 };
 
 

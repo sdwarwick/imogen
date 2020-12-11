@@ -2,9 +2,9 @@
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::design1), prevSkin(ImogenLookAndFeel::Skin::design1), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p), viewHelp(false)
+: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::design1), prevSkin(ImogenLookAndFeel::Skin::design1), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
 {
-    setSize (940, 475);
+    setSize (940, 435);
 	
 	lookAndFeel.changeSkin(currentSkin);
 	
@@ -26,6 +26,9 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addAndMakeVisible(selectSkin);
 	selectSkin.onChange = [this] { skinSelectorChanged(); };
 	
+	helpButton.setButtonText("Help");
+	helpButton.onClick = [this] { helpButtonClicked(); };
+	addAndMakeVisible(helpButton);
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -36,17 +39,20 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
 //==============================================================================
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
-	g.fillAll (juce::Colours::dimgrey);
+	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
 };
 
 void ImogenAudioProcessorEditor::resized()
 {
-	midiPanel.setBounds(10, 50, 300, 415);
-	ioPanel.setBounds(320, 50, 300, 415);
-	staffDisplay.setBounds(630, 50, 300, 415);
-	//helpScreen.setBounds(x, y, w, h);
+	midiPanel.setBounds(10, 10, 300, 415);
+	ioPanel.setBounds(320, 10, 300, 415);
+	staffDisplay.setBounds(630, 10, 300, 350);
 	
-	selectSkin.setBounds(10, 10, 150, 30);
+	selectSkin.setBounds(780, 385, 150, 30);
+	helpButton.setBounds(690, 385, 75, 30);
+	
+	helpScreen.setBounds(158, 80, 625, 315);
+	
 };
 
 
@@ -54,6 +60,7 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::timerCallback()
 {
 	staffDisplay.repaint();
+	
 	if(viewHelp) {
 		if(! helpScreen.isVisible() ) { helpScreen.setVisible(true); };
 		helpScreen.repaint();
@@ -65,8 +72,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 
 void ImogenAudioProcessorEditor::skinSelectorChanged()
 {
-	const int selectedid = selectSkin.getSelectedId();
-	switch(selectedid)
+	switch(selectSkin.getSelectedId())
 	{
 		case(1):
 			currentSkin = ImogenLookAndFeel::Skin::design1;
@@ -85,4 +91,13 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 		prevSkin = currentSkin;
 		this->repaint();
 	}
+};
+
+
+void ImogenAudioProcessorEditor::helpButtonClicked()
+{
+	if(viewHelp) { viewHelp = false; }
+	else { viewHelp = true; }
+	
+	this->repaint();
 };
