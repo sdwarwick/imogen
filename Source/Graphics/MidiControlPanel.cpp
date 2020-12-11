@@ -34,7 +34,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			adsrAttack.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			adsrAttack.setRange(0.01f, 1.0f);
-			adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
+			adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrAttack);
 			adsrAttack.setValue(0.035f);
 			lookAndFeel.initializeLabel(attackLabel, "Attack");
@@ -45,7 +45,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			adsrDecay.setRange(0.01f, 1.0f);
-			adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+			adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrDecay);
 			adsrDecay.setValue(0.06f);
 			lookAndFeel.initializeLabel(decayLabel, "Decay");
@@ -56,7 +56,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			adsrSustain.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			adsrSustain.setRange(0.01f, 1.0f);
-			adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+			adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrSustain);
 			adsrSustain.setValue(0.8f);
 			lookAndFeel.initializeLabel(sustainLabel, "Sustain");
@@ -67,7 +67,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			adsrRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			adsrRelease.setRange(0.01f, 1.0f);
-			adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+			adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrRelease);
 			adsrRelease.setValue(0.1f);
 			lookAndFeel.initializeLabel(releaseLabel, "Release");
