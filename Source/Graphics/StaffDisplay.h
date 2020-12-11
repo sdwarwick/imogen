@@ -37,6 +37,7 @@ private:
 	ImageComponent staffImage;
 	
 	Array<int> yCoordsOfActiveNotes;
+	Array<int> prevActivePitches;
 	int yCoordLookupTable[128];
 	bool useFlats;
 	
@@ -46,6 +47,13 @@ private:
 	
 	const float halfTheStafflineHeight;
 	const int accidentalXoffset;
+	
+	String noteheadSvg;
+	Path noteheadPath;
+	//String flatSvg;
+	//Path flatPath;
+	//String sharpSvg;
+	//Path sharpPath;
 	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StaffDisplay)
 };

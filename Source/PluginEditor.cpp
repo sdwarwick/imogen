@@ -52,9 +52,9 @@ void ImogenAudioProcessorEditor::resized()
 	ioPanel.setBounds(320, 10, 300, 415);
 	staffDisplay.setBounds(630, 10, 300, 350);
 	
-	selectSkin.setBounds(780, 385, 150, 30);
-	skinLabel.setBounds(780, 362, 150, 25);
-	helpButton.setBounds(690, 385, 75, 30);
+	selectSkin.setBounds(775, 388, 150, 30);
+	skinLabel.setBounds(775, 365, 150, 25);
+	helpButton.setBounds(685, 388, 75, 30);
 	
 	helpScreen.setBounds(158, 45, 625, 315);
 };
