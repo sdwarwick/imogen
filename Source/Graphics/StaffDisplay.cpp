@@ -67,7 +67,9 @@ void StaffDisplay::resized()
 	staffImage.setBounds(17, 40, 265, 197);
 	displayFlats.setBounds(80, 300, 140, 35);
 	
-	noteheadPath.applyTransform(noteheadPath.getTransformToScaleToFit(getLocalBounds().toFloat().reduced(3.5), false, Justification::centred));
+	//noteheadPath.applyTransform(AffineTransform::scale(scaleFactor)); to determine scale factor - noteheadPath.getBounds() scaled to halfTheStafflineHeight
+	
+	//noteheadPath.applyTransform(noteheadPath.getTransformToScaleToFit(getLocalBounds().toFloat().reduced(3.5), false, Justification::centred));
 };
 
 
@@ -128,7 +130,10 @@ void StaffDisplay::drawNotehead(const int x, const int y, Graphics& g)
 	// x & y coords are the center of the notehead.
 	
 	g.setColour(juce::Colours::black);
-	//g.fillPath(noteheadPath, AffineTransform(x, y);
+	// dX & dY are the distances from the notehead path's original centre coordinates on the screen to the desired coords:
+	//const int dX = origX - x;
+	//const int dY = origY - y;
+	//g.fillPath(noteheadPath, AffineTransform::translated(dX, dY));
 };
 
 

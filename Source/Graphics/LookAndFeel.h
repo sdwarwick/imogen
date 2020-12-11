@@ -171,6 +171,7 @@ private:
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::burlywood);
 		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::steelblue);
 		
+		// staff display
 		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::oldlace);
 	};
 	
@@ -194,6 +195,7 @@ private:
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::rosybrown);
 		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::slateblue);
 		
+		// staff display
 		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::navajowhite);
 	};
 	
@@ -217,6 +219,7 @@ private:
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::blueviolet);
 		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::darkslateblue);
 		
+		// staff display
 		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
 	};
 	
@@ -224,7 +227,7 @@ private:
 	void goDesign4()
 	{
 		// GUI background
-		this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::black);
+		this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
 		
 		// rotary sliders
 		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
@@ -237,6 +240,7 @@ private:
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::lightcyan);
 		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::darkslateblue);
 		
+		// staff display
 		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
 	};
 	
