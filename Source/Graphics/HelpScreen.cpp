@@ -12,9 +12,11 @@
 #include "HelpScreen.h"
 
 //==============================================================================
-HelpScreen::HelpScreen()
+HelpScreen::HelpScreen(): closeIcon(ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {
-	
+	closeButton.setImages(true, true, true, closeIcon, 1.0f, juce::Colours::transparentBlack, closeIcon, 1.0f, juce::Colours::transparentWhite, closeIcon, 1.0f, juce::Colours::transparentWhite);
+	addAndMakeVisible(closeButton);
+	closeButton.onClick = [this] { this->setVisible(false); };
 };
 
 HelpScreen::~HelpScreen()
@@ -35,5 +37,6 @@ void HelpScreen::paint (juce::Graphics& g)
 
 void HelpScreen::resized()
 {
-    
+	closeButton.setBounds(5, 5, 25, 25);
 };
+

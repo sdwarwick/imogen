@@ -6,8 +6,8 @@
 #include "StaffDisplay.h"
 #include "MidiControlPanel.h"
 #include "IOControlPanel.h"
-#include "HelpScreen.h"
 #include "LookAndFeel.h"
+#include "HelpScreen.h"
 
 //==============================================================================
 
@@ -43,7 +43,7 @@ private:
 	bool viewHelp;  // bool to control visibility of help/documentation screen
 	
 	ComboBox selectSkin;
-	
+	Label skinLabel;
 	void skinSelectorChanged();
 	
 	TextButton helpButton;

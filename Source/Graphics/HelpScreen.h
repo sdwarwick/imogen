@@ -24,7 +24,11 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+	
+	Image closeIcon;
+	ImageButton closeButton;
 
 private:
+	void closeButtonClicked();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelpScreen)
 };

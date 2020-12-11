@@ -14,8 +14,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	ioPanel.setLookAndFeel(&lookAndFeel);
 	addAndMakeVisible(staffDisplay);
 	staffDisplay.setLookAndFeel(&lookAndFeel);
-	addChildComponent(helpScreen);
-	helpScreen.setLookAndFeel(&lookAndFeel);
 	
 	Timer::startTimerHz(FRAMERATE);
 	
@@ -25,10 +23,15 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	selectSkin.setSelectedId(1);
 	addAndMakeVisible(selectSkin);
 	selectSkin.onChange = [this] { skinSelectorChanged(); };
+	lookAndFeel.initializeLabel(skinLabel, "Select skin");
+	addAndMakeVisible(skinLabel);
 	
 	helpButton.setButtonText("Help");
 	helpButton.onClick = [this] { helpButtonClicked(); };
 	addAndMakeVisible(helpButton);
+	
+	addChildComponent(helpScreen);
+	helpScreen.setLookAndFeel(&lookAndFeel);
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -42,6 +45,7 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
 };
 
+
 void ImogenAudioProcessorEditor::resized()
 {
 	midiPanel.setBounds(10, 10, 300, 415);
@@ -49,10 +53,10 @@ void ImogenAudioProcessorEditor::resized()
 	staffDisplay.setBounds(630, 10, 300, 350);
 	
 	selectSkin.setBounds(780, 385, 150, 30);
+	skinLabel.setBounds(780, 362, 150, 25);
 	helpButton.setBounds(690, 385, 75, 30);
 	
-	helpScreen.setBounds(158, 80, 625, 315);
-	
+	helpScreen.setBounds(158, 45, 625, 315);
 };
 
 
@@ -60,13 +64,6 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::timerCallback()
 {
 	staffDisplay.repaint();
-	
-	if(viewHelp) {
-		if(! helpScreen.isVisible() ) { helpScreen.setVisible(true); };
-		helpScreen.repaint();
-	} else {
-		helpScreen.setVisible(false);
-	}
 };
 
 
@@ -96,8 +93,6 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 
 void ImogenAudioProcessorEditor::helpButtonClicked()
 {
-	if(viewHelp) { viewHelp = false; }
-	else { viewHelp = true; }
-	
-	this->repaint();
+	if(! helpScreen.isVisible() ) { helpScreen.setVisible(true); helpScreen.repaint(); }
+	else { helpScreen.setVisible(false); };
 };

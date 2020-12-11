@@ -176,7 +176,7 @@ private:
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::rosybrown);
 		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::slateblue);
 		
-		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::ivory);
+		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::antiquewhite);
 	};
 	
 	

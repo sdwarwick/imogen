@@ -58,7 +58,10 @@
         <FILE id="gLZAFp" name="HelpScreen.cpp" compile="1" resource="0" file="Source/Graphics/HelpScreen.cpp"/>
         <FILE id="VWHuqH" name="HelpScreen.h" compile="0" resource="0" file="Source/Graphics/HelpScreen.h"/>
       </GROUP>
-      <FILE id="wUG4RD" name="grandStaff.png" compile="0" resource="1" file="grandStaff.png"/>
+      <GROUP id="{38442FFC-AF2D-9451-5C27-5D7A74537B76}" name="Images">
+        <FILE id="wUG4RD" name="grandStaff.png" compile="0" resource="1" file="grandStaff.png"/>
+        <FILE id="qbzN1o" name="closeIcon.png" compile="0" resource="1" file="closeIcon.png"/>
+      </GROUP>
     </GROUP>
     <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
       <FILE id="miD8GM" name="MidiProcessor.h" compile="0" resource="0" file="Source/Midi/MidiProcessor.h"/>
