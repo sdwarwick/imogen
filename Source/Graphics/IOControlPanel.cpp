@@ -12,12 +12,12 @@
 #include "IOControlPanel.h"
 
 //==============================================================================
-IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryPanLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
+IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audioProcessor(p), lookAndFeel(l), dryPanLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
 	masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "masterDryWet", masterDryWet)),
 	inputGainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
 	outputGainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
 	inputChannelLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "inputChan", inputChannel)),
-	limiterPanel(p)
+	limiterPanel(p, l)
 {
 	// dry pan
 	{
@@ -26,7 +26,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 		dryPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(dryPan);
 		dryPan.setValue(64);
-		initializeLabel(drypanLabel, "Modulator pan");
+		lookAndFeel.initializeLabel(drypanLabel, "Modulator pan");
 		addAndMakeVisible(drypanLabel);
 	}
 	
@@ -37,7 +37,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 		masterDryWet.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(masterDryWet);
 		masterDryWet.setValue(100);
-		initializeLabel(drywetLabel, "% wet signal");
+		lookAndFeel.initializeLabel(drywetLabel, "% wet signal");
 		addAndMakeVisible(drywetLabel);
 	}
 	
@@ -48,7 +48,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 		inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 		addAndMakeVisible(inputGain);
 		inputGain.setValue(0.0f);
-		initializeLabel(inputGainLabel, "Input gain");
+		lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
 		addAndMakeVisible(inputGainLabel);
 	}
 	
@@ -59,7 +59,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 		outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
 		addAndMakeVisible(outputGain);
 		outputGain.setValue(-4.0f);
-		initializeLabel(outputgainLabel, "Output gain");
+		lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
 		addAndMakeVisible(outputgainLabel);
 	}
 	
@@ -70,7 +70,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p): audioProcessor(p), dryP
 		inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(inputChannel);
 		inputChannel.setValue(0);
-		initializeLabel(inputChannelLabel, "Input channel");
+		lookAndFeel.initializeLabel(inputChannelLabel, "Input channel");
 		addAndMakeVisible(inputChannelLabel);
 	}
 	
@@ -84,9 +84,9 @@ IOControlPanel::~IOControlPanel()
 
 void IOControlPanel::paint (juce::Graphics& g)
 {
-	g.fillAll (juce::Colours::burlywood);
+	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::backgroundPanelColourId));
 	
-	g.setColour(juce::Colours::steelblue);
+	g.setColour(lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::insetPanelColourId));
 	
 	juce::Rectangle<int> inputControlPanel (5, 5, 290, 125);
 	g.fillRect(inputControlPanel);
@@ -128,11 +128,4 @@ void IOControlPanel::resized()
 	}
 	
 	limiterPanel.setBounds(5, 265, 290, 145);
-};
-
-void IOControlPanel::initializeLabel(Label& label, String labelText)
-{
-	label.setFont(juce::Font(14.0f, juce::Font::bold));
-	label.setJustificationType(juce::Justification::centred);
-	label.setText(labelText, juce::dontSendNotification);
 };

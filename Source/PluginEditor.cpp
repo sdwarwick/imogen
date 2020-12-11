@@ -2,7 +2,7 @@
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::design1), prevSkin(ImogenLookAndFeel::Skin::design1), midiPanel(p), ioPanel(p), staffDisplay(p), viewHelp(false)
+: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::design1), prevSkin(ImogenLookAndFeel::Skin::design1), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p), viewHelp(false)
 {
     setSize (940, 475);
 	
@@ -25,6 +25,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	selectSkin.setSelectedId(1);
 	addAndMakeVisible(selectSkin);
 	selectSkin.onChange = [this] { skinSelectorChanged(); };
+	
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

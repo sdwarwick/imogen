@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "GlobalDefinitions.h"
+#include "LookAndFeel.h"
 
 //==============================================================================
 /*
@@ -21,7 +22,8 @@ class MidiControlPanel  : public juce::Component
 {
 public:
 	ImogenAudioProcessor& audioProcessor;
-    MidiControlPanel(ImogenAudioProcessor& p);
+	ImogenLookAndFeel& lookAndFeel;
+    MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l);
     ~MidiControlPanel() override;
 
     void paint (juce::Graphics&) override;

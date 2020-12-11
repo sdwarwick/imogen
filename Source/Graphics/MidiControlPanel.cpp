@@ -12,7 +12,7 @@
 #include "MidiControlPanel.h"
 
 //==============================================================================
-MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
+MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audioProcessor(p), lookAndFeel(l),
 	attackLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),
 	decayLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay)),
 	sustainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
@@ -37,7 +37,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
 			addAndMakeVisible(adsrAttack);
 			adsrAttack.setValue(0.035f);
-			initializeLabel(attackLabel, "Attack");
+			lookAndFeel.initializeLabel(attackLabel, "Attack");
 			addAndMakeVisible(attackLabel);
 		}
 		
@@ -48,7 +48,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(adsrDecay);
 			adsrDecay.setValue(0.06f);
-			initializeLabel(decayLabel, "Decay");
+			lookAndFeel.initializeLabel(decayLabel, "Decay");
 			addAndMakeVisible(decayLabel);
 		}
 		
@@ -59,7 +59,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(adsrSustain);
 			adsrSustain.setValue(0.8f);
-			initializeLabel(sustainLabel, "Sustain");
+			lookAndFeel.initializeLabel(sustainLabel, "Sustain");
 			addAndMakeVisible(sustainLabel);
 		}
 		
@@ -70,7 +70,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(adsrRelease);
 			adsrRelease.setValue(0.1f);
-			initializeLabel(releaseLabel, "Release");
+			lookAndFeel.initializeLabel(releaseLabel, "Release");
 			addAndMakeVisible(releaseLabel);
 		}
 		
@@ -99,7 +99,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			addAndMakeVisible(stereoWidth);
 			stereoWidth.setValue(100);
 			stereoWidth.setNumDecimalPlacesToDisplay(0);
-			initializeLabel(stereowidthLabel, "Stereo width");
+			lookAndFeel.initializeLabel(stereowidthLabel, "Stereo width");
 			addAndMakeVisible(stereowidthLabel);
 		}
 		
@@ -110,7 +110,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			lowestPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(lowestPan);
 			lowestPan.setValue(0);
-			initializeLabel(lowestpanLabel, "Lowest panned pitch");
+			lookAndFeel.initializeLabel(lowestpanLabel, "Lowest panned pitch");
 			addAndMakeVisible(lowestpanLabel);
 		}
 	}
@@ -122,7 +122,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 		midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(midiVelocitySens);
 		midiVelocitySens.setValue(100);
-		initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
+		lookAndFeel.initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
 		addAndMakeVisible(midivelocitysensLabel);
 	}
 	
@@ -143,7 +143,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			pitchBendUp.addItem("Octave", 12);
 			pitchBendUp.setSelectedId(2);
 			addAndMakeVisible(pitchBendUp);
-			initializeLabel(pitchbendUpLabel, "Pitch bend range up");
+			lookAndFeel.initializeLabel(pitchbendUpLabel, "Pitch bend range up");
 			addAndMakeVisible(pitchbendUpLabel);
 		}
 		
@@ -162,7 +162,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			pitchBendDown.addItem("Octave", 12);
 			addAndMakeVisible(pitchBendDown);
 			pitchBendDown.setSelectedId(2);
-			initializeLabel(pitchbendDownLabel, "Pitch bend range down");
+			lookAndFeel.initializeLabel(pitchbendDownLabel, "Pitch bend range down");
 			addAndMakeVisible(pitchbendDownLabel);
 		}
 	}
@@ -181,7 +181,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
 			pedalPitchThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(pedalPitchThresh);
 			pedalPitchThresh.setValue(127);
-			initializeLabel(pedalpitchThreshLabel, "Threshold");
+			lookAndFeel.initializeLabel(pedalpitchThreshLabel, "Threshold");
 			addAndMakeVisible(pedalpitchThreshLabel);
 		}
 	}
@@ -208,9 +208,9 @@ MidiControlPanel::~MidiControlPanel()
 
 void MidiControlPanel::paint (juce::Graphics& g)
 {
-	g.fillAll (juce::Colours::burlywood);
+	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::backgroundPanelColourId));
 	
-	g.setColour(juce::Colours::steelblue);
+	g.setColour(lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::insetPanelColourId));
 	
 	juce::Rectangle<int> adsrPanel (5, 110, 290, 125);
 	g.fillRect(adsrPanel);
@@ -285,11 +285,4 @@ void MidiControlPanel::resized()
 	
 	midiLatch.setBounds(135, 40, 125, 35);
 
-};
-
-void MidiControlPanel::initializeLabel(Label& label, String labelText)
-{
-	label.setFont(juce::Font(14.0f, juce::Font::bold));
-	label.setJustificationType(juce::Justification::centred);
-	label.setText(labelText, juce::dontSendNotification);
 };

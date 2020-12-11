@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "GlobalDefinitions.h"
+#include "LookAndFeel.h"
 
 //==============================================================================
 /*
@@ -21,7 +22,8 @@ class LimiterControlPanel  : public juce::Component
 {
 public:
 	ImogenAudioProcessor& audioProcessor;
-	LimiterControlPanel(ImogenAudioProcessor& p): audioProcessor(p),
+	ImogenLookAndFeel& lookAndFeel;
+	LimiterControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audioProcessor(p), lookAndFeel(l),
 		limiterThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
 		limiterReleaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
 		limiterToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
@@ -33,7 +35,7 @@ public:
 			limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
 			addAndMakeVisible(limiterThresh);
 			limiterThresh.setValue(-2.0f);
-			initializeLabel(threshLabel, "Threshold");
+			lookAndFeel.initializeLabel(threshLabel, "Threshold");
 			addAndMakeVisible(threshLabel);
 		}
 		
@@ -44,7 +46,7 @@ public:
 			limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(limiterRelease);
 			limiterRelease.setValue(10);
-			initializeLabel(releaseLabel, "Release time");
+			lookAndFeel.initializeLabel(releaseLabel, "Release time");
 			addAndMakeVisible(releaseLabel);
 		}
 		
@@ -77,7 +79,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-		g.fillAll (juce::Colours::steelblue);
+		g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::insetPanelColourId));
 	};
 
     void resized() override
@@ -92,13 +94,6 @@ public:
 	};
 
 private:
-	
-	void initializeLabel(Label& label, String labelText)
-	{
-		label.setFont(juce::Font(14.0f, juce::Font::bold));
-		label.setJustificationType(juce::Justification::centred);
-		label.setText(labelText, juce::dontSendNotification);
-	};
 	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LimiterControlPanel)
 };

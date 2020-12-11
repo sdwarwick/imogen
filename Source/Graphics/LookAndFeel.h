@@ -110,6 +110,10 @@ public:
 				// buttons
 				this->setColour(TextButton::buttonColourId, juce::Colours::black);
 				
+				// gui panels
+				this->setColour(uiColourIds::backgroundPanelColourId, juce::Colours::burlywood);
+				this->setColour(uiColourIds::insetPanelColourId, juce::Colours::steelblue);
+				
 				break;
 				
 			case(design2):
@@ -123,6 +127,10 @@ public:
 				
 				// buttons
 				this->setColour(TextButton::buttonColourId, juce::Colours::black);
+				
+				// gui panels
+				this->setColour(uiColourIds::backgroundPanelColourId, juce::Colours::rosybrown);
+				this->setColour(uiColourIds::insetPanelColourId, juce::Colours::slateblue);
 				
 				break;
 				
@@ -138,8 +146,27 @@ public:
 				// buttons
 				this->setColour(TextButton::buttonColourId, juce::Colours::black);
 				
+				// gui panels
+				this->setColour(uiColourIds::backgroundPanelColourId, juce::Colours::burlywood);
+				this->setColour(uiColourIds::insetPanelColourId, juce::Colours::steelblue);
+				
 				break;
 		}
+	};
+	
+	
+	void initializeLabel(Label& l, String labelText)
+	{
+		l.setFont(juce::Font(14.0f, juce::Font::bold));
+		l.setJustificationType(juce::Justification::centred);
+		l.setText(labelText, juce::dontSendNotification);
+	};
+	
+	
+	enum uiColourIds
+	{
+		backgroundPanelColourId     = uint32_t(0),
+		insetPanelColourId          = uint32_t(1)
 	};
 	
 	

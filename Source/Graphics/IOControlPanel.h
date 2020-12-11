@@ -14,6 +14,7 @@
 #include "PluginProcessor.h"
 #include "GlobalDefinitions.h"
 #include "LimiterControlPanel.h"
+#include "LookAndFeel.h"
 
 //==============================================================================
 /*
@@ -22,7 +23,8 @@ class IOControlPanel  : public juce::Component
 {
 public:
 	ImogenAudioProcessor& audioProcessor;
-    IOControlPanel(ImogenAudioProcessor& p);
+	ImogenLookAndFeel& lookAndFeel;
+    IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l);
     ~IOControlPanel() override;
 
     void paint (juce::Graphics&) override;
