@@ -2,7 +2,7 @@
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::design1), prevSkin(ImogenLookAndFeel::Skin::design1), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
+: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
 {
     setSize (940, 435);
 	
@@ -17,18 +17,22 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	
 	Timer::startTimerHz(FRAMERATE);
 	
-	selectSkin.addItem("design1", 1);
-	selectSkin.addItem("design2", 2);
-	selectSkin.addItem("design3", 3);
+	selectSkin.addItem("Casual Denim", 1);
+	selectSkin.addItem("Playful Boho", 2);
+	selectSkin.addItem("Chic Eveningwear", 3);
+	//selectSkin.addItem("design4", 4);
 	selectSkin.setSelectedId(1);
 	addAndMakeVisible(selectSkin);
+	selectSkin.setLookAndFeel(&lookAndFeel);
 	selectSkin.onChange = [this] { skinSelectorChanged(); };
 	lookAndFeel.initializeLabel(skinLabel, "Select skin");
 	addAndMakeVisible(skinLabel);
+	skinLabel.setLookAndFeel(&lookAndFeel);
 	
 	helpButton.setButtonText("Help");
 	helpButton.onClick = [this] { helpButtonClicked(); };
 	addAndMakeVisible(helpButton);
+	helpButton.setLookAndFeel(&lookAndFeel);
 	
 	addChildComponent(helpScreen);
 	helpScreen.setLookAndFeel(&lookAndFeel);
@@ -72,13 +76,16 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 	switch(selectSkin.getSelectedId())
 	{
 		case(1):
-			currentSkin = ImogenLookAndFeel::Skin::design1;
+			currentSkin = ImogenLookAndFeel::Skin::CasualDenim;
 			break;
 		case(2):
-			currentSkin = ImogenLookAndFeel::Skin::design2;
+			currentSkin = ImogenLookAndFeel::Skin::PlayfulBoho;
 			break;
 		case(3):
-			currentSkin = ImogenLookAndFeel::Skin::design3;
+			currentSkin = ImogenLookAndFeel::Skin::ChicEveningwear;
+			break;
+		case(4):
+			currentSkin = ImogenLookAndFeel::Skin::design4;
 			break;
 	}
 	
