@@ -18,6 +18,17 @@ class ImogenLookAndFeel : public juce::LookAndFeel_V4
 public:
 	ImogenLookAndFeel()
 	{
+		// so far these colors are consistent across all the themes:
+		
+		// rotary sliders
+		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+		
+		// labels
+		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
+		
+		// buttons
+		this->setColour(uiColourIds::toggleButtonColourId, 				juce::Colours::black);
+		
 	};
 	
 	~ImogenLookAndFeel()
@@ -66,7 +77,7 @@ public:
 		drawCheckbox(g, 4.0f, ((float) b.getHeight() - tickWidth) * 0.5f,
 					 tickWidth, tickWidth, b.getToggleState());
 		
-		g.setColour (this->findColour(TextButton::buttonColourId));
+		g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
 		g.setFont (fontSize);
 		
 		if (! b.isEnabled())
@@ -82,12 +93,12 @@ public:
 	{
 		Rectangle<float> tickBounds (x, y, w, h);
 		
-		g.setColour (this->findColour(TextButton::buttonColourId));
+		g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
 		g.drawRoundedRectangle (tickBounds, 4.0f, 1.0f);
 		
 		if (ticked)
 		{
-			g.setColour (this->findColour(TextButton::buttonColourId));
+			g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
 			const auto tick = getTickShape (0.75f);
 			g.fillPath (tick, tick.getTransformToScaleToFit (tickBounds.reduced (4, 5).toFloat(), false));
 		}
@@ -130,7 +141,8 @@ public:
 		backgroundPanelColourId,
 		insetPanelColourId,
 		blankCanvasColourId,
-		staffDisplayBackgroundColourId
+		staffDisplayBackgroundColourId,
+		toggleButtonColourId
 	};
 	
 	
@@ -150,7 +162,10 @@ private:
 		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
 		
 		// buttons
-		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		this->setColour(TextButton::buttonColourId,						juce::Colours::cadetblue);
+		
+		// comboboxes
+		this->setColour(ComboBox::ColourIds::backgroundColourId,		juce::Colours::cadetblue);
 		
 		// gui panels
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::burlywood);
@@ -167,14 +182,13 @@ private:
 		
 		// rotary sliders
 		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::indianred);
-		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
 		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
 		
-		// labels
-		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
-		
 		// buttons
-		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		this->setColour(TextButton::buttonColourId,						juce::Colours::slategrey);
+		
+		// comboboxes
+		this->setColour(ComboBox::ColourIds::backgroundColourId,		juce::Colours::slategrey);
 		
 		// gui panels
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::rosybrown);
@@ -191,17 +205,16 @@ private:
 		
 		// rotary sliders
 		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
-		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
 		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
 		
-		// labels
-		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
-		
 		// buttons
-		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		this->setColour(TextButton::buttonColourId,						juce::Colours::black);
+		
+		// comboboxes
+		this->setColour(ComboBox::ColourIds::backgroundColourId,		juce::Colours::black);
 		
 		// gui panels
-		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::lightcyan);
+		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::blueviolet);
 		this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::darkslateblue);
 		
 		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
@@ -215,14 +228,10 @@ private:
 		
 		// rotary sliders
 		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
-		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
 		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
 		
-		// labels
-		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
-		
 		// buttons
-		this->setColour(TextButton::buttonColourId, 					juce::Colours::black);
+		this->setColour(TextButton::buttonColourId,						juce::Colours::black);
 		
 		// gui panels
 		this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::lightcyan);

@@ -95,7 +95,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			stereoWidth.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 			stereoWidth.setRange(0, 100);
-			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 60, 20);
+			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(stereoWidth);
 			stereoWidth.setValue(100);
 			stereoWidth.setNumDecimalPlacesToDisplay(0);
@@ -249,8 +249,8 @@ void MidiControlPanel::resized()
 	
 	// stereo width
 	{
-		stereowidthLabel.setBounds	(165, 302, 50, 50);
-		stereoWidth.setBounds		(153, 335, 75, 75);
+		stereowidthLabel.setBounds	(165, 300, 50, 50);
+		stereoWidth.setBounds		(153, 333, 75, 75);
 		
 		lowestpanLabel.setBounds	(240, 310, 50, 50);
 		lowestPan.setBounds			(248, 365, 35, 35);
