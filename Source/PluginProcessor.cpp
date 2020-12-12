@@ -578,39 +578,6 @@ void ImogenAudioProcessor::killAllMidi() {
 };
 
 
-bool ImogenAudioProcessor::hasEditor() const {
-    return true; // (change this to false if you choose to not supply an editor)
-};
-
-juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor() {
-    return new ImogenAudioProcessorEditor (*this);
-};
-
-//==============================================================================
-void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
-{
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-};
-
-void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-};
-
-//==============================================================================
-// This creates new instances of the plugin..
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
-{
-    return new ImogenAudioProcessor();
-};
-
-
-
-
-
 /////// ANALYZE INPUT
 
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
@@ -628,7 +595,6 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 	epochLocations = epochs.extractEpochIndices(input, inputChan, numSamples, lastSampleRate);
 	
 };
-
 
 
 //// write dry input to dryBuffer so it can be mixed w wet signal for output
@@ -663,3 +629,34 @@ Array<int> ImogenAudioProcessor::returnActivePitches() {
 };
 
 
+//==============================================================================
+bool ImogenAudioProcessor::hasEditor() const {
+	return true; // (change this to false if you choose to not supply an editor)
+};
+
+juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor() {
+	return new ImogenAudioProcessorEditor (*this);
+};
+
+void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+{
+	auto state = tree.copyState();
+	std::unique_ptr<juce::XmlElement> xml (state.createXml());
+	copyXmlToBinary (*xml, destData);
+};
+
+void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+{
+	std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+	
+	if (xmlState.get() != nullptr)
+		if (xmlState->hasTagName (tree.state.getType()))
+			tree.replaceState (juce::ValueTree::fromXml (*xmlState));
+};
+
+// This creates new instances of the plugin..
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+	return new ImogenAudioProcessor();
+};
+//==============================================================================
