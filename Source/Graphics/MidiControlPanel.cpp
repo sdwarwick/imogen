@@ -33,7 +33,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// attack
 		{
 			adsrAttack.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-			adsrAttack.setRange(0.01f, 1.0f);
 			adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrAttack);
 			adsrAttack.setValue(0.035f);
@@ -44,7 +43,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// decay
 		{
 			adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-			adsrDecay.setRange(0.01f, 1.0f);
 			adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrDecay);
 			adsrDecay.setValue(0.06f);
@@ -55,7 +53,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// sustain
 		{
 			adsrSustain.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-			adsrSustain.setRange(0.01f, 1.0f);
 			adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrSustain);
 			adsrSustain.setValue(0.8f);
@@ -66,7 +63,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// release
 		{
 			adsrRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-			adsrRelease.setRange(0.01f, 1.0f);
 			adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrRelease);
 			adsrRelease.setValue(0.1f);
@@ -94,7 +90,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// stereo width dial
 		{
 			stereoWidth.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-			stereoWidth.setRange(0, 100);
 			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(stereoWidth);
 			stereoWidth.setValue(100);
@@ -106,7 +101,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// lowest panned midiPitch
 		{
 			lowestPan.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-			lowestPan.setRange(0, 127);
 			lowestPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(lowestPan);
 			lowestPan.setValue(0);
@@ -118,7 +112,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	// MIDI velocity sensitivity
 	{
 		midiVelocitySens.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-		midiVelocitySens.setRange(0, 100);
 		midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(midiVelocitySens);
 		midiVelocitySens.setValue(100);
@@ -177,7 +170,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		// threshold
 		{
 			pedalPitchThresh.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-			pedalPitchThresh.setRange(0, 127);
 			pedalPitchThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(pedalPitchThresh);
 			pedalPitchThresh.setValue(127);

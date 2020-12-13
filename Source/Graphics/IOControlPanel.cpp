@@ -22,7 +22,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): a
 	// dry pan
 	{
 		dryPan.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-		dryPan.setRange(0, 127);
 		dryPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(dryPan);
 		dryPan.setValue(64);
@@ -33,7 +32,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): a
 	// master dry/wet
 	{
 		masterDryWet.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-		masterDryWet.setRange(0, 100);
 		masterDryWet.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(masterDryWet);
 		masterDryWet.setValue(100);
@@ -44,7 +42,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): a
 	// input gain
 	{
 		inputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
-		inputGain.setRange(-60.0f, 0.0f);
 		inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 		addAndMakeVisible(inputGain);
 		inputGain.setValue(0.0f);
@@ -55,7 +52,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): a
 	// output gain
 	{
 		outputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
-		outputGain.setRange(-60.0f, 0.0f);
 		outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
 		addAndMakeVisible(outputGain);
 		outputGain.setValue(-4.0f);
@@ -66,7 +62,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): a
 	// set input channel
 	{
 		inputChannel.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-		inputChannel.setRange(0, 16, 1);
 		inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(inputChannel);
 		inputChannel.setValue(0);

@@ -31,7 +31,6 @@ public:
 		// threshold
 		{
 			limiterThresh.setSliderStyle(Slider::SliderStyle::LinearVertical);
-			limiterThresh.setRange(-60.0f, 0.0f);
 			limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
 			addAndMakeVisible(limiterThresh);
 			limiterThresh.setValue(-2.0f);
@@ -42,7 +41,6 @@ public:
 		// release
 		{
 			limiterRelease.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-			limiterRelease.setRange(1, 250);
 			limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(limiterRelease);
 			limiterRelease.setValue(10);

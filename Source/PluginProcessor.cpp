@@ -65,12 +65,11 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
 	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-		HarmonyVoice* newvoice = new HarmonyVoice(i);
-		harmEngine.add(newvoice);
+		harmEngine.add(new HarmonyVoice(i));
 	}
 	
-	dryvoxpanningmults[0] = 64;
-	dryvoxpanningmults[1] = 64;
+	dryvoxpanningmults[0] = 0.5f;
+	dryvoxpanningmults[1] = 0.5f;
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
@@ -178,8 +177,18 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		lastBlockSize = samplesPerBlock;
 	}
 	
+	dsp::ProcessSpec oscSpec;
+	oscSpec.sampleRate = sampleRate;
+	oscSpec.maximumBlockSize = MAX_BUFFERSIZE;
+	oscSpec.numChannels = 1;
+	for(int i = 0; i < NUMBER_OF_VOICES; ++i)
+	{
+		harmEngine[i]->prepareOsc(oscSpec);
+	}
+	
 	// DSP settings
 	{
+		wetBuffer.clear();
 		if (prevLastSampleRate != lastSampleRate || prevLastBlockSize != lastBlockSize)
 		{
 			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
@@ -393,9 +402,11 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int numSamples, const int inputChannel)
 {
+
 	if(wetBuffer.getNumSamples() != numSamples) {
 		wetBuffer.setSize(NUMBER_OF_CHANNELS, numSamples, true, false, true);
 	}
+	wetBuffer.clear();
 	
 	// update settings/parameters
 	{
@@ -423,7 +434,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		// dry vox pan
 		{
-			if(dryVoxPanListener != previousmidipan) {
+			if(dryVoxPanListener != previousmidipan)
+			{
 				dryvoxpanningmults[1] = dryVoxPanListener / 127.0f;
 				dryvoxpanningmults[0] = 1.0f - dryvoxpanningmults[1];
 			}
@@ -469,17 +481,21 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
-	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
+	//buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
-	writeToDryBuffer(buffer, inputChannel, numSamples); // write this frame's input to the stereo, circular dryBuffer
+	//writeToDryBuffer(buffer, inputChannel, numSamples); // write this frame's input to the stereo, circular dryBuffer
 	
-	analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
+	//analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
 	
+	int actives = 0;
 	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {  // i = the harmony voice # currently being processed
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
 			
 			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
-			harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
+			//harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
+			
+			harmEngine[i]->rnbSynthOsc(numSamples, adsrIsOn); // writes oscillator samples to its harmonyBuffer
+			++actives;
 			
 			// writes shifted sample values to wetBuffer
 			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
@@ -488,6 +504,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			}
 		}
 	}
+	
+	if(actives > 0) { wetBuffer.applyGain(1.0f / actives); }
 	
 	// clear any extra channels present in I/O buffer
 	{
@@ -506,45 +524,45 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	}
 	
 	// write from dryBuffer to I/O buffer, accounting for latency of harmony algorithm
-	{
-		const int harmonyLatency = 0; // latency in samples of the harmony algorithm, used to realign the dry signal w the wet
-		
-		dryBufferReadPosition = dryBufferWritePosition - numSamples - harmonyLatency;
-		
-		if (dryBufferReadPosition < 0) {
-			dryBufferReadPosition += dryBuffer.getNumSamples();
-		}
-		
-		if(dryBufferReadPosition + numSamples <= dryBuffer.getNumSamples())
-		{
-			dryBuffer.applyGain(dryBufferReadPosition, numSamples, dryMultiplier);
-			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
-			{
-				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, numSamples);
-			}
-		}
-		else
-		{
-			const int midPos = dryBuffer.getNumSamples() - dryBufferReadPosition;
-			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
-			{
-				dryBuffer.applyGain(channel, dryBufferReadPosition, midPos, dryMultiplier);
-				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, midPos);
-				dryBuffer.applyGain(channel, 0, numSamples - midPos, dryMultiplier);
-				buffer.addFrom(channel, midPos, dryBuffer, channel, 0, numSamples - midPos);
-			}
-		}
-		dryBufferReadPosition += numSamples; // these two lines may be redundant, since dryBufferReadPosition is calculated each frame based on dryBufferWritePosition & the latency offset...
-		dryBufferReadPosition %= dryBuffer.getNumSamples();
-	}
+//	{
+//		const int harmonyLatency = 0; // latency in samples of the harmony algorithm, used to realign the dry signal w the wet
+//
+//		dryBufferReadPosition = dryBufferWritePosition - numSamples - harmonyLatency;
+//
+//		if (dryBufferReadPosition < 0) {
+//			dryBufferReadPosition += dryBuffer.getNumSamples();
+//		}
+//
+//		if(dryBufferReadPosition + numSamples <= dryBuffer.getNumSamples())
+//		{
+//			dryBuffer.applyGain(dryBufferReadPosition, numSamples, dryMultiplier);
+//			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+//			{
+//				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, numSamples);
+//			}
+//		}
+//		else
+//		{
+//			const int midPos = dryBuffer.getNumSamples() - dryBufferReadPosition;
+//			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+//			{
+//				dryBuffer.applyGain(channel, dryBufferReadPosition, midPos, dryMultiplier);
+//				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, midPos);
+//				dryBuffer.applyGain(channel, 0, numSamples - midPos, dryMultiplier);
+//				buffer.addFrom(channel, midPos, dryBuffer, channel, 0, numSamples - midPos);
+//			}
+//		}
+//		dryBufferReadPosition += numSamples; // these two lines may be redundant, since dryBufferReadPosition is calculated each frame based on dryBufferWritePosition & the latency offset...
+//		dryBufferReadPosition %= dryBuffer.getNumSamples();
+//	}
 	
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
 	// output limiter
-//	if(limiterIsOn) {
-//		dsp::AudioBlock<float> limiterBlock (buffer);
-//		limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
-//	}
+	if(limiterIsOn) {
+		dsp::AudioBlock<float> limiterBlock (buffer);
+		limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
+	}
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	

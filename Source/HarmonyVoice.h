@@ -43,6 +43,7 @@ public:
 		lastNoteRecieved = midiPitch;
 		lastRecievedVelocity = velocity;
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
+		osc.setFrequency(desiredFrequency);
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
 		adsrEnv.noteOn();
@@ -53,6 +54,9 @@ public:
 	void stopNote () {
 		adsrEnv.noteOff();
 		// voiceIsOn is set to FALSE in the renderNextBlock function so that the bool changes only after the ADSR has actually reached 0.
+		amplitudeMultiplier = 0.0f;
+		voiceIsOn = false;
+		clearBuffers();
 	};
 	
 	
@@ -60,11 +64,10 @@ public:
 		lastNoteRecieved = midiPitch;
 		lastRecievedVelocity = velocity;
 		desiredFrequency = mtof(returnMidiFloat(lastPitchBend));
+		osc.setFrequency(desiredFrequency);
 		amplitudeMultiplier = calcVelocityMultiplier(velocity);
 		voiceIsOn = true;
-		if(adsrEnv.isActive() == false) {
-			adsrEnv.noteOn();
-		}
+		if(adsrEnv.isActive() == false) { adsrEnv.noteOn(); }
 		lastRecievedPitchbend = lastPitchBend;
 	};
 	
@@ -75,7 +78,8 @@ public:
 	};
 	
 	
-	void adsrSettingsListener(const std::atomic<float>& adsrAttackTime, const std::atomic<float>& adsrDecayTime, const std::atomic<float>& adsrSustainRatio, const std::atomic<float>& adsrReleaseTime) {
+	void adsrSettingsListener(const std::atomic<float>& adsrAttackTime, const std::atomic<float>& adsrDecayTime, const std::atomic<float>& adsrSustainRatio, const std::atomic<float>& adsrReleaseTime)
+	{
 		// attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
 		adsrParams.attack = adsrAttackTime;
 		adsrParams.decay = adsrDecayTime;
@@ -136,6 +140,41 @@ public:
 	};
 	
 	
+	void rnbSynthOsc(const int numSamples, const bool adsrIsOn)
+	{
+		// for testing purposes, to enable the use of Imogen as if it's a polyphonic synth. Writes sample values to the stereo harmonyBuffer.
+		if(adsrEnv.isActive() == false) {
+			voiceIsOn = false;
+			amplitudeMultiplier = 0.0f;
+			clearBuffers();
+		}
+		else
+		{
+			checkBufferSizes(numSamples);
+			osc.setFrequency(desiredFrequency);
+			
+			dsp::AudioBlock<float> oscBlock(shiftedBuffer);
+			osc.process(dsp::ProcessContextReplacing<float>(oscBlock));
+			oscBlock.multiplyBy(amplitudeMultiplier); // apply MIDI velocity multiplier
+			
+			// transfer samples into the stereo harmonyBuffer, which is where the processBlock will grab them from
+			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
+			{
+				harmonyBuffer.copyFrom(channel, 0, shiftedBuffer, 0, 0, numSamples);
+				harmonyBuffer.applyGain(channel, 0, numSamples, panningMultipliers[channel]);
+			}
+			
+			if(adsrIsOn) {
+				adsrEnv.applyEnvelopeToBuffer(harmonyBuffer, 0, numSamples);
+			}
+		}
+	};
+	void prepareOsc(dsp::ProcessSpec& spec)
+	{
+		osc.prepare(spec);
+	};
+	
+	
 	void changePanning(const int newPanVal) {   // this function updates the voice's panning if it is active when the stereo width setting is changed
 												// TODO: ramp this value???
 		if(midiPan != newPanVal)
@@ -176,6 +215,8 @@ public:
 	
 	
 private:
+	
+	dsp::Oscillator<float> osc { [](float x) { return std::sin(x); } };
 	
 	ADSR adsrEnv;
 	ADSR::Parameters adsrParams;
