@@ -33,7 +33,7 @@ public:
 			++i;
 		}
 	};
-	
+
 	
 	void updatePitchCollection(const int voiceNumber, const int midiPitch)
 	{
@@ -49,6 +49,7 @@ public:
 	
 	
 	int nextAvailableVoice() const {
+		const ScopedLock s1 (lock);
 		int voiceNumber = -1;
 		int voiceTesting = 0;
 		while(voiceTesting < NUMBER_OF_VOICES)
@@ -65,6 +66,7 @@ public:
 	
 	
 	int getIndex(const int pitch) const {
+		const ScopedLock s1 (lock);
 		int index = -1;
 		int testing = 0;
 		while(testing < NUMBER_OF_VOICES)
@@ -81,6 +83,7 @@ public:
 	
 	
 	bool isPitchActive(const int midiPitch) const {
+		const ScopedLock s1 (lock);
 		bool foundIt = false;
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if (harmonyPitches[i] == midiPitch) {
@@ -112,6 +115,7 @@ public:
 	
 	bool areAllVoicesOff() const
 	{
+		const ScopedLock s1 (lock);
 		bool allareoff = true;
 		
 		for (int i = 0; i < NUMBER_OF_VOICES; ++i)
@@ -127,6 +131,8 @@ public:
 	
 	
 	int getLowestActiveNote() const {
+		//const ScopedLock s1 (lock);
+		
 		if(areAllVoicesOff() == false)
 		{
 			int lowestpitch = 128;
@@ -152,6 +158,8 @@ public:
 	
 	
 private:
+	CriticalSection lock; // this is used to control access to the note reading & writing methods
+	
 	int harmonyPitches[NUMBER_OF_VOICES];
 	
 	MidiPanningManager& panningManager;

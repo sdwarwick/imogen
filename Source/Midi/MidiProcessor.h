@@ -123,6 +123,7 @@ public:
 	
 	// run this function to kill all active harmony notes:
 	void killAll() {  // run this function to clear all held / turned on midi notes
+		const ScopedLock s1 (lock);
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if (const int returnedmidipitch = polyphonyManager.pitchAtIndex(i); returnedmidipitch != -1)
 			{
@@ -151,6 +152,7 @@ public:
 	
 	void turnOffLatch()  // run this function to turn off latch & send held note offs out to harmony engine
 	{
+		const ScopedLock s1 (lock);
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
 			if(const int returnedVal = latchManager.noteAtIndex(i); returnedVal > -1)
@@ -169,26 +171,35 @@ public:
 		
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
-			if(const int testpitch = polyphonyManager.pitchAtIndex(i); testpitch > -1) {
-				activePitches.add(testpitch);
-			}
+			activePitches.add(polyphonyManager.pitchAtIndex(i));
 		}
 		
-		if(activePitches.isEmpty() == false)
-		{
-			activePitches.sort();
-		} else {
-			activePitches.add(-1);
-		}
+		activePitches.sort();
 		
 		return activePitches;
+		
+//		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
+//		{
+//			if(const int testpitch = polyphonyManager.pitchAtIndex(i); testpitch > -1) {
+//				activePitches.add(testpitch);
+//			}
+//		}
+//
+//		if(activePitches.isEmpty() == false)
+//		{
+//			activePitches.sort();
+//		} else {
+//			activePitches.add(-1);
+//		}
+//
+//		return activePitches;
 	};
 	
 	MidiBuffer ioMidiBuffer;
 	
 	
 private:
-	
+	CriticalSection lock;
 	OwnedArray<HarmonyVoice>& harmonyEngine;
 	
 	PolyphonyVoiceManager polyphonyManager;
@@ -210,6 +221,7 @@ private:
 	// sends a note on out to the harmony engine
 	void harmonyNoteOn(const MidiMessage currentMessage)
 	{
+		const ScopedLock s1 (lock);
 		if(currentMessage.isNoteOn()) {
 			const int newPitch = currentMessage.getNoteNumber();
 			const int newVelocity = currentMessage.getVelocity();
@@ -243,6 +255,7 @@ private:
 	
 	// sends a note off out to the harmony engine
 	void harmonyNoteOff(const int pitch) {
+		const ScopedLock s1 (lock);
 		const int voiceToTurnOff = polyphonyManager.getIndex(pitch);
 		if(voiceToTurnOff > -1 && voiceToTurnOff < NUMBER_OF_VOICES) {
 			polyphonyManager.updatePitchCollection(voiceToTurnOff, -1);
@@ -270,6 +283,7 @@ private:
 	
 	
 	void pedalPitch(const int thresholdPitch) {
+		const ScopedLock s1 (lock);
 		// this function doubles the lowest currently active midiPitch an octave lower. the argument is the "threshold", ie the highest midiPitch that will be doubled 8vb. the lowest pitch that will be doubled is 0.
 		const int lowestActive = polyphonyManager.getLowestActiveNote();
 		if(lowestActive > -1) {

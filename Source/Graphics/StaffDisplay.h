@@ -33,6 +33,8 @@ public:
 
 private:
 	
+	Array<int> currentlyActive;
+	
 	Image grandStaff;
 	ImageComponent staffImage;
 	

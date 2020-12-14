@@ -489,12 +489,13 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	int actives = 0;
 	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {  // i = the harmony voice # currently being processed
+		
+		// writes this HarmonyVoice's shifted samples to its harmonyBuffer
+		//harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
+		
+		harmEngine[i]->rnbSynthOsc(numSamples, adsrIsOn); // writes oscillator samples to its harmonyBuffer
+		
 		if (harmEngine[i]->voiceIsOn) {  // only do audio processing on active voices:
-			
-			// writes this HarmonyVoice's shifted samples to its harmonyBuffer
-			//harmEngine[i]->renderNextBlock(buffer, numSamples, inputChannel, voxCurrentPitch, epochLocations, 3, adsrIsOn); // how to calculate numOfEpochsPerFrame parameter?
-			
-			harmEngine[i]->rnbSynthOsc(numSamples, adsrIsOn); // writes oscillator samples to its harmonyBuffer
 			++actives;
 			
 			// writes shifted sample values to wetBuffer
@@ -505,7 +506,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		}
 	}
 	
-	if(actives > 0) { wetBuffer.applyGain(1.0f / actives); }
+	if(actives > 0) { wetBuffer.applyGain(1.0f / actives); } else { wetBuffer.applyGain(0.0f); };
 	
 	// clear any extra channels present in I/O buffer
 	{

@@ -42,7 +42,7 @@ public:
 	
 	
 	void updateStereoWidth(const int newStereoWidth) {
-		
+		const ScopedLock s1 (lock);
 		const float rangeMultiplier = newStereoWidth/100.0f;
 		const float maxPan = 63.5f + (63.5f * rangeMultiplier);
 		const float minPan = 63.5f - (63.5f * rangeMultiplier);
@@ -71,6 +71,7 @@ public:
 	
 	
 	int getNextPanVal() {
+		const ScopedLock s1 (lock);
 		if(availablePanValIndexes.isEmpty() == false)
 		{
 			lastsentoverflow = 0;
@@ -92,6 +93,7 @@ public:
 	
 	void turnedoffPanVal(const int newAvailPanVal)
 	{
+		const ScopedLock s1 (lock);
 		int newindex = -1;
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i) {
 			if(panValsInAssigningOrder[i] == newAvailPanVal) {
@@ -119,6 +121,7 @@ public:
 	
 	int getClosestNewPanVal(const int prevPan)
 	{
+		const ScopedLock s1 (lock);
 		// find the value in list of new pan values whose absolute value of its distance from the voice's old pan val is the smallest
 		newPanValAbsDist.clearQuick();
 		for(int i = 0; i < newPanValsLeft.size(); ++i) {
@@ -145,7 +148,7 @@ public:
 								   							
 	
 private:
-
+	CriticalSection lock;
 	const int middleIndex;
 	
 	int possiblePanVals[NUMBER_OF_VOICES];

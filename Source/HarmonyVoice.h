@@ -114,7 +114,7 @@ public:
 			clearBuffers();
 			adsrEnv.reset();
 		} else {
-		
+			voiceIsOn = true;
 			checkBufferSizes(numSamples);
 			
 			const float scalingFactor = 1.0f / (1.0f + ((modInputFreq - desiredFrequency)/desiredFrequency));
@@ -150,6 +150,7 @@ public:
 		}
 		else
 		{
+			voiceIsOn = true;
 			checkBufferSizes(numSamples);
 			osc.setFrequency(desiredFrequency);
 			

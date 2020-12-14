@@ -44,6 +44,8 @@ StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audio
 	
 	staffImage.setImage(grandStaff);
 	addAndMakeVisible(staffImage);
+	
+	currentlyActive.ensureStorageAllocated(NUMBER_OF_VOICES);
 };
 
 StaffDisplay::~StaffDisplay()
@@ -56,7 +58,9 @@ void StaffDisplay::paint (juce::Graphics& g)
 	
 	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::staffDisplayBackgroundColourId));
 
-	drawPitches(audioProcessor.returnActivePitches(), g);
+	//drawPitches(audioProcessor.returnActivePitches(), g);
+	
+	currentlyActive = audioProcessor.returnActivePitches();
 	
 //	g.setColour(juce::Colours::black);
 //	g.fillPath(noteheadPath);

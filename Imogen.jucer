@@ -19,6 +19,8 @@
       <FILE id="T4QvQh" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="CjHGCm" name="Harmonizer.cpp" compile="1" resource="0" file="Source/Harmonizer.cpp"/>
+      <FILE id="eH1KXL" name="Harmonizer.h" compile="0" resource="0" file="Source/Harmonizer.h"/>
       <GROUP id="{0EFF1E8A-88CB-E92D-C447-9B3488858F9C}" name="PSOLA">
         <FILE id="XVLavT" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
         <FILE id="LZ3BSi" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>

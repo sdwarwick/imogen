@@ -29,6 +29,7 @@ public:
 
 	
 	void clear() {
+		const ScopedLock s1 (lock);
 		for(int i = 0; i < NUMBER_OF_VOICES; ++i)
 		{
 			heldNoteOffs[i] = -1;
@@ -37,6 +38,7 @@ public:
 	
 	
 	void noteOffRecieved(const int noteNumber) {
+		const ScopedLock s1 (lock);
 		int i = 0;
 		while (i < NUMBER_OF_VOICES)
 		{
@@ -51,6 +53,7 @@ public:
 	
 	
 	void noteOnRecieved(const int noteNumber) {
+		const ScopedLock s1 (lock);
 		int i = 0;
 		while (i < NUMBER_OF_VOICES)
 		{
@@ -70,6 +73,6 @@ public:
 	
 	
 private:
-	
+	CriticalSection lock;
 	int heldNoteOffs[NUMBER_OF_VOICES]; // array holds all note offs recieved while latch is active. Holds -1 for "empty array slot"
 };
