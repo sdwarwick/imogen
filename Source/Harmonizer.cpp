@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): currentlyPlayingNote(-1), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false)
+HarmonizerVoice::HarmonizerVoice(): currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100)
 { };
 
 
@@ -51,10 +51,33 @@ void HarmonizerVoice::esola(AudioBuffer<float>& outputBuffer, int startSample, i
 
 // MIDI -----------------------------------------------------------------------------------------------------------
 
+float HarmonizerVoice::getOutputFreqFromMidinoteAndPitchbend()
+{
+	jassert(currentlyPlayingNote >= 0);
+	
+	if(lastRecievedPitchbend == 64)
+	{
+		return benutils::mtof(currentlyPlayingNote);
+	}
+	else if(lastRecievedPitchbend > 64)
+	{
+		return benutils::mtof(((pitchbendRangeUp * (lastRecievedPitchbend - 65)) / 62) + currentlyPlayingNote);
+	}
+	else
+	{
+		return benutils::mtof((((1 - pitchbendRangeDown) * lastRecievedPitchbend) / 63) + currentlyPlayingNote - pitchbendRangeDown);
+	}
+	
+};
+
+
 void HarmonizerVoice::startNote(int midiPitch, float velocity, int currentPitchWheelPosition)
 {
 	adsr.noteOn();
 	currentlyPlayingNote = midiPitch;
+	currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend();
+	currentVelocityMultiplier = calcVelocityMultiplier(velocity);
+	lastRecievedVelocity = velocity;
 };
 
 void HarmonizerVoice::stopNote(float velocity, bool allowTailOff)
@@ -68,11 +91,14 @@ void HarmonizerVoice::stopNote(float velocity, bool allowTailOff)
 		clearCurrentNote();
 		adsr.reset();
 	}
+	lastRecievedVelocity = 0.0f;
 };
 
 void HarmonizerVoice::pitchWheelMoved(int newPitchWheelValue)
 {
-	
+	lastRecievedPitchbend = newPitchWheelValue;
+	if(currentlyPlayingNote >= 0)
+		currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend();
 };
 
 void HarmonizerVoice::aftertouchChanged(int) { };
@@ -80,6 +106,21 @@ void HarmonizerVoice::aftertouchChanged(int) { };
 void HarmonizerVoice::channelPressureChanged(int) { };
 
 void HarmonizerVoice::controllerMoved(int controllerNumber, int newControllerValue) { };
+
+
+float HarmonizerVoice::calcVelocityMultiplier(int inputVelocity)
+{
+	const float initialMutiplier = inputVelocity / 127.0f;
+	return ((1.0f - initialMutiplier) * (1.0f - midiVelocitySensitivity) + initialMutiplier);
+};
+
+
+void HarmonizerVoice::setMidiVelocitySensitivity(int newsensitity)
+{
+	midiVelocitySensitivity = newsensitity;
+	if(currentlyPlayingNote >= 0)
+		currentVelocityMultiplier = calcVelocityMultiplier(lastRecievedVelocity);
+};
 
 
 
@@ -94,6 +135,14 @@ void HarmonizerVoice::updateAdsrSettings(float attack, float decay, float sustai
 	adsr.setParameters(adsrParams);
 };
 
+
+void HarmonizerVoice::updatePitchbendSettings(int rangeUp, int rangeDown)
+{
+	pitchbendRangeUp = rangeUp;
+	pitchbendRangeDown = rangeDown;
+	if(currentlyPlayingNote >= 0)
+		currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend();
+};
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,6 +241,21 @@ void Harmonizer::setMinimumRenderingSubdivisionSize (int numSamples, bool should
 
 
 // MIDI events---------------------------------------------------------------------------------------------------------------------------------------
+
+void Harmonizer::updatePitchbendSettings(int rangeUp, int rangeDown)
+{
+	const ScopedLock sl (lock);
+	for(auto* voice : voices)
+		voice->updatePitchbendSettings(rangeUp, rangeDown);
+};
+
+
+void Harmonizer::updateMidiVelocitySensitivity(int newSensitivity)
+{
+	const ScopedLock sl (lock);
+	for(auto* voice : voices)
+		voice->setMidiVelocitySensitivity(newSensitivity);
+}
 
 
 Array<int> Harmonizer::reportActiveNotes() const

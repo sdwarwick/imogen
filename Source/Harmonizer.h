@@ -34,6 +34,9 @@ public:
 	void renderNextBlock(AudioBuffer<float> outputBuffer, int startSample, int numSamples);
 	
 	
+	void setMidiVelocitySensitivity(int newsensitity);
+	
+	
 	int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
 	
 	bool isVoiceActive() const { return currentlyPlayingNote >= 0; }
@@ -72,6 +75,8 @@ public:
 	
 	void updateAdsrSettings(float attack, float decay, float sustain, float release);
 	
+	void updatePitchbendSettings(int rangeUp, int rangeDown);
+	
 	
 protected:
 	//Resets the state of this voice after a note has finished playing. The subclass must call this when it finishes playing a note and becomes available to play new ones. It must either call it in the stopNote() method, or if the voice is tailing off, then it should call it later during the renderNextBlock method, as soon as it finishes its tail-off. It can also be called at any time during the render callback if the sound happens
@@ -86,11 +91,23 @@ private:
 	ADSR::Parameters adsrParams;
 	
 	int currentlyPlayingNote;
+	float currentOutputFreq;
+	float currentVelocityMultiplier;
+	int pitchbendRangeUp, pitchbendRangeDown;
+	int lastRecievedPitchbend, lastRecievedVelocity;
 	double currentSampleRate;
 	uint32 noteOnTime;
 	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
+	int midiVelocitySensitivity;
 	
 	AudioBuffer<float> tempBuffer;
+	
+	// calculates the actual target frequency, based on the last recieved midiPitch, the last recieved pitch wheel value, and the current pitch bend settings
+	float getOutputFreqFromMidinoteAndPitchbend();
+	
+	
+	// calculates a [0.0, 1.0] gain value to be applied to the output signal that corresponds to the latest recieved midi Velocity & the selected midi velocity sensitivity
+	float calcVelocityMultiplier(int inputVelocity);
 	
 	void esola(AudioBuffer<float>& outputBuffer, int startSample, int numSamples);
 	
@@ -111,6 +128,13 @@ public:
 	// The midi events in the inputMidi buffer are parsed for note and controller events, and these are used to trigger the voices. Note that the startSample offset applies both to the audio output buffer and the midi input buffer, so any midi events with timestamps outside the specified region will be ignored.
 	void renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuffer& inputMidi, int startSample, int numSamples);
 	
+	
+	
+	
+	void updateMidiVelocitySensitivity(int newSensitivity);
+	
+	
+	
 	void setCurrentPlaybackSampleRate(double newRate);
 	double getSamplerate() const noexcept { return sampleRate; }
 	
@@ -128,6 +152,8 @@ public:
 	void allNotesOff(bool allowTailOff);
 	
 	void updateADSRsettings(float attack, float decay, float sustain, float release);
+	
+	void updatePitchbendSettings(int rangeUp, int rangeDown);
 	
 	// Adds a new voice to the harmonizer. The object passed in will be managed by the synthesiser, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
 	HarmonizerVoice* addVoice(HarmonizerVoice* newVoice);

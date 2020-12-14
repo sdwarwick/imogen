@@ -220,10 +220,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	// MIDI velocity sensitivity
 	{
 		if(prevVelocitySens != midiVelocitySensListener) {
-			for(int i = 0; i < NUMBER_OF_VOICES; ++i)
-			{
-			//	harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
-			}
+			harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
 			prevVelocitySens = midiVelocitySensListener;
 		}
 	}
@@ -249,9 +246,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	// pitch bend settings
 	{
 		if (prevPitchBendUp != pitchBendUpListener || prevPitchBendDown != pitchBendDownListener) {
-			for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-			//	harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
-			}
+			harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 			prevPitchBendUp = pitchBendUpListener;
 			prevPitchBendDown = pitchBendDownListener;
 		}
@@ -406,14 +401,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		}
 		
 		// MIDI velocity sensitivity
-		{
-			if(prevVelocitySens != midiVelocitySensListener) {
-				for(int i = 0; i < NUMBER_OF_VOICES; ++i)
-				{
-				//	harmEngine[i]->midiVelocitySensitivityListener(midiVelocitySensListener);
-				}
-			}
-		}
+			if(prevVelocitySens != midiVelocitySensListener)
+				harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
 		
 		// dry vox pan
 		{
@@ -427,9 +416,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		// pitch bend settings
 		{
 			if (prevPitchBendUp != pitchBendUpListener || prevPitchBendDown != pitchBendDownListener) {
-				for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-				//	harmEngine[i]->pitchBendSettingsListener(pitchBendUpListener, pitchBendDownListener);
-				}
+				harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 			}
 		}
 		
