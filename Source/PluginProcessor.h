@@ -20,7 +20,7 @@ public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
 	
-	Array<int> returnActivePitches();
+	Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -31,7 +31,7 @@ public:
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 	
-	void killAllMidi();
+	void killAllMidi() { harmonizer.allNotesOff(false); }
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -105,8 +105,6 @@ private:
 
 	Yin pitchTracker;
 	EpochExtractor epochs;
-	
-	void writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples);
 	
 	int previousmidipan;
 	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.

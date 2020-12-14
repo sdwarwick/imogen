@@ -19,40 +19,6 @@ HarmonizerVoice::~HarmonizerVoice()
 { };
 
 
-void HarmonizerVoice::startNote(int midiPitch, float velocity, int currentPitchWheelPosition)
-{
-	adsr.noteOn();
-	currentlyPlayingNote = midiPitch;
-};
-
-
-void HarmonizerVoice::stopNote(float velocity, bool allowTailOff)
-{
-	if (allowTailOff)
-	{
-		adsr.noteOff();
-	}
-	else
-	{
-		clearCurrentNote();
-		adsr.reset();
-	}
-};
-
-
-void HarmonizerVoice::pitchWheelMoved(int newPitchWheelValue)
-{
-	
-};
-
-
-void HarmonizerVoice::controllerMoved(int controllerNumber, int newControllerValue) { };
-
-void HarmonizerVoice::aftertouchChanged(int) { };
-
-void HarmonizerVoice::channelPressureChanged(int) { };
-
-
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float> outputBuffer, int startSample, int numSamples)
 {
 	if(! (sustainPedalDown || sostenutoPedalDown))
@@ -83,6 +49,42 @@ void HarmonizerVoice::esola(AudioBuffer<float>& outputBuffer, int startSample, i
 };
 
 
+// MIDI -----------------------------------------------------------------------------------------------------------
+
+void HarmonizerVoice::startNote(int midiPitch, float velocity, int currentPitchWheelPosition)
+{
+	adsr.noteOn();
+	currentlyPlayingNote = midiPitch;
+};
+
+void HarmonizerVoice::stopNote(float velocity, bool allowTailOff)
+{
+	if (allowTailOff)
+	{
+		adsr.noteOff();
+	}
+	else
+	{
+		clearCurrentNote();
+		adsr.reset();
+	}
+};
+
+void HarmonizerVoice::pitchWheelMoved(int newPitchWheelValue)
+{
+	
+};
+
+void HarmonizerVoice::aftertouchChanged(int) { };
+
+void HarmonizerVoice::channelPressureChanged(int) { };
+
+void HarmonizerVoice::controllerMoved(int controllerNumber, int newControllerValue) { };
+
+
+
+// ADSR settings -------------------------------------------------------------------------------------------------------
+
 void HarmonizerVoice::updateAdsrSettings(float attack, float decay, float sustain, float release)
 {
 	adsrParams.attack = attack;
@@ -98,7 +100,11 @@ void HarmonizerVoice::updateAdsrSettings(float attack, float decay, float sustai
 
 
 Harmonizer::Harmonizer(): lastPitchWheelValue(0), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), minimumSubBlockSize(32), subBlockSubdivisionIsStrict(false)
-{ };
+{
+	currentlyActiveNotes.ensureStorageAllocated(NUMBER_OF_VOICES);
+	currentlyActiveNotes.clearQuick();
+	currentlyActiveNotes.add(-1);
+};
 
 
 Harmonizer::~Harmonizer()
@@ -107,34 +113,139 @@ Harmonizer::~Harmonizer()
 };
 
 
-void Harmonizer::deleteAllVoices()
+// audio rendering-----------------------------------------------------------------------------------------------------------------------------------
+
+void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuffer& inputMidi, int startSample, int numSamples)
 {
+	jassert (sampleRate != 0);
+	
+	auto midiIterator = inputMidi.findNextSamplePosition(startSample);
+	
+	bool firstEvent = true;
+	
 	const ScopedLock sl (lock);
-	voices.clear();
+	
+	for (; numSamples > 0; ++midiIterator)
+	{
+		if (midiIterator == inputMidi.cend())
+		{
+			renderVoices(outputAudio, startSample, numSamples);
+			return;
+		}
+		
+		const auto metadata = *midiIterator;
+		const int samplesToNextMidiMessage = metadata.samplePosition - startSample;
+		
+		if (samplesToNextMidiMessage >= numSamples)
+		{
+			renderVoices(outputAudio, startSample, numSamples);
+			handleMidiEvent(metadata.getMessage());
+			break;
+		}
+		
+		if (samplesToNextMidiMessage < ((firstEvent && ! subBlockSubdivisionIsStrict) ? 1 : minimumSubBlockSize))
+		{
+			handleMidiEvent(metadata.getMessage());
+			continue;
+		}
+		
+		firstEvent = false;
+		
+		renderVoices(outputAudio, startSample, samplesToNextMidiMessage);
+		
+		handleMidiEvent(metadata.getMessage());
+		startSample += samplesToNextMidiMessage;
+		numSamples  -= samplesToNextMidiMessage;
+	}
+	
+	std::for_each (midiIterator,
+				   inputMidi.cend(),
+				   [&] (const MidiMessageMetadata& meta) { handleMidiEvent (meta.getMessage()); });
+	
+};
+
+void Harmonizer::renderVoices (AudioBuffer<float>& outputAudio, int startSample, int numSamples)
+{
+	for (auto* voice : voices)
+		voice->renderNextBlock (outputAudio, startSample, numSamples);
+};
+
+void Harmonizer::setCurrentPlaybackSampleRate(double newRate)
+{
+	if (sampleRate != newRate)
+	{
+		const ScopedLock sl (lock);
+		allNotesOff (false);
+		sampleRate = newRate;
+		
+		for (auto* voice : voices)
+			voice->setCurrentPlaybackSamplerate (newRate);
+	}
+};
+
+void Harmonizer::setMinimumRenderingSubdivisionSize (int numSamples, bool shouldBeStrict) noexcept
+{
+	jassert (numSamples > 0); // it wouldn't make much sense for this to be less than 1
+	minimumSubBlockSize = numSamples;
+	subBlockSubdivisionIsStrict = shouldBeStrict;
 };
 
 
-HarmonizerVoice* Harmonizer::getVoice(int index) const
+// MIDI events---------------------------------------------------------------------------------------------------------------------------------------
+
+
+Array<int> Harmonizer::reportActiveNotes() const
 {
 	const ScopedLock sl (lock);
-	return voices[index];
+	
+	currentlyActiveNotes.clearQuick();
+	
+	for (auto* voice : voices)
+	{
+		if (voice->isVoiceActive())
+			currentlyActiveNotes.add(voice->getCurrentlyPlayingNote());
+	}
+	
+	if(! currentlyActiveNotes.isEmpty()) { currentlyActiveNotes.sort(); }
+	else { currentlyActiveNotes.add(-1); }
+
+	return currentlyActiveNotes;
 };
 
 
-HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
+void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
-	const ScopedLock sl (lock);
-	newVoice->setCurrentPlaybackSamplerate(sampleRate);
-	return voices.add(newVoice);
+	if (m.isNoteOn())
+	{
+		noteOn (m.getNoteNumber(), m.getFloatVelocity());
+	}
+	else if (m.isNoteOff())
+	{
+		noteOff (m.getNoteNumber(), m.getFloatVelocity(), true);
+	}
+	else if (m.isAllNotesOff() || m.isAllSoundOff())
+	{
+		allNotesOff (true);
+	}
+	else if (m.isPitchWheel())
+	{
+		const int wheelPos = m.getPitchWheelValue();
+		lastPitchWheelValue = wheelPos;
+		handlePitchWheel (wheelPos);
+	}
+	else if (m.isAftertouch())
+	{
+		handleAftertouch (m.getNoteNumber(), m.getAfterTouchValue());
+	}
+	else if (m.isChannelPressure())
+	{
+		handleChannelPressure (m.getChannelPressureValue());
+	}
+	else if (m.isController())
+	{
+		handleController (m.getControllerNumber(), m.getControllerValue());
+	}
 };
-
-
-void Harmonizer::removeVoice(int index)
-{
-	const ScopedLock sl (lock);
-	voices.remove(index);
-};
-
 
 void Harmonizer::noteOn(int midiPitch, float velocity)
 {
@@ -163,7 +274,6 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, int midiPitch, float velocit
 	}
 };
 
-
 void Harmonizer::noteOff (int midiNoteNumber, float velocity, bool allowTailOff)
 {
 	const ScopedLock sl (lock);
@@ -179,6 +289,13 @@ void Harmonizer::noteOff (int midiNoteNumber, float velocity, bool allowTailOff)
 	}
 };
 
+void Harmonizer::stopVoice (HarmonizerVoice* voice, float velocity, bool allowTailOff)
+{
+	if(voice != nullptr)
+	{
+		voice->stopNote (velocity, allowTailOff);
+	}
+};
 
 void Harmonizer::allNotesOff(bool allowTailOff)
 {
@@ -188,16 +305,88 @@ void Harmonizer::allNotesOff(bool allowTailOff)
 		voice->stopNote (1.0f, allowTailOff);
 };
 
-
-void Harmonizer::stopVoice (HarmonizerVoice* voice, float velocity, bool allowTailOff)
+void Harmonizer::handlePitchWheel(int wheelValue)
 {
-	if(voice != nullptr)
+	const ScopedLock sl (lock);
+	
+	for (auto* voice : voices)
+		voice->pitchWheelMoved (wheelValue);
+};
+
+void Harmonizer::handleAftertouch(int midiNoteNumber, int aftertouchValue)
+{
+	const ScopedLock sl (lock);
+	
+	for (auto* voice : voices)
+		if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
+			voice->aftertouchChanged (aftertouchValue);
+};
+
+void Harmonizer::handleChannelPressure(int channelPressureValue)
+{
+	const ScopedLock sl (lock);
+	
+	for (auto* voice : voices)
+		voice->channelPressureChanged (channelPressureValue);
+};
+
+void Harmonizer::handleController(int controllerNumber, int controllerValue)
+{
+	switch (controllerNumber)
 	{
-		voice->stopNote (velocity, allowTailOff);
+		case 0x40:  handleSustainPedal   (controllerValue >= 64); return;
+		case 0x42:  handleSostenutoPedal (controllerValue >= 64); return;
+		case 0x43:  handleSoftPedal      (controllerValue >= 64); return;
+		default:    break;
+	}
+	
+	const ScopedLock sl (lock);
+	
+	for (auto* voice : voices)
+		voice->controllerMoved (controllerNumber, controllerValue);
+};
+
+void Harmonizer::handleSustainPedal(bool isDown)
+{
+	const ScopedLock sl (lock);
+	
+	if (isDown)
+	{
+		for (auto* voice : voices)
+			voice->setSustainPedalDown (true);
+	}
+	else
+	{
+		for (auto* voice : voices)
+		{
+			voice->setSustainPedalDown (false);
+			
+			if (! (voice->isKeyDown() || voice->isSostenutoPedalDown()))
+				stopVoice (voice, 1.0f, true);
+		}
 	}
 };
 
+void Harmonizer::handleSostenutoPedal(bool isDown)
+{
+	const ScopedLock sl (lock);
+	
+	for (auto* voice : voices)
+	{
+		if (isDown)
+			voice->setSostenutoPedalDown (true);
+		else if (voice->isSostenutoPedalDown())
+			stopVoice (voice, 1.0f, true);
+	}
+};
 
+void Harmonizer::handleSoftPedal(bool isDown)
+{
+	ignoreUnused(isDown);
+};
+
+
+// voice allocation----------------------------------------------------------------------------------------------------------------------------------
 HarmonizerVoice* Harmonizer::findFreeVoice (int midiNoteNumber, bool stealIfNoneAvailable) const
 {
 	const ScopedLock sl (lock);
@@ -292,202 +481,7 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (int midiNoteNumber) const
 };
 
 
-void Harmonizer::handlePitchWheel(int wheelValue)
-{
-	const ScopedLock sl (lock);
-	
-	for (auto* voice : voices)
-		voice->pitchWheelMoved (wheelValue);
-};
-
-void Harmonizer::handleController(int controllerNumber, int controllerValue)
-{
-	switch (controllerNumber)
-	{
-		case 0x40:  handleSustainPedal   (controllerValue >= 64); break;
-		case 0x42:  handleSostenutoPedal (controllerValue >= 64); break;
-		case 0x43:  handleSoftPedal      (controllerValue >= 64); break;
-		default:    break;
-	}
-	
-	const ScopedLock sl (lock);
-	
-	for (auto* voice : voices)
-		voice->controllerMoved (controllerNumber, controllerValue);
-};
-
-void Harmonizer::handleAftertouch(int midiNoteNumber, int aftertouchValue)
-{
-	const ScopedLock sl (lock);
-	
-	for (auto* voice : voices)
-		if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
-			voice->aftertouchChanged (aftertouchValue);
-};
-
-void Harmonizer::handleChannelPressure(int channelPressureValue)
-{
-	const ScopedLock sl (lock);
-	
-	for (auto* voice : voices)
-		voice->channelPressureChanged (channelPressureValue);
-};
-
-void Harmonizer::handleSustainPedal(bool isDown)
-{
-	const ScopedLock sl (lock);
-	
-	if (isDown)
-	{
-		for (auto* voice : voices)
-			voice->setSustainPedalDown (true);
-	}
-	else
-	{
-		for (auto* voice : voices)
-		{
-			voice->setSustainPedalDown (false);
-	
-			if (! (voice->isKeyDown() || voice->isSostenutoPedalDown()))
-				stopVoice (voice, 1.0f, true);
-		}
-	}
-};
-
-void Harmonizer::handleSostenutoPedal(bool isDown)
-{
-	const ScopedLock sl (lock);
-	
-	for (auto* voice : voices)
-	{
-		if (isDown)
-			voice->setSostenutoPedalDown (true);
-		else if (voice->isSostenutoPedalDown())
-			stopVoice (voice, 1.0f, true);
-	}
-};
-
-void Harmonizer::handleSoftPedal(bool isDown)
-{
-	ignoreUnused(isDown);
-};
-
-
-void Harmonizer::setCurrentPlaybackSampleRate(double newRate)
-{
-	if (sampleRate != newRate)
-	{
-		const ScopedLock sl (lock);
-		allNotesOff (false);
-		sampleRate = newRate;
-		
-		for (auto* voice : voices)
-			voice->setCurrentPlaybackSamplerate (newRate);
-	}
-};
-
-
-void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuffer& inputMidi, int startSample, int numSamples)
-{
-	jassert (sampleRate != 0);
-	
-	auto midiIterator = inputMidi.findNextSamplePosition(startSample);
-	
-	bool firstEvent = true;
-	
-	const ScopedLock sl (lock);
-	
-	for (; numSamples > 0; ++midiIterator)
-	{
-		if (midiIterator == inputMidi.cend())
-		{
-			renderVoices(outputAudio, startSample, numSamples);
-			
-			return;
-		}
-		
-		const auto metadata = *midiIterator;
-		const int samplesToNextMidiMessage = metadata.samplePosition - startSample;
-		
-		if (samplesToNextMidiMessage >= numSamples)
-		{
-			renderVoices(outputAudio, startSample, numSamples);
-			
-			handleMidiEvent(metadata.getMessage());
-			break;
-		}
-		
-		if (samplesToNextMidiMessage < ((firstEvent && ! subBlockSubdivisionIsStrict) ? 1 : minimumSubBlockSize))
-		{
-			handleMidiEvent(metadata.getMessage());
-			continue;
-		}
-		
-		firstEvent = false;
-		
-		renderVoices(outputAudio, startSample, samplesToNextMidiMessage);
-		
-		handleMidiEvent(metadata.getMessage());
-		startSample += samplesToNextMidiMessage;
-		numSamples  -= samplesToNextMidiMessage;
-	}
-	
-	std::for_each (midiIterator,
-				   inputMidi.cend(),
-				   [&] (const MidiMessageMetadata& meta) { handleMidiEvent (meta.getMessage()); });
-	
-};
-
-
-void Harmonizer::setMinimumRenderingSubdivisionSize (int numSamples, bool shouldBeStrict) noexcept
-{
-	jassert (numSamples > 0); // it wouldn't make much sense for this to be less than 1
-	minimumSubBlockSize = numSamples;
-	subBlockSubdivisionIsStrict = shouldBeStrict;
-};
-
-
-void Harmonizer::renderVoices (AudioBuffer<float>& outputAudio, int startSample, int numSamples)
-{
-	for (auto* voice : voices)
-		voice->renderNextBlock (outputAudio, startSample, numSamples);
-};
-
-
-void Harmonizer::handleMidiEvent(const MidiMessage& m)
-{
-	if (m.isNoteOn())
-	{
-		noteOn (m.getNoteNumber(), m.getFloatVelocity());
-	}
-	else if (m.isNoteOff())
-	{
-		noteOff (m.getNoteNumber(), m.getFloatVelocity(), true);
-	}
-	else if (m.isAllNotesOff() || m.isAllSoundOff())
-	{
-		allNotesOff (true);
-	}
-	else if (m.isPitchWheel())
-	{
-		const int wheelPos = m.getPitchWheelValue();
-		lastPitchWheelValue = wheelPos;
-		handlePitchWheel (wheelPos);
-	}
-	else if (m.isAftertouch())
-	{
-		handleAftertouch (m.getNoteNumber(), m.getAfterTouchValue());
-	}
-	else if (m.isChannelPressure())
-	{
-		handleChannelPressure (m.getChannelPressureValue());
-	}
-	else if (m.isController())
-	{
-		handleController (m.getControllerNumber(), m.getControllerValue());
-	}
-};
-
+// update ADSR settings------------------------------------------------------------------------------------------------------------------------------
 void Harmonizer::updateADSRsettings(float attack, float decay, float sustain, float release)
 {
 	// attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
@@ -496,4 +490,31 @@ void Harmonizer::updateADSRsettings(float attack, float decay, float sustain, fl
 	
 	for (auto* voice : voices)
 		voice->updateAdsrSettings(attack, decay, sustain, release);
+};
+
+
+// functions for management of HarmonizerVoices------------------------------------------------------------------------------------------------------
+HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
+{
+	const ScopedLock sl (lock);
+	newVoice->setCurrentPlaybackSamplerate(sampleRate);
+	return voices.add(newVoice);
+};
+
+void Harmonizer::removeVoice(int index)
+{
+	const ScopedLock sl (lock);
+	voices.remove(index);
+};
+
+HarmonizerVoice* Harmonizer::getVoice(int index) const
+{
+	const ScopedLock sl (lock);
+	return voices[index];
+};
+
+void Harmonizer::deleteAllVoices()
+{
+	const ScopedLock sl (lock);
+	voices.clear();
 };

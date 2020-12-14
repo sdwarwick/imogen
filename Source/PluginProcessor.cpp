@@ -62,10 +62,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 #endif
 {
 	
-	// initializes each instance of the HarmonyVoice class inside the harmEngine array:
-	for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
-		harmonizer.addVoice(new HarmonizerVoice);
-	}
+	for (int i = 0; i < NUMBER_OF_VOICES; ++i) { harmonizer.addVoice(new HarmonizerVoice); }
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
@@ -469,8 +466,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	//buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
-	//writeToDryBuffer(buffer, inputChannel, numSamples); // write this frame's input to the stereo, circular dryBuffer
-	
 	//analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
 	
 	stealingIsOn = voiceStealingListener > 0.5f;
@@ -494,38 +489,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		buffer.copyFrom(channel, 0, wetBuffer, channel, 0, numSamples);
 	}
 	
-	// write from dryBuffer to I/O buffer, accounting for latency of harmony algorithm
-//	{
-//		const int harmonyLatency = 0; // latency in samples of the harmony algorithm, used to realign the dry signal w the wet
-//
-//		dryBufferReadPosition = dryBufferWritePosition - numSamples - harmonyLatency;
-//
-//		if (dryBufferReadPosition < 0) {
-//			dryBufferReadPosition += dryBuffer.getNumSamples();
-//		}
-//
-//		if(dryBufferReadPosition + numSamples <= dryBuffer.getNumSamples())
-//		{
-//			dryBuffer.applyGain(dryBufferReadPosition, numSamples, dryMultiplier);
-//			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
-//			{
-//				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, numSamples);
-//			}
-//		}
-//		else
-//		{
-//			const int midPos = dryBuffer.getNumSamples() - dryBufferReadPosition;
-//			for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
-//			{
-//				dryBuffer.applyGain(channel, dryBufferReadPosition, midPos, dryMultiplier);
-//				buffer.addFrom(channel, 0, dryBuffer, channel, dryBufferReadPosition, midPos);
-//				dryBuffer.applyGain(channel, 0, numSamples - midPos, dryMultiplier);
-//				buffer.addFrom(channel, midPos, dryBuffer, channel, 0, numSamples - midPos);
-//			}
-//		}
-//		dryBufferReadPosition += numSamples; // these two lines may be redundant, since dryBufferReadPosition is calculated each frame based on dryBufferWritePosition & the latency offset...
-//		dryBufferReadPosition %= dryBuffer.getNumSamples();
-//	}
 	
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
@@ -562,12 +525,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
  ============================================================================================================================*/
 
 
-void ImogenAudioProcessor::killAllMidi()
-{
-	
-};
-
-
 /////// ANALYZE INPUT
 
 void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
@@ -587,36 +544,7 @@ void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int in
 };
 
 
-//// write dry input to dryBuffer so it can be mixed w wet signal for output
-void ImogenAudioProcessor::writeToDryBuffer (AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples) {
-	// move samples from input buffer (stereo channel) to dryBuffer (stereo buffer, panned according to midiPan)
-	// NEED TO ACCOUNT FOR LATENCY OF THE HARMONY ALGORITHM !!!
 
-	for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
-	{
-		if(dryBufferWritePosition + numSamples <= dryBuffer.getNumSamples())
-		{
-			dryBuffer.copyFrom(channel, dryBufferWritePosition, inputBuffer, inputChan, 0, numSamples);
-			dryBuffer.applyGain(channel, dryBufferWritePosition, numSamples, dryvoxpanningmults[channel]);
-		}
-		else
-		{
-			const int midPos = dryBuffer.getNumSamples() - dryBufferWritePosition;
-			dryBuffer.copyFrom(channel, dryBufferWritePosition, inputBuffer, inputChan, 0, midPos);
-			dryBuffer.applyGain(channel, dryBufferWritePosition, midPos, dryvoxpanningmults[channel]);
-			dryBuffer.copyFrom(channel, 0, inputBuffer, inputChan, midPos, numSamples - midPos);
-			dryBuffer.applyGain(channel, 0, numSamples - midPos, dryvoxpanningmults[channel]);
-		}
-	}
-	dryBufferWritePosition += numSamples;
-	dryBufferWritePosition %= dryBuffer.getNumSamples();
-	
-};
-
-
-Array<int> ImogenAudioProcessor::returnActivePitches() {
-	//return midiProcessor.getActivePitches();
-};
 
 
 //==============================================================================
