@@ -24,7 +24,8 @@ public:
 		
 	bool voiceIsOn;
 	
-	HarmonyVoice(const int voiceNum): voiceIsOn(false), shiftedBuffer(1, MAX_BUFFERSIZE), harmonyBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE), midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), lastRecievedVelocity(0), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f), lastRecievedPitchbend(64)
+	HarmonyVoice(const int voiceNum): voiceIsOn(false), shiftedBuffer(1, MAX_BUFFERSIZE), harmonyBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE), oscBlock(shiftedBuffer),
+		midiPan(64), pitchBendRangeUp(2), pitchBendRangeDown(2), thisVoiceNumber(voiceNum), prevPan(64), panningMultR(0.5), panningMultL(0.5), lastRecievedVelocity(0), midiVelocitySensitivity(1.0f), desiredFrequency(440.0f), lastNoteRecieved(69), amplitudeMultiplier(0.0f), lastRecievedPitchbend(64)
 	{
 		panningMultipliers[0] = 0.5f;
 		panningMultipliers[1] = 0.5f;
@@ -54,9 +55,6 @@ public:
 	void stopNote () {
 		adsrEnv.noteOff();
 		// voiceIsOn is set to FALSE in the renderNextBlock function so that the bool changes only after the ADSR has actually reached 0.
-		amplitudeMultiplier = 0.0f;
-		voiceIsOn = false;
-		clearBuffers();
 	};
 	
 	
@@ -114,6 +112,7 @@ public:
 			voiceIsOn = false;
 			amplitudeMultiplier = 0.0f;
 			clearBuffers();
+			adsrEnv.reset();
 		} else {
 		
 			checkBufferSizes(numSamples);
@@ -147,13 +146,13 @@ public:
 			voiceIsOn = false;
 			amplitudeMultiplier = 0.0f;
 			clearBuffers();
+			adsrEnv.reset();
 		}
 		else
 		{
 			checkBufferSizes(numSamples);
 			osc.setFrequency(desiredFrequency);
 			
-			dsp::AudioBlock<float> oscBlock(shiftedBuffer);
 			osc.process(dsp::ProcessContextReplacing<float>(oscBlock));
 			oscBlock.multiplyBy(amplitudeMultiplier); // apply MIDI velocity multiplier
 			
@@ -214,7 +213,10 @@ public:
 	AudioBuffer<float> harmonyBuffer; // this buffer stores the harmony voice's actual output. STEREO BUFFER [step 2]
 	
 	
+	
 private:
+	
+	dsp::AudioBlock<float> oscBlock;
 	
 	dsp::Oscillator<float> osc { [](float x) { return std::sin(x); } };
 	
