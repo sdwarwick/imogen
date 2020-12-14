@@ -122,37 +122,14 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	// pitch bend settings
 	{
 		{
-			pitchBendUp.addItem("Minor Second", 1);
-			pitchBendUp.addItem("Major Second", 2);
-			pitchBendUp.addItem("Minor Third", 3);
-			pitchBendUp.addItem("Major Third", 4);
-			pitchBendUp.addItem("Perfect Fourth", 5);
-			pitchBendUp.addItem("Aug Fourth/Dim Fifth", 6);
-			pitchBendUp.addItem("Perfect Fifth", 7);
-			pitchBendUp.addItem("Minor Sixth", 8);
-			pitchBendUp.addItem("Major Sixth", 9);
-			pitchBendUp.addItem("Minor Seventh", 10);
-			pitchBendUp.addItem("Major Seventh", 11);
-			pitchBendUp.addItem("Octave", 12);
+			buildIntervalCombobox(pitchBendUp);
 			pitchBendUp.setSelectedId(2);
 			addAndMakeVisible(pitchBendUp);
 			lookAndFeel.initializeLabel(pitchbendUpLabel, "Pitch bend range up");
 			addAndMakeVisible(pitchbendUpLabel);
 		}
-		
 		{
-			pitchBendDown.addItem("Minor Second", 1);
-			pitchBendDown.addItem("Major Second", 2);
-			pitchBendDown.addItem("Minor Third", 3);
-			pitchBendDown.addItem("Major Third", 4);
-			pitchBendDown.addItem("Perfect Fourth", 5);
-			pitchBendDown.addItem("Aug Fourth/Dim Fifth", 6);
-			pitchBendDown.addItem("Perfect Fifth", 7);
-			pitchBendDown.addItem("Minor Sixth", 8);
-			pitchBendDown.addItem("Major Sixth", 9);
-			pitchBendDown.addItem("Minor Seventh", 10);
-			pitchBendDown.addItem("Major Seventh", 11);
-			pitchBendDown.addItem("Octave", 12);
+			buildIntervalCombobox(pitchBendDown);
 			addAndMakeVisible(pitchBendDown);
 			pitchBendDown.setSelectedId(2);
 			lookAndFeel.initializeLabel(pitchbendDownLabel, "Pitch bend range down");
@@ -277,4 +254,21 @@ void MidiControlPanel::resized()
 	
 	midiLatch.setBounds(135, 40, 125, 35);
 
+};
+
+
+void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
+{
+	box.addItem("Minor Second", 1);
+	box.addItem("Major Second", 2);
+	box.addItem("Minor Third", 3);
+	box.addItem("Major Third", 4);
+	box.addItem("Perfect Fourth", 5);
+	box.addItem("Aug Fourth/Dim Fifth", 6);
+	box.addItem("Perfect Fifth", 7);
+	box.addItem("Minor Sixth", 8);
+	box.addItem("Major Sixth", 9);
+	box.addItem("Minor Seventh", 10);
+	box.addItem("Major Seventh", 11);
+	box.addItem("Octave", 12);
 };

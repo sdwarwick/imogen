@@ -72,23 +72,14 @@ private:
 	
 	double lastSampleRate;
 	int lastBlockSize;
-	double prevLastSampleRate;
-	int prevLastBlockSize;
 	
 	bool frameIsPitched;
 	
 	// variables for tracking GUI-changeable parameters
 
 	bool adsrIsOn;
-	float prevAttack;
-	float prevDecay;
-	float prevSustain;
-	float prevRelease;
 	float previousStereoWidth;
 	int lowestPannedNote;
-	float prevVelocitySens;
-	float prevPitchBendUp;
-	float prevPitchBendDown;
 	bool pedalPitchToggle;
 	int pedalPitchThresh;
 	float inputGainMultiplier;
@@ -117,14 +108,12 @@ private:
 	float prevodeb;
 	
 	dsp::Limiter<float> limiter;
+	dsp::ProcessSpec limiterSpec;
 	bool limiterIsOn;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	
 	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-	AudioBuffer<float> dryBuffer; // this buffer holds the original input signal, delayed for latency, so it can be mixed back together with the wet signal for the dry/wet effect
-	int dryBufferWritePosition;
-	int dryBufferReadPosition;
 	
 		const std::atomic<float>& adsrAttackListener;
 		const std::atomic<float>& adsrDecayListener;
@@ -149,6 +138,10 @@ private:
 		const std::atomic<float>& limiterReleaseListener;
 		const std::atomic<float>& limiterToggleListener;
 	
+	void updateAdsr();
+	void updateIOgains();
+	void updateLimiter();
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
 

@@ -58,6 +58,6 @@ public:
 	LimiterControlPanel limiterPanel;
 
 private:
-	void initializeLabel(Label& label, String labelText);
+	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IOControlPanel)
 };

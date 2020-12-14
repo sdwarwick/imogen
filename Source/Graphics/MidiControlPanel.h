@@ -88,6 +88,8 @@ public:
 	TextButton midiKill;
 
 private:
-	void initializeLabel(Label& label, String labelText);
+	
+	void buildIntervalCombobox(ComboBox& box);
+	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };
