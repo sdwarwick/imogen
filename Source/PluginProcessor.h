@@ -3,8 +3,7 @@
 #include <JuceHeader.h>
 
 #include "GlobalDefinitions.h"
-#include "HarmonyVoice.h"
-#include "MidiProcessor.h"
+#include "Harmonizer.h"
 #include "EpochExtractor.h"
 #include "Yin.h"
 
@@ -31,7 +30,6 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
-	void processBlockPrivate(AudioBuffer<float>&, const int numSamples, const int inputChannel);
 	
 	void killAllMidi();
 
@@ -60,9 +58,6 @@ public:
 	
 	AudioProcessorValueTreeState tree;
 	
-	OwnedArray<HarmonyVoice> harmEngine;  // this array houses all the instances of the harmony engine that are running
-	
-	MidiProcessor midiProcessor;
 	bool midiLatch;
 	
 	Array<int> epochLocations;
@@ -70,6 +65,10 @@ public:
 //==============================================================================
 	
 private:
+	
+	void processBlockPrivate(AudioBuffer<float>&, const int numSamples, const int inputChannel, MidiBuffer& inputMidi);
+	
+	Harmonizer harmonizer;
 	
 	double lastSampleRate;
 	int lastBlockSize;
@@ -80,24 +79,24 @@ private:
 	
 	// variables for tracking GUI-changeable parameters
 
-		bool adsrIsOn;
-		float prevAttack;
-		float prevDecay;
-		float prevSustain;
-		float prevRelease;
-		float previousStereoWidth;
-		int lowestPannedNote;
-		float prevVelocitySens;
-		float prevPitchBendUp;
-		float prevPitchBendDown;
-		bool pedalPitchToggle;
-		int pedalPitchThresh;
-		float inputGainMultiplier;
-		float outputGainMultiplier;
-		bool latchIsOn;
-		bool previousLatch;
-		bool stealingIsOn;
-	
+	bool adsrIsOn;
+	float prevAttack;
+	float prevDecay;
+	float prevSustain;
+	float prevRelease;
+	float previousStereoWidth;
+	int lowestPannedNote;
+	float prevVelocitySens;
+	float prevPitchBendUp;
+	float prevPitchBendDown;
+	bool pedalPitchToggle;
+	int pedalPitchThresh;
+	float inputGainMultiplier;
+	float outputGainMultiplier;
+	bool latchIsOn;
+	bool previousLatch;
+	bool stealingIsOn;
+
 	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
 	
 	int analysisShift;
@@ -123,7 +122,6 @@ private:
 	bool limiterIsOn;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
-	void grabCurrentParameterValues();
 	
 	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
 	AudioBuffer<float> dryBuffer; // this buffer holds the original input signal, delayed for latency, so it can be mixed back together with the wet signal for the dry/wet effect

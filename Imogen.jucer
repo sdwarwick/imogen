@@ -19,11 +19,9 @@
       <FILE id="T4QvQh" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-      <FILE id="CjHGCm" name="Harmonizer.cpp" compile="1" resource="0" file="Source/Harmonizer.cpp"/>
-      <FILE id="eH1KXL" name="Harmonizer.h" compile="0" resource="0" file="Source/Harmonizer.h"/>
-      <GROUP id="{0EFF1E8A-88CB-E92D-C447-9B3488858F9C}" name="PSOLA">
-        <FILE id="XVLavT" name="HarmonyVoice.h" compile="0" resource="0" file="Source/HarmonyVoice.h"/>
-        <FILE id="LZ3BSi" name="shifter.h" compile="0" resource="0" file="Source/shifter.h"/>
+      <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
+        <FILE id="CjHGCm" name="Harmonizer.cpp" compile="1" resource="0" file="Source/Harmonizer.cpp"/>
+        <FILE id="eH1KXL" name="Harmonizer.h" compile="0" resource="0" file="Source/Harmonizer.h"/>
       </GROUP>
       <GROUP id="{1A77E665-5B33-AAD8-E8A0-3DC100C8F1C2}" name="InputAnalysis">
         <FILE id="TPvasw" name="Yin.h" compile="0" resource="0" file="Source/Yin.h"/>
@@ -64,17 +62,6 @@
         <FILE id="wUG4RD" name="grandStaff.png" compile="0" resource="1" file="grandStaff.png"/>
         <FILE id="qbzN1o" name="closeIcon.png" compile="0" resource="1" file="closeIcon.png"/>
       </GROUP>
-    </GROUP>
-    <GROUP id="{0922C21B-5DF6-8AB7-A4C9-59759EB839B7}" name="MIDI">
-      <FILE id="miD8GM" name="MidiProcessor.h" compile="0" resource="0" file="Source/Midi/MidiProcessor.h"/>
-      <FILE id="QTabwq" name="PolyphonyVoiceManager.h" compile="0" resource="0"
-            file="Source/Midi/PolyphonyVoiceManager.h"/>
-      <FILE id="jfWt6A" name="VoiceStealingManager.h" compile="0" resource="0"
-            file="Source/Midi/VoiceStealingManager.h"/>
-      <FILE id="XomsaL" name="MidiLatchManager.h" compile="0" resource="0"
-            file="Source/Midi/MidiLatchManager.h"/>
-      <FILE id="H64T9m" name="MidiPanningManager.h" compile="0" resource="0"
-            file="Source/Midi/MidiPanningManager.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
