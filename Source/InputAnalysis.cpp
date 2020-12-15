@@ -27,7 +27,7 @@ PitchTracker::PitchTracker(): yinBufferSize(round(MAX_BUFFERSIZE/2))
 PitchTracker::~PitchTracker()
 { };
 
-float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate)
+float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate)
 {
 /*	Implements the YIN pitch tracking algorithm, as described in "http://recherche.ircam.fr/equipes/pcm/cheveign/ps/2002_JASA_YIN_proof.pdf". This implementation uses an FFT to calculate the difference function in step 2 to increase performance and computational speed.
 
@@ -42,14 +42,14 @@ float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputCha
  */
 	if(yinBufferSize != numSamples)
 	{
-		yinBufferSize = numSamples;
-		yinBuffer.setSize(1, numSamples, false, true, true);
+		yinBufferSize = round(numSamples/2);
+		yinBuffer.setSize(1, round(numSamples/2), false, true, true);
 	}
 	
 	int tauEstimate;
 	float pitchInHz;
 	
-	difference(inputAudio, inputChan, numSamples);
+	difference(inputAudio, inputChan, numSamples, startSample);
 	
 	cumulativeMeanNormalizedDifference();
 	
@@ -69,7 +69,7 @@ float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputCha
 	
 };
 
-void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength) {
+void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const int startSample) {
 	/*
 	 THE DIFFERENCE FUNCTION
 	 @brief implements the difference function described in step 2 of the YIN paper, using an FFT to increase computational efficiency
@@ -80,45 +80,45 @@ void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputCh
 	
 	const float* reading = inputBuffer.getReadPointer(inputChan);
 	
-	const int fftOrder = log2(inputBufferLength);
+	const int fftOrder = log2(numSamples);
 	
 	dsp::FFT fft(fftOrder);
 	
-	dsp::Complex<float> fftBufferIn[inputBufferLength];
-	dsp::Complex<float> fftBufferOut[inputBufferLength];
-	dsp::Complex<float> kernelIn[inputBufferLength];
-	dsp::Complex<float> kernelOut[inputBufferLength];
-	dsp::Complex<float> yinStyleACFin[inputBufferLength];
-	dsp::Complex<float> yinStyleACFout[inputBufferLength];
+	dsp::Complex<float> fftBufferIn[numSamples];
+	dsp::Complex<float> fftBufferOut[numSamples];
+	dsp::Complex<float> kernelIn[numSamples];
+	dsp::Complex<float> kernelOut[numSamples];
+	dsp::Complex<float> yinStyleACFin[numSamples];
+	dsp::Complex<float> yinStyleACFout[numSamples];
 	
 	// POWER TERM CALCULATION
 	{
 		powerTerms.clearQuick();
 		for(int j = 0; j < yinBufferSize; ++j) { // first, calculate the first power term value...
-			powerTerms.add(reading[j] * reading[j]);
+			powerTerms.add(reading[startSample + j] * reading[startSample + j]);
 		}
 		// ... then iteratively calculate all others
 		for(int i = 1; i < yinBufferSize; ++i) {
-			powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize]);
+			powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[startSample + i - 1] * reading[startSample + i - 1] + reading[startSample + i + yinBufferSize] * reading[startSample + i + yinBufferSize]);
 		}
 	}
 	
 	// YIN-STYLE AUTOCORRELATION VIA FFT
 	{
 		// 1. data
-		for(int j = 0; j < inputBufferLength; ++j) {
-			fftBufferIn[j] = { reading[j], 0 };
+		for(int j = 0; j < numSamples; ++j) {
+			fftBufferIn[j] = { reading[startSample + j], 0 };
 		}
 		fft.perform(fftBufferIn, fftBufferOut, false);
 		
 		// 2. half of the data, disguised as a convolution kernel
 		for(int j = 0; j < yinBufferSize; ++j) {
-			kernelIn[j] = { reading[yinBufferSize-j], 0 }; // yinBufferSize-j-1 ?
+			kernelIn[j] = { reading[startSample + yinBufferSize - j], 0 };
 		}
 		fft.perform(kernelIn, kernelOut, false);
 		
 		// 3. convolution via complex multiplication
-		for (int j = 0; j < inputBufferLength; ++j) { // limit range to inputBufferLength - 1 ?
+		for (int j = 0; j < numSamples; ++j) {
 			
 			yinStyleACFin[j] = { fftBufferOut[j].real() * kernelOut[j].real() - fftBufferOut[j+1].real() * kernelOut[j+1].real(), fftBufferOut[j].imag() * kernelOut[j].imag() + fftBufferOut[j+1].imag() * kernelOut[j+1].imag() };
 			
@@ -256,7 +256,7 @@ EpochFinder::EpochFinder()
 EpochFinder::~EpochFinder()
 { };
 
-Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate)
+Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate)
 {
 	/*
 	 EXTRACT EPOCH INDICES
@@ -282,8 +282,8 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	
 	const float* data = inputAudio.getReadPointer(inputChan);
 	
-	const float x0 = data[0];
-	const float x1 = data[1] - x0;
+	const float x0 = data[startSample];
+	const float x1 = data[startSample + 1] - x0;
 	float y1_0 = x0;
 	float y1_1 = x1 + (2.0f * y1_0);
 	float x_i;
@@ -291,7 +291,7 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	y2.setUnchecked(0, y1_0);
 	y2.setUnchecked(1, y1_1 + (2.0f * y1_0));
 	for(int i = 2; i < numSamples; ++i) {
-		x_i = data[i] - data[i - 1];
+		x_i = data[startSample + i] - data[startSample + i - 1];
 		y1_i = x_i + (2.0f * y1_1) - y1_0;
 		const float y2b1 = y2.getUnchecked(i - 1);
 		const float y2b2 = y2.getUnchecked(i - 2);

@@ -33,9 +33,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		
 		tempBuffer.makeCopyOf(subBuffer, true);
 		
-		// shifting ratio = currentOutputFreq / currentInputFreq
-		
-		esola(inputAudio, inputChan, startSample, numSamples, tempBuffer, epochIndices);
+		esola(inputAudio, inputChan, startSample, numSamples, tempBuffer, epochIndices, 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)));
 		
 		subBuffer.makeCopyOf(tempBuffer, true);
 		
@@ -46,12 +44,6 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	{
 		clearCurrentNote();
 	}
-};
-
-
-void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
-{
-	
 };
 
 
@@ -157,14 +149,95 @@ void HarmonizerVoice::updatePitchbendSettings(const int rangeUp, const int range
 };
 
 
+
+
+void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio)
+{
+//	int targetLength = 0;
+//	int highestIndexWrittenTo = -1;
+//
+//	const int numOfEpochsPerFrame = 3;
+//
+//	int lastEpochIndex = epochIndices.getUnchecked(0);
+//	const int numOfEpochs = epochIndices.size();
+//
+//	if(synthesis.getNumSamples() != numSamples) {
+//		synthesis.setSize(1, numSamples, false, false, true);
+//	}
+//
+//	for(int i = 0; i < numOfEpochs - numOfEpochsPerFrame; ++i) {
+//		const int hop = epochIndices.getUnchecked(i + 1) - epochIndices.getUnchecked(i);
+//
+//		if(targetLength >= highestIndexWrittenTo) {
+//			const int frameLength = epochIndices.getUnchecked(i + numOfEpochsPerFrame) - epochIndices.getUnchecked(i) - 1;
+//			window.clearQuick();
+//			calcWindow(frameLength, window);
+//			const int bufferIncrease = frameLength - highestIndexWrittenTo + lastEpochIndex;
+//
+//			if(bufferIncrease > 0) {
+//				const float* reading = inputAudio.getReadPointer(inputChan);
+//				float* writing = synthesis.getWritePointer(0);
+//				int writingindex = highestIndexWrittenTo + 1;
+//				int readingindex = epochIndices.getUnchecked(i) + frameLength - 1 - bufferIncrease;
+//				int windowreading = frameLength - 1 - bufferIncrease;
+//
+//				for(int s = 0; s < bufferIncrease; ++s) {
+//					writing[writingindex] = reading[readingindex] * window.getUnchecked(s);
+//					++writingindex;
+//					++readingindex;
+//					finalWindow.add(window.getUnchecked(windowreading));
+//					++windowreading;
+//				}
+//				highestIndexWrittenTo += frameLength - 1;
+//			}
+//
+//			// OLA
+//			{
+//				int olaindex = epochIndices.getUnchecked(i);
+//				const float* olar = synthesis.getReadPointer(0);
+//				float* olaw = synthesis.getWritePointer(0);
+//				int wolaindex = 0;
+//
+//				for(int s = lastEpochIndex; s < lastEpochIndex + frameLength - bufferIncrease; ++s) {
+//					olaw[s] = olar[s] + olar[olaindex];
+//					++olaindex;
+//					const float newfinalwindow = finalWindow.getUnchecked(s) + finalWindow.getUnchecked(wolaindex);
+//					finalWindow.set(s, newfinalwindow);
+//					++wolaindex;
+//				}
+//			}
+//
+//			lastEpochIndex += hop;
+//		}
+//		targetLength += ceil(hop * scalingFactor);
+//	}
+//
+//	// normalize & write to output
+//	const float* r = synthesis.getReadPointer(0);
+//	float* w = outputBuffer.getWritePointer(0);
+//
+//	for(int s = 0; s < numSamples; ++s) {
+//		if(s < finalWindow.size()) {
+//			w[s] = r[s] / std::max<float>(finalWindow.getUnchecked(s), 1e-4);
+//		} else {
+//			w[s] = r[s] / 1e-4;
+//		}
+//	}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-Harmonizer::Harmonizer(): lastPitchWheelValue(0), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), minimumSubBlockSize(32), subBlockSubdivisionIsStrict(false), lowestPannedNote(0)
+Harmonizer::Harmonizer(): lastPitchWheelValue(0), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), minimumSubBlockSize(32), subBlockSubdivisionIsStrict(false), lowestPannedNote(0)
 {
 	currentlyActiveNotes.ensureStorageAllocated(NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
 	currentlyActiveNotes.add(-1);
+	epochIndices.ensureStorageAllocated(NUMBER_OF_VOICES);
+	epochIndices.clearQuick();
 };
 
 
@@ -203,7 +276,7 @@ void Harmonizer::updateInputPitch(const float inputPitchHz)
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
-void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, Array<int> epochIndices, const MidiBuffer& inputMidi)
+void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, const MidiBuffer& inputMidi)
 {
 	jassert (sampleRate != 0);
 	
@@ -217,7 +290,7 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int input
 	{
 		if (midiIterator == inputMidi.cend())
 		{
-			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
+			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer);
 			return;
 		}
 		
@@ -226,7 +299,7 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int input
 		
 		if (samplesToNextMidiMessage >= numSamples)
 		{
-			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
+			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer);
 			handleMidiEvent(metadata.getMessage());
 			break;
 		}
@@ -239,7 +312,7 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int input
 		
 		firstEvent = false;
 		
-		renderVoices(inputAudio, inputChan, startSample, samplesToNextMidiMessage, outputBuffer, epochIndices);
+		renderVoices(inputAudio, inputChan, startSample, samplesToNextMidiMessage, outputBuffer);
 		
 		handleMidiEvent(metadata.getMessage());
 		startSample += samplesToNextMidiMessage;
@@ -252,10 +325,16 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int input
 	
 };
 
-void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
+void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer)
 {
+	epochIndices = epochs.extractEpochSampleIndices(inputAudio, inputChan, startSample, numSamples, sampleRate);
+	currentInputFreq = pitch.findPitch(inputAudio, inputChan, startSample, numSamples, sampleRate);
+	
 	for (auto* voice : voices)
+	{
+		voice->updateInputFreq(currentInputFreq);
 		voice->renderNextBlock (inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
+	}
 };
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)

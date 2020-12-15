@@ -65,9 +65,6 @@ private:
 	
 	Harmonizer harmonizer;
 	
-	EpochFinder epochs;
-	PitchTracker pitch;
-	
 	double lastSampleRate;
 	int lastBlockSize;
 	

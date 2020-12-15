@@ -20,14 +20,14 @@ public:
 	PitchTracker();
 	~PitchTracker();
 	
-	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate);
+	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate);
 	
 private:
 	mutable AudioBuffer<float> yinBuffer;
 	Array<float> powerTerms;
 	int yinBufferSize;
 	
-	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength);
+	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength, const int startSample);
 	
 	void cumulativeMeanNormalizedDifference() const;
 	
@@ -45,7 +45,7 @@ public:
 	EpochFinder();
 	~EpochFinder();
 	
-	Array<int> extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, const double samplerate);
+	Array<int> extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate);
 	
 private:
 	CriticalSection lock;

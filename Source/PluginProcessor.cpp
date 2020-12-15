@@ -316,11 +316,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	dsp::AudioBlock<float> dwinblock (buffer);
 	dryWet.pushDrySamples(dwinblock);
 	
-	harmonizer.updateInputPitch(pitch.findPitch(buffer, inputChannel, numSamples, lastSampleRate));
-	
-	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer,
-							   epochs.extractEpochSampleIndices(buffer, inputChannel, numSamples, lastSampleRate),
-							   inputMidi);
+	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer, inputMidi);
 	
 	// clear any extra channels present in I/O buffer
 	{

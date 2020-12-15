@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
 #include "PanningManager.h"
+#include "InputAnalysis.h"
 
 
 /*
@@ -118,7 +119,7 @@ private:
 	// calculates a [0.0, 1.0] gain value to be applied to the output signal that corresponds to the latest recieved midi Velocity & the selected midi velocity sensitivity
 	float calcVelocityMultiplier(const int inputVelocity);
 	
-	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
 	JUCE_LEAK_DETECTOR(HarmonizerVoice)
 };
@@ -135,7 +136,7 @@ public:
 	// Creates the next block of audio output.
 	// This will process the next numSamples of data from all the voices, and add that output to the audio block supplied, starting from the offset specified. Note that the data will be added to the current contents of the buffer, so you should clear it before calling this method if necessary.
 	// The midi events in the inputMidi buffer are parsed for note and controller events, and these are used to trigger the voices. Note that the startSample offset applies both to the audio output buffer and the midi input buffer, so any midi events with timestamps outside the specified region will be ignored.
-	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, Array<int> epochIndices, const MidiBuffer& inputMidi);
+	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, const MidiBuffer& inputMidi);
 	
 	
 	void updateInputPitch(const float inputPitchHz);
@@ -191,7 +192,7 @@ protected:
 	PanningManager panner;
 	
 	// renders the voices for the given range
-	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer);
 	
 	// MIDI
 	void handleMidiEvent(const MidiMessage& m);
@@ -212,6 +213,10 @@ protected:
 	
 	
 private:
+	EpochFinder epochs;
+	PitchTracker pitch;
+	Array<int> epochIndices;
+	float currentInputFreq;
 	
 	double sampleRate;
 	bool shouldStealNotes;
