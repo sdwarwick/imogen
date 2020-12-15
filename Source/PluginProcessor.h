@@ -58,8 +58,6 @@ public:
 	
 	AudioProcessorValueTreeState tree;
 	
-	bool midiLatch;
-	
 	Array<int> epochLocations;
 	
 //==============================================================================
@@ -79,14 +77,10 @@ private:
 
 	bool adsrIsOn;
 	float previousStereoWidth;
-	int lowestPannedNote;
 	bool pedalPitchToggle;
 	int pedalPitchThresh;
 	float inputGainMultiplier;
 	float outputGainMultiplier;
-	bool latchIsOn;
-	bool previousLatch;
-	bool stealingIsOn;
 
 	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
 	
@@ -100,16 +94,15 @@ private:
 	int previousmidipan;
 	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.
 	
-	int previousMasterDryWet;
-	float dryMultiplier;
-	float wetMultiplier;
-	
 	float prevideb;
 	float prevodeb;
 	
+	dsp::ProcessSpec dspSpec;
+	
 	dsp::Limiter<float> limiter;
-	dsp::ProcessSpec limiterSpec;
 	bool limiterIsOn;
+	
+	dsp::DryWetMixer<float> dryWet;
 	
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	
@@ -141,6 +134,7 @@ private:
 	void updateAdsr();
 	void updateIOgains();
 	void updateLimiter();
+	void updateStereoWidth();
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

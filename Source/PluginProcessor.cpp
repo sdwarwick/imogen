@@ -14,20 +14,13 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                        ),
 		voxCurrentPitch(0.0f),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
-		midiLatch(false),
 		lastSampleRate(44100), lastBlockSize(512),
 		frameIsPitched(false),
 		adsrIsOn(true),
 		previousStereoWidth(100.0f),
-		lowestPannedNote(0),
 		pedalPitchToggle(false),
 		pedalPitchThresh(127),
-		latchIsOn(false), previousLatch(false),
-		stealingIsOn(true),
-		analysisShift(100), analysisShiftHalved(50), analysisLimit(461),
 		previousmidipan(64),
-		previousMasterDryWet(100),
-		dryMultiplier(0.0f), wetMultiplier(1.0f),
 		prevideb(0.0f), prevodeb(0.0f),
 		limiterIsOn(true),
 		wetBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE),
@@ -169,8 +162,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// block size
 	{
-		int newblocksize = samplesPerBlock;
-		if(newblocksize >= MAX_BUFFERSIZE) { newblocksize = MAX_BUFFERSIZE; }
+		const int newblocksize = samplesPerBlock >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
 		
 		if(lastBlockSize != newblocksize)
 		{
@@ -182,23 +174,13 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	wetBuffer.clear();
 	
-	updateAdsr(); // ADSR settings
-	
-	harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener); // MIDI velocity sensitivity
-	
-	stealingIsOn = voiceStealingListener > 0.5f; // voice stealing on/off
-	harmonizer.setNoteStealingEnabled(stealingIsOn);
-	
-	harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener); // pitch bend settings
+	updateIOgains();
+	updateAdsr();
+	updateStereoWidth();
+	harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
+	harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
+	harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 
-	// stereo width
-	{
-		if (previousStereoWidth != stereoWidthListener) {
-		//	midiProcessor.updateStereoWidth(stereoWidthListener);
-			previousStereoWidth = stereoWidthListener;
-		}
-		lowestPannedNote = round(lowestPanListener);
-	}
 	
 	// dry vox pan
 	{
@@ -218,32 +200,22 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// master dry/wet
 	{
-		if(masterDryWetListener != previousMasterDryWet) {
-			wetMultiplier = masterDryWetListener / 100.0f;
-			dryMultiplier = 1.0f - wetMultiplier;
-			previousMasterDryWet = masterDryWetListener;
-		}
+		//masterDryWetListener
 	}
 	
-	updateIOgains(); // input & output gain
+	dspSpec.sampleRate = sampleRate;
+	dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
+	dspSpec.numChannels = 2;
 	
-	// MIDI latch
-	{
-		latchIsOn = midiLatchListener > 0.5f;
-	//	if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
-		previousLatch = latchIsOn;
-	}
+	// limiter
+	limiter.prepare(dspSpec);
+	updateLimiter();
 	
-	
-	// limiter setup
-	{
-		limiterSpec.sampleRate = sampleRate;
-		limiterSpec.maximumBlockSize = MAX_BUFFERSIZE;
-		limiterSpec.numChannels = 2;
-		limiter.prepare(limiterSpec);
-		updateLimiter();
-	}
-	
+	// dry wet mixer
+	dryWet.prepare(dspSpec);
+	dryWet.setMixingRule(dsp::DryWetMixingRule::linear);
+	dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
+	dryWet.setWetLatency(64); // letency in samples of the ESOLA algorithm
 };
 
 void ImogenAudioProcessor::releaseResources() {
@@ -284,42 +256,21 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-	// MIDI
-	{
-	//	if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
-	//	if (previousStereoWidth != stereoWidthListener) { midiProcessor.updateStereoWidth(stereoWidthListener); }
-		lowestPannedNote = round(lowestPanListener);
-		pedalPitchToggle = pedalPitchToggleListener > 0.5f;
-		pedalPitchThresh = round(pedalPitchThreshListener);
-		latchIsOn = midiLatchListener > 0.5f;
-	}
 	
-	int inptchn = inputChannelListener;
-	if (inputChannelListener >= buffer.getNumChannels()) { inptchn = buffer.getNumChannels() - 1; }
-	const int inputChannel = inptchn;
+	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
 	
 	int samplesLeft = buffer.getNumSamples();
-	// int numElapsedLoops = 0;
+	
 	while (samplesLeft > 0)
 	{
 		//const int numSamples = std::max(samplesLeft, MAX_BUFFERSIZE);
 		
-		// slice input buffer into frames of length MAX_BUFFERSIZE or smaller
-		int samps;
-		if(samplesLeft >= MAX_BUFFERSIZE) {
-			samps = MAX_BUFFERSIZE;
-		}
-		else {
-			samps = samplesLeft;
-		}
-		const int numSamples = samps; // number of samples in this frame / slice
+		const int numSamples = samplesLeft >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
 		
 		AudioBuffer<float> proxy (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), buffer.getNumSamples() - samplesLeft, numSamples);
 		processBlockPrivate(proxy, numSamples, inputChannel, midiMessages);
 		samplesLeft -= numSamples;
-		// ++numElapsedLoops
 	}
-	// numElapsedLoops represents the number of times processBlockPrivate() was run, and can be used for latency calculations
 };
 
 
@@ -328,25 +279,16 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	// update settings & parameters
 	{
 		if(wetBuffer.getNumSamples() != numSamples) { wetBuffer.setSize(NUMBER_OF_CHANNELS, numSamples, true, true, true); }
+		
 		wetBuffer.clear();
 		
-		updateAdsr(); // ADSR settings
-		
-		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener); // MIDI velocity sensitivity
-		
-		stealingIsOn = voiceStealingListener > 0.5f; // voice stealing on/off
-		harmonizer.setNoteStealingEnabled(stealingIsOn);
-		
-		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener); // pitch bend settings
-		
-		// stereo width
-		{
-			if (previousStereoWidth != stereoWidthListener) {
-				//	midiProcessor.updateStereoWidth(stereoWidthListener);
-				previousStereoWidth = stereoWidthListener;
-			}
-			lowestPannedNote = round(lowestPanListener);
-		}
+		updateIOgains();
+		updateLimiter();
+		updateAdsr();
+		updateStereoWidth();
+		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
+		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
+		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 		
 		// dry vox pan
 		{
@@ -357,7 +299,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			}
 		}
 		
-		
 		// MIDI pedal pitch
 		{
 			pedalPitchToggle = pedalPitchToggleListener > 0.5f;
@@ -366,36 +307,22 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		// master dry/wet
 		{
-			if(masterDryWetListener != previousMasterDryWet) {
-				wetMultiplier = masterDryWetListener / 100.0f;
-				dryMultiplier = 1.0f - wetMultiplier;
-				previousMasterDryWet = masterDryWetListener;
-			}
+			dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
+			dryWet.setWetLatency(64); // letency in samples of the ESOLA algorithm
 		}
 		
-		updateIOgains(); // input & output gain
-		
-		// MIDI latch
-		{
-			latchIsOn = midiLatchListener > 0.5f;
-			//	if(latchIsOn == false && previousLatch == true) { midiProcessor.turnOffLatch(); }
-			previousLatch = latchIsOn;
-		}
-		
-		
-		// limiter
-		updateLimiter();
 	}
 	
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
-	//buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
+	
+	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
+	
+	dsp::AudioBlock<float> dwinblock (buffer);
+	dryWet.pushDrySamples(dwinblock);
 	
 	//analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
-	
-	stealingIsOn = voiceStealingListener > 0.5f;
-	harmonizer.setNoteStealingEnabled(stealingIsOn);
 	
 	harmonizer.renderNextBlock(buffer, inputMidi, 0, numSamples);
 	
@@ -408,13 +335,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		}
 	}
 
-	// write from wetBuffer to I/O buffer
-	wetBuffer.applyGain(0, numSamples, wetMultiplier);
-	for(int channel = 0; channel < NUMBER_OF_CHANNELS; ++channel)
-	{
-		buffer.copyFrom(channel, 0, wetBuffer, channel, 0, numSamples);
-	}
-	
+	dsp::AudioBlock<float> dwoutblock (buffer);
+	dryWet.mixWetSamples(dwoutblock);
 	
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
@@ -426,14 +348,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
-	
-	// update storage of previous frame's parameters, for comparison when the next frame comes in...
-	{
-		previousStereoWidth = stereoWidthListener;
-		previousmidipan = dryVoxPanListener;
-		previousMasterDryWet = masterDryWetListener;
-		previousLatch = latchIsOn;
-	}
 };
 
 
@@ -525,4 +439,16 @@ void ImogenAudioProcessor::updateLimiter()
 	limiter.setThreshold(limiterThreshListener);
 	limiter.setRelease(limiterReleaseListener);
 	limiterIsOn = limiterToggleListener > 0.5f;
+};
+
+
+void ImogenAudioProcessor::updateStereoWidth()
+{
+	harmonizer.updateLowestPannedNote(round(lowestPanListener));
+	
+	if (previousStereoWidth != stereoWidthListener)
+	{
+		harmonizer.updateStereoWidth(stereoWidthListener);
+		previousStereoWidth = stereoWidthListener;
+	}
 };

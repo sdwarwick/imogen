@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64)
 { };
 
 
@@ -37,6 +37,8 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float> outputBuffer, const int
 		
 		if(adsrIsOn)
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
+		
+		// TO DO : DEAL WITH PANNING !!
 	}
 	else
 	{
@@ -147,7 +149,7 @@ void HarmonizerVoice::updatePitchbendSettings(const int rangeUp, const int range
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(0), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), minimumSubBlockSize(32), subBlockSubdivisionIsStrict(false)
+Harmonizer::Harmonizer(): lastPitchWheelValue(0), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), minimumSubBlockSize(32), subBlockSubdivisionIsStrict(false), lowestPannedNote(0)
 {
 	currentlyActiveNotes.ensureStorageAllocated(NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
@@ -159,6 +161,24 @@ Harmonizer::~Harmonizer()
 {
 	voices.clear();
 };
+
+
+void Harmonizer::updateStereoWidth(const int newWidth) 
+{
+	const ScopedLock sl (lock);
+	
+	panner.updateStereoWidth(newWidth);
+	
+	for (auto* voice : voices)
+	{
+		if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+		{
+			const int newPanVal = panner.getClosestNewPanValFromOld(voice->getPan());
+			voice->setPan(newPanVal);
+		}
+	}
+};
+
 
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
@@ -323,6 +343,9 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
 		voice->setKeyDown (true);
 		voice->setSostenutoPedalDown (false);
 		
+		if(midiPitch >= lowestPannedNote) { voice->setPan(panner.getNextPanVal()); }
+		else { voice->setPan(64); }
+		
 		voice->startNote (midiPitch, velocity, lastPitchWheelValue);
 	}
 };
@@ -346,6 +369,7 @@ void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const 
 {
 	if(voice != nullptr)
 	{
+		panner.panValTurnedOff(voice->getPan());
 		voice->stopNote (velocity, allowTailOff);
 	}
 };
@@ -356,6 +380,8 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
 	
 	for (auto* voice : voices)
 		voice->stopNote (1.0f, allowTailOff);
+	
+	panner.reset(false);
 };
 
 void Harmonizer::handlePitchWheel(const int wheelValue)
@@ -565,6 +591,9 @@ void Harmonizer::setADSRonOff(const bool shouldBeOn)
 HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
 {
 	const ScopedLock sl (lock);
+	
+	panner.setNumberOfVoices(voices.size() + 1);
+	
 	newVoice->setCurrentPlaybackSamplerate(sampleRate);
 	return voices.add(newVoice);
 };
@@ -573,6 +602,8 @@ void Harmonizer::removeVoice(const int index)
 {
 	const ScopedLock sl (lock);
 	voices.remove(index);
+	
+	if(voices.size() > 0) { panner.setNumberOfVoices(voices.size()); }
 };
 
 HarmonizerVoice* Harmonizer::getVoice(const int index) const
@@ -585,4 +616,5 @@ void Harmonizer::deleteAllVoices()
 {
 	const ScopedLock sl (lock);
 	voices.clear();
+	panner.setNumberOfVoices(1);  // panner's numVoices must be >0
 };

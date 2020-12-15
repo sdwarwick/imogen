@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
+#include "PanningManager.h"
 
 
 /*
@@ -63,6 +64,9 @@ public:
 	
 	void setMidiVelocitySensitivity(const int newsensitity);
 	
+	void setPan(const int newPan) noexcept { currentMidipan = newPan; }
+	int getPan() const noexcept { return currentMidipan; }
+	
 	void startNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
 	void stopNote(const float velocity, const bool allowTailOff);
 	void pitchWheelMoved(const int newPitchWheelValue);
@@ -99,6 +103,7 @@ private:
 	uint32 noteOnTime;
 	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
 	int midiVelocitySensitivity;
+	int currentMidipan;
 	
 	AudioBuffer<float> tempBuffer;
 	
@@ -111,7 +116,7 @@ private:
 	
 	void esola(AudioBuffer<float>& outputBuffer, const int startSample, const int numSamples);
 	
-	JUCE_LEAK_DETECTOR(HarmonizerVoice);
+	JUCE_LEAK_DETECTOR(HarmonizerVoice)
 };
 
 
@@ -133,6 +138,9 @@ public:
 	
 	void setCurrentPlaybackSampleRate(const double newRate);
 	double getSamplerate() const noexcept { return sampleRate; }
+	
+	void updateStereoWidth(const int newWidth);
+	void updateLowestPannedNote(const int newPitchThresh) { lowestPannedNote = newPitchThresh; }
 	
 	// Sets a minimum limit on the size to which audio sub-blocks will be divided when rendering. When rendering, the audio blocks that are passed into renderNextBlock() will be split up into smaller blocks that lie between all the incoming midi messages, and it is these smaller sub-blocks that are rendered with multiple calls to renderVoices(). Obviously in a pathological case where there are midi messages on every sample, then renderVoices() could be called once per sample and lead to poor performance, so this setting allows you to set a lower limit on the block size. The default setting is 32, which means that midi messages are accurate to about < 1ms accuracy, which is probably fine for most purposes, but you may want to increase or decrease this value for your synth. If shouldBeStrict is true, the audio sub-blocks will strictly never be smaller than numSamples. If shouldBeStrict is false (default), the first audio sub-block in the buffer is allowed to be smaller, to make sure that the first MIDI event in a buffer will always be sample-accurate (this can sometimes help to avoid quantisation or phasing issues).
 	void setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict = false) noexcept;
@@ -173,6 +181,8 @@ protected:
 	OwnedArray<HarmonizerVoice> voices;
 	int lastPitchWheelValue;
 	
+	PanningManager panner;
+	
 	// renders the voices for the given range
 	void renderVoices (AudioBuffer<float>& outputAudio, const int startSample, const int numSamples);
 	
@@ -201,6 +211,7 @@ private:
 	uint32 lastNoteOnCounter;
 	int minimumSubBlockSize;
 	bool subBlockSubdivisionIsStrict;
+	int lowestPannedNote;
 	
 	mutable Array<int> currentlyActiveNotes;
 	
