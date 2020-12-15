@@ -215,7 +215,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	dryWet.prepare(dspSpec);
 	dryWet.setMixingRule(dsp::DryWetMixingRule::linear);
 	dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
-	dryWet.setWetLatency(64); // letency in samples of the ESOLA algorithm
+	dryWet.setWetLatency(64); // latency in samples of the ESOLA algorithm
 };
 
 void ImogenAudioProcessor::releaseResources() {
@@ -308,7 +308,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		// master dry/wet
 		{
 			dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
-			dryWet.setWetLatency(64); // letency in samples of the ESOLA algorithm
+			dryWet.setWetLatency(64); // latency in samples of the ESOLA algorithm
 		}
 		
 	}

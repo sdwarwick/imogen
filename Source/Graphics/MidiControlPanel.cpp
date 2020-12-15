@@ -158,7 +158,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	// midi latch toggle
 	{
 		midiLatch.setButtonText("MIDI latch");
-		addAndMakeVisible(midiLatch);
+		//addAndMakeVisible(midiLatch);
 	}
 	
 	// voice stealing on/off
@@ -252,7 +252,7 @@ void MidiControlPanel::resized()
 	
 	voiceStealing.setBounds(135, 70, 125, 35);
 	
-	midiLatch.setBounds(135, 40, 125, 35);
+	//midiLatch.setBounds(135, 40, 125, 35);
 
 };
 
