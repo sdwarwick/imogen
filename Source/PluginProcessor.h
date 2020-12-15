@@ -4,8 +4,7 @@
 
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
-#include "EpochExtractor.h"
-#include "Yin.h"
+#include "InputAnalysis.h"
 
 
 //==============================================================================
@@ -58,8 +57,6 @@ public:
 	
 	AudioProcessorValueTreeState tree;
 	
-	Array<int> epochLocations;
-	
 //==============================================================================
 	
 private:
@@ -67,6 +64,9 @@ private:
 	void processBlockPrivate(AudioBuffer<float>&, const int numSamples, const int inputChannel, MidiBuffer& inputMidi);
 	
 	Harmonizer harmonizer;
+	
+	EpochFinder epochs;
+	PitchTracker pitch;
 	
 	double lastSampleRate;
 	int lastBlockSize;
@@ -82,15 +82,6 @@ private:
 	float inputGainMultiplier;
 	float outputGainMultiplier;
 
-	void analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples);
-	
-	int analysisShift;
-	int analysisShiftHalved;
-	int analysisLimit;
-
-	Yin pitchTracker;
-	EpochExtractor epochs;
-	
 	int previousmidipan;
 	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.
 	

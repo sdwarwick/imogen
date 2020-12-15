@@ -32,7 +32,9 @@ public:
 	// If the voice is currently silent, it should just return without doing anything.
 	// The size of the blocks that are rendered can change each time it is called, and may involve rendering as little as 1 sample at a time.
 	// In between rendering callbacks, the voice's methods will be called to tell it about note and controller events.
-	void renderNextBlock(AudioBuffer<float> outputBuffer, const int startSample, const int numSamples);
+	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+	
+	void updateInputFreq(const float newFreq) noexcept { currentInputFreq = newFreq; }
 	
 	int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
 	
@@ -68,6 +70,7 @@ public:
 	int getPan() const noexcept { return currentMidipan; }
 	
 	void startNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
+	void changeNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
 	void stopNote(const float velocity, const bool allowTailOff);
 	void pitchWheelMoved(const int newPitchWheelValue);
 	void aftertouchChanged(const int newAftertouchValue);
@@ -82,7 +85,7 @@ public:
 	
 	
 protected:
-	//Resets the state of this voice after a note has finished playing. The subclass must call this when it finishes playing a note and becomes available to play new ones. It must either call it in the stopNote() method, or if the voice is tailing off, then it should call it later during the renderNextBlock method, as soon as it finishes its tail-off. It can also be called at any time during the render callback if the sound happens
+	//Resets the state of this voice after a note has finished playing. The subclass must call this when it finishes playing a note and becomes available to play new ones. It must either call it in the stopNote() method, or if the voice is tailing off, then it should call it later during the renderNextBlock method, as soon as it finishes its tail-off. 
 	void clearCurrentNote() { currentlyPlayingNote = -1; }
 	
 	
@@ -104,6 +107,7 @@ private:
 	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
 	int midiVelocitySensitivity;
 	int currentMidipan;
+	float currentInputFreq;
 	
 	AudioBuffer<float> tempBuffer;
 	
@@ -114,7 +118,7 @@ private:
 	// calculates a [0.0, 1.0] gain value to be applied to the output signal that corresponds to the latest recieved midi Velocity & the selected midi velocity sensitivity
 	float calcVelocityMultiplier(const int inputVelocity);
 	
-	void esola(AudioBuffer<float>& outputBuffer, const int startSample, const int numSamples);
+	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
 	JUCE_LEAK_DETECTOR(HarmonizerVoice)
 };
@@ -131,7 +135,10 @@ public:
 	// Creates the next block of audio output.
 	// This will process the next numSamples of data from all the voices, and add that output to the audio block supplied, starting from the offset specified. Note that the data will be added to the current contents of the buffer, so you should clear it before calling this method if necessary.
 	// The midi events in the inputMidi buffer are parsed for note and controller events, and these are used to trigger the voices. Note that the startSample offset applies both to the audio output buffer and the midi input buffer, so any midi events with timestamps outside the specified region will be ignored.
-	void renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuffer& inputMidi, int startSample, int numSamples);
+	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, Array<int> epochIndices, const MidiBuffer& inputMidi);
+	
+	
+	void updateInputPitch(const float inputPitchHz);
 	
 	
 	void updateMidiVelocitySensitivity(const int newSensitivity);
@@ -184,7 +191,7 @@ protected:
 	PanningManager panner;
 	
 	// renders the voices for the given range
-	void renderVoices (AudioBuffer<float>& outputAudio, const int startSample, const int numSamples);
+	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
 	// MIDI
 	void handleMidiEvent(const MidiMessage& m);

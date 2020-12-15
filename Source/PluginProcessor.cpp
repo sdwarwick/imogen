@@ -56,10 +56,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
-	
-	epochLocations.ensureStorageAllocated(MAX_BUFFERSIZE);
-	epochLocations.clearQuick();
-	epochLocations.fill(0);
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -167,7 +163,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		if(lastBlockSize != newblocksize)
 		{
 			lastBlockSize = newblocksize;
-			pitchTracker.checkBufferSize(newblocksize);
 			if(wetBuffer.getNumSamples() != newblocksize) { wetBuffer.setSize(NUMBER_OF_CHANNELS, newblocksize, true, true, true); }
 		}
 	}
@@ -222,7 +217,6 @@ void ImogenAudioProcessor::releaseResources() {
 	
 	wetBuffer.clear();
 	
-	pitchTracker.clearBuffer();
 };
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -322,9 +316,11 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	dsp::AudioBlock<float> dwinblock (buffer);
 	dryWet.pushDrySamples(dwinblock);
 	
-	//analyzeInput(buffer, inputChannel, numSamples); // extract epoch indices, etc
+	harmonizer.updateInputPitch(pitch.findPitch(buffer, inputChannel, numSamples, lastSampleRate));
 	
-	harmonizer.renderNextBlock(buffer, inputMidi, 0, numSamples);
+	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer,
+							   epochs.extractEpochSampleIndices(buffer, inputChannel, numSamples, lastSampleRate),
+							   inputMidi);
 	
 	// clear any extra channels present in I/O buffer
 	{
@@ -353,26 +349,6 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 
 /*===========================================================================================================================
  ============================================================================================================================*/
-
-
-/////// ANALYZE INPUT
-
-void ImogenAudioProcessor::analyzeInput (AudioBuffer<float>& input, const int inputChan, const int numSamples)
-{
-	const float newPitch = pitchTracker.pitchDetectionResult(input, inputChan, numSamples, lastSampleRate);
-	frameIsPitched = pitchTracker.isitPitched();
-	if (newPitch > 0.0f)
-	{
-		voxCurrentPitch = newPitch;
-	} else {
-		voxCurrentPitch = 80.0f; // need to set to arbitrary value ??
-		frameIsPitched = false;
-	}
-	
-	epochLocations = epochs.extractEpochIndices(input, inputChan, numSamples, lastSampleRate);
-	
-};
-
 
 
 

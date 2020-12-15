@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64), currentInputFreq(0.0f)
 { };
 
 
@@ -19,26 +19,28 @@ HarmonizerVoice::~HarmonizerVoice()
 { };
 
 
-void HarmonizerVoice::renderNextBlock(AudioBuffer<float> outputBuffer, const int startSample, const int numSamples)
+void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
 	if(! (sustainPedalDown || sostenutoPedalDown))
 	{
 		if(! keyIsDown)
-			stopNote(1.0f, false);
+			stopNote(1.0f, false); // turn off the note if the key has been released & the sustain/sostenuto pedals are released
 	}
 	
-	if(adsr.isActive())
+	if(adsr.isActive()) // use the adsr envelope to determine if the voice is on or not...
 	{
 		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), outputBuffer.getNumChannels(), startSample, numSamples);
 		
 		tempBuffer.makeCopyOf(subBuffer, true);
-		esola(tempBuffer, 0, numSamples);
+		
+		// shifting ratio = currentOutputFreq / currentInputFreq
+		
+		esola(inputAudio, inputChan, startSample, numSamples, tempBuffer, epochIndices);
+		
 		subBuffer.makeCopyOf(tempBuffer, true);
 		
-		if(adsrIsOn)
+		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
-		
-		// TO DO : DEAL WITH PANNING !!
 	}
 	else
 	{
@@ -47,7 +49,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float> outputBuffer, const int
 };
 
 
-void HarmonizerVoice::esola(AudioBuffer<float>& outputBuffer, const int startSample, const int numSamples)
+void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
 	
 };
@@ -92,9 +94,18 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity, const
 	adsr.noteOn();
 	currentlyPlayingNote = midiPitch;
 	lastRecievedPitchbend = currentPitchWheelPosition;
+	lastRecievedVelocity = velocity;
 	currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(midiPitch, currentPitchWheelPosition);
 	currentVelocityMultiplier = calcVelocityMultiplier(velocity);
+};
+
+void HarmonizerVoice::changeNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition)
+{
+	currentlyPlayingNote = midiPitch;
+	lastRecievedPitchbend = currentPitchWheelPosition;
 	lastRecievedVelocity = velocity;
+	currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(midiPitch, currentPitchWheelPosition);
+	currentVelocityMultiplier = calcVelocityMultiplier(velocity);
 };
 
 void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
@@ -180,10 +191,19 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 };
 
 
+void Harmonizer::updateInputPitch(const float inputPitchHz)
+{
+	const ScopedLock sl (lock);
+	
+	for(auto* voice : voices)
+		voice->updateInputFreq(inputPitchHz);
+};
+
+
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
-void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuffer& inputMidi, int startSample, int numSamples)
+void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, Array<int> epochIndices, const MidiBuffer& inputMidi)
 {
 	jassert (sampleRate != 0);
 	
@@ -197,7 +217,7 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuff
 	{
 		if (midiIterator == inputMidi.cend())
 		{
-			renderVoices(outputAudio, startSample, numSamples);
+			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
 			return;
 		}
 		
@@ -206,7 +226,7 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuff
 		
 		if (samplesToNextMidiMessage >= numSamples)
 		{
-			renderVoices(outputAudio, startSample, numSamples);
+			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
 			handleMidiEvent(metadata.getMessage());
 			break;
 		}
@@ -219,7 +239,7 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuff
 		
 		firstEvent = false;
 		
-		renderVoices(outputAudio, startSample, samplesToNextMidiMessage);
+		renderVoices(inputAudio, inputChan, startSample, samplesToNextMidiMessage, outputBuffer, epochIndices);
 		
 		handleMidiEvent(metadata.getMessage());
 		startSample += samplesToNextMidiMessage;
@@ -232,10 +252,10 @@ void Harmonizer::renderNextBlock(AudioBuffer<float>& outputAudio, const MidiBuff
 	
 };
 
-void Harmonizer::renderVoices (AudioBuffer<float>& outputAudio, const int startSample, const int numSamples)
+void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
 	for (auto* voice : voices)
-		voice->renderNextBlock (outputAudio, startSample, numSamples);
+		voice->renderNextBlock (inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
 };
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
@@ -330,7 +350,7 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity)
 		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice (voice, 1.0f, true); }
 	}
 	
-	startVoice(findFreeVoice (midiPitch, shouldStealNotes), midiPitch, velocity);
+	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity);
 	
 };
 
@@ -338,15 +358,25 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
 {
 	if(voice != nullptr)
 	{
-		voice->currentlyPlayingNote = midiPitch;
-		voice->noteOnTime = ++lastNoteOnCounter;
-		voice->setKeyDown (true);
-		voice->setSostenutoPedalDown (false);
+		if(! voice->isVoiceActive())
+		{
+			voice->noteOnTime = ++lastNoteOnCounter;
+			voice->setKeyDown (true);
+			voice->setSostenutoPedalDown (false);
 		
-		if(midiPitch >= lowestPannedNote) { voice->setPan(panner.getNextPanVal()); }
-		else { voice->setPan(64); }
+			if(midiPitch >= lowestPannedNote) { voice->setPan(panner.getNextPanVal()); }
+			else { voice->setPan(64); }
 		
-		voice->startNote (midiPitch, velocity, lastPitchWheelValue);
+			voice->startNote (midiPitch, velocity, lastPitchWheelValue);
+		}
+		else
+		{
+			voice->noteOnTime = ++lastNoteOnCounter;
+			voice->setKeyDown (true);
+			voice->setSostenutoPedalDown (false);
+			
+			voice->changeNote(midiPitch, velocity, lastPitchWheelValue);
+		}
 	}
 };
 
