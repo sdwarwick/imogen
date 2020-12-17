@@ -67,7 +67,7 @@ public:
 	
 	void setMidiVelocitySensitivity(const int newsensitity);
 	
-	void setPan(const int newPan) noexcept { currentMidipan = newPan; }
+	void setPan(const int newPan) noexcept;
 	int getPan() const noexcept { return currentMidipan; }
 	
 	void startNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
@@ -90,6 +90,10 @@ protected:
 	void clearCurrentNote() { currentlyPlayingNote = -1; }
 	
 	
+	// renders a quick "tail off" of the voice's sound. This is used for when stopNote() is called with the allowTailOff argument set to false: the trail-off audio is rendered before resetting the voice's ADSR and clearing its current note.
+	void renderTrailOff(const int numSamples);
+	
+	
 private:
 	
 	friend class Harmonizer;
@@ -97,7 +101,6 @@ private:
 	ADSR adsr;
 	ADSR::Parameters adsrParams;
 	bool adsrIsOn;
-	
 	int currentlyPlayingNote;
 	float currentOutputFreq;
 	float currentVelocityMultiplier;
@@ -108,6 +111,7 @@ private:
 	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
 	int midiVelocitySensitivity;
 	int currentMidipan;
+	float panningMults[2];
 	float currentInputFreq;
 	
 	AudioBuffer<float> tempBuffer;
@@ -235,3 +239,5 @@ private:
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
+
+

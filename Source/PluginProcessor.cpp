@@ -314,7 +314,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
 	dsp::AudioBlock<float> dwinblock (buffer);
-	dryWet.pushDrySamples(dwinblock);
+	dryWet.pushDrySamples(dwinblock); // first, pan the dry signal!
 	
 	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer, inputMidi);
 	
