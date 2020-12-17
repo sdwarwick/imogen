@@ -80,7 +80,7 @@ public:
 	
 	
 	void updateAdsrSettings(const float attack, const float decay, const float sustain, const float release);
-	void setQuickReleaseMs(const int newMs) noexcept { quickReleaseMs = newMs; }
+	void setQuickReleaseMs(const int newMs) noexcept;
 	void setAdsrOnOff(const bool isOn) { adsrIsOn = isOn; }
 	
 	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
@@ -102,9 +102,11 @@ private:
 	ADSR adsr;
 	ADSR::Parameters adsrParams;
 	bool adsrIsOn;
-	float currentAdsrRelease; // used to store the last recieved ADSR release parameter value, so that the actual release can be changed to a small value for quick trail offs and then back again
+	ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
+	ADSR::Parameters quickReleaseParams;
 	int quickReleaseMs;
-	bool isFading; // if doing a quick fadeout, the ADSR envelope must always be applied, even if the ADSR itself is turned off
+	bool isFading;
+	
 	int currentlyPlayingNote;
 	float currentOutputFreq;
 	float currentVelocityMultiplier;

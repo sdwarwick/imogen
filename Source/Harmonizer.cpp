@@ -11,10 +11,22 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentAdsrRelease(0.01f), quickReleaseMs(15), isFading(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64), currentInputFreq(0.0f)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64), currentInputFreq(0.0f)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
+	
+	adsrParams.attack = 0.035f;
+	adsrParams.decay = 0.06f;
+	adsrParams.sustain = 0.8f;
+	adsrParams.release = 0.01f;
+	adsr.setParameters(adsrParams);
+	
+	quickReleaseParams.attack = 0.01f;
+	quickReleaseParams.decay = 0.01f;
+	quickReleaseParams.sustain = 1.0f;
+	quickReleaseParams.release = 0.015f;
+	quickRelease.setParameters(quickReleaseParams);
 	
 	tempBuffer.setSize(1, MAX_BUFFERSIZE);
 };
@@ -43,15 +55,28 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		subBuffer.addFrom(1, startSample, tempBuffer, 1, startSample, numSamples, panningMults[0]);
 		subBuffer.addFrom(2, startSample, tempBuffer, 2, startSample, numSamples, panningMults[1]);
 	
-		if(adsrIsOn || isFading) //...but only apply the envelope if the ADSR on/off user toggle is ON or if a quick fadeout is underway
+		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON or if a quick fadeout is underway
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
+		
+		// quick fade out for stopNote() w/ allowTailOff = false:
+		if(isFading)
+		{
+			if(! quickRelease.isActive()) { quickRelease.noteOn(); quickRelease.noteOff(); }
+			quickRelease.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
+			adsr.reset();
+			isFading = false;
+		}
+		
 	}
 	else
 	{
 		clearCurrentNote();
-		adsrParams.release = currentAdsrRelease;
-		adsr.setParameters(adsrParams);
-		isFading = false;
+		
+		if(! isFading)
+		{
+			quickRelease.reset();
+			quickRelease.noteOn();
+		}
 	}
 };
 
@@ -97,9 +122,9 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity, const
 	lastRecievedVelocity = velocity;
 	currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(midiPitch, currentPitchWheelPosition);
 	currentVelocityMultiplier = calcVelocityMultiplier(velocity);
-	adsrParams.release = currentAdsrRelease;
 	adsr.setParameters(adsrParams);
 	adsr.noteOn();
+	if(! quickRelease.isActive()) { quickRelease.noteOn(); }
 	isFading = false;
 };
 
@@ -111,6 +136,8 @@ void HarmonizerVoice::changeNote(const int midiPitch, const float velocity, cons
 	currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(midiPitch, currentPitchWheelPosition);
 	currentVelocityMultiplier = calcVelocityMultiplier(velocity);
 	if(! adsr.isActive()) { adsr.noteOn(); }
+	if(! quickRelease.isActive()) { quickRelease.noteOn(); }
+	isFading = false;
 };
 
 void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
@@ -118,13 +145,15 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 	if (allowTailOff)
 	{
 		adsr.noteOff();
+		isFading = false;
 	}
 	else
 	{
-		adsrParams.release = quickReleaseMs / 1000.0f;
-		adsr.setParameters(adsrParams);
-		adsr.noteOff();
+		if(! quickRelease.isActive()) { quickRelease.noteOn(); }
+		quickReleaseParams.release = quickReleaseMs / 1000.0f;
+		quickRelease.setParameters(quickReleaseParams);
 		isFading = true;
+		quickRelease.noteOff();
 	}
 	lastRecievedVelocity = 0.0f;
 };
@@ -159,7 +188,12 @@ void HarmonizerVoice::updateAdsrSettings(const float attack, const float decay, 
 	adsrParams.sustain = sustain;
 	adsrParams.release = release;
 	adsr.setParameters(adsrParams);
-	currentAdsrRelease = release;
+};
+
+void HarmonizerVoice::setQuickReleaseMs(const int newMs) noexcept
+{
+	quickReleaseParams.release = newMs / 1000.0f;
+	quickRelease.setParameters(quickReleaseParams);
 };
 
 
