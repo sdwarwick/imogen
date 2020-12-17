@@ -10,10 +10,8 @@
 
 #include "Harmonizer.h"
 
-#define QUICK_KILL_MS 15
 
-
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64), currentInputFreq(0.0f)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), currentAdsrRelease(0.01f), quickReleaseMs(15), isFading(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64), currentInputFreq(0.0f)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -32,9 +30,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	if(! (sustainPedalDown || sostenutoPedalDown))
 	{
 		if(! keyIsDown)
-			stopNote(1.0f, false); // turn off the note if the key has been released & the sustain/sostenuto pedals are released
-			//clearCurrentNote();
-			//adsr.reset();
+			stopNote(1.0f, false);
 	}
 	
 	if(adsr.isActive()) // use the adsr envelope to determine if the voice is on or not...
@@ -47,12 +43,15 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		subBuffer.addFrom(1, startSample, tempBuffer, 1, startSample, numSamples, panningMults[0]);
 		subBuffer.addFrom(2, startSample, tempBuffer, 2, startSample, numSamples, panningMults[1]);
 	
-		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
+		if(adsrIsOn || isFading) //...but only apply the envelope if the ADSR on/off user toggle is ON or if a quick fadeout is underway
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
 	}
 	else
 	{
 		clearCurrentNote();
+		adsrParams.release = currentAdsrRelease;
+		adsr.setParameters(adsrParams);
+		isFading = false;
 	}
 };
 
@@ -98,7 +97,10 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity, const
 	lastRecievedVelocity = velocity;
 	currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(midiPitch, currentPitchWheelPosition);
 	currentVelocityMultiplier = calcVelocityMultiplier(velocity);
+	adsrParams.release = currentAdsrRelease;
+	adsr.setParameters(adsrParams);
 	adsr.noteOn();
+	isFading = false;
 };
 
 void HarmonizerVoice::changeNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition)
@@ -119,9 +121,10 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 	}
 	else
 	{
-		renderTrailOff(QUICK_KILL_MS); // # of ms is fairly arbitrary...
-		clearCurrentNote();
-		adsr.reset();
+		adsrParams.release = quickReleaseMs / 1000.0f;
+		adsr.setParameters(adsrParams);
+		adsr.noteOff();
+		isFading = true;
 	}
 	lastRecievedVelocity = 0.0f;
 };
@@ -156,6 +159,7 @@ void HarmonizerVoice::updateAdsrSettings(const float attack, const float decay, 
 	adsrParams.sustain = sustain;
 	adsrParams.release = release;
 	adsr.setParameters(adsrParams);
+	currentAdsrRelease = release;
 };
 
 
@@ -735,6 +739,12 @@ void Harmonizer::setADSRonOff(const bool shouldBeOn)
 	for(auto* voice : voices)
 		voice->setAdsrOnOff(shouldBeOn);
 };
+
+void Harmonizer::updateQuickReleaseMs(const int newMs)
+{
+	for(auto* voice : voices)
+		voice->setQuickReleaseMs(newMs);
+}
 
 
 // functions for management of HarmonizerVoices------------------------------------------------------------------------------------------------------
