@@ -93,7 +93,7 @@ void PanningManager::panValTurnedOff(const int panVal)
 	
 	const int targetindex = panValsInAssigningOrder.indexOf(panVal);
 	
-	if(targetindex > -1) // targetindex will return -1 if the turned off pan val is not in panValsInAssigningOrder. in this case, do nothing.
+	if(targetindex > -1) // targetindex will be -1 if the turned off pan val is not in panValsInAssigningOrder. in this case, do nothing.
 	{
 		if(! unsentPanVals.isEmpty())
 		{

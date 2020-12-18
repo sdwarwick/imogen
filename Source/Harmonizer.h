@@ -39,13 +39,10 @@ public:
 	
 	int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
 	
-	bool isVoiceActive() const { return currentlyPlayingNote >= 0; }
+	bool isVoiceActive() const noexcept { return currentlyPlayingNote >= 0; }
 	
 	// returns true if a voice is sounding, but its key has been released
-	bool isPlayingButReleased() const noexcept
-	{
-		return isVoiceActive() && ! (keyIsDown || sostenutoPedalDown || sustainPedalDown);
-	}
+	bool isPlayingButReleased() const noexcept { return isVoiceActive() && ! (keyIsDown || sostenutoPedalDown || sustainPedalDown); }
 	
 	// Returns true if this voice started playing its current note before the other voice did. */
 	bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
@@ -53,11 +50,9 @@ public:
 	void setCurrentPlaybackSamplerate(const double newRate);
 	double getSamplerate() const noexcept { return currentSampleRate; }
 	
-	// returns true if the sustain pedal is currently active for this voice
 	bool isSustainPedalDown() const noexcept { return sustainPedalDown; }
 	void setSustainPedalDown(bool isNowDown) noexcept { sustainPedalDown = isNowDown; }
 	
-	// returns true if the sostenuto pedal is currently active for this voice
 	bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
 	void setSostenutoPedalDown(bool isNowDown) noexcept { sostenutoPedalDown = isNowDown; }
 	
@@ -65,9 +60,9 @@ public:
 	bool isKeyDown() const noexcept { return keyIsDown; }
 	void setKeyDown(bool isNowDown) noexcept { keyIsDown = isNowDown; }
 	
-	void setMidiVelocitySensitivity(const int newsensitity);
+	void setMidiVelocitySensitivity(const float newsensitity);
 	
-	void setPan(const int newPan) noexcept;
+	void setPan(const int newPan);
 	int getPan() const noexcept { return currentMidipan; }
 	
 	void startNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
@@ -81,14 +76,14 @@ public:
 	
 	void updateAdsrSettings(const float attack, const float decay, const float sustain, const float release);
 	void setQuickReleaseMs(const int newMs) noexcept;
-	void setAdsrOnOff(const bool isOn) { adsrIsOn = isOn; }
+	void setAdsrOnOff(const bool isOn) noexcept { adsrIsOn = isOn; }
 	
 	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
 	
 	
 protected:
 	//Resets the state of this voice after a note has finished playing. The subclass must call this when it finishes playing a note and becomes available to play new ones. It must either call it in the stopNote() method, or if the voice is tailing off, then it should call it later during the renderNextBlock method, as soon as it finishes its tail-off. 
-	void clearCurrentNote() { currentlyPlayingNote = -1; }
+	void clearCurrentNote() noexcept { currentlyPlayingNote = -1; }
 
 	
 private:
@@ -111,7 +106,7 @@ private:
 	double currentSampleRate;
 	uint32 noteOnTime;
 	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
-	int midiVelocitySensitivity;
+	float midiVelocitySensitivity;
 	int currentMidipan;
 	float panningMults[2];
 	float currentInputFreq;
@@ -123,7 +118,7 @@ private:
 	
 	
 	// calculates a [0.0, 1.0] gain value to be applied to the output signal that corresponds to the latest recieved midi Velocity & the selected midi velocity sensitivity
-	float calcVelocityMultiplier(const int inputVelocity);
+	float calcVelocityMultiplier(const float inputVelocity);
 	
 	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
@@ -144,8 +139,7 @@ public:
 	// The midi events in the inputMidi buffer are parsed for note and controller events, and these are used to trigger the voices. Note that the startSample offset applies both to the audio output buffer and the midi input buffer, so any midi events with timestamps outside the specified region will be ignored.
 	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, const MidiBuffer& inputMidi);
 	
-	
-	void updateInputPitch(const float inputPitchHz);
+	void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
 	
 	
 	void updateMidiVelocitySensitivity(const int newSensitivity);
@@ -154,16 +148,14 @@ public:
 	double getSamplerate() const noexcept { return sampleRate; }
 	
 	void updateStereoWidth(const int newWidth);
-	void updateLowestPannedNote(const int newPitchThresh) { lowestPannedNote = newPitchThresh; }
+	void updateLowestPannedNote(const int newPitchThresh) noexcept { lowestPannedNote = newPitchThresh; }
 	
-	// Sets a minimum limit on the size to which audio sub-blocks will be divided when rendering. When rendering, the audio blocks that are passed into renderNextBlock() will be split up into smaller blocks that lie between all the incoming midi messages, and it is these smaller sub-blocks that are rendered with multiple calls to renderVoices(). Obviously in a pathological case where there are midi messages on every sample, then renderVoices() could be called once per sample and lead to poor performance, so this setting allows you to set a lower limit on the block size. The default setting is 32, which means that midi messages are accurate to about < 1ms accuracy, which is probably fine for most purposes, but you may want to increase or decrease this value for your synth. If shouldBeStrict is true, the audio sub-blocks will strictly never be smaller than numSamples. If shouldBeStrict is false (default), the first audio sub-block in the buffer is allowed to be smaller, to make sure that the first MIDI event in a buffer will always be sample-accurate (this can sometimes help to avoid quantisation or phasing issues).
 	void setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict = false) noexcept;
 	
-	// If set to true, then the synth will try to take over an existing voice if it runs out and needs to play another note.
 	void setNoteStealingEnabled (bool shouldSteal) { shouldStealNotes = shouldSteal; }
 	bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
 	
-	// returns an array of the currently active pitches, or -1 if no notes are active
+	// returns an array of the currently active pitches, or a single -1 if no notes are active
 	Array<int> reportActiveNotes() const;
 	
 	// turn off all notes

@@ -34,6 +34,8 @@ private:
 	int absoluteThreshold();
 	
 	float parabolicInterpolation(int tauEstimate) const;
+	
+	JUCE_LEAK_DETECTOR(PitchTracker)
 };
 
 
@@ -55,4 +57,6 @@ private:
 	Array<float> y3;
 	
 	Array<int> epochs;
+	
+	JUCE_LEAK_DETECTOR(EpochFinder)
 };

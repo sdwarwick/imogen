@@ -217,6 +217,7 @@ void ImogenAudioProcessor::releaseResources() {
 	
 	wetBuffer.clear();
 	
+	harmonizer.resetNoteOnCounter();
 };
 
 #ifndef JucePlugin_PreferredChannelConfigurations

@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(100), currentMidipan(64), currentInputFreq(0.0f)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -39,6 +39,8 @@ HarmonizerVoice::~HarmonizerVoice()
 
 void HarmonizerVoice::setCurrentPlaybackSamplerate(const double newRate)
 {
+	jassert(newRate > 0);
+	
 	if(currentSampleRate != newRate)
 	{
 		currentSampleRate = newRate;
@@ -71,6 +73,8 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	
 		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
+		
+		// don't forget to apply currentVelocityMultiplier !
 		
 		// quick fade out for stopNote() w/ allowTailOff = false:
 		if(isFading)
@@ -117,17 +121,17 @@ float HarmonizerVoice::getOutputFreqFromMidinoteAndPitchbend(const int lastRecie
 	
 };
 
-void HarmonizerVoice::setMidiVelocitySensitivity(const int newsensitity)
+void HarmonizerVoice::setMidiVelocitySensitivity(const float newsensitity)
 {
 	midiVelocitySensitivity = newsensitity;
+	
 	if(currentlyPlayingNote >= 0)
 		currentVelocityMultiplier = calcVelocityMultiplier(lastRecievedVelocity);
 };
 
-float HarmonizerVoice::calcVelocityMultiplier(const int inputVelocity)
+float HarmonizerVoice::calcVelocityMultiplier(const float inputVelocity)
 {
-	const float initialMutiplier = inputVelocity / 127.0f;
-	return ((1.0f - initialMutiplier) * (1.0f - midiVelocitySensitivity) + initialMutiplier);
+	return ((1.0f - inputVelocity) * (1.0f - midiVelocitySensitivity) + inputVelocity);
 };
 
 void HarmonizerVoice::startNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition)
@@ -165,9 +169,9 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 	else
 	{
 		if(! quickRelease.isActive()) { quickRelease.noteOn(); }
-		if(quickReleaseParams.release != quickReleaseMs / 1000.0f)
+		if(const float desiredR = quickReleaseMs / 1000.0f; quickReleaseParams.release != desiredR)
 		{
-			quickReleaseParams.release = quickReleaseMs / 1000.0f;
+			quickReleaseParams.release = desiredR;
 			quickRelease.setParameters(quickReleaseParams);
 		}
 		isFading = true;
@@ -179,6 +183,7 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 void HarmonizerVoice::pitchWheelMoved(const int newPitchWheelValue)
 {
 	lastRecievedPitchbend = newPitchWheelValue;
+	
 	if(currentlyPlayingNote >= 0)
 		currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(currentlyPlayingNote, newPitchWheelValue);
 };
@@ -203,8 +208,9 @@ void HarmonizerVoice::updateAdsrSettings(const float attack, const float decay, 
 
 void HarmonizerVoice::setQuickReleaseMs(const int newMs) noexcept
 {
-	quickReleaseParams.release = newMs / 1000.0f;
-	quickRelease.setParameters(quickReleaseParams);
+	if(const float desiredR = newMs / 1000.0f; quickReleaseParams.release != desiredR)
+		quickReleaseParams.release = desiredR;
+		quickRelease.setParameters(quickReleaseParams);
 };
 
 
@@ -216,12 +222,15 @@ void HarmonizerVoice::updatePitchbendSettings(const int rangeUp, const int range
 		currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(currentlyPlayingNote, lastRecievedPitchbend);
 };
 
-void HarmonizerVoice::setPan(const int newPan) noexcept
+void HarmonizerVoice::setPan(const int newPan) 
 {
+	jassert(isPositiveAndBelow(newPan, 128));
+	
 	if(newPan == 64) // save time for the simplest case
 	{
 		panningMults[0] = 0.5f;
 		panningMults[1] = 0.5f;
+		currentMidipan = 64;
 	}
 	else
 	{
@@ -346,20 +355,12 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 			continue;
 		}
 		if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < lowestPannedNote && voice->getPan() != 64)
+		{
+			panner.panValTurnedOff(voice->getPan());
 			voice->setPan(64);
+		}
 	}
 };
-
-
-void Harmonizer::updateInputPitch(const float inputPitchHz)
-{
-	const ScopedLock sl (lock);
-	
-	for(auto* voice : voices)
-		voice->updateInputFreq(inputPitchHz);
-};
-
-
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
@@ -426,6 +427,8 @@ void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputCh
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
 {
+	jassert(newRate > 0);
+	
 	if (sampleRate != newRate)
 	{
 		const ScopedLock sl (lock);
@@ -439,6 +442,7 @@ void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
 
 void Harmonizer::setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict) noexcept
 {
+	// Sets a minimum limit on the size to which audio sub-blocks will be divided when rendering. When rendering, the audio blocks that are passed into renderNextBlock() will be split up into smaller blocks that lie between all the incoming midi messages, and it is these smaller sub-blocks that are rendered with multiple calls to renderVoices(). Obviously in a pathological case where there are midi messages on every sample, then renderVoices() could be called once per sample and lead to poor performance, so this setting allows you to set a lower limit on the block size. The default setting is 32, which means that midi messages are accurate to about < 1ms accuracy, which is probably fine for most purposes, but you may want to increase or decrease this value for your synth. If shouldBeStrict is true, the audio sub-blocks will strictly never be smaller than numSamples. If shouldBeStrict is false (default), the first audio sub-block in the buffer is allowed to be smaller, to make sure that the first MIDI event in a buffer will always be sample-accurate (this can sometimes help to avoid quantisation or phasing issues).
 	jassert (numSamples > 0); // it wouldn't make much sense for this to be less than 1
 	minimumSubBlockSize = numSamples;
 	subBlockSubdivisionIsStrict = shouldBeStrict;
@@ -459,7 +463,7 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 	}
 	else if (m.isAllNotesOff() || m.isAllSoundOff())
 	{
-		allNotesOff (true);
+		allNotesOff (false); 
 	}
 	else if (m.isPitchWheel())
 	{
@@ -484,8 +488,11 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 {
 	const ScopedLock sl (lock);
+	
+	const float sensitivity = newSensitivity / 100.0f;
+	
 	for(auto* voice : voices)
-		voice->setMidiVelocitySensitivity(newSensitivity);
+		voice->setMidiVelocitySensitivity(sensitivity);
 }
 
 Array<int> Harmonizer::reportActiveNotes() const
@@ -513,7 +520,7 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity)
 	// If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
 	for (auto* voice : voices)
 	{
-		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice (voice, 0.5f, true); }
+		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice(voice, 0.5f, true); }
 	}
 	
 	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity);
@@ -578,7 +585,8 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
 	const ScopedLock sl (lock);
 	
 	for (auto* voice : voices)
-		voice->stopNote (1.0f, allowTailOff);
+		if(voice->isVoiceActive())
+			voice->stopNote (1.0f, allowTailOff);
 	
 	panner.reset(false);
 };
@@ -704,31 +712,29 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
 	
 	for (auto* voice : voices)
 	{
-		
-		jassert (voice->isVoiceActive()); // We wouldn't be here otherwise
-		
-		usableVoices.add (voice);
-		
-		// NB: Using a functor rather than a lambda here due to scare-stories about
-		// compilers generating code containing heap allocations..
-		struct Sorter
+		if(voice->isVoiceActive())
 		{
-			bool operator() (const HarmonizerVoice* a, const HarmonizerVoice* b) const noexcept { return a->wasStartedBefore (*b); }
-		};
+			usableVoices.add (voice);
 		
-		std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
+			// NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations..
+			struct Sorter
+			{
+				bool operator() (const HarmonizerVoice* a, const HarmonizerVoice* b) const noexcept { return a->wasStartedBefore (*b); }
+			};
 		
-		if (! voice->isPlayingButReleased()) // Don't protect released notes
-		{
-			auto note = voice->getCurrentlyPlayingNote();
-			
-			if (low == nullptr || note < low->getCurrentlyPlayingNote())
-				low = voice;
-			
-			if (top == nullptr || note > top->getCurrentlyPlayingNote())
-				top = voice;
+			std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
+		
+			if (! voice->isPlayingButReleased()) // Don't protect released notes
+			{
+				auto note = voice->getCurrentlyPlayingNote();
+				
+				if (low == nullptr || note < low->getCurrentlyPlayingNote())
+					low = voice;
+				
+				if (top == nullptr || note > top->getCurrentlyPlayingNote())
+					top = voice;
+			}
 		}
-		
 	}
 	
 	// Eliminate pathological cases (ie: only 1 note playing): we always give precedence to the lowest note(s)
@@ -747,16 +753,13 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
 	
 	// Oldest voice that doesn't have a finger on it:
 	for (auto* voice : usableVoices)
-		if (voice != low && voice != top && ! voice->isKeyDown())
+		if (voice != low && voice != top && (! voice->isKeyDown()))
 			return voice;
 	
 	// Oldest voice that isn't protected
 	for (auto* voice : usableVoices)
 		if (voice != low && voice != top)
 			return voice;
-	
-	// We've only got "protected" voices now: lowest note takes priority
-	jassert (low != nullptr);
 	
 	// Duophonic synth: give priority to the bass note:
 	if (top != nullptr)
@@ -787,6 +790,7 @@ void Harmonizer::setADSRonOff(const bool shouldBeOn)
 
 void Harmonizer::updateQuickReleaseMs(const int newMs)
 {
+	jassert(newMs > 0);
 	for(auto* voice : voices)
 		voice->setQuickReleaseMs(newMs);
 }
