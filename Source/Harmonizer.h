@@ -50,7 +50,7 @@ public:
 	// Returns true if this voice started playing its current note before the other voice did. */
 	bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
 	
-	void setCurrentPlaybackSamplerate(double newRate) { currentSampleRate = newRate; }
+	void setCurrentPlaybackSamplerate(const double newRate);
 	double getSamplerate() const noexcept { return currentSampleRate; }
 	
 	// returns true if the sustain pedal is currently active for this voice
@@ -89,11 +89,7 @@ public:
 protected:
 	//Resets the state of this voice after a note has finished playing. The subclass must call this when it finishes playing a note and becomes available to play new ones. It must either call it in the stopNote() method, or if the voice is tailing off, then it should call it later during the renderNextBlock method, as soon as it finishes its tail-off. 
 	void clearCurrentNote() { currentlyPlayingNote = -1; }
-	
-	
-	// renders a quick "tail off" of the voice's sound. This is used for when stopNote() is called with the allowTailOff argument set to false: the trail-off audio is rendered before resetting the voice's ADSR and clearing its current note.
-	void renderTrailOff(const int numSamples);
-	
+
 	
 private:
 	

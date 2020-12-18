@@ -16,12 +16,14 @@ HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
 	
+	adsr.setSampleRate(44100.0);
 	adsrParams.attack = 0.035f;
 	adsrParams.decay = 0.06f;
 	adsrParams.sustain = 0.8f;
 	adsrParams.release = 0.01f;
 	adsr.setParameters(adsrParams);
 	
+	quickRelease.setSampleRate(44100.0);
 	quickReleaseParams.attack = 0.01f;
 	quickReleaseParams.decay = 0.01f;
 	quickReleaseParams.sustain = 1.0f;
@@ -34,6 +36,18 @@ HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading
 
 HarmonizerVoice::~HarmonizerVoice()
 { };
+
+void HarmonizerVoice::setCurrentPlaybackSamplerate(const double newRate)
+{
+	if(currentSampleRate != newRate)
+	{
+		currentSampleRate = newRate;
+		adsr.setSampleRate(newRate);
+		adsr.setParameters(adsrParams);
+		quickRelease.setSampleRate(newRate);
+		quickRelease.setParameters(quickReleaseParams);
+	}
+};
 
 
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
@@ -55,26 +69,27 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		subBuffer.addFrom(1, startSample, tempBuffer, 1, startSample, numSamples, panningMults[0]);
 		subBuffer.addFrom(2, startSample, tempBuffer, 2, startSample, numSamples, panningMults[1]);
 	
-		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON or if a quick fadeout is underway
+		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
 		
 		// quick fade out for stopNote() w/ allowTailOff = false:
 		if(isFading)
 		{
-			if(! quickRelease.isActive()) { quickRelease.noteOn(); quickRelease.noteOff(); }
+			if(! quickRelease.isActive()) { quickRelease.noteOn(); quickRelease.noteOff(); }  // ??
 			quickRelease.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
 			adsr.reset();
 			isFading = false;
+			clearCurrentNote();
 		}
 		
 	}
 	else
 	{
 		clearCurrentNote();
+		currentMidipan = 64;
 		
 		if(! isFading)
 		{
-			quickRelease.reset();
 			quickRelease.noteOn();
 		}
 	}
@@ -150,20 +165,16 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 	else
 	{
 		if(! quickRelease.isActive()) { quickRelease.noteOn(); }
-		quickReleaseParams.release = quickReleaseMs / 1000.0f;
-		quickRelease.setParameters(quickReleaseParams);
+		if(quickReleaseParams.release != quickReleaseMs / 1000.0f)
+		{
+			quickReleaseParams.release = quickReleaseMs / 1000.0f;
+			quickRelease.setParameters(quickReleaseParams);
+		}
 		isFading = true;
 		quickRelease.noteOff();
 	}
 	lastRecievedVelocity = 0.0f;
 };
-
-
-void HarmonizerVoice::renderTrailOff(const int numSamples)
-{
-	// need to render a few ms trail off (w/ fade out) of voice's sound to prevent clicks if it jumps to 0
-};
-
 
 void HarmonizerVoice::pitchWheelMoved(const int newPitchWheelValue)
 {
@@ -332,7 +343,10 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 		{
 			const int newPanVal = panner.getClosestNewPanValFromOld(voice->getPan());
 			voice->setPan(newPanVal);
+			continue;
 		}
+		if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < lowestPannedNote && voice->getPan() != 64)
+			voice->setPan(64);
 	}
 };
 
@@ -499,7 +513,7 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity)
 	// If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
 	for (auto* voice : voices)
 	{
-		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice (voice, 1.0f, true); }
+		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice (voice, 0.5f, true); }
 	}
 	
 	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity);
@@ -510,28 +524,25 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
 {
 	if(voice != nullptr)
 	{
+		voice->noteOnTime = ++lastNoteOnCounter;
+		voice->setKeyDown (true);
+		voice->setSostenutoPedalDown (false);
+		
 		if(! voice->isVoiceActive())
 		{
-			voice->noteOnTime = ++lastNoteOnCounter;
-			voice->setKeyDown (true);
-			voice->setSostenutoPedalDown (false);
-		
 			if(midiPitch >= lowestPannedNote) { voice->setPan(panner.getNextPanVal()); }
-			else { voice->setPan(64); }
+			else { voice->setPan(64); } // don't need to report panner.panValTurnedOff() because voice was previously off!
 		
 			voice->startNote (midiPitch, velocity, lastPitchWheelValue);
 		}
 		else
 		{
-			voice->noteOnTime = ++lastNoteOnCounter;
-			voice->setKeyDown (true);
-			voice->setSostenutoPedalDown (false);
-			
 			if(midiPitch < lowestPannedNote)
 			{
 				panner.panValTurnedOff(voice->getPan());
 				voice->setPan(64);
 			}
+			// don't assign a new pan value here -- leave the voice in its place in the stereo field!
 			
 			voice->changeNote(midiPitch, velocity, lastPitchWheelValue);
 		}

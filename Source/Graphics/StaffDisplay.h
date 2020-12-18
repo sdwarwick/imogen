@@ -52,6 +52,7 @@ private:
 	
 	String noteheadSvg;
 	Path noteheadPath;
+	
 	//String flatSvg;
 	//Path flatPath;
 	//String sharpSvg;
