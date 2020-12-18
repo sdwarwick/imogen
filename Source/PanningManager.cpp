@@ -17,6 +17,8 @@ PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(
 	arrayIndexesMapped.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	unsentPanVals.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	absDistances.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	
+	setNumberOfVoices(1);
 };
 
 
@@ -27,18 +29,10 @@ PanningManager::~PanningManager()
 
 void PanningManager::setNumberOfVoices(const int newNumVoices)
 {
-	const ScopedLock sl (lock);
-	
 	jassert(newNumVoices > 0);
 	
 	currentNumVoices = newNumVoices;
-	
-	possiblePanVals.resize(newNumVoices);
-	panValsInAssigningOrder.resize(newNumVoices);
-	arrayIndexesMapped.resize(newNumVoices);
-	unsentPanVals.resize(newNumVoices);
-	absDistances.resize(newNumVoices);
-	
+
 	mapArrayIndexes();
 	updateStereoWidth(lastRecievedStereoWidth);
 };
@@ -55,17 +49,21 @@ void PanningManager::updateStereoWidth(const int newWidth)
 	const float increment = (maxPan - minPan) / currentNumVoices;
 	
 	// first, assign all possible, evenly spaced pan vals within range to an array
-	possiblePanVals.set(0, 64);
+	possiblePanVals.clearQuick();
+	possiblePanVals.add(64);
 	for (int i = 1; i < currentNumVoices; ++i)
-		possiblePanVals.setUnchecked(i, round(minPan + (i * increment) + (increment/2.0f)));
+		possiblePanVals.add(round(minPan + (i * increment) + (increment/2.0f)));
 	
 	// then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
-	for (int i = 0; i < currentNumVoices; ++i)
-		panValsInAssigningOrder.setUnchecked(i, possiblePanVals.getUnchecked(arrayIndexesMapped.getUnchecked(i)));
+	panValsInAssigningOrder.clearQuick();
+	panValsInAssigningOrder.add(64);
+	for (int i = 1; i < currentNumVoices; ++i)
+		panValsInAssigningOrder.add(possiblePanVals.getUnchecked(arrayIndexesMapped.getUnchecked(i) - 1));
 	
 	// transfer to I/O array we will be actually reading from
+	unsentPanVals.clearQuick();
 	for(int i = 0; i < currentNumVoices; ++i)
-		unsentPanVals.setUnchecked(i, panValsInAssigningOrder.getUnchecked(i));
+		unsentPanVals.add(panValsInAssigningOrder.getUnchecked(i));
 };
 
 
@@ -140,12 +138,14 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 		return 64;
 	}
 	
+	absDistances.clearQuick();
+	
 	// find & return the element in unsentPanVals that is the closest to oldPan, then remove that val from unsentPanVals
 	
 	if(const int targetsize = unsentPanVals.size(); targetsize != absDistances.size()) { absDistances.resize(targetsize); }
 	
 	for(int i = 0; i < unsentPanVals.size(); ++i)
-		absDistances.setUnchecked(i, abs(oldPan - unsentPanVals.getUnchecked(i)));
+		absDistances.add(abs(oldPan - unsentPanVals.getUnchecked(i)));
 	
 	// find the minimum val in absDistances *in place* -- if we sort, we lose the index # and can't find the original panValue from unsentPanVals
 	int minimum = 128; // higher than highest possible midiPan
@@ -167,7 +167,7 @@ void PanningManager::reset(const bool grabbedFirst64)
 	unsentPanVals.clearQuick();
 	
 	for(int i = 0; i < currentNumVoices; ++i)
-		unsentPanVals.setUnchecked(i, panValsInAssigningOrder.getUnchecked(i));
+		unsentPanVals.add(panValsInAssigningOrder.getUnchecked(i));
 	
 	if(grabbedFirst64)
 		unsentPanVals.remove(0);
@@ -187,20 +187,25 @@ void PanningManager::mapArrayIndexes()
 	 I'm storing this list in another array called arrayIndexesMapped.
 	 */
 	
-	const int middleIndex = ceil(currentNumVoices / 2);
+	const ScopedLock sl (lock);
 	
-	arrayIndexesMapped.setUnchecked(0, middleIndex);
+	const int middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2) : 1;
+	
+	arrayIndexesMapped.clearQuick();
+	
+	arrayIndexesMapped.add(middleIndex);
 	
 	int i = 1;
 	int p = 1;
 	int m = -1;
 	
-	while (i < currentNumVoices) {
+	while (i < currentNumVoices)
+	{
 		if(i % 2 == 0) { // i is even
-			arrayIndexesMapped.setUnchecked(i, middleIndex + p);
+			arrayIndexesMapped.add(middleIndex + p);
 			++p;
 		} else { // i is odd
-			arrayIndexesMapped.setUnchecked(i, middleIndex - m);
+			arrayIndexesMapped.add(middleIndex - m);
 			--m;
 		}
 		++i;

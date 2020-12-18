@@ -366,7 +366,7 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 
 void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, const MidiBuffer& inputMidi)
 {
-	jassert (sampleRate != 0);
+	jassert (sampleRate > 0);
 	
 	auto midiIterator = inputMidi.findNextSamplePosition(startSample);
 	

@@ -19,6 +19,8 @@ public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
 	
+	AudioProcessor::BusesProperties makeBusProperties();
+	
 	Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;

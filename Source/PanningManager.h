@@ -60,6 +60,8 @@ private:
 	int lastRecievedStereoWidth;
 	int currentNumVoices;
 	
+	void setNumVoicesPrivate(const int newNumVoices);
+	
 	void mapArrayIndexes();
 	
 	JUCE_LEAK_DETECTOR(PanningManager)

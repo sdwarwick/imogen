@@ -270,7 +270,7 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	
 	const ScopedLock sl (lock);
 	
-	const int window_length = round(0.015f * samplerate);
+	const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
 	
 	epochs.clearQuick();
 	y.clearQuick();
@@ -283,19 +283,19 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	const float* data = inputAudio.getReadPointer(inputChan);
 	
 	const float x0 = data[startSample];
-	const float x1 = data[startSample + 1] - x0;
 	float y1_0 = x0;
-	float y1_1 = x1 + (2.0f * y1_0);
+	float y1_1 = data[startSample + 1] - x0 + (2.0f * y1_0);
 	float x_i;
 	float y1_i;
-	y2.setUnchecked(0, y1_0);
-	y2.setUnchecked(1, y1_1 + (2.0f * y1_0));
-	for(int i = 2; i < numSamples; ++i) {
+	y2.add(y1_0);
+	y2.add(y1_1 + (2.0f * y1_0));
+	for(int i = 2; i < numSamples; ++i)
+	{
 		x_i = data[startSample + i] - data[startSample + i - 1];
 		y1_i = x_i + (2.0f * y1_1) - y1_0;
 		const float y2b1 = y2.getUnchecked(i - 1);
 		const float y2b2 = y2.getUnchecked(i - 2);
-		y2.setUnchecked(i, y1_i + (2.0f * y2b1 - y2b2));
+		y2.add(y1_i + (2.0f * y2b1 - y2b2));
 		y1_0 = y1_1;
 		y1_1 = y1_i;
 	}
@@ -314,7 +314,7 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 			running_sum -= y2.getUnchecked(i - window_length - 1) - y2.getUnchecked(i + window_length);
 			mean_val = running_sum / (2.0f * window_length + 1.0f);
 		}
-		y3.setUnchecked(i, y2.getUnchecked(i) - mean_val);
+		y3.add(y2.getUnchecked(i) - mean_val);
 	}
 	
 	// fourth stage
@@ -332,7 +332,7 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 			running_sum -= y3.getUnchecked(i - window_length - 1) - y3.getUnchecked(i + window_length);
 			mean_val = running_sum / (2.0f * window_length + 1.0f);
 		}
-		y.setUnchecked(i, y3.getUnchecked(i) - mean_val);
+		y.add(y3.getUnchecked(i) - mean_val);
 	}
 	
 	// last stage
