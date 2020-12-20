@@ -180,6 +180,9 @@ public:
 	// deletes one of the voices
 	void removeVoice(const int index);
 	
+	// removes a specified # of voices, attempting to remove inactive voices first
+	void removeNumVoices(const int voicesToRemove);
+	
 	// returns a pointer to one of the voices that has been added
 	HarmonizerVoice* getVoice(const int index) const;
 	

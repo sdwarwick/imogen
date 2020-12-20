@@ -5,12 +5,12 @@
 ImogenAudioProcessor::ImogenAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor(makeBusProperties()),
-		voxCurrentPitch(0.0f),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
 		lastSampleRate(44100), lastBlockSize(512),
 		adsrIsOn(true),
 		previousStereoWidth(100.0f),
 		prevQuickKillMs(0),
+		prevConcertPitch(440),
 		previousmidipan(64),
 		prevideb(0.0f), prevodeb(0.0f),
 		limiterIsOn(true),
@@ -34,7 +34,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		limiterThreshListener(*tree.getRawParameterValue("limiterThresh")),
 		limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
 		limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
-		quickKillMsListener(*tree.getRawParameterValue("quickKillMs"))
+		quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
+		concertPitchListener(*tree.getRawParameterValue("concertPitch"))
 
 #endif
 {
@@ -72,6 +73,10 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 			if(wetBuffer.getNumSamples() != newblocksize) { wetBuffer.setSize(NUMBER_OF_CHANNELS, newblocksize, true, true, true); }
 		}
 	}
+	
+	// concert pitch
+	if(int(concertPitchListener) != prevConcertPitch)
+		harmonizer.setConcertPitchHz(concertPitchListener);
 	
 	wetBuffer.clear();
 	
@@ -174,6 +179,10 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
 		}
 		
+		// concert pitch
+		if(int(concertPitchListener) != prevConcertPitch)
+			harmonizer.setConcertPitchHz(concertPitchListener);
+		
 	}
 	
 	
@@ -275,6 +284,25 @@ void ImogenAudioProcessor::updateDryVoxPan()
 	}
 };
 
+
+void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
+{
+	if(const int currentVoices = harmonizer.getNumVoices(); currentVoices != newNumVoices)
+	{
+		if(newNumVoices > currentVoices) 
+		{
+			const int voicesToAdd = newNumVoices - currentVoices;
+			for(int i = 0; i < voicesToAdd; ++i)
+				harmonizer.addVoice(new HarmonizerVoice);
+		}
+		else
+		{
+			harmonizer.removeNumVoices(currentVoices - newNumVoices);
+		}
+	}
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
@@ -298,6 +326,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -4.0f));
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
 	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 16, 0));
+	params.push_back(std::make_unique<AudioParameterInt>("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
 	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
 	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
 	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));

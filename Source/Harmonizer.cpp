@@ -853,3 +853,30 @@ void Harmonizer::deleteAllVoices()
 	voices.clear();
 	panner.setNumberOfVoices(1);  // panner's numVoices must be >0
 };
+
+
+void Harmonizer::removeNumVoices(const int voicesToRemove)
+{
+	const ScopedLock sl (lock);
+	
+	int voicesRemoved = 0;
+	while(voicesRemoved < voicesToRemove)
+	{
+		int indexToRemove = -1;
+		for(auto* voice : voices)
+		{
+			if(! voice->isVoiceActive())
+			{
+				indexToRemove = voices.indexOf(voice);
+				break;
+			}
+		}
+		
+		if(indexToRemove > -1)
+			voices.remove(indexToRemove);
+		else
+			voices.remove(0);
+		
+		++voicesRemoved;
+	}
+};

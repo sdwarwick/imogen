@@ -53,11 +53,9 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 	
-	//==============================================================================
-	
-	double voxCurrentPitch;  // a variable to store the modulator signal's current input pitch [as frequency!]
-	
 	AudioProcessorValueTreeState tree;
+	
+	void updateNumVoices(const int newNumVoices);
 	
 //==============================================================================
 	
@@ -76,6 +74,7 @@ private:
 	float outputGainMultiplier;
 	
 	int prevQuickKillMs;
+	int prevConcertPitch;
 
 	int previousmidipan;
 	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.
@@ -114,6 +113,7 @@ private:
 		const std::atomic<float>& limiterReleaseListener;
 		const std::atomic<float>& limiterToggleListener;
 		const std::atomic<float>& quickKillMsListener;
+		const std::atomic<float>& concertPitchListener;
 	
 	void updateAdsr();
 	void updateIOgains();
@@ -121,6 +121,7 @@ private:
 	void updateStereoWidth();
 	void updateQuickKillMs();
 	void updateDryVoxPan();
+	
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

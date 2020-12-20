@@ -24,7 +24,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	pitchBendUpLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
 	pitchBendDownLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
 	voiceStealingLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing)),
-	quickKillMsLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs))
+	quickKillMsLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs)),
+	concertPitchLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "concertPitch", concertPitch))
 {
 	// ADSR
 	{
@@ -138,8 +139,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		}
 		{
 			buildIntervalCombobox(pitchBendDown);
-			addAndMakeVisible(pitchBendDown);
 			pitchBendDown.setSelectedId(2);
+			addAndMakeVisible(pitchBendDown);
 			lookAndFeel.initializeLabel(pitchbendDownLabel, "Pitch bend range down");
 			addAndMakeVisible(pitchbendDownLabel);
 		}
@@ -151,6 +152,26 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		voiceStealing.setButtonText("Voice stealing");
 		addAndMakeVisible(voiceStealing);
 		voiceStealing.triggerClick();
+	}
+	
+	// concert pitch
+	{
+		concertPitch.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
+		concertPitch.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+		addAndMakeVisible(concertPitch);
+		concertPitch.setValue(440);
+		lookAndFeel.initializeLabel(concertPitchLabel, "Concert pitch (Hz)");
+		addAndMakeVisible(concertPitchLabel);
+	}
+	
+	// # of harmony voices
+	{
+		numberOfVoices.onChange = [this] { audioProcessor.updateNumVoices(numberOfVoices.getSelectedId()); };
+		buildVoicesCombobox(numberOfVoices);
+		numberOfVoices.setSelectedId(12);
+		addAndMakeVisible(numberOfVoices);
+		lookAndFeel.initializeLabel(numVoicesLabel, "Number of harmony voices");
+		addAndMakeVisible(numVoicesLabel);
 	}
 
 };
@@ -224,11 +245,34 @@ void MidiControlPanel::resized()
 	}
 	
 	midiKill.setBounds(145, 5, 100, 35);
-	quickKillmsLabel.setBounds(125, 51, 85, 35);
-	quickKillMs.setBounds(215, 48, 45, 45);
+	quickKillmsLabel.setBounds(98, 35, 85, 35);
+	quickKillMs.setBounds(118, 60, 45, 45);
 	
-	voiceStealing.setBounds(15, 310, 125, 35);
+	concertPitchLabel.setBounds(190, 35, 110, 35);
+	concertPitch.setBounds(220, 60, 45, 45);
+	
+	voiceStealing.setBounds(16, 310, 125, 35);
+	
+	numVoicesLabel.setBounds(18, 348, 115, 35);
+	numberOfVoices.setBounds(42, 385, 65, 20);
 
+};
+
+
+void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
+{
+	box.addItem("1", 1);
+	box.addItem("2", 2);
+	box.addItem("3", 3);
+	box.addItem("4", 4);
+	box.addItem("5", 5);
+	box.addItem("6", 6);
+	box.addItem("7", 7);
+	box.addItem("8", 8);
+	box.addItem("9", 9);
+	box.addItem("10", 10);
+	box.addItem("11", 11);
+	box.addItem("12", 12);
 };
 
 

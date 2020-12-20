@@ -79,10 +79,20 @@ public:
 	Label quickKillmsLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> quickKillMsLink;
 	
+	// set concert pitch in Hz
+	Slider concertPitch;
+	Label concertPitchLabel;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> concertPitchLink;
+	
+	// # of harmony voices
+	ComboBox numberOfVoices;
+	Label numVoicesLabel;
+	
 
 private:
 	
 	void buildIntervalCombobox(ComboBox& box);
+	void buildVoicesCombobox(ComboBox& box);
 	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };
