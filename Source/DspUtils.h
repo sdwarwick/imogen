@@ -17,17 +17,17 @@ class MidiConverter
 {
 public:
 	
-	MidiConverter(int initialConcertPitch): concertPitchHz(initialConcertPitch)
+	MidiConverter(const int initialConcertPitch): concertPitchHz(initialConcertPitch)
 	{ };
 	
 	
-	float mtof(const float midiNote) // converts midiPitch to frequency in Hz
+	float mtof(const float midiNote) const // converts midiPitch to frequency in Hz
 	{
 		return concertPitchHz * std::pow(2.0f, ((midiNote - 69.0f) / 12.0f));
 	};
 	
 	
-	float ftom(const float inputFreq) // converts frequency in Hz to midiPitch (as a float)
+	float ftom(const float inputFreq) const // converts frequency in Hz to midiPitch (as a float)
 	{
 		return 12.0f * log2(inputFreq / concertPitchHz) + 69.0f;
 	};
@@ -39,7 +39,7 @@ public:
 	}
 	
 	
-	int getCurrentConcertPitchHz()
+	int getCurrentConcertPitchHz() const
 	{
 		return concertPitchHz;
 	}

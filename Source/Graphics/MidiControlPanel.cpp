@@ -23,10 +23,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	midiVelocitySensLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
 	pitchBendUpLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
 	pitchBendDownLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
-	pedalPitchLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitch)),
-	pedalPitchThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThresh)),
-	midiLatchLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "midiLatch", midiLatch)),
-	voiceStealingLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing))
+	voiceStealingLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing)),
+	quickKillMsLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs))
 {
 	// ADSR
 	{
@@ -84,6 +82,16 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
 		addAndMakeVisible(midiKill);
 	}
+	// quick kill ms slider
+	{
+		quickKillMs.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
+		quickKillMs.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+		addAndMakeVisible(quickKillMs);
+		quickKillMs.setValue(15);
+		quickKillMs.setNumDecimalPlacesToDisplay(0);
+		lookAndFeel.initializeLabel(quickKillmsLabel, "Quick kill ms");
+		addAndMakeVisible(quickKillmsLabel);
+	}
 	
 	// stereo width
 	{
@@ -137,29 +145,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		}
 	}
 	
-	// MIDI PEDAL PITCH settings
-	{
-		// toggle on/off
-		{
-			pedalPitch.setButtonText("MIDI pedal pitch");
-			addAndMakeVisible(pedalPitch);
-		}
-		// threshold
-		{
-			pedalPitchThresh.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-			pedalPitchThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-			addAndMakeVisible(pedalPitchThresh);
-			pedalPitchThresh.setValue(127);
-			lookAndFeel.initializeLabel(pedalpitchThreshLabel, "Threshold");
-			addAndMakeVisible(pedalpitchThreshLabel);
-		}
-	}
-	
-	// midi latch toggle
-	{
-		midiLatch.setButtonText("MIDI latch");
-		//addAndMakeVisible(midiLatch);
-	}
 	
 	// voice stealing on/off
 	{
@@ -193,8 +178,6 @@ void MidiControlPanel::paint (juce::Graphics& g)
 	juce::Rectangle<int> pitchbendPanel (5, 240, 290, 65);
 	g.fillRect(pitchbendPanel);
 	
-	juce::Rectangle<int> pedalpitchPanel (5, 320, 140, 75);
-	g.fillRect(pedalpitchPanel);
 };
 
 void MidiControlPanel::resized()
@@ -240,19 +223,11 @@ void MidiControlPanel::resized()
 		pitchBendDown.setBounds		(155, 265, 130, 30);
 	}
 	
-	// pedal pitch
-	{
-		pedalPitch.setBounds(10, 320, 125, 35);
-		
-		pedalpitchThreshLabel.setBounds(25, 350, 75, 35);
-		pedalPitchThresh.setBounds(100, 350, 35, 35);
-	}
-	
 	midiKill.setBounds(145, 5, 100, 35);
+	quickKillmsLabel.setBounds(125, 51, 85, 35);
+	quickKillMs.setBounds(215, 48, 45, 45);
 	
-	voiceStealing.setBounds(135, 70, 125, 35);
-	
-	//midiLatch.setBounds(135, 40, 125, 35);
+	voiceStealing.setBounds(15, 310, 125, 35);
 
 };
 

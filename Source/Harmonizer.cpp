@@ -814,6 +814,9 @@ void Harmonizer::setADSRonOff(const bool shouldBeOn)
 void Harmonizer::updateQuickReleaseMs(const int newMs)
 {
 	jassert(newMs > 0);
+	
+	const ScopedLock sl (lock);
+	
 	for(auto* voice : voices)
 		voice->setQuickReleaseMs(newMs);
 }

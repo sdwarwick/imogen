@@ -67,25 +67,18 @@ public:
 	Label pitchbendDownLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendDownLink;
 	
-	// MIDI PEDAL PITCH: doubles the lowest played pitch an octave lower, if lowest active pitch is below a certain threshold
-	// toggle on/off
-	ToggleButton pedalPitch;
-	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> pedalPitchLink;
-	// set the highest pitch that will be doubled @ 8vb
-	Slider pedalPitchThresh;
-	Label pedalpitchThreshLabel;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> pedalPitchThreshLink;
-	
-	// midi latch on/off toggle
-	ToggleButton midiLatch;
-	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> midiLatchLink;
-	
 	// voice stealing on/off toggle
 	ToggleButton voiceStealing;
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> voiceStealingLink;
 	
 	// kill all MIDI button
 	TextButton midiKill;
+	
+	// set quick kill ms - amount of time it takes for voices to ramp to 0 if "kill all" button is pressed
+	Slider quickKillMs;
+	Label quickKillmsLabel;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> quickKillMsLink;
+	
 
 private:
 	

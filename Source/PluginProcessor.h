@@ -69,17 +69,13 @@ private:
 	
 	double lastSampleRate;
 	int lastBlockSize;
-	
-	bool frameIsPitched;
-	
-	// variables for tracking GUI-changeable parameters
 
 	bool adsrIsOn;
 	float previousStereoWidth;
-	bool pedalPitchToggle;
-	int pedalPitchThresh;
 	float inputGainMultiplier;
 	float outputGainMultiplier;
+	
+	int prevQuickKillMs;
 
 	int previousmidipan;
 	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.
@@ -88,7 +84,7 @@ private:
 	float prevodeb;
 	
 	dsp::ProcessSpec dspSpec;
-	
+
 	dsp::Limiter<float> limiter;
 	bool limiterIsOn;
 	
@@ -108,11 +104,8 @@ private:
 		const std::atomic<float>& midiVelocitySensListener;
 		const std::atomic<float>& pitchBendUpListener;
 		const std::atomic<float>& pitchBendDownListener;
-		const std::atomic<float>& pedalPitchToggleListener;
-		const std::atomic<float>& pedalPitchThreshListener;
 		const std::atomic<float>& inputGainListener;
 		const std::atomic<float>& outputGainListener;
-		const std::atomic<float>& midiLatchListener;
 		const std::atomic<float>& voiceStealingListener;
 		const std::atomic<float>& inputChannelListener;
 		const std::atomic<float>& dryVoxPanListener;
@@ -120,11 +113,14 @@ private:
 		const std::atomic<float>& limiterThreshListener;
 		const std::atomic<float>& limiterReleaseListener;
 		const std::atomic<float>& limiterToggleListener;
+		const std::atomic<float>& quickKillMsListener;
 	
 	void updateAdsr();
 	void updateIOgains();
 	void updateLimiter();
 	void updateStereoWidth();
+	void updateQuickKillMs();
+	void updateDryVoxPan();
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
