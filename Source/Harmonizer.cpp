@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), converter(440), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -52,6 +52,17 @@ void HarmonizerVoice::setCurrentPlaybackSamplerate(const double newRate)
 };
 
 
+void HarmonizerVoice::setConcertPitch(const int newConcertPitch)
+{
+	if(converter.getCurrentConcertPitchHz() != newConcertPitch)
+	{
+		converter.setConcertPitchHz(newConcertPitch);
+		if(currentlyPlayingNote >= 0)
+			currentOutputFreq = getOutputFreqFromMidinoteAndPitchbend(currentlyPlayingNote, lastRecievedPitchbend);
+	}
+}
+
+
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
 
@@ -65,16 +76,17 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	{
 		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), 2, startSample, numSamples);
 	
+		// puts shifted samples into the tempBuffer
 		esola(inputAudio, inputChan, startSample, numSamples, tempBuffer, epochIndices,
 			  	1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) ); // shifting ratio
 		
 		subBuffer.addFrom(1, startSample, tempBuffer, 1, startSample, numSamples, panningMults[0]);
 		subBuffer.addFrom(2, startSample, tempBuffer, 2, startSample, numSamples, panningMults[1]);
+		
+		subBuffer.applyGain(startSample, numSamples, currentVelocityMultiplier);
 	
 		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
-		
-		// don't forget to apply currentVelocityMultiplier !
 		
 		// quick fade out for stopNote() w/ allowTailOff = false:
 		if(isFading)
@@ -108,15 +120,15 @@ float HarmonizerVoice::getOutputFreqFromMidinoteAndPitchbend(const int lastRecie
 	
 	if(pitchBend == 64)
 	{
-		return benutils::mtof(lastRecievedNote);
+		return converter.mtof(lastRecievedNote);
 	}
 	else if(pitchBend > 64)
 	{
-		return benutils::mtof(((pitchbendRangeUp * (pitchBend - 65)) / 62) + lastRecievedNote);
+		return converter.mtof( ((pitchbendRangeUp * (pitchBend - 65)) / 62) + lastRecievedNote );
 	}
 	else
 	{
-		return benutils::mtof((((1 - pitchbendRangeDown) * pitchBend) / 63) + lastRecievedNote - pitchbendRangeDown);
+		return converter.mtof( (((1 - pitchbendRangeDown) * pitchBend) / 63) + lastRecievedNote - pitchbendRangeDown );
 	}
 	
 };
@@ -449,6 +461,17 @@ void Harmonizer::setMinimumRenderingSubdivisionSize (const int numSamples, const
 };
 
 
+void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
+{
+	jassert(newConcertPitchhz > 0);
+	
+	const ScopedLock sl (lock);
+	
+	for(auto* voice : voices)
+		voice->setConcertPitch(newConcertPitchhz);
+}
+
+
 // MIDI events---------------------------------------------------------------------------------------------------------------------------------------
 
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
@@ -549,7 +572,7 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
 				panner.panValTurnedOff(voice->getPan());
 				voice->setPan(64);
 			}
-			// don't assign a new pan value here -- leave the voice in its place in the stereo field!
+			// don't assign a new pan value if midiPitch >= lowestPannedNote -- leave the voice in its place in the stereo field!
 			
 			voice->changeNote(midiPitch, velocity, lastPitchWheelValue);
 		}

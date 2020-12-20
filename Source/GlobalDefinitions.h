@@ -30,20 +30,3 @@
 
 #define NUMBER_OF_CHANNELS 2
 // as of now, Imogen is set up to output a stereo signal to channels 0 and 1.
-
-
-#define CONCERT_PITCH_HZ 440.0f
-// the pitch, in Hz, that Midi note 69 (the A above middle C) will be tuned to. Change this to essentially detune the entire Harmonizer.
-
-
-
-class benutils
-{
-public:
-	
-	static float mtof(const float midiNote) // converts midiPitch to frequency in Hz
-	{
-		return CONCERT_PITCH_HZ * std::pow(2.0f, ((midiNote - 69.0f) / 12.0f));
-	};
-	
-};

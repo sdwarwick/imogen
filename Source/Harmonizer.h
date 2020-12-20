@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
+#include "DspUtils.h"
 #include "PanningManager.h"
 #include "InputAnalysis.h"
 
@@ -49,6 +50,8 @@ public:
 	
 	void setCurrentPlaybackSamplerate(const double newRate);
 	double getSamplerate() const noexcept { return currentSampleRate; }
+	
+	void setConcertPitch(const int newConcertPitch);
 	
 	bool isSustainPedalDown() const noexcept { return sustainPedalDown; }
 	void setSustainPedalDown(bool isNowDown) noexcept { sustainPedalDown = isNowDown; }
@@ -98,6 +101,8 @@ private:
 	int quickReleaseMs;
 	bool isFading;
 	
+	MidiConverter converter;
+	
 	int currentlyPlayingNote;
 	float currentOutputFreq;
 	float currentVelocityMultiplier;
@@ -146,6 +151,8 @@ public:
 	
 	void setCurrentPlaybackSampleRate(const double newRate);
 	double getSamplerate() const noexcept { return sampleRate; }
+	
+	void setConcertPitchHz(const int newConcertPitchhz);
 	
 	void updateStereoWidth(const int newWidth);
 	void updateLowestPannedNote(const int newPitchThresh) noexcept { lowestPannedNote = newPitchThresh; }
@@ -234,5 +241,6 @@ private:
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
+
 
 

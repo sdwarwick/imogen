@@ -37,6 +37,7 @@
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
         <FILE id="yiULVe" name="GlobalDefinitions.h" compile="0" resource="0"
               file="Source/GlobalDefinitions.h"/>
+        <FILE id="oNyqZ2" name="DspUtils.h" compile="0" resource="0" file="Source/DspUtils.h"/>
       </GROUP>
     </GROUP>
     <GROUP id="{27897AB0-D6F3-54AD-89AC-1DAFE19D8DDF}" name="Graphics">
