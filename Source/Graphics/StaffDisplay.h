@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
+#include "DspUtils.h"
 #include "PluginProcessor.h"
 #include "LookAndFeel.h"
 
@@ -40,7 +41,7 @@ private:
 	
 	Array<int> yCoordsOfActiveNotes;
 	Array<int> prevActivePitches;
-	int yCoordLookupTable[128];
+	int yCoordLookupTable[127];
 	bool useFlats;
 	
 	void drawPitches(Array<int> activePitches, Graphics& g);
@@ -48,7 +49,6 @@ private:
 	void drawAccidental(const int x, const int y, Graphics& g);
 	
 	const float halfTheStafflineHeight;
-	const int accidentalXoffset;
 	
 	String noteheadSvg;
 	Path noteheadPath;

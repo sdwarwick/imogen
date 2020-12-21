@@ -364,7 +364,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 	
 	if (xmlState.get() != nullptr)
 		if (xmlState->hasTagName (tree.state.getType()))
-			tree.replaceState (juce::ValueTree::fromXml (*xmlState));
+			tree.replaceState(juce::ValueTree::fromXml (*xmlState));
 };
 
 

@@ -13,6 +13,22 @@
 #include "GlobalDefinitions.h"
 
 
+class BenUtils
+{
+public:
+	
+	static bool isMidiNoteBlackKey(const int midipitch)
+	{
+		if(const int modulo = midipitch % 12; modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
+			return true;
+		else
+			return false;
+	};
+	
+};
+
+
+
 class MidiConverter
 {
 public:

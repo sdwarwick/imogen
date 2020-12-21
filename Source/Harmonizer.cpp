@@ -80,19 +80,19 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		esola(inputAudio, inputChan, startSample, numSamples, tempBuffer, epochIndices,
 			  	1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) ); // shifting ratio
 		
-		subBuffer.addFrom(1, startSample, tempBuffer, 1, startSample, numSamples, panningMults[0]);
-		subBuffer.addFrom(2, startSample, tempBuffer, 2, startSample, numSamples, panningMults[1]);
+		subBuffer.addFrom(0, 0, tempBuffer, 0, 0, numSamples, panningMults[0]);
+		subBuffer.addFrom(1, 0, tempBuffer, 0, 0, numSamples, panningMults[1]);
 		
-		subBuffer.applyGain(startSample, numSamples, currentVelocityMultiplier);
+		subBuffer.applyGain(0, numSamples, currentVelocityMultiplier);
 	
 		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
-			adsr.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
+			adsr.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
 		
 		// quick fade out for stopNote() w/ allowTailOff = false:
 		if(isFading)
 		{
 			if(! quickRelease.isActive()) { quickRelease.noteOn(); quickRelease.noteOff(); }  // ??
-			quickRelease.applyEnvelopeToBuffer(subBuffer, startSample, numSamples);
+			quickRelease.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
 			adsr.reset();
 			isFading = false;
 			clearCurrentNote();
@@ -520,7 +520,7 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 
 Array<int> Harmonizer::reportActiveNotes() const
 {
-	const ScopedLock sl (lock);
+	//const ScopedLock sl (lock);
 	
 	currentlyActiveNotes.clearQuick();
 	

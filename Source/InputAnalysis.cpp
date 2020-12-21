@@ -268,7 +268,7 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	 @see : example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
 	 */
 	
-	const ScopedLock sl (lock);
+	
 	
 	const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
 	
