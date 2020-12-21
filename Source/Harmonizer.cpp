@@ -244,7 +244,7 @@ void HarmonizerVoice::setPan(const int newPan)
 		panningMults[1] = 0.5f;
 		currentMidipan = 64;
 	}
-	else
+	else if(currentMidipan != newPan)
 	{
 		currentMidipan = newPan;
 		const float Rpan = newPan / 127.0f;

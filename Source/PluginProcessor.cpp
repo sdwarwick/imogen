@@ -277,9 +277,11 @@ void ImogenAudioProcessor::updateQuickKillMs()
 
 void ImogenAudioProcessor::updateDryVoxPan()
 {
-	if(int(dryVoxPanListener) != previousmidipan) {
-		dryvoxpanningmults[1] = dryVoxPanListener / 127.0f;
-		dryvoxpanningmults[0] = 1.0f - dryvoxpanningmults[1];
+	if(int(dryVoxPanListener) != previousmidipan)
+	{
+		const float Rpan = dryVoxPanListener / 127.0f;
+		dryvoxpanningmults[1] = Rpan;
+		dryvoxpanningmults[0] = 1.0f - Rpan;
 		previousmidipan = dryVoxPanListener;
 	}
 };
