@@ -27,7 +27,7 @@ PitchTracker::PitchTracker(): yinBufferSize(round(MAX_BUFFERSIZE/2))
 PitchTracker::~PitchTracker()
 { };
 
-float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate)
+float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
 {
 /*	Implements the YIN pitch tracking algorithm, as described in "http://recherche.ircam.fr/equipes/pcm/cheveign/ps/2002_JASA_YIN_proof.pdf". This implementation uses an FFT to calculate the difference function in step 2 to increase performance and computational speed.
 
@@ -40,6 +40,9 @@ float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputCha
 	@see
 	: YIN implementation in Python by Patrice Guyot : http://www.github.com/patriceguyot/Yin/blob/master/yin.py
  */
+	
+	const int numSamples = inputAudio.getNumSamples();
+	
 	if(yinBufferSize != numSamples)
 	{
 		yinBufferSize = round(numSamples/2);
@@ -49,7 +52,7 @@ float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputCha
 	int tauEstimate;
 	float pitchInHz;
 	
-	difference(inputAudio, inputChan, numSamples, startSample);
+	difference(inputAudio, inputChan, numSamples);
 	
 	cumulativeMeanNormalizedDifference();
 	
@@ -69,7 +72,7 @@ float PitchTracker::findPitch(AudioBuffer<float>& inputAudio, const int inputCha
 	
 };
 
-void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples, const int startSample) {
+void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int numSamples) {
 	/*
 	 THE DIFFERENCE FUNCTION
 	 @brief implements the difference function described in step 2 of the YIN paper, using an FFT to increase computational efficiency
@@ -95,11 +98,11 @@ void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputCh
 	{
 		powerTerms.clearQuick();
 		for(int j = 0; j < yinBufferSize; ++j) { // first, calculate the first power term value...
-			powerTerms.add(reading[startSample + j] * reading[startSample + j]);
+			powerTerms.add(reading[j] * reading[j]);
 		}
 		// ... then iteratively calculate all others
 		for(int i = 1; i < yinBufferSize; ++i) {
-			powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[startSample + i - 1] * reading[startSample + i - 1] + reading[startSample + i + yinBufferSize] * reading[startSample + i + yinBufferSize]);
+			powerTerms.add(powerTerms.getUnchecked(i - 1) - reading[i - 1] * reading[i - 1] + reading[i + yinBufferSize] * reading[i + yinBufferSize]);
 		}
 	}
 	
@@ -107,13 +110,13 @@ void PitchTracker::difference(AudioBuffer<float>& inputBuffer, const int inputCh
 	{
 		// 1. data
 		for(int j = 0; j < numSamples; ++j) {
-			fftBufferIn[j] = { reading[startSample + j], 0 };
+			fftBufferIn[j] = { reading[j], 0 };
 		}
 		fft.perform(fftBufferIn, fftBufferOut, false);
 		
 		// 2. half of the data, disguised as a convolution kernel
 		for(int j = 0; j < yinBufferSize; ++j) {
-			kernelIn[j] = { reading[startSample + yinBufferSize - j], 0 };
+			kernelIn[j] = { reading[yinBufferSize - j], 0 };
 		}
 		fft.perform(kernelIn, kernelOut, false);
 		

@@ -285,7 +285,7 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	dsp::AudioBlock<float> dwinblock(dryBuffer);
 	dryWet.pushDrySamples(dwinblock);
 	
-	harmonizer.setCurrentInputFreq(pitch.findPitch(buffer, inputChannel, 0, numSamples, lastSampleRate));
+	harmonizer.setCurrentInputFreq(pitch.findPitch(buffer, inputChannel, lastSampleRate)); // do this here if possible? input pitch should be calculated/updated as frequently as possible
 	
 	harmonizer.renderVoices(buffer, inputChannel, 0, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output samples into "buffer"
 	
