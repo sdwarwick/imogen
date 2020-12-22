@@ -256,7 +256,7 @@ EpochFinder::EpochFinder()
 EpochFinder::~EpochFinder()
 { };
 
-Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate)
+Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
 {
 	/*
 	 EXTRACT EPOCH INDICES
@@ -268,6 +268,7 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	 @see : example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
 	 */
 	
+	const int numSamples = inputAudio.getNumSamples();
 	
 	
 	const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
@@ -282,16 +283,16 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
 	
 	const float* data = inputAudio.getReadPointer(inputChan);
 	
-	const float x0 = data[startSample];
+	const float x0 = data[0];
 	float y1_0 = x0;
-	float y1_1 = data[startSample + 1] - x0 + (2.0f * y1_0);
+	float y1_1 = data[1] - x0 + (2.0f * y1_0);
 	float x_i;
 	float y1_i;
 	y2.add(y1_0);
 	y2.add(y1_1 + (2.0f * y1_0));
 	for(int i = 2; i < numSamples; ++i)
 	{
-		x_i = data[startSample + i] - data[startSample + i - 1];
+		x_i = data[i] - data[i - 1];
 		y1_i = x_i + (2.0f * y1_1) - y1_0;
 		const float y2b1 = y2.getUnchecked(i - 1);
 		const float y2b2 = y2.getUnchecked(i - 2);

@@ -8,7 +8,7 @@
               pluginVST3Category="Fx,Pitch Shift" pluginRTASCategory="4,64"
               pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
               pluginFormats="buildAU,buildVST3" pluginManufacturerCode="BenV"
-              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Midi/"
+              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Midi/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/"
               displaySplashScreen="1" cppLanguageStandard="17">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
@@ -20,18 +20,18 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
       <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
-        <FILE id="CjHGCm" name="Harmonizer.cpp" compile="1" resource="0" file="Source/Harmonizer.cpp"/>
-        <FILE id="eH1KXL" name="Harmonizer.h" compile="0" resource="0" file="Source/Harmonizer.h"/>
+        <FILE id="aUPC7B" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
+        <FILE id="xCpozC" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
         <GROUP id="{BBDCBAF8-D2B1-B319-ED70-E66CCD4EA18F}" name="InputAnalysis">
-          <FILE id="opGWYH" name="InputAnalysis.cpp" compile="1" resource="0"
-                file="Source/InputAnalysis.cpp"/>
-          <FILE id="ymToqP" name="InputAnalysis.h" compile="0" resource="0" file="Source/InputAnalysis.h"/>
+          <FILE id="TJGYOz" name="InputAnalysis.cpp" compile="1" resource="0"
+                file="Source/HarmonizerDSP/InputAnalysis.cpp"/>
+          <FILE id="uXRjy7" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
         </GROUP>
         <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
-          <FILE id="L1ajHI" name="PanningManager.cpp" compile="1" resource="0"
-                file="Source/PanningManager.cpp"/>
-          <FILE id="tVA93g" name="PanningManager.h" compile="0" resource="0"
-                file="Source/PanningManager.h"/>
+          <FILE id="wxVlaC" name="PanningManager.cpp" compile="1" resource="0"
+                file="Source/HarmonizerDSP/PanningManager.cpp"/>
+          <FILE id="AMjikC" name="PanningManager.h" compile="0" resource="0"
+                file="Source/HarmonizerDSP/PanningManager.h"/>
         </GROUP>
       </GROUP>
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">

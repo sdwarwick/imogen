@@ -26,7 +26,3 @@
 
 #define FRAMERATE 60
 // the framerate, in ms, of the graphics processing
-
-
-#define NUMBER_OF_CHANNELS 2
-// as of now, Imogen is set up to output a stereo signal to channels 0 and 1.

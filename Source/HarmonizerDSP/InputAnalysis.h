@@ -47,7 +47,7 @@ public:
 	EpochFinder();
 	~EpochFinder();
 	
-	Array<int> extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, const double samplerate);
+	Array<int> extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
 	
 private:
 	CriticalSection lock;

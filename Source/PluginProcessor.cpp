@@ -16,7 +16,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		previousmidipan(64),
 		prevideb(0.0f), prevodeb(0.0f),
 		limiterIsOn(true),
-		wetBuffer(NUMBER_OF_CHANNELS, MAX_BUFFERSIZE),
+		wetBuffer(2, MAX_BUFFERSIZE),
+		dryBuffer(2, MAX_BUFFERSIZE),
 		adsrAttackListener(*tree.getRawParameterValue("adsrAttack")),
 		adsrDecayListener(*tree.getRawParameterValue("adsrDecay")),
 		adsrSustainListener(*tree.getRawParameterValue("adsrSustain")),
@@ -45,9 +46,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
-	
-	dryBuffer.setSize(2, MAX_BUFFERSIZE);
-	wetBuffer.setSize(2, MAX_BUFFERSIZE);
 	
 	epochIndices.ensureStorageAllocated(MAX_BUFFERSIZE);
 	epochIndices.clearQuick();
@@ -148,6 +146,8 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 	}
 	
 	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
+	
+	epochIndices = epochs.extractEpochSampleIndices(buffer, inputChannel, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
 	
 	auto midiIterator = midiMessages.findNextSamplePosition(0);
 	
@@ -284,8 +284,6 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	
 	dsp::AudioBlock<float> dwinblock(dryBuffer);
 	dryWet.pushDrySamples(dwinblock);
-	
-	epochIndices = epochs.extractEpochSampleIndices(buffer, inputChannel, 0, numSamples, lastSampleRate);
 	
 	harmonizer.setCurrentInputFreq(pitch.findPitch(buffer, inputChannel, 0, numSamples, lastSampleRate));
 	
