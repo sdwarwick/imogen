@@ -45,6 +45,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
+	
+	dryBuffer.setSize(2, MAX_BUFFERSIZE);
+	wetBuffer.setSize(2, MAX_BUFFERSIZE);
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -70,7 +73,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		if(lastBlockSize != newblocksize)
 		{
 			lastBlockSize = newblocksize;
-			if(wetBuffer.getNumSamples() != newblocksize) { wetBuffer.setSize(NUMBER_OF_CHANNELS, newblocksize, true, true, true); }
+			if(wetBuffer.getNumSamples() != newblocksize) { wetBuffer.setSize(2, newblocksize, true, true, true); }
+			if(dryBuffer.getNumSamples() != newblocksize) { dryBuffer.setSize(2, newblocksize, true, true, true); }
 		}
 	}
 	
@@ -88,11 +92,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
 	harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
 	harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
-	
-	// master dry/wet
-	{
-		//masterDryWetListener
-	}
 	
 	dspSpec.sampleRate = sampleRate;
 	dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
@@ -114,7 +113,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 void ImogenAudioProcessor::releaseResources() {
 	
 	wetBuffer.clear();
-	
+	dryBuffer.clear();
 	harmonizer.resetNoteOnCounter();
 };
 
@@ -160,7 +159,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 {
 	// update settings & parameters
 	{
-		if(wetBuffer.getNumSamples() != numSamples) { wetBuffer.setSize(NUMBER_OF_CHANNELS, numSamples, true, true, true); }
+		if(wetBuffer.getNumSamples() != numSamples) { wetBuffer.setSize(2, numSamples, true, true, true); }
+		if(dryBuffer.getNumSamples() != numSamples) { dryBuffer.setSize(2, numSamples, true, true, true); }
 		
 		wetBuffer.clear();
 		
@@ -174,10 +174,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
 		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 		
-		// master dry/wet
-		{
-			dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
-		}
+		dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
 		
 		// concert pitch
 		if(int(concertPitchListener) != prevConcertPitch)
@@ -191,15 +188,21 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
-	dsp::AudioBlock<float> dwinblock (buffer);
-	dryWet.pushDrySamples(dwinblock); // first, pan the dry signal!
+	// copy input signal to dryBuffer & apply panning
+	dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
+	dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
+	dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
+	dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
 	
-	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer, inputMidi);
+	dsp::AudioBlock<float> dwinblock(dryBuffer);
+	dryWet.pushDrySamples(dwinblock);
+	
+	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer, inputMidi); // puts the harmonizer's rendered stereo output samples into "buffer"
 	
 	// clear any extra channels present in I/O buffer
 	{
-		if (buffer.getNumChannels() > NUMBER_OF_CHANNELS)
-			for (int i = NUMBER_OF_CHANNELS + 1; i <= buffer.getNumChannels(); ++i)
+		if (buffer.getNumChannels() > 2)
+			for (int i = 3; i <= buffer.getNumChannels(); ++i)
 				buffer.clear(i - 1, 0, numSamples);
 	}
 

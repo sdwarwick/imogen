@@ -92,6 +92,7 @@ private:
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 	
 	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+	AudioBuffer<float> dryBuffer; // this buffer is used for panning the dry signal
 	
 		const std::atomic<float>& adsrAttackListener;
 		const std::atomic<float>& adsrDecayListener;
