@@ -14,7 +14,7 @@
 #include "GlobalDefinitions.h"
 #include "DspUtils.h"
 #include "PanningManager.h"
-#include "InputAnalysis.h"
+
 
 
 /*
@@ -139,10 +139,13 @@ public:
 	
 	~Harmonizer();
 	
-	// Creates the next block of audio output.
-	// This will process the next numSamples of data from all the voices, and add that output to the audio block supplied, starting from the offset specified. Note that the data will be added to the current contents of the buffer, so you should clear it before calling this method if necessary.
-	// The midi events in the inputMidi buffer are parsed for note and controller events, and these are used to trigger the voices. Note that the startSample offset applies both to the audio output buffer and the midi input buffer, so any midi events with timestamps outside the specified region will be ignored.
-	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, const MidiBuffer& inputMidi);
+	// renders the voices for the given range
+	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+	
+	void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; }
+	
+	void handleMidiEvent(const MidiMessage& m);
+	
 	
 	void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
 	
@@ -156,8 +159,6 @@ public:
 	
 	void updateStereoWidth(const int newWidth);
 	void updateLowestPannedNote(const int newPitchThresh) noexcept { lowestPannedNote = newPitchThresh; }
-	
-	void setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict = false) noexcept;
 	
 	void setNoteStealingEnabled (bool shouldSteal) { shouldStealNotes = shouldSteal; }
 	bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
@@ -200,11 +201,7 @@ protected:
 	
 	PanningManager panner;
 	
-	// renders the voices for the given range
-	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer);
-	
 	// MIDI
-	void handleMidiEvent(const MidiMessage& m);
 	void noteOn(const int midiPitch, const float velocity);
 	void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff);
 	void handlePitchWheel(const int wheelValue);
@@ -222,16 +219,12 @@ protected:
 	
 	
 private:
-	EpochFinder epochs;
-	PitchTracker pitch;
-	Array<int> epochIndices;
+	
 	float currentInputFreq;
 	
 	double sampleRate;
 	bool shouldStealNotes;
 	uint32 lastNoteOnCounter;
-	int minimumSubBlockSize;
-	bool subBlockSubdivisionIsStrict;
 	int lowestPannedNote;
 	
 	mutable Array<int> currentlyActiveNotes;

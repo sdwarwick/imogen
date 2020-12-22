@@ -56,14 +56,24 @@ public:
 	AudioProcessorValueTreeState tree;
 	
 	void updateNumVoices(const int newNumVoices);
+	void setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict = false) noexcept;
 	
 //==============================================================================
 	
 private:
 	
-	void processBlockPrivate(AudioBuffer<float>&, const int numSamples, const int inputChannel, MidiBuffer& inputMidi);
+	void processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples);
+	
+	void renderChunk(AudioBuffer<float>& buffer, const int inputChannel);
+	
+	int minimumSubBlockSize;
+	bool subBlockSubdivisionIsStrict;
 	
 	Harmonizer harmonizer;
+	
+	EpochFinder epochs;
+	PitchTracker pitch;
+	Array<int> epochIndices;
 	
 	double lastSampleRate;
 	int lastBlockSize;
@@ -122,6 +132,8 @@ private:
 	void updateStereoWidth();
 	void updateQuickKillMs();
 	void updateDryVoxPan();
+	
+	void savePrevParamValues();
 	
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)

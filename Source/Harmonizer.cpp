@@ -336,13 +336,11 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(0), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), minimumSubBlockSize(32), subBlockSubdivisionIsStrict(false), lowestPannedNote(0)
+Harmonizer::Harmonizer(): lastPitchWheelValue(0), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0)
 {
 	currentlyActiveNotes.ensureStorageAllocated(NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
 	currentlyActiveNotes.add(-1);
-	epochIndices.ensureStorageAllocated(NUMBER_OF_VOICES);
-	epochIndices.clearQuick();
 };
 
 
@@ -376,60 +374,8 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
-void Harmonizer::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, int startSample, int numSamples, AudioBuffer<float>& outputBuffer, const MidiBuffer& inputMidi)
+void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
-	jassert (sampleRate > 0);
-	
-	auto midiIterator = inputMidi.findNextSamplePosition(startSample);
-	
-	bool firstEvent = true;
-	
-	const ScopedLock sl (lock);
-	
-	for (; numSamples > 0; ++midiIterator)
-	{
-		if (midiIterator == inputMidi.cend())
-		{
-			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer);
-			return;
-		}
-		
-		const auto metadata = *midiIterator;
-		const int samplesToNextMidiMessage = metadata.samplePosition - startSample;
-		
-		if (samplesToNextMidiMessage >= numSamples)
-		{
-			renderVoices(inputAudio, inputChan, startSample, numSamples, outputBuffer);
-			handleMidiEvent(metadata.getMessage());
-			break;
-		}
-		
-		if (samplesToNextMidiMessage < ((firstEvent && ! subBlockSubdivisionIsStrict) ? 1 : minimumSubBlockSize))
-		{
-			handleMidiEvent(metadata.getMessage());
-			continue;
-		}
-		
-		firstEvent = false;
-		
-		renderVoices(inputAudio, inputChan, startSample, samplesToNextMidiMessage, outputBuffer);
-		
-		handleMidiEvent(metadata.getMessage());
-		startSample += samplesToNextMidiMessage;
-		numSamples  -= samplesToNextMidiMessage;
-	}
-	
-	std::for_each (midiIterator,
-				   inputMidi.cend(),
-				   [&] (const MidiMessageMetadata& meta) { handleMidiEvent (meta.getMessage()); });
-	
-};
-
-void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer)
-{
-	epochIndices = epochs.extractEpochSampleIndices(inputAudio, inputChan, startSample, numSamples, sampleRate);
-	currentInputFreq = pitch.findPitch(inputAudio, inputChan, startSample, numSamples, sampleRate);
-	
 	for (auto* voice : voices)
 	{
 		voice->updateInputFreq(currentInputFreq);
@@ -451,15 +397,6 @@ void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
 			voice->setCurrentPlaybackSamplerate (newRate);
 	}
 };
-
-void Harmonizer::setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict) noexcept
-{
-	// Sets a minimum limit on the size to which audio sub-blocks will be divided when rendering. When rendering, the audio blocks that are passed into renderNextBlock() will be split up into smaller blocks that lie between all the incoming midi messages, and it is these smaller sub-blocks that are rendered with multiple calls to renderVoices(). Obviously in a pathological case where there are midi messages on every sample, then renderVoices() could be called once per sample and lead to poor performance, so this setting allows you to set a lower limit on the block size. The default setting is 32, which means that midi messages are accurate to about < 1ms accuracy, which is probably fine for most purposes, but you may want to increase or decrease this value for your synth. If shouldBeStrict is true, the audio sub-blocks will strictly never be smaller than numSamples. If shouldBeStrict is false (default), the first audio sub-block in the buffer is allowed to be smaller, to make sure that the first MIDI event in a buffer will always be sample-accurate (this can sometimes help to avoid quantisation or phasing issues).
-	jassert (numSamples > 0); // it wouldn't make much sense for this to be less than 1
-	minimumSubBlockSize = numSamples;
-	subBlockSubdivisionIsStrict = shouldBeStrict;
-};
-
 
 void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 {

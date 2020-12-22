@@ -6,6 +6,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor(makeBusProperties()),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
+		minimumSubBlockSize(16),
+		subBlockSubdivisionIsStrict(false),
 		lastSampleRate(44100), lastBlockSize(512),
 		adsrIsOn(true),
 		previousStereoWidth(100.0f),
@@ -41,13 +43,14 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 {
 	for (int i = 0; i < 13; ++i) { harmonizer.addVoice(new HarmonizerVoice); }
 	
-	harmonizer.setMinimumRenderingSubdivisionSize(64);
-	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
 	
 	dryBuffer.setSize(2, MAX_BUFFERSIZE);
 	wetBuffer.setSize(2, MAX_BUFFERSIZE);
+	
+	epochIndices.ensureStorageAllocated(MAX_BUFFERSIZE);
+	epochIndices.clearQuick();
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -66,15 +69,17 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		// update latency for dry/wet mixer !
 	}
 	
-	// block size
+	 // block size
 	{
-		const int newblocksize = samplesPerBlock >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
-		
+		const int newblocksize = samplesPerBlock > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
+
 		if(lastBlockSize != newblocksize)
 		{
 			lastBlockSize = newblocksize;
-			if(wetBuffer.getNumSamples() != newblocksize) { wetBuffer.setSize(2, newblocksize, true, true, true); }
-			if(dryBuffer.getNumSamples() != newblocksize) { dryBuffer.setSize(2, newblocksize, true, true, true); }
+			if(wetBuffer.getNumSamples() != newblocksize)
+				wetBuffer.setSize(2, newblocksize, true, true, true);
+			if(dryBuffer.getNumSamples() != newblocksize)
+				dryBuffer.setSize(2, newblocksize, true, true, true);
 		}
 	}
 	
@@ -94,7 +99,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 	
 	dspSpec.sampleRate = sampleRate;
-	dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
+	dspSpec.maximumBlockSize = MAX_BUFFERSIZE * 2;
 	dspSpec.numChannels = 2;
 	
 	// limiter
@@ -106,6 +111,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	dryWet.setMixingRule(dsp::DryWetMixingRule::linear);
 	dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
 	dryWet.setWetLatency(2); // latency in samples of the ESOLA algorithm
+	
+	savePrevParamValues();
 };
 
 
@@ -119,51 +126,10 @@ void ImogenAudioProcessor::releaseResources() {
 
 
 
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
-{
-	
-	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
-	
-	int samplesLeft = buffer.getNumSamples();
-	int startSample = 0;
-	
-	while (samplesLeft > 0)
-	{
-		const int numSamples = samplesLeft >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
-		
-		AudioBuffer<float> proxy (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), startSample, numSamples);
-		
-		processBlockPrivate(proxy, numSamples, inputChannel, midiMessages);
-		
-		// update midi buffer timestamps:
-		// for all midiMessages from startSample to the end of the midiBuffer, subtract startSample from their timestamps
-		{
-			auto midiIterator = midiMessages.findNextSamplePosition(startSample);
-			
-			std::for_each (midiIterator,
-						   midiMessages.cend(),
-						   [&] (const MidiMessageMetadata& meta)
-						   {
-							   MidiMessage current = meta.getMessage();
-							   current.setTimeStamp(current.getTimeStamp() - startSample);
-						   });
-		}
-		
-		samplesLeft -= numSamples;
-		startSample += numSamples;
-	}
-};
-
-
-void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int numSamples, const int inputChannel, MidiBuffer& inputMidi)
+void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
 	// update settings & parameters
 	{
-		if(wetBuffer.getNumSamples() != numSamples) { wetBuffer.setSize(2, numSamples, true, true, true); }
-		if(dryBuffer.getNumSamples() != numSamples) { dryBuffer.setSize(2, numSamples, true, true, true); }
-		
-		wetBuffer.clear();
-		
 		updateIOgains();
 		updateLimiter();
 		updateAdsr();
@@ -179,12 +145,134 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		// concert pitch
 		if(int(concertPitchListener) != prevConcertPitch)
 			harmonizer.setConcertPitchHz(concertPitchListener);
+	}
+	
+	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
+	
+	auto midiIterator = midiMessages.findNextSamplePosition(0);
+	
+	int numSamples = buffer.getNumSamples();
+	int startSample = 0;
+	bool firstEvent = true;
+	
+	for (; numSamples > 0; ++midiIterator)
+	{
+		if (midiIterator == midiMessages.cend())
+		{
+			processBlockPrivate(buffer, inputChannel, startSample, numSamples);
+			return;
+		}
+		
+		const auto metadata = *midiIterator;
+		const int samplesToNextMidiMessage = metadata.samplePosition - startSample;
+		
+		if (samplesToNextMidiMessage >= numSamples)
+		{
+			processBlockPrivate(buffer, inputChannel, startSample, numSamples);
+			harmonizer.handleMidiEvent(metadata.getMessage());
+			break;
+		}
+		
+		if (samplesToNextMidiMessage < ((firstEvent && ! subBlockSubdivisionIsStrict) ? 1 : minimumSubBlockSize))
+		{
+			harmonizer.handleMidiEvent(metadata.getMessage());
+			continue;
+		}
+		
+		firstEvent = false;
+	
+		processBlockPrivate(buffer, inputChannel, startSample, samplesToNextMidiMessage);
+		
+		harmonizer.handleMidiEvent(metadata.getMessage());
+		startSample += samplesToNextMidiMessage;
+		numSamples  -= samplesToNextMidiMessage;
+	}
+	
+	std::for_each (midiIterator,
+				   midiMessages.cend(),
+				   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); });
+	
+	savePrevParamValues();
+};
+
+
+
+
+void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples)
+{
+	// update settings & parameters
+	{
+		updateIOgains();
+		updateLimiter();
+		updateAdsr();
+		updateStereoWidth();
+		updateDryVoxPan();
+		updateQuickKillMs();
+		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
+		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
+		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
+		
+		dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
+		
+		// concert pitch
+		if(int(concertPitchListener) != prevConcertPitch)
+			harmonizer.setConcertPitchHz(concertPitchListener);
+	}
+	
+	int samplesLeft = numSamples;
+	int chunkStartSample = startSample;
+	
+	while(samplesLeft > 0)
+	{
+		const int chunkNumSamples = samplesLeft > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
+		
+		AudioBuffer<float> proxy(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), chunkStartSample, chunkNumSamples);
+		
+		renderChunk(proxy, inputChannel);
+		
+		samplesLeft -= chunkNumSamples;
+		chunkStartSample += chunkNumSamples;
 		
 	}
+	
+	savePrevParamValues();
+};
+
+
+
+void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inputChannel)
+{
+	// update settings & parameters
+	{
+		updateIOgains();
+		updateLimiter();
+		updateAdsr();
+		updateStereoWidth();
+		updateDryVoxPan();
+		updateQuickKillMs();
+		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
+		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
+		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
+		
+		dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
+		
+		// concert pitch
+		if(int(concertPitchListener) != prevConcertPitch)
+			harmonizer.setConcertPitchHz(concertPitchListener);
+	}
+	
+	const int numSamples = buffer.getNumSamples();
+	
+	// buffer sizes
+	if(wetBuffer.getNumSamples() != numSamples)
+		wetBuffer.setSize(2, numSamples, true, true, true);
+	if(dryBuffer.getNumSamples() != numSamples)
+		dryBuffer.setSize(2, numSamples, true, true, true);
 	
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
+	wetBuffer.clear();
 	
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
@@ -197,7 +285,11 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 	dsp::AudioBlock<float> dwinblock(dryBuffer);
 	dryWet.pushDrySamples(dwinblock);
 	
-	harmonizer.renderNextBlock(buffer, inputChannel, 0, numSamples, wetBuffer, inputMidi); // puts the harmonizer's rendered stereo output samples into "buffer"
+	epochIndices = epochs.extractEpochSampleIndices(buffer, inputChannel, 0, numSamples, lastSampleRate);
+	
+	harmonizer.setCurrentInputFreq(pitch.findPitch(buffer, inputChannel, 0, numSamples, lastSampleRate));
+	
+	harmonizer.renderVoices(buffer, inputChannel, 0, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output samples into "buffer"
 	
 	// clear any extra channels present in I/O buffer
 	{
@@ -205,21 +297,24 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 			for (int i = 3; i <= buffer.getNumChannels(); ++i)
 				buffer.clear(i - 1, 0, numSamples);
 	}
-
+	
 	dsp::AudioBlock<float> dwoutblock (buffer);
 	dryWet.mixWetSamples(dwoutblock);
 	
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
 	// output limiter
-	if(limiterIsOn) {
+	if(limiterIsOn)
+	{
 		dsp::AudioBlock<float> limiterBlock (buffer);
 		limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
 	}
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
+	savePrevParamValues();
 };
+
 
 
 /*===========================================================================================================================
@@ -263,7 +358,7 @@ void ImogenAudioProcessor::updateStereoWidth()
 	if (previousStereoWidth != int(stereoWidthListener))
 	{
 		harmonizer.updateStereoWidth(stereoWidthListener);
-		previousStereoWidth = stereoWidthListener;
+		previousStereoWidth = int(stereoWidthListener);
 	}
 };
 
@@ -273,7 +368,7 @@ void ImogenAudioProcessor::updateQuickKillMs()
 	if(prevQuickKillMs != int(quickKillMsListener))
 	{
 		harmonizer.updateQuickReleaseMs(quickKillMsListener);
-		prevQuickKillMs = quickKillMsListener;
+		prevQuickKillMs = int(quickKillMsListener);
 	}
 };
 
@@ -305,6 +400,24 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 			harmonizer.removeNumVoices(currentVoices - newNumVoices);
 		}
 	}
+};
+
+void ImogenAudioProcessor::savePrevParamValues()
+{
+	prevideb = inputGainListener;
+	prevodeb = outputGainListener;
+	previousStereoWidth = int(stereoWidthListener);
+	prevQuickKillMs = int(quickKillMsListener);
+	previousmidipan = int(dryVoxPanListener);
+};
+
+void ImogenAudioProcessor::setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict) noexcept
+{
+	// Sets a minimum limit on the size to which audio sub-blocks will be divided when rendering. When rendering, the audio blocks that are passed into processBlock() will be split up into smaller blocks that lie between all the incoming midi messages, and it is these smaller sub-blocks that are rendered with multiple calls to harmonizer.renderVoices() via processBlockPrivate(). Obviously in a pathological case where there are midi messages on every sample, then renderVoices() could be called once per sample and lead to poor performance, so this setting allows you to set a lower limit on the block size.
+	// If shouldBeStrict is true, the audio sub-blocks will strictly never be smaller than numSamples. If shouldBeStrict is false (default), the first audio sub-block in the buffer is allowed to be smaller, to make sure that the first MIDI event in a buffer will always be sample-accurate (this can sometimes help to avoid quantisation or phasing issues).
+	jassert (numSamples > 0); // it wouldn't make much sense for this to be less than 1
+	minimumSubBlockSize = numSamples;
+	subBlockSubdivisionIsStrict = shouldBeStrict;
 };
 
 
