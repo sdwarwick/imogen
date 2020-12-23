@@ -444,35 +444,60 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 
 
 
-void ImogenAudioProcessor::saveNewPreset()
+void ImogenAudioProcessor::savePreset(String presetName)
 {
+	// this function can be used both to save new preset files and to update existing ones
+	
+	File writingTo = getPresetsFolder().getChildFile(presetName);
+	
+	auto state = tree.copyState();
+	std::unique_ptr<juce::XmlElement> xml (state.createXml());
+	
+	bool existed = writingTo.existsAsFile();
+	
+	xml->writeTo(writingTo);
+	
+	if(! existed)
+		writingTo.setCreationTime(Time::getCurrentTime());
+	
+	writingTo.setLastModificationTime(Time::getCurrentTime());
 	
 };
 
 
-void ImogenAudioProcessor::updatePreset()
+void ImogenAudioProcessor::loadPreset(String presetName)
 {
+	File presetToLoad = getPresetsFolder().getChildFile(presetName);
 	
+	if(presetToLoad.existsAsFile())
+	{
+		setStateInformation(&presetToLoad, int(presetToLoad.getSize()));
+		presetToLoad.setLastAccessTime(Time::getCurrentTime());
+	}
 };
 
 
-void ImogenAudioProcessor::loadPreset()
+void ImogenAudioProcessor::deletePreset(String presetName)
 {
+	File presetToDelete = getPresetsFolder().getChildFile(presetName);
 	
+	if(presetToDelete.existsAsFile())
+		presetToDelete.moveToTrash();
 };
 
 
-
-AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
+File ImogenAudioProcessor::getPresetsFolder()
 {
-	PluginHostType host;
-	if(host.isLogic() || host.isGarageBand())
-		return BusesProperties().withInput("Input", AudioChannelSet::mono(), false)
-		.withInput("Sidechain", AudioChannelSet::mono(), true)
-		.withOutput("Output", AudioChannelSet::stereo(), true);
-	else
-		return BusesProperties().withInput("Input", AudioChannelSet::mono(), true)
-		.withOutput("Output", AudioChannelSet::stereo(), true);
+	File rootFolder = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory);
+	
+#ifdef JUCE_MAC
+	rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets");
+#endif
+	
+	rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
+	Result res = rootFolder.createDirectory(); // creates if not existing
+	
+	return rootFolder;
 };
 
 
@@ -491,6 +516,19 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 	if (xmlState.get() != nullptr)
 		if (xmlState->hasTagName (tree.state.getType()))
 			tree.replaceState(juce::ValueTree::fromXml (*xmlState));
+};
+
+
+AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
+{
+	PluginHostType host;
+	if(host.isLogic() || host.isGarageBand())
+		return BusesProperties().withInput("Input", AudioChannelSet::mono(), false)
+		.withInput("Sidechain", AudioChannelSet::mono(), true)
+		.withOutput("Output", AudioChannelSet::stereo(), true);
+	else
+		return BusesProperties().withInput("Input", AudioChannelSet::mono(), true)
+		.withOutput("Output", AudioChannelSet::stereo(), true);
 };
 
 

@@ -52,9 +52,10 @@ public:
     const juce::String getProgramName (int index) override;
     void changeProgramName (int index, const juce::String& newName) override;
 	
-	void saveNewPreset();
-	void updatePreset();
-	void loadPreset();
+	void savePreset(String presetName);
+	void loadPreset(String presetName);
+	void deletePreset(String presetName);
+	File getPresetsFolder();
 
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;

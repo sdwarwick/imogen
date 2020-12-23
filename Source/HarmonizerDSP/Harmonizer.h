@@ -100,6 +100,7 @@ private:
 	ADSR::Parameters quickReleaseParams;
 	int quickReleaseMs;
 	bool isFading;
+	bool noteTurnedOff;
 	
 	MidiConverter converter;
 	

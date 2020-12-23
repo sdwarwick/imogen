@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), converter(440), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), quickReleaseMs(15), isFading(false), noteTurnedOff(true), converter(440), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -69,7 +69,15 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		if(! keyIsDown)
 			stopNote(1.0f, false);
 	
-	if(adsr.isActive()) // use the adsr envelope to determine if the voice is on or not...
+	// don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
+	bool voiceIsOnRightNow;
+	if(adsrIsOn)
+		voiceIsOnRightNow = adsr.isActive();
+	else
+		voiceIsOnRightNow = isFading ? true : !noteTurnedOff;
+	
+	
+	if(voiceIsOnRightNow)
 	{
 		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
 	
@@ -82,7 +90,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		
 		subBuffer.applyGain(0, numSamples, currentVelocityMultiplier);
 	
-		if(adsrIsOn) //...but only apply the envelope if the ADSR on/off user toggle is ON
+		if(adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
 		
 		// quick fade out for stopNote() w/ allowTailOff = false:
@@ -147,6 +155,7 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity, const
 	adsr.noteOn();
 	if(! quickRelease.isActive()) { quickRelease.noteOn(); }
 	isFading = false;
+	noteTurnedOff = false;
 };
 
 void HarmonizerVoice::changeNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition)
@@ -159,6 +168,7 @@ void HarmonizerVoice::changeNote(const int midiPitch, const float velocity, cons
 	if(! adsr.isActive()) { adsr.noteOn(); }
 	if(! quickRelease.isActive()) { quickRelease.noteOn(); }
 	isFading = false;
+	noteTurnedOff = false;
 };
 
 void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
@@ -180,6 +190,7 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 		quickRelease.noteOff();
 	}
 	lastRecievedVelocity = 0.0f;
+	noteTurnedOff = true;
 };
 
 void HarmonizerVoice::pitchWheelMoved(const int newPitchWheelValue)
