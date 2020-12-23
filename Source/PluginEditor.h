@@ -49,6 +49,8 @@ private:
 	TextButton helpButton;
 	
 	void helpButtonClicked();
+	
+	Label pitchTester;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

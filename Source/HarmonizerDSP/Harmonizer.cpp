@@ -63,22 +63,19 @@ void HarmonizerVoice::setConcertPitch(const int newConcertPitch)
 }
 
 
-void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
+void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
-
 	if(! (sustainPedalDown || sostenutoPedalDown))
-	{
 		if(! keyIsDown)
 			stopNote(1.0f, false);
-	}
 	
 	if(adsr.isActive()) // use the adsr envelope to determine if the voice is on or not...
 	{
-		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), 2, startSample, numSamples);
+		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
 	
 		// puts shifted samples into the tempBuffer
-		esola(inputAudio, inputChan, startSample, numSamples, tempBuffer, epochIndices,
-			  	1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) ); // shifting ratio
+		esola(inputAudio, inputChan, numSamples, tempBuffer, epochIndices,
+			  	(1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq))) ); // shifting ratio
 		
 		subBuffer.addFrom(0, 0, tempBuffer, 0, 0, numSamples, panningMults[0]);
 		subBuffer.addFrom(1, 0, tempBuffer, 0, 0, numSamples, panningMults[1]);
@@ -105,9 +102,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		currentMidipan = 64;
 		
 		if(! isFading)
-		{
 			quickRelease.noteOn();
-		}
 	}
 };
 
@@ -119,18 +114,13 @@ float HarmonizerVoice::getOutputFreqFromMidinoteAndPitchbend(const int lastRecie
 	jassert(lastRecievedNote >= 0);
 	
 	if(pitchBend == 64)
-	{
 		return converter.mtof(lastRecievedNote);
-	}
-	else if(pitchBend > 64)
-	{
-		return converter.mtof( ((pitchbendRangeUp * (pitchBend - 65)) / 62) + lastRecievedNote );
-	}
-	else
-	{
-		return converter.mtof( (((1 - pitchbendRangeDown) * pitchBend) / 63) + lastRecievedNote - pitchbendRangeDown );
-	}
 	
+	else if(pitchBend > 64)
+		return converter.mtof( ((pitchbendRangeUp * (pitchBend - 65)) / 62) + lastRecievedNote );
+	
+	else
+		return converter.mtof( (((1 - pitchbendRangeDown) * pitchBend) / 63) + lastRecievedNote - pitchbendRangeDown );
 };
 
 void HarmonizerVoice::setMidiVelocitySensitivity(const float newsensitity)
@@ -256,7 +246,7 @@ void HarmonizerVoice::setPan(const int newPan)
 
 
 
-void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio)
+void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio)
 {
 //	int targetLength = 0;
 //	int highestIndexWrittenTo = -1;
@@ -374,13 +364,10 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
-void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
+void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
 	for (auto* voice : voices)
-	{
-		voice->updateInputFreq(currentInputFreq);
-		voice->renderNextBlock (inputAudio, inputChan, startSample, numSamples, outputBuffer, epochIndices);
-	}
+		voice->renderNextBlock (inputAudio, inputChan, numSamples, outputBuffer, epochIndices);
 };
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
@@ -406,7 +393,18 @@ void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 	
 	for(auto* voice : voices)
 		voice->setConcertPitch(newConcertPitchhz);
-}
+};
+
+void Harmonizer::setCurrentInputFreq(const float inputFreqHz) noexcept
+{
+	if(inputFreqHz > 0.0f)
+	{
+		const ScopedLock sl (lock);
+		currentInputFreq = inputFreqHz;
+		for(auto* voice : voices)
+			voice->updateInputFreq(inputFreqHz);
+	}
+};
 
 
 // MIDI events---------------------------------------------------------------------------------------------------------------------------------------
@@ -414,17 +412,11 @@ void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
 	if (m.isNoteOn())
-	{
 		noteOn (m.getNoteNumber(), m.getFloatVelocity());
-	}
 	else if (m.isNoteOff())
-	{
 		noteOff (m.getNoteNumber(), m.getFloatVelocity(), true);
-	}
 	else if (m.isAllNotesOff() || m.isAllSoundOff())
-	{
-		allNotesOff (false); 
-	}
+		allNotesOff (false);
 	else if (m.isPitchWheel())
 	{
 		const int wheelPos = m.getPitchWheelValue();
@@ -432,17 +424,11 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 		handlePitchWheel (wheelPos);
 	}
 	else if (m.isAftertouch())
-	{
 		handleAftertouch (m.getNoteNumber(), m.getAfterTouchValue());
-	}
 	else if (m.isChannelPressure())
-	{
 		handleChannelPressure (m.getChannelPressureValue());
-	}
 	else if (m.isController())
-	{
 		handleController (m.getControllerNumber(), m.getControllerValue());
-	}
 };
 
 void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
@@ -462,10 +448,8 @@ Array<int> Harmonizer::reportActiveNotes() const
 	currentlyActiveNotes.clearQuick();
 	
 	for (auto* voice : voices)
-	{
 		if (voice->isVoiceActive())
 			currentlyActiveNotes.add(voice->getCurrentlyPlayingNote());
-	}
 	
 	if(! currentlyActiveNotes.isEmpty()) { currentlyActiveNotes.sort(); }
 	else { currentlyActiveNotes.add(-1); }
@@ -479,9 +463,7 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity)
 	
 	// If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
 	for (auto* voice : voices)
-	{
 		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice(voice, 0.5f, true); }
-	}
 	
 	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity);
 	
@@ -604,10 +586,8 @@ void Harmonizer::handleSustainPedal(const bool isDown)
 	const ScopedLock sl (lock);
 	
 	if (isDown)
-	{
 		for (auto* voice : voices)
 			voice->setSustainPedalDown (true);
-	}
 	else
 	{
 		for (auto* voice : voices)

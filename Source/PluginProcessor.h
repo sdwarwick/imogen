@@ -21,7 +21,9 @@ public:
 	
 	AudioProcessor::BusesProperties makeBusProperties();
 	
-	Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); }
+	Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }
+	
+	float reportCurrentInputPitch() const noexcept { return currentInputPitch; }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -49,6 +51,10 @@ public:
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
     void changeProgramName (int index, const juce::String& newName) override;
+	
+	void saveNewPreset();
+	void updatePreset();
+	void loadPreset();
 
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
@@ -74,6 +80,8 @@ private:
 	EpochFinder epochs;
 	PitchTracker pitch;
 	Array<int> epochIndices;
+	
+	float currentInputPitch;
 	
 	double lastSampleRate;
 	int lastBlockSize;

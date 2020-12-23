@@ -8,6 +8,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
 		minimumSubBlockSize(16),
 		subBlockSubdivisionIsStrict(false),
+		currentInputPitch(0.0f),
 		lastSampleRate(44100), lastBlockSize(512),
 		adsrIsOn(true),
 		previousStereoWidth(100.0f),
@@ -285,9 +286,11 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	dsp::AudioBlock<float> dwinblock(dryBuffer);
 	dryWet.pushDrySamples(dwinblock);
 	
-	harmonizer.setCurrentInputFreq(pitch.findPitch(buffer, inputChannel, lastSampleRate)); // do this here if possible? input pitch should be calculated/updated as frequently as possible
+	currentInputPitch = pitch.getPitch(buffer, inputChannel, lastSampleRate);
 	
-	harmonizer.renderVoices(buffer, inputChannel, 0, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output samples into "buffer"
+	harmonizer.setCurrentInputFreq(currentInputPitch); // do this here if possible? input pitch should be calculated/updated as frequently as possible
+	
+	harmonizer.renderVoices(buffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output samples into "buffer"
 	
 	// clear any extra channels present in I/O buffer
 	{
@@ -449,6 +452,26 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	
 	return { params.begin(), params.end() };
 };
+
+
+
+void ImogenAudioProcessor::saveNewPreset()
+{
+	
+};
+
+
+void ImogenAudioProcessor::updatePreset()
+{
+	
+};
+
+
+void ImogenAudioProcessor::loadPreset()
+{
+	
+};
+
 
 
 AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()

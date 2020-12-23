@@ -96,9 +96,7 @@ void PanningManager::panValTurnedOff(const int panVal)
 		if(! unsentPanVals.isEmpty())
 		{
 			if(panValsInAssigningOrder.indexOf(unsentPanVals.getUnchecked(0)) > targetindex)
-			{
 				unsentPanVals.insert(0, panVal);
-			}
 			else
 			{
 				int i = 1;
@@ -112,18 +110,14 @@ void PanningManager::panValTurnedOff(const int panVal)
 						break;
 					}
 					else
-					{
 						++i;
-					}
 				}
 				if(! addedIt)
 					unsentPanVals.add(panVal);
 			}
 		}
 		else
-		{
 			unsentPanVals.add(panVal);
-		}
 	}
 };
 
@@ -142,7 +136,8 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 	
 	// find & return the element in unsentPanVals that is the closest to oldPan, then remove that val from unsentPanVals
 	
-	if(const int targetsize = unsentPanVals.size(); targetsize != absDistances.size()) { absDistances.resize(targetsize); }
+	if(const int targetsize = unsentPanVals.size(); targetsize != absDistances.size())
+		absDistances.resize(targetsize);
 	
 	for(int i = 0; i < unsentPanVals.size(); ++i)
 		absDistances.add(abs(oldPan - unsentPanVals.getUnchecked(i)));
@@ -150,7 +145,8 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 	// find the minimum val in absDistances *in place* -- if we sort, we lose the index # and can't find the original panValue from unsentPanVals
 	int minimum = 128; // higher than highest possible midiPan
 	for(int i = 0; i < unsentPanVals.size(); ++i)
-		if(const int tester = absDistances.getUnchecked(i); tester < minimum) { minimum = tester; }
+		if(const int tester = absDistances.getUnchecked(i); tester < minimum)
+			minimum = tester;
 	
 	const int minIndex = absDistances.indexOf(minimum);
 	

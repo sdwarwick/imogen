@@ -36,6 +36,9 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	
 	addChildComponent(helpScreen);
 	helpScreen.setLookAndFeel(&lookAndFeel);
+	
+	lookAndFeel.initializeLabel(pitchTester, "pitch");
+	addAndMakeVisible(pitchTester);
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -47,6 +50,7 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
 	g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
+	
 };
 
 
@@ -61,6 +65,8 @@ void ImogenAudioProcessorEditor::resized()
 	helpButton.setBounds(685, 388, 75, 30);
 	
 	helpScreen.setBounds(158, 45, 625, 315);
+	
+	pitchTester.setBounds(getWidth()/2 - 75, getHeight()/2 - 38, 150, 75);
 };
 
 
@@ -68,6 +74,9 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::timerCallback()
 {
 	staffDisplay.repaint();
+	
+	pitchTester.setText(juce::String(audioProcessor.reportCurrentInputPitch()), juce::dontSendNotification);
+	pitchTester.repaint();
 };
 
 

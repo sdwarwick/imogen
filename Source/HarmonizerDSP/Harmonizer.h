@@ -34,7 +34,7 @@ public:
 	// If the voice is currently silent, it should just return without doing anything.
 	// The size of the blocks that are rendered can change each time it is called, and may involve rendering as little as 1 sample at a time.
 	// In between rendering callbacks, the voice's methods will be called to tell it about note and controller events.
-	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
 	void updateInputFreq(const float newFreq) noexcept { currentInputFreq = newFreq; }
 	
@@ -125,7 +125,7 @@ private:
 	// calculates a [0.0, 1.0] gain value to be applied to the output signal that corresponds to the latest recieved midi Velocity & the selected midi velocity sensitivity
 	float calcVelocityMultiplier(const float inputVelocity);
 	
-	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
+	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
 	JUCE_LEAK_DETECTOR(HarmonizerVoice)
 };
@@ -140,9 +140,9 @@ public:
 	~Harmonizer();
 	
 	// renders the voices for the given range
-	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int startSample, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
-	void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; }
+	void setCurrentInputFreq(const float inputFreqHz) noexcept;
 	
 	void handleMidiEvent(const MidiMessage& m);
 	

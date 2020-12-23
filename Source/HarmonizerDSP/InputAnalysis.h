@@ -20,20 +20,40 @@ public:
 	PitchTracker();
 	~PitchTracker();
 	
-	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
+//	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
+	
+	float getPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
+	
+	void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
+	
+	void setHzLimits(const float newMin, const float newMax) noexcept { minHz = newMin; maxHz = newMax; }
+	
+	
 	
 private:
-	mutable AudioBuffer<float> yinBuffer;
-	Array<float> powerTerms;
-	int yinBufferSize;
+	AudioBuffer<float> yinBuffer;
+	float prevDetectedPitch;
+//	Array<float> powerTerms;
+//	int yinBufferSize;
 	
-	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength);
+	float tolerence;
+	float minHz, maxHz;
 	
-	void cumulativeMeanNormalizedDifference() const;
+	float simpleYin(AudioBuffer<float>& inputAudio, const int inputChan) noexcept;
 	
-	int absoluteThreshold();
+	unsigned int minElement(const float* data, const int dataSize) noexcept;
 	
-	float parabolicInterpolation(int tauEstimate) const;
+	float quadraticPeakPosition (const float *data, unsigned int pos, const int dataSize) noexcept;
+	
+//	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength);
+//
+//	void fastDifference(AudioBuffer<float>& inputAudio, const int inputChan);
+//
+//	void cumulativeMeanNormalizedDifference() const;
+//
+//	int absoluteThreshold();
+//
+//	float parabolicInterpolation(int tauEstimate) const;
 	
 	JUCE_LEAK_DETECTOR(PitchTracker)
 };
