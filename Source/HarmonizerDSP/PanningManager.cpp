@@ -43,10 +43,10 @@ void PanningManager::updateStereoWidth(const int newWidth)
 	const ScopedLock sl (lock);
 	lastRecievedStereoWidth = newWidth;
 	
-	const float rangeMultiplier = newWidth/100.0f;
-	const float maxPan = 63.5f + (63.5f * rangeMultiplier);
-	const float minPan = 63.5f - (63.5f * rangeMultiplier);
-	const float increment = (maxPan - minPan) / currentNumVoices;
+	const auto rangeMultiplier = newWidth/100.0f;
+	const auto maxPan = 63.5f + (63.5f * rangeMultiplier);
+	const auto minPan = 63.5f - (63.5f * rangeMultiplier);
+	const auto increment = (maxPan - minPan) / currentNumVoices;
 	
 	// first, assign all possible, evenly spaced pan vals within range to an array
 	possiblePanVals.clearQuick();
@@ -73,7 +73,7 @@ int PanningManager::getNextPanVal()
 	
 	if(! unsentPanVals.isEmpty())
 	{
-		const int nextPan = unsentPanVals.getUnchecked(0);
+		const auto nextPan = unsentPanVals.getUnchecked(0);
 		unsentPanVals.remove(0);
 		return nextPan;
 	}
@@ -89,7 +89,7 @@ void PanningManager::panValTurnedOff(const int panVal)
 {
 	const ScopedLock sl (lock);
 	
-	const int targetindex = panValsInAssigningOrder.indexOf(panVal);
+	const auto targetindex = panValsInAssigningOrder.indexOf(panVal);
 	
 	if(targetindex > -1) // targetindex will be -1 if the turned off pan val is not in panValsInAssigningOrder. in this case, do nothing.
 	{
@@ -148,9 +148,9 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 		if(const int tester = absDistances.getUnchecked(i); tester < minimum)
 			minimum = tester;
 	
-	const int minIndex = absDistances.indexOf(minimum);
+	const auto minIndex = absDistances.indexOf(minimum);
 	
-	const int newPan = unsentPanVals.getUnchecked(minIndex);
+	const auto newPan = unsentPanVals.getUnchecked(minIndex);
 	unsentPanVals.remove(minIndex);
 	return newPan;
 };
@@ -185,7 +185,7 @@ void PanningManager::mapArrayIndexes()
 	
 	const ScopedLock sl (lock);
 	
-	const int middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2) : 1;
+	const auto middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2) : 1;
 	
 	arrayIndexesMapped.clearQuick();
 	

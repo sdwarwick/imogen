@@ -6,8 +6,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor(makeBusProperties()),
 		tree(*this, nullptr, "PARAMETERS", createParameters()),
-		minimumSubBlockSize(16),
-		subBlockSubdivisionIsStrict(false),
 		currentInputPitch(0.0f),
 		lastSampleRate(44100), lastBlockSize(512),
 		adsrIsOn(true),
@@ -174,7 +172,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 			break;
 		}
 		
-		if (samplesToNextMidiMessage < ((firstEvent && ! subBlockSubdivisionIsStrict) ? 1 : minimumSubBlockSize))
+		if (samplesToNextMidiMessage < 1)
 		{
 			harmonizer.handleMidiEvent(metadata.getMessage());
 			continue;
@@ -410,15 +408,6 @@ void ImogenAudioProcessor::savePrevParamValues()
 	previousStereoWidth = int(stereoWidthListener);
 	prevQuickKillMs = int(quickKillMsListener);
 	previousmidipan = int(dryVoxPanListener);
-};
-
-void ImogenAudioProcessor::setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict) noexcept
-{
-	// Sets a minimum limit on the size to which audio sub-blocks will be divided when rendering. When rendering, the audio blocks that are passed into processBlock() will be split up into smaller blocks that lie between all the incoming midi messages, and it is these smaller sub-blocks that are rendered with multiple calls to harmonizer.renderVoices() via processBlockPrivate(). Obviously in a pathological case where there are midi messages on every sample, then renderVoices() could be called once per sample and lead to poor performance, so this setting allows you to set a lower limit on the block size.
-	// If shouldBeStrict is true, the audio sub-blocks will strictly never be smaller than numSamples. If shouldBeStrict is false (default), the first audio sub-block in the buffer is allowed to be smaller, to make sure that the first MIDI event in a buffer will always be sample-accurate (this can sometimes help to avoid quantisation or phasing issues).
-	jassert (numSamples > 0); // it wouldn't make much sense for this to be less than 1
-	minimumSubBlockSize = numSamples;
-	subBlockSubdivisionIsStrict = shouldBeStrict;
 };
 
 

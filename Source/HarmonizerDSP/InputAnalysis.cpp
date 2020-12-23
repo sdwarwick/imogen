@@ -28,9 +28,9 @@ PitchTracker::~PitchTracker()
 
 float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
 {
-	float pitch = simpleYin(inputAudio, inputChan);
+	//float pitch = simpleYin(inputAudio, inputChan);
 	
-	return samplerate / (pitch + 0.0f);
+	return samplerate / simpleYin(inputAudio, inputChan);
 	
 //	if(pitch > 0.0f)
 //	{

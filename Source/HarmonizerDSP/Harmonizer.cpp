@@ -328,7 +328,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 
 Harmonizer::Harmonizer(): lastPitchWheelValue(0), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0)
 {
-	currentlyActiveNotes.ensureStorageAllocated(NUMBER_OF_VOICES);
+	currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
 	currentlyActiveNotes.add(-1);
 };
@@ -435,7 +435,7 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 {
 	const ScopedLock sl (lock);
 	
-	const float sensitivity = newSensitivity / 100.0f;
+	const auto sensitivity = newSensitivity / 100.0f;
 	
 	for(auto* voice : voices)
 		voice->setMidiVelocitySensitivity(sensitivity);

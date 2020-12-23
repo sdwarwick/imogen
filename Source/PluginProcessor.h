@@ -62,7 +62,6 @@ public:
 	AudioProcessorValueTreeState tree;
 	
 	void updateNumVoices(const int newNumVoices);
-	void setMinimumRenderingSubdivisionSize (const int numSamples, const bool shouldBeStrict = false) noexcept;
 	
 //==============================================================================
 	
@@ -71,9 +70,6 @@ private:
 	void processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples);
 	
 	void renderChunk(AudioBuffer<float>& buffer, const int inputChannel);
-	
-	int minimumSubBlockSize;
-	bool subBlockSubdivisionIsStrict;
 	
 	Harmonizer harmonizer;
 	

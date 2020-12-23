@@ -5,7 +5,7 @@
     Created: 23 Nov 2020 9:56:38pm
     Author:  Ben Vining
  
- 	This file just defines some global variables. I put these all in 1 file for convenience of includes.
+ 	This file just defines some global macros used across Imogen
 
   ==============================================================================
 */
@@ -13,10 +13,7 @@
 #pragma once
 
 
-#define NUMBER_OF_VOICES 12
-// the number of instances of the harmony algorithm running concurrently
-
-#define MAX_POSSIBLE_NUMBER_OF_VOICES 15
+#define MAX_POSSIBLE_NUMBER_OF_VOICES 12
 // used to define some arbitrary global maximums for memory allocation, etc...
 
 
