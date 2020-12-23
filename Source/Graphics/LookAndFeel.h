@@ -155,11 +155,7 @@ private:
 		
 		// rotary sliders
 		this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::royalblue);
-		this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
 		this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
-		
-		// labels
-		this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
 		
 		// buttons
 		this->setColour(TextButton::buttonColourId,						juce::Colours::cadetblue);
@@ -244,4 +240,5 @@ private:
 		this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
 	};
 	
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImogenLookAndFeel)
 };

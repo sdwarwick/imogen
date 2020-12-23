@@ -128,7 +128,7 @@ private:
 	
 	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
-	JUCE_LEAK_DETECTOR(HarmonizerVoice)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HarmonizerVoice)
 };
 
 

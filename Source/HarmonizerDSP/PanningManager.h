@@ -64,5 +64,5 @@ private:
 	
 	void mapArrayIndexes();
 	
-	JUCE_LEAK_DETECTOR(PanningManager)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };

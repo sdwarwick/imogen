@@ -55,7 +55,7 @@ private:
 //
 //	float parabolicInterpolation(int tauEstimate) const;
 	
-	JUCE_LEAK_DETECTOR(PitchTracker)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchTracker)
 };
 
 
@@ -78,5 +78,5 @@ private:
 	
 	Array<int> epochs;
 	
-	JUCE_LEAK_DETECTOR(EpochFinder)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EpochFinder)
 };
