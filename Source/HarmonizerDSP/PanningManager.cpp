@@ -58,7 +58,7 @@ void PanningManager::updateStereoWidth(const int newWidth)
 	panValsInAssigningOrder.clearQuick();
 	panValsInAssigningOrder.add(64);
 	for (int i = 1; i < currentNumVoices; ++i)
-		panValsInAssigningOrder.add(possiblePanVals.getUnchecked(arrayIndexesMapped.getUnchecked(i) - 1));
+		panValsInAssigningOrder.add(possiblePanVals.getUnchecked(arrayIndexesMapped.getUnchecked(i)));
 	
 	// transfer to I/O array we will be actually reading from
 	unsentPanVals.clearQuick();
@@ -180,24 +180,34 @@ void PanningManager::mapArrayIndexes()
 	
 	const ScopedLock sl (lock);
 	
-	const auto middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2) : 1;
-	
 	arrayIndexesMapped.clearQuick();
 	
+	const auto middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2) : 1;
+
 	arrayIndexesMapped.add(middleIndex);
-	
+
 	int i = 1;
 	int p = 1;
 	int m = -1;
-	
+
 	while (i < currentNumVoices)
 	{
 		if(i % 2 == 0) { // i is even
-			arrayIndexesMapped.add(middleIndex + p);
-			++p;
+			if(middleIndex + p < currentNumVoices)
+			{
+				arrayIndexesMapped.add(middleIndex + p);
+				++p;
+			}
+			else
+				continue;
 		} else { // i is odd
-			arrayIndexesMapped.add(middleIndex + m);
-			--m;
+			if(middleIndex + m >= 0)
+			{
+				arrayIndexesMapped.add(middleIndex + m);
+				--m;
+			}
+			else
+				continue;
 		}
 		++i;
 	}
