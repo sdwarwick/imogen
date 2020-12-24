@@ -46,6 +46,11 @@ public:
 	void reset(const bool grabbedFirst64);
 	
 	
+	int getCurrentStereoWidth() const noexcept { return lastRecievedStereoWidth; }
+	
+	int getCurrentNumVoices() const noexcept { return currentNumVoices; }
+	
+	
 private:
 	CriticalSection lock;
 	

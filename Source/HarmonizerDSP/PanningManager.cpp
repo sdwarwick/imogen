@@ -50,14 +50,12 @@ void PanningManager::updateStereoWidth(const int newWidth)
 	
 	// first, assign all possible, evenly spaced pan vals within range to an array
 	possiblePanVals.clearQuick();
-	possiblePanVals.add(64);
-	for (int i = 1; i < currentNumVoices; ++i)
+	for (int i = 0; i < currentNumVoices; ++i)
 		possiblePanVals.add(round(minPan + (i * increment) + (increment/2.0f)));
 	
 	// then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
 	panValsInAssigningOrder.clearQuick();
-	panValsInAssigningOrder.add(64);
-	for (int i = 1; i < currentNumVoices; ++i)
+	for (int i = 0; i < currentNumVoices; ++i)
 		panValsInAssigningOrder.add(possiblePanVals.getUnchecked(arrayIndexesMapped.getUnchecked(i)));
 	
 	// transfer to I/O array we will be actually reading from
@@ -193,17 +191,17 @@ void PanningManager::mapArrayIndexes()
 	while (i < currentNumVoices)
 	{
 		if(i % 2 == 0) { // i is even
-			if(middleIndex + p < currentNumVoices)
+			if(const int newI = middleIndex + p; newI < currentNumVoices)
 			{
-				arrayIndexesMapped.add(middleIndex + p);
+				arrayIndexesMapped.add(newI);
 				++p;
 			}
 			else
 				continue;
 		} else { // i is odd
-			if(middleIndex + m >= 0)
+			if(const int newI = middleIndex + m; newI >= 0)
 			{
-				arrayIndexesMapped.add(middleIndex + m);
+				arrayIndexesMapped.add(newI);
 				--m;
 			}
 			else
