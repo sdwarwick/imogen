@@ -410,7 +410,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 	
 	rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
 	
-	if(! rootFolder.isDirectory())
+	if(! rootFolder.isDirectory() && ! rootFolder.existsAsFile())
 		rootFolder.createDirectory(); // creates the presets folder if it doesn't already exist
 	
 	return rootFolder;
