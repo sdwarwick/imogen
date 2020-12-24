@@ -99,7 +99,7 @@ private:
 	
 	bool noteTurnedOff;
 	
-	MidiConverter converter;
+	MidiPitchConverter converter;
 	
 	int currentlyPlayingNote;
 	float currentOutputFreq;

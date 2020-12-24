@@ -32,7 +32,7 @@ StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audio
 	yCoordLookupTable[0] = 0;
 	for(int n = 1; n < 127; ++n)
 	{
-		if(BenUtils::isMidiNoteBlackKey(n))
+		if(MidiUtils::NoteHelpers::isMidiNoteBlackKey(n))
 			yCoordLookupTable[n] = yCoordLookupTable[n - 1];
 		else
 			yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
@@ -109,7 +109,7 @@ void StaffDisplay::drawPitches(Array<int> activePitches, Graphics& g)
 				
 				drawNotehead(xCoord, yCoord, g);
 				
-				if(BenUtils::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
+				if(MidiUtils::NoteHelpers::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
 					drawAccidental(xCoord, yCoord, g);
 				
 				xOffset ^= 1;

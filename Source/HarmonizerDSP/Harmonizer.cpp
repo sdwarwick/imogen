@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), isFading(false), noteTurnedOff(true), converter(440), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
+HarmonizerVoice::HarmonizerVoice(): adsrIsOn(true), isFading(false), noteTurnedOff(true), converter(440, 69, 12), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), pitchbendRangeUp(2), pitchbendRangeDown(2), lastRecievedPitchbend(64), lastRecievedVelocity(0), currentSampleRate(44100.0), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), midiVelocitySensitivity(1.0f), currentMidipan(64), currentInputFreq(0.0f)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -80,11 +80,11 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	
 	if(voiceIsOnRightNow)
 	{
-		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
-	
 		// puts shifted samples into the tempBuffer
 		esola(inputAudio, inputChan, numSamples, tempBuffer, epochIndices,
 			  	(1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq))) ); // shifting ratio
+		
+		AudioBuffer<float> subBuffer(outputBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
 		
 		subBuffer.addFrom(0, 0, tempBuffer, 0, 0, numSamples, panningMults[0]);
 		subBuffer.addFrom(1, 0, tempBuffer, 0, 0, numSamples, panningMults[1]);
@@ -103,15 +103,13 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 			isFading = false;
 			clearCurrentNote();
 		}
-		
 	}
 	else
 	{
 		clearCurrentNote();
 		currentMidipan = 64;
-		
-		if(! isFading)
-			quickRelease.noteOn();
+		quickRelease.noteOn();
+		adsr.reset();
 	}
 };
 
