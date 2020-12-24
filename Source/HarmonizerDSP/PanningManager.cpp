@@ -196,7 +196,7 @@ void PanningManager::mapArrayIndexes()
 			arrayIndexesMapped.add(middleIndex + p);
 			++p;
 		} else { // i is odd
-			arrayIndexesMapped.add(middleIndex - m);
+			arrayIndexesMapped.add(middleIndex + m);
 			--m;
 		}
 		++i;
