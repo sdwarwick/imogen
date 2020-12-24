@@ -62,8 +62,7 @@ void PanningManager::updateStereoWidth(const int newWidth)
 	
 	// transfer to I/O array we will be actually reading from
 	unsentPanVals.clearQuick();
-	for(int i = 0; i < currentNumVoices; ++i)
-		unsentPanVals.add(panValsInAssigningOrder.getUnchecked(i));
+	unsentPanVals = panValsInAssigningOrder;
 };
 
 
@@ -87,6 +86,8 @@ int PanningManager::getNextPanVal()
 
 void PanningManager::panValTurnedOff(const int panVal)
 {
+	// this function is called when a pan value is turned off and is available again for assigning. This function attempts to reinsert the pan value into unsentPanVals with respect to the order the values are in in panValsInAssigningOrder
+	
 	const ScopedLock sl (lock);
 	
 	const auto targetindex = panValsInAssigningOrder.indexOf(panVal);
@@ -95,26 +96,21 @@ void PanningManager::panValTurnedOff(const int panVal)
 	{
 		if(! unsentPanVals.isEmpty())
 		{
-			if(panValsInAssigningOrder.indexOf(unsentPanVals.getUnchecked(0)) > targetindex)
-				unsentPanVals.insert(0, panVal);
-			else
+			int i = 0;
+			bool addedIt = false;
+			while (i < currentNumVoices)
 			{
-				int i = 1;
-				bool addedIt = false;
-				while (i < currentNumVoices)
+				if(panValsInAssigningOrder.indexOf(unsentPanVals.getUnchecked(i)) > targetindex)
 				{
-					if(panValsInAssigningOrder.indexOf(unsentPanVals.getUnchecked(i)) > targetindex)
-					{
-						unsentPanVals.insert(i, panVal);
-						addedIt = true;
-						break;
-					}
-					else
-						++i;
+					unsentPanVals.insert(i, panVal);
+					addedIt = true;
+					break;
 				}
-				if(! addedIt)
-					unsentPanVals.add(panVal);
+				else
+					++i;
 			}
+			if(! addedIt)
+				unsentPanVals.add(panVal);
 		}
 		else
 			unsentPanVals.add(panVal);
@@ -124,6 +120,10 @@ void PanningManager::panValTurnedOff(const int panVal)
 
 int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 {
+	// this function is called when updating the stereo width. This function attempts to return the new available pan value that is the closest to the input old pan value, with the goal of maintaining as much continuity of the stereo field as possible.
+	
+	jassert(isPositiveAndBelow(oldPan, 128));
+	
 	const ScopedLock sl (lock);
 	
 	if(unsentPanVals.isEmpty())
@@ -136,19 +136,16 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 	
 	// find & return the element in unsentPanVals that is the closest to oldPan, then remove that val from unsentPanVals
 	
-	if(const int targetsize = unsentPanVals.size(); targetsize != absDistances.size())
-		absDistances.resize(targetsize);
-	
 	for(int i = 0; i < unsentPanVals.size(); ++i)
 		absDistances.add(abs(oldPan - unsentPanVals.getUnchecked(i)));
 	
 	// find the minimum val in absDistances *in place* -- if we sort, we lose the index # and can't find the original panValue from unsentPanVals
-	int minimum = 128; // higher than highest possible midiPan
+	int minimum = 128; // higher than highest possible midiPan of 127
 	for(int i = 0; i < unsentPanVals.size(); ++i)
 		if(const int tester = absDistances.getUnchecked(i); tester < minimum)
 			minimum = tester;
 	
-	const auto minIndex = absDistances.indexOf(minimum);
+	const auto minIndex = absDistances.indexOf(minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
 	
 	const auto newPan = unsentPanVals.getUnchecked(minIndex);
 	unsentPanVals.remove(minIndex);
@@ -161,9 +158,7 @@ void PanningManager::reset(const bool grabbedFirst64)
 	const ScopedLock sl (lock);
 	
 	unsentPanVals.clearQuick();
-	
-	for(int i = 0; i < currentNumVoices; ++i)
-		unsentPanVals.add(panValsInAssigningOrder.getUnchecked(i));
+	unsentPanVals = panValsInAssigningOrder;
 	
 	if(grabbedFirst64)
 		unsentPanVals.remove(0);
@@ -172,13 +167,13 @@ void PanningManager::reset(const bool grabbedFirst64)
 
 void PanningManager::mapArrayIndexes()
 {
-	/* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and index 11 the highest.
+	/* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and the highest index will contain the largest midiPan value.
 	 
-	 When an instance of the harmony algorithm requests a new midiPan value, I want to assign them from the "center out" -- so that the first voice that turns on will be the one in the center, then the sides get added as more voices turn on.
+	 When a new midiPan value is requested with getNextPanVal(), I want to assign them from the "center out" -- so that the first voice that turns on will be the one in the center, then the sides get added as more voices turn on.
 	 
-	 So I need to transfer the values in possiblePanVals into another array - panValsInAssigningOrder - which will hold the panning values in order so that index 0 contains 64, index 1 contains 72, index 2 contains 52... index 10 contains 127 and index 11 contains 0.
+	 So I need to transfer the values in possiblePanVals into another array - panValsInAssigningOrder - which will hold the panning values in order so that index 0 contains 64, index 1 contains 72, index 2 contains 52... index 10 contains 127 and index 11 contains 0. [for 12 voices]
 	 
-	 In order to transfer the panning values from array to array like this, I need to essentially have a list of array indices of possiblePanVals to read from, in order of the panValsInAssigningOrder indices I'll be writing to. IE, in this list, index 0 will contain 6, meaning that I want to write the value in index 6 of possiblePanVals to index 0 of panValsInAssigningOrder.
+	 In order to transfer the panning values from array to array like this, I need to essentially have a list of array indices of possiblePanVals to read from, in order of the panValsInAssigningOrder indices I'll be writing to. IE, in this list, if I'm working with 12 voices, index 0 will contain 6, meaning that I want to write the value in index 6 of possiblePanVals to index 0 of panValsInAssigningOrder.
 	 
 	 I'm storing this list in another array called arrayIndexesMapped.
 	 */

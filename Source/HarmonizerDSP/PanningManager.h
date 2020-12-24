@@ -21,7 +21,7 @@ public:
 	PanningManager();
 	~PanningManager();
 	
-	// used to change the # of harmonizer voices currently active
+	// used to change the # of polyphony voices currently active
 	void setNumberOfVoices(const int newNumVoices);
 	
 	
@@ -29,7 +29,7 @@ public:
 	void updateStereoWidth(const int newWidth);
 	
 	
-	// returns next available panning value
+	// returns next available panning value. Panning values are assigned from the "middle out" - the first pan values sent will be toward the center of the stereo field, working outwards to either side as more pan values are requested
 	int getNextPanVal();
 	
 	
@@ -42,25 +42,25 @@ public:
 	
 	
 	// tells the PanningManager that all voices have been turned off -- ie, all the pan vals are available again
-	// the boolean argument should normally be false. this is used for if reset() needs to be called in a flow where the first value has been used for a new voice
+	// the boolean argument should normally be false. 'true' is used in a situation where reset() needs to be called, but a new voice will be turned on immediately, or is already on - thus, the first pan value has already been taken.
 	void reset(const bool grabbedFirst64);
 	
 	
 private:
 	CriticalSection lock;
 	
-	Array<int> possiblePanVals;
-	Array<int> panValsInAssigningOrder;
-	Array<int> arrayIndexesMapped;
+	Array<int> possiblePanVals; // this array stores all the possible pan values for the desired stereo width, in increasing numerical order from 0 to 127
 	
-	Array<int> unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting
+	Array<int> panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
+	
+	Array<int> arrayIndexesMapped; // this array is used to facilitate the transfer of values from possiblePanVals to panValsInAssigningOrder
+	
+	Array<int> unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting.
 	
 	Array<int> absDistances; // used for finding which new pan value is the closest to a voice's old pan val
 	
 	int lastRecievedStereoWidth;
 	int currentNumVoices;
-	
-	void setNumVoicesPrivate(const int newNumVoices);
 	
 	void mapArrayIndexes();
 	

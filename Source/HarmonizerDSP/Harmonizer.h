@@ -16,7 +16,6 @@
 #include "PanningManager.h"
 
 
-
 /*
  HarmonizerVoice : represents a "voice", or instance of the DSP algorithm, that the Harmonizer can use to generate sound. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
  */
@@ -77,8 +76,8 @@ public:
 	void controllerMoved(const int controllerNumber, const int newControllerValue);
 	
 	
-	void updateAdsrSettings(const float attack, const float decay, const float sustain, const float release);
-	void setQuickReleaseMs(const int newMs) noexcept;
+	void updateAdsrSettings(ADSR::Parameters& newParams) noexcept { adsr.setParameters(newParams); }
+	void updateQuickReleaseSettings(ADSR::Parameters& newParams) noexcept { quickRelease.setParameters(newParams); }
 	void setAdsrOnOff(const bool isOn) noexcept { adsrIsOn = isOn; }
 	
 	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
@@ -94,12 +93,10 @@ private:
 	friend class Harmonizer;
 	
 	ADSR adsr;
-	ADSR::Parameters adsrParams;
 	bool adsrIsOn;
 	ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
-	ADSR::Parameters quickReleaseParams;
-	int quickReleaseMs;
 	bool isFading;
+	
 	bool noteTurnedOff;
 	
 	MidiConverter converter;
@@ -173,6 +170,7 @@ public:
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
 	void setADSRonOff(const bool shouldBeOn);
 	void updateQuickReleaseMs(const int newMs);
+	ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
 	
 	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
 	
@@ -220,6 +218,9 @@ protected:
 	
 	
 private:
+	
+	ADSR::Parameters adsrParams;
+	ADSR::Parameters quickReleaseParams;
 	
 	float currentInputFreq;
 	

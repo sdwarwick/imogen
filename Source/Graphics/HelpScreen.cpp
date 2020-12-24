@@ -14,13 +14,17 @@
 //==============================================================================
 HelpScreen::HelpScreen(): closeIcon(ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {
-	closeButton.setImages(true, true, true, closeIcon, 1.0f, juce::Colours::transparentBlack, closeIcon, 1.0f, juce::Colours::transparentWhite, closeIcon, 1.0f, juce::Colours::transparentWhite);
-	addAndMakeVisible(closeButton);
-	closeButton.onClick = [this] { this->setVisible(false); };
+	// close button
+	{
+		closeButton.setImages(true, true, true, closeIcon, 1.0f, juce::Colours::transparentBlack, closeIcon, 1.0f, juce::Colours::transparentWhite, closeIcon, 1.0f, juce::Colours::transparentWhite);
+		addAndMakeVisible(closeButton);
+		closeButton.onClick = [this] { this->setVisible(false); };
+	}
 };
 
 HelpScreen::~HelpScreen()
 {
+	setLookAndFeel(nullptr);
 };
 
 void HelpScreen::paint (juce::Graphics& g)

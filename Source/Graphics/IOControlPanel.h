@@ -40,7 +40,7 @@ public:
 	Label drywetLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
 	
-	// modulator input gain (gain applied before mod signal is sent into harmony algorithm
+	// modulator input gain (gain applied before mod signal is sent into harmony algorithm)
 	Slider inputGain;
 	Label inputGainLabel;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputGainLink;

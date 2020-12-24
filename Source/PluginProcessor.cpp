@@ -2,46 +2,37 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-ImogenAudioProcessor::ImogenAudioProcessor()
+ImogenAudioProcessor::ImogenAudioProcessor():
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor(makeBusProperties()),
-		tree(*this, nullptr, "PARAMETERS", createParameters()),
-		currentInputPitch(0.0f),
-		lastSampleRate(44100), lastBlockSize(512),
-		adsrIsOn(true),
-		previousStereoWidth(100.0f),
-		prevQuickKillMs(0),
-		prevConcertPitch(440),
-		previousmidipan(64),
-		prevideb(0.0f), prevodeb(0.0f),
-		limiterIsOn(true),
-		wetBuffer(2, MAX_BUFFERSIZE),
-		dryBuffer(2, MAX_BUFFERSIZE),
-		adsrAttackListener(*tree.getRawParameterValue("adsrAttack")),
-		adsrDecayListener(*tree.getRawParameterValue("adsrDecay")),
-		adsrSustainListener(*tree.getRawParameterValue("adsrSustain")),
-		adsrReleaseListener(*tree.getRawParameterValue("adsrRelease")),
-		adsrOnOffListener(*tree.getRawParameterValue("adsrOnOff")),
-		stereoWidthListener(*tree.getRawParameterValue("stereoWidth")),
-		lowestPanListener(*tree.getRawParameterValue("lowestPan")),
-		midiVelocitySensListener(*tree.getRawParameterValue("midiVelocitySensitivity")),
-		pitchBendUpListener(*tree.getRawParameterValue("PitchBendUpRange")),
-		pitchBendDownListener(*tree.getRawParameterValue("PitchBendDownRange")),
-		inputGainListener(*tree.getRawParameterValue("inputGain")),
-		outputGainListener(*tree.getRawParameterValue("outputGain")),
-		voiceStealingListener(*tree.getRawParameterValue("voiceStealing")),
-		inputChannelListener(*tree.getRawParameterValue("inputChan")),
-		dryVoxPanListener(*tree.getRawParameterValue("dryPan")),
-		masterDryWetListener(*tree.getRawParameterValue("masterDryWet")),
-		limiterThreshListener(*tree.getRawParameterValue("limiterThresh")),
-		limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
-		limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
-		quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
-		concertPitchListener(*tree.getRawParameterValue("concertPitch"))
-
+	AudioProcessor(makeBusProperties()),
 #endif
+	tree(*this, nullptr, "PARAMETERS", createParameters()),
+	wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
+	lastSampleRate(44100), adsrIsOn(true), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
+	prevBendUp(2), prevBendDown(2), prevConcertPitchHz(440), prevVelocitySensitivity(100), prevDryPan(64), previousStereoWidth(100), prevideb(0.0f), prevodeb(0.0f),
+	adsrAttackListener(*tree.getRawParameterValue("adsrAttack")),
+	adsrDecayListener(*tree.getRawParameterValue("adsrDecay")),
+	adsrSustainListener(*tree.getRawParameterValue("adsrSustain")),
+	adsrReleaseListener(*tree.getRawParameterValue("adsrRelease")),
+	adsrOnOffListener(*tree.getRawParameterValue("adsrOnOff")),
+	stereoWidthListener(*tree.getRawParameterValue("stereoWidth")),
+	lowestPanListener(*tree.getRawParameterValue("lowestPan")),
+	midiVelocitySensListener(*tree.getRawParameterValue("midiVelocitySensitivity")),
+	pitchBendUpListener(*tree.getRawParameterValue("PitchBendUpRange")),
+	pitchBendDownListener(*tree.getRawParameterValue("PitchBendDownRange")),
+	inputGainListener(*tree.getRawParameterValue("inputGain")),
+	outputGainListener(*tree.getRawParameterValue("outputGain")),
+	voiceStealingListener(*tree.getRawParameterValue("voiceStealing")),
+	inputChannelListener(*tree.getRawParameterValue("inputChan")),
+	dryVoxPanListener(*tree.getRawParameterValue("dryPan")),
+	masterDryWetListener(*tree.getRawParameterValue("masterDryWet")),
+	limiterThreshListener(*tree.getRawParameterValue("limiterThresh")),
+	limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
+	limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
+	quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
+	concertPitchListener(*tree.getRawParameterValue("concertPitch"))
 {
-	for (int i = 0; i < 13; ++i) { harmonizer.addVoice(new HarmonizerVoice); }
+	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice); }
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
@@ -51,10 +42,10 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
-{
-};
+{ };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock) {
 	
@@ -66,34 +57,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 		// update latency for dry/wet mixer !
 	}
 	
-	 // block size
-	{
-		const int newblocksize = samplesPerBlock > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
-
-		if(lastBlockSize != newblocksize)
-		{
-			lastBlockSize = newblocksize;
-			if(wetBuffer.getNumSamples() != newblocksize)
-				wetBuffer.setSize(2, newblocksize, true, true, true);
-			if(dryBuffer.getNumSamples() != newblocksize)
-				dryBuffer.setSize(2, newblocksize, true, true, true);
-		}
-	}
-	
-	// concert pitch
-	if(int(concertPitchListener) != prevConcertPitch)
-		harmonizer.setConcertPitchHz(concertPitchListener);
-	
 	wetBuffer.clear();
-	
-	updateIOgains();
-	updateAdsr();
-	updateStereoWidth();
-	updateDryVoxPan();
-	updateQuickKillMs();
-	harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
-	harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
-	harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
 	
 	dspSpec.sampleRate = sampleRate;
 	dspSpec.maximumBlockSize = MAX_BUFFERSIZE * 2;
@@ -101,49 +65,26 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	
 	// limiter
 	limiter.prepare(dspSpec);
-	updateLimiter();
 	
 	// dry wet mixer
 	dryWet.prepare(dspSpec);
 	dryWet.setMixingRule(dsp::DryWetMixingRule::linear);
-	dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
 	dryWet.setWetLatency(2); // latency in samples of the ESOLA algorithm
 	
-	savePrevParamValues();
+	updateAllParameters();
 };
 
 
-
-void ImogenAudioProcessor::releaseResources() {
-	
+void ImogenAudioProcessor::releaseResources()
+{
 	wetBuffer.clear();
 	dryBuffer.clear();
 	harmonizer.resetNoteOnCounter();
 };
 
 
-
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-	// update settings & parameters
-	{
-		updateIOgains();
-		updateLimiter();
-		updateAdsr();
-		updateStereoWidth();
-		updateDryVoxPan();
-		updateQuickKillMs();
-		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
-		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
-		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
-		
-		dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
-		
-		// concert pitch
-		if(int(concertPitchListener) != prevConcertPitch)
-			harmonizer.setConcertPitchHz(concertPitchListener);
-	}
-	
 	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
 	
 	epochIndices = epochs.extractEpochSampleIndices(buffer, inputChannel, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
@@ -191,33 +132,11 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 				   midiMessages.cend(),
 				   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); });
 	
-	savePrevParamValues();
 };
-
-
 
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples)
 {
-	// update settings & parameters
-	{
-		updateIOgains();
-		updateLimiter();
-		updateAdsr();
-		updateStereoWidth();
-		updateDryVoxPan();
-		updateQuickKillMs();
-		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
-		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
-		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
-		
-		dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
-		
-		// concert pitch
-		if(int(concertPitchListener) != prevConcertPitch)
-			harmonizer.setConcertPitchHz(concertPitchListener);
-	}
-	
 	int samplesLeft = numSamples;
 	int chunkStartSample = startSample;
 	
@@ -231,34 +150,13 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		samplesLeft -= chunkNumSamples;
 		chunkStartSample += chunkNumSamples;
-		
 	}
-	
-	savePrevParamValues();
 };
-
 
 
 void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inputChannel)
 {
-	// update settings & parameters
-	{
-		updateIOgains();
-		updateLimiter();
-		updateAdsr();
-		updateStereoWidth();
-		updateDryVoxPan();
-		updateQuickKillMs();
-		harmonizer.updateMidiVelocitySensitivity(midiVelocitySensListener);
-		harmonizer.setNoteStealingEnabled(voiceStealingListener > 0.5f);
-		harmonizer.updatePitchbendSettings(pitchBendUpListener, pitchBendDownListener);
-		
-		dryWet.setWetMixProportion(masterDryWetListener / 100.0f);
-		
-		// concert pitch
-		if(int(concertPitchListener) != prevConcertPitch)
-			harmonizer.setConcertPitchHz(concertPitchListener);
-	}
+	updateAllParameters();
 	
 	const int numSamples = buffer.getNumSamples();
 	
@@ -311,75 +209,136 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
 	
-	savePrevParamValues();
 };
-
 
 
 /*===========================================================================================================================
  ============================================================================================================================*/
 
+
+// functions for updating parameters ----------------------------------------------------------------------------------------------------------------
+
+void ImogenAudioProcessor::updateAllParameters()
+{
+	updateIOgains();
+	updateLimiter();
+	updateAdsr();
+	updateStereoWidth();
+	updateDryVoxPan();
+	updateQuickKillMs();
+	updateMidiVelocitySensitivity();
+	updateNoteStealing();
+	updatePitchbendSettings();
+	updateDryWet();
+	updateConcertPitch();
+};
+
+
 void ImogenAudioProcessor::updateAdsr()
 {
-	adsrIsOn = adsrOnOffListener > 0.5f;
+	adsrIsOn = float(adsrOnOffListener) > 0.5f;
 	harmonizer.setADSRonOff(adsrIsOn);
-	
-	if (adsrIsOn)
-		harmonizer.updateADSRsettings(adsrAttackListener, adsrDecayListener, adsrSustainListener, adsrReleaseListener);
+	harmonizer.updateADSRsettings(float(adsrAttackListener), float(adsrDecayListener), float(adsrSustainListener), float(adsrReleaseListener));
 };
 
 
 void ImogenAudioProcessor::updateIOgains()
 {
-	if(inputGainListener != prevideb) {
-		inputGainMultiplier = Decibels::decibelsToGain(float(inputGainListener));
-		prevideb = inputGainListener;
+	if(const float newIn = float(inputGainListener); newIn != prevideb)
+	{
+		inputGainMultiplier = Decibels::decibelsToGain(newIn);
+		prevideb = newIn;
 	}
-	if(outputGainListener != prevodeb) {
-		outputGainMultiplier = Decibels::decibelsToGain(float(outputGainListener));
-		prevodeb = outputGainListener;
+	
+	if(const float newOut = float(outputGainListener); newOut != prevodeb)
+	{
+		outputGainMultiplier = Decibels::decibelsToGain(newOut);
+		prevodeb = newOut;
 	}
 };
 
 
 void ImogenAudioProcessor::updateLimiter()
 {
-	limiter.setThreshold(limiterThreshListener);
-	limiter.setRelease(limiterReleaseListener);
-	limiterIsOn = limiterToggleListener > 0.5f;
+	limiter.setThreshold(float(limiterThreshListener));
+	limiter.setRelease(float(limiterReleaseListener));
+	limiterIsOn = float(limiterToggleListener) > 0.5f;
 };
 
 
 void ImogenAudioProcessor::updateStereoWidth()
 {
-	harmonizer.updateLowestPannedNote(round(lowestPanListener));
+	harmonizer.updateLowestPannedNote(int(round(float(lowestPanListener))));
 	
-	if (previousStereoWidth != int(stereoWidthListener))
+	if(const int newWidth = int(round(float(stereoWidthListener))); previousStereoWidth != newWidth)
 	{
-		harmonizer.updateStereoWidth(stereoWidthListener);
-		previousStereoWidth = int(stereoWidthListener);
+		harmonizer.updateStereoWidth(newWidth);
+		previousStereoWidth = newWidth;
 	}
 };
 
 
 void ImogenAudioProcessor::updateQuickKillMs()
 {
-	if(prevQuickKillMs != int(quickKillMsListener))
-	{
-		harmonizer.updateQuickReleaseMs(quickKillMsListener);
-		prevQuickKillMs = int(quickKillMsListener);
-	}
+	harmonizer.updateQuickReleaseMs(int(round(float(quickKillMsListener))));
 };
 
 
 void ImogenAudioProcessor::updateDryVoxPan()
 {
-	if(int(dryVoxPanListener) != previousmidipan)
+	if(const int newDryPan = int(round(float(dryVoxPanListener))); newDryPan != prevDryPan)
 	{
-		const float Rpan = dryVoxPanListener / 127.0f;
+		const float Rpan = newDryPan / 127.0f;
 		dryvoxpanningmults[1] = Rpan;
 		dryvoxpanningmults[0] = 1.0f - Rpan;
-		previousmidipan = dryVoxPanListener;
+		prevDryPan = newDryPan;
+	}
+};
+
+
+void ImogenAudioProcessor::updateMidiVelocitySensitivity()
+{
+	if(const int newSensitivity = int(round(float(midiVelocitySensListener))); newSensitivity != prevVelocitySensitivity)
+	{
+		harmonizer.updateMidiVelocitySensitivity(newSensitivity);
+		prevVelocitySensitivity = newSensitivity;
+	}
+};
+
+
+void ImogenAudioProcessor::updateNoteStealing()
+{
+	harmonizer.setNoteStealingEnabled(float(voiceStealingListener) > 0.5f);
+};
+
+
+void ImogenAudioProcessor::updatePitchbendSettings()
+{
+	const int newBendUp = int(round(float(pitchBendUpListener)));
+	const int newBendDown = int(round(float(pitchBendDownListener)));
+	if(prevBendUp != newBendUp || prevBendDown != newBendDown)
+	{
+		harmonizer.updatePitchbendSettings(newBendUp, newBendDown);
+		prevBendUp = newBendUp;
+		prevBendDown = newBendDown;
+	}
+};
+
+
+void ImogenAudioProcessor::updateDryWet()
+{
+	dryWet.setWetMixProportion(float(masterDryWetListener) / 100.0f);
+	
+	// need to set latency!!!
+};
+
+
+void ImogenAudioProcessor::updateConcertPitch()
+{
+	if(const int newHz = int(round(float(concertPitchListener))); prevConcertPitchHz != newHz)
+	{
+		harmonizer.setConcertPitchHz(newHz);
+		prevConcertPitchHz = newHz;
 	}
 };
 
@@ -390,28 +349,103 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 	{
 		if(newNumVoices > currentVoices) 
 		{
-			const int voicesToAdd = newNumVoices - currentVoices;
-			for(int i = 0; i < voicesToAdd; ++i)
+			for(int i = 0; i < newNumVoices - currentVoices; ++i)
 				harmonizer.addVoice(new HarmonizerVoice);
 		}
 		else
-		{
 			harmonizer.removeNumVoices(currentVoices - newNumVoices);
-		}
 	}
-};
-
-void ImogenAudioProcessor::savePrevParamValues()
-{
-	prevideb = inputGainListener;
-	prevodeb = outputGainListener;
-	previousStereoWidth = int(stereoWidthListener);
-	prevQuickKillMs = int(quickKillMsListener);
-	previousmidipan = int(dryVoxPanListener);
 };
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// functions for custom preset management system ----------------------------------------------------------------------------------------------------
+
+void ImogenAudioProcessor::savePreset(juce::String presetName) 
+{
+	// this function can be used both to save new preset files or to update existing ones
+	
+	File writingTo = getPresetsFolder().getChildFile(presetName);
+	
+	auto xml(tree.copyState().createXml());
+	
+	xml->writeTo(writingTo);
+};
+
+
+void ImogenAudioProcessor::loadPreset(juce::String presetName)
+{
+	File presetToLoad = getPresetsFolder().getChildFile(presetName);
+	
+	if(presetToLoad.existsAsFile())
+	{
+		auto xmlElement = juce::parseXML(presetToLoad);
+		
+		if(xmlElement.get() != nullptr)
+			if(xmlElement->hasTagName (tree.state.getType()))
+				tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
+	}
+};
+
+
+void ImogenAudioProcessor::deletePreset(juce::String presetName) const
+{
+	File presetToDelete = getPresetsFolder().getChildFile(presetName);
+	
+	if(presetToDelete.existsAsFile())
+		if(! presetToDelete.moveToTrash())
+			presetToDelete.deleteFile();
+};
+
+
+juce::File ImogenAudioProcessor::getPresetsFolder() const
+{
+	File rootFolder = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory);
+	
+#ifdef JUCE_MAC
+	rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets");
+#endif
+	
+	rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
+	
+	if(! rootFolder.isDirectory())
+		rootFolder.createDirectory(); // creates the presets folder if it doesn't already exist
+	
+	return rootFolder;
+};
+
+
+void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+{
+	auto xml(tree.copyState().createXml());
+	copyXmlToBinary (*xml, destData);
+};
+
+
+void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+{
+	auto xmlState(getXmlFromBinary(data, sizeInBytes));
+	
+	if (xmlState.get() != nullptr)
+		if (xmlState->hasTagName (tree.state.getType()))
+			tree.replaceState(juce::ValueTree::fromXml (*xmlState));
+};
+
+
+// standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
+
+AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
+{
+	PluginHostType host;
+	if(host.isLogic() || host.isGarageBand())
+		return BusesProperties().withInput("Input", AudioChannelSet::mono(), false).withInput("Sidechain", AudioChannelSet::mono(), true)
+		.withOutput("Output", AudioChannelSet::stereo(), true);
+	else
+		return BusesProperties().withInput("Input", AudioChannelSet::mono(), true).withOutput("Output", AudioChannelSet::stereo(), true);
+};
+
 
 AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
 {
@@ -443,130 +477,16 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 };
 
 
-
-void ImogenAudioProcessor::savePreset(String presetName)
+double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-	// this function can be used both to save new preset files and to update existing ones
-	
-	File writingTo = getPresetsFolder().getChildFile(presetName);
-	
-	auto state = tree.copyState();
-	std::unique_ptr<juce::XmlElement> xml (state.createXml());
-	
-	bool existed = writingTo.existsAsFile();
-	
-	xml->writeTo(writingTo);
-	
-	if(! existed)
-		writingTo.setCreationTime(Time::getCurrentTime());
-	
-	writingTo.setLastModificationTime(Time::getCurrentTime());
-	
-};
-
-
-void ImogenAudioProcessor::loadPreset(String presetName)
-{
-	File presetToLoad = getPresetsFolder().getChildFile(presetName);
-	
-	if(presetToLoad.existsAsFile())
-	{
-		setStateInformation(&presetToLoad, int(presetToLoad.getSize()));
-		presetToLoad.setLastAccessTime(Time::getCurrentTime());
-	}
-};
-
-
-void ImogenAudioProcessor::deletePreset(String presetName)
-{
-	File presetToDelete = getPresetsFolder().getChildFile(presetName);
-	
-	if(presetToDelete.existsAsFile())
-		presetToDelete.moveToTrash();
-};
-
-
-File ImogenAudioProcessor::getPresetsFolder()
-{
-	File rootFolder = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory);
-	
-#ifdef JUCE_MAC
-	rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets");
-#endif
-	
-	rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
-	Result res = rootFolder.createDirectory(); // creates if not existing
-	
-	return rootFolder;
-};
-
-
-void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
-{
-	auto state = tree.copyState();
-	std::unique_ptr<juce::XmlElement> xml (state.createXml());
-	copyXmlToBinary (*xml, destData);
-};
-
-
-void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
-{
-	std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
-	
-	if (xmlState.get() != nullptr)
-		if (xmlState->hasTagName (tree.state.getType()))
-			tree.replaceState(juce::ValueTree::fromXml (*xmlState));
-};
-
-
-AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
-{
-	PluginHostType host;
-	if(host.isLogic() || host.isGarageBand())
-		return BusesProperties().withInput("Input", AudioChannelSet::mono(), false)
-		.withInput("Sidechain", AudioChannelSet::mono(), true)
-		.withOutput("Output", AudioChannelSet::stereo(), true);
+	if(adsrIsOn)
+		return double(adsrReleaseListener); // ADSR release time in seconds
 	else
-		return BusesProperties().withInput("Input", AudioChannelSet::mono(), true)
-		.withOutput("Output", AudioChannelSet::stereo(), true);
-};
-
-
-const juce::String ImogenAudioProcessor::getName() const {
-	return JucePlugin_Name;
-};
-
-bool ImogenAudioProcessor::acceptsMidi() const {
-#if JucePlugin_WantsMidiInput
-	return true;
-#else
-	return false;
-#endif
-};
-
-bool ImogenAudioProcessor::producesMidi() const {
-#if JucePlugin_ProducesMidiOutput
-	return true;
-#else
-	return false;
-#endif
-};
-
-bool ImogenAudioProcessor::isMidiEffect() const {
-#if JucePlugin_IsMidiEffect
-	return true;
-#else
-	return false;
-#endif
-};
-
-double ImogenAudioProcessor::getTailLengthSeconds() const {
-	return 0.0;
+		return double(quickKillMsListener * 1000.0); // "quick kill" time in seconds
 };
 
 int ImogenAudioProcessor::getNumPrograms() {
-	return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-	// so this should be at least 1, even if you're not really implementing programs.
+	return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs, so this should be at least 1, even if you're not really implementing programs.
 };
 
 int ImogenAudioProcessor::getCurrentProgram() {
@@ -607,9 +527,6 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 }
 #endif
 
-bool ImogenAudioProcessor::hasEditor() const {
-	return true; // (change this to false if you choose to not supply an editor)
-};
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor() {
 	return new ImogenAudioProcessorEditor (*this);

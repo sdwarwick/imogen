@@ -35,6 +35,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrAttack);
 			adsrAttack.setValue(0.035f);
+			adsrAttack.onValueChange = [this] { audioProcessor.updateAdsr(); };
 			lookAndFeel.initializeLabel(attackLabel, "Attack");
 			addAndMakeVisible(attackLabel);
 		}
@@ -45,6 +46,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrDecay);
 			adsrDecay.setValue(0.06f);
+			adsrDecay.onValueChange = [this] { audioProcessor.updateAdsr(); };
 			lookAndFeel.initializeLabel(decayLabel, "Decay");
 			addAndMakeVisible(decayLabel);
 		}
@@ -55,6 +57,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrSustain);
 			adsrSustain.setValue(0.8f);
+			adsrSustain.onValueChange = [this] { audioProcessor.updateAdsr(); };
 			lookAndFeel.initializeLabel(sustainLabel, "Sustain");
 			addAndMakeVisible(sustainLabel);
 		}
@@ -65,6 +68,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
 			addAndMakeVisible(adsrRelease);
 			adsrRelease.setValue(0.1f);
+			adsrRelease.onValueChange = [this] { audioProcessor.updateAdsr(); };
 			lookAndFeel.initializeLabel(releaseLabel, "Release");
 			addAndMakeVisible(releaseLabel);
 		}
@@ -73,6 +77,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			adsrOnOff.setButtonText("MIDI-triggered ADSR");
 			addAndMakeVisible(adsrOnOff);
+			adsrOnOff.onClick = [this] { audioProcessor.updateAdsr(); };
 			adsrOnOff.triggerClick();
 		}
 	}
@@ -90,6 +95,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		addAndMakeVisible(quickKillMs);
 		quickKillMs.setValue(15);
 		quickKillMs.setNumDecimalPlacesToDisplay(0);
+		quickKillMs.onValueChange = [this] { audioProcessor.updateQuickKillMs(); };
 		lookAndFeel.initializeLabel(quickKillmsLabel, "Quick kill ms");
 		addAndMakeVisible(quickKillmsLabel);
 	}
@@ -102,7 +108,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(stereoWidth);
 			stereoWidth.setValue(100);
-			stereoWidth.setNumDecimalPlacesToDisplay(0);
+			stereoWidth.onValueChange = [this] { audioProcessor.updateStereoWidth(); };
 			lookAndFeel.initializeLabel(stereowidthLabel, "Stereo width");
 			addAndMakeVisible(stereowidthLabel);
 		}
@@ -113,6 +119,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			lowestPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(lowestPan);
 			lowestPan.setValue(0);
+			lowestPan.onValueChange = [this] { audioProcessor.updateStereoWidth(); };
 			lookAndFeel.initializeLabel(lowestpanLabel, "Lowest panned pitch");
 			addAndMakeVisible(lowestpanLabel);
 		}
@@ -124,6 +131,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(midiVelocitySens);
 		midiVelocitySens.setValue(100);
+		midiVelocitySens.onValueChange = [this] { audioProcessor.updateMidiVelocitySensitivity(); };
 		lookAndFeel.initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
 		addAndMakeVisible(midivelocitysensLabel);
 	}
@@ -134,6 +142,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			buildIntervalCombobox(pitchBendUp);
 			pitchBendUp.setSelectedId(2);
 			addAndMakeVisible(pitchBendUp);
+			pitchBendUp.onChange = [this] { audioProcessor.updatePitchbendSettings(); };
 			lookAndFeel.initializeLabel(pitchbendUpLabel, "Pitch bend range up");
 			addAndMakeVisible(pitchbendUpLabel);
 		}
@@ -141,15 +150,16 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			buildIntervalCombobox(pitchBendDown);
 			pitchBendDown.setSelectedId(2);
 			addAndMakeVisible(pitchBendDown);
+			pitchBendDown.onChange = [this] { audioProcessor.updatePitchbendSettings(); };
 			lookAndFeel.initializeLabel(pitchbendDownLabel, "Pitch bend range down");
 			addAndMakeVisible(pitchbendDownLabel);
 		}
 	}
 	
-	
 	// voice stealing on/off
 	{
 		voiceStealing.setButtonText("Voice stealing");
+		voiceStealing.onClick = [this] { audioProcessor.updateNoteStealing(); };
 		addAndMakeVisible(voiceStealing);
 		voiceStealing.triggerClick();
 	}
@@ -160,6 +170,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		concertPitch.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 		addAndMakeVisible(concertPitch);
 		concertPitch.setValue(440);
+		concertPitch.onValueChange = [this] { audioProcessor.updateConcertPitch(); };
 		lookAndFeel.initializeLabel(concertPitchLabel, "Concert pitch (Hz)");
 		addAndMakeVisible(concertPitchLabel);
 	}
@@ -173,7 +184,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		lookAndFeel.initializeLabel(numVoicesLabel, "Number of harmony voices");
 		addAndMakeVisible(numVoicesLabel);
 	}
-
 };
 
 MidiControlPanel::~MidiControlPanel()

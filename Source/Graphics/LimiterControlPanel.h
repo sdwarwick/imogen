@@ -34,6 +34,7 @@ public:
 			limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
 			addAndMakeVisible(limiterThresh);
 			limiterThresh.setValue(-2.0f);
+			limiterThresh.onValueChange = [this] { audioProcessor.updateLimiter(); };
 			lookAndFeel.initializeLabel(threshLabel, "Threshold");
 			addAndMakeVisible(threshLabel);
 		}
@@ -44,6 +45,7 @@ public:
 			limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
 			addAndMakeVisible(limiterRelease);
 			limiterRelease.setValue(10);
+			limiterRelease.onValueChange = [this] { audioProcessor.updateLimiter(); };
 			lookAndFeel.initializeLabel(releaseLabel, "Release time");
 			addAndMakeVisible(releaseLabel);
 		}
@@ -52,6 +54,7 @@ public:
 		{
 			limiterToggle.setButtonText("Output limiter");
 			addAndMakeVisible(limiterToggle);
+			limiterToggle.onClick = [this] { audioProcessor.updateLimiter(); };
 			limiterToggle.triggerClick();
 		}
 	};

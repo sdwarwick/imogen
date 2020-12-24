@@ -19,6 +19,7 @@
 class HelpScreen  : public juce::Component
 {
 public:
+	
     HelpScreen();
     ~HelpScreen() override;
 
@@ -29,6 +30,8 @@ public:
 	ImageButton closeButton;
 
 private:
+	
 	void closeButtonClicked();
+	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HelpScreen)
 };

@@ -16,15 +16,12 @@ class ImogenAudioProcessor    : public juce::AudioProcessor
 	
 public:
 	
+	// standard & general-purpose functions ---------------------------------------------------------------------------------------------------------
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
 	
 	AudioProcessor::BusesProperties makeBusProperties();
 	
-	Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }
-	
-	float reportCurrentInputPitch() const noexcept { return currentInputPitch; }
-
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
@@ -34,16 +31,14 @@ public:
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 	
-	void killAllMidi() { harmonizer.allNotesOff(false); }
-
     juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override;
+	bool hasEditor() const override { return true; }
 
-    const juce::String getName() const override;
+	const juce::String getName() const override { return JucePlugin_Name; }
 
-    bool acceptsMidi() const override;
-    bool producesMidi() const override;
-    bool isMidiEffect() const override;
+	bool acceptsMidi() const override { return true; }
+	bool producesMidi() const override { return false; }
+	bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override;
 
     int getNumPrograms() override;
@@ -52,95 +47,98 @@ public:
     const juce::String getProgramName (int index) override;
     void changeProgramName (int index, const juce::String& newName) override;
 	
-	void savePreset(String presetName);
-	void loadPreset(String presetName);
-	void deletePreset(String presetName);
-	File getPresetsFolder();
-
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 	
-	AudioProcessorValueTreeState tree;
+	// functions for custom preset management system ------------------------------------------------------------------------------------------------
+	void savePreset(juce::String presetName);
+	void loadPreset(juce::String presetName);
+	void deletePreset(juce::String presetName) const;
+	juce::File getPresetsFolder() const;
 	
-	void updateNumVoices(const int newNumVoices);
-	
-//==============================================================================
-	
-private:
-	
-	void processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples);
-	
-	void renderChunk(AudioBuffer<float>& buffer, const int inputChannel);
-	
-	Harmonizer harmonizer;
-	
-	EpochFinder epochs;
-	PitchTracker pitch;
-	Array<int> epochIndices;
-	
-	float currentInputPitch;
-	
-	double lastSampleRate;
-	int lastBlockSize;
-
-	bool adsrIsOn;
-	float previousStereoWidth;
-	float inputGainMultiplier;
-	float outputGainMultiplier;
-	
-	int prevQuickKillMs;
-	int prevConcertPitch;
-
-	int previousmidipan;
-	int dryvoxpanningmults[2]; // should have NUMBER_OF_CHANNELS elements.
-	
-	float prevideb;
-	float prevodeb;
-	
-	dsp::ProcessSpec dspSpec;
-
-	dsp::Limiter<float> limiter;
-	bool limiterIsOn;
-	
-	dsp::DryWetMixer<float> dryWet;
-	
-	AudioProcessorValueTreeState::ParameterLayout createParameters();
-	
-	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-	AudioBuffer<float> dryBuffer; // this buffer is used for panning the dry signal
-	
-		const std::atomic<float>& adsrAttackListener;
-		const std::atomic<float>& adsrDecayListener;
-		const std::atomic<float>& adsrSustainListener;
-		const std::atomic<float>& adsrReleaseListener;
-		const std::atomic<float>& adsrOnOffListener;
-		const std::atomic<float>& stereoWidthListener;
-		const std::atomic<float>& lowestPanListener;
-		const std::atomic<float>& midiVelocitySensListener;
-		const std::atomic<float>& pitchBendUpListener;
-		const std::atomic<float>& pitchBendDownListener;
-		const std::atomic<float>& inputGainListener;
-		const std::atomic<float>& outputGainListener;
-		const std::atomic<float>& voiceStealingListener;
-		const std::atomic<float>& inputChannelListener;
-		const std::atomic<float>& dryVoxPanListener;
-		const std::atomic<float>& masterDryWetListener;
-		const std::atomic<float>& limiterThreshListener;
-		const std::atomic<float>& limiterReleaseListener;
-		const std::atomic<float>& limiterToggleListener;
-		const std::atomic<float>& quickKillMsListener;
-		const std::atomic<float>& concertPitchListener;
-	
+	// functions to update parameters ---------------------------------------------------------------------------------------------------------------
 	void updateAdsr();
 	void updateIOgains();
 	void updateLimiter();
 	void updateStereoWidth();
 	void updateQuickKillMs();
 	void updateDryVoxPan();
+	void updateMidiVelocitySensitivity();
+	void updateNoteStealing();
+	void updatePitchbendSettings();
+	void updateDryWet();
+	void updateConcertPitch();
 	
-	void savePrevParamValues();
+	// misc utility functions -----------------------------------------------------------------------------------------------------------------------
+	Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }
 	
-
+	float reportCurrentInputPitch() const noexcept { return currentInputPitch; }
+	
+	void killAllMidi() { harmonizer.allNotesOff(false); }
+	
+	void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
+	
+	AudioProcessorValueTreeState tree;
+	
+//==============================================================================
+	
+private:
+	
+	void processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples);
+	void renderChunk(AudioBuffer<float>& buffer, const int inputChannel);
+	
+	AudioProcessorValueTreeState::ParameterLayout createParameters();
+	
+	void updateAllParameters();
+	
+	AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+	AudioBuffer<float> dryBuffer; // this buffer is used for panning & delaying the dry signal
+	
+	Harmonizer harmonizer;
+	
+	EpochFinder epochs;
+	Array<int> epochIndices;
+	
+	PitchTracker pitch;
+	
+	dsp::ProcessSpec dspSpec;
+	dsp::Limiter<float> limiter;
+	dsp::DryWetMixer<float> dryWet;
+	
+	// these variables store *current* states:
+	double lastSampleRate;
+	bool adsrIsOn, limiterIsOn;
+	float inputGainMultiplier, outputGainMultiplier, currentInputPitch;
+	
+	int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
+	
+	// variables to store previous parameter values, to avoid unnecessary update operations:
+	int prevBendUp, prevBendDown, prevConcertPitchHz, prevVelocitySensitivity, prevDryPan, previousStereoWidth;
+	float prevideb, prevodeb;
+	
+	// listener variables linked to AudioProcessorValueTreeState parameters:
+	const std::atomic<float>& adsrAttackListener;
+	const std::atomic<float>& adsrDecayListener;
+	const std::atomic<float>& adsrSustainListener;
+	const std::atomic<float>& adsrReleaseListener;
+	const std::atomic<float>& adsrOnOffListener;
+	const std::atomic<float>& stereoWidthListener;
+	const std::atomic<float>& lowestPanListener;
+	const std::atomic<float>& midiVelocitySensListener;
+	const std::atomic<float>& pitchBendUpListener;
+	const std::atomic<float>& pitchBendDownListener;
+	const std::atomic<float>& inputGainListener;
+	const std::atomic<float>& outputGainListener;
+	const std::atomic<float>& voiceStealingListener;
+	const std::atomic<float>& inputChannelListener;
+	const std::atomic<float>& dryVoxPanListener;
+	const std::atomic<float>& masterDryWetListener;
+	const std::atomic<float>& limiterThreshListener;
+	const std::atomic<float>& limiterReleaseListener;
+	const std::atomic<float>& limiterToggleListener;
+	const std::atomic<float>& quickKillMsListener;
+	const std::atomic<float>& concertPitchListener;
+	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
 

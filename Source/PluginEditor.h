@@ -26,29 +26,25 @@ public:
 //==============================================================================
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
+    
     ImogenAudioProcessor& audioProcessor;
 	
 	ImogenLookAndFeel lookAndFeel;
 	ImogenLookAndFeel::Skin currentSkin;
 	ImogenLookAndFeel::Skin prevSkin;
 	
+	ComboBox selectSkin;
+	Label skinLabel;
+	void skinSelectorChanged();
+	
 	MidiControlPanel midiPanel;
 	IOControlPanel ioPanel;
 	StaffDisplay staffDisplay;
 	
 	HelpScreen helpScreen;
-	
-	bool viewHelp;  // bool to control visibility of help/documentation screen
-	
-	ComboBox selectSkin;
-	Label skinLabel;
-	void skinSelectorChanged();
-	
 	TextButton helpButton;
-	
 	void helpButtonClicked();
+	bool viewHelp;  // bool to control visibility of help/documentation screen
 	
 	Label pitchTester;
 
