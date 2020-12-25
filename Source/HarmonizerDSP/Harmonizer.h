@@ -12,7 +12,8 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
-#include "DspUtils.h"
+#include "GeneralUtils.h"
+#include "MidiUtilities.h"
 #include "PanningManager.h"
 
 
@@ -99,7 +100,7 @@ private:
 	
 	bool noteTurnedOff;
 	
-	MidiPitchConverter converter;
+	PitchConverter converter;
 	
 	int currentlyPlayingNote;
 	float currentOutputFreq;

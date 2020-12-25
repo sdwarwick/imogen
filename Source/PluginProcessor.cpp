@@ -383,9 +383,8 @@ void ImogenAudioProcessor::loadPreset(juce::String presetName)
 	{
 		auto xmlElement = juce::parseXML(presetToLoad);
 		
-		if(xmlElement.get() != nullptr)
-			if(xmlElement->hasTagName (tree.state.getType()))
-				tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
+		if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
+			tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
 	}
 };
 
@@ -402,13 +401,22 @@ void ImogenAudioProcessor::deletePreset(juce::String presetName) const
 
 juce::File ImogenAudioProcessor::getPresetsFolder() const
 {
-	File rootFolder = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory);
+	File rootFolder;
 	
 #ifdef JUCE_MAC
-	rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets");
+	rootFolder = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory);
+	rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets").getChildFile("Ben Vining Music Software").getChildFile("Imogen");
 #endif
 	
+#ifdef JUCE_WINDOWS
+	rootFolder = File::getSpecialLocation(File::SpecialLocationType::UserDocumentsDirectory);
 	rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
+#endif
+	
+#ifdef JUCE_LINUX
+	rootFolder = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory);
+	rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
+#endif
 	
 	if(! rootFolder.isDirectory() && ! rootFolder.existsAsFile())
 		rootFolder.createDirectory(); // creates the presets folder if it doesn't already exist
@@ -428,9 +436,8 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 {
 	auto xmlState(getXmlFromBinary(data, sizeInBytes));
 	
-	if (xmlState.get() != nullptr)
-		if (xmlState->hasTagName (tree.state.getType()))
-			tree.replaceState(juce::ValueTree::fromXml (*xmlState));
+	if (xmlState.get() != nullptr && xmlState->hasTagName (tree.state.getType()))
+		tree.replaceState(juce::ValueTree::fromXml (*xmlState));
 };
 
 

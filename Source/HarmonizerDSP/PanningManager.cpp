@@ -31,6 +31,8 @@ void PanningManager::setNumberOfVoices(const int newNumVoices)
 {
 	jassert(newNumVoices > 0);
 	
+	const ScopedLock sl (lock);
+	
 	currentNumVoices = newNumVoices;
 
 	mapArrayIndexes();
@@ -41,6 +43,7 @@ void PanningManager::setNumberOfVoices(const int newNumVoices)
 void PanningManager::updateStereoWidth(const int newWidth)
 {
 	const ScopedLock sl (lock);
+	
 	lastRecievedStereoWidth = newWidth;
 	
 	const auto rangeMultiplier = newWidth/100.0f;

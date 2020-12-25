@@ -12,7 +12,7 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
-#include "DspUtils.h"
+#include "GeneralUtils.h"
 #include "PluginProcessor.h"
 #include "LookAndFeel.h"
 
