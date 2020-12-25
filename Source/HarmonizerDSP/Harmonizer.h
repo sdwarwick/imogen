@@ -32,29 +32,16 @@ public:
 	
 	~HarmonizerVoice();
 	
-	// renders the next block of audio data for this voice.
-	// The output audio data will be added to the current contents of the buffer provided.
-	// Only the region of the buffer between startSample and (startSample + numSamples) should be altered by this method.
-	// If the voice is currently silent, it should just return without doing anything.
-	// The size of the blocks that are rendered can change each time it is called, and may involve rendering as little as 1 sample at a time.
-	// In between rendering callbacks, the voice's methods will be called to tell it about note and controller events.
 	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
 	int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
 	
 	bool isVoiceActive() const noexcept { return currentlyPlayingNote >= 0; }
 	
-	// returns true if a voice is sounding, but its key has been released
-	bool isPlayingButReleased() const noexcept { return isVoiceActive() && ! (keyIsDown || sostenutoPedalDown || sustainPedalDown); }
+	bool isPlayingButReleased() const noexcept; // returns true if a voice is sounding, but its key has been released
 	
 	// Returns true if this voice started playing its current note before the other voice did. */
 	bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
-	
-	bool isSustainPedalDown() const noexcept { return sustainPedalDown; }
-	void setSustainPedalDown(bool isNowDown) noexcept { sustainPedalDown = isNowDown; }
-	
-	bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
-	void setSostenutoPedalDown(bool isNowDown) noexcept { sostenutoPedalDown = isNowDown; }
 	
 	// Returns true if the key that triggered this voice is still held down. Note that the voice may still be playing after the key was released (e.g because the sostenuto pedal is down).
 	bool isKeyDown() const noexcept { return keyIsDown; }
@@ -70,11 +57,6 @@ public:
 	void controllerMoved(const int controllerNumber, const int newControllerValue);
 	
 	
-protected:
-	//Resets the state of this voice after a note has finished playing. The subclass must call this when it finishes playing a note and becomes available to play new ones. It must either call it in the stopNote() method, or if the voice is tailing off, then it should call it later during the renderNextBlock method, as soon as it finishes its tail-off. 
-	void clearCurrentNote() noexcept { currentlyPlayingNote = -1; }
-
-	
 private:
 	
 	friend class Harmonizer;
@@ -82,23 +64,21 @@ private:
 	Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
 	
 	ADSR adsr;
-	bool adsrIsOn;
 	ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
 	bool isFading;
-	
 	bool noteTurnedOff;
-	
 	int currentlyPlayingNote;
 	float currentOutputFreq;
 	float currentVelocityMultiplier;
 	float lastRecievedVelocity;
 	uint32 noteOnTime;
-	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
+	bool keyIsDown;
 	int currentMidipan;
 	float panningMults[2];
 	
 	AudioBuffer<float> tempBuffer;
 	
+	void clearCurrentNote() noexcept { currentlyPlayingNote = -1; }
 	
 	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
@@ -114,18 +94,14 @@ public:
 	
 	~Harmonizer();
 	
-	// renders the voices for the given range
 	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
 	void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; };
 	
 	void handleMidiEvent(const MidiMessage& m);
-	
+	void updateMidiVelocitySensitivity(const int newSensitivity);
 	
 	void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
-	
-	
-	void updateMidiVelocitySensitivity(const int newSensitivity);
 	
 	void setCurrentPlaybackSampleRate(const double newRate);
 	double getSamplerate() const noexcept { return sampleRate; }
@@ -145,7 +121,7 @@ public:
 	void allNotesOff(const bool allowTailOff);
 	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
-	void setADSRonOff(const bool shouldBeOn);
+	void setADSRonOff(const bool shouldBeOn) { adsrIsOn = shouldBeOn; };
 	void updateQuickReleaseMs(const int newMs);
 	ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
 	
@@ -167,7 +143,6 @@ public:
 	void deleteAllVoices();
 	
 	int getNumVoices() const noexcept { return voices.size(); }
-	
 	
 	
 protected:
@@ -193,7 +168,6 @@ protected:
 	HarmonizerVoice* findVoiceToSteal (const int midiNoteNumber) const;
 
 	
-	
 private:
 	
 	friend class HarmonizerVoice;
@@ -204,6 +178,7 @@ private:
 	
 	ADSR::Parameters adsrParams;
 	ADSR::Parameters quickReleaseParams;
+	bool adsrIsOn;
 	
 	float currentInputFreq;
 	
@@ -211,6 +186,8 @@ private:
 	bool shouldStealNotes;
 	uint32 lastNoteOnCounter;
 	int lowestPannedNote;
+	
+	bool sustainPedalDown, sostenutoPedalDown;
 	
 	mutable Array<int> currentlyActiveNotes;
 	

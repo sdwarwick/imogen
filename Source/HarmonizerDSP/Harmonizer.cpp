@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), adsrIsOn(true), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), sustainPedalDown(false), sostenutoPedalDown(false), currentMidipan(64)
+HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -43,17 +43,16 @@ HarmonizerVoice::~HarmonizerVoice()
 
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
-	if(! (sustainPedalDown || sostenutoPedalDown))
+	if(! (parent->sustainPedalDown || parent->sostenutoPedalDown))
 		if(! keyIsDown)
 			stopNote(1.0f, false);
 	
 	// don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
 	bool voiceIsOnRightNow;
-	if(adsrIsOn)
+	if(parent->adsrIsOn)
 		voiceIsOnRightNow = adsr.isActive();
 	else
 		voiceIsOnRightNow = isFading ? true : !noteTurnedOff;
-	
 	
 	if(voiceIsOnRightNow)
 	{
@@ -68,7 +67,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		
 		subBuffer.applyGain(0, numSamples, currentVelocityMultiplier);
 	
-		if(adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
+		if(parent->adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
 		
 		// quick fade out for stopNote() w/ allowTailOff = false:
@@ -84,6 +83,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	else
 	{
 		clearCurrentNote();
+		parent->panner.panValTurnedOff(currentMidipan);
 		currentMidipan = 64;
 		quickRelease.noteOn();
 		adsr.reset();
@@ -92,7 +92,6 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 
 
 // MIDI -----------------------------------------------------------------------------------------------------------
-
 
 void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
 {
@@ -135,7 +134,6 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 	noteTurnedOff = true;
 };
 
-
 void HarmonizerVoice::aftertouchChanged(const int) { };
 
 void HarmonizerVoice::channelPressureChanged(const int) { };
@@ -143,25 +141,31 @@ void HarmonizerVoice::channelPressureChanged(const int) { };
 void HarmonizerVoice::controllerMoved(const int controllerNumber, const int newControllerValue) { };
 
 
-// ADSR settings -------------------------------------------------------------------------------------------------------
-
 void HarmonizerVoice::setPan(const int newPan) 
 {
 	jassert(isPositiveAndBelow(newPan, 128));
 	
-	if(newPan == 64) // save time for the simplest case
+	if(currentMidipan != newPan)
 	{
-		panningMults[0] = 0.5f;
-		panningMults[1] = 0.5f;
-		currentMidipan = 64;
-	}
-	else if(currentMidipan != newPan)
-	{
+		if(newPan == 64) // save time for the simplest case
+		{
+			panningMults[0] = 0.5f;
+			panningMults[1] = 0.5f;
+		}
+		else if(currentMidipan != newPan)
+		{
+			const float Rpan = newPan / 127.0f;
+			panningMults[1] = Rpan; // R channel
+			panningMults[0] = 1.0f - Rpan; // L channel
+		}
 		currentMidipan = newPan;
-		const float Rpan = newPan / 127.0f;
-		panningMults[1] = Rpan; // R channel
-		panningMults[0] = 1.0f - Rpan; // L channel
 	}
+};
+
+
+bool HarmonizerVoice::isPlayingButReleased() const noexcept
+{
+	return isVoiceActive() && ! (keyIsDown || parent->sostenutoPedalDown || parent->sustainPedalDown);
 };
 
 
@@ -245,7 +249,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(0), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0)
+Harmonizer::Harmonizer(): lastPitchWheelValue(0), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false)
 {
 	currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
@@ -366,10 +370,9 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 
 void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 {
-	const ScopedLock sl (lock);
-	
 	if(velocityConverter.getCurrentSensitivity() != newSensitivity/100.0f)
 	{
+		const ScopedLock sl (lock);
 		velocityConverter.setSensitivity(newSensitivity);
 		for(auto* voice : voices)
 			if(voice->isVoiceActive())
@@ -411,7 +414,6 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
 	{
 		voice->noteOnTime = ++lastNoteOnCounter;
 		voice->setKeyDown (true);
-		voice->setSostenutoPedalDown (false);
 		
 		if(! voice->isVoiceActive())
 		{
@@ -443,7 +445,7 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 		if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
 		{
 			voice->setKeyDown (false);
-			if (! (voice->isSustainPedalDown() || voice->isSostenutoPedalDown()))
+			if (! (sustainPedalDown || sostenutoPedalDown))
 				stopVoice (voice, velocity, allowTailOff);
 		}
 	}
@@ -453,8 +455,9 @@ void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const 
 {
 	if(voice != nullptr)
 	{
-		panner.panValTurnedOff(voice->currentMidipan);
 		voice->stopNote (velocity, allowTailOff);
+		if(! allowTailOff)
+			panner.panValTurnedOff(voice->currentMidipan);
 	}
 };
 
@@ -528,16 +531,13 @@ void Harmonizer::handleSustainPedal(const bool isDown)
 {
 	const ScopedLock sl (lock);
 	
-	if (isDown)
-		for (auto* voice : voices)
-			voice->setSustainPedalDown (true);
-	else
+	sustainPedalDown = isDown;
+	
+	if(! isDown)
 	{
 		for (auto* voice : voices)
 		{
-			voice->setSustainPedalDown (false);
-			
-			if (! (voice->isKeyDown() || voice->isSostenutoPedalDown()))
+			if (! (voice->isKeyDown() || ! sustainPedalDown))
 				stopVoice (voice, 1.0f, true);
 		}
 	}
@@ -547,11 +547,11 @@ void Harmonizer::handleSostenutoPedal(const bool isDown)
 {
 	const ScopedLock sl (lock);
 	
+	sostenutoPedalDown = isDown;
+	
 	for (auto* voice : voices)
 	{
-		if (isDown)
-			voice->setSostenutoPedalDown (true);
-		else if (voice->isSostenutoPedalDown())
+		if (! isDown && sostenutoPedalDown)
 			stopVoice (voice, 1.0f, true);
 	}
 };
@@ -669,14 +669,6 @@ void Harmonizer::updateADSRsettings(const float attack, const float decay, const
 		for (auto* voice : voices)
 			voice->adsr.setParameters(adsrParams);
 	}
-};
-
-void Harmonizer::setADSRonOff(const bool shouldBeOn)
-{
-	const ScopedLock sl (lock);
-	
-	for(auto* voice : voices)
-		voice->adsrIsOn = shouldBeOn;
 };
 
 void Harmonizer::updateQuickReleaseMs(const int newMs)
