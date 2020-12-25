@@ -17,6 +17,10 @@
 #include "PanningManager.h"
 
 
+class Harmonizer; // forward declaration...
+
+
+
 /*
  HarmonizerVoice : represents a "voice", or instance of the DSP algorithm, that the Harmonizer can use to generate sound. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
  */
@@ -24,7 +28,7 @@
 class HarmonizerVoice
 {
 public:
-	HarmonizerVoice();
+	HarmonizerVoice(Harmonizer* h);
 	
 	~HarmonizerVoice();
 	
@@ -36,8 +40,6 @@ public:
 	// In between rendering callbacks, the voice's methods will be called to tell it about note and controller events.
 	void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
-	void updateInputFreq(const float newFreq) noexcept { currentInputFreq = newFreq; }
-	
 	int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
 	
 	bool isVoiceActive() const noexcept { return currentlyPlayingNote >= 0; }
@@ -47,11 +49,6 @@ public:
 	
 	// Returns true if this voice started playing its current note before the other voice did. */
 	bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
-	
-	void setCurrentPlaybackSamplerate(const double newRate);
-	double getSamplerate() const noexcept { return currentSampleRate; }
-	
-	void setConcertPitch(const int newConcertPitch);
 	
 	bool isSustainPedalDown() const noexcept { return sustainPedalDown; }
 	void setSustainPedalDown(bool isNowDown) noexcept { sustainPedalDown = isNowDown; }
@@ -63,25 +60,14 @@ public:
 	bool isKeyDown() const noexcept { return keyIsDown; }
 	void setKeyDown(bool isNowDown) noexcept { keyIsDown = isNowDown; }
 	
-	void setMidiVelocitySensitivity(const float newsensitity);
-	
 	void setPan(const int newPan);
-	int getPan() const noexcept { return currentMidipan; }
 	
-	void startNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
-	void changeNote(const int midiPitch, const float velocity, const int currentPitchWheelPosition);
+	void startNote(const int midiPitch, const float velocity);
+	void changeNote(const int midiPitch, const float velocity);
 	void stopNote(const float velocity, const bool allowTailOff);
-	void pitchWheelMoved(const int newPitchWheelValue);
 	void aftertouchChanged(const int newAftertouchValue);
 	void channelPressureChanged(const int newChannelPressureValue);
 	void controllerMoved(const int controllerNumber, const int newControllerValue);
-	
-	
-	void updateAdsrSettings(ADSR::Parameters& newParams) noexcept { adsr.setParameters(newParams); }
-	void updateQuickReleaseSettings(ADSR::Parameters& newParams) noexcept { quickRelease.setParameters(newParams); }
-	void setAdsrOnOff(const bool isOn) noexcept { adsrIsOn = isOn; }
-	
-	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
 	
 	
 protected:
@@ -93,6 +79,8 @@ private:
 	
 	friend class Harmonizer;
 	
+	Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
+	
 	ADSR adsr;
 	bool adsrIsOn;
 	ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
@@ -100,29 +88,17 @@ private:
 	
 	bool noteTurnedOff;
 	
-	PitchConverter converter;
-	
 	int currentlyPlayingNote;
 	float currentOutputFreq;
 	float currentVelocityMultiplier;
-	int pitchbendRangeUp, pitchbendRangeDown;
-	int lastRecievedPitchbend, lastRecievedVelocity;
-	double currentSampleRate;
+	float lastRecievedVelocity;
 	uint32 noteOnTime;
 	bool keyIsDown, sustainPedalDown, sostenutoPedalDown;
-	float midiVelocitySensitivity;
 	int currentMidipan;
 	float panningMults[2];
-	float currentInputFreq;
 	
 	AudioBuffer<float> tempBuffer;
 	
-	// calculates the actual target frequency, based on the last recieved midiPitch, the last recieved pitch wheel value, and the current pitch bend settings
-	float getOutputFreqFromMidinoteAndPitchbend(const int lastRecievedNote, const int pitchBend);
-	
-	
-	// calculates a [0.0, 1.0] gain value to be applied to the output signal that corresponds to the latest recieved midi Velocity & the selected midi velocity sensitivity
-	float calcVelocityMultiplier(const float inputVelocity);
 	
 	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
@@ -141,7 +117,7 @@ public:
 	// renders the voices for the given range
 	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
-	void setCurrentInputFreq(const float inputFreqHz) noexcept;
+	void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; };
 	
 	void handleMidiEvent(const MidiMessage& m);
 	
@@ -219,6 +195,12 @@ protected:
 	
 	
 private:
+	
+	friend class HarmonizerVoice;
+	
+	PitchConverter pitchConverter;
+	PitchBendHelper bendTracker;
+	VelocityHelper velocityConverter;
 	
 	ADSR::Parameters adsrParams;
 	ADSR::Parameters quickReleaseParams;

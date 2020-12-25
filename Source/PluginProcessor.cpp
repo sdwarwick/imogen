@@ -32,7 +32,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
 	concertPitchListener(*tree.getRawParameterValue("concertPitch"))
 {
-	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice); }
+	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice(&harmonizer)); }
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
@@ -350,7 +350,7 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 		if(newNumVoices > currentVoices) 
 		{
 			for(int i = 0; i < newNumVoices - currentVoices; ++i)
-				harmonizer.addVoice(new HarmonizerVoice);
+				harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
 		}
 		else
 			harmonizer.removeNumVoices(currentVoices - newNumVoices);
