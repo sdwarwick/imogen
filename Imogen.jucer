@@ -9,7 +9,7 @@
               pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
               pluginFormats="buildAU,buildVST3" pluginManufacturerCode="BenV"
               pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Midi/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/"
-              displaySplashScreen="1" cppLanguageStandard="17">
+              displaySplashScreen="1" cppLanguageStandard="17" maxBinaryFileSize="20971520">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
       <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"

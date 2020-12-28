@@ -8,8 +8,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 #endif
 	tree(*this, nullptr, "PARAMETERS", createParameters()),
 	wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
-	lastSampleRate(44100), adsrIsOn(true), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
-	prevBendUp(2), prevBendDown(2), prevConcertPitchHz(440), prevVelocitySensitivity(100), prevDryPan(64), previousStereoWidth(100), prevideb(0.0f), prevodeb(0.0f),
+	lastSampleRate(44100), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
+	prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
 	adsrAttackListener(*tree.getRawParameterValue("adsrAttack")),
 	adsrDecayListener(*tree.getRawParameterValue("adsrDecay")),
 	adsrSustainListener(*tree.getRawParameterValue("adsrSustain")),
@@ -58,6 +58,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	}
 	
 	wetBuffer.clear();
+	dryBuffer.clear();
 	
 	dspSpec.sampleRate = sampleRate;
 	dspSpec.maximumBlockSize = MAX_BUFFERSIZE * 2;
@@ -72,6 +73,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	dryWet.setWetLatency(2); // latency in samples of the ESOLA algorithm
 	
 	updateAllParameters();
+	harmonizer.resetNoteOnCounter(); // ??
 };
 
 
@@ -161,23 +163,27 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	const int numSamples = buffer.getNumSamples();
 	
 	// buffer sizes
+	{
 	if(wetBuffer.getNumSamples() != numSamples)
 		wetBuffer.setSize(2, numSamples, true, true, true);
 	if(dryBuffer.getNumSamples() != numSamples)
 		dryBuffer.setSize(2, numSamples, true, true, true);
-	
+	}
 	
 	//==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
 	
 	wetBuffer.clear();
+	dryBuffer.clear();
 	
 	buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
 	
 	// copy input signal to dryBuffer & apply panning
-	dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
-	dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
-	dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
-	dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
+	{
+		dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
+		dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
+		dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
+		dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
+	}
 	
 	dsp::AudioBlock<float> dwinblock(dryBuffer);
 	dryWet.pushDrySamples(dwinblock);
@@ -186,7 +192,7 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	
 	harmonizer.setCurrentInputFreq(currentInputPitch); // do this here if possible? input pitch should be calculated/updated as frequently as possible
 	
-	harmonizer.renderVoices(buffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output samples into "buffer"
+	harmonizer.renderVoices(buffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output into "wetBuffer"
 	
 	// clear any extra channels present in I/O buffer
 	{
@@ -195,8 +201,10 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 				buffer.clear(i - 1, 0, numSamples);
 	}
 	
-	dsp::AudioBlock<float> dwoutblock (buffer);
-	dryWet.mixWetSamples(dwoutblock);
+	dsp::AudioBlock<float> dwoutblock (wetBuffer);
+	dryWet.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
+	
+	buffer.makeCopyOf(wetBuffer, true); // transfer from wetBuffer to I/O buffer
 	
 	buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
 	
@@ -236,8 +244,7 @@ void ImogenAudioProcessor::updateAllParameters()
 
 void ImogenAudioProcessor::updateAdsr()
 {
-	adsrIsOn = float(adsrOnOffListener) > 0.5f;
-	harmonizer.setADSRonOff(adsrIsOn);
+	harmonizer.setADSRonOff(float(adsrOnOffListener) > 0.5f);
 	harmonizer.updateADSRsettings(float(adsrAttackListener), float(adsrDecayListener), float(adsrSustainListener), float(adsrReleaseListener));
 };
 
@@ -269,12 +276,7 @@ void ImogenAudioProcessor::updateLimiter()
 void ImogenAudioProcessor::updateStereoWidth()
 {
 	harmonizer.updateLowestPannedNote(int(round(float(lowestPanListener))));
-	
-	if(const int newWidth = int(round(float(stereoWidthListener))); previousStereoWidth != newWidth)
-	{
-		harmonizer.updateStereoWidth(newWidth);
-		previousStereoWidth = newWidth;
-	}
+	harmonizer.updateStereoWidth(int(round(float(stereoWidthListener))));
 };
 
 
@@ -298,11 +300,7 @@ void ImogenAudioProcessor::updateDryVoxPan()
 
 void ImogenAudioProcessor::updateMidiVelocitySensitivity()
 {
-	if(const int newSensitivity = int(round(float(midiVelocitySensListener))); newSensitivity != prevVelocitySensitivity)
-	{
-		harmonizer.updateMidiVelocitySensitivity(newSensitivity);
-		prevVelocitySensitivity = newSensitivity;
-	}
+	harmonizer.updateMidiVelocitySensitivity(int(round(float(midiVelocitySensListener))));
 };
 
 
@@ -314,14 +312,7 @@ void ImogenAudioProcessor::updateNoteStealing()
 
 void ImogenAudioProcessor::updatePitchbendSettings()
 {
-	const int newBendUp = int(round(float(pitchBendUpListener)));
-	const int newBendDown = int(round(float(pitchBendDownListener)));
-	if(prevBendUp != newBendUp || prevBendDown != newBendDown)
-	{
-		harmonizer.updatePitchbendSettings(newBendUp, newBendDown);
-		prevBendUp = newBendUp;
-		prevBendDown = newBendDown;
-	}
+	harmonizer.updatePitchbendSettings(int(round(float(pitchBendUpListener))), int(round(float(pitchBendDownListener))));
 };
 
 
@@ -335,11 +326,7 @@ void ImogenAudioProcessor::updateDryWet()
 
 void ImogenAudioProcessor::updateConcertPitch()
 {
-	if(const int newHz = int(round(float(concertPitchListener))); prevConcertPitchHz != newHz)
-	{
-		harmonizer.setConcertPitchHz(newHz);
-		prevConcertPitchHz = newHz;
-	}
+	harmonizer.setConcertPitchHz(int(round(float(concertPitchListener))));
 };
 
 
@@ -486,10 +473,10 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-	if(adsrIsOn)
+	if(harmonizer.isADSRon())
 		return double(adsrReleaseListener); // ADSR release time in seconds
 	else
-		return double(quickKillMsListener * 1000.0); // "quick kill" time in seconds
+		return double(quickKillMsListener * 1000.0f); // "quick kill" time in seconds
 };
 
 int ImogenAudioProcessor::getNumPrograms() {

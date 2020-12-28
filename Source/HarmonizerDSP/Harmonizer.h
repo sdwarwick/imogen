@@ -101,6 +101,7 @@ public:
 	void handleMidiEvent(const MidiMessage& m);
 	void updateMidiVelocitySensitivity(const int newSensitivity);
 	
+	
 	void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
 	
 	void setCurrentPlaybackSampleRate(const double newRate);
@@ -109,7 +110,8 @@ public:
 	void setConcertPitchHz(const int newConcertPitchhz);
 	
 	void updateStereoWidth(const int newWidth);
-	void updateLowestPannedNote(const int newPitchThresh) noexcept { lowestPannedNote = newPitchThresh; }
+	void updateLowestPannedNote(const int newPitchThresh) noexcept;
+	int getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; };
 	
 	void setNoteStealingEnabled (bool shouldSteal) { shouldStealNotes = shouldSteal; }
 	bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
@@ -121,7 +123,8 @@ public:
 	void allNotesOff(const bool allowTailOff);
 	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
-	void setADSRonOff(const bool shouldBeOn) { adsrIsOn = shouldBeOn; };
+	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
+	bool isADSRon() const noexcept { return adsrIsOn; };
 	void updateQuickReleaseMs(const int newMs);
 	ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
 	

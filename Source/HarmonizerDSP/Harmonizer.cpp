@@ -249,7 +249,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(0), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false)
+Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false)
 {
 	currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
@@ -297,12 +297,41 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 	}
 };
 
+
+void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
+{
+	if(lowestPannedNote != newPitchThresh)
+	{
+		const ScopedLock sl (lock);
+		lowestPannedNote = newPitchThresh;
+		for(auto* voice : voices)
+		{
+			if(voice->isVoiceActive() && voice->currentlyPlayingNote < newPitchThresh && voice->currentMidipan != 64)
+			{
+				panner.panValTurnedOff(voice->currentMidipan);
+				voice->setPan(64);
+			}
+		}
+	}
+};
+
+
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
 void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
+	int actives = 0;
 	for (auto* voice : voices)
+	{
 		voice->renderNextBlock (inputAudio, inputChan, numSamples, outputBuffer, epochIndices);
+		++actives;
+	}
+	if(actives > 0)
+	{
+		const float gain = 1.0f / actives;
+		outputBuffer.applyGain(0, 0, numSamples, gain);
+		outputBuffer.applyGain(1, 0, numSamples, gain);
+	}
 };
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
@@ -370,10 +399,10 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 
 void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 {
-	if(velocityConverter.getCurrentSensitivity() != newSensitivity/100.0f)
+	if(const float newSens = newSensitivity/100.0f; velocityConverter.getCurrentSensitivity() != newSens)
 	{
 		const ScopedLock sl (lock);
-		velocityConverter.setSensitivity(newSensitivity);
+		velocityConverter.setFloatSensitivity(newSens);
 		for(auto* voice : voices)
 			if(voice->isVoiceActive())
 				voice->currentVelocityMultiplier = velocityConverter.floatVelocity(voice->lastRecievedVelocity);
@@ -474,9 +503,11 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
 
 void Harmonizer::handlePitchWheel(const int wheelValue)
 {
-	if(bendTracker.getLastRecievedPitchbend() != wheelValue)
+	if(lastPitchWheelValue != wheelValue)
 	{
 		const ScopedLock sl (lock);
+		
+		lastPitchWheelValue = wheelValue;
 		
 		bendTracker.newPitchbendRecieved(wheelValue);
 		for (auto* voice : voices)
@@ -487,11 +518,17 @@ void Harmonizer::handlePitchWheel(const int wheelValue)
 
 void Harmonizer::updatePitchbendSettings(const int rangeUp, const int rangeDown)
 {
-	const ScopedLock sl (lock);
-	bendTracker.setRange(rangeUp, rangeDown);
-	for(auto* voice : voices)
-		if(voice->isVoiceActive())
-			voice->currentOutputFreq = pitchConverter.mtof(bendTracker.newNoteRecieved(voice->currentlyPlayingNote));
+	if(bendTracker.getCurrentRangeUp() != rangeUp || bendTracker.getCurrentRangeDown() != rangeDown)
+	{
+		bendTracker.setRange(rangeUp, rangeDown);
+		if(lastPitchWheelValue != 64)
+		{
+			const ScopedLock sl (lock);
+			for(auto* voice : voices)
+				if(voice->isVoiceActive())
+					voice->currentOutputFreq = pitchConverter.mtof(bendTracker.newNoteRecieved(voice->currentlyPlayingNote));
+		}
+	}
 };
 
 void Harmonizer::handleAftertouch(const int midiNoteNumber, const int aftertouchValue)

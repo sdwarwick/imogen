@@ -107,13 +107,13 @@ private:
 	
 	// these variables store *current* states:
 	double lastSampleRate;
-	bool adsrIsOn, limiterIsOn;
+	bool limiterIsOn;
 	float inputGainMultiplier, outputGainMultiplier, currentInputPitch;
 	
 	int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
 	
 	// variables to store previous parameter values, to avoid unnecessary update operations:
-	int prevBendUp, prevBendDown, prevConcertPitchHz, prevVelocitySensitivity, prevDryPan, previousStereoWidth;
+	int prevDryPan;
 	float prevideb, prevodeb;
 	
 	// listener variables linked to AudioProcessorValueTreeState parameters:
