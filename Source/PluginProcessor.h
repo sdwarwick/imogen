@@ -55,7 +55,7 @@ public:
 	// functions for custom preset management system ------------------------------------------------------------------------------------------------
 	void savePreset(juce::String presetName);
 	void loadPreset(juce::String presetName);
-	void deletePreset(juce::String presetName) const;
+	void deletePreset(juce::String presetName);
 	juce::File getPresetsFolder() const;
 	
 	// functions to update parameters ---------------------------------------------------------------------------------------------------------------
@@ -72,6 +72,8 @@ public:
 	void updateDryWet();
 	void updateConcertPitch();
 	void updateMidiLatch();
+	void updatePedalPitch();
+	void updateDescant();
 	
 	// misc utility functions -----------------------------------------------------------------------------------------------------------------------
 	Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }

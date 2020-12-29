@@ -49,7 +49,6 @@ public:
 	void setPan(const int newPan);
 	
 	void startNote(const int midiPitch, const float velocity);
-	void changeNote(const int midiPitch, const float velocity);
 	void stopNote(const float velocity, const bool allowTailOff);
 	void aftertouchChanged(const int newAftertouchValue);
 	void channelPressureChanged(const int newChannelPressureValue);
@@ -151,6 +150,21 @@ public:
 	
 	int getNumVoices() const noexcept { return voices.size(); }
 	
+
+	void setPedalPitch(const bool isOn);
+	bool isPedalPitchOn() const noexcept { return pedalPitchIsOn; };
+	void setPedalPitchUpperThresh(const int newThresh);
+	int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; };
+	void setPedalPitchInterval(const int newInterval);
+	int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; };
+	
+	void setDescant(const bool isOn);
+	bool isDescantOn() const noexcept { return descantIsOn; };
+	void setDescantLowerThresh(const int newThresh);
+	int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
+	void setDescantInterval(const int newInterval);
+	int getCurrentDescantInterval() const noexcept { return descantInterval; };
+	
 	
 protected:
 	CriticalSection lock;
@@ -160,8 +174,8 @@ protected:
 	PanningManager panner;
 	
 	// MIDI
-	void noteOn(const int midiPitch, const float velocity);
-	void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff);
+	void noteOn(const int midiPitch, const float velocity, const bool partofList);
+	void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partOfList);
 	void handlePitchWheel(const int wheelValue);
 	void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
 	void handleChannelPressure(const int channelPressureValue);
@@ -215,6 +229,22 @@ private:
 	Array<int> reportActivesNoReleased() const;
 	Array<int> desired, previous;
 	Array<int> unLatched;
+	
+	// this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, etc
+	void pitchCollectionChanged();
+	
+	// doubles the lowest active pitch at an octave below
+	void applyPedalPitch();
+	bool pedalPitchIsOn;
+	int lastPedalPitch;
+	int pedalPitchUpperThresh;
+	int pedalPitchInterval;
+	
+	void applyDescant();
+	bool descantIsOn;
+	int lastDescantPitch;
+	int descantLowerThresh;
+	int descantInterval;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

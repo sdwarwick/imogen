@@ -48,6 +48,10 @@ private:
 	void helpButtonClicked();
 	bool viewHelp;  // bool to control visibility of help/documentation screen
 	
+	ComboBox selectPreset;
+	void newPresetSelected();
+	void makePresetMenu(ComboBox& box);
+	
 	Label pitchTester;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)

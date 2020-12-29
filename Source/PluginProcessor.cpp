@@ -183,8 +183,8 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	// copy input signal to dryBuffer & apply panning
 	{
 		dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
-		dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
 		dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
+		dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
 		dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
 	}
 	
@@ -243,6 +243,8 @@ void ImogenAudioProcessor::updateAllParameters()
 	updateMidiLatch();
 	updateConcertPitch();
 	updatePitchbendSettings();
+	updatePedalPitch();
+	updateDescant();
 };
 
 void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
@@ -257,19 +259,19 @@ void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
 
 void ImogenAudioProcessor::updateAdsr()
 {
-	harmonizer.setADSRonOff(float(adsrOnOffListener) > 0.5f);
-	harmonizer.updateADSRsettings(float(adsrAttackListener), float(adsrDecayListener), float(adsrSustainListener), float(adsrReleaseListener));
+	harmonizer.setADSRonOff(float(adsrOnOffListener.load()) > 0.5f);
+	harmonizer.updateADSRsettings(float(adsrAttackListener.load()), float(adsrDecayListener.load()), float(adsrSustainListener.load()), float(adsrReleaseListener.load()));
 };
 
 void ImogenAudioProcessor::updateIOgains()
 {
-	if(const float newIn = float(inputGainListener); newIn != prevideb)
+	if(const float newIn = float(inputGainListener.load()); newIn != prevideb)
 	{
 		inputGainMultiplier = Decibels::decibelsToGain(newIn);
 		prevideb = newIn;
 	}
 	
-	if(const float newOut = float(outputGainListener); newOut != prevodeb)
+	if(const float newOut = float(outputGainListener.load()); newOut != prevodeb)
 	{
 		outputGainMultiplier = Decibels::decibelsToGain(newOut);
 		prevodeb = newOut;
@@ -278,25 +280,25 @@ void ImogenAudioProcessor::updateIOgains()
 
 void ImogenAudioProcessor::updateLimiter()
 {
-	limiter.setThreshold(float(limiterThreshListener));
-	limiter.setRelease(float(limiterReleaseListener));
-	limiterIsOn = float(limiterToggleListener) > 0.5f;
+	limiter.setThreshold(float(limiterThreshListener.load()));
+	limiter.setRelease(float(limiterReleaseListener.load()));
+	limiterIsOn = float(limiterToggleListener.load()) > 0.5f;
 };
 
 void ImogenAudioProcessor::updateStereoWidth()
 {
-	harmonizer.updateLowestPannedNote(int(round(float(lowestPanListener))));
-	harmonizer.updateStereoWidth(int(round(float(stereoWidthListener))));
+	harmonizer.updateLowestPannedNote(roundToInt(lowestPanListener.load()));
+	harmonizer.updateStereoWidth(roundToInt(stereoWidthListener.load()));
 };
 
 void ImogenAudioProcessor::updateQuickKillMs()
 {
-	harmonizer.updateQuickReleaseMs(int(round(float(quickKillMsListener))));
+	harmonizer.updateQuickReleaseMs(roundToInt(quickKillMsListener.load()));
 };
 
 void ImogenAudioProcessor::updateDryVoxPan()
 {
-	if(const int newDryPan = int(round(float(dryVoxPanListener))); newDryPan != prevDryPan)
+	if(const int newDryPan = roundToInt(dryVoxPanListener.load()); newDryPan != prevDryPan)
 	{
 		const float Rpan = newDryPan / 127.0f;
 		dryvoxpanningmults[1] = Rpan;
@@ -307,38 +309,66 @@ void ImogenAudioProcessor::updateDryVoxPan()
 
 void ImogenAudioProcessor::updateMidiVelocitySensitivity()
 {
-	harmonizer.updateMidiVelocitySensitivity(int(round(float(midiVelocitySensListener))));
+	harmonizer.updateMidiVelocitySensitivity(roundToInt(midiVelocitySensListener.load()));
 };
 
 void ImogenAudioProcessor::updateNoteStealing()
 {
-	harmonizer.setNoteStealingEnabled(float(voiceStealingListener) > 0.5f);
+	harmonizer.setNoteStealingEnabled(float(voiceStealingListener.load()) > 0.5f);
 };
 
 void ImogenAudioProcessor::updatePitchbendSettings()
 {
-	harmonizer.updatePitchbendSettings(int(round(float(pitchBendUpListener))), int(round(float(pitchBendDownListener))));
+	harmonizer.updatePitchbendSettings(roundToInt(pitchBendUpListener.load()), roundToInt(pitchBendDownListener.load()));
 };
 
 void ImogenAudioProcessor::updateDryWet()
 {
-	dryWet.setWetMixProportion(float(masterDryWetListener) / 100.0f);
+	dryWet.setWetMixProportion(float(masterDryWetListener.load()) / 100.0f);
 	
 	// need to set latency!!!
 };
 
 void ImogenAudioProcessor::updateConcertPitch()
 {
-	harmonizer.setConcertPitchHz(int(round(float(concertPitchListener))));
+	harmonizer.setConcertPitchHz(roundToInt(concertPitchListener.load()));
 };
 
 void ImogenAudioProcessor::updateMidiLatch()
 {
-	bool shouldBeOn = float(latchIsOnListener) > 0.5f;
+	bool shouldBeOn = float(latchIsOnListener.load()) > 0.5f;
 	bool tailOff = false;
 	
 	if(harmonizer.isLatched() != shouldBeOn)
 		harmonizer.setMidiLatch(shouldBeOn, tailOff);
+};
+
+void ImogenAudioProcessor::updatePedalPitch()
+{
+	bool isNowOn = false;
+	int newUpperThresh = 48;
+	int newInterval = 12;
+	
+	if(harmonizer.isPedalPitchOn() != isNowOn)
+		harmonizer.setPedalPitch(isNowOn);
+	if(harmonizer.getCurrentPedalPitchUpperThresh() != newUpperThresh)
+		harmonizer.setPedalPitchUpperThresh(newUpperThresh);
+	if(harmonizer.getCurrentPedalPitchInterval() != newInterval)
+		harmonizer.setPedalPitchInterval(newInterval);
+};
+
+void ImogenAudioProcessor::updateDescant()
+{
+	bool isNowOn = false;
+	int newLowerThresh = 72;
+	int newInterval = 12;
+	
+	if(harmonizer.isDescantOn() != isNowOn)
+		harmonizer.setDescant(isNowOn);
+	if(harmonizer.getCurrentDescantLowerThresh() != newLowerThresh)
+		harmonizer.setDescantLowerThresh(newLowerThresh);
+	if(harmonizer.getCurrentDescantInterval() != newInterval)
+		harmonizer.setDescantInterval(newInterval);
 };
 
 void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
@@ -358,6 +388,7 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 };
 
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -372,6 +403,7 @@ void ImogenAudioProcessor::savePreset(juce::String presetName)
 	auto xml(tree.copyState().createXml());
 	xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
 	xml->writeTo(writingTo);
+	updateHostDisplay();
 };
 
 
@@ -386,20 +418,21 @@ void ImogenAudioProcessor::loadPreset(juce::String presetName)
 		if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
 		{
 			tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
-			const int newNumOfVoices = xmlElement->getIntAttribute("numberOfVoices", 4);
-			updateNumVoices(newNumOfVoices);
+			updateNumVoices( xmlElement->getIntAttribute("numberOfVoices", 4) );
+			updateHostDisplay();
 		}
 	}
 };
 
 
-void ImogenAudioProcessor::deletePreset(juce::String presetName) const
+void ImogenAudioProcessor::deletePreset(juce::String presetName) 
 {
 	File presetToDelete = getPresetsFolder().getChildFile(presetName);
 	
 	if(presetToDelete.existsAsFile())
 		if(! presetToDelete.moveToTrash())
 			presetToDelete.deleteFile();
+	updateHostDisplay();
 };
 
 

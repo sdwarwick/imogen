@@ -37,8 +37,12 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 	addChildComponent(helpScreen);
 	helpScreen.setLookAndFeel(&lookAndFeel);
 	
-	lookAndFeel.initializeLabel(pitchTester, "pitch");
+	lookAndFeel.initializeLabel(pitchTester, "pitch"); // for testing pitch detection
 	addAndMakeVisible(pitchTester);
+	
+	makePresetMenu(selectPreset);
+	selectPreset.onChange = [this] { newPresetSelected(); };
+	//addAndMakeVisible(selectPreset);
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -67,6 +71,8 @@ void ImogenAudioProcessorEditor::resized()
 	helpScreen.setBounds(158, 45, 625, 315);
 	
 	pitchTester.setBounds(getWidth()/2 - 75, getHeight()/2 - 38, 150, 75);
+	
+	//selectPreset.setBounds(x, y, w, h);
 };
 
 
@@ -117,4 +123,21 @@ void ImogenAudioProcessorEditor::helpButtonClicked()
 void ImogenAudioProcessorEditor::updateNumVoicesCombobox(const int newNumVoices)
 {
 	midiPanel.updateNumVoicesCombobox(newNumVoices);
+};
+
+
+void ImogenAudioProcessorEditor::newPresetSelected()
+{
+	audioProcessor.loadPreset(selectPreset.getItemText(selectPreset.getSelectedId()));
+};
+
+
+void ImogenAudioProcessorEditor::makePresetMenu(ComboBox& box)
+{
+	int id = 1;
+	for(DirectoryEntry entry : RangedDirectoryIterator(audioProcessor.getPresetsFolder(), false))
+	{
+		box.addItem(entry.getFile().getFileName(), id);
+		++id;
+	}
 };
