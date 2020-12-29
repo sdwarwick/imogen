@@ -85,6 +85,8 @@ void ImogenAudioProcessor::releaseResources()
 };
 
 
+// audio rendering ----------------------------------------------------------------------------------------------------------------------------------
+
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
 	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);

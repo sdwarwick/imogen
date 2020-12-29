@@ -375,6 +375,32 @@ void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 
 // MIDI events---------------------------------------------------------------------------------------------------------------------------------------
 
+
+void Harmonizer::turnOnList(std::vector<int>& toTurnOn, const int velocity)
+{
+	if(! toTurnOn.empty())
+	{
+		const ScopedLock sl (lock);
+		const float floatVelocity = velocity / 127.0f;
+		for(int i = 0; i < toTurnOn.size(); ++i)
+			noteOn(toTurnOn[i], floatVelocity);
+	}
+};
+
+
+void Harmonizer::turnOffList(std::vector<int>& toTurnOff, const float velocity, const bool allowTailOff)
+{
+	if(! toTurnOff.empty())
+	{
+		const ScopedLock sl (lock);
+		for(int i = 0; i < toTurnOff.size(); ++i)
+		{
+			noteOff(toTurnOff[i], velocity, allowTailOff);
+		}
+	}
+};
+
+
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
 	if (m.isNoteOn())

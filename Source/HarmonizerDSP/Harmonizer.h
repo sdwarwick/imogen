@@ -122,6 +122,11 @@ public:
 	// turn off all notes
 	void allNotesOff(const bool allowTailOff);
 	
+	// turns on a list of pitches at once
+	void turnOnList(std::vector<int>& toTurnOn, const int velocity); // midi velocity 1-127
+	// turns off a list of pitches at once
+	void turnOffList(std::vector<int>& toTurnOff, const float velocity, const bool allowTailOff); // float velocity 0.0-1.0
+	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
 	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
 	bool isADSRon() const noexcept { return adsrIsOn; };
