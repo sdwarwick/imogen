@@ -125,6 +125,9 @@ public:
 	// makes sure the notes specified in the chord are all active, and all other pitches are turned off
 	void playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld);
 	
+	// works like playChord, but using intervals instead of absolute pitches
+	void newIntervalSet(Array<int>& desiredIntervals, const int velocity, const bool allowTailOffOfOld);
+	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
 	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
 	bool isADSRon() const noexcept { return adsrIsOn; };
@@ -228,7 +231,10 @@ private:
 	void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff); // float velocity 0.0-1.0
 	Array<int> reportActivesNoReleased() const;
 	Array<int> desired, previous;
+	
 	Array<int> unLatched;
+	
+	Array<int> notesFromIntervals;
 	
 	// this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, etc
 	void pitchCollectionChanged();

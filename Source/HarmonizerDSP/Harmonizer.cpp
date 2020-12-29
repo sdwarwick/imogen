@@ -252,6 +252,7 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	desired.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	previous.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	notesFromIntervals.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	
 	adsrParams.attack = 0.035f;
 	adsrParams.decay = 0.06f;
@@ -442,10 +443,29 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 };
 
 
+
+
+void Harmonizer::newIntervalSet(Array<int>& desiredIntervals, const int velocity, const bool allowTailOffOfOld)
+{
+	const ScopedLock sl (lock);
+	
+	notesFromIntervals.clearQuick();
+	
+	const int referenceNote = pitchConverter.ftom(currentInputFreq);
+	
+	for(int i = 0; i < desiredIntervals.size(); ++i)
+		notesFromIntervals.add(referenceNote + desiredIntervals.getUnchecked(i));
+	
+	playChord(notesFromIntervals, velocity, allowTailOffOfOld);
+};
+
+
 // functions for triggering chords ------------------------------------------------------------------------
 
 void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld)
 {
+	const ScopedLock sl (lock);
+	
 	desired = chordNotes;
 	previous = reportActivesNoReleased();
 	
