@@ -59,6 +59,7 @@ public:
 	juce::File getPresetsFolder() const;
 	
 	// functions to update parameters ---------------------------------------------------------------------------------------------------------------
+	void updateSampleRate(const double newSamplerate);
 	void updateAdsr();
 	void updateIOgains();
 	void updateLimiter();
@@ -142,8 +143,6 @@ private:
 	const std::atomic<float>& quickKillMsListener;
 	const std::atomic<float>& concertPitchListener;
 	const std::atomic<float>& latchIsOnListener;
-	
-	ImogenAudioProcessorEditor* editor; 
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
