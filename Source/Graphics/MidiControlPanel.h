@@ -45,6 +45,10 @@ public:
 	ToggleButton adsrOnOff;
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> adsrOnOffLink;
 	
+	// Midi latch
+	ToggleButton latchToggle;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> latchToggleLink;
+	
 	// stereo width of harmony output
 	Slider stereoWidth;
 	Label stereowidthLabel;
@@ -88,6 +92,7 @@ public:
 	ComboBox numberOfVoices;
 	Label numVoicesLabel;
 	
+	void updateNumVoicesCombobox(const int newNumVoices);
 
 private:
 	

@@ -101,7 +101,6 @@ public:
 	void handleMidiEvent(const MidiMessage& m);
 	void updateMidiVelocitySensitivity(const int newSensitivity);
 	
-	
 	void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
 	
 	void setCurrentPlaybackSampleRate(const double newRate);
@@ -122,10 +121,11 @@ public:
 	// turn off all notes
 	void allNotesOff(const bool allowTailOff);
 	
-	// turns on a list of pitches at once
-	void turnOnList(std::vector<int>& toTurnOn, const int velocity); // midi velocity 1-127
-	// turns off a list of pitches at once
-	void turnOffList(std::vector<int>& toTurnOff, const float velocity, const bool allowTailOff); // float velocity 0.0-1.0
+	void setMidiLatch(const bool shouldBeOn, const bool allowTailOff);
+	bool isLatched() const noexcept { return latchIsOn; };
+	
+	// makes sure the notes specified in the chord are all active, and all other pitches are turned off
+	void playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld);
 	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
 	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
@@ -184,6 +184,9 @@ private:
 	PitchBendHelper bendTracker;
 	VelocityHelper velocityConverter;
 	
+	bool latchIsOn;
+	MidiLatchManager latchManager;
+	
 	ADSR::Parameters adsrParams;
 	ADSR::Parameters quickReleaseParams;
 	bool adsrIsOn;
@@ -198,12 +201,21 @@ private:
 	bool sustainPedalDown, sostenutoPedalDown;
 	
 	mutable Array<int> currentlyActiveNotes;
+	mutable Array<int> currentlyActiveNoReleased;
 	
 	// Starts a specified voice playing a specified note
 	void startVoice (HarmonizerVoice* voice, const int midiPitch, const float velocity);
 	
 	// Stops a given voice.
 	void stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff);
+	
+	
+	// used for triggering entire chords at once:
+	void turnOnList(Array<int>& toTurnOn, const int velocity); // midi velocity 1-127
+	void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff); // float velocity 0.0-1.0
+	Array<int> reportActivesNoReleased() const;
+	Array<int> desired, previous;
+	Array<int> unLatched;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

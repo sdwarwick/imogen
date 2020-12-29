@@ -249,11 +249,19 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false)
+Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false)
 {
 	currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
 	currentlyActiveNotes.add(-1);
+	
+	currentlyActiveNoReleased.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	currentlyActiveNoReleased.clearQuick();
+	currentlyActiveNoReleased.add(-1);
+	
+	desired.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	previous.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	
 	adsrParams.attack = 0.035f;
 	adsrParams.decay = 0.06f;
@@ -376,26 +384,70 @@ void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 // MIDI events---------------------------------------------------------------------------------------------------------------------------------------
 
 
-void Harmonizer::turnOnList(std::vector<int>& toTurnOn, const int velocity)
+void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld)
 {
-	if(! toTurnOn.empty())
+	desired = chordNotes;
+	previous = reportActivesNoReleased();
+	
+	float offVelocity = allowTailOffOfOld ? 0.0f : 1.0f;
+	
+	if(previous.getUnchecked(0) != -1)
 	{
-		const ScopedLock sl (lock);
-		const float floatVelocity = velocity / 127.0f;
-		for(int i = 0; i < toTurnOn.size(); ++i)
-			noteOn(toTurnOn[i], floatVelocity);
+		for(int i = 0; i < chordNotes.size(); ++i)
+			if(const int note = chordNotes.getUnchecked(i); previous.contains(note))
+			   desired.remove(desired.indexOf(note)); // what's left in desired is the notes that need to be turned on
+		
+		for(int i = 0; i < previous.size(); ++i)
+			if(chordNotes.contains(previous.getUnchecked(i)))
+				previous.remove(i); // what's left in previous is the notes that need to be turned off
+	}
+	
+	previous.removeAllInstancesOf(-1);
+	
+	if(! desired.isEmpty())
+		turnOnList(desired, velocity);
+	
+	if(! previous.isEmpty())
+		turnOffList(previous, offVelocity, allowTailOffOfOld);
+};
+
+
+void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
+{
+	latchIsOn = shouldBeOn;
+
+	if(! shouldBeOn)
+	{
+		unLatched = latchManager.turnOffLatch();
+		if(! unLatched.isEmpty())
+		{
+			const float offVelocity = allowTailOff ? 0.0f : 1.0f;
+			turnOffList(unLatched, offVelocity, allowTailOff);
+		}
 	}
 };
 
 
-void Harmonizer::turnOffList(std::vector<int>& toTurnOff, const float velocity, const bool allowTailOff)
+void Harmonizer::turnOnList(Array<int>& toTurnOn, const int velocity)
 {
-	if(! toTurnOff.empty())
+	if(! toTurnOn.isEmpty())
+	{
+		const ScopedLock sl (lock);
+		const float floatVelocity = velocity / 127.0f;
+		for(int i = 0; i < toTurnOn.size(); ++i)
+			noteOn(toTurnOn.getUnchecked(i), floatVelocity);
+	}
+};
+
+
+void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff)
+{
+	if(! toTurnOff.isEmpty())
 	{
 		const ScopedLock sl (lock);
 		for(int i = 0; i < toTurnOff.size(); ++i)
 		{
-			noteOff(toTurnOff[i], velocity, allowTailOff);
+			noteOff(toTurnOff.getUnchecked(i), velocity, allowTailOff);
 		}
 	}
 };
@@ -437,8 +489,6 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 
 Array<int> Harmonizer::reportActiveNotes() const
 {
-	//const ScopedLock sl (lock);
-	
 	currentlyActiveNotes.clearQuick();
 	
 	for (auto* voice : voices)
@@ -451,6 +501,22 @@ Array<int> Harmonizer::reportActiveNotes() const
 	return currentlyActiveNotes;
 };
 
+
+Array<int> Harmonizer::reportActivesNoReleased() const
+{
+	currentlyActiveNoReleased.clearQuick();
+	
+	for (auto* voice : voices)
+		if (voice->isVoiceActive() && !(voice->isPlayingButReleased()))
+			currentlyActiveNoReleased.add(voice->getCurrentlyPlayingNote());
+	
+	if(! currentlyActiveNoReleased.isEmpty()) { currentlyActiveNoReleased.sort(); }
+	else { currentlyActiveNoReleased.add(-1); }
+	
+	return currentlyActiveNoReleased;
+};
+
+
 void Harmonizer::noteOn(const int midiPitch, const float velocity)
 {
 	const ScopedLock sl (lock);
@@ -461,6 +527,8 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity)
 	
 	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity);
 	
+	if(latchIsOn)
+		latchManager.noteOnRecieved(midiPitch);
 };
 
 void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const float velocity)
@@ -495,13 +563,18 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 {
 	const ScopedLock sl (lock);
 	
-	for (auto* voice : voices)
+	if(latchIsOn)
+		latchManager.noteOffRecieved(midiNoteNumber);
+	else
 	{
-		if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
+		for (auto* voice : voices)
 		{
-			voice->setKeyDown (false);
-			if (! (sustainPedalDown || sostenutoPedalDown))
-				stopVoice (voice, velocity, allowTailOff);
+			if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
+			{
+				voice->setKeyDown (false);
+				if (! (sustainPedalDown || sostenutoPedalDown))
+					stopVoice (voice, velocity, allowTailOff);
+			}
 		}
 	}
 };
@@ -525,6 +598,7 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
 			voice->stopNote (1.0f, allowTailOff);
 	
 	panner.reset(false);
+	latchManager.reset();
 };
 
 void Harmonizer::handlePitchWheel(const int wheelValue)

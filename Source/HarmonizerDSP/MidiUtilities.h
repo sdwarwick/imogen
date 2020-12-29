@@ -354,3 +354,54 @@ private:
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningHelper)
 };
+
+
+
+
+
+
+class MidiLatchManager
+{
+public:
+	
+	MidiLatchManager(const int maxNumVoices)
+	{
+		currentlyHeldNotes.ensureStorageAllocated(maxNumVoices);
+	};
+	
+	Array<int> turnOffLatch()
+	{
+		return currentlyHeldNotes;
+	};
+	
+	void noteOnRecieved(const int pitch)
+	{
+		const ScopedLock sl(lock);
+		if(! currentlyHeldNotes.contains(pitch))
+			currentlyHeldNotes.add(pitch);
+	};
+	
+	void noteOffRecieved(const int pitch)
+	{
+		const ScopedLock sl(lock);
+		if(currentlyHeldNotes.contains(pitch))
+			currentlyHeldNotes.remove(currentlyHeldNotes.indexOf(pitch));
+	};
+	
+	int getNumHeldNotes() const noexcept
+	{
+		return currentlyHeldNotes.size();
+	};
+	
+	void reset()
+	{
+		currentlyHeldNotes.clear();
+	};
+	
+	
+private:
+	CriticalSection lock;
+	Array<int> currentlyHeldNotes;
+	
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MidiLatchManager)
+};

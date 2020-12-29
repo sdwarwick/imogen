@@ -112,3 +112,9 @@ void ImogenAudioProcessorEditor::helpButtonClicked()
 	if(! helpScreen.isVisible() ) { helpScreen.setVisible(true); helpScreen.repaint(); }
 	else { helpScreen.setVisible(false); };
 };
+
+
+void ImogenAudioProcessorEditor::updateNumVoicesCombobox(const int newNumVoices)
+{
+	midiPanel.updateNumVoicesCombobox(newNumVoices);
+};

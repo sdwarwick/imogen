@@ -30,7 +30,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
 	limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
 	quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
-	concertPitchListener(*tree.getRawParameterValue("concertPitch"))
+	concertPitchListener(*tree.getRawParameterValue("concertPitch")),
+	latchIsOnListener(*tree.getRawParameterValue("latchIsOn"))
 {
 	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice(&harmonizer)); }
 	
@@ -90,6 +91,8 @@ void ImogenAudioProcessor::releaseResources()
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
 	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
+	
+	updateAllParameters();
 	
 	epochIndices = epochs.extractEpochSampleIndices(buffer, inputChannel, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
 	
@@ -233,14 +236,15 @@ void ImogenAudioProcessor::updateAllParameters()
 	updateIOgains();
 	updateLimiter();
 	updateAdsr();
-	updateStereoWidth();
 	updateDryVoxPan();
-	updateQuickKillMs();
-	updateMidiVelocitySensitivity();
-	updateNoteStealing();
-	updatePitchbendSettings();
 	updateDryWet();
+	updateStereoWidth();
+	updateMidiVelocitySensitivity();
+	updateQuickKillMs();
+	updateNoteStealing();
+	updateMidiLatch();
 	updateConcertPitch();
+	updatePitchbendSettings();
 };
 
 
@@ -332,9 +336,21 @@ void ImogenAudioProcessor::updateConcertPitch()
 };
 
 
+void ImogenAudioProcessor::updateMidiLatch()
+{
+	bool shouldBeOn = float(latchIsOnListener) > 0.5f;
+	bool tailOff = false;
+	
+	if(harmonizer.isLatched() != shouldBeOn)
+		harmonizer.setMidiLatch(shouldBeOn, tailOff);
+};
+
+
 void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 {
-	if(const int currentVoices = harmonizer.getNumVoices(); currentVoices != newNumVoices)
+	const int currentVoices = harmonizer.getNumVoices();
+	
+	if(currentVoices != newNumVoices)
 	{
 		if(newNumVoices > currentVoices) 
 		{
@@ -345,6 +361,7 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 			harmonizer.removeNumVoices(currentVoices - newNumVoices);
 	}
 };
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +376,7 @@ void ImogenAudioProcessor::savePreset(juce::String presetName)
 	File writingTo = getPresetsFolder().getChildFile(presetName);
 	
 	auto xml(tree.copyState().createXml());
-	
+	xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
 	xml->writeTo(writingTo);
 };
 
@@ -373,7 +390,12 @@ void ImogenAudioProcessor::loadPreset(juce::String presetName)
 		auto xmlElement = juce::parseXML(presetToLoad);
 		
 		if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
+		{
 			tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
+			const int newNumOfVoices = xmlElement->getIntAttribute("numberOfVoices", 4);
+			updateNumVoices(newNumOfVoices);
+			editor->updateNumVoicesCombobox(newNumOfVoices);
+		}
 	}
 };
 
@@ -417,6 +439,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
 	auto xml(tree.copyState().createXml());
+	xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
 	copyXmlToBinary (*xml, destData);
 };
 
@@ -426,7 +449,12 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 	auto xmlState(getXmlFromBinary(data, sizeInBytes));
 	
 	if (xmlState.get() != nullptr && xmlState->hasTagName (tree.state.getType()))
+	{
 		tree.replaceState(juce::ValueTree::fromXml (*xmlState));
+		const int newNumOfVoices = xmlState->getIntAttribute("numberOfVoices", 4);
+		updateNumVoices(newNumOfVoices);
+		editor->updateNumVoicesCombobox(newNumOfVoices);
+	}
 };
 
 
@@ -465,6 +493,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
 	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 16, 0));
 	params.push_back(std::make_unique<AudioParameterInt>("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
+	params.push_back(std::make_unique<AudioParameterBool>("latchIsOn", "MIDI latch is on", false));
 	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
 	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
 	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));
@@ -524,8 +553,11 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 #endif
 
 
-juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor() {
-	return new ImogenAudioProcessorEditor (*this);
+juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
+{
+	ImogenAudioProcessorEditor* newEditor = new ImogenAudioProcessorEditor(*this);
+	editor = newEditor;
+	return newEditor;
 };
 
 // This creates new instances of the plugin..

@@ -18,6 +18,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	sustainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
 	releaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
 	adsrOnOffLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
+	latchToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "latchIsOn", latchToggle)),
 	stereoWidthLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
 	lowestPanLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
 	midiVelocitySensLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
@@ -79,6 +80,16 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 			addAndMakeVisible(adsrOnOff);
 			adsrOnOff.onClick = [this] { audioProcessor.updateAdsr(); };
 			adsrOnOff.triggerClick();
+		}
+	}
+	
+	// Midi latch
+	{
+		// on/off toggle
+		{
+			latchToggle.setButtonText("MIDI latch");
+			//addAndMakeVisible(latchToggle);
+			latchToggle.onClick = [this] { audioProcessor.updateMidiLatch(); };
 		}
 	}
 	
@@ -230,6 +241,9 @@ void MidiControlPanel::resized()
 		adsrOnOff.setBounds		(70, 110, 175, 35);
 	}
 	
+	// midi latch
+	//latchToggle.setBounds(x, y, w, h);
+	
 	// stereo width
 	{
 		stereowidthLabel.setBounds	(165, 300, 50, 50);
@@ -300,4 +314,10 @@ void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
 	box.addItem("Minor Seventh", 10);
 	box.addItem("Major Seventh", 11);
 	box.addItem("Octave", 12);
+};
+
+
+void MidiControlPanel::updateNumVoicesCombobox(const int newNumVoices)
+{
+	numberOfVoices.setSelectedId(newNumVoices);
 };

@@ -23,6 +23,8 @@ public:
 	
 	void timerCallback() override;
 	
+	void updateNumVoicesCombobox(const int newNumVoices);
+	
 //==============================================================================
 
 private:

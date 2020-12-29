@@ -6,6 +6,8 @@
 #include "Harmonizer.h"
 #include "InputAnalysis.h"
 
+class ImogenAudioProcessorEditor; // forward declaration...
+
 
 //==============================================================================
 /**
@@ -68,6 +70,7 @@ public:
 	void updatePitchbendSettings();
 	void updateDryWet();
 	void updateConcertPitch();
+	void updateMidiLatch();
 	
 	// misc utility functions -----------------------------------------------------------------------------------------------------------------------
 	Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }
@@ -138,6 +141,9 @@ private:
 	const std::atomic<float>& limiterToggleListener;
 	const std::atomic<float>& quickKillMsListener;
 	const std::atomic<float>& concertPitchListener;
+	const std::atomic<float>& latchIsOnListener;
+	
+	ImogenAudioProcessorEditor* editor; 
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
