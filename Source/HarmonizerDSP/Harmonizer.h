@@ -12,8 +12,7 @@
 
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
-#include "GeneralUtils.h"
-#include "MidiUtilities.h"
+#include "HarmonizerUtilities.h"
 #include "PanningManager.h"
 
 

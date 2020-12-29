@@ -19,7 +19,7 @@ class PanningManager
 public:
 	
 	PanningManager();
-	~PanningManager();
+	~PanningManager() {};
 	
 	// used to change the # of polyphony voices currently active
 	void setNumberOfVoices(const int newNumVoices);

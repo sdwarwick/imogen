@@ -22,11 +22,6 @@ PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(
 };
 
 
-PanningManager::~PanningManager()
-{
-};
-
-
 void PanningManager::setNumberOfVoices(const int newNumVoices)
 {
 	jassert(newNumVoices > 0);

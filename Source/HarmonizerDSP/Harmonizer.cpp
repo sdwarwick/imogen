@@ -274,53 +274,9 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	quickReleaseParams.release = 0.015f;
 };
 
-
 Harmonizer::~Harmonizer()
 {
 	voices.clear();
-};
-
-
-void Harmonizer::updateStereoWidth(const int newWidth) 
-{
-	if(panner.getCurrentStereoWidth() != newWidth)
-	{
-		const ScopedLock sl (lock);
-		
-		panner.updateStereoWidth(newWidth);
-		
-		for (auto* voice : voices)
-		{
-			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() >= lowestPannedNote)
-			{
-				voice->setPan(panner.getClosestNewPanValFromOld(voice->currentMidipan));
-				continue;
-			}
-			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < lowestPannedNote && voice->currentMidipan != 64)
-			{
-				panner.panValTurnedOff(voice->currentMidipan);
-				voice->setPan(64);
-			}
-		}
-	}
-};
-
-
-void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
-{
-	if(lowestPannedNote != newPitchThresh)
-	{
-		const ScopedLock sl (lock);
-		lowestPannedNote = newPitchThresh;
-		for(auto* voice : voices)
-		{
-			if(voice->isVoiceActive() && voice->currentlyPlayingNote < newPitchThresh && voice->currentMidipan != 64)
-			{
-				panner.panValTurnedOff(voice->currentMidipan);
-				voice->setPan(64);
-			}
-		}
-	}
 };
 
 
@@ -380,9 +336,95 @@ void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 };
 
 
+// stereo width -------------------------------------------------------------------------------------------------------------------------------------
 
-// MIDI events---------------------------------------------------------------------------------------------------------------------------------------
+void Harmonizer::updateStereoWidth(const int newWidth)
+{
+	if(panner.getCurrentStereoWidth() != newWidth)
+	{
+		const ScopedLock sl (lock);
+		
+		panner.updateStereoWidth(newWidth);
+		
+		for (auto* voice : voices)
+		{
+			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+			{
+				voice->setPan(panner.getClosestNewPanValFromOld(voice->currentMidipan));
+				continue;
+			}
+			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < lowestPannedNote && voice->currentMidipan != 64)
+			{
+				panner.panValTurnedOff(voice->currentMidipan);
+				voice->setPan(64);
+			}
+		}
+	}
+};
 
+void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
+{
+	if(lowestPannedNote != newPitchThresh)
+	{
+		const ScopedLock sl (lock);
+		lowestPannedNote = newPitchThresh;
+		for(auto* voice : voices)
+		{
+			if(voice->isVoiceActive() && voice->currentlyPlayingNote < newPitchThresh && voice->currentMidipan != 64)
+			{
+				panner.panValTurnedOff(voice->currentMidipan);
+				voice->setPan(64);
+			}
+		}
+	}
+};
+
+
+// MIDI events --------------------------------------------------------------------------------------------------------------------------------------
+
+Array<int> Harmonizer::reportActiveNotes() const
+{
+	currentlyActiveNotes.clearQuick();
+	
+	for (auto* voice : voices)
+		if (voice->isVoiceActive())
+			currentlyActiveNotes.add(voice->getCurrentlyPlayingNote());
+	
+	if(! currentlyActiveNotes.isEmpty()) { currentlyActiveNotes.sort(); }
+	else { currentlyActiveNotes.add(-1); }
+	
+	return currentlyActiveNotes;
+};
+
+void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
+{
+	latchIsOn = shouldBeOn;
+	
+	if(! shouldBeOn)
+	{
+		unLatched = latchManager.turnOffLatch();
+		if(! unLatched.isEmpty())
+		{
+			const float offVelocity = allowTailOff ? 0.0f : 1.0f;
+			turnOffList(unLatched, offVelocity, allowTailOff);
+		}
+	}
+};
+
+void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
+{
+	if(const float newSens = newSensitivity/100.0f; velocityConverter.getCurrentSensitivity() != newSens)
+	{
+		const ScopedLock sl (lock);
+		velocityConverter.setFloatSensitivity(newSens);
+		for(auto* voice : voices)
+			if(voice->isVoiceActive())
+				voice->currentVelocityMultiplier = velocityConverter.floatVelocity(voice->lastRecievedVelocity);
+	}
+};
+
+
+// functions for triggering chords ------------------------------------------------------------------------
 
 void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld)
 {
@@ -395,11 +437,11 @@ void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const boo
 	{
 		for(int i = 0; i < chordNotes.size(); ++i)
 			if(const int note = chordNotes.getUnchecked(i); previous.contains(note))
-			   desired.remove(desired.indexOf(note)); // what's left in desired is the notes that need to be turned on
+			   desired.remove(desired.indexOf(note)); // what's left in desired will be the notes that need to be turned on
 		
 		for(int i = 0; i < previous.size(); ++i)
 			if(chordNotes.contains(previous.getUnchecked(i)))
-				previous.remove(i); // what's left in previous is the notes that need to be turned off
+				previous.remove(i); // what's left in previous will be the notes that need to be turned off
 	}
 	
 	previous.removeAllInstancesOf(-1);
@@ -411,23 +453,6 @@ void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const boo
 		turnOffList(previous, offVelocity, allowTailOffOfOld);
 };
 
-
-void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
-{
-	latchIsOn = shouldBeOn;
-
-	if(! shouldBeOn)
-	{
-		unLatched = latchManager.turnOffLatch();
-		if(! unLatched.isEmpty())
-		{
-			const float offVelocity = allowTailOff ? 0.0f : 1.0f;
-			turnOffList(unLatched, offVelocity, allowTailOff);
-		}
-	}
-};
-
-
 void Harmonizer::turnOnList(Array<int>& toTurnOn, const int velocity)
 {
 	if(! toTurnOn.isEmpty())
@@ -438,7 +463,6 @@ void Harmonizer::turnOnList(Array<int>& toTurnOn, const int velocity)
 			noteOn(toTurnOn.getUnchecked(i), floatVelocity);
 	}
 };
-
 
 void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff)
 {
@@ -452,6 +476,22 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 	}
 };
 
+Array<int> Harmonizer::reportActivesNoReleased() const
+{
+	currentlyActiveNoReleased.clearQuick();
+	
+	for (auto* voice : voices)
+		if (voice->isVoiceActive() && !(voice->isPlayingButReleased()))
+			currentlyActiveNoReleased.add(voice->getCurrentlyPlayingNote());
+	
+	if(! currentlyActiveNoReleased.isEmpty()) { currentlyActiveNoReleased.sort(); }
+	else { currentlyActiveNoReleased.add(-1); }
+	
+	return currentlyActiveNoReleased;
+};
+
+
+// functions for propogating midi events to HarmonizerVoices -------------------------------------------------------
 
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
@@ -474,48 +514,6 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 	else if (m.isController())
 		handleController (m.getControllerNumber(), m.getControllerValue());
 };
-
-void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
-{
-	if(const float newSens = newSensitivity/100.0f; velocityConverter.getCurrentSensitivity() != newSens)
-	{
-		const ScopedLock sl (lock);
-		velocityConverter.setFloatSensitivity(newSens);
-		for(auto* voice : voices)
-			if(voice->isVoiceActive())
-				voice->currentVelocityMultiplier = velocityConverter.floatVelocity(voice->lastRecievedVelocity);
-	}
-};
-
-Array<int> Harmonizer::reportActiveNotes() const
-{
-	currentlyActiveNotes.clearQuick();
-	
-	for (auto* voice : voices)
-		if (voice->isVoiceActive())
-			currentlyActiveNotes.add(voice->getCurrentlyPlayingNote());
-	
-	if(! currentlyActiveNotes.isEmpty()) { currentlyActiveNotes.sort(); }
-	else { currentlyActiveNotes.add(-1); }
-
-	return currentlyActiveNotes;
-};
-
-
-Array<int> Harmonizer::reportActivesNoReleased() const
-{
-	currentlyActiveNoReleased.clearQuick();
-	
-	for (auto* voice : voices)
-		if (voice->isVoiceActive() && !(voice->isPlayingButReleased()))
-			currentlyActiveNoReleased.add(voice->getCurrentlyPlayingNote());
-	
-	if(! currentlyActiveNoReleased.isEmpty()) { currentlyActiveNoReleased.sort(); }
-	else { currentlyActiveNoReleased.add(-1); }
-	
-	return currentlyActiveNoReleased;
-};
-
 
 void Harmonizer::noteOn(const int midiPitch, const float velocity)
 {
@@ -700,6 +698,7 @@ void Harmonizer::handleSoftPedal(const bool isDown)
 
 
 // voice allocation----------------------------------------------------------------------------------------------------------------------------------
+
 HarmonizerVoice* Harmonizer::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const
 {
 	const ScopedLock sl (lock);
@@ -790,6 +789,7 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
 
 
 // update ADSR settings------------------------------------------------------------------------------------------------------------------------------
+
 void Harmonizer::updateADSRsettings(const float attack, const float decay, const float sustain, const float release)
 {
 	// attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
@@ -824,6 +824,7 @@ void Harmonizer::updateQuickReleaseMs(const int newMs)
 
 
 // functions for management of HarmonizerVoices------------------------------------------------------------------------------------------------------
+
 HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
 {
 	const ScopedLock sl (lock);
@@ -853,7 +854,6 @@ void Harmonizer::deleteAllVoices()
 	voices.clear();
 	panner.setNumberOfVoices(1);  // panner's numVoices must be >0
 };
-
 
 void Harmonizer::removeNumVoices(const int voicesToRemove)
 {

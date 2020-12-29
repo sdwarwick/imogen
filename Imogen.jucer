@@ -27,18 +27,21 @@
                 file="Source/HarmonizerDSP/InputAnalysis.cpp"/>
           <FILE id="uXRjy7" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
         </GROUP>
-        <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
-          <FILE id="wxVlaC" name="PanningManager.cpp" compile="1" resource="0"
-                file="Source/HarmonizerDSP/PanningManager.cpp"/>
-          <FILE id="AMjikC" name="PanningManager.h" compile="0" resource="0"
-                file="Source/HarmonizerDSP/PanningManager.h"/>
+        <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
+          <FILE id="rJjaxI" name="HarmonizerUtilities.h" compile="0" resource="0"
+                file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
+          <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
+            <FILE id="wxVlaC" name="PanningManager.cpp" compile="1" resource="0"
+                  file="Source/HarmonizerDSP/PanningManager.cpp"/>
+            <FILE id="AMjikC" name="PanningManager.h" compile="0" resource="0"
+                  file="Source/HarmonizerDSP/PanningManager.h"/>
+          </GROUP>
         </GROUP>
       </GROUP>
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
         <FILE id="yiULVe" name="GlobalDefinitions.h" compile="0" resource="0"
               file="Source/GlobalDefinitions.h"/>
         <FILE id="oNyqZ2" name="GeneralUtils.h" compile="0" resource="0" file="Source/GeneralUtils.h"/>
-        <FILE id="xmFt1P" name="MidiUtilities.h" compile="0" resource="0" file="Source/HarmonizerDSP/MidiUtilities.h"/>
       </GROUP>
     </GROUP>
     <GROUP id="{27897AB0-D6F3-54AD-89AC-1DAFE19D8DDF}" name="Graphics">
