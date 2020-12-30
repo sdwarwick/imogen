@@ -47,7 +47,7 @@ public:
 	
 	// Midi latch
 	ToggleButton latchToggle;
-	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> latchToggleLink;
+	ToggleButton latchTailOff;
 	
 	// stereo width of harmony output
 	Slider stereoWidth;
@@ -92,9 +92,31 @@ public:
 	ComboBox numberOfVoices;
 	Label numVoicesLabel;
 	
+	// pedal pitch
+	ToggleButton pedalPitchToggle;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> pedalPitchToggleLink;
+	Slider pedalPitchThreshold;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> pedalPitchThreshLink;
+	Label pedalPitchThreshLabel;
+	ComboBox pedalPitchInterval;
+	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> pedalPitchIntervalLink;
+	Label pedalPitchIntervalLabel;
+	
+	// descant
+	ToggleButton descantToggle;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> descantToggleLink;
+	Slider descantThreshold;
+	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> descantThresholdLink;
+	Label descantThreshLabel;
+	ComboBox descantInterval;
+	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> descantIntervalLink;
+	Label descantIntervalLabel;
+	
 	void updateNumVoicesCombobox(const int newNumVoices);
 
 private:
+	
+	void updateMidiLatch();
 	
 	void buildIntervalCombobox(ComboBox& box);
 	void buildVoicesCombobox(ComboBox& box);

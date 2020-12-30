@@ -39,6 +39,8 @@
         </GROUP>
       </GROUP>
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
+        <FILE id="T4Xasn" name="alternateInputModes.h" compile="0" resource="0"
+              file="Source/alternateInputModes.h"/>
         <FILE id="yiULVe" name="GlobalDefinitions.h" compile="0" resource="0"
               file="Source/GlobalDefinitions.h"/>
         <FILE id="oNyqZ2" name="GeneralUtils.h" compile="0" resource="0" file="Source/GeneralUtils.h"/>

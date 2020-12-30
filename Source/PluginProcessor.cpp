@@ -29,7 +29,14 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
 	quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
 	concertPitchListener(*tree.getRawParameterValue("concertPitch")),
-	latchIsOnListener(*tree.getRawParameterValue("latchIsOn"))
+	pedalPitchToggleListener(*tree.getRawParameterValue("pedalPitchToggle")),
+	pedalPitchThreshListener(*tree.getRawParameterValue("pedalPitchThresh")),
+	pedalPitchIntervalListener(*tree.getRawParameterValue("pedalPitchInterval")),
+	descantToggleListener(*tree.getRawParameterValue("descantToggle")),
+	descantThreshlistener(*tree.getRawParameterValue("descantThresh")),
+	descantIntervalListener(*tree.getRawParameterValue("descantInterval")),
+	currentInputMode(keyboard),
+	lastTriggeredChordIndex(-1), lastTriggeredIntervalSetIndex(-1)
 {
 	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice(&harmonizer)); }
 	
@@ -114,12 +121,16 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 		{
 			processBlockPrivate(buffer, inputChannel, startSample, numSamples);
 			harmonizer.handleMidiEvent(metadata.getMessage());
+			if((! (currentInputMode == keyboard)) && metadata.getMessage().isNoteOnOrOff())
+				handleAlternateInputModes(metadata.getMessage());
 			break;
 		}
 		
 		if (samplesToNextMidiMessage < 1)
 		{
 			harmonizer.handleMidiEvent(metadata.getMessage());
+			if((! (currentInputMode == keyboard)) && metadata.getMessage().isNoteOnOrOff())
+				handleAlternateInputModes(metadata.getMessage());
 			continue;
 		}
 		
@@ -128,14 +139,20 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 		processBlockPrivate(buffer, inputChannel, startSample, samplesToNextMidiMessage);
 		
 		harmonizer.handleMidiEvent(metadata.getMessage());
+		if((! (currentInputMode == keyboard)) && metadata.getMessage().isNoteOnOrOff())
+			handleAlternateInputModes(metadata.getMessage());
 		startSample += samplesToNextMidiMessage;
 		numSamples  -= samplesToNextMidiMessage;
 	}
 	
 	std::for_each (midiIterator,
 				   midiMessages.cend(),
-				   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); });
-	
+				   [&] (const MidiMessageMetadata& meta)
+				   {
+					   harmonizer.handleMidiEvent (meta.getMessage());
+					   if((! (currentInputMode == keyboard)) && meta.getMessage().isNoteOnOrOff())
+						   handleAlternateInputModes(meta.getMessage());
+				   });
 };
 
 
@@ -227,6 +244,150 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
  ============================================================================================================================*/
 
 
+
+void ImogenAudioProcessor::killAllMidi()
+{
+	harmonizer.allNotesOff(false);
+	lastTriggeredChordIndex = -1;
+	lastTriggeredIntervalSetIndex = -1;
+};
+
+
+
+// functions for alternate input modes --------------------------------------------------------------------------------------------------------------
+
+void ImogenAudioProcessor::setInputMode(const inputMode newMode)
+{
+	harmonizer.allNotesOff(true);
+	currentInputMode = newMode;
+	
+	switch(newMode)
+	{
+		case(keyboard):
+			harmonizer.setListeningToKeyboardNoteEvents(true);
+			lastTriggeredChordIndex = -1;
+			lastTriggeredIntervalSetIndex = -1;
+			break;
+		case(chord):
+			harmonizer.setListeningToKeyboardNoteEvents(false);
+			lastTriggeredIntervalSetIndex = -1;
+			break;
+		case(interval):
+			harmonizer.setListeningToKeyboardNoteEvents(false);
+			lastTriggeredChordIndex = -1;
+			break;
+	}
+};
+
+
+void ImogenAudioProcessor::handleAlternateInputModes(const MidiMessage& m)
+{
+	switch(currentInputMode)
+	{
+		case(keyboard):
+			setInputMode(keyboard);
+			break;
+		case(chord):
+			handleChordInputMode(m);
+			break;
+		case(interval):
+			handleIntervalInputMode(m);
+			break;
+	}
+};
+
+
+// chord input mode -----------------------------------------------------------------
+
+void ImogenAudioProcessor::handleChordInputMode(const MidiMessage& m)
+{
+	if(m.isNoteOnOrOff())
+	{
+		const int chordIndex = chords.indexMappedToMidiNote(m.getNoteNumber());
+	
+		if(m.isNoteOn() && chordIndex > -1)
+		{
+			triggerSavedChord(chordIndex, m.getVelocity());
+			lastTriggeredChordIndex = chordIndex;
+		}
+		else if(m.isNoteOff() && (chordIndex == lastTriggeredChordIndex && lastTriggeredChordIndex > -1))
+		{
+			const float velocity = m.getFloatVelocity();
+			const bool allowTailOff = velocity > 0.5f ? false : true;
+			harmonizer.allNotesOff(allowTailOff);
+			lastTriggeredChordIndex = -1;
+		}
+	}
+};
+
+void ImogenAudioProcessor::triggerSavedChord(const int index, const int velocity)
+{
+	const bool allowTailOffOfOld = false;
+	
+	harmonizer.playChord(chords.returnChord(index), velocity, allowTailOffOfOld);
+};
+
+void ImogenAudioProcessor::triggerUnsavedChord(Array<int>& desiredNotes)
+{
+	const int velocity = 127;
+	const bool allowTailOffOfOld = false;
+	
+	harmonizer.playChord(desiredNotes, velocity, allowTailOffOfOld);
+	lastTriggeredChordIndex = -1;
+};
+
+void ImogenAudioProcessor::saveChord(Array<int>& chordNotes, const int index)
+{
+	chords.saveChord(chordNotes, index);
+};
+
+
+// interval input mode --------------------------------------------------------------
+
+void ImogenAudioProcessor::handleIntervalInputMode(const MidiMessage& m)
+{
+	if(m.isNoteOnOrOff())
+	{
+		const int intervalSetIndex = intervals.indexMappedToMidiNote(m.getNoteNumber());
+	
+		if(m.isNoteOn() && intervalSetIndex > -1)
+		{
+			triggerSavedIntervalSet(intervalSetIndex, m.getVelocity());
+			lastTriggeredIntervalSetIndex = intervalSetIndex;
+		}
+		else if(m.isNoteOff() && (intervalSetIndex == lastTriggeredIntervalSetIndex && lastTriggeredIntervalSetIndex > -1))
+		{
+			const float velocity = m.getFloatVelocity();
+			const bool allowTailOff = velocity > 0.5f ? false : true;
+			harmonizer.allNotesOff(allowTailOff);
+			lastTriggeredIntervalSetIndex = -1;
+		}
+	}
+};
+
+void ImogenAudioProcessor::triggerSavedIntervalSet(const int index, const int velocity)
+{
+	const bool allowTailOffOfOld = false;
+	
+	harmonizer.newIntervalSet(intervals.returnIntervalSet(index), velocity, allowTailOffOfOld);
+};
+
+void ImogenAudioProcessor::triggerUnsavedIntervalSet(Array<int>& desiredIntervals)
+{
+	const int velocity = 127;
+	const bool allowTailOffOfOld = false;
+	
+	harmonizer.newIntervalSet(desiredIntervals, velocity, allowTailOffOfOld);
+	lastTriggeredIntervalSetIndex = -1;
+};
+
+void ImogenAudioProcessor::saveIntervalSet(Array<int>& desiredIntervals, const int index)
+{
+	intervals.saveIntervalSet(desiredIntervals, index);
+};
+
+
+
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
 
 void ImogenAudioProcessor::updateAllParameters()
@@ -240,7 +401,6 @@ void ImogenAudioProcessor::updateAllParameters()
 	updateMidiVelocitySensitivity();
 	updateQuickKillMs();
 	updateNoteStealing();
-	updateMidiLatch();
 	updateConcertPitch();
 	updatePitchbendSettings();
 	updatePedalPitch();
@@ -251,7 +411,8 @@ void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
 {
 	if(lastSampleRate != newSamplerate)
 	{
-		harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
+		if(harmonizer.getSamplerate() != newSamplerate)
+			harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
 		lastSampleRate = newSamplerate;
 		// update latency for dry/wet mixer !
 	}
@@ -334,20 +495,17 @@ void ImogenAudioProcessor::updateConcertPitch()
 	harmonizer.setConcertPitchHz(roundToInt(concertPitchListener.load()));
 };
 
-void ImogenAudioProcessor::updateMidiLatch()
+void ImogenAudioProcessor::updateMidiLatch(const bool shouldBeOn, const bool tailOff)
 {
-	bool shouldBeOn = float(latchIsOnListener.load()) > 0.5f;
-	bool tailOff = false;
-	
 	if(harmonizer.isLatched() != shouldBeOn)
 		harmonizer.setMidiLatch(shouldBeOn, tailOff);
 };
 
 void ImogenAudioProcessor::updatePedalPitch()
 {
-	bool isNowOn = false;
-	int newUpperThresh = 48;
-	int newInterval = 12;
+	const bool isNowOn = float(pedalPitchToggleListener.load()) > 0.5f;
+	const int newUpperThresh = roundToInt(pedalPitchThreshListener.load());
+	const int newInterval = roundToInt(pedalPitchIntervalListener.load());
 	
 	if(harmonizer.isPedalPitchOn() != isNowOn)
 		harmonizer.setPedalPitch(isNowOn);
@@ -359,9 +517,9 @@ void ImogenAudioProcessor::updatePedalPitch()
 
 void ImogenAudioProcessor::updateDescant()
 {
-	bool isNowOn = false;
-	int newLowerThresh = 72;
-	int newInterval = 12;
+	bool isNowOn = float(descantToggleListener.load()) > 0.5f;
+	int newLowerThresh = roundToInt(descantThreshlistener.load());
+	int newInterval = roundToInt(descantIntervalListener.load());
 	
 	if(harmonizer.isDescantOn() != isNowOn)
 		harmonizer.setDescant(isNowOn);
@@ -511,17 +669,22 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterInt>("masterDryWet", "% wet", 0, 100, 100));
 	params.push_back(std::make_unique<AudioParameterInt>("quickKillMs", "Quick kill ms", 1, 250, 15));
 	params.push_back(std::make_unique<AudioParameterInt> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
-	params.push_back(std::make_unique<AudioParameterFloat> ("PitchBendUpRange", "Pitch bend range (up)", NormalisableRange<float> (1.0f, 12.0f), 2));
-	params.push_back(std::make_unique<AudioParameterFloat>("PitchBendDownRange", "Pitch bend range (down)", NormalisableRange<float> (1.0f, 12.0f), 2));
+	params.push_back(std::make_unique<AudioParameterInt> ("PitchBendUpRange", "Pitch bend range (up)", 0, 12, 2));
+	params.push_back(std::make_unique<AudioParameterInt>("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));
 	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), 0.0f));
 	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -4.0f));
 	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
 	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 16, 0));
 	params.push_back(std::make_unique<AudioParameterInt>("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
-	params.push_back(std::make_unique<AudioParameterBool>("latchIsOn", "MIDI latch is on", false));
 	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
 	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
 	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));
+	params.push_back(std::make_unique<AudioParameterBool>("pedalPitchToggle", "Pedal pitch on/off", false));
+	params.push_back(std::make_unique<AudioParameterInt>("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
+	params.push_back(std::make_unique<AudioParameterInt>("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
+	params.push_back(std::make_unique<AudioParameterBool>("descantToggle", "Descant on/off", false));
+	params.push_back(std::make_unique<AudioParameterInt>("descantThresh", "Descant lower threshold", 0, 127, 127));
+	params.push_back(std::make_unique<AudioParameterInt>("descantInterval", "Descant interval", 1, 12, 12));
 	
 	return { params.begin(), params.end() };
 };

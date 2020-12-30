@@ -123,11 +123,11 @@ public:
 	bool isLatched() const noexcept { return latchIsOn; };
 	
 	// makes sure the notes specified in the chord are all active, and all other pitches are turned off
-	void playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld);
+	void playChord(Array<int> chordNotes, const int velocity, const bool allowTailOffOfOld);
 	
 	// works like playChord, but using intervals instead of absolute pitches
 	// this method should be called any time the input frequency changes, in order to properly update all the pitches derived from intervals
-	void newIntervalSet(Array<int>& desiredIntervals, const int velocity, const bool allowTailOffOfOld);
+	void newIntervalSet(Array<int> desiredIntervals, const int velocity, const bool allowTailOffOfOld);
 	
 	Array<int> grabIntervalsFromCurrentlyPlayingNotes();
 	Array<int> getIntervalsFromSetOfDesiredPitches(Array<int>& desiredPitches, const bool alsoActivatePitches);
@@ -170,6 +170,9 @@ public:
 	int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
 	void setDescantInterval(const int newInterval);
 	int getCurrentDescantInterval() const noexcept { return descantInterval; };
+	
+	void setListeningToKeyboardNoteEvents(const bool shouldListen) noexcept { listeningToKeyboardNoteEvents = shouldListen; };
+	bool isListeningToKeyboardNoteEvents() const noexcept { return listeningToKeyboardNoteEvents; };
 	
 	
 protected:
@@ -255,6 +258,8 @@ private:
 	int lastDescantPitch;
 	int descantLowerThresh;
 	int descantInterval;
+	
+	bool listeningToKeyboardNoteEvents; // this flag is used to determine whether the harmonizer should be listening to note ons & offs from traditional MIDI input. Set to false for chord or interval mode...
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

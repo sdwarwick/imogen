@@ -18,7 +18,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	sustainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
 	releaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
 	adsrOnOffLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
-	latchToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "latchIsOn", latchToggle)),
 	stereoWidthLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
 	lowestPanLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
 	midiVelocitySensLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
@@ -26,7 +25,13 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 	pitchBendDownLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
 	voiceStealingLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing)),
 	quickKillMsLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs)),
-	concertPitchLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "concertPitch", concertPitch))
+	concertPitchLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "concertPitch", concertPitch)),
+	pedalPitchToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
+	pedalPitchThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThreshold)),
+	pedalPitchIntervalLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.tree, "pedalPitchInterval", pedalPitchInterval)),
+	descantToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "descantToggle", descantToggle)),
+	descantThresholdLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "descantThresh", descantThreshold)),
+	descantIntervalLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.tree, "descantInterval", descantInterval))
 {
 	// ADSR
 	{
@@ -89,7 +94,14 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			latchToggle.setButtonText("MIDI latch");
 			//addAndMakeVisible(latchToggle);
-			latchToggle.onClick = [this] { audioProcessor.updateMidiLatch(); };
+			latchToggle.onClick = [this] { updateMidiLatch(); };
+		}
+		
+		// "allow trail off" toggle
+		{
+			latchTailOff.setButtonText("Allow trail-off on unlatch");
+			//addAndMakeVisible(latchTailOff);
+			latchTailOff.onClick = [this] { updateMidiLatch(); };
 		}
 	}
 	
@@ -195,6 +207,52 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		lookAndFeel.initializeLabel(numVoicesLabel, "Number of harmony voices");
 		addAndMakeVisible(numVoicesLabel);
 	}
+	
+	// pedal pitch
+	{
+		pedalPitchToggle.setButtonText("MIDI pedal pitch");
+		//addAndMakeVisible(pedalPitchToggle);
+		pedalPitchToggle.onClick = [this] { audioProcessor.updatePedalPitch(); };
+		
+		pedalPitchThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
+		pedalPitchThreshold.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+		//addAndMakeVisible(pedalPitchThreshold);
+		pedalPitchThreshold.setValue(0);
+		pedalPitchThreshold.onValueChange = [this] { audioProcessor.updatePedalPitch(); };
+		lookAndFeel.initializeLabel(pedalPitchThreshLabel, "Upper threshold");
+		//addAndMakeVisible(pedalPitchThreshLabel);
+		
+		buildIntervalCombobox(pedalPitchInterval);
+		pedalPitchInterval.setSelectedId(12);
+		//addAndMakeVisible(pedalPitchInterval);
+		pedalPitchInterval.onChange = [this] { audioProcessor.updatePedalPitch(); };
+		lookAndFeel.initializeLabel(pedalPitchIntervalLabel, "Interval");
+		//addAndMakeVisible(pedalPitchIntervalLabel);
+	}
+	
+	// descant
+	{
+		descantToggle.setButtonText("MIDI descant");
+		//addAndMakeVisible(descantToggle);
+		descantToggle.onClick = [this] { audioProcessor.updateDescant(); };
+		
+		descantThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
+		descantThreshold.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+		//addAndMakeVisible(descantThreshold);
+		descantThreshold.setValue(127);
+		descantThreshold.onValueChange = [this] { audioProcessor.updateDescant(); };
+		lookAndFeel.initializeLabel(descantThreshLabel, "Lower threshold");
+		//addAndMakeVisible(descantThreshLabel);
+		
+		buildIntervalCombobox(descantInterval);
+		descantInterval.setSelectedId(12);
+		//addAndMakeVisible(descantInterval);
+		descantInterval.onChange = [this] { audioProcessor.updateDescant(); };
+		lookAndFeel.initializeLabel(descantIntervalLabel, "Interval");
+		//addAndMakeVisible(descantIntervalLabel);
+	}
+	
+	
 };
 
 MidiControlPanel::~MidiControlPanel()
@@ -243,6 +301,7 @@ void MidiControlPanel::resized()
 	
 	// midi latch
 	//latchToggle.setBounds(x, y, w, h);
+	//latchTailOff.setBounds(x, y, w, h);
 	
 	// stereo width
 	{
@@ -268,6 +327,24 @@ void MidiControlPanel::resized()
 		pitchBendDown.setBounds		(155, 265, 130, 30);
 	}
 	
+	// pedal pitch
+	{
+		//pedalPitchToggle.setBounds(x, y, w, h);
+		//pedalPitchThreshold.setBounds(x, y, w, h);
+		//pedalPitchThreshLabel.setBounds(x, y, w, h);
+		//pedalPitchInterval.setBounds(x, y, w, h);
+		//pedalPitchIntervalLabel.setBounds(x, y, w, h);
+	}
+	
+	// descant
+	{
+		//descantToggle.setBounds(x, y, w, h);
+		//descantThreshold.setBounds(x, y, w, h);
+		//descantThreshLabel.setBounds(x, y, w, h);
+		//descantInterval.setBounds(x, y, w, h);
+		//descantIntervalLabel.setBounds(x, y, w, h);
+	}
+	
 	midiKill.setBounds(145, 5, 100, 35);
 	quickKillmsLabel.setBounds(98, 35, 85, 35);
 	quickKillMs.setBounds(118, 60, 45, 45);
@@ -280,6 +357,12 @@ void MidiControlPanel::resized()
 	numVoicesLabel.setBounds(18, 348, 115, 35);
 	numberOfVoices.setBounds(42, 385, 65, 20);
 
+};
+
+
+void MidiControlPanel::updateMidiLatch()
+{
+	audioProcessor.updateMidiLatch(latchToggle.getToggleState(), latchTailOff.getToggleState());
 };
 
 

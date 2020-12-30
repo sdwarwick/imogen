@@ -239,7 +239,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12)
+Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12), listeningToKeyboardNoteEvents(true)
 {
 	currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
@@ -447,7 +447,7 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 
 // functions for triggering/creating sets of intervals based on current input pitch -----------------------------------
 
-void Harmonizer::newIntervalSet(Array<int>& desiredIntervals, const int velocity, const bool allowTailOffOfOld)
+void Harmonizer::newIntervalSet(Array<int> desiredIntervals, const int velocity, const bool allowTailOffOfOld)
 {
 	const ScopedLock sl (lock);
 	
@@ -501,7 +501,7 @@ Array<int> Harmonizer::getIntervalsFromSetOfDesiredPitches(Array<int>& desiredPi
 
 // functions for triggering chords -------------------------------------------------------------------------------------
 
-void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld)
+void Harmonizer::playChord(Array<int> chordNotes, const int velocity, const bool allowTailOffOfOld)
 {
 	const ScopedLock sl (lock);
 	
@@ -561,9 +561,15 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
 	if (m.isNoteOn())
-		noteOn (m.getNoteNumber(), m.getFloatVelocity(), false);
+	{
+		if(listeningToKeyboardNoteEvents)
+			noteOn (m.getNoteNumber(), m.getFloatVelocity(), false);
+	}
 	else if (m.isNoteOff())
-		noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, false);
+	{
+		if(listeningToKeyboardNoteEvents)
+			noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, false);
+	}
 	else if (m.isAllNotesOff() || m.isAllSoundOff())
 		allNotesOff (false);
 	else if (m.isPitchWheel())
@@ -641,10 +647,10 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 					stopVoice (voice, velocity, allowTailOff);
 			}
 		}
-	}
 	
-	if(! partofList)
-		pitchCollectionChanged();
+		if(! partofList)
+			pitchCollectionChanged();
+	}
 };
 
 void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff)
