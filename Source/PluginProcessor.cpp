@@ -34,9 +34,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	pedalPitchIntervalListener(*tree.getRawParameterValue("pedalPitchInterval")),
 	descantToggleListener(*tree.getRawParameterValue("descantToggle")),
 	descantThreshlistener(*tree.getRawParameterValue("descantThresh")),
-	descantIntervalListener(*tree.getRawParameterValue("descantInterval")),
-	currentInputMode(keyboard),
-	lastTriggeredChordIndex(-1), lastTriggeredIntervalSetIndex(-1)
+	descantIntervalListener(*tree.getRawParameterValue("descantInterval"))
 {
 	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice(&harmonizer)); }
 	
@@ -121,16 +119,12 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 		{
 			processBlockPrivate(buffer, inputChannel, startSample, numSamples);
 			harmonizer.handleMidiEvent(metadata.getMessage());
-			if((! (currentInputMode == keyboard)) && metadata.getMessage().isNoteOnOrOff())
-				handleAlternateInputModes(metadata.getMessage());
 			break;
 		}
 		
 		if (samplesToNextMidiMessage < 1)
 		{
 			harmonizer.handleMidiEvent(metadata.getMessage());
-			if((! (currentInputMode == keyboard)) && metadata.getMessage().isNoteOnOrOff())
-				handleAlternateInputModes(metadata.getMessage());
 			continue;
 		}
 		
@@ -139,8 +133,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 		processBlockPrivate(buffer, inputChannel, startSample, samplesToNextMidiMessage);
 		
 		harmonizer.handleMidiEvent(metadata.getMessage());
-		if((! (currentInputMode == keyboard)) && metadata.getMessage().isNoteOnOrOff())
-			handleAlternateInputModes(metadata.getMessage());
+		
 		startSample += samplesToNextMidiMessage;
 		numSamples  -= samplesToNextMidiMessage;
 	}
@@ -148,11 +141,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 	std::for_each (midiIterator,
 				   midiMessages.cend(),
 				   [&] (const MidiMessageMetadata& meta)
-				   {
-					   harmonizer.handleMidiEvent (meta.getMessage());
-					   if((! (currentInputMode == keyboard)) && meta.getMessage().isNoteOnOrOff())
-						   handleAlternateInputModes(meta.getMessage());
-				   });
+				   { harmonizer.handleMidiEvent (meta.getMessage()); } );
 };
 
 
@@ -248,142 +237,6 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 void ImogenAudioProcessor::killAllMidi()
 {
 	harmonizer.allNotesOff(false);
-	lastTriggeredChordIndex = -1;
-	lastTriggeredIntervalSetIndex = -1;
-};
-
-
-
-// functions for alternate input modes --------------------------------------------------------------------------------------------------------------
-
-void ImogenAudioProcessor::setInputMode(const inputMode newMode)
-{
-	harmonizer.allNotesOff(true);
-	currentInputMode = newMode;
-	
-	switch(newMode)
-	{
-		case(keyboard):
-			harmonizer.setListeningToKeyboardNoteEvents(true);
-			lastTriggeredChordIndex = -1;
-			lastTriggeredIntervalSetIndex = -1;
-			break;
-		case(chord):
-			harmonizer.setListeningToKeyboardNoteEvents(false);
-			lastTriggeredIntervalSetIndex = -1;
-			break;
-		case(interval):
-			harmonizer.setListeningToKeyboardNoteEvents(false);
-			lastTriggeredChordIndex = -1;
-			break;
-	}
-};
-
-
-void ImogenAudioProcessor::handleAlternateInputModes(const MidiMessage& m)
-{
-	switch(currentInputMode)
-	{
-		case(keyboard):
-			setInputMode(keyboard);
-			break;
-		case(chord):
-			handleChordInputMode(m);
-			break;
-		case(interval):
-			handleIntervalInputMode(m);
-			break;
-	}
-};
-
-
-// chord input mode -----------------------------------------------------------------
-
-void ImogenAudioProcessor::handleChordInputMode(const MidiMessage& m)
-{
-	if(m.isNoteOnOrOff())
-	{
-		const int chordIndex = chords.indexMappedToMidiNote(m.getNoteNumber());
-	
-		if(m.isNoteOn() && chordIndex > -1)
-		{
-			triggerSavedChord(chordIndex, m.getVelocity());
-			lastTriggeredChordIndex = chordIndex;
-		}
-		else if(m.isNoteOff() && (chordIndex == lastTriggeredChordIndex && lastTriggeredChordIndex > -1))
-		{
-			const float velocity = m.getFloatVelocity();
-			const bool allowTailOff = velocity > 0.5f ? false : true;
-			harmonizer.allNotesOff(allowTailOff);
-			lastTriggeredChordIndex = -1;
-		}
-	}
-};
-
-void ImogenAudioProcessor::triggerSavedChord(const int index, const int velocity)
-{
-	const bool allowTailOffOfOld = false;
-	
-	harmonizer.playChord(chords.returnChord(index), velocity, allowTailOffOfOld);
-};
-
-void ImogenAudioProcessor::triggerUnsavedChord(Array<int>& desiredNotes)
-{
-	const int velocity = 127;
-	const bool allowTailOffOfOld = false;
-	
-	harmonizer.playChord(desiredNotes, velocity, allowTailOffOfOld);
-	lastTriggeredChordIndex = -1;
-};
-
-void ImogenAudioProcessor::saveChord(Array<int>& chordNotes, const int index)
-{
-	chords.saveChord(chordNotes, index);
-};
-
-
-// interval input mode --------------------------------------------------------------
-
-void ImogenAudioProcessor::handleIntervalInputMode(const MidiMessage& m)
-{
-	if(m.isNoteOnOrOff())
-	{
-		const int intervalSetIndex = intervals.indexMappedToMidiNote(m.getNoteNumber());
-	
-		if(m.isNoteOn() && intervalSetIndex > -1)
-		{
-			triggerSavedIntervalSet(intervalSetIndex, m.getVelocity());
-			lastTriggeredIntervalSetIndex = intervalSetIndex;
-		}
-		else if(m.isNoteOff() && (intervalSetIndex == lastTriggeredIntervalSetIndex && lastTriggeredIntervalSetIndex > -1))
-		{
-			const float velocity = m.getFloatVelocity();
-			const bool allowTailOff = velocity > 0.5f ? false : true;
-			harmonizer.allNotesOff(allowTailOff);
-			lastTriggeredIntervalSetIndex = -1;
-		}
-	}
-};
-
-void ImogenAudioProcessor::triggerSavedIntervalSet(const int index, const int velocity)
-{
-	const bool allowTailOffOfOld = false;
-	
-	harmonizer.newIntervalSet(intervals.returnIntervalSet(index), velocity, allowTailOffOfOld);
-};
-
-void ImogenAudioProcessor::triggerUnsavedIntervalSet(Array<int>& desiredIntervals)
-{
-	const int velocity = 127;
-	const bool allowTailOffOfOld = false;
-	
-	harmonizer.newIntervalSet(desiredIntervals, velocity, allowTailOffOfOld);
-	lastTriggeredIntervalSetIndex = -1;
-};
-
-void ImogenAudioProcessor::saveIntervalSet(Array<int>& desiredIntervals, const int index)
-{
-	intervals.saveIntervalSet(desiredIntervals, index);
 };
 
 

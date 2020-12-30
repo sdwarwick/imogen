@@ -5,7 +5,6 @@
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
 #include "InputAnalysis.h"
-#include "alternateInputModes.h"
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
@@ -88,17 +87,6 @@ public:
 	AudioProcessorValueTreeState tree;
 	
 	
-	void triggerSavedChord(const int index, const int velocity);
-	void triggerUnsavedChord(Array<int>& desiredNotes);
-	void saveChord(Array<int>& chordNotes, const int index);
-	
-	void triggerSavedIntervalSet(const int index, const int velocity);
-	void triggerUnsavedIntervalSet(Array<int>& desiredIntervals);
-	void saveIntervalSet(Array<int>& desiredIntervals, const int index);
-	
-	enum inputMode { keyboard, chord, interval };
-	void setInputMode(const inputMode newMode);
-	
 //==============================================================================
 	
 private:
@@ -163,19 +151,6 @@ private:
 	const std::atomic<float>& descantToggleListener;
 	const std::atomic<float>& descantThreshlistener;
 	const std::atomic<float>& descantIntervalListener;
-	
-	ChordHolder chords;
-	IntervalHolder intervals;
-	
-	inputMode currentInputMode;
-	
-	void handleAlternateInputModes(const MidiMessage& m);
-	
-	void handleChordInputMode(const MidiMessage& m);
-	
-	void handleIntervalInputMode(const MidiMessage& m);
-	
-	int lastTriggeredChordIndex, lastTriggeredIntervalSetIndex;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

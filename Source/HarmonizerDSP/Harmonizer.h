@@ -51,8 +51,6 @@ public:
 	void startNote(const int midiPitch, const float velocity);
 	void stopNote(const float velocity, const bool allowTailOff);
 	void aftertouchChanged(const int newAftertouchValue);
-	void channelPressureChanged(const int newChannelPressureValue);
-	void controllerMoved(const int controllerNumber, const int newControllerValue);
 	
 	
 private:
@@ -94,6 +92,8 @@ public:
 	
 	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
+	int getNumActiveVoices();
+	
 	void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; };
 	
 	void handleMidiEvent(const MidiMessage& m);
@@ -113,24 +113,14 @@ public:
 	void setNoteStealingEnabled (bool shouldSteal) { shouldStealNotes = shouldSteal; }
 	bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
 	
-	// returns an array of the currently active pitches, or a single -1 if no notes are active
-	Array<int> reportActiveNotes() const;
+	Array<int> reportActiveNotes() const; // returns an array of the currently active pitches, or a single -1 if no notes are active
+	Array<int> reportActivesNoReleased() const; // the same, but excludes notes that are still ringing but whose key has been released
 	
 	// turn off all notes
 	void allNotesOff(const bool allowTailOff);
 	
 	void setMidiLatch(const bool shouldBeOn, const bool allowTailOff);
 	bool isLatched() const noexcept { return latchIsOn; };
-	
-	// makes sure the notes specified in the chord are all active, and all other pitches are turned off
-	void playChord(Array<int> chordNotes, const int velocity, const bool allowTailOffOfOld);
-	
-	// works like playChord, but using intervals instead of absolute pitches
-	// this method should be called any time the input frequency changes, in order to properly update all the pitches derived from intervals
-	void newIntervalSet(Array<int> desiredIntervals, const int velocity, const bool allowTailOffOfOld);
-	
-	Array<int> grabIntervalsFromCurrentlyPlayingNotes();
-	Array<int> getIntervalsFromSetOfDesiredPitches(Array<int>& desiredPitches, const bool alsoActivatePitches);
 	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
 	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
@@ -143,14 +133,8 @@ public:
 	// Adds a new voice to the harmonizer. The object passed in will be managed by the synthesiser, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
 	HarmonizerVoice* addVoice(HarmonizerVoice* newVoice);
 	
-	// deletes one of the voices
-	void removeVoice(const int index);
-	
 	// removes a specified # of voices, attempting to remove inactive voices first
 	void removeNumVoices(const int voicesToRemove);
-	
-	// returns a pointer to one of the voices that has been added
-	HarmonizerVoice* getVoice(const int index) const;
 	
 	// deletes all harmony voices
 	void deleteAllVoices();
@@ -171,9 +155,6 @@ public:
 	void setDescantInterval(const int newInterval);
 	int getCurrentDescantInterval() const noexcept { return descantInterval; };
 	
-	void setListeningToKeyboardNoteEvents(const bool shouldListen) noexcept { listeningToKeyboardNoteEvents = shouldListen; };
-	bool isListeningToKeyboardNoteEvents() const noexcept { return listeningToKeyboardNoteEvents; };
-	
 	
 protected:
 	CriticalSection lock;
@@ -183,7 +164,7 @@ protected:
 	PanningManager panner;
 	
 	// MIDI
-	void noteOn(const int midiPitch, const float velocity, const bool partofList);
+	void noteOn(const int midiPitch, const float velocity);
 	void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partOfList);
 	void handlePitchWheel(const int wheelValue);
 	void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
@@ -192,6 +173,14 @@ protected:
 	void handleSustainPedal(const bool isDown);
 	void handleSostenutoPedal(const bool isDown);
 	void handleSoftPedal(const bool isDown);
+	
+	void handleModWheel(const int wheelValue);
+	void handleBreathController(const int controlValue);
+	void handleFootController(const int controlValue);
+	void handlePortamentoTime(const int controlValue);
+	void handleMainVolume(const int controlValue);
+	void handleBalance(const int controlValue);
+	void handleLegato(const bool isOn);
 	
 	// voice allocation
 	HarmonizerVoice* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const;
@@ -231,18 +220,10 @@ private:
 	// Stops a given voice.
 	void stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff);
 	
-	// used for triggering entire chords at once:
-	void turnOnList(Array<int>& toTurnOn, const int velocity); // midi velocity 1-127
-	void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff); // float velocity 0.0-1.0
-	Array<int> reportActivesNoReleased() const;
-	Array<int> desired, previous;
-	
 	Array<int> unLatched;
+	void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff);
 	
-	Array<int> notesFromIntervals;
-	
-	Array<int> intervalsFromNotes;
-	Array<int> activePitches;
+	//Array<int> activePitches;
 	
 	// this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, etc
 	void pitchCollectionChanged();
@@ -258,8 +239,6 @@ private:
 	int lastDescantPitch;
 	int descantLowerThresh;
 	int descantInterval;
-	
-	bool listeningToKeyboardNoteEvents; // this flag is used to determine whether the harmonizer should be listening to note ons & offs from traditional MIDI input. Set to false for chord or interval mode...
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
