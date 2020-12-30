@@ -229,6 +229,11 @@ public:
 	{
 		currentlyHeldNotes.clear();
 	};
+	
+	bool isNoteLatched(const int pitch)
+	{
+		return currentlyHeldNotes.contains(pitch);
+	};
 
 
 private:

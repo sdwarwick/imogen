@@ -72,9 +72,11 @@ private:
 	int currentMidipan;
 	float panningMults[2];
 	
+	int currentAftertouch;
+	
 	AudioBuffer<float> tempBuffer;
 	
-	void clearCurrentNote() noexcept { currentlyPlayingNote = -1; }
+	void clearCurrentNote();
 	
 	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
@@ -93,6 +95,8 @@ public:
 	void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
 	
 	int getNumActiveVoices();
+	
+	bool isPitchActive(const int midiPitch, const bool countRingingButReleased);
 	
 	void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; };
 	
@@ -113,7 +117,7 @@ public:
 	void setNoteStealingEnabled (bool shouldSteal) { shouldStealNotes = shouldSteal; }
 	bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
 	
-	Array<int> reportActiveNotes() const; // returns an array of the currently active pitches, or a single -1 if no notes are active
+	Array<int> reportActiveNotes() const; // returns an array of the currently active pitches
 	Array<int> reportActivesNoReleased() const; // the same, but excludes notes that are still ringing but whose key has been released
 	
 	// turn off all notes
@@ -135,9 +139,6 @@ public:
 	
 	// removes a specified # of voices, attempting to remove inactive voices first
 	void removeNumVoices(const int voicesToRemove);
-	
-	// deletes all harmony voices
-	void deleteAllVoices();
 	
 	int getNumVoices() const noexcept { return voices.size(); }
 	
@@ -221,6 +222,7 @@ private:
 	void stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff);
 	
 	Array<int> unLatched;
+	Array<int> latching;
 	void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff);
 	
 	//Array<int> activePitches;

@@ -11,7 +11,7 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64)
+HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
 {
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
@@ -52,7 +52,8 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 	if(parent->adsrIsOn)
 		voiceIsOnRightNow = adsr.isActive();
 	else
-		voiceIsOnRightNow = isFading ? true : !noteTurnedOff;
+		voiceIsOnRightNow = isFading ? quickRelease.isActive() : !noteTurnedOff;
+	
 	
 	if(voiceIsOnRightNow)
 	{
@@ -72,24 +73,31 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		if(parent->adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
 		
-		// quick fade out for stopNote() w/ allowTailOff = false:
-		if(isFading)
-		{
-			if(! quickRelease.isActive()) { quickRelease.noteOn(); quickRelease.noteOff(); }  // ??
+		if(isFading) // quick fade out for stopNote() w/ allowTailOff = false:
 			quickRelease.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
-			adsr.reset();
-			isFading = false;
-			clearCurrentNote();
-		}
 	}
 	else
-	{
 		clearCurrentNote();
-		parent->panner.panValTurnedOff(currentMidipan);
-		currentMidipan = 64;
+};
+
+
+// this function is called to reset the HarmonizerVoice's internal state to neutral / initial
+void HarmonizerVoice::clearCurrentNote() 
+{
+	currentlyPlayingNote = -1;
+	setPan(64);
+	lastRecievedVelocity = 0.0f;
+	currentVelocityMultiplier = 0.0f;
+	isFading = false;
+	noteTurnedOff = true;
+	noteOnTime = 0;
+	keyIsDown = false;
+	
+	if(! quickRelease.isActive())
 		quickRelease.noteOn();
+	
+	if(adsr.isActive())
 		adsr.reset();
-	}
 };
 
 
@@ -126,7 +134,7 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 
 void HarmonizerVoice::aftertouchChanged(const int newAftertouchValue)
 {
-	ignoreUnused(newAftertouchValue);
+	currentAftertouch = newAftertouchValue;
 };
 
 
@@ -136,6 +144,7 @@ void HarmonizerVoice::setPan(const int newPan)
 	
 	if(currentMidipan != newPan)
 	{
+		parent->panner.panValTurnedOff(currentMidipan);
 		if(newPan == 64) // save time for the simplest case
 		{
 			panningMults[0] = 0.5f;
@@ -249,6 +258,7 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	currentlyActiveNoReleased.add(-1);
 	
 	unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	latching.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	
 	adsrParams.attack = 0.035f;
 	adsrParams.decay = 0.06f;
@@ -296,6 +306,31 @@ int Harmonizer::getNumActiveVoices()
 			++actives;
 	
 	return actives;
+};
+
+bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButReleased)
+{
+	bool active = false;
+	for(auto* voice : voices)
+	{
+		if(voice->isVoiceActive() && voice->currentlyPlayingNote == midiPitch)
+		{
+			if(countRingingButReleased)
+			{
+				active = true;
+				break;
+			}
+			else
+			{
+				if(! voice->isPlayingButReleased())
+				{
+					active = true;
+					break;
+				}
+			}
+		}
+	}
+	return active;
 };
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
@@ -356,10 +391,7 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 				continue;
 			}
 			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < lowestPannedNote && voice->currentMidipan != 64)
-			{
-				panner.panValTurnedOff(voice->currentMidipan);
 				voice->setPan(64);
-			}
 		}
 	}
 };
@@ -375,11 +407,11 @@ void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
 			if(voice->isVoiceActive())
 			{
 				if(voice->currentlyPlayingNote < newPitchThresh && voice->currentMidipan != 64)
-				{
-					panner.panValTurnedOff(voice->currentMidipan);
+		 		{
 					voice->setPan(64);
+					continue;
 				}
-				if(voice->currentlyPlayingNote > newPitchThresh && voice->currentMidipan == 64)
+				else if(voice->currentlyPlayingNote >= newPitchThresh && voice->currentMidipan == 64)
 					voice->setPan(panner.getNextPanVal());
 			}
 		}
@@ -389,6 +421,8 @@ void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
 
 // MIDI events --------------------------------------------------------------------------------------------------------------------------------------
 
+
+// this function is called any time the harmonizer's overall pitch collection is changed. With standard keyboard input, this would be once every note event; for chord triggering, this should be called once after the new chord note on/off events have been handled.
 void Harmonizer::pitchCollectionChanged()
 {
 	if(pedalPitchIsOn)
@@ -403,28 +437,28 @@ void Harmonizer::pitchCollectionChanged()
 Array<int> Harmonizer::reportActiveNotes() const
 {
 	currentlyActiveNotes.clearQuick();
-	
+
 	for (auto* voice : voices)
 		if (voice->isVoiceActive())
 			currentlyActiveNotes.add(voice->getCurrentlyPlayingNote());
-	
-	if(! currentlyActiveNotes.isEmpty()) { currentlyActiveNotes.sort(); }
-	else { currentlyActiveNotes.add(-1); }
-	
+
+	if(! currentlyActiveNotes.isEmpty())
+		currentlyActiveNotes.sort();
+
 	return currentlyActiveNotes;
 };
 
 Array<int> Harmonizer::reportActivesNoReleased() const
 {
 	currentlyActiveNoReleased.clearQuick();
-	
+
 	for (auto* voice : voices)
 		if (voice->isVoiceActive() && !(voice->isPlayingButReleased()))
 			currentlyActiveNoReleased.add(voice->currentlyPlayingNote);
-	
-	if(! currentlyActiveNoReleased.isEmpty()) { currentlyActiveNoReleased.sort(); }
-	else { currentlyActiveNoReleased.add(-1); }
-	
+
+	if(! currentlyActiveNoReleased.isEmpty())
+		currentlyActiveNoReleased.sort();
+
 	return currentlyActiveNoReleased;
 };
 
@@ -452,6 +486,7 @@ void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
 	
 	if(! shouldBeOn)
 	{
+		unLatched.clearQuick();
 		unLatched = latchManager.turnOffLatch();
 		latchManager.reset();
 		if(! unLatched.isEmpty())
@@ -462,7 +497,16 @@ void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
 		}
 	}
 	else
+	{
 		latchManager.reset();
+		latching.clearQuick();
+		latching = reportActivesNoReleased();
+		if(! latching.isEmpty())
+		{
+			for(int i = 0; i < latching.size(); ++i)
+				latchManager.noteOnRecieved(latching.getUnchecked(i));
+		}
+	}
 };
 
 void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff)
@@ -529,16 +573,12 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
 			if(midiPitch >= lowestPannedNote)
 				voice->setPan(panner.getNextPanVal());
 			else
-				voice->setPan(64);  // don't need to report panner.panValTurnedOff() because voice was previously off!
+				voice->setPan(64);
 		}
 		else
 		{
 			if(midiPitch < lowestPannedNote)
-			{
-				panner.panValTurnedOff(voice->currentMidipan);
 				voice->setPan(64);
-			}
-			// don't assign a new pan value if midiPitch >= lowestPannedNote -- leave the voice in its place in the stereo field!
 		}
 		voice->startNote (midiPitch, velocity);
 	}
@@ -561,6 +601,11 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 					stopVoice (voice, velocity, allowTailOff);
 			}
 		}
+		
+		if(midiNoteNumber == lastPedalPitch)
+			lastPedalPitch = -1;
+		if(midiNoteNumber == lastDescantPitch)
+			lastDescantPitch = -1;
 	
 		if(! partofList)
 			pitchCollectionChanged();
@@ -725,9 +770,6 @@ void Harmonizer::handleLegato(const bool isOn)
 };
 
 
-
-
-
 // pedal pitch -----------------------------------------------------------------------------------------------------------
 
 void Harmonizer::applyPedalPitch()
@@ -757,8 +799,13 @@ void Harmonizer::applyPedalPitch()
 			if(lastPedalPitch > -1)
 				noteOff(lastPedalPitch, 1.0f, false, true);
 			
-			lastPedalPitch = newPedalPitch;
-			noteOn(newPedalPitch, velocity);
+			if(! isPitchActive(newPedalPitch, false))
+			{
+				lastPedalPitch = newPedalPitch;
+				noteOn(newPedalPitch, velocity);
+			}
+			else
+				lastPedalPitch = -1; // if we get here, the new pedal pitch is already on
 		}
 	}
 	else
@@ -799,7 +846,6 @@ void Harmonizer::setPedalPitchInterval(const int newInterval)
 	if(pedalPitchInterval != newInterval)
 	{
 		pedalPitchInterval = newInterval;
-		
 		if(pedalPitchIsOn)
 			applyPedalPitch();
 	}
@@ -834,8 +880,13 @@ void Harmonizer::applyDescant()
 			if(lastDescantPitch > -1)
 				noteOff(lastDescantPitch, 1.0f, false, true);
 			
-			lastDescantPitch = newDescantPitch;
-			noteOn(newDescantPitch, velocity);
+			if(! isPitchActive(newDescantPitch, false))
+			{
+				lastDescantPitch = newDescantPitch;
+				noteOn(newDescantPitch, velocity);
+			}
+			else
+				lastDescantPitch = -1; // if we get here, the new descant pitch is already on
 		}
 	}
 	else
@@ -875,7 +926,6 @@ void Harmonizer::setDescantInterval(const int newInterval)
 	if(descantInterval != newInterval)
 	{
 		descantInterval = newInterval;
-		
 		if(descantIsOn)
 			applyDescant();
 	}
@@ -1019,13 +1069,6 @@ HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
 	return voices.add(newVoice);
 };
 
-void Harmonizer::deleteAllVoices()
-{
-	const ScopedLock sl (lock);
-	voices.clear();
-	panner.setNumberOfVoices(1);  // panner's numVoices must be >0
-};
-
 void Harmonizer::removeNumVoices(const int voicesToRemove)
 {
 	const ScopedLock sl (lock);
@@ -1043,11 +1086,21 @@ void Harmonizer::removeNumVoices(const int voicesToRemove)
 			}
 		}
 		
-		if(indexToRemove > -1)
-			voices.remove(indexToRemove);
-		else
-			voices.remove(0);
+		const int indexRemoving = indexToRemove > -1 ? indexToRemove : 0;
+		
+		HarmonizerVoice* removing = voices[indexRemoving];
+		if(removing->isVoiceActive())
+		{
+			panner.panValTurnedOff(removing->currentMidipan);
+			if(latchIsOn && latchManager.isNoteLatched(removing->currentlyPlayingNote))
+				latchManager.noteOffRecieved(removing->currentlyPlayingNote);
+		}
+		
+		voices.remove(indexRemoving);
 		
 		++voicesRemoved;
 	}
+	
+	const int voicesLeft = voices.size() > 0 ? voices.size() : 1;
+	panner.setNumberOfVoices(voicesLeft);
 };

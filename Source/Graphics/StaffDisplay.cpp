@@ -78,14 +78,11 @@ void StaffDisplay::drawPitches(Array<int> activePitches, Graphics& g)
 	
 	useFlats = displayFlats.getSelectedId() == 1 ? true : false;
 	
-	if(! activePitches.isEmpty()) // if(activePitches.isEmpty() == false && activePitches != prevActivePitches)
+	if(activePitches != prevActivePitches && (! activePitches.isEmpty()))
 	{
 		yCoordsOfActiveNotes.clearQuick();
 		for(int n = 0; n < activePitches.size(); ++n)
-		{
-			if(const int returnedpitch = activePitches.getUnchecked(n); returnedpitch > -1)
-				yCoordsOfActiveNotes.add(yCoordLookupTable[returnedpitch] + 17);
-		}
+			yCoordsOfActiveNotes.add(yCoordLookupTable[activePitches.getUnchecked(n)] + 17);
 		
 		if(! yCoordsOfActiveNotes.isEmpty())
 		{
