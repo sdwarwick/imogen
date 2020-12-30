@@ -126,7 +126,11 @@ public:
 	void playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld);
 	
 	// works like playChord, but using intervals instead of absolute pitches
+	// this method should be called any time the input frequency changes, in order to properly update all the pitches derived from intervals
 	void newIntervalSet(Array<int>& desiredIntervals, const int velocity, const bool allowTailOffOfOld);
+	
+	Array<int> grabIntervalsFromCurrentlyPlayingNotes();
+	Array<int> getIntervalsFromSetOfDesiredPitches(Array<int>& desiredPitches, const bool alsoActivatePitches);
 	
 	void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
 	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
@@ -153,7 +157,6 @@ public:
 	
 	int getNumVoices() const noexcept { return voices.size(); }
 	
-
 	void setPedalPitch(const bool isOn);
 	bool isPedalPitchOn() const noexcept { return pedalPitchIsOn; };
 	void setPedalPitchUpperThresh(const int newThresh);
@@ -225,7 +228,6 @@ private:
 	// Stops a given voice.
 	void stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff);
 	
-	
 	// used for triggering entire chords at once:
 	void turnOnList(Array<int>& toTurnOn, const int velocity); // midi velocity 1-127
 	void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff); // float velocity 0.0-1.0
@@ -236,10 +238,12 @@ private:
 	
 	Array<int> notesFromIntervals;
 	
+	Array<int> intervalsFromNotes;
+	Array<int> activePitches;
+	
 	// this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, etc
 	void pitchCollectionChanged();
 	
-	// doubles the lowest active pitch at an octave below
 	void applyPedalPitch();
 	bool pedalPitchIsOn;
 	int lastPedalPitch;

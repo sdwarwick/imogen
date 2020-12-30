@@ -253,6 +253,8 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	previous.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	notesFromIntervals.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	intervalsFromNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+	activePitches.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	
 	adsrParams.attack = 0.035f;
 	adsrParams.decay = 0.06f;
@@ -403,7 +405,7 @@ Array<int> Harmonizer::reportActivesNoReleased() const
 	
 	for (auto* voice : voices)
 		if (voice->isVoiceActive() && !(voice->isPlayingButReleased()))
-			currentlyActiveNoReleased.add(voice->getCurrentlyPlayingNote());
+			currentlyActiveNoReleased.add(voice->currentlyPlayingNote);
 	
 	if(! currentlyActiveNoReleased.isEmpty()) { currentlyActiveNoReleased.sort(); }
 	else { currentlyActiveNoReleased.add(-1); }
@@ -443,7 +445,7 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 };
 
 
-
+// functions for triggering/creating sets of intervals based on current input pitch -----------------------------------
 
 void Harmonizer::newIntervalSet(Array<int>& desiredIntervals, const int velocity, const bool allowTailOffOfOld)
 {
@@ -451,7 +453,7 @@ void Harmonizer::newIntervalSet(Array<int>& desiredIntervals, const int velocity
 	
 	notesFromIntervals.clearQuick();
 	
-	const int referenceNote = pitchConverter.ftom(currentInputFreq);
+	const int referenceNote = roundToInt(pitchConverter.ftom(currentInputFreq));
 	
 	for(int i = 0; i < desiredIntervals.size(); ++i)
 		notesFromIntervals.add(referenceNote + desiredIntervals.getUnchecked(i));
@@ -459,8 +461,45 @@ void Harmonizer::newIntervalSet(Array<int>& desiredIntervals, const int velocity
 	playChord(notesFromIntervals, velocity, allowTailOffOfOld);
 };
 
+Array<int> Harmonizer::grabIntervalsFromCurrentlyPlayingNotes()
+{
+	const ScopedLock sl (lock);
+	
+	const int referenceNote = roundToInt(pitchConverter.ftom(currentInputFreq));
+	
+	intervalsFromNotes.clearQuick();
+	activePitches.clearQuick();
+	
+	activePitches = reportActivesNoReleased();
+	
+	for(int i = 0; i < activePitches.size(); ++i)
+		intervalsFromNotes.add(referenceNote - activePitches.getUnchecked(i));
+	
+	return intervalsFromNotes;
+};
 
-// functions for triggering chords ------------------------------------------------------------------------
+Array<int> Harmonizer::getIntervalsFromSetOfDesiredPitches(Array<int>& desiredPitches, const bool alsoActivatePitches)
+{
+	const ScopedLock sl (lock);
+	
+	float velocity = 1.0f;
+	bool allowTailOffOfOld = true;
+	
+	if(alsoActivatePitches)
+		playChord(desiredPitches, velocity, allowTailOffOfOld);
+	
+	const int referenceNote = roundToInt(pitchConverter.ftom(currentInputFreq));
+	
+	intervalsFromNotes.clearQuick();
+	
+	for(int i = 0; i < desiredPitches.size(); ++i)
+		intervalsFromNotes.add(referenceNote - desiredPitches.getUnchecked(i));
+	
+	return intervalsFromNotes;
+};
+
+
+// functions for triggering chords -------------------------------------------------------------------------------------
 
 void Harmonizer::playChord(Array<int>& chordNotes, const int velocity, const bool allowTailOffOfOld)
 {
@@ -517,7 +556,7 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 };
 
 
-// functions for propogating midi events to HarmonizerVoices -------------------------------------------------------
+// functions for propogating midi events to HarmonizerVoices -----------------------------------------------------------
 
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
@@ -740,6 +779,8 @@ void Harmonizer::pitchCollectionChanged()
 };
 
 
+// pedal pitch -----------------------------------------------------------------------------------------------------------
+
 void Harmonizer::applyPedalPitch()
 {
 	const float velocity = 1.0f;
@@ -766,7 +807,6 @@ void Harmonizer::applyPedalPitch()
 	}
 };
 
-
 void Harmonizer::setPedalPitch(const bool isOn) 
 {
 	pedalPitchIsOn = isOn;
@@ -779,7 +819,6 @@ void Harmonizer::setPedalPitch(const bool isOn)
 	}
 };
 
-
 void Harmonizer::setPedalPitchUpperThresh(const int newThresh)
 {
 	if(pedalPitchUpperThresh != newThresh)
@@ -790,7 +829,6 @@ void Harmonizer::setPedalPitchUpperThresh(const int newThresh)
 				noteOff(lastPedalPitch, 1.0f, false, true);
 	}
 };
-
 
 void Harmonizer::setPedalPitchInterval(const int newInterval)
 {
@@ -808,6 +846,7 @@ void Harmonizer::setPedalPitchInterval(const int newInterval)
 	}
 };
 
+// descant ----------------------------------------------------------------------------------------------------------------
 
 void Harmonizer::applyDescant()
 {
