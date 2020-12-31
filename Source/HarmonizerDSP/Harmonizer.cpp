@@ -18,6 +18,7 @@ HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), not
 	
 	adsr.setSampleRate(44100.0);
 	quickRelease.setSampleRate(44100.0);
+	quickAttack.setSampleRate(44100.0);
 
 	ADSR::Parameters initParams;
 	initParams.attack = 0.035f;
@@ -33,6 +34,12 @@ HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), not
 	qrinit.release = 0.015f;
 	quickRelease.setParameters(qrinit);
 	
+	ADSR::Parameters qainit;
+	qainit.attack = 0.015f;
+	qainit.decay = 0.01f;
+	qainit.sustain = 1.0f;
+	qainit.release = 0.015f;
+	
 	tempBuffer.setSize(1, MAX_BUFFERSIZE);
 };
 
@@ -43,17 +50,15 @@ HarmonizerVoice::~HarmonizerVoice()
 
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
-	if(! (parent->sustainPedalDown || parent->sostenutoPedalDown))
-		if(! keyIsDown)
-			stopNote(1.0f, false);
+	if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
+		stopNote(1.0f, false);
 	
 	// don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
 	bool voiceIsOnRightNow;
-	if(parent->adsrIsOn)
+	if(!isFading && parent->adsrIsOn)
 		voiceIsOnRightNow = adsr.isActive();
 	else
 		voiceIsOnRightNow = isFading ? quickRelease.isActive() : !noteTurnedOff;
-	
 	
 	if(voiceIsOnRightNow)
 	{
@@ -72,6 +77,8 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 		
 		if(parent->adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
 			adsr.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
+		else
+			quickAttack.applyEnvelopeToBuffer(subBuffer, 0, numSamples); // to prevent pops at start of notes
 		
 		if(isFading) // quick fade out for stopNote() w/ allowTailOff = false:
 			quickRelease.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
@@ -98,6 +105,9 @@ void HarmonizerVoice::clearCurrentNote()
 	
 	if(adsr.isActive())
 		adsr.reset();
+	
+	if(quickAttack.isActive())
+		quickAttack.reset();
 };
 
 
@@ -113,6 +123,7 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
 	isFading = false;
 	noteTurnedOff = false;
 	adsr.noteOn();
+	quickAttack.noteOn();
 };
 
 void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
@@ -269,6 +280,11 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	quickReleaseParams.decay = 0.005f;
 	quickReleaseParams.sustain = 1.0f;
 	quickReleaseParams.release = 0.015f;
+	
+	quickAttackParams.attack = 0.015f;
+	quickAttackParams.decay = 0.01f;
+	quickAttackParams.sustain = 1.0f;
+	quickAttackParams.release = 0.015f;
 };
 
 Harmonizer::~Harmonizer()
@@ -348,8 +364,10 @@ void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
 		{
 			voice->adsr.setSampleRate(newRate);
 			voice->quickRelease.setSampleRate(newRate);
+			voice->quickAttack.setSampleRate(newRate);
 			voice->adsr.setParameters(adsrParams);
 			voice->quickRelease.setParameters(quickReleaseParams);
+			voice->quickAttack.setParameters(quickAttackParams);
 		}
 	}
 };
@@ -1050,10 +1068,30 @@ void Harmonizer::updateQuickReleaseMs(const int newMs)
 	if(const float desiredR = newMs / 1000.0f; quickReleaseParams.release != desiredR)
 	{
 		const ScopedLock sl (lock);
-		
 		quickReleaseParams.release = desiredR;
+		quickAttackParams.release = desiredR;
 		for(auto* voice : voices)
+		{
 			voice->quickRelease.setParameters(quickReleaseParams);
+			voice->quickAttack.setParameters(quickAttackParams);
+		}
+	}
+};
+
+void Harmonizer::updateQuickAttackMs(const int newMs)
+{
+	jassert(newMs > 0);
+	
+	if(const float desiredA = newMs / 1000.0f; quickAttackParams.attack != desiredA)
+	{
+		const ScopedLock sl (lock);
+		quickAttackParams.attack = desiredA;
+		quickReleaseParams.attack = desiredA;
+		for(auto* voice : voices)
+		{
+			voice->quickAttack.setParameters(quickAttackParams);
+			voice->quickRelease.setParameters(quickReleaseParams);
+		}
 	}
 };
 

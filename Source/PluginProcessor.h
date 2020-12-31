@@ -65,6 +65,7 @@ public:
 	void updateLimiter();
 	void updateStereoWidth();
 	void updateQuickKillMs();
+	void updateQuickAttackMs();
 	void updateDryVoxPan();
 	void updateMidiVelocitySensitivity();
 	void updateNoteStealing();
@@ -144,6 +145,7 @@ private:
 	const std::atomic<float>& limiterReleaseListener;
 	const std::atomic<float>& limiterToggleListener;
 	const std::atomic<float>& quickKillMsListener;
+	const std::atomic<float>& quickAttackMsListener;
 	const std::atomic<float>& concertPitchListener;
 	const std::atomic<float>& pedalPitchToggleListener;
 	const std::atomic<float>& pedalPitchThreshListener;

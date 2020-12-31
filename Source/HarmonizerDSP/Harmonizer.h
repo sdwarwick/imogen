@@ -61,6 +61,7 @@ private:
 	
 	ADSR adsr;
 	ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
+	ADSR quickAttack; // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
 	bool isFading;
 	bool noteTurnedOff;
 	int currentlyPlayingNote;
@@ -130,6 +131,7 @@ public:
 	void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
 	bool isADSRon() const noexcept { return adsrIsOn; };
 	void updateQuickReleaseMs(const int newMs);
+	void updateQuickAttackMs(const int newMs);
 	ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
 	
 	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
@@ -201,6 +203,7 @@ private:
 	
 	ADSR::Parameters adsrParams;
 	ADSR::Parameters quickReleaseParams;
+	ADSR::Parameters quickAttackParams;
 	bool adsrIsOn;
 	
 	float currentInputFreq;

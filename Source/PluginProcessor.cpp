@@ -28,6 +28,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
 	limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
 	quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
+	quickAttackMsListener(*tree.getRawParameterValue("quickAttackMs")),
 	concertPitchListener(*tree.getRawParameterValue("concertPitch")),
 	pedalPitchToggleListener(*tree.getRawParameterValue("pedalPitchToggle")),
 	pedalPitchThreshListener(*tree.getRawParameterValue("pedalPitchThresh")),
@@ -48,7 +49,19 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
-{ };
+{
+//#ifdef MAX_POSSIBLE_NUMBER_OF_VOICES
+//#undef MAX_POSSIBLE_NUMBER_OF_VOICES
+//#endif
+//
+//#ifdef MAX_BUFFERSIZE
+//#undef MAX_BUFFERSIZE
+//#endif
+//
+//#ifdef FRAMERATE
+//#undef FRAMERATE
+//#endif
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -253,6 +266,7 @@ void ImogenAudioProcessor::updateAllParameters()
 	updateStereoWidth();
 	updateMidiVelocitySensitivity();
 	updateQuickKillMs();
+	updateQuickAttackMs();
 	updateNoteStealing();
 	updateConcertPitch();
 	updatePitchbendSettings();
@@ -308,6 +322,11 @@ void ImogenAudioProcessor::updateStereoWidth()
 void ImogenAudioProcessor::updateQuickKillMs()
 {
 	harmonizer.updateQuickReleaseMs(roundToInt(quickKillMsListener.load()));
+};
+
+void ImogenAudioProcessor::updateQuickAttackMs()
+{
+	harmonizer.updateQuickAttackMs(roundToInt(quickAttackMsListener.load()));
 };
 
 void ImogenAudioProcessor::updateDryVoxPan()
@@ -521,6 +540,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 	params.push_back(std::make_unique<AudioParameterInt>("dryPan", "Dry vox pan", 0, 127, 64));
 	params.push_back(std::make_unique<AudioParameterInt>("masterDryWet", "% wet", 0, 100, 100));
 	params.push_back(std::make_unique<AudioParameterInt>("quickKillMs", "Quick kill ms", 1, 250, 15));
+	params.push_back(std::make_unique<AudioParameterInt>("quickAttackMs", "Quick attack ms", 1, 250, 15));
 	params.push_back(std::make_unique<AudioParameterInt> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
 	params.push_back(std::make_unique<AudioParameterInt> ("PitchBendUpRange", "Pitch bend range (up)", 0, 12, 2));
 	params.push_back(std::make_unique<AudioParameterInt>("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));

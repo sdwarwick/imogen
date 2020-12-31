@@ -131,10 +131,11 @@ private:
 		jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
 		if(pitchbend == 64)
 			return midiPitch;
-		else if (pitchbend > 64)
+		
+		if (pitchbend > 64)
 			return ((rangeUp * (pitchbend - 65)) / 62) + midiPitch;
-		else
-			return (((1 - rangeDown) * pitchbend) / 63) + midiPitch - rangeDown;
+		
+		return (((1 - rangeDown) * pitchbend) / 63) + midiPitch - rangeDown;
 	};
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchBendHelper)

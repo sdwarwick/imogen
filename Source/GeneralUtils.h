@@ -23,8 +23,8 @@ public:
 			jassert(midipitch >= 0);
 			if(const int modulo = midipitch % 12; modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
 				return true;
-			else
-				return false;
+			
+			return false;
 		};
 
 		static bool isMidiNoteBlackKey(const float midipitch)
@@ -33,8 +33,8 @@ public:
 			const int roundedpitch = round(midipitch);
 			if(const int modulo = roundedpitch % 12; modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
 				return true;
-			else
-				return false;
+			
+			return false;
 		};
 		
 		// determine if two midiPitches in any octave are the same pitch class
@@ -118,10 +118,11 @@ public:
 		jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128) && rangeUp >= 0 && rangeDown >= 0);
 		if(pitchbend == 64)
 			return midiPitch;
-		else if (pitchbend > 64)
+		
+		if (pitchbend > 64)
 			return ((rangeUp * (pitchbend - 65)) / 62) + midiPitch;
-		else
-			return (((1 - rangeDown) * pitchbend) / 63) + midiPitch - rangeDown;
+		
+		return (((1 - rangeDown) * pitchbend) / 63) + midiPitch - rangeDown;
 	};
 	
 	struct velocityHelpers
