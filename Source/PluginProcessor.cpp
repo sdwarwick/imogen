@@ -6,38 +6,11 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	AudioProcessor(makeBusProperties()),
 	tree(*this, nullptr, "PARAMETERS", createParameters()),
 	wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
-	lastSampleRate(44100), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
-	prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
-	adsrAttackListener(*tree.getRawParameterValue("adsrAttack")),
-	adsrDecayListener(*tree.getRawParameterValue("adsrDecay")),
-	adsrSustainListener(*tree.getRawParameterValue("adsrSustain")),
-	adsrReleaseListener(*tree.getRawParameterValue("adsrRelease")),
-	adsrOnOffListener(*tree.getRawParameterValue("adsrOnOff")),
-	stereoWidthListener(*tree.getRawParameterValue("stereoWidth")),
-	lowestPanListener(*tree.getRawParameterValue("lowestPan")),
-	midiVelocitySensListener(*tree.getRawParameterValue("midiVelocitySensitivity")),
-	pitchBendUpListener(*tree.getRawParameterValue("PitchBendUpRange")),
-	pitchBendDownListener(*tree.getRawParameterValue("PitchBendDownRange")),
-	inputGainListener(*tree.getRawParameterValue("inputGain")),
-	outputGainListener(*tree.getRawParameterValue("outputGain")),
-	voiceStealingListener(*tree.getRawParameterValue("voiceStealing")),
-	inputChannelListener(*tree.getRawParameterValue("inputChan")),
-	dryVoxPanListener(*tree.getRawParameterValue("dryPan")),
-	masterDryWetListener(*tree.getRawParameterValue("masterDryWet")),
-	limiterThreshListener(*tree.getRawParameterValue("limiterThresh")),
-	limiterReleaseListener(*tree.getRawParameterValue("limiterRelease")),
-	limiterToggleListener(*tree.getRawParameterValue("limiterIsOn")),
-	quickKillMsListener(*tree.getRawParameterValue("quickKillMs")),
-	quickAttackMsListener(*tree.getRawParameterValue("quickAttackMs")),
-	concertPitchListener(*tree.getRawParameterValue("concertPitch")),
-	pedalPitchToggleListener(*tree.getRawParameterValue("pedalPitchToggle")),
-	pedalPitchThreshListener(*tree.getRawParameterValue("pedalPitchThresh")),
-	pedalPitchIntervalListener(*tree.getRawParameterValue("pedalPitchInterval")),
-	descantToggleListener(*tree.getRawParameterValue("descantToggle")),
-	descantThreshlistener(*tree.getRawParameterValue("descantThresh")),
-	descantIntervalListener(*tree.getRawParameterValue("descantInterval"))
+	lastSampleRate(44100.0), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
+	prevDryPan(64), prevideb(0.0f), prevodeb(0.0f)
 {
-	for (int i = 0; i < 12; ++i) { harmonizer.addVoice(new HarmonizerVoice(&harmonizer)); }
+	for (int i = 0; i < 12; ++i)
+		harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
@@ -46,22 +19,42 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 	epochIndices.clearQuick();
 	
 	// setLatencySamples(newLatency); // TOTAL plugin latency!
+	
+	dryPan 	           = dynamic_cast<AudioParameterInt*>  (tree.getParameter("dryPan")); 				   jassert(dryPan);
+	dryWet 	           = dynamic_cast<AudioParameterInt*>  (tree.getParameter("masterDryWet")); 		   jassert(dryWet);
+	inputChan          = dynamic_cast<AudioParameterInt*>  (tree.getParameter("inputChan")); 			   jassert(inputChan);
+	adsrAttack         = dynamic_cast<AudioParameterFloat*>(tree.getParameter("adsrAttack")); 			   jassert(adsrAttack);
+	adsrDecay          = dynamic_cast<AudioParameterFloat*>(tree.getParameter("adsrDecay")); 			   jassert(adsrDecay);
+	adsrSustain        = dynamic_cast<AudioParameterFloat*>(tree.getParameter("adsrSustain")); 			   jassert(adsrSustain);
+	adsrRelease        = dynamic_cast<AudioParameterFloat*>(tree.getParameter("adsrRelease")); 			   jassert(adsrRelease);
+	adsrToggle         = dynamic_cast<AudioParameterBool*> (tree.getParameter("adsrOnOff")); 			   jassert(adsrToggle);
+	quickKillMs        = dynamic_cast<AudioParameterInt*>  (tree.getParameter("quickKillMs")); 			   jassert(quickKillMs);
+	quickAttackMs      = dynamic_cast<AudioParameterInt*>  (tree.getParameter("quickAttackMs")); 		   jassert(quickAttackMs);
+	stereoWidth	       = dynamic_cast<AudioParameterInt*>  (tree.getParameter("stereoWidth")); 		       jassert(stereoWidth);
+	lowestPanned       = dynamic_cast<AudioParameterInt*>  (tree.getParameter("lowestPan")); 		       jassert(lowestPanned);
+	velocitySens       = dynamic_cast<AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity")); jassert(velocitySens);
+	pitchBendUp        = dynamic_cast<AudioParameterInt*>  (tree.getParameter("PitchBendUpRange")); 	   jassert(pitchBendUp);
+	pitchBendDown      = dynamic_cast<AudioParameterInt*>  (tree.getParameter("PitchBendDownRange")); 	   jassert(pitchBendDown);
+	pedalPitchIsOn     = dynamic_cast<AudioParameterBool*> (tree.getParameter("pedalPitchToggle")); 	   jassert(pedalPitchIsOn);
+	pedalPitchThresh   = dynamic_cast<AudioParameterInt*>  (tree.getParameter("pedalPitchThresh")); 	   jassert(pedalPitchThresh);
+	pedalPitchInterval = dynamic_cast<AudioParameterInt*>  (tree.getParameter("pedalPitchInterval")); 	   jassert(pedalPitchInterval);
+	descantIsOn		   = dynamic_cast<AudioParameterBool*> (tree.getParameter("descantToggle")); 		   jassert(descantIsOn);
+	descantThresh	   = dynamic_cast<AudioParameterInt*>  (tree.getParameter("descantThresh"));		   jassert(descantThresh);
+	descantInterval	   = dynamic_cast<AudioParameterInt*>  (tree.getParameter("descantInterval")); 	       jassert(descantInterval);
+	concertPitchHz	   = dynamic_cast<AudioParameterInt*>  (tree.getParameter("concertPitch")); 		   jassert(concertPitchHz);
+	voiceStealing	   = dynamic_cast<AudioParameterBool*> (tree.getParameter("voiceStealing")); 		   jassert(voiceStealing);
+	latchIsOn		   = dynamic_cast<AudioParameterBool*> (tree.getParameter("latchIsOn"));			   jassert(latchIsOn);
+	inputGain		   = dynamic_cast<AudioParameterFloat*>(tree.getParameter("inputGain"));			   jassert(inputGain);
+	outputGain		   = dynamic_cast<AudioParameterFloat*>(tree.getParameter("outputGain"));			   jassert(outputGain);
+	limiterToggle	   = dynamic_cast<AudioParameterBool*> (tree.getParameter("limiterIsOn"));			   jassert(limiterToggle);
+	limiterThresh	   = dynamic_cast<AudioParameterFloat*>(tree.getParameter("limiterThresh"));		   jassert(limiterThresh);
+	limiterRelease     = dynamic_cast<AudioParameterInt*>  (tree.getParameter("limiterRelease"));		   jassert(limiterRelease);
+	
+	updateAllParameters();
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
-{
-//#ifdef MAX_POSSIBLE_NUMBER_OF_VOICES
-//#undef MAX_POSSIBLE_NUMBER_OF_VOICES
-//#endif
-//
-//#ifdef MAX_BUFFERSIZE
-//#undef MAX_BUFFERSIZE
-//#endif
-//
-//#ifdef FRAMERATE
-//#undef FRAMERATE
-//#endif
-};
+{ };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,9 +76,9 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 	limiter.prepare(dspSpec);
 	
 	// dry wet mixer
-	dryWet.prepare(dspSpec);
-	dryWet.setMixingRule(dsp::DryWetMixingRule::linear);
-	dryWet.setWetLatency(2); // latency in samples of the ESOLA algorithm
+	dryWetMixer.prepare(dspSpec);
+	dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
+	dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
 	
 	updateAllParameters();
 	harmonizer.resetNoteOnCounter(); // ??
@@ -104,7 +97,7 @@ void ImogenAudioProcessor::releaseResources()
 
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-	const int inputChannel = inputChannelListener >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : int(inputChannelListener);
+	const int inputChannel = inputChan->get() >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : inputChan->get();
 	
 	updateSampleRate(getSampleRate());
 	updateAllParameters();
@@ -208,7 +201,7 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	}
 	
 	dsp::AudioBlock<float> dwinblock(dryBuffer);
-	dryWet.pushDrySamples(dwinblock);
+	dryWetMixer.pushDrySamples(dwinblock);
 	
 	currentInputPitch = pitch.getPitch(buffer, inputChannel, lastSampleRate);
 	
@@ -224,7 +217,7 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
 	}
 	
 	dsp::AudioBlock<float> dwoutblock (wetBuffer);
-	dryWet.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
+	dryWetMixer.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
 	
 	buffer.makeCopyOf(wetBuffer, true); // transfer from wetBuffer to I/O buffer
 	
@@ -253,7 +246,6 @@ void ImogenAudioProcessor::killAllMidi()
 };
 
 
-
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
 
 void ImogenAudioProcessor::updateAllParameters()
@@ -270,6 +262,7 @@ void ImogenAudioProcessor::updateAllParameters()
 	updateNoteStealing();
 	updateConcertPitch();
 	updatePitchbendSettings();
+	updateMidiLatch();
 	updatePedalPitch();
 	updateDescant();
 };
@@ -285,53 +278,11 @@ void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
 	}
 };
 
-void ImogenAudioProcessor::updateAdsr()
-{
-	harmonizer.setADSRonOff(float(adsrOnOffListener.load()) > 0.5f);
-	harmonizer.updateADSRsettings(float(adsrAttackListener.load()), float(adsrDecayListener.load()), float(adsrSustainListener.load()), float(adsrReleaseListener.load()));
-};
-
-void ImogenAudioProcessor::updateIOgains()
-{
-	if(const float newIn = float(inputGainListener.load()); newIn != prevideb)
-	{
-		inputGainMultiplier = Decibels::decibelsToGain(newIn);
-		prevideb = newIn;
-	}
-	
-	if(const float newOut = float(outputGainListener.load()); newOut != prevodeb)
-	{
-		outputGainMultiplier = Decibels::decibelsToGain(newOut);
-		prevodeb = newOut;
-	}
-};
-
-void ImogenAudioProcessor::updateLimiter()
-{
-	limiter.setThreshold(float(limiterThreshListener.load()));
-	limiter.setRelease(float(limiterReleaseListener.load()));
-	limiterIsOn = float(limiterToggleListener.load()) > 0.5f;
-};
-
-void ImogenAudioProcessor::updateStereoWidth()
-{
-	harmonizer.updateLowestPannedNote(roundToInt(lowestPanListener.load()));
-	harmonizer.updateStereoWidth(roundToInt(stereoWidthListener.load()));
-};
-
-void ImogenAudioProcessor::updateQuickKillMs()
-{
-	harmonizer.updateQuickReleaseMs(roundToInt(quickKillMsListener.load()));
-};
-
-void ImogenAudioProcessor::updateQuickAttackMs()
-{
-	harmonizer.updateQuickAttackMs(roundToInt(quickAttackMsListener.load()));
-};
-
 void ImogenAudioProcessor::updateDryVoxPan()
 {
-	if(const int newDryPan = roundToInt(dryVoxPanListener.load()); newDryPan != prevDryPan)
+	const int newDryPan = dryPan->get();
+	
+	if(newDryPan != prevDryPan)
 	{
 		const float Rpan = newDryPan / 127.0f;
 		dryvoxpanningmults[1] = Rpan;
@@ -340,65 +291,94 @@ void ImogenAudioProcessor::updateDryVoxPan()
 	}
 };
 
-void ImogenAudioProcessor::updateMidiVelocitySensitivity()
-{
-	harmonizer.updateMidiVelocitySensitivity(roundToInt(midiVelocitySensListener.load()));
-};
-
-void ImogenAudioProcessor::updateNoteStealing()
-{
-	harmonizer.setNoteStealingEnabled(float(voiceStealingListener.load()) > 0.5f);
-};
-
-void ImogenAudioProcessor::updatePitchbendSettings()
-{
-	harmonizer.updatePitchbendSettings(roundToInt(pitchBendUpListener.load()), roundToInt(pitchBendDownListener.load()));
-};
-
 void ImogenAudioProcessor::updateDryWet()
 {
-	dryWet.setWetMixProportion(float(masterDryWetListener.load()) / 100.0f);
+	dryWetMixer.setWetMixProportion(dryWet->get() / 100.0f);
 	
 	// need to set latency!!!
 };
 
-void ImogenAudioProcessor::updateConcertPitch()
+void ImogenAudioProcessor::updateAdsr()
 {
-	harmonizer.setConcertPitchHz(roundToInt(concertPitchListener.load()));
+	harmonizer.setADSRonOff(adsrToggle->get());
+	harmonizer.updateADSRsettings(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
 };
 
-void ImogenAudioProcessor::updateMidiLatch(const bool shouldBeOn, const bool tailOff)
+void ImogenAudioProcessor::updateQuickKillMs()
 {
-	if(harmonizer.isLatched() != shouldBeOn)
-		harmonizer.setMidiLatch(shouldBeOn, tailOff);
+	harmonizer.updateQuickReleaseMs(quickKillMs->get());
+};
+
+void ImogenAudioProcessor::updateQuickAttackMs()
+{
+	harmonizer.updateQuickAttackMs(quickAttackMs->get());
+};
+
+void ImogenAudioProcessor::updateStereoWidth()
+{
+	harmonizer.updateLowestPannedNote(lowestPanned->get());
+	harmonizer.updateStereoWidth(stereoWidth->get());
+};
+
+void ImogenAudioProcessor::updateMidiVelocitySensitivity()
+{
+	harmonizer.updateMidiVelocitySensitivity(velocitySens->get());
+};
+
+void ImogenAudioProcessor::updatePitchbendSettings()
+{
+	harmonizer.updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
 };
 
 void ImogenAudioProcessor::updatePedalPitch()
 {
-	const bool isNowOn = float(pedalPitchToggleListener.load()) > 0.5f;
-	const int newUpperThresh = roundToInt(pedalPitchThreshListener.load());
-	const int newInterval = roundToInt(pedalPitchIntervalListener.load());
-	
-	if(harmonizer.isPedalPitchOn() != isNowOn)
-		harmonizer.setPedalPitch(isNowOn);
-	if(harmonizer.getCurrentPedalPitchUpperThresh() != newUpperThresh)
-		harmonizer.setPedalPitchUpperThresh(newUpperThresh);
-	if(harmonizer.getCurrentPedalPitchInterval() != newInterval)
-		harmonizer.setPedalPitchInterval(newInterval);
+	harmonizer.setPedalPitch		   (pedalPitchIsOn->get());
+	harmonizer.setPedalPitchUpperThresh(pedalPitchThresh->get());
+	harmonizer.setPedalPitchInterval   (pedalPitchInterval->get());
 };
 
 void ImogenAudioProcessor::updateDescant()
 {
-	bool isNowOn = float(descantToggleListener.load()) > 0.5f;
-	int newLowerThresh = roundToInt(descantThreshlistener.load());
-	int newInterval = roundToInt(descantIntervalListener.load());
+	harmonizer.setDescant			(descantIsOn->get());
+	harmonizer.setDescantLowerThresh(descantThresh->get());
+	harmonizer.setDescantInterval	(descantInterval->get());
+};
+
+void ImogenAudioProcessor::updateConcertPitch()
+{
+	harmonizer.setConcertPitchHz(concertPitchHz->get());
+};
+
+void ImogenAudioProcessor::updateNoteStealing()
+{
+	harmonizer.setNoteStealingEnabled(voiceStealing->get());
+};
+
+void ImogenAudioProcessor::updateMidiLatch()
+{
+	const bool allowTailOff = true;
+	harmonizer.setMidiLatch(latchIsOn->get(), allowTailOff);
+};
+
+void ImogenAudioProcessor::updateIOgains()
+{
+	const float newIn = inputGain->get();
 	
-	if(harmonizer.isDescantOn() != isNowOn)
-		harmonizer.setDescant(isNowOn);
-	if(harmonizer.getCurrentDescantLowerThresh() != newLowerThresh)
-		harmonizer.setDescantLowerThresh(newLowerThresh);
-	if(harmonizer.getCurrentDescantInterval() != newInterval)
-		harmonizer.setDescantInterval(newInterval);
+	if(newIn != prevideb)
+		inputGainMultiplier = Decibels::decibelsToGain(newIn);
+	prevideb = newIn;
+	
+	const float newOut = outputGain->get();
+	if(newOut != prevodeb)
+		outputGainMultiplier = Decibels::decibelsToGain(newOut);
+	prevodeb = newOut;
+};
+
+void ImogenAudioProcessor::updateLimiter()
+{
+	limiterIsOn = limiterToggle->get();
+	limiter.setThreshold(limiterThresh->get());
+	limiter.setRelease(limiterRelease->get());
 };
 
 void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
@@ -519,10 +499,12 @@ AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
 {
 	PluginHostType host;
 	if(host.isLogic() || host.isGarageBand())
-		return BusesProperties().withInput("Input", AudioChannelSet::mono(), false).withInput("Sidechain", AudioChannelSet::mono(), true)
-		.withOutput("Output", AudioChannelSet::stereo(), true);
-	else
-		return BusesProperties().withInput("Input", AudioChannelSet::mono(), true).withOutput("Output", AudioChannelSet::stereo(), true);
+		return BusesProperties().withInput("Input", AudioChannelSet::mono(), false)
+							    .withInput("Sidechain", AudioChannelSet::mono(), true)
+								.withOutput("Output", AudioChannelSet::stereo(), true);
+	
+	return BusesProperties()    .withInput("Input", AudioChannelSet::mono(), true)
+								.withOutput("Output", AudioChannelSet::stereo(), true);
 };
 
 
@@ -530,34 +512,53 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 {
 	std::vector<std::unique_ptr<RangedAudioParameter>> params;
 	
-	params.push_back(std::make_unique<AudioParameterFloat> ("adsrAttack", "ADSR Attack", NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.035f));
-	params.push_back(std::make_unique<AudioParameterFloat> ("adsrDecay", "ADSR Decay", NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.06f));
-	params.push_back(std::make_unique<AudioParameterFloat> ("adsrSustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f, 0.01f), 0.8f));
-	params.push_back(std::make_unique<AudioParameterFloat> ("adsrRelease", "ADSR Release", NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.1f));
-	params.push_back(std::make_unique<AudioParameterBool>("adsrOnOff", "ADSR on/off", true));
-	params.push_back(std::make_unique<AudioParameterInt> ("stereoWidth", "Stereo Width", 0, 100, 100));
-	params.push_back(std::make_unique<AudioParameterInt>("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
-	params.push_back(std::make_unique<AudioParameterInt>("dryPan", "Dry vox pan", 0, 127, 64));
-	params.push_back(std::make_unique<AudioParameterInt>("masterDryWet", "% wet", 0, 100, 100));
-	params.push_back(std::make_unique<AudioParameterInt>("quickKillMs", "Quick kill ms", 1, 250, 15));
-	params.push_back(std::make_unique<AudioParameterInt>("quickAttackMs", "Quick attack ms", 1, 250, 15));
-	params.push_back(std::make_unique<AudioParameterInt> ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
-	params.push_back(std::make_unique<AudioParameterInt> ("PitchBendUpRange", "Pitch bend range (up)", 0, 12, 2));
-	params.push_back(std::make_unique<AudioParameterInt>("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));
-	params.push_back(std::make_unique<AudioParameterFloat>("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), 0.0f));
-	params.push_back(std::make_unique<AudioParameterFloat>("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -4.0f));
-	params.push_back(std::make_unique<AudioParameterBool>("voiceStealing", "Voice stealing", false));
-	params.push_back(std::make_unique<AudioParameterInt>("inputChan", "Input channel", 0, 16, 0));
-	params.push_back(std::make_unique<AudioParameterInt>("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
-	params.push_back(std::make_unique<AudioParameterFloat>("limiterThresh", "Limiter threshold (dBFS)", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
-	params.push_back(std::make_unique<AudioParameterInt>("limiterRelease", "limiter release (ms)", 1, 250, 10));
-	params.push_back(std::make_unique<AudioParameterBool>("limiterIsOn", "Limiter on/off", true));
-	params.push_back(std::make_unique<AudioParameterBool>("pedalPitchToggle", "Pedal pitch on/off", false));
-	params.push_back(std::make_unique<AudioParameterInt>("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
-	params.push_back(std::make_unique<AudioParameterInt>("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
-	params.push_back(std::make_unique<AudioParameterBool>("descantToggle", "Descant on/off", false));
-	params.push_back(std::make_unique<AudioParameterInt>("descantThresh", "Descant lower threshold", 0, 127, 127));
-	params.push_back(std::make_unique<AudioParameterInt>("descantInterval", "Descant interval", 1, 12, 12));
+	// general
+	params.push_back(std::make_unique<AudioParameterInt>	("dryPan", "Dry vox pan", 0, 127, 64));
+	
+	params.push_back(std::make_unique<AudioParameterInt>	("masterDryWet", "% wet", 0, 100, 100));
+	
+	params.push_back(std::make_unique<AudioParameterInt>	("inputChan", "Input channel", 0, 16, 0));
+	
+	// ADSR
+	params.push_back(std::make_unique<AudioParameterFloat> 	("adsrAttack", "ADSR Attack", NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.035f));
+	params.push_back(std::make_unique<AudioParameterFloat> 	("adsrDecay", "ADSR Decay", NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.06f));
+	params.push_back(std::make_unique<AudioParameterFloat> 	("adsrSustain", "ADSR Sustain", NormalisableRange<float> (0.01f, 1.0f, 0.01f), 0.8f));
+	params.push_back(std::make_unique<AudioParameterFloat> 	("adsrRelease", "ADSR Release", NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.1f));
+	params.push_back(std::make_unique<AudioParameterBool>	("adsrOnOff", "ADSR on/off", true));
+	params.push_back(std::make_unique<AudioParameterInt>	("quickKillMs", "Quick kill ms", 1, 250, 15));
+	params.push_back(std::make_unique<AudioParameterInt>	("quickAttackMs", "Quick attack ms", 1, 250, 15));
+	
+	// stereo width
+	params.push_back(std::make_unique<AudioParameterInt> 	("stereoWidth", "Stereo Width", 0, 100, 100));
+	params.push_back(std::make_unique<AudioParameterInt>	("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
+	
+	// midi settings
+	params.push_back(std::make_unique<AudioParameterInt> 	("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
+	params.push_back(std::make_unique<AudioParameterInt> 	("PitchBendUpRange", "Pitch bend range (up)", 0, 12, 2));
+	params.push_back(std::make_unique<AudioParameterInt>	("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));
+	// pedal pitch
+	params.push_back(std::make_unique<AudioParameterBool>	("pedalPitchToggle", "Pedal pitch on/off", false));
+	params.push_back(std::make_unique<AudioParameterInt>	("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
+	params.push_back(std::make_unique<AudioParameterInt>	("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
+	// descant
+	params.push_back(std::make_unique<AudioParameterBool>	("descantToggle", "Descant on/off", false));
+	params.push_back(std::make_unique<AudioParameterInt>	("descantThresh", "Descant lower threshold", 0, 127, 127));
+	params.push_back(std::make_unique<AudioParameterInt>	("descantInterval", "Descant interval", 1, 12, 12));
+	// concert pitch Hz
+	params.push_back(std::make_unique<AudioParameterInt>	("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
+	// voice stealing
+	params.push_back(std::make_unique<AudioParameterBool>	("voiceStealing", "Voice stealing", false));
+	// midi latch
+	params.push_back(std::make_unique<AudioParameterBool>	("latchIsOn", "MIDI latch on/off", false));
+	
+	// input & output gain
+	params.push_back(std::make_unique<AudioParameterFloat>	("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), 0.0f));
+	params.push_back(std::make_unique<AudioParameterFloat>	("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -4.0f));
+	
+	// output limiter
+	params.push_back(std::make_unique<AudioParameterBool>	("limiterIsOn", "Limiter on/off", true));
+	params.push_back(std::make_unique<AudioParameterFloat>	("limiterThresh", "Limiter threshold", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
+	params.push_back(std::make_unique<AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
 	
 	return { params.begin(), params.end() };
 };
@@ -566,9 +567,9 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
 	if(harmonizer.isADSRon())
-		return double(adsrReleaseListener); // ADSR release time in seconds
-	else
-		return double(quickKillMsListener * 1000.0f); // "quick kill" time in seconds
+		return double(adsrRelease->get()); // ADSR release time in seconds
+	
+	return double(quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
 };
 
 int ImogenAudioProcessor::getNumPrograms() {

@@ -72,7 +72,7 @@ public:
 	void updatePitchbendSettings();
 	void updateDryWet();
 	void updateConcertPitch();
-	void updateMidiLatch(const bool shouldBeOn, const bool tailOff);
+	void updateMidiLatch();
 	void updatePedalPitch();
 	void updateDescant();
 	
@@ -111,7 +111,7 @@ private:
 	
 	dsp::ProcessSpec dspSpec;
 	dsp::Limiter<float> limiter;
-	dsp::DryWetMixer<float> dryWet;
+	dsp::DryWetMixer<float> dryWetMixer;
 	
 	// these variables store *current* states:
 	double lastSampleRate;
@@ -125,34 +125,35 @@ private:
 	float prevideb, prevodeb;
 	
 	// listener variables linked to AudioProcessorValueTreeState parameters:
-	const std::atomic<float>& adsrAttackListener;
-	const std::atomic<float>& adsrDecayListener;
-	const std::atomic<float>& adsrSustainListener;
-	const std::atomic<float>& adsrReleaseListener;
-	const std::atomic<float>& adsrOnOffListener;
-	const std::atomic<float>& stereoWidthListener;
-	const std::atomic<float>& lowestPanListener;
-	const std::atomic<float>& midiVelocitySensListener;
-	const std::atomic<float>& pitchBendUpListener;
-	const std::atomic<float>& pitchBendDownListener;
-	const std::atomic<float>& inputGainListener;
-	const std::atomic<float>& outputGainListener;
-	const std::atomic<float>& voiceStealingListener;
-	const std::atomic<float>& inputChannelListener;
-	const std::atomic<float>& dryVoxPanListener;
-	const std::atomic<float>& masterDryWetListener;
-	const std::atomic<float>& limiterThreshListener;
-	const std::atomic<float>& limiterReleaseListener;
-	const std::atomic<float>& limiterToggleListener;
-	const std::atomic<float>& quickKillMsListener;
-	const std::atomic<float>& quickAttackMsListener;
-	const std::atomic<float>& concertPitchListener;
-	const std::atomic<float>& pedalPitchToggleListener;
-	const std::atomic<float>& pedalPitchThreshListener;
-	const std::atomic<float>& pedalPitchIntervalListener;
-	const std::atomic<float>& descantToggleListener;
-	const std::atomic<float>& descantThreshlistener;
-	const std::atomic<float>& descantIntervalListener;
+	AudioParameterInt* 	 dryPan 	        = nullptr;
+	AudioParameterInt* 	 dryWet 	        = nullptr;
+	AudioParameterInt* 	 inputChan          = nullptr;
+	AudioParameterFloat* adsrAttack         = nullptr;
+	AudioParameterFloat* adsrDecay          = nullptr;
+	AudioParameterFloat* adsrSustain        = nullptr;
+	AudioParameterFloat* adsrRelease        = nullptr;
+	AudioParameterBool*  adsrToggle         = nullptr;
+	AudioParameterInt*	 quickKillMs        = nullptr;
+	AudioParameterInt* 	 quickAttackMs      = nullptr;
+	AudioParameterInt*   stereoWidth        = nullptr;
+	AudioParameterInt*   lowestPanned       = nullptr;
+	AudioParameterInt*   velocitySens       = nullptr;
+	AudioParameterInt*   pitchBendUp        = nullptr;
+	AudioParameterInt*   pitchBendDown      = nullptr;
+	AudioParameterBool*  pedalPitchIsOn     = nullptr;
+	AudioParameterInt*   pedalPitchThresh   = nullptr;
+	AudioParameterInt*   pedalPitchInterval = nullptr;
+	AudioParameterBool*  descantIsOn		= nullptr;
+	AudioParameterInt*	 descantThresh		= nullptr;
+	AudioParameterInt*	 descantInterval	= nullptr;
+	AudioParameterInt*	 concertPitchHz	    = nullptr;
+	AudioParameterBool*  voiceStealing	    = nullptr;
+	AudioParameterBool*  latchIsOn			= nullptr;
+	AudioParameterFloat* inputGain			= nullptr;
+	AudioParameterFloat* outputGain			= nullptr;
+	AudioParameterBool*	 limiterToggle		= nullptr;
+	AudioParameterFloat* limiterThresh		= nullptr;
+	AudioParameterInt*   limiterRelease     = nullptr;
 	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

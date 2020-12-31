@@ -94,14 +94,14 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 		{
 			latchToggle.setButtonText("MIDI latch");
 			//addAndMakeVisible(latchToggle);
-			latchToggle.onClick = [this] { updateMidiLatch(); };
+			latchToggle.onClick = [this] { audioProcessor.updateMidiLatch(); };
 		}
 		
 		// "allow trail off" toggle
 		{
 			latchTailOff.setButtonText("Allow trail-off on unlatch");
 			//addAndMakeVisible(latchTailOff);
-			latchTailOff.onClick = [this] { updateMidiLatch(); };
+			latchTailOff.onClick = [this] { audioProcessor.updateMidiLatch(); };
 		}
 	}
 	
@@ -357,12 +357,6 @@ void MidiControlPanel::resized()
 	numVoicesLabel.setBounds(18, 348, 115, 35);
 	numberOfVoices.setBounds(42, 385, 65, 20);
 
-};
-
-
-void MidiControlPanel::updateMidiLatch()
-{
-	audioProcessor.updateMidiLatch(latchToggle.getToggleState(), latchTailOff.getToggleState());
 };
 
 

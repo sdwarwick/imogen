@@ -16,29 +16,15 @@ HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), not
 	panningMults[0] = 0.5f;
 	panningMults[1] = 0.5f;
 	
-	adsr.setSampleRate(44100.0);
-	quickRelease.setSampleRate(44100.0);
-	quickAttack.setSampleRate(44100.0);
+	const double initSamplerate = parent->getSamplerate();
+	
+	adsr.setSampleRate			(initSamplerate);
+	quickRelease.setSampleRate	(initSamplerate);
+	quickAttack.setSampleRate	(initSamplerate);
 
-	ADSR::Parameters initParams;
-	initParams.attack = 0.035f;
-	initParams.decay = 0.06f;
-	initParams.sustain = 0.8f;
-	initParams.release = 0.01f;
-	adsr.setParameters(initParams);
-	
-	ADSR::Parameters qrinit;
-	qrinit.attack = 0.01f;
-	qrinit.decay = 0.01f;
-	qrinit.sustain = 1.0f;
-	qrinit.release = 0.015f;
-	quickRelease.setParameters(qrinit);
-	
-	ADSR::Parameters qainit;
-	qainit.attack = 0.015f;
-	qainit.decay = 0.01f;
-	qainit.sustain = 1.0f;
-	qainit.release = 0.015f;
+	adsr.setParameters			(parent->getCurrentAdsrParams());
+	quickRelease.setParameters	(parent->getCurrentQuickReleaseParams());
+	quickAttack.setParameters	(parent->getCurrentQuickAttackParams());
 	
 	tempBuffer.setSize(1, MAX_BUFFERSIZE);
 };
@@ -93,12 +79,12 @@ void HarmonizerVoice::clearCurrentNote()
 {
 	currentlyPlayingNote = -1;
 	setPan(64);
-	lastRecievedVelocity = 0.0f;
+	lastRecievedVelocity 	  = 0.0f;
 	currentVelocityMultiplier = 0.0f;
-	isFading = false;
-	noteTurnedOff = true;
 	noteOnTime = 0;
-	keyIsDown = false;
+	isFading 	  = false;
+	noteTurnedOff = true;
+	keyIsDown 	  = false;
 	
 	if(! quickRelease.isActive())
 		quickRelease.noteOn();
@@ -119,11 +105,13 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
 	lastRecievedVelocity = velocity;
 	currentOutputFreq = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
 	currentVelocityMultiplier = parent->velocityConverter.floatVelocity(velocity);
-	if(! quickRelease.isActive()) { quickRelease.noteOn(); }
-	isFading = false;
+	isFading 	  = false;
 	noteTurnedOff = false;
+	
 	adsr.noteOn();
 	quickAttack.noteOn();
+	if(! quickRelease.isActive())
+		quickRelease.noteOn();
 };
 
 void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
@@ -135,9 +123,10 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
 	}
 	else
 	{
-		if(! quickRelease.isActive()) { quickRelease.noteOn(); }
 		isFading = true;
 		quickRelease.noteOff();
+		if(! quickRelease.isActive())
+			quickRelease.noteOn();
 	}
 	lastRecievedVelocity = 0.0f;
 	noteTurnedOff = true;
@@ -253,6 +242,18 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 };
 
 
+void HarmonizerVoice::updateSampleRate(const double newSamplerate)
+{
+	adsr.setSampleRate	      (newSamplerate);
+	quickRelease.setSampleRate(newSamplerate);
+	quickAttack.setSampleRate (newSamplerate);
+	
+	adsr.setParameters		  (parent->getCurrentAdsrParams());
+	quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
+	quickAttack.setParameters (parent->getCurrentQuickAttackParams());
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,18 +272,18 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	latching.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	
-	adsrParams.attack = 0.035f;
-	adsrParams.decay = 0.06f;
+	adsrParams.attack  = 0.035f;
+	adsrParams.decay   = 0.06f;
 	adsrParams.sustain = 0.8f;
 	adsrParams.release = 0.01f;
 	
-	quickReleaseParams.attack = 0.01f;
-	quickReleaseParams.decay = 0.005f;
+	quickReleaseParams.attack  = 0.01f;
+	quickReleaseParams.decay   = 0.005f;
 	quickReleaseParams.sustain = 1.0f;
 	quickReleaseParams.release = 0.015f;
 	
-	quickAttackParams.attack = 0.015f;
-	quickAttackParams.decay = 0.01f;
+	quickAttackParams.attack  = 0.015f;
+	quickAttackParams.decay   = 0.01f;
 	quickAttackParams.sustain = 1.0f;
 	quickAttackParams.release = 0.015f;
 };
@@ -297,21 +298,9 @@ Harmonizer::~Harmonizer()
 
 void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
-	int actives = 0;
 	for (auto* voice : voices)
-	{
 		if(voice->isVoiceActive())
-		{
 			voice->renderNextBlock (inputAudio, inputChan, numSamples, outputBuffer, epochIndices);
-			++actives;
-		}
-	}
-	if(actives > 0)
-	{
-		const float gain = 1.0f / actives;
-		outputBuffer.applyGain(0, 0, numSamples, gain);
-		outputBuffer.applyGain(1, 0, numSamples, gain);
-	}
 };
 
 int Harmonizer::getNumActiveVoices()
@@ -326,27 +315,18 @@ int Harmonizer::getNumActiveVoices()
 
 bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButReleased)
 {
-	bool active = false;
 	for(auto* voice : voices)
 	{
 		if(voice->isVoiceActive() && voice->currentlyPlayingNote == midiPitch)
 		{
 			if(countRingingButReleased)
-			{
-				active = true;
-				break;
-			}
+				return true;
 			else
-			{
 				if(! voice->isPlayingButReleased())
-				{
-					active = true;
-					break;
-				}
-			}
+					return true;
 		}
 	}
-	return active;
+	return false;
 };
 
 void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
@@ -357,18 +337,11 @@ void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
 	{
 		const ScopedLock sl (lock);
 		
-		allNotesOff (false);
+		allNotesOff (false); // ??
 		sampleRate = newRate;
 		
 		for (auto* voice : voices)
-		{
-			voice->adsr.setSampleRate(newRate);
-			voice->quickRelease.setSampleRate(newRate);
-			voice->quickAttack.setSampleRate(newRate);
-			voice->adsr.setParameters(adsrParams);
-			voice->quickRelease.setParameters(quickReleaseParams);
-			voice->quickAttack.setParameters(quickAttackParams);
-		}
+			voice->updateSampleRate(newRate);
 	}
 };
 
@@ -403,13 +376,16 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 		
 		for (auto* voice : voices)
 		{
-			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+			if(voice->isVoiceActive())
 			{
-				voice->setPan(panner.getClosestNewPanValFromOld(voice->currentMidipan));
-				continue;
+				if(voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+				{
+					voice->setPan(panner.getClosestNewPanValFromOld(voice->currentMidipan));
+					continue;
+				}
+				else if(voice->currentMidipan != 64)
+					voice->setPan(64);
 			}
-			if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < lowestPannedNote && voice->currentMidipan != 64)
-				voice->setPan(64);
 		}
 	}
 };
@@ -420,6 +396,7 @@ void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
 	{
 		const ScopedLock sl (lock);
 		lowestPannedNote = newPitchThresh;
+		
 		for(auto* voice : voices)
 		{
 			if(voice->isVoiceActive())
@@ -485,10 +462,13 @@ Array<int> Harmonizer::reportActivesNoReleased() const
 
 void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 {
-	if(const float newSens = newSensitivity/100.0f; velocityConverter.getCurrentSensitivity() != newSens)
+	const float newSens = newSensitivity/100.0f;
+	
+	if(velocityConverter.getCurrentSensitivity() != newSens)
 	{
 		const ScopedLock sl (lock);
 		velocityConverter.setFloatSensitivity(newSens);
+		
 		for(auto* voice : voices)
 			if(voice->isVoiceActive())
 				voice->currentVelocityMultiplier = velocityConverter.floatVelocity(voice->lastRecievedVelocity);
@@ -500,29 +480,32 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 
 void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
 {
-	latchIsOn = shouldBeOn;
+	if(latchIsOn != shouldBeOn)
+	{
+		latchIsOn = shouldBeOn;
 	
-	if(! shouldBeOn)
-	{
-		unLatched.clearQuick();
-		unLatched = latchManager.turnOffLatch();
-		latchManager.reset();
-		if(! unLatched.isEmpty())
+		if(! shouldBeOn)
 		{
-			const float offVelocity = allowTailOff ? 0.0f : 1.0f;
-			turnOffList(unLatched, offVelocity, allowTailOff);
-			pitchCollectionChanged();
+			unLatched.clearQuick();
+			unLatched = latchManager.turnOffLatch();
+			latchManager.reset();
+			if(! unLatched.isEmpty())
+			{
+				const float offVelocity = allowTailOff ? 0.0f : 1.0f;
+				turnOffList(unLatched, offVelocity, allowTailOff);
+				pitchCollectionChanged();
+			}
 		}
-	}
-	else
-	{
-		latchManager.reset();
-		latching.clearQuick();
-		latching = reportActivesNoReleased();
-		if(! latching.isEmpty())
+		else
 		{
-			for(int i = 0; i < latching.size(); ++i)
-				latchManager.noteOnRecieved(latching.getUnchecked(i));
+			latchManager.reset();
+			latching.clearQuick();
+			latching = reportActivesNoReleased();
+			if(! latching.isEmpty())
+			{
+				for(int i = 0; i < latching.size(); ++i)
+					latchManager.noteOnRecieved(latching.getUnchecked(i));
+			}
 		}
 	}
 };
@@ -533,7 +516,7 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 	{
 		const ScopedLock sl (lock);
 		for(int i = 0; i < toTurnOff.size(); ++i)
-			noteOff(toTurnOff.getUnchecked(i), velocity, allowTailOff, true);
+			noteOff(toTurnOff.getUnchecked(i), velocity, allowTailOff, true, false);
 	}
 };
 
@@ -543,17 +526,13 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 void Harmonizer::handleMidiEvent(const MidiMessage& m)
 {
 	if (m.isNoteOn())
-		noteOn (m.getNoteNumber(), m.getFloatVelocity());
+		noteOn (m.getNoteNumber(), m.getFloatVelocity(), true);
 	else if (m.isNoteOff())
-		noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, false);
+		noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, false, true);
 	else if (m.isAllNotesOff() || m.isAllSoundOff())
 		allNotesOff (false);
 	else if (m.isPitchWheel())
-	{
-		const int wheelPos = m.getPitchWheelValue();
-		lastPitchWheelValue = wheelPos;
-		handlePitchWheel (wheelPos);
-	}
+		handlePitchWheel (m.getPitchWheelValue());
 	else if (m.isAftertouch())
 		handleAftertouch (m.getNoteNumber(), m.getAfterTouchValue());
 	else if (m.isChannelPressure())
@@ -562,51 +541,53 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
 		handleController (m.getControllerNumber(), m.getControllerValue());
 };
 
-void Harmonizer::noteOn(const int midiPitch, const float velocity)
+void Harmonizer::noteOn(const int midiPitch, const float velocity, const bool isKeyboard)
 {
+	// N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
+	
 	const ScopedLock sl (lock);
 	
 	// If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
 	for (auto* voice : voices)
-		if (voice->getCurrentlyPlayingNote() == midiPitch) { stopVoice(voice, 0.5f, true); }
+		if (voice->getCurrentlyPlayingNote() == midiPitch)
+			stopVoice(voice, 0.5f, true);
 	
-	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity);
+	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity, isKeyboard);
 	
-	if(latchIsOn)
-		latchManager.noteOnRecieved(midiPitch);
-	
-	if(! (midiPitch == lastPedalPitch || midiPitch == lastDescantPitch))
+	if(isKeyboard)
+	{
+		if(latchIsOn)
+			latchManager.noteOnRecieved(midiPitch);
 		pitchCollectionChanged();
+	}
 };
 
-void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const float velocity)
+void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
 	if(voice != nullptr)
 	{
 		voice->noteOnTime = ++lastNoteOnCounter;
-		voice->setKeyDown (true);
 		
-		if(! voice->isVoiceActive())
-		{
-			if(midiPitch >= lowestPannedNote)
-				voice->setPan(panner.getNextPanVal());
-			else
-				voice->setPan(64);
-		}
-		else
-		{
-			if(midiPitch < lowestPannedNote)
-				voice->setPan(64);
-		}
+		if(! voice->isKeyDown())
+			voice->setKeyDown (isKeyboard);
+		
+		if(midiPitch < lowestPannedNote)
+			voice->setPan(64);
+		else if(! voice->isVoiceActive())
+			voice->setPan(panner.getNextPanVal());
+		
 		voice->startNote (midiPitch, velocity);
 	}
 };
 
-void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partofList)
+void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partofList, const bool isKeyboard)
 {
+	// N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch or descant.
+	// N.B. the `partofList` flag should be false if this is a singular note off event; this flag should be true if this is a note off event in a known sequence of many quick note offs, so that pedal pitch & descant will not be updated after every single one of these events.
+	
 	const ScopedLock sl (lock);
 	
-	if(latchIsOn)
+	if(latchIsOn && isKeyboard)
 		latchManager.noteOffRecieved(midiNoteNumber);
 	else
 	{
@@ -614,9 +595,17 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 		{
 			if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
 			{
-				voice->setKeyDown (false);
-				if (! (sustainPedalDown || sostenutoPedalDown))
-					stopVoice (voice, velocity, allowTailOff);
+				if(! isKeyboard)
+				{
+					if(! voice->isKeyDown())
+						stopVoice (voice, velocity, allowTailOff);
+				}
+				else
+				{
+					voice->setKeyDown (false);
+					if (! (sustainPedalDown || sostenutoPedalDown))
+						stopVoice (voice, velocity, allowTailOff);
+				}
 			}
 		}
 		
@@ -624,10 +613,10 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 			lastPedalPitch = -1;
 		if(midiNoteNumber == lastDescantPitch)
 			lastDescantPitch = -1;
-	
-		if(! partofList)
-			pitchCollectionChanged();
 	}
+	
+	if(! partofList && isKeyboard && ! latchIsOn)
+		pitchCollectionChanged();
 };
 
 void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff)
@@ -662,6 +651,7 @@ void Harmonizer::handlePitchWheel(const int wheelValue)
 		
 		lastPitchWheelValue = wheelValue;
 		bendTracker.newPitchbendRecieved(wheelValue);
+		
 		for (auto* voice : voices)
 			if(voice->isVoiceActive())
 				voice->currentOutputFreq = pitchConverter.mtof(bendTracker.newNoteRecieved(voice->currentlyPlayingNote));
@@ -673,6 +663,7 @@ void Harmonizer::updatePitchbendSettings(const int rangeUp, const int rangeDown)
 	if(bendTracker.getCurrentRangeUp() != rangeUp || bendTracker.getCurrentRangeDown() != rangeDown)
 	{
 		bendTracker.setRange(rangeUp, rangeDown);
+		
 		if(lastPitchWheelValue != 64)
 		{
 			const ScopedLock sl (lock);
@@ -727,10 +718,8 @@ void Harmonizer::handleSustainPedal(const bool isDown)
 	if(! isDown)
 	{
 		for (auto* voice : voices)
-		{
-			if (! (voice->isKeyDown() || ! sustainPedalDown))
+			if (! voice->isKeyDown())
 				stopVoice (voice, 1.0f, true);
-		}
 	}
 };
 
@@ -740,10 +729,11 @@ void Harmonizer::handleSostenutoPedal(const bool isDown)
 	
 	sostenutoPedalDown = isDown;
 	
-	for (auto* voice : voices)
+	if(! isDown)
 	{
-		if (! isDown && sostenutoPedalDown)
-			stopVoice (voice, 1.0f, true);
+		for (auto* voice : voices)
+			if (! voice->isKeyDown())
+				stopVoice (voice, 1.0f, true);
 	}
 };
 
@@ -804,7 +794,8 @@ void Harmonizer::applyPedalPitch()
 	if(currentLowest == 128) // pathological case -- ie, no notes playing, some error encountered, etc
 	{
 		if(lastPedalPitch > -1)
-			noteOff(lastPedalPitch, 1.0f, false, true);
+			noteOff(lastPedalPitch, 1.0f, false, true, false);
+		lastPedalPitch = -1;
 		return;
 	}
 	
@@ -815,38 +806,44 @@ void Harmonizer::applyPedalPitch()
 		if(newPedalPitch != lastPedalPitch)
 		{
 			if(lastPedalPitch > -1)
-				noteOff(lastPedalPitch, 1.0f, false, true);
+				noteOff(lastPedalPitch, 1.0f, false, true, false);
 			
 			if(! isPitchActive(newPedalPitch, false))
 			{
 				lastPedalPitch = newPedalPitch;
-				noteOn(newPedalPitch, velocity);
+				noteOn(newPedalPitch, velocity, false);
 			}
 			else
-				lastPedalPitch = -1; // if we get here, the new pedal pitch is already on
+				lastPedalPitch = -1; // if we get here, the new pedal pitch is already being played by a MIDI keyboard key
+		}
+		else
+		{
+			// if we get here, the new pedal pitch is already on and was triggered by pedal pitch
 		}
 	}
 	else
 	{
 		if(lastPedalPitch > -1)
-			noteOff(lastPedalPitch, 1.0f, false, true);
+			noteOff(lastPedalPitch, 1.0f, false, true, false);
 		lastPedalPitch = -1;
 	}
-	
 };
 
 void Harmonizer::setPedalPitch(const bool isOn) 
 {
-	pedalPitchIsOn = isOn;
-	
-	if(! isOn)
+	if(pedalPitchIsOn != isOn)
 	{
-		if(lastPedalPitch > -1)
-			noteOff(lastPedalPitch, 1.0f, false, true);
-		lastPedalPitch = -1;
+		pedalPitchIsOn = isOn;
+		
+		if(! isOn)
+		{
+			if(lastPedalPitch > -1)
+				noteOff(lastPedalPitch, 1.0f, false, true, false);
+			lastPedalPitch = -1;
+		}
+		else
+			applyPedalPitch();
 	}
-	else
-		applyPedalPitch();
 };
 
 void Harmonizer::setPedalPitchUpperThresh(const int newThresh)
@@ -885,7 +882,8 @@ void Harmonizer::applyDescant()
 	if(currentHighest == -1) // pathological case -- ie, no notes playing, some error encountered, etc
 	{
 		if(lastDescantPitch > -1)
-			noteOff(lastDescantPitch, 1.0f, false, true);
+			noteOff(lastDescantPitch, 1.0f, false, true, false);
+		lastDescantPitch = -1;
 		return;
 	}
 	
@@ -896,37 +894,44 @@ void Harmonizer::applyDescant()
 		if(newDescantPitch != lastDescantPitch)
 		{
 			if(lastDescantPitch > -1)
-				noteOff(lastDescantPitch, 1.0f, false, true);
+				noteOff(lastDescantPitch, 1.0f, false, true, false);
 			
 			if(! isPitchActive(newDescantPitch, false))
 			{
 				lastDescantPitch = newDescantPitch;
-				noteOn(newDescantPitch, velocity);
+				noteOn(newDescantPitch, velocity, false);
 			}
 			else
-				lastDescantPitch = -1; // if we get here, the new descant pitch is already on
+				lastDescantPitch = -1; // if we get here, the new descant pitch is already on, being played by a MIDI keyboard key
+		}
+		else
+		{
+			// if we get here, the new descant pitch is already on, and was triggered by the descant function...
 		}
 	}
 	else
 	{
 		if(lastDescantPitch > -1)
-			noteOff(lastDescantPitch, 1.0f, false, true);
+			noteOff(lastDescantPitch, 1.0f, false, true, false);
 		lastDescantPitch = -1;
 	}
 };
 
 void Harmonizer::setDescant(const bool isOn)
 {
-	descantIsOn = isOn;
-	
-	if(! isOn)
+	if(descantIsOn != isOn)
 	{
-		if(lastDescantPitch > -1)
-			noteOff(lastDescantPitch, 1.0f, false, true);
-		lastDescantPitch = -1;
+		descantIsOn = isOn;
+	
+		if(! isOn)
+		{
+			if(lastDescantPitch > -1)
+				noteOff(lastDescantPitch, 1.0f, false, true, false);
+			lastDescantPitch = -1;
+		}
+		else
+			applyDescant();
 	}
-	else
-		applyDescant();
 };
 
 void Harmonizer::setDescantLowerThresh(const int newThresh)
@@ -948,6 +953,8 @@ void Harmonizer::setDescantInterval(const int newInterval)
 			applyDescant();
 	}
 };
+
+
 
 
 // voice allocation----------------------------------------------------------------------------------------------------------------------------------
@@ -1069,11 +1076,11 @@ void Harmonizer::updateQuickReleaseMs(const int newMs)
 	{
 		const ScopedLock sl (lock);
 		quickReleaseParams.release = desiredR;
-		quickAttackParams.release = desiredR;
+		quickAttackParams.release  = desiredR;
 		for(auto* voice : voices)
 		{
 			voice->quickRelease.setParameters(quickReleaseParams);
-			voice->quickAttack.setParameters(quickAttackParams);
+			voice->quickAttack.setParameters (quickAttackParams);
 		}
 	}
 };
@@ -1085,11 +1092,11 @@ void Harmonizer::updateQuickAttackMs(const int newMs)
 	if(const float desiredA = newMs / 1000.0f; quickAttackParams.attack != desiredA)
 	{
 		const ScopedLock sl (lock);
-		quickAttackParams.attack = desiredA;
+		quickAttackParams.attack  = desiredA;
 		quickReleaseParams.attack = desiredA;
 		for(auto* voice : voices)
 		{
-			voice->quickAttack.setParameters(quickAttackParams);
+			voice->quickAttack.setParameters (quickAttackParams);
 			voice->quickRelease.setParameters(quickReleaseParams);
 		}
 	}

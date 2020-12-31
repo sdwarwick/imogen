@@ -102,6 +102,8 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 		case(4):
 			currentSkin = ImogenLookAndFeel::Skin::design4;
 			break;
+		default:
+			return;
 	}
 	
 	if(currentSkin != prevSkin)
@@ -115,8 +117,13 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 
 void ImogenAudioProcessorEditor::helpButtonClicked()
 {
-	if(! helpScreen.isVisible() ) { helpScreen.setVisible(true); helpScreen.repaint(); }
-	else { helpScreen.setVisible(false); };
+	if(! helpScreen.isVisible() )
+	{
+		helpScreen.setVisible(true);
+		helpScreen.repaint();
+	}
+	else
+		helpScreen.setVisible(false);
 };
 
 

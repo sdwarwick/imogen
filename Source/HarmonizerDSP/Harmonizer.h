@@ -81,6 +81,8 @@ private:
 	
 	void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
 	
+	void updateSampleRate(const double newSamplerate);
+	
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HarmonizerVoice)
 };
 
@@ -133,6 +135,8 @@ public:
 	void updateQuickReleaseMs(const int newMs);
 	void updateQuickAttackMs(const int newMs);
 	ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
+	ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; };
+	ADSR::Parameters getCurrentQuickAttackParams() const noexcept { return quickAttackParams; };
 	
 	void updatePitchbendSettings(const int rangeUp, const int rangeDown);
 	
@@ -167,8 +171,8 @@ protected:
 	PanningManager panner;
 	
 	// MIDI
-	void noteOn(const int midiPitch, const float velocity);
-	void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partOfList);
+	void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
+	void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partOfList, const bool isKeyboard);
 	void handlePitchWheel(const int wheelValue);
 	void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
 	void handleChannelPressure(const int channelPressureValue);
@@ -219,7 +223,7 @@ private:
 	mutable Array<int> currentlyActiveNoReleased;
 	
 	// Starts a specified voice playing a specified note
-	void startVoice (HarmonizerVoice* voice, const int midiPitch, const float velocity);
+	void startVoice (HarmonizerVoice* voice, const int midiPitch, const float velocity, const bool isKeyboard);
 	
 	// Stops a given voice.
 	void stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff);

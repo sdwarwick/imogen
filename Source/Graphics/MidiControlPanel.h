@@ -116,8 +116,6 @@ public:
 
 private:
 	
-	void updateMidiLatch();
-	
 	void buildIntervalCombobox(ComboBox& box);
 	void buildVoicesCombobox(ComboBox& box);
 	
