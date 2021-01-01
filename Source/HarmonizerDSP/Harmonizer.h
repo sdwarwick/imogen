@@ -155,6 +155,7 @@ public:
     int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; };
     void setPedalPitchInterval(const int newInterval);
     int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; };
+    HarmonizerVoice* getCurrentPedalPitchVoice();
     
     void setDescant(const bool isOn);
     bool isDescantOn() const noexcept { return descantIsOn; };
@@ -162,7 +163,7 @@ public:
     int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
     void setDescantInterval(const int newInterval);
     int getCurrentDescantInterval() const noexcept { return descantInterval; };
-    
+    HarmonizerVoice* getCurrentDescantVoice();
     
 protected:
     

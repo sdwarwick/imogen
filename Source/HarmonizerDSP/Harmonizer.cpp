@@ -856,6 +856,18 @@ void Harmonizer::setPedalPitchInterval(const int newInterval)
     }
 };
 
+HarmonizerVoice* Harmonizer::getCurrentPedalPitchVoice()
+{
+    if(! pedalPitchIsOn)
+        return nullptr;
+    
+    for(auto* voice : voices)
+        if(voice->isVoiceActive() && voice->currentlyPlayingNote == lastPedalPitch)
+            return voice;
+    
+    return nullptr;
+};
+
 // descant ----------------------------------------------------------------------------------------------------------------
 
 void Harmonizer::applyDescant()
@@ -944,7 +956,17 @@ void Harmonizer::setDescantInterval(const int newInterval)
     }
 };
 
-
+HarmonizerVoice* Harmonizer::getCurrentDescantVoice()
+{
+    if(! descantIsOn)
+        return nullptr;
+    
+    for(auto* voice : voices)
+        if(voice->isVoiceActive() && voice->currentlyPlayingNote == lastDescantPitch)
+            return voice;
+    
+    return nullptr;
+};
 
 
 // voice allocation----------------------------------------------------------------------------------------------------------------------------------
