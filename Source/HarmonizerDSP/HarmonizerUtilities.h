@@ -19,7 +19,7 @@ class PitchConverter
 public:
     
     PitchConverter(const int initialConcertPitch, const int initialRootNote, const int initialNotesPerOctave):
-    concertPitchHz(initialConcertPitch), rootNote(initialRootNote), notesPerOctave(initialNotesPerOctave)
+        concertPitchHz(initialConcertPitch), rootNote(initialRootNote), notesPerOctave(initialNotesPerOctave)
     { };
     
     float mtof(const float midiNote) const // converts midiPitch to frequency in Hz
@@ -91,19 +91,19 @@ class PitchBendHelper
 {
 public:
     PitchBendHelper(const int initialStUp, const int initialStDwn):
-    rangeUp(initialStUp), rangeDown(initialStDwn), lastRecievedPitchbend(64)
+        rangeUp(initialStUp), rangeDown(initialStDwn), lastRecievedPitchbend(64)
     { };
     
     void setRange(const int newStUp, const int newStDown) noexcept
     {
         jassert(newStUp >= 0 && newStDown >= 0);
-        rangeUp = newStUp;
+        rangeUp   = newStUp;
         rangeDown = newStDown;
     };
     
-    int getCurrentRangeUp() const noexcept { return rangeUp; };
+    int getCurrentRangeUp()        const noexcept { return rangeUp; };
     
-    int getCurrentRangeDown() const noexcept { return rangeDown; };
+    int getCurrentRangeDown()      const noexcept { return rangeDown; };
     
     int getLastRecievedPitchbend() const noexcept { return lastRecievedPitchbend; };
     
@@ -148,8 +148,7 @@ private:
 class VelocityHelper
 {
 public:
-    VelocityHelper(const int initialSensitivity):
-    sensitivity(initialSensitivity/100.0f)
+    VelocityHelper(const int initialSensitivity): sensitivity(initialSensitivity/100.0f)
     { };
     
     void setSensitivity(const int newSensitivity) noexcept

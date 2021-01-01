@@ -3,11 +3,11 @@
 
 //==============================================================================
 ImogenAudioProcessor::ImogenAudioProcessor():
-AudioProcessor(makeBusProperties()),
-tree(*this, nullptr, "PARAMETERS", createParameters()),
-wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
-lastSampleRate(44100.0), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
-prevDryPan(64), prevideb(0.0f), prevodeb(0.0f)
+    AudioProcessor(makeBusProperties()),
+    tree(*this, nullptr, "PARAMETERS", createParameters()),
+    wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
+    lastSampleRate(44100.0), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
+    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f)
 {
     for (int i = 0; i < 12; ++i)
         harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
@@ -154,8 +154,8 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples)
 {
-    int samplesLeft      = numSamples;
     int chunkStartSample = startSample;
+    int samplesLeft      = numSamples;
     
     while(samplesLeft > 0)
     {
@@ -165,8 +165,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
         
         renderChunk(proxy, inputChannel);
         
-        samplesLeft      -= chunkNumSamples;
         chunkStartSample += chunkNumSamples;
+        samplesLeft      -= chunkNumSamples;
     }
 };
 
@@ -179,12 +179,10 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
     const int numSamples = buffer.getNumSamples();
     
     // buffer sizes
-    {
-        if(wetBuffer.getNumSamples() != numSamples)
-            wetBuffer.setSize(2, numSamples, true, true, true);
-        if(dryBuffer.getNumSamples() != numSamples)
-            dryBuffer.setSize(2, numSamples, true, true, true);
-    }
+    if(wetBuffer.getNumSamples() != numSamples)
+        wetBuffer.setSize(2, numSamples, true, true, true);
+    if(dryBuffer.getNumSamples() != numSamples)
+        dryBuffer.setSize(2, numSamples, true, true, true);
     
     //==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
     
@@ -194,12 +192,10 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
     buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
     
     // copy input signal to dryBuffer & apply panning
-    {
-        dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
-        dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
-        dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
-        dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
-    }
+    dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
+    dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
+    dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
+    dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
     
     dsp::AudioBlock<float> dwinblock(dryBuffer);
     dryWetMixer.pushDrySamples(dwinblock);
@@ -211,11 +207,9 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
     harmonizer.renderVoices(buffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output into "wetBuffer"
     
     // clear any extra channels present in I/O buffer
-    {
-        if (buffer.getNumChannels() > 2)
-            for (int i = 3; i <= buffer.getNumChannels(); ++i)
-                buffer.clear(i - 1, 0, numSamples);
-    }
+    if (buffer.getNumChannels() > 2)
+        for (int i = 3; i <= buffer.getNumChannels(); ++i)
+            buffer.clear(i - 1, 0, numSamples);
     
     dsp::AudioBlock<float> dwoutblock (wetBuffer);
     dryWetMixer.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
@@ -378,7 +372,7 @@ void ImogenAudioProcessor::updateLimiter()
 {
     limiterIsOn = limiterToggle->get();
     limiter.setThreshold(limiterThresh->get());
-    limiter.setRelease(limiterRelease->get());
+    limiter.setRelease  (limiterRelease->get());
 };
 
 void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
@@ -388,10 +382,8 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
     if(currentVoices != newNumVoices)
     {
         if(newNumVoices > currentVoices)
-        {
             for(int i = 0; i < newNumVoices - currentVoices; ++i)
                 harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
-        }
         else
             harmonizer.removeNumVoices(currentVoices - newNumVoices);
     }
@@ -499,11 +491,11 @@ AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
 {
     PluginHostType host;
     if(host.isLogic() || host.isGarageBand())
-        return BusesProperties().withInput("Input", AudioChannelSet::mono(), false)
-                                .withInput("Sidechain", AudioChannelSet::mono(), true)
-                                .withOutput("Output", AudioChannelSet::stereo(), true);
+        return BusesProperties().withInput("Input",     AudioChannelSet::mono(),   false)
+                                .withInput("Sidechain", AudioChannelSet::mono(),   true)
+                                .withOutput("Output",   AudioChannelSet::stereo(), true);
     
-    return BusesProperties()    .withInput("Input", AudioChannelSet::mono(), true)
+    return BusesProperties()    .withInput("Input",   AudioChannelSet::mono(),   true)
                                 .withOutput("Output", AudioChannelSet::stereo(), true);
 };
 

@@ -35,21 +35,21 @@ public:
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
-    bool isVoiceActive() const noexcept { return currentlyPlayingNote >= 0; }
+    bool isVoiceActive()          const noexcept { return currentlyPlayingNote >= 0; }
     
-    bool isPlayingButReleased() const noexcept; // returns true if a voice is sounding, but its key has been released
+    bool isPlayingButReleased()   const noexcept; // returns true if a voice is sounding, but its key has been released
     
     // Returns true if this voice started playing its current note before the other voice did.
     bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
     
     // Returns true if the key that triggered this voice is still held down. Note that the voice may still be playing after the key was released (e.g because the sostenuto pedal is down).
-    bool isKeyDown() const noexcept { return keyIsDown; }
+    bool isKeyDown()          const noexcept { return keyIsDown; }
     void setKeyDown(bool isNowDown) noexcept { keyIsDown = isNowDown; }
     
     void setPan(const int newPan);
     
-    void startNote(const int midiPitch, const float velocity);
-    void stopNote(const float velocity, const bool allowTailOff);
+    void startNote(const int midiPitch,  const float velocity);
+    void stopNote (const float velocity, const bool allowTailOff);
     void aftertouchChanged(const int newAftertouchValue);
     
     
@@ -66,9 +66,9 @@ private:
     
     Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
-    ADSR adsr; // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
+    ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
-    ADSR quickAttack; // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
+    ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
     bool isFading;
     bool noteTurnedOff;
     int currentlyPlayingNote;
@@ -137,7 +137,7 @@ public:
     void updateQuickAttackMs(const int newMs);
     ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; };
-    ADSR::Parameters getCurrentQuickAttackParams() const noexcept { return quickAttackParams; };
+    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; };
     
     void updatePitchbendSettings(const int rangeUp, const int rangeDown);
     
@@ -209,7 +209,6 @@ private:
     void applyPedalPitch();
     
     void applyDescant();
-    
     
     PitchConverter pitchConverter;
     PitchBendHelper bendTracker;

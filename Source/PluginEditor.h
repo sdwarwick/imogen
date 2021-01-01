@@ -31,13 +31,20 @@ private:
     
     ImogenAudioProcessor& audioProcessor;
     
+    void skinSelectorChanged();
+    
+    void helpButtonClicked();
+    
+    void newPresetSelected();
+    
+    void makePresetMenu(ComboBox& box);
+    
     ImogenLookAndFeel lookAndFeel;
     ImogenLookAndFeel::Skin currentSkin;
     ImogenLookAndFeel::Skin prevSkin;
     
     ComboBox selectSkin;
     Label skinLabel;
-    void skinSelectorChanged();
     
     MidiControlPanel midiPanel;
     IOControlPanel ioPanel;
@@ -45,12 +52,10 @@ private:
     
     HelpScreen helpScreen;
     TextButton helpButton;
-    void helpButtonClicked();
+    
     bool viewHelp;  // bool to control visibility of help/documentation screen
     
     ComboBox selectPreset;
-    void newPresetSelected();
-    void makePresetMenu(ComboBox& box);
     
     Label pitchTester;
     

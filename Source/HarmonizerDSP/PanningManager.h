@@ -48,7 +48,7 @@ public:
     
     int getCurrentStereoWidth() const noexcept { return lastRecievedStereoWidth; }
     
-    int getCurrentNumVoices() const noexcept { return currentNumVoices; }
+    int getCurrentNumVoices()   const noexcept { return currentNumVoices; }
     
     
 private:

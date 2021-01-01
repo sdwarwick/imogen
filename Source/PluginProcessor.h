@@ -38,7 +38,7 @@ public:
     
     const juce::String getName() const override { return JucePlugin_Name; }
     
-    bool acceptsMidi() const override { return true; }
+    bool acceptsMidi()  const override { return true; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override;
@@ -53,8 +53,8 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     // functions for custom preset management system ------------------------------------------------------------------------------------------------
-    void savePreset(juce::String presetName);
-    void loadPreset(juce::String presetName);
+    void savePreset  (juce::String presetName);
+    void loadPreset  (juce::String presetName);
     void deletePreset(juce::String presetName);
     juce::File getPresetsFolder() const;
     
@@ -79,7 +79,7 @@ public:
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }
     
-    float reportCurrentInputPitch() const noexcept { return currentInputPitch; }
+    float reportCurrentInputPitch()  const noexcept { return currentInputPitch; }
     
     void killAllMidi();
     
@@ -125,8 +125,8 @@ private:
     float prevideb, prevodeb;
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
-    AudioParameterInt* 	 dryPan 	        = nullptr;
-    AudioParameterInt* 	 dryWet 	        = nullptr;
+    AudioParameterInt* 	 dryPan             = nullptr;
+    AudioParameterInt* 	 dryWet             = nullptr;
     AudioParameterInt* 	 inputChan          = nullptr;
     AudioParameterFloat* adsrAttack         = nullptr;
     AudioParameterFloat* adsrDecay          = nullptr;
@@ -143,16 +143,16 @@ private:
     AudioParameterBool*  pedalPitchIsOn     = nullptr;
     AudioParameterInt*   pedalPitchThresh   = nullptr;
     AudioParameterInt*   pedalPitchInterval = nullptr;
-    AudioParameterBool*  descantIsOn		= nullptr;
-    AudioParameterInt*	 descantThresh		= nullptr;
-    AudioParameterInt*	 descantInterval	= nullptr;
-    AudioParameterInt*	 concertPitchHz	    = nullptr;
-    AudioParameterBool*  voiceStealing	    = nullptr;
-    AudioParameterBool*  latchIsOn			= nullptr;
-    AudioParameterFloat* inputGain			= nullptr;
-    AudioParameterFloat* outputGain			= nullptr;
-    AudioParameterBool*	 limiterToggle		= nullptr;
-    AudioParameterFloat* limiterThresh		= nullptr;
+    AudioParameterBool*  descantIsOn        = nullptr;
+    AudioParameterInt*	 descantThresh      = nullptr;
+    AudioParameterInt*	 descantInterval    = nullptr;
+    AudioParameterInt*	 concertPitchHz     = nullptr;
+    AudioParameterBool*  voiceStealing      = nullptr;
+    AudioParameterBool*  latchIsOn          = nullptr;
+    AudioParameterFloat* inputGain          = nullptr;
+    AudioParameterFloat* outputGain	        = nullptr;
+    AudioParameterBool*	 limiterToggle      = nullptr;
+    AudioParameterFloat* limiterThresh      = nullptr;
     AudioParameterInt*   limiterRelease     = nullptr;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)

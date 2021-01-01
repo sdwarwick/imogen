@@ -11,20 +11,21 @@
 #include "Harmonizer.h"
 
 
-HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
+HarmonizerVoice::HarmonizerVoice(Harmonizer* h):
+    parent(h), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
     
     const double initSamplerate = parent->getSamplerate();
     
-    adsr.setSampleRate        (initSamplerate);
+    adsr        .setSampleRate(initSamplerate);
     quickRelease.setSampleRate(initSamplerate);
-    quickAttack.setSampleRate (initSamplerate);
+    quickAttack .setSampleRate(initSamplerate);
     
-    adsr.setParameters        (parent->getCurrentAdsrParams());
+    adsr        .setParameters(parent->getCurrentAdsrParams());
     quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
-    quickAttack.setParameters (parent->getCurrentQuickAttackParams());
+    quickAttack .setParameters(parent->getCurrentQuickAttackParams());
     
     tempBuffer.setSize(1, MAX_BUFFERSIZE);
 };
@@ -62,9 +63,9 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
         subBuffer.addFrom(1, 0, tempBuffer, 0, 0, numSamples, panningMults[1]);
         
         if(parent->adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
-            adsr.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
+            adsr        .applyEnvelopeToBuffer(subBuffer, 0, numSamples);
         else
-            quickAttack.applyEnvelopeToBuffer(subBuffer, 0, numSamples); // to prevent pops at start of notes
+            quickAttack .applyEnvelopeToBuffer(subBuffer, 0, numSamples); // to prevent pops at start of notes
         
         if(isFading) // quick fade out for stopNote() w/ allowTailOff = false:
             quickRelease.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
@@ -104,8 +105,8 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
 {
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
-    currentOutputFreq         = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
     currentVelocityMultiplier = parent->velocityConverter.floatVelocity(velocity);
+    currentOutputFreq         = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
     isFading      = false;
     noteTurnedOff = false;
     
@@ -245,13 +246,13 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const int inputChan,
 
 void HarmonizerVoice::updateSampleRate(const double newSamplerate)
 {
-    adsr.setSampleRate        (newSamplerate);
+    adsr        .setSampleRate(newSamplerate);
     quickRelease.setSampleRate(newSamplerate);
-    quickAttack.setSampleRate (newSamplerate);
+    quickAttack .setSampleRate(newSamplerate);
     
-    adsr.setParameters        (parent->getCurrentAdsrParams());
+    adsr        .setParameters(parent->getCurrentAdsrParams());
     quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
-    quickAttack.setParameters (parent->getCurrentQuickAttackParams());
+    quickAttack .setParameters(parent->getCurrentQuickAttackParams());
 };
 
 
@@ -260,7 +261,8 @@ void HarmonizerVoice::updateSampleRate(const double newSamplerate)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12)
+Harmonizer::Harmonizer():
+    pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12)
 {
     currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
     currentlyActiveNotes.clearQuick();
@@ -514,7 +516,7 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
     if (m.isNoteOn())
         noteOn (m.getNoteNumber(), m.getFloatVelocity(), true);
     else if (m.isNoteOff())
-        noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, false, true);
+        noteOff(m.getNoteNumber(), m.getFloatVelocity(), true, false, true);
     else if (m.isAllNotesOff() || m.isAllSoundOff())
         allNotesOff (false);
     else if (m.isPitchWheel())
@@ -1059,16 +1061,16 @@ void Harmonizer::updateADSRsettings(const float attack, const float decay, const
 void Harmonizer::updateQuickReleaseMs(const int newMs)
 {
     jassert(newMs > 0);
-    
-    if(const float desiredR = newMs / 1000.0f; quickReleaseParams.release != desiredR)
+    const float desiredR = newMs / 1000.0f;
+    if(quickReleaseParams.release != desiredR)
     {
         const ScopedLock sl (lock);
         quickReleaseParams.release = desiredR;
-        quickAttackParams.release  = desiredR;
+        quickAttackParams .release = desiredR;
         for(auto* voice : voices)
         {
             voice->quickRelease.setParameters(quickReleaseParams);
-            voice->quickAttack.setParameters (quickAttackParams);
+            voice->quickAttack .setParameters(quickAttackParams);
         }
     }
 };
@@ -1076,15 +1078,15 @@ void Harmonizer::updateQuickReleaseMs(const int newMs)
 void Harmonizer::updateQuickAttackMs(const int newMs)
 {
     jassert(newMs > 0);
-    
-    if(const float desiredA = newMs / 1000.0f; quickAttackParams.attack != desiredA)
+    const float desiredA = newMs / 1000.0f;
+    if(quickAttackParams.attack != desiredA)
     {
         const ScopedLock sl (lock);
-        quickAttackParams.attack  = desiredA;
+        quickAttackParams .attack = desiredA;
         quickReleaseParams.attack = desiredA;
         for(auto* voice : voices)
         {
-            voice->quickAttack.setParameters (quickAttackParams);
+            voice->quickAttack .setParameters(quickAttackParams);
             voice->quickRelease.setParameters(quickReleaseParams);
         }
     }

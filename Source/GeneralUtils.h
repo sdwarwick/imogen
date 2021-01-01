@@ -21,7 +21,8 @@ public:
         static bool isMidiNoteBlackKey(const int midipitch)
         {
             jassert(midipitch >= 0);
-            if(const int modulo = midipitch % 12; modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
+            const int modulo = midipitch % 12;
+            if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
                 return true;
             
             return false;
@@ -30,8 +31,8 @@ public:
         static bool isMidiNoteBlackKey(const float midipitch)
         {
             jassert(midipitch >= 0.0f);
-            const int roundedpitch = round(midipitch);
-            if(const int modulo = roundedpitch % 12; modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
+            const int modulo = (roundToInt(midipitch)) % 12;
+            if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
                 return true;
             
             return false;

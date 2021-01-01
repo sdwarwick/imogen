@@ -1,19 +1,20 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-: AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
+ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
+    AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
 {
     setSize (940, 435);
     
     lookAndFeel.changeSkin(currentSkin);
     
-    addAndMakeVisible(midiPanel);
-    midiPanel.setLookAndFeel(&lookAndFeel);
-    addAndMakeVisible(ioPanel);
-    ioPanel.setLookAndFeel(&lookAndFeel);
-    addAndMakeVisible(staffDisplay);
+    midiPanel   .setLookAndFeel(&lookAndFeel);
+    ioPanel     .setLookAndFeel(&lookAndFeel);
     staffDisplay.setLookAndFeel(&lookAndFeel);
+    selectSkin  .setLookAndFeel(&lookAndFeel);
+    skinLabel   .setLookAndFeel(&lookAndFeel);
+    helpButton  .setLookAndFeel(&lookAndFeel);
+    helpScreen  .setLookAndFeel(&lookAndFeel);
     
     Timer::startTimerHz(FRAMERATE);
     
@@ -22,27 +23,28 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     selectSkin.addItem("Chic Eveningwear", 3);
     //selectSkin.addItem("design4", 4);
     selectSkin.setSelectedId(1);
-    addAndMakeVisible(selectSkin);
-    selectSkin.setLookAndFeel(&lookAndFeel);
     selectSkin.onChange = [this] { skinSelectorChanged(); };
     lookAndFeel.initializeLabel(skinLabel, "Select skin");
-    addAndMakeVisible(skinLabel);
-    skinLabel.setLookAndFeel(&lookAndFeel);
     
     helpButton.setButtonText("Help");
     helpButton.onClick = [this] { helpButtonClicked(); };
-    addAndMakeVisible(helpButton);
-    helpButton.setLookAndFeel(&lookAndFeel);
     
     addChildComponent(helpScreen);
-    helpScreen.setLookAndFeel(&lookAndFeel);
-    
-    lookAndFeel.initializeLabel(pitchTester, "pitch"); // for testing pitch detection
-    addAndMakeVisible(pitchTester);
     
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
+    
+    lookAndFeel.initializeLabel(pitchTester, "pitch"); // for testing pitch detection
+    
+    addAndMakeVisible(midiPanel);
+    addAndMakeVisible(ioPanel);
+    addAndMakeVisible(staffDisplay);
+    addAndMakeVisible(selectSkin);
+    addAndMakeVisible(helpButton);
+    addAndMakeVisible(skinLabel);
+    addAndMakeVisible(pitchTester);
     //addAndMakeVisible(selectPreset);
+    
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -60,17 +62,17 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 
 void ImogenAudioProcessorEditor::resized()
 {
-    midiPanel.setBounds(10, 10, 300, 415);
-    ioPanel.setBounds(320, 10, 300, 415);
+    midiPanel   .setBounds(10, 10, 300, 415);
+    ioPanel     .setBounds(320, 10, 300, 415);
     staffDisplay.setBounds(630, 10, 300, 350);
     
-    selectSkin.setBounds(775, 388, 150, 30);
-    skinLabel.setBounds(775, 365, 150, 25);
-    helpButton.setBounds(685, 388, 75, 30);
+    selectSkin  .setBounds(775, 388, 150, 30);
+    skinLabel   .setBounds(775, 365, 150, 25);
+    helpButton  .setBounds(685, 388, 75, 30);
     
-    helpScreen.setBounds(158, 45, 625, 315);
+    helpScreen  .setBounds(158, 45, 625, 315);
     
-    pitchTester.setBounds(getWidth()/2 - 75, getHeight()/2 - 38, 150, 75);
+    pitchTester .setBounds(getWidth()/2 - 75, getHeight()/2 - 38, 150, 75);
     
     //selectPreset.setBounds(x, y, w, h);
 };

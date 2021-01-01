@@ -12,11 +12,11 @@
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
 {
-    possiblePanVals.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    possiblePanVals        .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
     panValsInAssigningOrder.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    arrayIndexesMapped.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    unsentPanVals.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    absDistances.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    arrayIndexesMapped     .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    unsentPanVals          .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    absDistances           .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
     
     setNumberOfVoices(1);
 };
