@@ -259,7 +259,7 @@ void HarmonizerVoice::updateSampleRate(const double newSamplerate)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12)
+Harmonizer::Harmonizer(): pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12)
 {
 	currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	currentlyActiveNotes.clearQuick();
@@ -270,7 +270,6 @@ Harmonizer::Harmonizer(): lastPitchWheelValue(64), pitchConverter(440, 69, 12), 
 	currentlyActiveNoReleased.add(-1);
 	
 	unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-	latching.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 	
 	adsrParams.attack  = 0.035f;
 	adsrParams.decay   = 0.06f;
@@ -303,7 +302,7 @@ void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, const int inputCh
 			voice->renderNextBlock (inputAudio, inputChan, numSamples, outputBuffer, epochIndices);
 };
 
-int Harmonizer::getNumActiveVoices()
+int Harmonizer::getNumActiveVoices() const
 {
 	int actives = 0;
 	for(auto* voice : voices)
@@ -313,7 +312,7 @@ int Harmonizer::getNumActiveVoices()
 	return actives;
 };
 
-bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButReleased)
+bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButReleased) const
 {
 	for(auto* voice : voices)
 	{
@@ -321,9 +320,8 @@ bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButRe
 		{
 			if(countRingingButReleased)
 				return true;
-			else
-				if(! voice->isPlayingButReleased())
-					return true;
+			if(! voice->isPlayingButReleased())
+				return true;
 		}
 	}
 	return false;
@@ -379,10 +377,7 @@ void Harmonizer::updateStereoWidth(const int newWidth)
 			if(voice->isVoiceActive())
 			{
 				if(voice->getCurrentlyPlayingNote() >= lowestPannedNote)
-				{
 					voice->setPan(panner.getClosestNewPanValFromOld(voice->currentMidipan));
-					continue;
-				}
 				else if(voice->currentMidipan != 64)
 					voice->setPan(64);
 			}
@@ -402,10 +397,7 @@ void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
 			if(voice->isVoiceActive())
 			{
 				if(voice->currentlyPlayingNote < newPitchThresh && voice->currentMidipan != 64)
-		 		{
 					voice->setPan(64);
-					continue;
-				}
 				else if(voice->currentlyPlayingNote >= newPitchThresh && voice->currentMidipan == 64)
 					voice->setPan(panner.getNextPanVal());
 			}
@@ -499,13 +491,6 @@ void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
 		else
 		{
 			latchManager.reset();
-			latching.clearQuick();
-			latching = reportActivesNoReleased();
-			if(! latching.isEmpty())
-			{
-				for(int i = 0; i < latching.size(); ++i)
-					latchManager.noteOnRecieved(latching.getUnchecked(i));
-			}
 		}
 	}
 };
@@ -549,8 +534,13 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity, const bool is
 	
 	// If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
 	for (auto* voice : voices)
+	{
 		if (voice->getCurrentlyPlayingNote() == midiPitch)
+		{
 			stopVoice(voice, 0.5f, true);
+			break; // there should be only one instance of a midi note playing at a time...
+		}
+	}
 	
 	startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity, isKeyboard);
 	
@@ -595,11 +585,8 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 		{
 			if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
 			{
-				if(! isKeyboard)
-				{
-					if(! voice->isKeyDown())
-						stopVoice (voice, velocity, allowTailOff);
-				}
+				if((! isKeyboard && ! voice->isKeyDown()) || partofList)
+					stopVoice (voice, velocity, allowTailOff);
 				else
 				{
 					voice->setKeyDown (false);
@@ -608,12 +595,12 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
 				}
 			}
 		}
-		
-		if(midiNoteNumber == lastPedalPitch)
-			lastPedalPitch = -1;
-		if(midiNoteNumber == lastDescantPitch)
-			lastDescantPitch = -1;
 	}
+	
+	if(midiNoteNumber == lastPedalPitch)
+		lastPedalPitch   = -1;
+	if(midiNoteNumber == lastDescantPitch)
+		lastDescantPitch = -1;
 	
 	if(! partofList && isKeyboard && ! latchIsOn)
 		pitchCollectionChanged();
@@ -639,7 +626,7 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
 	
 	panner.reset(false);
 	latchManager.reset();
-	lastPedalPitch = -1;
+	lastPedalPitch   = -1;
 	lastDescantPitch = -1;
 };
 
@@ -794,7 +781,7 @@ void Harmonizer::applyPedalPitch()
 	if(currentLowest == 128) // pathological case -- ie, no notes playing, some error encountered, etc
 	{
 		if(lastPedalPitch > -1)
-			noteOff(lastPedalPitch, 1.0f, false, true, false);
+			noteOff(lastPedalPitch, 1.0f, false, false, false);
 		lastPedalPitch = -1;
 		return;
 	}
@@ -806,7 +793,7 @@ void Harmonizer::applyPedalPitch()
 		if(newPedalPitch != lastPedalPitch)
 		{
 			if(lastPedalPitch > -1)
-				noteOff(lastPedalPitch, 1.0f, false, true, false);
+				noteOff(lastPedalPitch, 1.0f, false, false, false);
 			
 			if(! isPitchActive(newPedalPitch, false))
 			{
@@ -824,7 +811,7 @@ void Harmonizer::applyPedalPitch()
 	else
 	{
 		if(lastPedalPitch > -1)
-			noteOff(lastPedalPitch, 1.0f, false, true, false);
+			noteOff(lastPedalPitch, 1.0f, false, false, false);
 		lastPedalPitch = -1;
 	}
 };
@@ -838,7 +825,7 @@ void Harmonizer::setPedalPitch(const bool isOn)
 		if(! isOn)
 		{
 			if(lastPedalPitch > -1)
-				noteOff(lastPedalPitch, 1.0f, false, true, false);
+				noteOff(lastPedalPitch, 1.0f, false, false, false);
 			lastPedalPitch = -1;
 		}
 		else
@@ -882,7 +869,7 @@ void Harmonizer::applyDescant()
 	if(currentHighest == -1) // pathological case -- ie, no notes playing, some error encountered, etc
 	{
 		if(lastDescantPitch > -1)
-			noteOff(lastDescantPitch, 1.0f, false, true, false);
+			noteOff(lastDescantPitch, 1.0f, false, false, false);
 		lastDescantPitch = -1;
 		return;
 	}
@@ -894,7 +881,7 @@ void Harmonizer::applyDescant()
 		if(newDescantPitch != lastDescantPitch)
 		{
 			if(lastDescantPitch > -1)
-				noteOff(lastDescantPitch, 1.0f, false, true, false);
+				noteOff(lastDescantPitch, 1.0f, false, false, false);
 			
 			if(! isPitchActive(newDescantPitch, false))
 			{
@@ -912,7 +899,7 @@ void Harmonizer::applyDescant()
 	else
 	{
 		if(lastDescantPitch > -1)
-			noteOff(lastDescantPitch, 1.0f, false, true, false);
+			noteOff(lastDescantPitch, 1.0f, false, false, false);
 		lastDescantPitch = -1;
 	}
 };
@@ -926,7 +913,7 @@ void Harmonizer::setDescant(const bool isOn)
 		if(! isOn)
 		{
 			if(lastDescantPitch > -1)
-				noteOff(lastDescantPitch, 1.0f, false, true, false);
+				noteOff(lastDescantPitch, 1.0f, false, false, false);
 			lastDescantPitch = -1;
 		}
 		else

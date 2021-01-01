@@ -11,6 +11,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 {
 	for (int i = 0; i < 12; ++i)
 		harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
+	harmonizer.setCurrentPlaybackSampleRate(44100.0);
 	
 	dryvoxpanningmults[0] = 0.5f;
 	dryvoxpanningmults[1] = 0.5f;
@@ -97,7 +98,7 @@ void ImogenAudioProcessor::releaseResources()
 
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-	const int inputChannel = inputChan->get() >= buffer.getNumChannels() ? buffer.getNumChannels() - 1 : inputChan->get();
+	const int inputChannel = inputChan->get() >= buffer.getNumChannels() - 1 ? buffer.getNumChannels() - 1 : inputChan->get();
 	
 	updateSampleRate(getSampleRate());
 	updateAllParameters();
@@ -106,7 +107,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 	
 	auto midiIterator = midiMessages.findNextSamplePosition(0);
 	
-	int numSamples = buffer.getNumSamples();
+	int numSamples  = buffer.getNumSamples();
 	int startSample = 0;
 	bool firstEvent = true;
 	
@@ -153,7 +154,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples)
 {
-	int samplesLeft = numSamples;
+	int samplesLeft      = numSamples;
 	int chunkStartSample = startSample;
 	
 	while(samplesLeft > 0)
@@ -164,7 +165,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 		
 		renderChunk(proxy, inputChannel);
 		
-		samplesLeft -= chunkNumSamples;
+		samplesLeft      -= chunkNumSamples;
 		chunkStartSample += chunkNumSamples;
 	}
 };
@@ -363,7 +364,6 @@ void ImogenAudioProcessor::updateMidiLatch()
 void ImogenAudioProcessor::updateIOgains()
 {
 	const float newIn = inputGain->get();
-	
 	if(newIn != prevideb)
 		inputGainMultiplier = Decibels::decibelsToGain(newIn);
 	prevideb = newIn;
