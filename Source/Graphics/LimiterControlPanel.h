@@ -23,10 +23,11 @@ class LimiterControlPanel  : public juce::Component
 public:
     ImogenAudioProcessor& audioProcessor;
     ImogenLookAndFeel& lookAndFeel;
-    LimiterControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l): audioProcessor(p), lookAndFeel(l),
-    limiterThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
-    limiterReleaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
-    limiterToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
+    LimiterControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
+        audioProcessor(p), lookAndFeel(l),
+        limiterThreshLink (std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
+        limiterReleaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
+        limiterToggleLink (std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
         // threshold
         {

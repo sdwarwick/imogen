@@ -12,7 +12,8 @@
 #include "HelpScreen.h"
 
 //==============================================================================
-HelpScreen::HelpScreen(): closeIcon(ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
+HelpScreen::HelpScreen():
+    closeIcon(ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {
     // close button
     {

@@ -41,7 +41,7 @@ public:
     void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
                            const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider&) override 
     {
-        const auto radius = (float) juce::jmin (width / 2, height / 2) - 5.0f;
+        const auto radius  = (float) juce::jmin (width / 2, height / 2) - 5.0f;
         const auto centreX = (float) x + (float) width  * 0.5f;
         const auto centreY = (float) y + (float) height * 0.5f;
         const auto rx = centreX - radius;
@@ -71,7 +71,7 @@ public:
     
     void drawToggleButton (Graphics& g, ToggleButton& b, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
     {
-        const auto fontSize = jmin (15.0f, (float) b.getHeight() * 0.75f);
+        const auto fontSize  = jmin (15.0f, (float) b.getHeight() * 0.75f);
         const auto tickWidth = fontSize * 1.1f;
         
         drawCheckbox(g, 4.0f, ((float) b.getHeight() - tickWidth) * 0.5f,
