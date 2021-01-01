@@ -18,13 +18,13 @@ HarmonizerVoice::HarmonizerVoice(Harmonizer* h): parent(h), isFading(false), not
     
     const double initSamplerate = parent->getSamplerate();
     
-    adsr.setSampleRate          (initSamplerate);
-    quickRelease.setSampleRate  (initSamplerate);
-    quickAttack.setSampleRate   (initSamplerate);
+    adsr.setSampleRate        (initSamplerate);
+    quickRelease.setSampleRate(initSamplerate);
+    quickAttack.setSampleRate (initSamplerate);
     
-    adsr.setParameters          (parent->getCurrentAdsrParams());
-    quickRelease.setParameters  (parent->getCurrentQuickReleaseParams());
-    quickAttack.setParameters   (parent->getCurrentQuickAttackParams());
+    adsr.setParameters        (parent->getCurrentAdsrParams());
+    quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
+    quickAttack.setParameters (parent->getCurrentQuickAttackParams());
     
     tempBuffer.setSize(1, MAX_BUFFERSIZE);
 };
@@ -77,14 +77,15 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 void HarmonizerVoice::clearCurrentNote() 
 {
-    currentlyPlayingNote = -1;
-    setPan(64);
-    lastRecievedVelocity      = 0.0f;
     currentVelocityMultiplier = 0.0f;
-    noteOnTime = 0;
+    lastRecievedVelocity      = 0.0f;
+    currentlyPlayingNote = -1;
+    noteOnTime    = 0;
     isFading      = false;
     noteTurnedOff = true;
     keyIsDown     = false;
+    
+    setPan(64);
     
     if(! quickRelease.isActive())
         quickRelease.noteOn();
@@ -103,7 +104,7 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
 {
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
-    currentOutputFreq = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
+    currentOutputFreq         = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
     currentVelocityMultiplier = parent->velocityConverter.floatVelocity(velocity);
     isFading      = false;
     noteTurnedOff = false;
@@ -624,8 +625,8 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
         if(voice->isVoiceActive())
             voice->stopNote (1.0f, allowTailOff);
     
-    panner.reset(false);
     latchManager.reset();
+    panner.reset(false);
     lastPedalPitch   = -1;
     lastDescantPitch = -1;
 };
@@ -1045,8 +1046,8 @@ void Harmonizer::updateADSRsettings(const float attack, const float decay, const
     {
         const ScopedLock sl (lock);
         
-        adsrParams.attack = attack;
-        adsrParams.decay = decay;
+        adsrParams.attack  = attack;
+        adsrParams.decay   = decay;
         adsrParams.sustain = sustain;
         adsrParams.release = release;
         

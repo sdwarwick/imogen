@@ -500,11 +500,11 @@ AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
     PluginHostType host;
     if(host.isLogic() || host.isGarageBand())
         return BusesProperties().withInput("Input", AudioChannelSet::mono(), false)
-        .withInput("Sidechain", AudioChannelSet::mono(), true)
-        .withOutput("Output", AudioChannelSet::stereo(), true);
+                                .withInput("Sidechain", AudioChannelSet::mono(), true)
+                                .withOutput("Output", AudioChannelSet::stereo(), true);
     
     return BusesProperties()    .withInput("Input", AudioChannelSet::mono(), true)
-    .withOutput("Output", AudioChannelSet::stereo(), true);
+                                .withOutput("Output", AudioChannelSet::stereo(), true);
 };
 
 
