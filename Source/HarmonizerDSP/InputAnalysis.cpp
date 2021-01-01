@@ -1,12 +1,12 @@
 /*
-  ==============================================================================
-
-    InputAnalysis.cpp
-    Created: 14 Dec 2020 6:32:56pm
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
+ ==============================================================================
+ 
+ InputAnalysis.cpp
+ Created: 14 Dec 2020 6:32:56pm
+ Author:  Ben Vining
+ 
+ ==============================================================================
+ */
 
 #include "InputAnalysis.h"
 
@@ -17,10 +17,10 @@
 
 PitchTracker::PitchTracker(): prevDetectedPitch(-1.0f), tolerence(0.15f), minHz(50.0f), maxHz(2000.0f)
 {
-	yinBuffer.setSize(1, MAX_BUFFERSIZE);
-//	powerTerms.ensureStorageAllocated(MAX_BUFFERSIZE);
-//	powerTerms.clearQuick();
-//	powerTerms.fill(0);
+    yinBuffer.setSize(1, MAX_BUFFERSIZE);
+    //	powerTerms.ensureStorageAllocated(MAX_BUFFERSIZE);
+    //	powerTerms.clearQuick();
+    //	powerTerms.fill(0);
 };
 
 PitchTracker::~PitchTracker()
@@ -28,90 +28,90 @@ PitchTracker::~PitchTracker()
 
 float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
 {
-	//float pitch = simpleYin(inputAudio, inputChan);
-	
-	return samplerate / simpleYin(inputAudio, inputChan);
-	
-//	if(pitch > 0.0f)
-//	{
-//		pitch = samplerate / (pitch + 0.0f);
-//		if(pitch > minHz && pitch < maxHz)
-//		{
-//			prevDetectedPitch = pitch;
-//			return pitch;
-//		}
-//		else
-//			return prevDetectedPitch;
-//	}
-//	else
-//		return prevDetectedPitch;
+    //float pitch = simpleYin(inputAudio, inputChan);
+    
+    return samplerate / simpleYin(inputAudio, inputChan);
+    
+    //	if(pitch > 0.0f)
+    //	{
+    //		pitch = samplerate / (pitch + 0.0f);
+    //		if(pitch > minHz && pitch < maxHz)
+    //		{
+    //			prevDetectedPitch = pitch;
+    //			return pitch;
+    //		}
+    //		else
+    //			return prevDetectedPitch;
+    //	}
+    //	else
+    //		return prevDetectedPitch;
 };
 
 
 
 float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio, const int inputChan) noexcept
 {
-	if(const int newsize = round(inputAudio.getNumSamples()/2); yinBuffer.getNumSamples() != newsize)
-		yinBuffer.setSize(1, newsize, true, true, true);
-	
-	const int yinBufferSize = yinBuffer.getNumSamples();
-	
-	const float* in = inputAudio.getReadPointer(inputChan);
-	float* yinData = yinBuffer.getWritePointer(0);
-	
-	int period;
-	float delta = 0.0f;
-	float runningSum = 0.0f;
-	
-	yinData[0] = 1.0f;
-	for (int tau = 1; tau < yinBufferSize; ++tau)
-	{
-		yinData[tau] = 0.0;
-		for (int j = 0; j < yinBufferSize; ++j)
-		{
-			delta = in[j] - in[j + tau];
-			yinData[tau] += (delta * delta);
-		}
-		runningSum += yinData[tau];
-		if (runningSum != 0)
-			yinData[tau] *= tau / runningSum;
-		else
-			yinData[tau] = 1.0;
-		
-		period = tau - 3;
-		
-		if (tau > 4 && (yinData[period] < tolerence) && (yinData[period] < yinData[period + 1]))
-			return quadraticPeakPosition (yinBuffer.getReadPointer(0), period, yinBufferSize);
-	}
-	return quadraticPeakPosition (yinBuffer.getReadPointer(0), minElement(yinBuffer.getReadPointer(0), yinBufferSize), yinBufferSize);
+    if(const int newsize = round(inputAudio.getNumSamples()/2); yinBuffer.getNumSamples() != newsize)
+        yinBuffer.setSize(1, newsize, true, true, true);
+    
+    const int yinBufferSize = yinBuffer.getNumSamples();
+    
+    const float* in = inputAudio.getReadPointer(inputChan);
+    float* yinData = yinBuffer.getWritePointer(0);
+    
+    int period;
+    float delta = 0.0f;
+    float runningSum = 0.0f;
+    
+    yinData[0] = 1.0f;
+    for (int tau = 1; tau < yinBufferSize; ++tau)
+    {
+        yinData[tau] = 0.0;
+        for (int j = 0; j < yinBufferSize; ++j)
+        {
+            delta = in[j] - in[j + tau];
+            yinData[tau] += (delta * delta);
+        }
+        runningSum += yinData[tau];
+        if (runningSum != 0)
+            yinData[tau] *= tau / runningSum;
+        else
+            yinData[tau] = 1.0;
+        
+        period = tau - 3;
+        
+        if (tau > 4 && (yinData[period] < tolerence) && (yinData[period] < yinData[period + 1]))
+            return quadraticPeakPosition (yinBuffer.getReadPointer(0), period, yinBufferSize);
+    }
+    return quadraticPeakPosition (yinBuffer.getReadPointer(0), minElement(yinBuffer.getReadPointer(0), yinBufferSize), yinBufferSize);
 };
 
 unsigned int PitchTracker::minElement(const float* data, const int dataSize) noexcept
 {
-	unsigned int j, pos = 0;
-	float tmp = data[0];
-	for (j = 0; j < dataSize; j++)
-	{
-		pos = (tmp < data[j]) ? pos : j;
-		tmp = (tmp < data[j]) ? tmp : data[j];
-	}
-	return pos;
+    unsigned int j, pos = 0;
+    float tmp = data[0];
+    for (j = 0; j < dataSize; j++)
+    {
+        pos = (tmp < data[j]) ? pos : j;
+        tmp = (tmp < data[j]) ? tmp : data[j];
+    }
+    return pos;
 };
 
 
 float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, const int dataSize) noexcept
 {
-	float s0, s1, s2;
-	unsigned int x0, x2;
-	if (pos == 0 || pos == dataSize - 1) return pos;
-	x0 = (pos < 1) ? pos : pos - 1;
-	x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
-	if (x0 == pos) return (data[pos] <= data[x2]) ? pos : x2;
-	if (x2 == pos) return (data[pos] <= data[x0]) ? pos : x0;
-	s0 = data[x0];
-	s1 = data[pos];
-	s2 = data[x2];
-	return pos + 0.5 * (s0 - s2 ) / (s0 - 2.* s1 + s2);
+    float s0, s1, s2;
+    unsigned int x0, x2;
+    if (pos == 0 || pos == dataSize - 1) return pos;
+    x0 = (pos < 1) ? pos : pos - 1;
+    x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
+    if (x0 == pos) return (data[pos] <= data[x2]) ? pos : x2;
+    if (x2 == pos) return (data[pos] <= data[x0]) ? pos : x0;
+    s0 = data[x0];
+    s1 = data[pos];
+    s2 = data[x2];
+    return pos + 0.5 * (s0 - s2 ) / (s0 - 2.* s1 + s2);
 }
 
 //
@@ -412,14 +412,14 @@ float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, 
 
 EpochFinder::EpochFinder()
 {
-	y.ensureStorageAllocated(MAX_BUFFERSIZE);
-	y.clearQuick();
-	y2.ensureStorageAllocated(MAX_BUFFERSIZE);
-	y2.clearQuick();
-	y3.ensureStorageAllocated(MAX_BUFFERSIZE);
-	y3.clearQuick();
-	epochs.ensureStorageAllocated(MAX_BUFFERSIZE);
-	epochs.clearQuick();
+    y.ensureStorageAllocated(MAX_BUFFERSIZE);
+    y.clearQuick();
+    y2.ensureStorageAllocated(MAX_BUFFERSIZE);
+    y2.clearQuick();
+    y3.ensureStorageAllocated(MAX_BUFFERSIZE);
+    y3.clearQuick();
+    epochs.ensureStorageAllocated(MAX_BUFFERSIZE);
+    epochs.clearQuick();
 };
 
 EpochFinder::~EpochFinder()
@@ -427,95 +427,95 @@ EpochFinder::~EpochFinder()
 
 Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
 {
-	/*
-	 EXTRACT EPOCH INDICES
-	 
-	 uses a ZFR approach to find sample index #s of epoch locations to an integer array
-	 
-	 @see : "Epoch Extraction From Speech Signals", by K. Sri Rama Murty and B. Yegnanarayana, 2008 : http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6D94C490DA889017DE4362D322E1A23C?doi=10.1.1.586.7214&rep=rep1&type=pdf
-	 
-	 @see : example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
-	 */
-	
-	const int numSamples = inputAudio.getNumSamples();
-	
-	const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
-	
-	epochs.clearQuick();
-	y.clearQuick();
-	y2.clearQuick();
-	y3.clearQuick();
-	
-	float mean_val;
-	float running_sum = 0.0f;
-	
-	const float* data = inputAudio.getReadPointer(inputChan);
-	
-	const float x0 = data[0];
-	float y1_0 = x0;
-	float y1_1 = data[1] - x0 + (2.0f * y1_0);
-	float x_i;
-	float y1_i;
-	y2.add(y1_0);
-	y2.add(y1_1 + (2.0f * y1_0));
-	for(int i = 2; i < numSamples; ++i)
-	{
-		x_i = data[i] - data[i - 1];
-		y1_i = x_i + (2.0f * y1_1) - y1_0;
-		const float y2b1 = y2.getUnchecked(i - 1);
-		const float y2b2 = y2.getUnchecked(i - 2);
-		y2.add(y1_i + (2.0f * y2b1 - y2b2));
-		y1_0 = y1_1;
-		y1_1 = y1_i;
-	}
-	
-	// third stage
-	for(int i = 0; i < 2 * window_length + 2; ++i)
-		running_sum += y2.getUnchecked(i);
-	
-	mean_val = 0.0f;
-	for(int i = 0; i < numSamples; ++i) {
-		if((i - window_length < 0) || (i + window_length >= numSamples)) {
-			mean_val = y2.getUnchecked(i);
-		} else if (i - window_length == 0) {
-			mean_val = running_sum / (2.0f * window_length + 1.0f);
-		} else {
-			running_sum -= y2.getUnchecked(i - window_length - 1) - y2.getUnchecked(i + window_length);
-			mean_val = running_sum / (2.0f * window_length + 1.0f);
-		}
-		y3.add(y2.getUnchecked(i) - mean_val);
-	}
-	
-	// fourth stage
-	running_sum = 0.0f;
-	for(int i = 0; i < 2 * window_length + 2; ++i)
-		running_sum += y3.getUnchecked(i);
-	
-	mean_val = 0.0f;
-	for(int i = 0; i < numSamples; ++i) {
-		if((i - window_length < 0) || (i + window_length >= numSamples)) {
-			mean_val = y3.getUnchecked(i);
-		} else if (i - window_length == 0) {
-			mean_val = running_sum / (2.0f * window_length + 1.0f);
-		} else {
-			running_sum -= y3.getUnchecked(i - window_length - 1) - y3.getUnchecked(i + window_length);
-			mean_val = running_sum / (2.0f * window_length + 1.0f);
-		}
-		y.add(y3.getUnchecked(i) - mean_val);
-	}
-	
-	// last stage
-	float last = y.getUnchecked(0);
-	float act;
-	epochs.add(0);
-	for(int i = 0; i < numSamples; ++i) {
-		act = y[i];
-		if(last < 0 and act > 0) {
-			epochs.add(i);
-		}
-		last = act;
-	}
-	epochs.add(numSamples - 1);
-	
-	return epochs;
+    /*
+     EXTRACT EPOCH INDICES
+     
+     uses a ZFR approach to find sample index #s of epoch locations to an integer array
+     
+     @see : "Epoch Extraction From Speech Signals", by K. Sri Rama Murty and B. Yegnanarayana, 2008 : http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6D94C490DA889017DE4362D322E1A23C?doi=10.1.1.586.7214&rep=rep1&type=pdf
+     
+     @see : example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
+     */
+    
+    const int numSamples = inputAudio.getNumSamples();
+    
+    const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
+    
+    epochs.clearQuick();
+    y.clearQuick();
+    y2.clearQuick();
+    y3.clearQuick();
+    
+    float mean_val;
+    float running_sum = 0.0f;
+    
+    const float* data = inputAudio.getReadPointer(inputChan);
+    
+    const float x0 = data[0];
+    float y1_0 = x0;
+    float y1_1 = data[1] - x0 + (2.0f * y1_0);
+    float x_i;
+    float y1_i;
+    y2.add(y1_0);
+    y2.add(y1_1 + (2.0f * y1_0));
+    for(int i = 2; i < numSamples; ++i)
+    {
+        x_i = data[i] - data[i - 1];
+        y1_i = x_i + (2.0f * y1_1) - y1_0;
+        const float y2b1 = y2.getUnchecked(i - 1);
+        const float y2b2 = y2.getUnchecked(i - 2);
+        y2.add(y1_i + (2.0f * y2b1 - y2b2));
+        y1_0 = y1_1;
+        y1_1 = y1_i;
+    }
+    
+    // third stage
+    for(int i = 0; i < 2 * window_length + 2; ++i)
+        running_sum += y2.getUnchecked(i);
+    
+    mean_val = 0.0f;
+    for(int i = 0; i < numSamples; ++i) {
+        if((i - window_length < 0) || (i + window_length >= numSamples)) {
+            mean_val = y2.getUnchecked(i);
+        } else if (i - window_length == 0) {
+            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        } else {
+            running_sum -= y2.getUnchecked(i - window_length - 1) - y2.getUnchecked(i + window_length);
+            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        }
+        y3.add(y2.getUnchecked(i) - mean_val);
+    }
+    
+    // fourth stage
+    running_sum = 0.0f;
+    for(int i = 0; i < 2 * window_length + 2; ++i)
+        running_sum += y3.getUnchecked(i);
+    
+    mean_val = 0.0f;
+    for(int i = 0; i < numSamples; ++i) {
+        if((i - window_length < 0) || (i + window_length >= numSamples)) {
+            mean_val = y3.getUnchecked(i);
+        } else if (i - window_length == 0) {
+            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        } else {
+            running_sum -= y3.getUnchecked(i - window_length - 1) - y3.getUnchecked(i + window_length);
+            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        }
+        y.add(y3.getUnchecked(i) - mean_val);
+    }
+    
+    // last stage
+    float last = y.getUnchecked(0);
+    float act;
+    epochs.add(0);
+    for(int i = 0; i < numSamples; ++i) {
+        act = y[i];
+        if(last < 0 and act > 0) {
+            epochs.add(i);
+        }
+        last = act;
+    }
+    epochs.add(numSamples - 1);
+    
+    return epochs;
 };

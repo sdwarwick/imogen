@@ -1,14 +1,14 @@
 /*
-  ==============================================================================
-
-    GlobalDefinitions.h
-    Created: 23 Nov 2020 9:56:38pm
-    Author:  Ben Vining
+ ==============================================================================
  
- 	This file just defines some global macros used across Imogen
-
-  ==============================================================================
-*/
+ GlobalDefinitions.h
+ Created: 23 Nov 2020 9:56:38pm
+ Author:  Ben Vining
+ 
+ This file just defines some global macros used across Imogen
+ 
+ ==============================================================================
+ */
 
 #pragma once
 
