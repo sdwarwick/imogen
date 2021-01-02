@@ -97,8 +97,8 @@ public:
     
 private:
     
-    void processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples);
-    void renderChunk(AudioBuffer<float>& buffer, const int inputChannel);
+    void processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer, const int startSample, const int numSamples);
+    void renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
     
     AudioProcessorValueTreeState::ParameterLayout createParameters();
     

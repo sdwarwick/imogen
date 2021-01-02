@@ -105,12 +105,20 @@ void ImogenAudioProcessor::reset()
 
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    const int inputChannel = inputChan->get() >= buffer.getNumChannels() - 1 ? buffer.getNumChannels() - 1 : inputChan->get();
+    if(host.isLogic() || host.isGarageBand())
+    {
+        // check to make sure sidechain input bus is not disabled
+    }
+    
+    const int inBusIndex = (host.isLogic() || host.isGarageBand()) ? 1 : 0;
+    AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, inBusIndex);
+    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
     
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
-    epochIndices = epochs.extractEpochSampleIndices(buffer, inputChannel, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
+    // TO DO: update this function (inputChan)
+    epochIndices = epochs.extractEpochSampleIndices(input, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
@@ -122,7 +130,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     {
         if (midiIterator == midiMessages.cend())
         {
-            processBlockPrivate(buffer, inputChannel, startSample, numSamples);
+            processBlockPrivate(input, output, startSample, numSamples);
             return;
         }
         
@@ -131,7 +139,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         if (samplesToNextMidiMessage >= numSamples)
         {
-            processBlockPrivate(buffer, inputChannel, startSample, numSamples);
+            processBlockPrivate(input, output, startSample, numSamples);
             harmonizer.handleMidiEvent(metadata.getMessage());
             break;
         }
@@ -144,7 +152,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         firstEvent = false;
         
-        processBlockPrivate(buffer, inputChannel, startSample, samplesToNextMidiMessage);
+        processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
         
         harmonizer.handleMidiEvent(metadata.getMessage());
         
@@ -158,7 +166,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 };
 
 
-void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const int inputChannel, const int startSample, const int numSamples)
+void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer, const int startSample, const int numSamples)
 {
     int chunkStartSample = startSample;
     int samplesLeft      = numSamples;
@@ -167,9 +175,9 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
     {
         const int chunkNumSamples = samplesLeft > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
         
-        AudioBuffer<float> proxy(buffer.getArrayOfWritePointers(), buffer.getNumChannels(), chunkStartSample, chunkNumSamples);
+        AudioBuffer<float> proxy(inBuffer.getArrayOfWritePointers(), inBuffer.getNumChannels(), chunkStartSample, chunkNumSamples);
         
-        renderChunk(proxy, inputChannel);
+        renderChunk(proxy, outBuffer);
         
         chunkStartSample += chunkNumSamples;
         samplesLeft      -= chunkNumSamples;
@@ -177,12 +185,12 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& buffer, const
 };
 
 
-void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inputChannel)
+void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer)
 {
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
-    const int numSamples = buffer.getNumSamples();
+    const int numSamples = inBuffer.getNumSamples();
     
     // buffer sizes
     if(wetBuffer.getNumSamples() != numSamples)
@@ -195,39 +203,41 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
     wetBuffer.clear();
     dryBuffer.clear();
     
-    buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
+    inBuffer.applyGain(0, numSamples, inputGainMultiplier); // apply input gain
+    
+    const int inputChannel = 0;
     
     // copy input signal to dryBuffer & apply panning
-    dryBuffer.copyFrom (0, 0, buffer, inputChannel, 0, numSamples);
-    dryBuffer.copyFrom (1, 0, buffer, inputChannel, 0, numSamples);
+    dryBuffer.copyFrom (0, 0, inBuffer,   inputChannel, 0, numSamples);
+    dryBuffer.copyFrom (1, 0, inBuffer,   inputChannel, 0, numSamples);
     dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
     dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
     
     dsp::AudioBlock<float> dwinblock(dryBuffer);
     dryWetMixer.pushDrySamples(dwinblock);
     
-    currentInputPitch = pitch.getPitch(buffer, inputChannel, lastSampleRate);
+    currentInputPitch = pitch.getPitch(inBuffer, inputChannel, lastSampleRate);
     
     harmonizer.setCurrentInputFreq(currentInputPitch); // do this here if possible? input pitch should be calculated/updated as frequently as possible
     
-    harmonizer.renderVoices(buffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output into "wetBuffer"
+    harmonizer.renderVoices(inBuffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output into "wetBuffer"
     
     // clear any extra channels present in I/O buffer
-    if (buffer.getNumChannels() > 2)
-        for (int i = 3; i <= buffer.getNumChannels(); ++i)
-            buffer.clear(i - 1, 0, numSamples);
+    if (outBuffer.getNumChannels() > 2)
+        for (int i = 3; i <= outBuffer.getNumChannels(); ++i)
+            outBuffer.clear(i - 1, 0, numSamples);
     
     dsp::AudioBlock<float> dwoutblock (wetBuffer);
     dryWetMixer.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
     
-    buffer.makeCopyOf(wetBuffer, true); // transfer from wetBuffer to I/O buffer
+    outBuffer.makeCopyOf(wetBuffer, true); // transfer from wetBuffer to I/O buffer
     
-    buffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
+    outBuffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
     
     // output limiter
     if(limiterIsOn)
     {
-        dsp::AudioBlock<float> limiterBlock (buffer);
+        dsp::AudioBlock<float> limiterBlock (outBuffer);
         limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
     }
     
@@ -587,12 +597,12 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 
 AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
 {
-    if(host.isLogic() || host.isGarageBand())
-        return BusesProperties().withInput ("Input",     AudioChannelSet::mono(),   true)
+    if (host.isLogic() || host.isGarageBand())
+        return BusesProperties().withInput ("Input",     AudioChannelSet::stereo(), true)
                                 .withInput ("Sidechain", AudioChannelSet::mono(),   true)
                                 .withOutput("Output",    AudioChannelSet::stereo(), true);
     
-    return     BusesProperties().withInput ("Input",     AudioChannelSet::mono(),   true)
+    return     BusesProperties().withInput ("Input",     AudioChannelSet::stereo(), true)
                                 .withOutput("Output",    AudioChannelSet::stereo(), true);
 };
 
@@ -603,12 +613,9 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
         || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled() )
         return false;
     
-    if   (layouts.getMainOutputChannelSet()  != juce::AudioChannelSet::stereo())
+    if   ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()
+        || layouts.getMainInputChannelSet()  != juce::AudioChannelSet::stereo() )
         return false;
-    
-    //if (host.isLogic() || host.isGarageBand() )
-        // make sure that sidechain input is not disabled...
-        // but how to retrieve the sidechain bus from layouts ?
     
     return true;
 };
