@@ -33,14 +33,19 @@ public:
     
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
     
+    void processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) override;
+    
+    void reset() override;
+    
     juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override { return true; }
+    bool hasEditor() const override { return true; };
     
-    const juce::String getName() const override { return JucePlugin_Name; }
+    const juce::String getName() const override { return JucePlugin_Name; };
     
-    bool acceptsMidi()  const override { return true; }
-    bool producesMidi() const override { return false; }
-    bool isMidiEffect() const override { return false; }
+    bool acceptsMidi()  const override { return true;  };
+    bool supportsMPE()  const override { return false; };
+    bool producesMidi() const override { return false; };
+    bool isMidiEffect() const override { return false; };
     double getTailLengthSeconds() const override;
     
     int getNumPrograms() override;
@@ -77,9 +82,9 @@ public:
     void updateDescant();
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
-    Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); }
+    Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); };
     
-    float reportCurrentInputPitch()  const noexcept { return currentInputPitch; }
+    float reportCurrentInputPitch()  const noexcept { return currentInputPitch; };
     
     void killAllMidi();
     
@@ -112,6 +117,8 @@ private:
     dsp::ProcessSpec dspSpec;
     dsp::Limiter<float> limiter;
     dsp::DryWetMixer<float> dryWetMixer;
+    
+    PluginHostType host;
     
     // these variables store *current* states:
     double lastSampleRate;

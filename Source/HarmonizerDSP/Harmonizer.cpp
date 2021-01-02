@@ -17,7 +17,7 @@ HarmonizerVoice::HarmonizerVoice(Harmonizer* h):
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
     
-    const double initSamplerate = parent->getSamplerate();
+    const double initSamplerate = (parent->getSamplerate() > 0) ? parent->getSamplerate() : 44100.0;
     
     adsr        .setSampleRate(initSamplerate);
     quickRelease.setSampleRate(initSamplerate);
@@ -266,13 +266,12 @@ Harmonizer::Harmonizer():
 {
     currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
     currentlyActiveNotes.clearQuick();
-    currentlyActiveNotes.add(-1);
     
     currentlyActiveNoReleased.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
     currentlyActiveNoReleased.clearQuick();
-    currentlyActiveNoReleased.add(-1);
     
     unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    unLatched.clearQuick();
     
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
@@ -600,10 +599,10 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
         }
     }
     
-    if(midiNoteNumber == lastPedalPitch)
-        lastPedalPitch   = -1;
     if(midiNoteNumber == lastDescantPitch)
         lastDescantPitch = -1;
+    if(midiNoteNumber == lastPedalPitch)
+        lastPedalPitch   = -1;
     
     if(! partofList && isKeyboard && ! latchIsOn)
         pitchCollectionChanged();
@@ -629,8 +628,8 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
     
     latchManager.reset();
     panner.reset(false);
-    lastPedalPitch   = -1;
     lastDescantPitch = -1;
+    lastPedalPitch   = -1;
 };
 
 void Harmonizer::handlePitchWheel(const int wheelValue)

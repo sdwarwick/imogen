@@ -94,6 +94,13 @@ void ImogenAudioProcessor::releaseResources()
 };
 
 
+void ImogenAudioProcessor::reset()
+{
+    harmonizer.allNotesOff(false);
+    releaseResources();
+};
+
+
 // audio rendering ----------------------------------------------------------------------------------------------------------------------------------
 
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -120,7 +127,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         }
         
         const auto metadata = *midiIterator;
-        const int samplesToNextMidiMessage = metadata.samplePosition - startSample;
+        const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
         
         if (samplesToNextMidiMessage >= numSamples)
         {
@@ -147,8 +154,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     
     std::for_each (midiIterator,
                    midiMessages.cend(),
-                   [&] (const MidiMessageMetadata& meta)
-                   { harmonizer.handleMidiEvent (meta.getMessage()); } );
+                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
 };
 
 
@@ -192,8 +198,8 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
     buffer.applyGain(inputChannel, 0, numSamples, inputGainMultiplier); // apply input gain
     
     // copy input signal to dryBuffer & apply panning
-    dryBuffer.copyFrom(0, 0, buffer, inputChannel, 0, numSamples);
-    dryBuffer.copyFrom(1, 0, buffer, inputChannel, 0, numSamples);
+    dryBuffer.copyFrom (0, 0, buffer, inputChannel, 0, numSamples);
+    dryBuffer.copyFrom (1, 0, buffer, inputChannel, 0, numSamples);
     dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
     dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
     
@@ -227,6 +233,15 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& buffer, const int inp
     
     //==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
     
+};
+
+
+void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) 
+{
+    ignoreUnused(buffer);
+    ignoreUnused(midiMessages);
+    
+    // add latency compensation here
 };
 
 
@@ -295,8 +310,8 @@ void ImogenAudioProcessor::updateDryWet()
 
 void ImogenAudioProcessor::updateAdsr()
 {
-    harmonizer.setADSRonOff      (adsrToggle->get());
     harmonizer.updateADSRsettings(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
+    harmonizer.setADSRonOff      (adsrToggle->get());
 };
 
 void ImogenAudioProcessor::updateQuickKillMs()
@@ -487,19 +502,6 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 
 // standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
 
-AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
-{
-    PluginHostType host;
-    if(host.isLogic() || host.isGarageBand())
-        return BusesProperties().withInput("Input",     AudioChannelSet::mono(),   false)
-                                .withInput("Sidechain", AudioChannelSet::mono(),   true)
-                                .withOutput("Output",   AudioChannelSet::stereo(), true);
-    
-    return BusesProperties()    .withInput("Input",   AudioChannelSet::mono(),   true)
-                                .withOutput("Output", AudioChannelSet::stereo(), true);
-};
-
-
 AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
 {
     std::vector<std::unique_ptr<RangedAudioParameter>> params;
@@ -572,39 +574,44 @@ int ImogenAudioProcessor::getCurrentProgram() {
     return 0;
 };
 
-void ImogenAudioProcessor::setCurrentProgram (int index) {
-};
+void ImogenAudioProcessor::setCurrentProgram (int index)
+{ };
 
 const juce::String ImogenAudioProcessor::getProgramName (int index) {
     return {};
 };
 
-void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName) {
+void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
+{ };
+
+
+AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
+{
+    if(host.isLogic() || host.isGarageBand())
+        return BusesProperties().withInput ("Input",     AudioChannelSet::mono(),   true)
+                                .withInput ("Sidechain", AudioChannelSet::mono(),   true)
+                                .withOutput("Output",    AudioChannelSet::stereo(), true);
+    
+    return     BusesProperties().withInput ("Input",     AudioChannelSet::mono(),   true)
+                                .withOutput("Output",    AudioChannelSet::stereo(), true);
 };
 
 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-#if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
-    return true;
-#else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-        && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if   ( layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()
+        || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled() )
         return false;
     
-    // This checks if the input layout matches the output layout
-#if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+    if   (layouts.getMainOutputChannelSet()  != juce::AudioChannelSet::stereo())
         return false;
-#endif
+    
+    //if (host.isLogic() || host.isGarageBand() )
+        // make sure that sidechain input is not disabled...
+        // but how to retrieve the sidechain bus from layouts ?
     
     return true;
-#endif
-}
-
+};
 
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
