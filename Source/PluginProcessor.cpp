@@ -9,13 +9,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     lastSampleRate(44100.0), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f)
 {
-    for (int i = 0; i < 12; ++i)
-        harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
-    harmonizer.setCurrentPlaybackSampleRate(44100.0);
-    
-    dryvoxpanningmults[0] = 0.5f;
-    dryvoxpanningmults[1] = 0.5f;
-    
     epochIndices.ensureStorageAllocated(MAX_BUFFERSIZE);
     epochIndices.clearQuick();
     
@@ -51,9 +44,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     limiterThresh      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("limiterThresh"));            jassert(limiterThresh);
     limiterRelease     = dynamic_cast<AudioParameterInt*>  (tree.getParameter("limiterRelease"));           jassert(limiterRelease);
     
-    updateAllParameters();
-    
-    clearBuffers();
+    initialize(44100.0, MAX_BUFFERSIZE, 12);
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -73,11 +64,11 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
     
     updateSampleRate(sampleRate);
     
-    const int newBlockSize = samplesPerBlock > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
+    const int newBlockSize = samplesPerBlock >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
     updateBufferSizes(newBlockSize, true); // also clears buffers
     
     dspSpec.sampleRate = sampleRate;
-    dspSpec.maximumBlockSize = MAX_BUFFERSIZE * 2;
+    dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
     dspSpec.numChannels = 2;
     
     // limiter
@@ -576,6 +567,43 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     params.push_back(std::make_unique<AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
     
     return { params.begin(), params.end() };
+};
+
+
+
+void ImogenAudioProcessor::initialize(const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
+{
+    for (int i = 0; i < initNumVoices; ++i)
+        harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
+    
+    harmonizer.resetNoteOnCounter();
+    
+    if(host.isLogic() || host.isGarageBand())
+        if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
+        {
+            // give user a warning that sidechain must be enabled
+        }
+    
+    // setLatencySamples(newLatency); // TOTAL plugin latency!
+    
+    updateSampleRate(initSamplerate);
+    
+    const int newBlockSize = initSamplesPerBlock >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : initSamplesPerBlock;
+    updateBufferSizes(newBlockSize, true); // also clears buffers
+    
+    dspSpec.sampleRate = initSamplerate;
+    dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
+    dspSpec.numChannels = 2;
+    
+    // limiter
+    limiter.prepare(dspSpec);
+    
+    // dry wet mixer
+    dryWetMixer.prepare(dspSpec);
+    dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
+    dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
+    
+    updateAllParameters();
 };
 
 

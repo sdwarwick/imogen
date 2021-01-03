@@ -162,6 +162,8 @@ private:
     
     AudioProcessor::BusesProperties makeBusProperties() const;
     
+    void initialize(const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
 

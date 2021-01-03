@@ -12,7 +12,7 @@
 
 
 HarmonizerVoice::HarmonizerVoice(Harmonizer* h):
-    parent(h), isFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
+    parent(h), isQuickFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
@@ -52,10 +52,10 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
     
     // don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
     bool voiceIsOnRightNow;
-    if(!isFading && parent->adsrIsOn)
+    if(!isQuickFading && parent->adsrIsOn)
         voiceIsOnRightNow = adsr.isActive();
     else
-        voiceIsOnRightNow = isFading ? quickRelease.isActive() : !noteTurnedOff;
+        voiceIsOnRightNow = isQuickFading ? quickRelease.isActive() : !noteTurnedOff;
     
     if(voiceIsOnRightNow)
     {
@@ -77,7 +77,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
         else
             quickAttack .applyEnvelopeToBuffer(subBuffer, 0, numSamples); // to prevent pops at start of notes
         
-        if(isFading) // quick fade out for stopNote() w/ allowTailOff = false:
+        if(isQuickFading) // quick fade out for stopNote() w/ allowTailOff = false:
             quickRelease.applyEnvelopeToBuffer(subBuffer, 0, numSamples);
     }
     else
@@ -92,14 +92,15 @@ void HarmonizerVoice::clearCurrentNote()
     lastRecievedVelocity      = 0.0f;
     currentlyPlayingNote = -1;
     noteOnTime    = 0;
-    isFading      = false;
+    isQuickFading = false;
     noteTurnedOff = true;
     keyIsDown     = false;
     
     setPan(64);
     
-    if(! quickRelease.isActive())
-        quickRelease.noteOn();
+    if(quickRelease.isActive())
+       quickRelease.reset();
+    quickRelease.noteOn();
     
     if(adsr.isActive())
         adsr.reset();
@@ -119,7 +120,7 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
     lastRecievedVelocity = velocity;
     currentVelocityMultiplier = parent->velocityConverter.floatVelocity(velocity);
     currentOutputFreq         = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
-    isFading      = false;
+    isQuickFading      = false;
     noteTurnedOff = false;
     
     adsr.noteOn();
@@ -133,16 +134,17 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
     if (allowTailOff)
     {
         adsr.noteOff();
-        isFading = false;
+        isQuickFading = false;
     }
     else
     {
-        isFading = true;
-        quickRelease.noteOff();
         if(! quickRelease.isActive())
             quickRelease.noteOn();
+        
+        isQuickFading = true;
+        quickRelease.noteOff();
     }
-    lastRecievedVelocity = 0.0f;
+    
     noteTurnedOff = true;
 };
 
@@ -299,6 +301,12 @@ Harmonizer::Harmonizer():
     quickAttackParams.decay   = 0.01f;
     quickAttackParams.sustain = 1.0f;
     quickAttackParams.release = 0.015f;
+    
+    updateStereoWidth(100);
+    setConcertPitchHz(440);
+    setCurrentPlaybackSampleRate(44100.0);
+    
+    updateBufferSizes(MAX_BUFFERSIZE, true);
 };
 
 Harmonizer::~Harmonizer()

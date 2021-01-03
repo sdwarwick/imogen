@@ -68,7 +68,7 @@ private:
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
     ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
-    bool isFading;
+    bool isQuickFading;
     bool noteTurnedOff;
     int currentlyPlayingNote;
     float currentOutputFreq;
@@ -114,14 +114,14 @@ public:
     
     void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
     
-    void setCurrentPlaybackSampleRate(const double newRate);
+    void   setCurrentPlaybackSampleRate(const double newRate);
     double getSamplerate() const noexcept { return sampleRate; }
     
     void setConcertPitchHz(const int newConcertPitchhz);
     
     void updateStereoWidth(const int newWidth);
     void updateLowestPannedNote(const int newPitchThresh) noexcept;
-    int getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; };
+    int  getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; };
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
     bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
