@@ -262,7 +262,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, Array<int>& epochInd
           float* w = monoBuffer.getWritePointer(0);
 
     for(int s = 0; s < numSamples; ++s)
-        w[s] = r[s] / ( s < finalWindow.size() ? std::max<float>(finalWindow.getUnchecked(s), 1e-4) : 1e-4 );
+        w[s] = r[s] / ( s < finalWindow.size() ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
 };
 
 
@@ -342,7 +342,7 @@ Harmonizer::~Harmonizer()
 void Harmonizer::clearBuffers()
 {
     for (auto* voice : voices)
-        voice->clearBuffers();
+        voice->clearBuffers(); 
     
     pitch.clearBuffer();
     epochIndices.clearQuick();
@@ -544,8 +544,7 @@ void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
             latchManager.reset();
             if(! unLatched.isEmpty())
             {
-                const float offVelocity = allowTailOff ? 0.0f : 1.0f;
-                turnOffList(unLatched, offVelocity, allowTailOff);
+                turnOffList(unLatched, !allowTailOff, allowTailOff);
                 pitchCollectionChanged();
             }
         }
@@ -1201,7 +1200,7 @@ void Harmonizer::removeNumVoices(const int voicesToRemove)
             }
         }
         
-        const int indexRemoving = indexToRemove > -1 ? indexToRemove : 0;
+        const int indexRemoving = std::max(indexToRemove, 0);
         
         HarmonizerVoice* removing = voices[indexRemoving];
         if(removing->isVoiceActive())
@@ -1216,6 +1215,6 @@ void Harmonizer::removeNumVoices(const int voicesToRemove)
         ++voicesRemoved;
     }
     
-    const int voicesLeft = voices.size() > 0 ? voices.size() : 1;
+    const int voicesLeft = std::max(voices.size(), 1);
     panner.setNumberOfVoices(voicesLeft);
 };

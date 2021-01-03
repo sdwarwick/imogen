@@ -70,7 +70,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
     
     // dry wet mixer
     dryWetMixer.prepare(dspSpec);
-    dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
     dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
     
     updateAllParameters();
@@ -90,6 +89,8 @@ void ImogenAudioProcessor::reset()
     harmonizer.allNotesOff(false);
     harmonizer.resetNoteOnCounter();
     clearBuffers();
+    dryWetMixer.reset();
+    limiter.reset();
 };
 
 
@@ -98,10 +99,11 @@ void ImogenAudioProcessor::reset()
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     if(host.isLogic() || host.isGarageBand())
-    {
-        // check to make sure sidechain input bus is not disabled
-        // if it is, display warning to user
-    }
+        if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
+        {
+            // give user a warning that sidechain must be enabled
+            return;
+        }
     
     updateSampleRate(getSampleRate());
     updateAllParameters();
@@ -230,17 +232,17 @@ void ImogenAudioProcessor::writeToDryBuffer(const AudioBuffer<float>& input)
 };
 
 
-void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) 
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+
+void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ignoreUnused(buffer);
     ignoreUnused(midiMessages);
     
     // add latency compensation here
 };
-
-
-/*===========================================================================================================================
- ============================================================================================================================*/
 
 
 void ImogenAudioProcessor::clearBuffers()
@@ -259,7 +261,6 @@ void ImogenAudioProcessor::updateAllParameters()
     updateLimiter();
     updateDryVoxPan();
     updateDryWet();
-
     updateQuickKillMs();
     updateQuickAttackMs();
     updateNoteStealing();
@@ -396,6 +397,8 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
                 harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
         else
             harmonizer.removeNumVoices(currentVoices - newNumVoices);
+        
+        // update GUI numVoices ComboBox
     }
 };
 
@@ -579,8 +582,8 @@ void ImogenAudioProcessor::initialize(const double initSamplerate, const int ini
     limiter.prepare(dspSpec);
     
     // dry wet mixer
-    dryWetMixer.prepare(dspSpec);
     dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
+    dryWetMixer.prepare(dspSpec);
     dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
     
     updateAllParameters();
