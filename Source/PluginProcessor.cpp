@@ -106,25 +106,24 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
-    AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
     
-    
     int inputChannelIndexInInputBuffer = 0;
-    AudioBuffer<float> inProxy (input.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, input.getNumSamples());
-    // inProxy needs to be a MONO buffer containing the input signal... so whether it needs to get channel 0 or 1 of the input, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
+    AudioBuffer<float> input (inBus.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, inBus.getNumSamples());
+    // input needs to be a MONO buffer containing the input modulator signal... so whether it needs to get channel 0 or 1 of the input bus, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
-    int numSamples  = buffer.getNumSamples();
-    int startSample = 0;
-    bool firstEvent = true;
+    int  numSamples  = buffer.getNumSamples();
+    int  startSample = 0;
+    bool firstEvent  = true;
     
     for (; numSamples > 0; ++midiIterator)
     {
         if (midiIterator == midiMessages.cend())
         {
-            processBlockPrivate(inProxy, output, startSample, numSamples);
+            processBlockPrivate(input, output, startSample, numSamples);
             return;
         }
         
@@ -133,7 +132,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         if (samplesToNextMidiMessage >= numSamples)
         {
-            processBlockPrivate(inProxy, output, startSample, numSamples);
+            processBlockPrivate(input, output, startSample, numSamples);
             harmonizer.handleMidiEvent(metadata.getMessage());
             break;
         }
@@ -146,7 +145,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         firstEvent = false;
         
-        processBlockPrivate(inProxy, output, startSample, samplesToNextMidiMessage);
+        processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
         
         harmonizer.handleMidiEvent(metadata.getMessage());
         
@@ -168,7 +167,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, Aud
     
     while(samplesLeft > 0)
     {
-        const int chunkNumSamples = samplesLeft >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
+        const int chunkNumSamples = std::min(samplesLeft, MAX_BUFFERSIZE);
         
         AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
         AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
@@ -185,6 +184,7 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer
 {
     // regardless of the input channel(s) setup, the inBuffer fed to this function should be a mono buffer with its audio content in channel 0
     // outBuffer should be a stereo buffer with the same length in samples as inBuffer
+    // # of samples in the I/O buffers must be less than or equal to MAX_BUFFERSIZE
     
     updateSampleRate(getSampleRate());
     updateAllParameters();
@@ -257,16 +257,21 @@ void ImogenAudioProcessor::updateAllParameters()
 {
     updateIOgains();
     updateLimiter();
-    updateAdsr();
     updateDryVoxPan();
     updateDryWet();
-    updateStereoWidth();
-    updateMidiVelocitySensitivity();
+
     updateQuickKillMs();
     updateQuickAttackMs();
     updateNoteStealing();
+    
+    // these parameter functions have the potential to alter the pitch & other properties of currently playing harmonizer voices:
     updateConcertPitch();
     updatePitchbendSettings();
+    updateStereoWidth();
+    updateMidiVelocitySensitivity();
+    updateAdsr();
+    
+    // these parameter functions have the potential to trigger or turn off midi notes / harmonizer voices:
     updateMidiLatch();
     updatePedalPitch();
     updateDescant();

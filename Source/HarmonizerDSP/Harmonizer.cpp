@@ -13,7 +13,7 @@
 
 HarmonizerVoice::HarmonizerVoice(Harmonizer* h):
     parent(h), isQuickFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64),
-        monoBuffer(2, MAX_BUFFERSIZE), stereoBuffer(2, MAX_BUFFERSIZE), window(1, MAX_BUFFERSIZE)
+        synthesisBuffer(1, MAX_BUFFERSIZE), monoBuffer(1, MAX_BUFFERSIZE), stereoBuffer(2, MAX_BUFFERSIZE), window(1, MAX_BUFFERSIZE)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
@@ -41,6 +41,7 @@ void HarmonizerVoice::clearBuffers()
 {
     monoBuffer.clear();
     stereoBuffer.clear();
+    synthesisBuffer.clear();
     window.clear();
     finalWindow.clearQuick();
 };
@@ -269,11 +270,12 @@ void HarmonizerVoice::fillWindowBuffer(const int numSamples)
 {
     window.clear();
     float* writing = window.getWritePointer(0);
+    
+    const float samplemultiplier = MathConstants<float>::pi / static_cast<float> (numSamples - 1);
+    
     for(int i = 0; i < numSamples; ++i)
     {
-        auto cos2 = std::cos (static_cast<float> (2 * i)
-                              * MathConstants<float>::pi / static_cast<float> (numSamples - 1));
-        
+        auto cos2 = std::cos(static_cast<float> (2 * i) * samplemultiplier);
         writing[i] = static_cast<float> (0.5 - 0.5 * cos2);
     }
 };
@@ -395,7 +397,6 @@ void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
     {
         const ScopedLock sl (lock);
         
-        allNotesOff (false); // ??
         sampleRate = newRate;
         
         for (auto* voice : voices)
