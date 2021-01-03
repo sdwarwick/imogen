@@ -34,15 +34,12 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
     
-    lookAndFeel.initializeLabel(pitchTester, "pitch"); // for testing pitch detection
-    
     addAndMakeVisible(midiPanel);
     addAndMakeVisible(ioPanel);
     addAndMakeVisible(staffDisplay);
     addAndMakeVisible(selectSkin);
     addAndMakeVisible(helpButton);
     addAndMakeVisible(skinLabel);
-    addAndMakeVisible(pitchTester);
     //addAndMakeVisible(selectPreset);
     
 };
@@ -72,8 +69,6 @@ void ImogenAudioProcessorEditor::resized()
     
     helpScreen  .setBounds(158, 45, 625, 315);
     
-    pitchTester .setBounds(getWidth()/2 - 75, getHeight()/2 - 38, 150, 75);
-    
     //selectPreset.setBounds(x, y, w, h);
 };
 
@@ -82,9 +77,6 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::timerCallback()
 {
     staffDisplay.repaint();
-    
-    pitchTester.setText(juce::String(audioProcessor.reportCurrentInputPitch()), juce::dontSendNotification);
-    pitchTester.repaint();
 };
 
 

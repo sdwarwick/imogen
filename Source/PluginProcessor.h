@@ -4,7 +4,6 @@
 
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
-#include "InputAnalysis.h"
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
@@ -80,8 +79,6 @@ public:
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); };
     
-    float reportCurrentInputPitch()  const noexcept { return currentInputPitch; };
-    
     void killAllMidi() { reset(); };
     
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
@@ -97,15 +94,9 @@ private:
     
     void updateAllParameters();
     void updateSampleRate(const double newSamplerate);
-    void updateBufferSizes( const int newNumSamples, const bool clear);
     void clearBuffers();
     
     Harmonizer harmonizer;
-    
-    EpochFinder epochs;
-    Array<int> epochIndices;
-    
-    PitchTracker pitch;
     
     AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer<float> dryBuffer; // this buffer is used for panning & delaying the dry signal
@@ -115,9 +106,8 @@ private:
     dsp::DryWetMixer<float> dryWetMixer;
     
     // these variables store CURRENT states:
-    double lastSampleRate;
     bool limiterIsOn;
-    float inputGainMultiplier, outputGainMultiplier, currentInputPitch;
+    float inputGainMultiplier, outputGainMultiplier;
     
     int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
     
@@ -157,6 +147,8 @@ private:
     AudioParameterInt*   limiterRelease     = nullptr;
     
     PluginHostType host;
+    
+    void writeToDryBuffer(const AudioBuffer<float>& input);
     
     AudioProcessorValueTreeState::ParameterLayout createParameters() const;
     

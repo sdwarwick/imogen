@@ -14,6 +14,7 @@
 #include "GlobalDefinitions.h"
 #include "HarmonizerUtilities.h"
 #include "PanningManager.h"
+#include "InputAnalysis.h"
 
 
 class Harmonizer; // forward declaration...
@@ -31,7 +32,7 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+    void renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float currentInputFreq);
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
@@ -61,7 +62,7 @@ private:
     
     void updateSampleRate(const double newSamplerate);
     
-    void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
+    void esola(AudioBuffer<float>& inputAudio, Array<int>& epochIndices, const float shiftingRatio);
     
     Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
@@ -81,10 +82,16 @@ private:
     
     int currentAftertouch;
     
-    AudioBuffer<float> tempBuffer;
+    AudioBuffer<float> synthesisBuffer;
+    AudioBuffer<float> monoBuffer;
+    AudioBuffer<float> stereoBuffer;
     
-    void updateBufferSize(const int newNumSamples, const bool clear);
-    void clearBuffer() { tempBuffer.clear(); };
+    AudioBuffer<float> window;
+    Array<float> finalWindow;
+    
+    void fillWindowBuffer(const int numSamples);
+    
+    void clearBuffers();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HarmonizerVoice)
 };
@@ -98,16 +105,16 @@ public:
     
     ~Harmonizer();
     
-    void updateBufferSizes(const int newNumSamples, const bool clear);
+
     void clearBuffers();
     
-    void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
+    void renderVoices (AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer);
     
     int getNumActiveVoices() const;
     
     bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
-    
-    void setCurrentInputFreq(const float inputFreqHz) noexcept { currentInputFreq = inputFreqHz; };
+
+    int getCurrentInputFreq() const noexcept { return currentInputFreq; };
     
     void handleMidiEvent(const MidiMessage& m);
     void updateMidiVelocitySensitivity(const int newSensitivity);
@@ -253,6 +260,11 @@ private:
     int lastDescantPitch;
     int descantLowerThresh;
     int descantInterval;
+    
+    EpochFinder epochs;
+    Array<int> epochIndices;
+    
+    PitchTracker pitch;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

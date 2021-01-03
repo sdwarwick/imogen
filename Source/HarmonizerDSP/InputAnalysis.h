@@ -22,13 +22,11 @@ public:
     
     //	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
     
-    float getPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
+    float getPitch(AudioBuffer<float>& inputAudio, const double samplerate);
     
     void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
     
     void setHzLimits(const float newMin, const float newMax) noexcept { minHz = newMin; maxHz = newMax; }
-    
-    int updateBufferSize(const int newInputTotalNumSamps, const bool clear);
     
     void clearBuffer() { yinBuffer.clear(); };
     
@@ -42,7 +40,7 @@ private:
     float tolerence;
     float minHz, maxHz;
     
-    float simpleYin(AudioBuffer<float>& inputAudio, const int inputChan) noexcept;
+    float simpleYin(AudioBuffer<float>& inputAudio) noexcept;
     
     unsigned int minElement(const float* data, const int dataSize) noexcept;
     
@@ -70,7 +68,7 @@ public:
     EpochFinder();
     ~EpochFinder();
     
-    Array<int> extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const double samplerate);
+    void extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray);
     
 private:
     CriticalSection lock;
@@ -78,8 +76,6 @@ private:
     Array<float> y;
     Array<float> y2;
     Array<float> y3;
-    
-    Array<int> epochs;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EpochFinder)
 };

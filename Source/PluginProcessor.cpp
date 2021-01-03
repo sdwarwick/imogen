@@ -6,12 +6,9 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
     wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
-    lastSampleRate(44100.0), limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f), currentInputPitch(0.0f),
+    limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f)
 {
-    epochIndices.ensureStorageAllocated(MAX_BUFFERSIZE);
-    epochIndices.clearQuick();
-    
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
     dryPan             = dynamic_cast<AudioParameterInt*>  (tree.getParameter("dryPan"));                   jassert(dryPan);
@@ -64,9 +61,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
     
     updateSampleRate(sampleRate);
     
-    const int newBlockSize = samplesPerBlock >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
-    updateBufferSizes(newBlockSize, true); // also clears buffers
-    
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
     dspSpec.numChannels = 2;
@@ -106,17 +100,19 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     if(host.isLogic() || host.isGarageBand())
     {
         // check to make sure sidechain input bus is not disabled
+        // if it is, display warning to user
     }
     
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
-    //const int inBusIndex = (host.isLogic() || host.isGarageBand()) ? 1 : 0;
     AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
-
-    // TO DO: update this function (inputChan)
-    epochIndices = epochs.extractEpochSampleIndices(input, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
+    
+    
+    int inputChannelIndexInInputBuffer = 0;
+    AudioBuffer<float> inProxy (input.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, input.getNumSamples());
+    // inProxy needs to be a MONO buffer containing the input signal... so whether it needs to get channel 0 or 1 of the input, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
@@ -128,7 +124,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     {
         if (midiIterator == midiMessages.cend())
         {
-            processBlockPrivate(input, output, startSample, numSamples);
+            processBlockPrivate(inProxy, output, startSample, numSamples);
             return;
         }
         
@@ -137,7 +133,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         if (samplesToNextMidiMessage >= numSamples)
         {
-            processBlockPrivate(input, output, startSample, numSamples);
+            processBlockPrivate(inProxy, output, startSample, numSamples);
             harmonizer.handleMidiEvent(metadata.getMessage());
             break;
         }
@@ -150,7 +146,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         firstEvent = false;
         
-        processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
+        processBlockPrivate(inProxy, output, startSample, samplesToNextMidiMessage);
         
         harmonizer.handleMidiEvent(metadata.getMessage());
         
@@ -164,18 +160,20 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 };
 
 
-void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer, const int startSample, const int numSamples)
+void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
+                                               const int startSample, const int numSamples)
 {
     int chunkStartSample = startSample;
     int samplesLeft      = numSamples;
     
     while(samplesLeft > 0)
     {
-        const int chunkNumSamples = samplesLeft > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
+        const int chunkNumSamples = samplesLeft >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesLeft;
         
-        AudioBuffer<float> proxy(inBuffer.getArrayOfWritePointers(), inBuffer.getNumChannels(), chunkStartSample, chunkNumSamples);
+        AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
+        AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
         
-        renderChunk(proxy, outBuffer);
+        renderChunk(inProxy, outProxy);
         
         chunkStartSample += chunkNumSamples;
         samplesLeft      -= chunkNumSamples;
@@ -185,40 +183,30 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, Aud
 
 void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer)
 {
+    // regardless of the input channel(s) setup, the inBuffer fed to this function should be a mono buffer with its audio content in channel 0
+    // outBuffer should be a stereo buffer with the same length in samples as inBuffer
+    
     updateSampleRate(getSampleRate());
     updateAllParameters();
+
+    inBuffer.applyGain(inputGainMultiplier); // apply input gain
+    
+    writeToDryBuffer(inBuffer); // puts input samples into dryBuffer w/ proper panning applied
     
     const int numSamples = inBuffer.getNumSamples();
     
-    updateBufferSizes(numSamples, true); // also clears buffers
+    AudioBuffer<float> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
+    AudioBuffer<float> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     
-    //==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
+    dryWetMixer.pushDrySamples( dsp::AudioBlock<float>(dryProxy) );
+
+    harmonizer.renderVoices(inBuffer, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
     
-    inBuffer.applyGain(0, numSamples, inputGainMultiplier); // apply input gain
+    dryWetMixer.mixWetSamples( dsp::AudioBlock<float>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
     
-    const int inputChannel = 0;
+    outBuffer.makeCopyOf(wetProxy, true); // transfer from wetBuffer to output buffer
     
-    // copy input signal to dryBuffer & apply panning
-    dryBuffer.copyFrom (0, 0, inBuffer,   inputChannel, 0, numSamples);
-    dryBuffer.copyFrom (1, 0, inBuffer,   inputChannel, 0, numSamples);
-    dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
-    dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
-    
-    dsp::AudioBlock<float> dwinblock(dryBuffer);
-    dryWetMixer.pushDrySamples(dwinblock);
-    
-    currentInputPitch = pitch.getPitch(inBuffer, inputChannel, lastSampleRate);
-    
-    harmonizer.setCurrentInputFreq(currentInputPitch); // do this here if possible? input pitch should be calculated/updated as frequently as possible
-    
-    harmonizer.renderVoices(inBuffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output into "wetBuffer"
-    
-    dsp::AudioBlock<float> dwoutblock (wetBuffer);
-    dryWetMixer.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
-    
-    outBuffer.makeCopyOf(wetBuffer, true); // transfer from wetBuffer to I/O buffer
-    
-    outBuffer.applyGain(0, numSamples, outputGainMultiplier); // apply master output gain
+    outBuffer.applyGain(outputGainMultiplier); // apply master output gain
     
     // output limiter
     if(limiterIsOn)
@@ -226,9 +214,19 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer
         dsp::AudioBlock<float> limiterBlock (outBuffer);
         limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
     }
+};
+
+
+void ImogenAudioProcessor::writeToDryBuffer(const AudioBuffer<float>& input)
+{
+    // writes from "input" into dryBuffer & applies panning
     
-    //==========================  AUDIO DSP SIGNAL CHAIN ENDS HERE ==========================//
+    const int numSamples = input.getNumSamples();
     
+    dryBuffer.copyFrom (0, 0, input, 0, 0, numSamples);
+    dryBuffer.copyFrom (1, 0, input, 0, 0, numSamples);
+    dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
+    dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
 };
 
 
@@ -244,25 +242,10 @@ void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, Mid
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-void ImogenAudioProcessor::updateBufferSizes(const int newNumSamples, const bool clear)
-{
-    if(wetBuffer.getNumSamples() != newNumSamples)
-        wetBuffer.setSize(2, newNumSamples, true, true, true);
-    
-    if(dryBuffer.getNumSamples() != newNumSamples)
-        dryBuffer.setSize(2, newNumSamples, true, true, true);
-    
-    harmonizer.updateBufferSizes(newNumSamples, false);
-    pitch     .updateBufferSize (newNumSamples, false);
-    
-    if(clear)
-        clearBuffers();
-};
 
 void ImogenAudioProcessor::clearBuffers()
 {
     harmonizer.clearBuffers();
-    pitch.clearBuffer();
     wetBuffer.clear();
     dryBuffer.clear();
 };
@@ -291,13 +274,8 @@ void ImogenAudioProcessor::updateAllParameters()
 
 void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
 {
-    if(lastSampleRate != newSamplerate)
-    {
-        if(harmonizer.getSamplerate() != newSamplerate)
-            harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
-        lastSampleRate = newSamplerate;
-        // update latency for dry/wet mixer !
-    }
+    if(harmonizer.getSamplerate() != newSamplerate)
+        harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
 };
 
 void ImogenAudioProcessor::updateDryVoxPan()
@@ -576,8 +554,6 @@ void ImogenAudioProcessor::initialize(const double initSamplerate, const int ini
     for (int i = 0; i < initNumVoices; ++i)
         harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
     
-    harmonizer.resetNoteOnCounter();
-    
     if(host.isLogic() || host.isGarageBand())
         if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
         {
@@ -588,8 +564,7 @@ void ImogenAudioProcessor::initialize(const double initSamplerate, const int ini
     
     updateSampleRate(initSamplerate);
     
-    const int newBlockSize = initSamplesPerBlock >= MAX_BUFFERSIZE ? MAX_BUFFERSIZE : initSamplesPerBlock;
-    updateBufferSizes(newBlockSize, true); // also clears buffers
+    clearBuffers();
     
     dspSpec.sampleRate = initSamplerate;
     dspSpec.maximumBlockSize = MAX_BUFFERSIZE;

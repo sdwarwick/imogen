@@ -26,25 +26,12 @@ PitchTracker::PitchTracker(): prevDetectedPitch(-1.0f), tolerence(0.15f), minHz(
 PitchTracker::~PitchTracker()
 { };
 
-int PitchTracker::updateBufferSize(const int newInputTotalNumSamps, const bool clear)
-{
-    const int newsize = roundToInt(newInputTotalNumSamps/2);
-    
-    if (yinBuffer.getNumSamples() != newsize)
-        yinBuffer.setSize(1, newsize, true, true, true);
-    
-    if (clear)
-        yinBuffer.clear();
-    
-    return newsize;
-};
 
-
-float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
+float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const double samplerate)
 {
     //float pitch = simpleYin(inputAudio, inputChan);
     
-    return samplerate / simpleYin(inputAudio, inputChan);
+    return samplerate / simpleYin(inputAudio);
     
     //	if(pitch > 0.0f)
     //	{
@@ -63,11 +50,11 @@ float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const int inputChan
 
 
 
-float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio, const int inputChan) noexcept
+float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio) noexcept
 {
-    const int yinBufferSize = updateBufferSize(inputAudio.getNumSamples(), false);
+    const int yinBufferSize = roundToInt(inputAudio.getNumSamples()/2);
     
-    const float* in      = inputAudio.getReadPointer (inputChan);
+    const float* in      = inputAudio.getReadPointer (0);
           float* yinData = yinBuffer .getWritePointer(0);
     
     int   period;
@@ -427,21 +414,20 @@ float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, 
 
 EpochFinder::EpochFinder()
 {
-    y     .ensureStorageAllocated(MAX_BUFFERSIZE);
-    y2    .ensureStorageAllocated(MAX_BUFFERSIZE);
-    y3    .ensureStorageAllocated(MAX_BUFFERSIZE);
-    epochs.ensureStorageAllocated(MAX_BUFFERSIZE);
+    y .ensureStorageAllocated(MAX_BUFFERSIZE);
+    y2.ensureStorageAllocated(MAX_BUFFERSIZE);
+    y3.ensureStorageAllocated(MAX_BUFFERSIZE);
     
-    y     .clearQuick();
-    y2    .clearQuick();
-    y3    .clearQuick();
-    epochs.clearQuick();
+    y .clearQuick();
+    y2.clearQuick();
+    y3.clearQuick();
 };
 
 EpochFinder::~EpochFinder()
 { };
 
-Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio, const double samplerate)
+
+void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray)
 {
     /*
      EXTRACT EPOCH INDICES
@@ -453,21 +439,19 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
      @see : example of ESOLA in C++ by Arjun Variar : http://www.github.com/viig99/esolafast/blob/master/src/esola.cpp
      */
     
-    const int inputChan = 0;
-    
     const int numSamples = inputAudio.getNumSamples();
     
     const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
     
-    epochs.clearQuick();
-    y     .clearQuick();
-    y2    .clearQuick();
-    y3    .clearQuick();
+    outputArray.clearQuick();
+    y .clearQuick();
+    y2.clearQuick();
+    y3.clearQuick();
     
     float mean_val;
     float running_sum = 0.0f;
     
-    const float* data = inputAudio.getReadPointer(inputChan);
+    const float* data = inputAudio.getReadPointer(0);
     
     const float x0 = data[0];
     float y1_0 = x0;
@@ -525,15 +509,13 @@ Array<int> EpochFinder::extractEpochSampleIndices(AudioBuffer<float>& inputAudio
     // last stage
     float last = y.getUnchecked(0);
     float act;
-    epochs.add(0);
+    outputArray.add(0);
     for(int i = 0; i < numSamples; ++i)
     {
         act = y[i];
         if(last < 0 and act > 0)
-            epochs.add(i);
+            outputArray.add(i);
         last = act;
     }
-    epochs.add(numSamples - 1);
-    
-    return epochs;
+    outputArray.add(numSamples - 1);
 };
