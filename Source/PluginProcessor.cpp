@@ -115,49 +115,57 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     AudioBuffer<float> input (inBus.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, inBus.getNumSamples());
     // input needs to be a MONO buffer containing the input modulator signal... so whether it needs to get channel 0 or 1 of the input bus, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
     
-    auto midiIterator = midiMessages.findNextSamplePosition(0);
-    
-    int  numSamples  = buffer.getNumSamples();
-    int  startSample = 0;
-    bool firstEvent  = true;
-    
-    for (; numSamples > 0; ++midiIterator)
+    if (! isSuspended())
     {
-        if (midiIterator == midiMessages.cend())
-        {
-            processBlockPrivate(input, output, startSample, numSamples);
-            return;
-        }
-        
-        const auto metadata = *midiIterator;
-        const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
-        
-        if (samplesToNextMidiMessage >= numSamples)
-        {
-            processBlockPrivate(input, output, startSample, numSamples);
-            harmonizer.handleMidiEvent(metadata.getMessage());
-            break;
-        }
-        
-        if (firstEvent && samplesToNextMidiMessage == 0)
-        {
-            harmonizer.handleMidiEvent(metadata.getMessage());
-            continue;
-        }
-        
-        firstEvent = false;
-        
-        processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
-        
-        harmonizer.handleMidiEvent(metadata.getMessage());
-        
-        startSample += samplesToNextMidiMessage;
-        numSamples  -= samplesToNextMidiMessage;
-    }
+        auto midiIterator = midiMessages.findNextSamplePosition(0);
     
-    std::for_each (midiIterator,
-                   midiMessages.cend(),
-                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
+        int  numSamples  = buffer.getNumSamples();
+        int  startSample = 0;
+        bool firstEvent  = true;
+    
+        for (; numSamples > 0; ++midiIterator)
+        {
+            if (midiIterator == midiMessages.cend())
+            {
+                processBlockPrivate(input, output, startSample, numSamples);
+                return;
+            }
+            
+            const auto metadata = *midiIterator;
+            const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
+            
+            if (samplesToNextMidiMessage >= numSamples)
+            {
+                processBlockPrivate(input, output, startSample, numSamples);
+                harmonizer.handleMidiEvent(metadata.getMessage());
+                break;
+            }
+            
+            if (firstEvent && samplesToNextMidiMessage == 0)
+            {
+                harmonizer.handleMidiEvent(metadata.getMessage());
+                continue;
+            }
+            
+            firstEvent = false;
+            
+            processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
+            
+            harmonizer.handleMidiEvent(metadata.getMessage());
+            
+            startSample += samplesToNextMidiMessage;
+            numSamples  -= samplesToNextMidiMessage;
+        }
+    
+        std::for_each (midiIterator,
+                       midiMessages.cend(),
+                       [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
+    }
+    else
+    {
+        // audio processing is suspended, output only silence
+        output.clear();
+    }
 };
 
 
@@ -251,9 +259,13 @@ void ImogenAudioProcessor::writeToDryBuffer(const AudioBuffer<float>& input)
  ++++++++++++++++++++++++++++++++++++++*/
 void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
 {
+    suspendProcessing (true);
+    
     wetBuffer.setSize(2, newMaxBlocksize);
     dryBuffer.setSize(2, newMaxBlocksize);
     harmonizer.increaseBufferSizes(newMaxBlocksize);
+    
+    suspendProcessing (false);
 };
 
 
@@ -577,6 +589,9 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     params.push_back(std::make_unique<AudioParameterFloat>	("limiterThresh", "Limiter threshold", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
     params.push_back(std::make_unique<AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
     
+    // bypass all processing
+    params.push_back(std::make_unique<AudioParameterBool>   ("isBypassed", "Bypass processing", false));
+    
     return { params.begin(), params.end() };
 };
 
@@ -680,3 +695,6 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ImogenAudioProcessor();
 };
+
+
+

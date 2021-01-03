@@ -84,7 +84,7 @@ public:
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     AudioProcessorValueTreeState tree;
-    
+        
     //==============================================================================
     
 private:
