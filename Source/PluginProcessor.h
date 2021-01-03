@@ -156,6 +156,8 @@ private:
     
     void initialize(const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
     
+    void increaseBufferSizes(const int newMaxBlocksize);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
 

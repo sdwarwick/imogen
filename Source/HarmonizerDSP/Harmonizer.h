@@ -53,6 +53,9 @@ public:
     void stopNote (const float velocity, const bool allowTailOff);
     void aftertouchChanged(const int newAftertouchValue);
     
+    // DANGER!!! FOR NON REALTIME USE ONLY!
+    void increaseBufferSizes(const int newMaxBlocksize);
+    
     
 private:
     
@@ -176,6 +179,9 @@ public:
     void setDescantInterval(const int newInterval);
     int getCurrentDescantInterval() const noexcept { return descantInterval; };
     HarmonizerVoice* getCurrentDescantVoice();
+    
+    // DANGER!!! FOR NON REAL TIME USE ONLY!!!
+    void increaseBufferSizes(const int newMaxBlocksize);
     
 protected:
     

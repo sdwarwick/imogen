@@ -293,6 +293,20 @@ void HarmonizerVoice::updateSampleRate(const double newSamplerate)
 };
 
 
+/*+++++++++++++++++++++++++++++++++++++
+ DANGER!!!
+ FOR NON REAL TIME ONLY!!!!!!!!
+ ++++++++++++++++++++++++++++++++++++++*/
+void HarmonizerVoice::increaseBufferSizes(const int newMaxBlocksize)
+{
+    synthesisBuffer.setSize(1, newMaxBlocksize);
+    monoBuffer     .setSize(1, newMaxBlocksize);
+    stereoBuffer   .setSize(2, newMaxBlocksize);
+    window         .setSize(1, newMaxBlocksize);
+    finalWindow.ensureStorageAllocated(newMaxBlocksize);
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1217,4 +1231,21 @@ void Harmonizer::removeNumVoices(const int voicesToRemove)
     
     const int voicesLeft = std::max(voices.size(), 1);
     panner.setNumberOfVoices(voicesLeft);
+};
+
+
+/*+++++++++++++++++++++++++++++++++++++
+ DANGER!!!
+ FOR NON REAL TIME ONLY!!!!!!!!
+ ++++++++++++++++++++++++++++++++++++++*/
+void Harmonizer::increaseBufferSizes(const int newMaxBlocksize)
+{
+    for(auto* voice : voices)
+        voice->increaseBufferSizes(newMaxBlocksize);
+    
+    epochIndices.ensureStorageAllocated(newMaxBlocksize);
+    epochIndices.clearQuick();
+    epochs.increaseBufferSizes(newMaxBlocksize);
+    
+    pitch.increaseBuffersize(newMaxBlocksize);
 };

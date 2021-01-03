@@ -139,7 +139,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
             break;
         }
         
-        if (samplesToNextMidiMessage < 1)
+        if (firstEvent && samplesToNextMidiMessage == 0)
         {
             harmonizer.handleMidiEvent(metadata.getMessage());
             continue;
@@ -164,20 +164,30 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
                                                const int startSample, const int numSamples)
 {
-    int chunkStartSample = startSample;
-    int samplesLeft      = numSamples;
-    
-    while(samplesLeft > 0)
+    if (isNonRealtime())
     {
-        const int chunkNumSamples = std::min(samplesLeft, MAX_BUFFERSIZE);
-        
-        AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
-        AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
+        AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, startSample, numSamples);
+        AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, startSample, numSamples);
         
         renderChunk(inProxy, outProxy);
-        
-        chunkStartSample += chunkNumSamples;
-        samplesLeft      -= chunkNumSamples;
+    }
+    else
+    {
+        int chunkStartSample = startSample;
+        int samplesLeft      = numSamples;
+    
+        while(samplesLeft > 0)
+        {
+            const int chunkNumSamples = std::min(samplesLeft, MAX_BUFFERSIZE);
+            
+            AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
+            AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
+            
+            renderChunk(inProxy, outProxy);
+            
+            chunkStartSample += chunkNumSamples;
+            samplesLeft      -= chunkNumSamples;
+        }
     }
 };
 
@@ -188,14 +198,17 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer
     // outBuffer should be a stereo buffer with the same length in samples as inBuffer
     // # of samples in the I/O buffers must be less than or equal to MAX_BUFFERSIZE
     
+    const int numSamples = inBuffer.getNumSamples();
+    
+    if (isNonRealtime() && wetBuffer.getNumSamples() < numSamples)
+        increaseBufferSizes(numSamples);
+    
     updateSampleRate(getSampleRate());
     updateAllParameters();
 
     inBuffer.applyGain(inputGainMultiplier); // apply input gain
     
     writeToDryBuffer(inBuffer); // puts input samples into dryBuffer w/ proper panning applied
-    
-    const int numSamples = inBuffer.getNumSamples();
     
     AudioBuffer<float> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     AudioBuffer<float> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
@@ -229,6 +242,18 @@ void ImogenAudioProcessor::writeToDryBuffer(const AudioBuffer<float>& input)
     dryBuffer.copyFrom (1, 0, input, 0, 0, numSamples);
     dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
     dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
+};
+
+
+/*+++++++++++++++++++++++++++++++++++++
+ DANGER!!!
+ FOR NON REAL TIME ONLY!!!!!!!!
+ ++++++++++++++++++++++++++++++++++++++*/
+void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
+{
+    wetBuffer.setSize(2, newMaxBlocksize);
+    dryBuffer.setSize(2, newMaxBlocksize);
+    harmonizer.increaseBufferSizes(newMaxBlocksize);
 };
 
 

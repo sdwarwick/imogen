@@ -426,6 +426,13 @@ EpochFinder::EpochFinder()
 EpochFinder::~EpochFinder()
 { };
 
+void EpochFinder::increaseBufferSizes(const int newMaxBlocksize)
+{
+    y .ensureStorageAllocated(newMaxBlocksize);
+    y2.ensureStorageAllocated(newMaxBlocksize);
+    y3.ensureStorageAllocated(newMaxBlocksize);
+};
+
 
 void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray)
 {

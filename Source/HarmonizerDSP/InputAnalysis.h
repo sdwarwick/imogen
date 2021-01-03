@@ -30,6 +30,8 @@ public:
     
     void clearBuffer() { yinBuffer.clear(); };
     
+    // DANGER!!! FOR NON REALTIME USE ONLY!!!
+    void increaseBuffersize(const int newMaxBlocksize) { yinBuffer.setSize(1, newMaxBlocksize); };
     
 private:
     AudioBuffer<float> yinBuffer;
@@ -69,6 +71,9 @@ public:
     ~EpochFinder();
     
     void extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray);
+    
+    // DANGER!!! FOR NON REAL TIME USE ONLY!!!
+    void increaseBufferSizes(const int newMaxBlocksize);
     
 private:
     CriticalSection lock;
