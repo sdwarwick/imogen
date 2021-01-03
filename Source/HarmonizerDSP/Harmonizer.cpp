@@ -35,6 +35,16 @@ HarmonizerVoice::~HarmonizerVoice()
 { };
 
 
+void HarmonizerVoice::updateBufferSize(const int newNumSamples, const bool clear)
+{
+    if (tempBuffer.getNumSamples() != newNumSamples)
+        tempBuffer.setSize(1, newNumSamples, true, true, true);
+    
+    if (clear)
+        tempBuffer.clear();
+};
+
+
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices)
 {
     if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
@@ -49,7 +59,7 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, const int 
     
     if(voiceIsOnRightNow)
     {
-        tempBuffer.clear();
+        updateBufferSize(numSamples, true); // also clears buffer
         
         // puts shifted samples into the tempBuffer
         esola(inputAudio, inputChan, numSamples, tempBuffer, epochIndices,
@@ -96,6 +106,8 @@ void HarmonizerVoice::clearCurrentNote()
     
     if(quickAttack.isActive())
         quickAttack.reset();
+    
+    tempBuffer.clear();
 };
 
 
@@ -292,6 +304,19 @@ Harmonizer::Harmonizer():
 Harmonizer::~Harmonizer()
 {
     voices.clear();
+};
+
+
+void Harmonizer::updateBufferSizes(const int newNumSamples, const bool clear)
+{
+    for (auto* voice : voices)
+        voice->updateBufferSize(newNumSamples, clear);
+};
+
+void Harmonizer::clearBuffers()
+{
+    for (auto* voice : voices)
+        voice->clearBuffer();
 };
 
 

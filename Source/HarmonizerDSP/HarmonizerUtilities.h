@@ -22,29 +22,20 @@ public:
         concertPitchHz(initialConcertPitch), rootNote(initialRootNote), notesPerOctave(initialNotesPerOctave)
     { };
     
-    float mtof(const float midiNote) const // converts midiPitch to frequency in Hz
+    // converts midi pitch to frequency in Hz
+    template<typename T>
+    T mtof(const T midiNote) const
     {
-        jassert(midiNote >= 0.0f && midiNote <= 127.0f);
-        return concertPitchHz * std::pow(2.0f, ((midiNote - rootNote) / notesPerOctave));
+        jassert(midiNote >= 0 && midiNote <= 127);
+        return concertPitchHz * std::pow(2, ((midiNote - rootNote) / notesPerOctave));
     };
     
-    int mtof(const int midiNote) const // midiPitch to frequency with integers instead of floats
-    {
-        jassert(isPositiveAndBelow(midiNote, 128));
-        return round(concertPitchHz * std::pow(2.0f, ((midiNote - rootNote) / notesPerOctave)));
-    };
-    
-    
-    float ftom(const float inputFreq) const // converts frequency in Hz to midiPitch (as a float)
+    // converts frequency in Hz to midipitch
+    template<typename T>
+    T ftom(const T inputFreq) const
     {
         jassert(inputFreq >= 0);
         return notesPerOctave * log2(inputFreq / concertPitchHz) + rootNote;
-    };
-    
-    int ftom(const int inputFreq) const // frequency to midiPitch with integers
-    {
-        jassert(inputFreq >= 0);
-        return round(notesPerOctave * log2(inputFreq / concertPitchHz) + rootNote);
     };
     
     void setConcertPitchHz(const int newConcertPitch) noexcept
@@ -83,7 +74,6 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchConverter)
     
 };
-
 
 
 
@@ -143,8 +133,6 @@ private:
 
 
 
-
-
 class VelocityHelper
 {
 public:
@@ -189,8 +177,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VelocityHelper)
 };
-
-
 
 
 

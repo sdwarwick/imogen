@@ -52,6 +52,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     limiterRelease     = dynamic_cast<AudioParameterInt*>  (tree.getParameter("limiterRelease"));           jassert(limiterRelease);
     
     updateAllParameters();
+    
+    clearBuffers();
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -59,15 +61,20 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {
+    if(host.isLogic() || host.isGarageBand())
+        if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
+        {
+            // give user a warning that sidechain must be enabled
+        }
+    
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
     updateSampleRate(sampleRate);
     
-    wetBuffer.clear();
-    dryBuffer.clear();
+    const int newBlockSize = samplesPerBlock > MAX_BUFFERSIZE ? MAX_BUFFERSIZE : samplesPerBlock;
+    updateBufferSizes(newBlockSize, true); // also clears buffers
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = MAX_BUFFERSIZE * 2;
@@ -88,8 +95,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 
 void ImogenAudioProcessor::releaseResources()
 {
-    wetBuffer.clear();
-    dryBuffer.clear();
+    clearBuffers();
     harmonizer.resetNoteOnCounter();
 };
 
@@ -97,7 +103,8 @@ void ImogenAudioProcessor::releaseResources()
 void ImogenAudioProcessor::reset()
 {
     harmonizer.allNotesOff(false);
-    releaseResources();
+    harmonizer.resetNoteOnCounter();
+    clearBuffers();
 };
 
 
@@ -110,13 +117,13 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         // check to make sure sidechain input bus is not disabled
     }
     
-    const int inBusIndex = (host.isLogic() || host.isGarageBand()) ? 1 : 0;
-    AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, inBusIndex);
-    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
-    
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
+    //const int inBusIndex = (host.isLogic() || host.isGarageBand()) ? 1 : 0;
+    AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
+
     // TO DO: update this function (inputChan)
     epochIndices = epochs.extractEpochSampleIndices(input, lastSampleRate); // this only needs to be done once per top-level processBlock call, because epoch locations are not dependant on the size of the rendered chunks...
     
@@ -192,16 +199,9 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer
     
     const int numSamples = inBuffer.getNumSamples();
     
-    // buffer sizes
-    if(wetBuffer.getNumSamples() != numSamples)
-        wetBuffer.setSize(2, numSamples, true, true, true);
-    if(dryBuffer.getNumSamples() != numSamples)
-        dryBuffer.setSize(2, numSamples, true, true, true);
+    updateBufferSizes(numSamples, true); // also clears buffers
     
     //==========================  AUDIO DSP SIGNAL CHAIN STARTS HERE ==========================//
-    
-    wetBuffer.clear();
-    dryBuffer.clear();
     
     inBuffer.applyGain(0, numSamples, inputGainMultiplier); // apply input gain
     
@@ -221,11 +221,6 @@ void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer
     harmonizer.setCurrentInputFreq(currentInputPitch); // do this here if possible? input pitch should be calculated/updated as frequently as possible
     
     harmonizer.renderVoices(inBuffer, inputChannel, numSamples, wetBuffer, epochIndices); // puts the harmonizer's rendered stereo output into "wetBuffer"
-    
-    // clear any extra channels present in I/O buffer
-    if (outBuffer.getNumChannels() > 2)
-        for (int i = 3; i <= outBuffer.getNumChannels(); ++i)
-            outBuffer.clear(i - 1, 0, numSamples);
     
     dsp::AudioBlock<float> dwoutblock (wetBuffer);
     dryWetMixer.mixWetSamples(dwoutblock); // puts the mixed dry & wet samples into wetBuffer
@@ -258,11 +253,27 @@ void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, Mid
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-
-
-void ImogenAudioProcessor::killAllMidi()
+void ImogenAudioProcessor::updateBufferSizes(const int newNumSamples, const bool clear)
 {
-    harmonizer.allNotesOff(false);
+    if(wetBuffer.getNumSamples() != newNumSamples)
+        wetBuffer.setSize(2, newNumSamples, true, true, true);
+    
+    if(dryBuffer.getNumSamples() != newNumSamples)
+        dryBuffer.setSize(2, newNumSamples, true, true, true);
+    
+    harmonizer.updateBufferSizes(newNumSamples, false);
+    pitch     .updateBufferSize (newNumSamples, false);
+    
+    if(clear)
+        clearBuffers();
+};
+
+void ImogenAudioProcessor::clearBuffers()
+{
+    harmonizer.clearBuffers();
+    pitch.clearBuffer();
+    wetBuffer.clear();
+    dryBuffer.clear();
 };
 
 
@@ -445,7 +456,7 @@ void ImogenAudioProcessor::loadPreset(juce::String presetName)
         if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
         {
             tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
-            updateNumVoices( xmlElement->getIntAttribute("numberOfVoices", 4) );
+            updateNumVoices( xmlElement->getIntAttribute("numberOfVoices", 4) ); // TO DO : send notif to GUI to update numVoices comboBox
             updateHostDisplay();
         }
     }
@@ -505,14 +516,14 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     {
         tree.replaceState(juce::ValueTree::fromXml (*xmlState));
         const int newNumOfVoices = xmlState->getIntAttribute("numberOfVoices", 4);
-        updateNumVoices(newNumOfVoices);
+        updateNumVoices(newNumOfVoices); // TO DO : send notif to GUI to update numVoices comboBox
     }
 };
 
 
 // standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
 
-AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
+AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters() const
 {
     std::vector<std::unique_ptr<RangedAudioParameter>> params;
     
@@ -595,7 +606,7 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 { };
 
 
-AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
+AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
     if (host.isLogic() || host.isGarageBand())
         return BusesProperties().withInput ("Input",     AudioChannelSet::stereo(), true)
@@ -609,12 +620,14 @@ AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties()
 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    if   ( layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()
-        || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled() )
+    if ( layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled() && (! (host.isLogic() || host.isGarageBand())) )
         return false;
     
-    if   ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()
-        || layouts.getMainInputChannelSet()  != juce::AudioChannelSet::stereo() )
+    if ( layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled() )
+        return false;
+    
+    if ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()
+      || layouts.getMainInputChannelSet()  != juce::AudioChannelSet::stereo() )
         return false;
     
     return true;

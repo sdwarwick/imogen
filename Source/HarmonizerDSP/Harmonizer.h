@@ -63,7 +63,6 @@ private:
     
     void esola(AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float shiftingRatio);
     
-    
     Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
@@ -84,6 +83,9 @@ private:
     
     AudioBuffer<float> tempBuffer;
     
+    void updateBufferSize(const int newNumSamples, const bool clear);
+    void clearBuffer() { tempBuffer.clear(); };
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HarmonizerVoice)
 };
 
@@ -95,6 +97,9 @@ public:
     Harmonizer();
     
     ~Harmonizer();
+    
+    void updateBufferSizes(const int newNumSamples, const bool clear);
+    void clearBuffers();
     
     void renderVoices (AudioBuffer<float>& inputAudio, const int inputChan, const int numSamples, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices);
     

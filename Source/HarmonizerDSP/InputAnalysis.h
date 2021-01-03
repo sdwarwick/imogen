@@ -28,6 +28,9 @@ public:
     
     void setHzLimits(const float newMin, const float newMax) noexcept { minHz = newMin; maxHz = newMax; }
     
+    int updateBufferSize(const int newInputTotalNumSamps, const bool clear);
+    
+    void clearBuffer() { yinBuffer.clear(); };
     
     
 private:

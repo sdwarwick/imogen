@@ -21,15 +21,11 @@ public:
     // standard & general-purpose functions ---------------------------------------------------------------------------------------------------------
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
-    
-    AudioProcessor::BusesProperties makeBusProperties();
-    
+
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     
-#ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-#endif
     
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
     
@@ -42,10 +38,11 @@ public:
     
     const juce::String getName() const override { return JucePlugin_Name; };
     
-    bool acceptsMidi()  const override { return true;  };
-    bool supportsMPE()  const override { return false; };
-    bool producesMidi() const override { return false; };
-    bool isMidiEffect() const override { return false; };
+    bool  acceptsMidi()  const override { return true;  };
+    bool  supportsMPE()  const override { return false; };
+    bool  producesMidi() const override { return false; };
+    bool  isMidiEffect() const override { return false; };
+    
     double getTailLengthSeconds() const override;
     
     int getNumPrograms() override;
@@ -64,7 +61,6 @@ public:
     juce::File getPresetsFolder() const;
     
     // functions to update parameters ---------------------------------------------------------------------------------------------------------------
-    void updateSampleRate(const double newSamplerate);
     void updateAdsr();
     void updateIOgains();
     void updateLimiter();
@@ -86,12 +82,11 @@ public:
     
     float reportCurrentInputPitch()  const noexcept { return currentInputPitch; };
     
-    void killAllMidi();
+    void killAllMidi() { reset(); };
     
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     AudioProcessorValueTreeState tree;
-    
     
     //==============================================================================
     
@@ -100,12 +95,10 @@ private:
     void processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer, const int startSample, const int numSamples);
     void renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
     
-    AudioProcessorValueTreeState::ParameterLayout createParameters();
-    
     void updateAllParameters();
-    
-    AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-    AudioBuffer<float> dryBuffer; // this buffer is used for panning & delaying the dry signal
+    void updateSampleRate(const double newSamplerate);
+    void updateBufferSizes( const int newNumSamples, const bool clear);
+    void clearBuffers();
     
     Harmonizer harmonizer;
     
@@ -114,13 +107,14 @@ private:
     
     PitchTracker pitch;
     
-    dsp::ProcessSpec dspSpec;
-    dsp::Limiter<float> limiter;
+    AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+    AudioBuffer<float> dryBuffer; // this buffer is used for panning & delaying the dry signal
+    
+    dsp::ProcessSpec        dspSpec;
+    dsp::Limiter    <float> limiter;
     dsp::DryWetMixer<float> dryWetMixer;
     
-    PluginHostType host;
-    
-    // these variables store *current* states:
+    // these variables store CURRENT states:
     double lastSampleRate;
     bool limiterIsOn;
     float inputGainMultiplier, outputGainMultiplier, currentInputPitch;
@@ -161,6 +155,12 @@ private:
     AudioParameterBool*	 limiterToggle      = nullptr;
     AudioParameterFloat* limiterThresh      = nullptr;
     AudioParameterInt*   limiterRelease     = nullptr;
+    
+    PluginHostType host;
+    
+    AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    
+    AudioProcessor::BusesProperties makeBusProperties() const;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

@@ -26,6 +26,20 @@ PitchTracker::PitchTracker(): prevDetectedPitch(-1.0f), tolerence(0.15f), minHz(
 PitchTracker::~PitchTracker()
 { };
 
+int PitchTracker::updateBufferSize(const int newInputTotalNumSamps, const bool clear)
+{
+    const int newsize = roundToInt(newInputTotalNumSamps/2);
+    
+    if (yinBuffer.getNumSamples() != newsize)
+        yinBuffer.setSize(1, newsize, true, true, true);
+    
+    if (clear)
+        yinBuffer.clear();
+    
+    return newsize;
+};
+
+
 float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate)
 {
     //float pitch = simpleYin(inputAudio, inputChan);
@@ -51,15 +65,12 @@ float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const int inputChan
 
 float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio, const int inputChan) noexcept
 {
-    if(const int newsize = roundToInt(inputAudio.getNumSamples()/2); yinBuffer.getNumSamples() != newsize)
-        yinBuffer.setSize(1, newsize, true, true, true);
+    const int yinBufferSize = updateBufferSize(inputAudio.getNumSamples(), false);
     
-    const int yinBufferSize = yinBuffer.getNumSamples();
+    const float* in      = inputAudio.getReadPointer (inputChan);
+          float* yinData = yinBuffer .getWritePointer(0);
     
-    const float* in = inputAudio.getReadPointer(inputChan);
-    float* yinData  = yinBuffer .getWritePointer(0);
-    
-    int period;
+    int   period;
     float delta      = 0.0f;
     float runningSum = 0.0f;
     
