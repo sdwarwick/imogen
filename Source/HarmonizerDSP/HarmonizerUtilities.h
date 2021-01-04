@@ -221,6 +221,11 @@ public:
         return currentlyHeldNotes.contains(pitch);
     };
     
+    void newMaxNumVoices(const int newMaxVoices)
+    {
+        currentlyHeldNotes.ensureStorageAllocated(newMaxVoices);
+    };
+    
     
 private:
     Array<int> currentlyHeldNotes;

@@ -72,6 +72,8 @@ public:
     
     void extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray);
     
+    int averageDistanceBetweenEpochs(const Array<int>& epochIndices);
+    
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void increaseBufferSizes(const int newMaxBlocksize);
     

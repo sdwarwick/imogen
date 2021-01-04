@@ -15,7 +15,7 @@
 #define MIN_SAMPLES_NEEDED 32 // the minimum number of samples needed to calculate the pitch of a chunk
 
 
-PitchTracker::PitchTracker(): prevDetectedPitch(-1.0f), tolerence(0.15f), minHz(50.0f), maxHz(2000.0f)
+PitchTracker::PitchTracker(): prevDetectedPitch(0.0f), tolerence(0.15f), minHz(50.0f), maxHz(2000.0f)
 {
     yinBuffer.setSize(1, MAX_BUFFERSIZE);
     //	powerTerms.ensureStorageAllocated(MAX_BUFFERSIZE);
@@ -29,25 +29,21 @@ PitchTracker::~PitchTracker()
 
 float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const double samplerate)
 {
-    //float pitch = simpleYin(inputAudio, inputChan);
+    float period = simpleYin(inputAudio);
     
-    return samplerate / simpleYin(inputAudio);
+    if(! (period > 0))
+        return prevDetectedPitch;
     
-    //	if(pitch > 0.0f)
-    //	{
-    //		pitch = samplerate / (pitch + 0.0f);
-    //		if(pitch > minHz && pitch < maxHz)
-    //		{
-    //			prevDetectedPitch = pitch;
-    //			return pitch;
-    //		}
-    //		else
-    //			return prevDetectedPitch;
-    //	}
-    //	else
-    //		return prevDetectedPitch;
-};
+    const float detectedHz = samplerate / period;
 
+    if(detectedHz >= minHz && detectedHz <= maxHz)
+    {
+        prevDetectedPitch = detectedHz;
+        return detectedHz;
+    }
+    
+    return prevDetectedPitch;
+};
 
 
 float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio) noexcept
@@ -448,16 +444,16 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     
     const int numSamples = inputAudio.getNumSamples();
     
-    const int window_length = round(numSamples * 0.1);  // ?? was originally based on samplerate... 
+    int window_length = ceil( floor((0.0015 * samplerate) / numSamples) * (1 / numSamples) );
+    
+    if(window_length > numSamples)
+        window_length = numSamples;
     
     outputArray.clearQuick();
     y .clearQuick();
     y2.clearQuick();
     y3.clearQuick();
-    
-    float mean_val;
-    float running_sum = 0.0f;
-    
+
     const float* data = inputAudio.getReadPointer(0);
     
     const float x0 = data[0];
@@ -479,26 +475,31 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     }
     
     // third stage
+    float running_sum = 0.0f;
     for(int i = 0; i < 2 * window_length + 2; ++i)
-        running_sum += y2.getUnchecked(i);
+        running_sum += ( (i < y2.size()) ? y2.getUnchecked(i) : 0 );
     
-    mean_val = 0.0f;
+    float mean_val = 0.0f;
     for(int i = 0; i < numSamples; ++i)
     {
         if((i - window_length < 0) || (i + window_length >= numSamples))
             mean_val = y2.getUnchecked(i);
         else if (i - window_length == 0)
             mean_val = running_sum / (2.0f * window_length + 1.0f);
-        else {
-            running_sum -= y2.getUnchecked(i - window_length - 1) - y2.getUnchecked(i + window_length);
-            mean_val = running_sum / (2.0f * window_length + 1.0f); }
+        else
+        {
+            float rs1 = ((i - window_length - 1) >= 0)  ? y2.getUnchecked(i - window_length - 1) : 0;
+            float rs2 = (i + window_length < y2.size()) ? y2.getUnchecked(i + window_length)     : 0;
+            running_sum -= (rs1 - rs2);
+            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        }
         y3.add(y2.getUnchecked(i) - mean_val);
     }
     
     // fourth stage
     running_sum = 0.0f;
     for(int i = 0; i < 2 * window_length + 2; ++i)
-        running_sum += y3.getUnchecked(i);
+        running_sum += ( (i < y3.size()) ? y3.getUnchecked(i) : 0 );
     
     mean_val = 0.0f;
     for(int i = 0; i < numSamples; ++i)
@@ -507,9 +508,13 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
             mean_val = y3.getUnchecked(i);
         else if (i - window_length == 0)
             mean_val = running_sum / (2.0f * window_length + 1.0f);
-        else {
-            running_sum -= y3.getUnchecked(i - window_length - 1) - y3.getUnchecked(i + window_length);
-            mean_val = running_sum / (2.0f * window_length + 1.0f); }
+        else
+        {
+            float rs1 = ((i - window_length - 1) >= 0)  ? y3.getUnchecked(i - window_length - 1) : 0;
+            float rs2 = (i + window_length < y3.size()) ? y3.getUnchecked(i + window_length)     : 0;
+            running_sum -= (rs1 - rs2);
+            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        }
         y.add(y3.getUnchecked(i) - mean_val);
     }
     
@@ -525,4 +530,21 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
         last = act;
     }
     outputArray.add(numSamples - 1);
+};
+
+
+int EpochFinder::averageDistanceBetweenEpochs(const Array<int>& epochIndices)
+{
+    int averageDistance = 0;
+    
+    for (int i = 0; i < epochIndices.size() - 1; ++i)
+    {
+        const int distance = epochIndices.getUnchecked(i + 1) - epochIndices.getUnchecked(i);
+        averageDistance = ceil((averageDistance + distance) / 2);
+    }
+    
+    if (! (averageDistance > 0))
+        return 1;
+    
+    return averageDistance;
 };

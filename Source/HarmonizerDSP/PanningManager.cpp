@@ -96,7 +96,8 @@ void PanningManager::panValTurnedOff(const int panVal)
             bool addedIt = false;
             while (i < currentNumVoices)
             {
-                if(panValsInAssigningOrder.indexOf(unsentPanVals.getUnchecked(i)) > targetindex)
+                const int valueComparing = (i < unsentPanVals.size()) ? unsentPanVals.getUnchecked(i) : 64;
+                if(panValsInAssigningOrder.indexOf(valueComparing) > targetindex)
                 {
                     unsentPanVals.insert(i, panVal);
                     addedIt = true;
@@ -141,7 +142,10 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
         if(const int tester = absDistances.getUnchecked(i); tester < minimum)
             minimum = tester;
     
-    const auto minIndex = absDistances.indexOf(minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    int minIndex = absDistances.indexOf(minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    
+    if(! (minIndex >= 0))
+        minIndex = 0;
     
     const auto newPan = unsentPanVals.getUnchecked(minIndex);
     unsentPanVals.remove(minIndex);

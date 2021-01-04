@@ -48,7 +48,7 @@ void HarmonizerVoice::clearBuffers()
 
 
 void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
-                                      Array<int>& epochIndices, const float currentInputFreq)
+                                      const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq)
 {
     if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
         stopNote(1.0f, false);
@@ -62,11 +62,11 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffe
     
     if(voiceIsOnRightNow)
     {
-        const int numSamples = inputAudio.getNumSamples();
-        
         // puts shifted samples into the monoBuffer, from sample indices 0 to numSamples-1
-        esola(inputAudio, epochIndices,
+        esola(inputAudio, epochIndices, numOfEpochsPerFrame,
                ( 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) ) ); // shifting ratio
+        
+        const int numSamples = inputAudio.getNumSamples();
         
         monoBuffer.applyGain(0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
@@ -90,6 +90,106 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffe
     }
     else
         clearCurrentNote();
+};
+
+
+void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& epochIndices,
+                            const int numOfEpochsPerFrame, const float shiftingRatio)
+{
+    const int numSamples = inputAudio.getNumSamples();
+    
+    int targetLength = 0;
+    int highestIndexWrittenTo = -1;
+    
+    int lastEpochIndex = epochIndices.getUnchecked(0);
+    
+    finalWindow.clearQuick();
+    synthesisBuffer.clear();
+    monoBuffer.clear();
+    
+    for(int i = 0; i < epochIndices.size() - numOfEpochsPerFrame; ++i)
+    {
+        const int hop = epochIndices.getUnchecked(i + 1) - lastEpochIndex;
+        
+        if(targetLength >= highestIndexWrittenTo)
+        {
+            const int finalEpoch = (i + numOfEpochsPerFrame < epochIndices.size()) ? epochIndices.getUnchecked(i + numOfEpochsPerFrame) : numSamples;
+            const int frameLength    = finalEpoch - epochIndices.getUnchecked(i) - 1;
+            const int bufferIncrease = frameLength - highestIndexWrittenTo + lastEpochIndex;
+            fillWindowBuffer(frameLength);
+            
+            if(bufferIncrease > 0)
+            {
+                const float* reading = inputAudio.getReadPointer(0);
+                      float* writing = synthesisBuffer.getWritePointer(0);
+                int writingindex = highestIndexWrittenTo + 1;
+                int readingindex = epochIndices.getUnchecked(i) + frameLength - 1 - bufferIncrease;
+                int windowindex  = frameLength - 1 - bufferIncrease;
+                const float* windowreading = window.getReadPointer(0);
+                
+                for(int s = 0; s < bufferIncrease; ++s)
+                {
+                    writing[writingindex] = reading[readingindex] * windowreading[s];
+                    finalWindow.add(windowreading[windowindex]);
+                    ++writingindex;
+                    ++readingindex;
+                    ++windowindex;
+                }
+                
+                highestIndexWrittenTo += (frameLength - 1);
+            }
+            
+            // OLA
+            int olaindex  = epochIndices.getUnchecked(i);
+            int wolaindex = 0;
+            const float* reading = synthesisBuffer.getReadPointer(0);
+                  float* writing = synthesisBuffer.getWritePointer(0);
+            
+            for(int s = lastEpochIndex; s < lastEpochIndex + frameLength - bufferIncrease; ++s)
+            {
+                writing[s] = reading[s] + reading[olaindex];
+                
+                const int finalWindowAdding = (wolaindex < finalWindow.size()) ? finalWindow.getUnchecked(wolaindex) : 0;
+                if(s < finalWindow.size())
+                    finalWindow.set(s, finalWindow.getUnchecked(s) + finalWindowAdding );
+                else
+                    finalWindow.add(finalWindowAdding);
+                
+                ++olaindex;
+                ++wolaindex;
+            }
+            
+            lastEpochIndex += hop;
+        }
+        
+        targetLength += ceil(hop * shiftingRatio);
+    }
+    
+    // normalize & write to output
+    const float* r = synthesisBuffer.getReadPointer(0);
+          float* w = monoBuffer.getWritePointer(0);
+    
+    for(int s = 0; s < numSamples; ++s)
+    {
+        float denom;
+        if (s < finalWindow.size())
+            denom = (std::max<float>(finalWindow.getUnchecked(s), 1e-4));
+        else
+            denom = 1e-4;
+        
+        w[s] = r[s] / denom;
+    }
+};
+
+
+void HarmonizerVoice::fillWindowBuffer(const int numSamples)
+{
+    window.clear();
+    float* writing = window.getWritePointer(0);
+    const float samplemultiplier = MathConstants<float>::pi / static_cast<float> (numSamples - 1);
+    
+    for(int i = 0; i < numSamples; ++i)
+        writing[i] = static_cast<float> (0.5 - 0.5 * (std::cos(static_cast<float> (2 * i) * samplemultiplier)) );
 };
 
 
@@ -191,96 +291,6 @@ bool HarmonizerVoice::isPlayingButReleased() const noexcept
 };
 
 
-void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, Array<int>& epochIndices, const float shiftingRatio)
-{
-    const int numSamples = inputAudio.getNumSamples();
-    
-    int targetLength = 0;
-    int highestIndexWrittenTo = -1;
-
-    const int numOfEpochsPerFrame = 3;
-
-    int    lastEpochIndex = epochIndices.getUnchecked(0);
-    const int numOfEpochs = epochIndices.size();
-    
-    finalWindow.clearQuick();
-
-    for(int i = 0; i < numOfEpochs - numOfEpochsPerFrame; ++i)
-    {
-        const int hop = epochIndices.getUnchecked(i + 1) - epochIndices.getUnchecked(i);
-
-        if(targetLength >= highestIndexWrittenTo)
-        {
-            const int frameLength = epochIndices.getUnchecked(i + numOfEpochsPerFrame) - epochIndices.getUnchecked(i) - 1;
-            fillWindowBuffer(frameLength);
-            const int bufferIncrease = frameLength - highestIndexWrittenTo + lastEpochIndex;
-
-            if(bufferIncrease > 0)
-            {
-                const float* reading = inputAudio.getReadPointer(0);
-                      float* writing = synthesisBuffer.getWritePointer(0);
-                int writingindex = highestIndexWrittenTo + 1;
-                int readingindex = epochIndices.getUnchecked(i) + frameLength - 1 - bufferIncrease;
-                int windowindex = frameLength - 1 - bufferIncrease;
-                const float* windowreading = window.getReadPointer(0);
-
-                for(int s = 0; s < bufferIncrease; ++s)
-                {
-                    writing[writingindex] = reading[readingindex] * windowreading[s];
-                    ++writingindex;
-                    ++readingindex;
-                    finalWindow.add(windowreading[windowindex]);
-                    ++windowindex;
-                }
-                highestIndexWrittenTo += frameLength - 1;
-            }
-
-            // OLA
-            {
-                int olaindex = epochIndices.getUnchecked(i);
-                const float* reading = synthesisBuffer.getReadPointer(0);
-                      float* writing = synthesisBuffer.getWritePointer(0);
-                int wolaindex = 0;
-
-                for(int s = lastEpochIndex; s < lastEpochIndex + frameLength - bufferIncrease; ++s)
-                {
-                    writing[s] = reading[s] + reading[olaindex];
-                    ++olaindex;
-                    finalWindow.set(s, finalWindow.getUnchecked(s) + finalWindow.getUnchecked(wolaindex) );
-                    ++wolaindex;
-                }
-            }
-
-            lastEpochIndex += hop;
-        }
-        
-        targetLength += ceil(hop * shiftingRatio);
-    }
-
-    // normalize & write to output
-    const float* r = synthesisBuffer.getReadPointer(0);
-          float* w = monoBuffer.getWritePointer(0);
-
-    for(int s = 0; s < numSamples; ++s)
-        w[s] = r[s] / ( s < finalWindow.size() ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
-};
-
-
-void HarmonizerVoice::fillWindowBuffer(const int numSamples)
-{
-    window.clear();
-    float* writing = window.getWritePointer(0);
-    
-    const float samplemultiplier = MathConstants<float>::pi / static_cast<float> (numSamples - 1);
-    
-    for(int i = 0; i < numSamples; ++i)
-    {
-        auto cos2 = std::cos(static_cast<float> (2 * i) * samplemultiplier);
-        writing[i] = static_cast<float> (0.5 - 0.5 * cos2);
-    }
-};
-
-
 void HarmonizerVoice::updateSampleRate(const double newSamplerate)
 {
     adsr        .setSampleRate(newSamplerate);
@@ -373,9 +383,22 @@ void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, AudioBuffer<float
     
     currentInputFreq = pitch.getPitch(inputAudio, sampleRate);
     
+    jassert(currentInputFreq > 0);
+    
+    const int averageDistanceBetweenEpochs = epochs.averageDistanceBetweenEpochs(epochIndices);
+    const int periodInSamples = ceil((1 / currentInputFreq) * sampleRate);
+    
+    int numOfEpochsPerFrame;
+    
+    if (averageDistanceBetweenEpochs >= periodInSamples)
+        numOfEpochsPerFrame = 2;
+    else
+        numOfEpochsPerFrame = ceil(periodInSamples / averageDistanceBetweenEpochs) * 2;
+    
     for (auto* voice : voices)
         if(voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, epochIndices, currentInputFreq); // this method will ADD the voice's output to outputBuffer
+            voice->renderNextBlock (inputAudio, outputBuffer, epochIndices, numOfEpochsPerFrame, currentInputFreq);
+            // this method will ADD the voice's output to outputBuffer
 };
 
 int Harmonizer::getNumActiveVoices() const
@@ -1248,4 +1271,18 @@ void Harmonizer::increaseBufferSizes(const int newMaxBlocksize)
     epochs.increaseBufferSizes(newMaxBlocksize);
     
     pitch.increaseBuffersize(newMaxBlocksize);
+};
+
+void Harmonizer::newMaxNumVoices(const int newMaxNumVoices)
+{
+    currentlyActiveNotes.ensureStorageAllocated(newMaxNumVoices);
+    currentlyActiveNotes.clearQuick();
+    
+    currentlyActiveNoReleased.ensureStorageAllocated(newMaxNumVoices);
+    currentlyActiveNoReleased.clearQuick();
+    
+    unLatched.ensureStorageAllocated(newMaxNumVoices);
+    unLatched.clearQuick();
+    
+    latchManager.newMaxNumVoices(newMaxNumVoices);
 };

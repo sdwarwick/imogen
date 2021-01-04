@@ -32,7 +32,8 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer, Array<int>& epochIndices, const float currentInputFreq);
+    void renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
+                         const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq);
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
@@ -65,7 +66,7 @@ private:
     
     void updateSampleRate(const double newSamplerate);
     
-    void esola(AudioBuffer<float>& inputAudio, Array<int>& epochIndices, const float shiftingRatio);
+    void esola(AudioBuffer<float>& inputAudio, const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float shiftingRatio);
     
     Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
@@ -182,6 +183,8 @@ public:
     
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void increaseBufferSizes(const int newMaxBlocksize);
+    void newMaxNumVoices(const int newMaxNumVoices);
+    
     
 protected:
     

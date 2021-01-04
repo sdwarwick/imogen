@@ -265,6 +265,10 @@ void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
     dryBuffer.setSize(2, newMaxBlocksize);
     harmonizer.increaseBufferSizes(newMaxBlocksize);
     
+    dspSpec.maximumBlockSize = newMaxBlocksize;
+    limiter.prepare(dspSpec);
+    dryWetMixer.prepare(dspSpec);
+    
     suspendProcessing (false);
 };
 
@@ -430,8 +434,13 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
     if(currentVoices != newNumVoices)
     {
         if(newNumVoices > currentVoices)
+        {
             for(int i = 0; i < newNumVoices - currentVoices; ++i)
                 harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
+            
+            if(newNumVoices > MAX_POSSIBLE_NUMBER_OF_VOICES)
+                harmonizer.newMaxNumVoices(newNumVoices); // increases storage overheads for internal harmonizer functions dealing with arrays of notes, etc
+        }
         else
             harmonizer.removeNumVoices(currentVoices - newNumVoices);
         
@@ -588,9 +597,6 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     params.push_back(std::make_unique<AudioParameterBool>	("limiterIsOn", "Limiter on/off", true));
     params.push_back(std::make_unique<AudioParameterFloat>	("limiterThresh", "Limiter threshold", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
     params.push_back(std::make_unique<AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
-    
-    // bypass all processing
-    params.push_back(std::make_unique<AudioParameterBool>   ("isBypassed", "Bypass processing", false));
     
     return { params.begin(), params.end() };
 };
