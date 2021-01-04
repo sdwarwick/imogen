@@ -7,7 +7,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     tree(*this, nullptr, "PARAMETERS", createParameters()),
     wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
     limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
-    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f)
+    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
+    modulatorInput(ModulatorInputSource::left)
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
@@ -98,74 +99,97 @@ void ImogenAudioProcessor::reset()
 
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if(host.isLogic() || host.isGarageBand())
-        if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
-        {
-            // give user a warning that sidechain must be enabled
-            return;
-        }
+    if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
+    {
+        // give user a warning that sidechain audio input must be enabled
+        return;
+    }
+    
+    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
+
+    if (isSuspended())
+    {
+        output = inBus;
+        return;
+    }
     
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
-    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
+    const int totalNumSamples = inBus.getNumSamples();
     
-    int inputChannelIndexInInputBuffer = 0;
-    AudioBuffer<float> input (inBus.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, inBus.getNumSamples());
-    // input needs to be a MONO buffer containing the input modulator signal... so whether it needs to get channel 0 or 1 of the input bus, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
-    
-    if (! isSuspended())
+    int inputChannelIndexInInputBuffer;
+    // TO DO: if host is Logic or Garageband, is this unnecessary? would the sidechain input always be channel 0 of inBus?
+    switch(modulatorInput)
     {
-        auto midiIterator = midiMessages.findNextSamplePosition(0);
-    
-        int  numSamples  = buffer.getNumSamples();
-        int  startSample = 0;
-        bool firstEvent  = true;
-    
-        for (; numSamples > 0; ++midiIterator)
+        case ModulatorInputSource::left:
+            inputChannelIndexInInputBuffer = 0;
+            break;
+        case ModulatorInputSource::right:
+            inputChannelIndexInInputBuffer = 1;
+            break;
+        case ModulatorInputSource::mixToMono:
         {
-            if (midiIterator == midiMessages.cend())
-            {
-                processBlockPrivate(input, output, startSample, numSamples);
-                return;
-            }
+            jassert(inBus.getNumChannels() > 0);
+            const int channelToUse = 0;
+            AudioBuffer<float> destProxy (inBus.getArrayOfWritePointers() + channelToUse, 1, totalNumSamples);
             
-            const auto metadata = *midiIterator;
-            const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
+            for(int chan = 0; chan < inBus.getNumChannels(); ++chan)
+                destProxy.addFrom(0, 0, inBus, chan, 0, totalNumSamples);
             
-            if (samplesToNextMidiMessage >= numSamples)
-            {
-                processBlockPrivate(input, output, startSample, numSamples);
-                harmonizer.handleMidiEvent(metadata.getMessage());
-                break;
-            }
-            
-            if (firstEvent && samplesToNextMidiMessage == 0)
-            {
-                harmonizer.handleMidiEvent(metadata.getMessage());
-                continue;
-            }
-            
-            firstEvent = false;
-            
-            processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
-            
-            harmonizer.handleMidiEvent(metadata.getMessage());
-            
-            startSample += samplesToNextMidiMessage;
-            numSamples  -= samplesToNextMidiMessage;
+            destProxy.applyGain(1 / inBus.getNumChannels());
+            inputChannelIndexInInputBuffer = channelToUse;
+            break;
         }
+    }
     
-        std::for_each (midiIterator,
-                       midiMessages.cend(),
-                       [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
-    }
-    else
+    AudioBuffer<float> input (inBus.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, totalNumSamples);
+    // input needs to be a MONO buffer containing the input modulator signal... so whether it needs to get channel 0 or 1 of the input bus, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
+
+    auto midiIterator = midiMessages.findNextSamplePosition(0);
+
+    int  numSamples  = totalNumSamples;
+    int  startSample = 0;
+    bool firstEvent  = true;
+
+    for (; numSamples > 0; ++midiIterator)
     {
-        // audio processing is suspended, output only silence
-        output.clear();
+        if (midiIterator == midiMessages.cend())
+        {
+            processBlockPrivate(input, output, startSample, numSamples);
+            return;
+        }
+        
+        const auto metadata = *midiIterator;
+        const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
+        
+        if (samplesToNextMidiMessage >= numSamples)
+        {
+            processBlockPrivate(input, output, startSample, numSamples);
+            harmonizer.handleMidiEvent(metadata.getMessage());
+            break;
+        }
+        
+        if (firstEvent && samplesToNextMidiMessage == 0)
+        {
+            harmonizer.handleMidiEvent(metadata.getMessage());
+            continue;
+        }
+        
+        firstEvent = false;
+        
+        processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
+        
+        harmonizer.handleMidiEvent(metadata.getMessage());
+        
+        startSample += samplesToNextMidiMessage;
+        numSamples  -= samplesToNextMidiMessage;
     }
+
+    std::for_each (midiIterator,
+                   midiMessages.cend(),
+                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
 };
 
 

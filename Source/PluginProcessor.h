@@ -84,6 +84,10 @@ public:
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     AudioProcessorValueTreeState tree;
+    
+    enum ModulatorInputSource { left, right, mixToMono }; // determines how the plugin will take input from the stereo buffer fed to it from the host
+    
+    void changeModulatorInputSource(ModulatorInputSource newSource) noexcept { modulatorInput = newSource; };
         
     //==============================================================================
     
@@ -114,6 +118,8 @@ private:
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;
     float prevideb, prevodeb;
+    
+    ModulatorInputSource modulatorInput;
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     AudioParameterInt* 	 dryPan             = nullptr;

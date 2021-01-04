@@ -171,12 +171,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
     
     for(int s = 0; s < numSamples; ++s)
     {
-        float denom;
-        if (s < finalWindow.size())
-            denom = (std::max<float>(finalWindow.getUnchecked(s), 1e-4));
-        else
-            denom = 1e-4;
-        
+        const float denom = (s < finalWindow.size()) ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4;
         w[s] = r[s] / denom;
     }
 };
