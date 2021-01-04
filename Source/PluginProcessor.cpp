@@ -120,16 +120,24 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         
         case ModulatorInputSource::mixToMono:
         {
+            if (inBus.getNumChannels() == 1)
+            {
+                input = AudioBuffer<float> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
+                break;
+            }
+            
             if(isNonRealtime() && monoSummingBuffer.getNumSamples() < totalNumSamples)
                 monoSummingBuffer.setSize(1, totalNumSamples);
             
             monoSummingBuffer.copyFrom(0, 0, inBus, 0, 0, totalNumSamples);
+            
             const int totalNumChannels = inBus.getNumChannels();
             
             for(int channel = 1; channel < totalNumChannels; ++channel)
                 monoSummingBuffer.addFrom(0, 0, inBus, channel, 0, totalNumSamples);
             
             monoSummingBuffer.applyGain(0, totalNumSamples, 1.0f / totalNumChannels);
+            
             input = AudioBuffer<float> (monoSummingBuffer.getArrayOfWritePointers(), 1, totalNumSamples);
             break;
         }
