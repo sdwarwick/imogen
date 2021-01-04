@@ -57,5 +57,11 @@ private:
     
     ComboBox selectPreset;
     
+    PluginHostType host;
+    
+    bool sidechainWarningShowing;
+    
+    void changeModulatorInputSource(const int idNum);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

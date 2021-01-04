@@ -109,6 +109,8 @@ public:
     
     ~Harmonizer();
     
+    void setPitchDetectionRange(const float newMinHz, const float newMaxHz) { pitch.setHzLimits(newMinHz, newMaxHz); };
+    void setPitchDetectionTolerance(const float newTolerance) { pitch.setTolerence(newTolerance); };
 
     void clearBuffers();
     
@@ -123,10 +125,10 @@ public:
     void handleMidiEvent(const MidiMessage& m);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     
-    void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
+    void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; };
     
     void   setCurrentPlaybackSampleRate(const double newRate);
-    double getSamplerate() const noexcept { return sampleRate; }
+    double getSamplerate() const noexcept { return sampleRate; };
     
     void setConcertPitchHz(const int newConcertPitchhz);
     
@@ -134,8 +136,8 @@ public:
     void updateLowestPannedNote(const int newPitchThresh) noexcept;
     int  getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; };
     
-    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
-    bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
+    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; };
+    bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; };
     
     Array<int> reportActiveNotes() const; // returns an array of the currently active pitches
     Array<int> reportActivesNoReleased() const; // the same, but excludes notes that are still ringing but whose key has been released
@@ -151,7 +153,7 @@ public:
     bool isADSRon() const noexcept { return adsrIsOn; };
     void updateQuickReleaseMs(const int newMs);
     void updateQuickAttackMs(const int newMs);
-    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
+    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; };
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; };
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; };
     
@@ -163,7 +165,7 @@ public:
     // removes a specified # of voices, attempting to remove inactive voices first
     void removeNumVoices(const int voicesToRemove);
     
-    int getNumVoices() const noexcept { return voices.size(); }
+    int getNumVoices() const noexcept { return voices.size(); };
     
     void setPedalPitch(const bool isOn);
     bool isPedalPitchOn() const noexcept { return pedalPitchIsOn; };

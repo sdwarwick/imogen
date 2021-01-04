@@ -5,7 +5,7 @@
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
-    wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE),
+    wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE), monoSummingBuffer(1, MAX_BUFFERSIZE * 2),
     limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
     modulatorInput(ModulatorInputSource::left)
@@ -52,18 +52,15 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {
-    if(host.isLogic() || host.isGarageBand())
-        if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
-        {
-            // give user a warning that sidechain must be enabled
-        }
-    
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
     updateSampleRate(sampleRate);
     
+    if(wetBuffer.getNumSamples() < samplesPerBlock)
+        increaseBufferSizes(samplesPerBlock);
+    
     dspSpec.sampleRate = sampleRate;
-    dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
+    dspSpec.maximumBlockSize = std::max(samplesPerBlock, MAX_BUFFERSIZE);
     dspSpec.numChannels = 2;
     
     // limiter
@@ -100,52 +97,43 @@ void ImogenAudioProcessor::reset()
 void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
-    {
-        // give user a warning that sidechain audio input must be enabled
-        return;
-    }
+        return; // our audio input is disabled! can't do processing
     
     AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
-
-    if (isSuspended())
-    {
-        output = inBus;
-        return;
-    }
+    AudioBuffer<float> input; // input needs to be a MONO buffer!
     
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
     const int totalNumSamples = inBus.getNumSamples();
     
-    int inputChannelIndexInInputBuffer;
-    // TO DO: if host is Logic or Garageband, is this unnecessary? would the sidechain input always be channel 0 of inBus?
     switch(modulatorInput)
     {
         case ModulatorInputSource::left:
-            inputChannelIndexInInputBuffer = 0;
+            input = AudioBuffer<float> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
             break;
+        
         case ModulatorInputSource::right:
-            inputChannelIndexInInputBuffer = 1;
+            input = AudioBuffer<float> (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1), 1, totalNumSamples);
             break;
+        
         case ModulatorInputSource::mixToMono:
         {
-            jassert(inBus.getNumChannels() > 0);
-            const int channelToUse = 0;
-            AudioBuffer<float> destProxy (inBus.getArrayOfWritePointers() + channelToUse, 1, totalNumSamples);
+            if(isNonRealtime() && monoSummingBuffer.getNumSamples() < totalNumSamples)
+                monoSummingBuffer.setSize(1, totalNumSamples);
             
-            for(int chan = 0; chan < inBus.getNumChannels(); ++chan)
-                destProxy.addFrom(0, 0, inBus, chan, 0, totalNumSamples);
+            monoSummingBuffer.copyFrom(0, 0, inBus, 0, 0, totalNumSamples);
+            const int totalNumChannels = inBus.getNumChannels();
             
-            destProxy.applyGain(1 / inBus.getNumChannels());
-            inputChannelIndexInInputBuffer = channelToUse;
+            for(int channel = 1; channel < totalNumChannels; ++channel)
+                monoSummingBuffer.addFrom(0, 0, inBus, channel, 0, totalNumSamples);
+            
+            monoSummingBuffer.applyGain(0, totalNumSamples, 1.0f / totalNumChannels);
+            input = AudioBuffer<float> (monoSummingBuffer.getArrayOfWritePointers(), 1, totalNumSamples);
             break;
         }
     }
-    
-    AudioBuffer<float> input (inBus.getArrayOfWritePointers() + inputChannelIndexInInputBuffer, 1, totalNumSamples);
-    // input needs to be a MONO buffer containing the input modulator signal... so whether it needs to get channel 0 or 1 of the input bus, or sum the 2 channels to mono, either way this buffer needs to contain THAT data
 
     auto midiIterator = midiMessages.findNextSamplePosition(0);
 
@@ -190,6 +178,8 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     std::for_each (midiIterator,
                    midiMessages.cend(),
                    [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
+    
+    midiMessages.clear();
 };
 
 
@@ -210,7 +200,7 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, Aud
     
         while(samplesLeft > 0)
         {
-            const int chunkNumSamples = std::min(samplesLeft, MAX_BUFFERSIZE);
+            const int chunkNumSamples = std::min(samplesLeft, wetBuffer.getNumSamples());
             
             AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
             AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
@@ -285,11 +275,16 @@ void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
 {
     suspendProcessing (true);
     
-    wetBuffer.setSize(2, newMaxBlocksize);
-    dryBuffer.setSize(2, newMaxBlocksize);
-    harmonizer.increaseBufferSizes(newMaxBlocksize);
+    const int realNewNumSamples = ceil(newMaxBlocksize * 1.5f);
     
-    dspSpec.maximumBlockSize = newMaxBlocksize;
+    wetBuffer.setSize(2, realNewNumSamples);
+    dryBuffer.setSize(2, realNewNumSamples);
+    harmonizer.increaseBufferSizes(realNewNumSamples);
+    
+    if(monoSummingBuffer.getNumSamples() < realNewNumSamples * 2)
+        monoSummingBuffer.setSize(1, realNewNumSamples * 2);
+    
+    dspSpec.maximumBlockSize = realNewNumSamples;
     limiter.prepare(dspSpec);
     dryWetMixer.prepare(dspSpec);
     
@@ -304,7 +299,8 @@ void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
 void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ignoreUnused(buffer);
-    ignoreUnused(midiMessages);
+    
+    midiMessages.clear();
     
     // add latency compensation here
 };
@@ -315,6 +311,13 @@ void ImogenAudioProcessor::clearBuffers()
     harmonizer.clearBuffers();
     wetBuffer.clear();
     dryBuffer.clear();
+    monoSummingBuffer.clear();
+};
+
+
+bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain()
+{
+    return (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled());
 };
 
 
@@ -451,6 +454,16 @@ void ImogenAudioProcessor::updateLimiter()
     limiter.setRelease  (limiterRelease->get());
 };
 
+
+void ImogenAudioProcessor::updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance)
+{
+    harmonizer.setPitchDetectionRange(newMinHz, newMaxHz);
+    harmonizer.setPitchDetectionTolerance(newTolerance);
+};
+
+
+
+// DANGER -- suspends processing & reallocates memory for new max num voices if the requested # of harmony voices is larger than the storage size preallocated at startup
 void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 {
     const int currentVoices = harmonizer.getNumVoices();
@@ -459,11 +472,15 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
     {
         if(newNumVoices > currentVoices)
         {
+            suspendProcessing (true);
+            
             for(int i = 0; i < newNumVoices - currentVoices; ++i)
                 harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
             
             if(newNumVoices > MAX_POSSIBLE_NUMBER_OF_VOICES)
                 harmonizer.newMaxNumVoices(newNumVoices); // increases storage overheads for internal harmonizer functions dealing with arrays of notes, etc
+            
+            suspendProcessing (false);
         }
         else
             harmonizer.removeNumVoices(currentVoices - newNumVoices);
@@ -632,11 +649,9 @@ void ImogenAudioProcessor::initialize(const double initSamplerate, const int ini
     for (int i = 0; i < initNumVoices; ++i)
         harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
     
-    if(host.isLogic() || host.isGarageBand())
-        if ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() )
-        {
-            // give user a warning that sidechain must be enabled
-        }
+    harmonizer.newMaxNumVoices(std::max(initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
+    harmonizer.setPitchDetectionRange(40.0, 2000.0);
+    harmonizer.setPitchDetectionTolerance(0.15);
     
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
@@ -645,7 +660,7 @@ void ImogenAudioProcessor::initialize(const double initSamplerate, const int ini
     clearBuffers();
     
     dspSpec.sampleRate = initSamplerate;
-    dspSpec.maximumBlockSize = MAX_BUFFERSIZE;
+    dspSpec.maximumBlockSize = std::max(initSamplesPerBlock, MAX_BUFFERSIZE);
     dspSpec.numChannels = 2;
     
     // limiter
@@ -709,6 +724,18 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
     
     if ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()
       || layouts.getMainInputChannelSet()  != juce::AudioChannelSet::stereo() )
+        return false;
+    
+    return true;
+};
+
+
+bool ImogenAudioProcessor::canAddBus(bool isInput)
+{
+    if (! host.isLogic() || host.isGarageBand())
+        return false;
+    
+    if (! isInput)
         return false;
     
     return true;

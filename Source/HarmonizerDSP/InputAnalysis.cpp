@@ -29,6 +29,9 @@ PitchTracker::~PitchTracker()
 
 float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const double samplerate)
 {
+    if (inputAudio.getNumSamples() < MIN_SAMPLES_NEEDED)
+        return prevDetectedPitch;
+    
     float period = simpleYin(inputAudio);
     
     if(! (period > 0))
@@ -406,6 +409,8 @@ float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, 
 //
 //
 
+#undef MIN_SAMPLES_NEEDED
+
 
 
 EpochFinder::EpochFinder()
@@ -444,10 +449,10 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     
     const int numSamples = inputAudio.getNumSamples();
     
-    int window_length = ceil( floor((0.0015 * samplerate) / numSamples) * (1 / numSamples) );
+    int windowLength = ceil( floor((0.0015 * samplerate) / numSamples) * (1 / numSamples) );
     
-    if(window_length > numSamples)
-        window_length = numSamples;
+    if(windowLength > numSamples)
+        windowLength = numSamples;
     
     outputArray.clearQuick();
     y .clearQuick();
@@ -475,47 +480,47 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     }
     
     // third stage
-    float running_sum = 0.0f;
-    for(int i = 0; i < 2 * window_length + 2; ++i)
-        running_sum += ( (i < y2.size()) ? y2.getUnchecked(i) : 0 );
+    float runningSum = 0.0f;
+    for(int i = 0; i < 2 * windowLength + 2; ++i)
+        runningSum += ( (i < y2.size()) ? y2.getUnchecked(i) : 0 );
     
-    float mean_val = 0.0f;
+    float meanVal = 0.0f;
     for(int i = 0; i < numSamples; ++i)
     {
-        if((i - window_length < 0) || (i + window_length >= numSamples))
-            mean_val = y2.getUnchecked(i);
-        else if (i - window_length == 0)
-            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        if((i - windowLength < 0) || (i + windowLength >= numSamples))
+            meanVal = y2.getUnchecked(i);
+        else if (i - windowLength == 0)
+            meanVal = runningSum / (2.0f * windowLength + 1.0f);
         else
         {
-            float rs1 = ((i - window_length - 1) >= 0)  ? y2.getUnchecked(i - window_length - 1) : 0;
-            float rs2 = (i + window_length < y2.size()) ? y2.getUnchecked(i + window_length)     : 0;
-            running_sum -= (rs1 - rs2);
-            mean_val = running_sum / (2.0f * window_length + 1.0f);
+            float rs1 = ((i - windowLength - 1) >= 0)  ? y2.getUnchecked(i - windowLength - 1) : 0;
+            float rs2 = (i + windowLength < y2.size()) ? y2.getUnchecked(i + windowLength)     : 0;
+            runningSum -= (rs1 - rs2);
+            meanVal = runningSum / (2.0f * windowLength + 1.0f);
         }
-        y3.add(y2.getUnchecked(i) - mean_val);
+        y3.add(y2.getUnchecked(i) - meanVal);
     }
     
     // fourth stage
-    running_sum = 0.0f;
-    for(int i = 0; i < 2 * window_length + 2; ++i)
-        running_sum += ( (i < y3.size()) ? y3.getUnchecked(i) : 0 );
+    runningSum = 0.0f;
+    for(int i = 0; i < 2 * windowLength + 2; ++i)
+        runningSum += ( (i < y3.size()) ? y3.getUnchecked(i) : 0 );
     
-    mean_val = 0.0f;
+    meanVal = 0.0f;
     for(int i = 0; i < numSamples; ++i)
     {
-        if((i - window_length < 0) || (i + window_length >= numSamples))
-            mean_val = y3.getUnchecked(i);
-        else if (i - window_length == 0)
-            mean_val = running_sum / (2.0f * window_length + 1.0f);
+        if((i - windowLength < 0) || (i + windowLength >= numSamples))
+            meanVal = y3.getUnchecked(i);
+        else if (i - windowLength == 0)
+            meanVal = runningSum / (2.0f * windowLength + 1.0f);
         else
         {
-            float rs1 = ((i - window_length - 1) >= 0)  ? y3.getUnchecked(i - window_length - 1) : 0;
-            float rs2 = (i + window_length < y3.size()) ? y3.getUnchecked(i + window_length)     : 0;
-            running_sum -= (rs1 - rs2);
-            mean_val = running_sum / (2.0f * window_length + 1.0f);
+            float rs1 = ((i - windowLength - 1) >= 0)  ? y3.getUnchecked(i - windowLength - 1) : 0;
+            float rs2 = (i + windowLength < y3.size()) ? y3.getUnchecked(i + windowLength)     : 0;
+            runningSum -= (rs1 - rs2);
+            meanVal = runningSum / (2.0f * windowLength + 1.0f);
         }
-        y.add(y3.getUnchecked(i) - mean_val);
+        y.add(y3.getUnchecked(i) - meanVal);
     }
     
     // last stage

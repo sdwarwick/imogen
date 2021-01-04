@@ -76,6 +76,8 @@ public:
     void updatePedalPitch();
     void updateDescant();
     
+    void updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance);
+    
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     Array<int> returnActivePitches() const noexcept { return harmonizer.reportActiveNotes(); };
     
@@ -88,6 +90,10 @@ public:
     enum ModulatorInputSource { left, right, mixToMono }; // determines how the plugin will take input from the stereo buffer fed to it from the host
     
     void changeModulatorInputSource(ModulatorInputSource newSource) noexcept { modulatorInput = newSource; };
+    
+    bool canAddBus(bool isInput);
+    
+    bool shouldWarnUserToEnableSidechain();
         
     //==============================================================================
     
@@ -104,6 +110,7 @@ private:
     
     AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer<float> dryBuffer; // this buffer is used for panning & delaying the dry signal
+    AudioBuffer<float> monoSummingBuffer; // this buffer is used in case a multichannel input needs to be summed to mono.
     
     dsp::ProcessSpec        dspSpec;
     dsp::Limiter    <float> limiter;

@@ -2,7 +2,7 @@
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
+    AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false), sidechainWarningShowing(false)
 {
     setSize (940, 435);
     
@@ -77,6 +77,44 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::timerCallback()
 {
     staffDisplay.repaint();
+    
+    if (host.isLogic() || host.isGarageBand())
+    {
+        const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
+        
+        if(sidechainWarningShowing != shouldBeShowing)
+        {
+            sidechainWarningShowing = shouldBeShowing;
+            
+            if(shouldBeShowing)
+            {
+                
+            }
+            else
+            {
+                
+            }
+        }
+    }
+};
+
+
+void ImogenAudioProcessorEditor::changeModulatorInputSource(const int idNum)
+{
+    switch (idNum)
+    {
+        case 1:
+            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::left);
+            break;
+        case 2:
+            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::right);
+            break;
+        case 3:
+            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::mixToMono);
+            break;
+        default:
+            return;
+    }
 };
 
 
