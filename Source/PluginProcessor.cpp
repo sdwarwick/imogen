@@ -142,6 +142,10 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
             break;
         }
     }
+    
+    if (output.getNumChannels() > 2)
+        for (int channel = 2; channel < output.getNumChannels(); ++channel)
+            output.clear(channel, 0, totalNumSamples);
 
     auto midiIterator = midiMessages.findNextSamplePosition(0);
 
@@ -306,7 +310,13 @@ void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
 
 void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    ignoreUnused(buffer);
+    if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
+        return; // our audio input is disabled! can't do processing
+    
+    AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
+    
+    output = input;
     
     midiMessages.clear();
     
