@@ -8,11 +8,12 @@
 #include "IOControlPanel.h"
 #include "LookAndFeel.h"
 #include "HelpScreen.h"
+#include "EnableSidechainWarning.h"
 
 //==============================================================================
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
-public Timer
+                                    public Timer
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -57,11 +58,15 @@ private:
     
     ComboBox selectPreset;
     
+    ComboBox modulatorInputSource;
+    
     PluginHostType host;
     
     bool sidechainWarningShowing;
     
-    void changeModulatorInputSource(const int idNum);
+    void changeModulatorInputSource();
+    
+    EnableSidechainWarning sidechainWarning;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

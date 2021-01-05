@@ -32,7 +32,8 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
+    
+    void renderNextBlock(const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
                          const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq);
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
@@ -66,7 +67,10 @@ private:
     
     void updateSampleRate(const double newSamplerate);
     
-    void esola(AudioBuffer<float>& inputAudio, const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float shiftingRatio);
+    
+    void esola (const AudioBuffer<float>& inputAudio,
+                const Array<int>& epochIndices, const int numOfEpochsPerFrame,
+                const float shiftingRatio);
     
     Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
@@ -114,7 +118,12 @@ public:
 
     void clearBuffers();
     
-    void renderVoices (AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer);
+    void clearMidiBuffer() { aggregateMidiBuffer.clear(); lastMidiTimeStamp = 0.0; };
+    
+    MidiBuffer& returnMidiBuffer() { return aggregateMidiBuffer; };
+    
+    
+    void renderVoices (const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer);
     
     int getNumActiveVoices() const;
     
@@ -122,7 +131,7 @@ public:
 
     int getCurrentInputFreq() const noexcept { return currentInputFreq; };
     
-    void handleMidiEvent(const MidiMessage& m);
+    void handleMidiEvent(const MidiMessage& m, const int samplePosition);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     
     void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; };
@@ -276,6 +285,10 @@ private:
     Array<int> epochIndices;
     
     PitchTracker pitch;
+    
+    MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
+    int lastMidiTimeStamp;
+    int lastMidiChannel;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

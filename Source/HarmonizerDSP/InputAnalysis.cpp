@@ -26,17 +26,17 @@ PitchTracker::~PitchTracker()
 { };
 
 
-float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const double samplerate)
+float PitchTracker::getPitch(const AudioBuffer<float>& inputAudio, const double samplerate)
 {
     if (inputAudio.getNumSamples() < MIN_SAMPLES_NEEDED)
         return prevDetectedPitch;
     
-    float period = simpleYin(inputAudio);
+    const auto period = simpleYin(inputAudio);
     
     if(! (period > 0))
         return prevDetectedPitch;
     
-    const float detectedHz = samplerate / period;
+    const auto detectedHz = samplerate / period;
 
     if(detectedHz >= minHz && detectedHz <= maxHz)
     {
@@ -48,12 +48,12 @@ float PitchTracker::getPitch(AudioBuffer<float>& inputAudio, const double sample
 };
 
 
-float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio) noexcept
+float PitchTracker::simpleYin(const AudioBuffer<float>& inputAudio) noexcept
 {
     const int yinBufferSize = roundToInt(inputAudio.getNumSamples()/2);
     
-    const float* in      = inputAudio.getReadPointer (0);
-          float* yinData = yinBuffer .getWritePointer(0);
+    const auto* in      = inputAudio.getReadPointer (0);
+          auto* yinData = yinBuffer .getWritePointer(0);
     
     float delta      = 0.0f;
     float runningSum = 0.0f;
@@ -81,10 +81,11 @@ float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio) noexcept
     return quadraticPeakPosition (yinBuffer.getReadPointer(0), minElement(yinBuffer.getReadPointer(0), yinBufferSize), yinBufferSize);
 };
 
+
 unsigned int PitchTracker::minElement(const float* data, const int dataSize) noexcept
 {
     unsigned int j, pos = 0;
-    float tmp = data[0];
+    auto tmp = data[0];
     for (j = 0; j < dataSize; j++)
     {
         pos = (tmp < data[j]) ? pos : j;
@@ -94,7 +95,7 @@ unsigned int PitchTracker::minElement(const float* data, const int dataSize) noe
 };
 
 
-float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, const int dataSize) noexcept
+float PitchTracker::quadraticPeakPosition (const float* data, unsigned int pos, const int dataSize) noexcept
 {
     unsigned int x0, x2;
     
@@ -110,8 +111,8 @@ float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, 
     if (x2 == pos)
         return (data[pos] <= data[x0]) ? pos : x0;
     
-    float s0 = data[x0];
-    float s2 = data[x2];
+    auto s0 = data[x0];
+    auto s2 = data[x2];
     return pos + 0.5 * (s0 - s2 ) / (s0 - 2.* data[pos] + s2);
 }
 
@@ -459,21 +460,20 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     y2.clearQuick();
     y3.clearQuick();
 
-    const float* data = inputAudio.getReadPointer(0);
+    const auto* data = inputAudio.getReadPointer(0);
     
-    const float x0 = data[0];
-    float y1_0 = x0;
-    float y1_1 = data[1] - x0 + (2.0f * y1_0);
-    float x_i;
-    float y1_i;
+    auto y1_0 = data[0];
+    auto y1_1 = data[1] - y1_0 + (2.0f * y1_0);
+    
     y2.add(y1_0);
     y2.add(y1_1 + (2.0f * y1_0));
+    
     for(int i = 2; i < numSamples; ++i)
     {
-        x_i = data[i] - data[i - 1];
-        y1_i = x_i + (2.0f * y1_1) - y1_0;
-        const float y2b1 = y2.getUnchecked(i - 1);
-        const float y2b2 = y2.getUnchecked(i - 2);
+        auto x_i = data[i] - data[i - 1];
+        auto y1_i = x_i + (2.0f * y1_1) - y1_0;
+        const auto y2b1 = y2.getUnchecked(i - 1);
+        const auto y2b2 = y2.getUnchecked(i - 2);
         y2.add(y1_i + (2.0f * y2b1 - y2b2));
         y1_0 = y1_1;
         y1_1 = y1_i;
@@ -493,8 +493,8 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
             meanVal = runningSum / (2.0f * windowLength + 1.0f);
         else
         {
-            float rs1 = ((i - windowLength - 1) >= 0)  ? y2.getUnchecked(i - windowLength - 1) : 0;
-            float rs2 = (i + windowLength < y2.size()) ? y2.getUnchecked(i + windowLength)     : 0;
+            const auto rs1 = ((i - windowLength - 1) >= 0)  ? y2.getUnchecked(i - windowLength - 1) : 0;
+            const auto rs2 = (i + windowLength < y2.size()) ? y2.getUnchecked(i + windowLength)     : 0;
             runningSum -= (rs1 - rs2);
             meanVal = runningSum / (2.0f * windowLength + 1.0f);
         }
@@ -515,8 +515,8 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
             meanVal = runningSum / (2.0f * windowLength + 1.0f);
         else
         {
-            float rs1 = ((i - windowLength - 1) >= 0)  ? y3.getUnchecked(i - windowLength - 1) : 0;
-            float rs2 = (i + windowLength < y3.size()) ? y3.getUnchecked(i + windowLength)     : 0;
+            const auto rs1 = ((i - windowLength - 1) >= 0)  ? y3.getUnchecked(i - windowLength - 1) : 0;
+            const auto rs2 = (i + windowLength < y3.size()) ? y3.getUnchecked(i + windowLength)     : 0;
             runningSum -= (rs1 - rs2);
             meanVal = runningSum / (2.0f * windowLength + 1.0f);
         }
@@ -524,7 +524,7 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     }
     
     // last stage
-    float last = y.getUnchecked(0);
+    auto last = y.getUnchecked(0);
     float act;
     outputArray.add(0);
     for(int i = 0; i < numSamples; ++i)

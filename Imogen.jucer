@@ -45,6 +45,8 @@
       </GROUP>
     </GROUP>
     <GROUP id="{27897AB0-D6F3-54AD-89AC-1DAFE19D8DDF}" name="Graphics">
+      <FILE id="gKbSEX" name="EnableSidechainWarning.h" compile="0" resource="0"
+            file="Source/Graphics/EnableSidechainWarning.h"/>
       <FILE id="vGGdhL" name="LookAndFeel.h" compile="0" resource="0" file="Source/Graphics/LookAndFeel.h"/>
       <GROUP id="{5B685E86-D1DA-2F32-AF0D-2A7394AFCFDA}" name="StaffDisplay">
         <FILE id="zE12pr" name="StaffDisplay.cpp" compile="1" resource="0"

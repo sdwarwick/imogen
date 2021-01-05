@@ -2,7 +2,8 @@
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim), midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false), sidechainWarningShowing(false)
+    AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim),
+    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false), sidechainWarningShowing(false)
 {
     setSize (940, 435);
     
@@ -15,6 +16,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     skinLabel   .setLookAndFeel(&lookAndFeel);
     helpButton  .setLookAndFeel(&lookAndFeel);
     helpScreen  .setLookAndFeel(&lookAndFeel);
+    sidechainWarning.setLookAndFeel(&lookAndFeel);
     
     Timer::startTimerHz(FRAMERATE);
     
@@ -31,8 +33,16 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     
     addChildComponent(helpScreen);
     
+    addChildComponent(sidechainWarning);
+    
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
+    
+    modulatorInputSource.addItem("left",  1);
+    modulatorInputSource.addItem("right", 2);
+    modulatorInputSource.addItem("mix to mono", 3);
+    modulatorInputSource.setSelectedId(1);
+    modulatorInputSource.onChange = [this] { changeModulatorInputSource(); };
     
     addAndMakeVisible(midiPanel);
     addAndMakeVisible(ioPanel);
@@ -41,7 +51,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     addAndMakeVisible(helpButton);
     addAndMakeVisible(skinLabel);
     //addAndMakeVisible(selectPreset);
-    
+    //addAndMakeVisible(modulatorInputSource);
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -70,6 +80,10 @@ void ImogenAudioProcessorEditor::resized()
     helpScreen  .setBounds(158, 45, 625, 315);
     
     //selectPreset.setBounds(x, y, w, h);
+    
+    //modulatorInputSource.setBounds(x, y, w, h);
+    
+    //sidechainWarning.setBounds(x, y, w, h);
 };
 
 
@@ -88,20 +102,19 @@ void ImogenAudioProcessorEditor::timerCallback()
             
             if(shouldBeShowing)
             {
-                
+                sidechainWarning.setVisible(true);
+                sidechainWarning.repaint();
             }
             else
-            {
-                
-            }
+                sidechainWarning.setVisible(false);
         }
     }
 };
 
 
-void ImogenAudioProcessorEditor::changeModulatorInputSource(const int idNum)
+void ImogenAudioProcessorEditor::changeModulatorInputSource()
 {
-    switch (idNum)
+    switch (modulatorInputSource.getSelectedId())
     {
         case 1:
             audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::left);

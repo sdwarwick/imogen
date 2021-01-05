@@ -5,10 +5,11 @@
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
-    wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE), monoSummingBuffer(1, MAX_BUFFERSIZE * 2),
+    inBuffer(1, MAX_BUFFERSIZE), wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE), monoSummingBuffer(1, MAX_BUFFERSIZE * 2),
     limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
-    modulatorInput(ModulatorInputSource::left)
+    modulatorInput(ModulatorInputSource::left),
+    wasBypassedLastCallback(true)
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
@@ -54,31 +55,28 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
-    updateSampleRate(sampleRate);
+    const int newMaxblocksize = std::max(samplesPerBlock, MAX_BUFFERSIZE);
     
-    if(wetBuffer.getNumSamples() < samplesPerBlock)
-        increaseBufferSizes(samplesPerBlock);
+    if(wetBuffer.getNumSamples() < newMaxblocksize)
+        increaseBufferSizes(newMaxblocksize); // only make this call here if .isNonRealtime() ???
     
     dspSpec.sampleRate = sampleRate;
-    dspSpec.maximumBlockSize = std::max(samplesPerBlock, MAX_BUFFERSIZE);
+    dspSpec.maximumBlockSize = newMaxblocksize;
     dspSpec.numChannels = 2;
     
-    // limiter
     limiter.prepare(dspSpec);
-    
-    // dry wet mixer
+  
     dryWetMixer.prepare(dspSpec);
     dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
     
-    updateAllParameters();
+    bypassDelay.prepare(dspSpec);
+    bypassDelay.setDelay(2); // latency in samples of the ESOLA algorithm
+    
     harmonizer.resetNoteOnCounter(); // ??
-};
-
-
-void ImogenAudioProcessor::releaseResources()
-{
+    
+    updateSampleRate(sampleRate);
+    updateAllParameters();
     clearBuffers();
-    harmonizer.resetNoteOnCounter();
 };
 
 
@@ -89,6 +87,7 @@ void ImogenAudioProcessor::reset()
     clearBuffers();
     dryWetMixer.reset();
     limiter.reset();
+    bypassDelay.reset();
 };
 
 
@@ -99,25 +98,36 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return; // our audio input is disabled! can't do processing
     
-    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
-    AudioBuffer<float> input; // input needs to be a MONO buffer!
+    if (buffer.getNumSamples() == 0) // some hosts are crazy
+        return;
     
+    processBlockWrapped(buffer, midiMessages, wasBypassedLastCallback, false);
+    wasBypassedLastCallback = false;
+};
+
+
+void ImogenAudioProcessor::processBlockWrapped(AudioBuffer<float>& buffer, MidiBuffer& midiMessages,
+                                               const bool applyFadeIn, const bool applyFadeOut)
+{
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
+    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
+    AudioBuffer<float> input; // input needs to be a MONO buffer!
+    
     const int totalNumSamples = inBus.getNumSamples();
     
-    switch(modulatorInput)
+    switch (modulatorInput)
     {
         case ModulatorInputSource::left:
             input = AudioBuffer<float> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
             break;
-        
+            
         case ModulatorInputSource::right:
             input = AudioBuffer<float> (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1), 1, totalNumSamples);
             break;
-        
+            
         case ModulatorInputSource::mixToMono:
         {
             if (inBus.getNumChannels() == 1)
@@ -143,65 +153,72 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         }
     }
     
-    if (output.getNumChannels() > 2)
-        for (int channel = 2; channel < output.getNumChannels(); ++channel)
-            output.clear(channel, 0, totalNumSamples);
-
     auto midiIterator = midiMessages.findNextSamplePosition(0);
-
+    
     int  numSamples  = totalNumSamples;
     int  startSample = 0;
     bool firstEvent  = true;
-
+    
+    harmonizer.clearMidiBuffer();
+    
     for (; numSamples > 0; ++midiIterator)
     {
         if (midiIterator == midiMessages.cend())
         {
             processBlockPrivate(input, output, startSample, numSamples);
-            return;
+            break;
         }
         
         const auto metadata = *midiIterator;
-        const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
+        const int  samplePosition = metadata.samplePosition;
+        const int  samplesToNextMidiMessage = samplePosition - startSample;
         
         if (samplesToNextMidiMessage >= numSamples)
         {
             processBlockPrivate(input, output, startSample, numSamples);
-            harmonizer.handleMidiEvent(metadata.getMessage());
+            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
             break;
         }
         
         if (firstEvent && samplesToNextMidiMessage == 0)
         {
-            harmonizer.handleMidiEvent(metadata.getMessage());
+            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
             continue;
         }
         
         firstEvent = false;
         
         processBlockPrivate(input, output, startSample, samplesToNextMidiMessage);
-        
-        harmonizer.handleMidiEvent(metadata.getMessage());
+        harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
         
         startSample += samplesToNextMidiMessage;
         numSamples  -= samplesToNextMidiMessage;
     }
-
+    
     std::for_each (midiIterator,
                    midiMessages.cend(),
-                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage()); } );
+                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
     
-    midiMessages.clear();
+    midiMessages.swapWith(harmonizer.returnMidiBuffer());
+    
+    if (applyFadeOut)
+        output.applyGainRamp(0, totalNumSamples, 1.0f, 0.0f);
+    
+    if (applyFadeIn)
+        output.applyGainRamp(0, totalNumSamples, 0.0f, 1.0f);
 };
 
 
-void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
-                                               const int startSample, const int numSamples) 
+void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& input, AudioBuffer<float>& output,
+                                               const int startSample, const int numSamples)
 {
     if (isNonRealtime())
     {
-        AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, startSample, numSamples);
-        AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, startSample, numSamples);
+        AudioBuffer<float> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples);
+        AudioBuffer<float> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples);
+        
+        if (wetBuffer.getNumSamples() < numSamples)
+            increaseBufferSizes(numSamples);
         
         renderChunk(inProxy, outProxy);
     }
@@ -214,8 +231,8 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, Aud
         {
             const int chunkNumSamples = std::min(samplesLeft, wetBuffer.getNumSamples());
             
-            AudioBuffer<float> inProxy  (inBuffer .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
-            AudioBuffer<float> outProxy (outBuffer.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
+            AudioBuffer<float> inProxy  (input .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
+            AudioBuffer<float> outProxy (output.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
             
             renderChunk(inProxy, outProxy);
             
@@ -226,41 +243,43 @@ void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, Aud
 };
 
 
-void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer)
+
+void ImogenAudioProcessor::renderChunk(AudioBuffer<float>& input, AudioBuffer<float>& output)
 {
     // regardless of the input channel(s) setup, the inBuffer fed to this function should be a mono buffer with its audio content in channel 0
     // outBuffer should be a stereo buffer with the same length in samples as inBuffer
     // # of samples in the I/O buffers must be less than or equal to MAX_BUFFERSIZE
     
-    const int numSamples = inBuffer.getNumSamples();
-    
-    if (isNonRealtime() && wetBuffer.getNumSamples() < numSamples)
-        increaseBufferSizes(numSamples);
-    
     updateSampleRate(getSampleRate());
     updateAllParameters();
-
-    inBuffer.applyGain(inputGainMultiplier); // apply input gain
     
-    writeToDryBuffer(inBuffer); // puts input samples into dryBuffer w/ proper panning applied
+    const int numSamples = input.getNumSamples();
+    
+    AudioBuffer<float> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
+    
+    inBufferProxy.copyFrom(0, 0, input, 0, 0, numSamples); // copy to input storage buffer so that input gain can be applied
+
+    inBufferProxy.applyGain(inputGainMultiplier); // apply input gain
+    
+    writeToDryBuffer(inBufferProxy); // puts input samples into dryBuffer w/ proper panning applied
     
     AudioBuffer<float> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     AudioBuffer<float> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     
     dryWetMixer.pushDrySamples( dsp::AudioBlock<float>(dryProxy) );
 
-    harmonizer.renderVoices(inBuffer, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
+    harmonizer.renderVoices(inBufferProxy, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
     
     dryWetMixer.mixWetSamples( dsp::AudioBlock<float>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
     
-    outBuffer.makeCopyOf(wetProxy, true); // transfer from wetBuffer to output buffer
+    output.makeCopyOf(wetProxy, true); // transfer from wetBuffer to output buffer
     
-    outBuffer.applyGain(outputGainMultiplier); // apply master output gain
+    output.applyGain(outputGainMultiplier); // apply master output gain
     
     // output limiter
     if(limiterIsOn)
     {
-        dsp::AudioBlock<float> limiterBlock (outBuffer);
+        dsp::AudioBlock<float> limiterBlock (output);
         limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
     }
 };
@@ -285,20 +304,26 @@ void ImogenAudioProcessor::writeToDryBuffer(const AudioBuffer<float>& input)
  ++++++++++++++++++++++++++++++++++++++*/
 void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
 {
+    if (! (wetBuffer.getNumSamples() < newMaxBlocksize))
+        return;
+    
     suspendProcessing (true);
     
     const int realNewNumSamples = ceil(newMaxBlocksize * 1.5f);
     
-    wetBuffer.setSize(2, realNewNumSamples);
-    dryBuffer.setSize(2, realNewNumSamples);
+    wetBuffer.setSize(2, realNewNumSamples, true, true, true);
+    dryBuffer.setSize(2, realNewNumSamples, true, true, true);
+    inBuffer .setSize(1, realNewNumSamples, true, true, true);
     harmonizer.increaseBufferSizes(realNewNumSamples);
     
-    if(monoSummingBuffer.getNumSamples() < newMaxBlocksize * 2)
-        monoSummingBuffer.setSize(1, newMaxBlocksize * 2);
+    const int monoBufferNumSamples = newMaxBlocksize * 3;
+    if(monoSummingBuffer.getNumSamples() < monoBufferNumSamples)
+        monoSummingBuffer.setSize(1, monoBufferNumSamples);
     
     dspSpec.maximumBlockSize = realNewNumSamples;
     limiter.prepare(dspSpec);
     dryWetMixer.prepare(dspSpec);
+    bypassDelay.prepare(dspSpec);
     
     suspendProcessing (false);
 };
@@ -311,31 +336,59 @@ void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
 void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
-        return; // our audio input is disabled! can't do processing
+        return;
     
-    AudioBuffer<float> input  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    if (buffer.getNumSamples() == 0)
+        return;
+
+    if (! wasBypassedLastCallback)
+    {
+        // this is the first callback of processBlockBypassed() after the bypass has been activated.
+        // Process one more chunk and ramp the sound to 0 instead of killing the sound instantly...
+       
+        processBlockWrapped(buffer, midiMessages, false, true);
+        wasBypassedLastCallback = true;
+        clearBuffers();
+        return;
+    }
+    
+    updateSampleRate(getSampleRate());
+    updateAllParameters();
+    
+    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<float> output = AudioProcessor::getBusBuffer(buffer, false, 0);
     
-    output = input;
+    if (output.getNumChannels() > inBus.getNumChannels())
+        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
+            output.clear(chan, 0, output.getNumSamples());
     
-    midiMessages.clear();
+    dsp::AudioBlock<float> inBlock  (inBus);
+    dsp::AudioBlock<float> outBlock (output);
     
-    // add latency compensation here
+    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
+    if (inBlock == outBlock)
+        bypassDelay.process (dsp::ProcessContextReplacing<float> (inBlock));
+    else
+        bypassDelay.process (dsp::ProcessContextNonReplacing<float> (inBlock, outBlock));
+    
+    wasBypassedLastCallback = true;
 };
 
 
 void ImogenAudioProcessor::clearBuffers()
 {
     harmonizer.clearBuffers();
+    harmonizer.clearMidiBuffer();
     wetBuffer.clear();
     dryBuffer.clear();
+    inBuffer.clear();
     monoSummingBuffer.clear();
 };
 
 
-bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain()
+bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 {
-    return (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled());
+    return getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled(); // only for Logic & Garageband
 };
 
 
@@ -468,7 +521,7 @@ void ImogenAudioProcessor::updateLimiter()
 {
     limiterIsOn = limiterToggle->get();
     limiter.setThreshold(limiterThresh->get());
-    limiter.setRelease  (limiterRelease->get());
+    limiter.setRelease(limiterRelease->get());
 };
 
 
@@ -688,6 +741,9 @@ void ImogenAudioProcessor::initialize(const double initSamplerate, const int ini
     dryWetMixer.prepare(dspSpec);
     dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
     
+    bypassDelay.prepare(dspSpec);
+    bypassDelay.setDelay(2); // latency in samples of the ESOLA algorithm
+    
     updateAllParameters();
 };
 
@@ -746,12 +802,29 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 };
 
 
-bool ImogenAudioProcessor::canAddBus(bool isInput)
+bool ImogenAudioProcessor::canAddBus(bool isInput) const
 {
     if (! host.isLogic() || host.isGarageBand())
         return false;
     
     return isInput;
+};
+
+
+void ImogenAudioProcessor::updateTrackProperties (const TrackProperties& properties)
+{
+    String trackName   = properties.name;   // The name   of the track - this will be empty if the track name is not known
+    Colour trackColour = properties.colour; // The colour of the track - this will be transparentBlack if the colour is not known
+    
+    if (trackName != "")
+    {
+        // do something cool with the name of the mixer track the plugin is loaded on
+    }
+    
+    if (trackColour != Colours::transparentBlack)
+    {
+        // do something cool with the colour of the mixer track the plugin is loaded on
+    }
 };
 
 

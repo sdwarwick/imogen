@@ -47,7 +47,7 @@ void HarmonizerVoice::clearBuffers()
 };
 
 
-void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
+void HarmonizerVoice::renderNextBlock(const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
                                       const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq)
 {
     if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
@@ -62,11 +62,11 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffe
     
     if(voiceIsOnRightNow)
     {
+        const int numSamples = inputAudio.getNumSamples();
+        
         // puts shifted samples into the monoBuffer, from sample indices 0 to numSamples-1
         esola(inputAudio, epochIndices, numOfEpochsPerFrame,
                ( 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) )); // shifting ratio
-        
-        const int numSamples = inputAudio.getNumSamples();
         
         monoBuffer.applyGain(0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
@@ -93,8 +93,9 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffe
 };
 
 
-void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& epochIndices,
-                            const int numOfEpochsPerFrame, const float shiftingRatio)
+void HarmonizerVoice::esola(const AudioBuffer<float>& inputAudio,
+                            const Array<int>& epochIndices, const int numOfEpochsPerFrame,
+                            const float shiftingRatio)
 {
     const int numSamples = inputAudio.getNumSamples();
     
@@ -120,12 +121,12 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
             
             if(bufferIncrease > 0)
             {
-                const float* reading = inputAudio.getReadPointer(0);
-                      float* writing = synthesisBuffer.getWritePointer(0);
+                const auto* reading = inputAudio.getReadPointer(0);
+                      auto* writing = synthesisBuffer.getWritePointer(0);
                 int writingindex = highestIndexWrittenTo + 1;
                 int readingindex = epochIndices.getUnchecked(i) + frameLength - 1 - bufferIncrease;
                 int windowindex  = frameLength - 1 - bufferIncrease;
-                const float* windowreading = window.getReadPointer(0);
+                const auto* windowreading = window.getReadPointer(0);
                 
                 for(int s = 0; s < bufferIncrease; ++s)
                 {
@@ -142,8 +143,8 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
             // OLA
             int olaindex  = epochIndices.getUnchecked(i);
             int wolaindex = 0;
-            const float* reading = synthesisBuffer.getReadPointer(0);
-                  float* writing = synthesisBuffer.getWritePointer(0);
+            const auto* reading = synthesisBuffer.getReadPointer(0);
+                  auto* writing = synthesisBuffer.getWritePointer(0);
             
             for(int s = lastEpochIndex; s < lastEpochIndex + frameLength - bufferIncrease; ++s)
             {
@@ -166,8 +167,8 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
     }
     
     // normalize & write to output
-    const float* r = synthesisBuffer.getReadPointer(0);
-          float* w = monoBuffer.getWritePointer(0);
+    const auto* r = synthesisBuffer.getReadPointer(0);
+          auto* w = monoBuffer.getWritePointer(0);
     
     for(int s = 0; s < numSamples; ++s)
         w[s] = r[s] / ( (s < finalWindow.size()) ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
@@ -177,8 +178,8 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
 void HarmonizerVoice::fillWindowBuffer(const int numSamples)
 {
     window.clear();
-    float* writing = window.getWritePointer(0);
-    const float samplemultiplier = MathConstants<float>::pi / static_cast<float> (numSamples - 1);
+    auto* writing = window.getWritePointer(0);
+    const auto samplemultiplier = MathConstants<float>::pi / static_cast<float> (numSamples - 1);
     
     for(int i = 0; i < numSamples; ++i)
         writing[i] = static_cast<float> (0.5 - 0.5 * (std::cos(static_cast<float> (2 * i) * samplemultiplier)) );
@@ -301,10 +302,10 @@ void HarmonizerVoice::updateSampleRate(const double newSamplerate)
  ++++++++++++++++++++++++++++++++++++++*/
 void HarmonizerVoice::increaseBufferSizes(const int newMaxBlocksize)
 {
-    synthesisBuffer.setSize(1, newMaxBlocksize);
-    monoBuffer     .setSize(1, newMaxBlocksize);
-    stereoBuffer   .setSize(2, newMaxBlocksize);
-    window         .setSize(1, newMaxBlocksize);
+    synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
+    monoBuffer     .setSize(1, newMaxBlocksize, true, true, true);
+    stereoBuffer   .setSize(2, newMaxBlocksize, true, true, true);
+    window         .setSize(1, newMaxBlocksize, true, true, true);
     finalWindow.ensureStorageAllocated(newMaxBlocksize);
 };
 
@@ -315,7 +316,7 @@ void HarmonizerVoice::increaseBufferSizes(const int newMaxBlocksize)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Harmonizer::Harmonizer():
-    pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12)
+    pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12), lastMidiTimeStamp(0), lastMidiChannel(1)
 {
     currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
     currentlyActiveNotes.clearQuick();
@@ -347,6 +348,8 @@ Harmonizer::Harmonizer():
     updateStereoWidth(100);
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
+    
+    aggregateMidiBuffer.ensureSize(MAX_BUFFERSIZE * 2);
 };
 
 Harmonizer::~Harmonizer()
@@ -367,7 +370,8 @@ void Harmonizer::clearBuffers()
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 
-void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer)
+
+void Harmonizer::renderVoices (const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer)
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
@@ -592,12 +596,18 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 
 // functions for propogating midi events to HarmonizerVoices -----------------------------------------------------------
 
-void Harmonizer::handleMidiEvent(const MidiMessage& m)
+void Harmonizer::handleMidiEvent(const MidiMessage& m, const int samplePosition)
 {
+    bool shouldAddToAggregateMidiBuffer = true;
+    lastMidiChannel = m.getChannel();
+    
     if (m.isNoteOn())
         noteOn (m.getNoteNumber(), m.getFloatVelocity(), true);
     else if (m.isNoteOff())
+    {
         noteOff(m.getNoteNumber(), m.getFloatVelocity(), true, false, true);
+        shouldAddToAggregateMidiBuffer = (! latchIsOn);
+    }
     else if (m.isAllNotesOff() || m.isAllSoundOff())
         allNotesOff (false);
     else if (m.isPitchWheel())
@@ -608,6 +618,12 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m)
         handleChannelPressure (m.getChannelPressureValue());
     else if (m.isController())
         handleController (m.getControllerNumber(), m.getControllerValue());
+    
+    if (shouldAddToAggregateMidiBuffer)
+    {
+        lastMidiTimeStamp = samplePosition;
+        aggregateMidiBuffer.addEvent(m, ++lastMidiTimeStamp);
+    }
 };
 
 void Harmonizer::noteOn(const int midiPitch, const float velocity, const bool isKeyboard)
@@ -628,11 +644,16 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity, const bool is
     
     startVoice(findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity, isKeyboard);
     
-    if(isKeyboard)
+    if (! isKeyboard)
+    {
+        // this note event was not triggered by the keyboard (ie, input midi), it was triggered automatically by Imogen... so we need to add this event manually to our aggregate MIDI buffer that will be returned to the host.
+        aggregateMidiBuffer.addEvent(MidiMessage::noteOn(lastMidiChannel, midiPitch, velocity), ++lastMidiTimeStamp);
+    }
+    else
     {
         if(latchIsOn)
             latchManager.noteOnRecieved(midiPitch);
-        pitchCollectionChanged();
+        pitchCollectionChanged(); // apply pedal pitch / descant
     }
 };
 
@@ -661,6 +682,8 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
     
     const ScopedLock sl (lock);
     
+    bool stoppedVoice = false;
+    
     if(latchIsOn && isKeyboard)
         latchManager.noteOffRecieved(midiNoteNumber);
     else
@@ -669,25 +692,42 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
         {
             if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
             {
-                if((! isKeyboard && ! voice->isKeyDown()) || partofList)
+                if(((! isKeyboard) && (! voice->isKeyDown())) || partofList)
+                {
                     stopVoice (voice, velocity, allowTailOff);
+                    stoppedVoice = true;
+                }
                 else
                 {
                     voice->setKeyDown (false);
                     if (! (sustainPedalDown || sostenutoPedalDown))
+                    {
                         stopVoice (voice, velocity, allowTailOff);
+                        stoppedVoice = true;
+                    }
                 }
             }
         }
     }
     
-    if(midiNoteNumber == lastDescantPitch)
-        lastDescantPitch = -1;
-    if(midiNoteNumber == lastPedalPitch)
-        lastPedalPitch   = -1;
+    if (stoppedVoice)
+    {
+        if(midiNoteNumber == lastDescantPitch)
+            lastDescantPitch = -1;
+        if(midiNoteNumber == lastPedalPitch)
+            lastPedalPitch   = -1;
+    }
     
-    if(! partofList && isKeyboard && ! latchIsOn)
-        pitchCollectionChanged();
+    if (! latchIsOn)
+    {
+        if (! isKeyboard)
+        {
+            // this note event was not triggered by the keyboard (ie, input midi), it was triggered automatically by Imogen... so we need to add this event manually to our aggregate MIDI buffer that will be returned to the host.
+            aggregateMidiBuffer.addEvent(MidiMessage::noteOff(lastMidiChannel, midiNoteNumber, velocity), ++lastMidiTimeStamp);
+        }
+        else if (! partofList)
+            pitchCollectionChanged(); // apply descant / pedal pitch
+    }
 };
 
 void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff)
@@ -1258,7 +1298,10 @@ void Harmonizer::increaseBufferSizes(const int newMaxBlocksize)
     epochs.increaseBufferSizes(newMaxBlocksize);
     
     pitch.increaseBuffersize(newMaxBlocksize);
+    
+    aggregateMidiBuffer.ensureSize(newMaxBlocksize * 2);
 };
+
 
 void Harmonizer::newMaxNumVoices(const int newMaxNumVoices)
 {

@@ -22,7 +22,7 @@ public:
     
     //	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
     
-    float getPitch(AudioBuffer<float>& inputAudio, const double samplerate);
+    float getPitch(const AudioBuffer<float>& inputAudio, const double samplerate);
     
     void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
     
@@ -31,7 +31,7 @@ public:
     void clearBuffer() { yinBuffer.clear(); };
     
     // DANGER!!! FOR NON REALTIME USE ONLY!!!
-    void increaseBuffersize(const int newMaxBlocksize) { yinBuffer.setSize(1, newMaxBlocksize); };
+    void increaseBuffersize(const int newMaxBlocksize) { yinBuffer.setSize(1, newMaxBlocksize, true, true, true); };
     
 private:
     AudioBuffer<float> yinBuffer;
@@ -42,11 +42,11 @@ private:
     float tolerence;
     float minHz, maxHz;
     
-    float simpleYin(AudioBuffer<float>& inputAudio) noexcept;
+    float simpleYin(const AudioBuffer<float>& inputAudio) noexcept;
     
     unsigned int minElement(const float* data, const int dataSize) noexcept;
     
-    float quadraticPeakPosition (const float *data, unsigned int pos, const int dataSize) noexcept;
+    float quadraticPeakPosition (const float* data, unsigned int pos, const int dataSize) noexcept;
     
     //	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength);
     //
