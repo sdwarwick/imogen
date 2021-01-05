@@ -109,11 +109,11 @@ private:
     
     // takes the chunks in between midi messages and makes sure they don't exceed the internal preallocated buffer sizes
     // if they do, this function breaks the in/out buffers into smaller chunks & calls renderChunk() on each of these in sequence.
-    void processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
+    void renderBlock(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
                              const int startSample, const int numSamples);
     
     // this function actually does the audio processing on a chunk of audio.
-    void renderChunk(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
+    void renderChunk(const AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
     
     void updateAllParameters();
     void updateSampleRate(const double newSamplerate);
