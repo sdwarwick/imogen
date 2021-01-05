@@ -196,7 +196,7 @@ void ImogenAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 
 
 void ImogenAudioProcessor::processBlockPrivate(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
-                                               const int startSample, const int numSamples)
+                                               const int startSample, const int numSamples) 
 {
     if (isNonRealtime())
     {
@@ -293,8 +293,8 @@ void ImogenAudioProcessor::increaseBufferSizes(const int newMaxBlocksize)
     dryBuffer.setSize(2, realNewNumSamples);
     harmonizer.increaseBufferSizes(realNewNumSamples);
     
-    if(monoSummingBuffer.getNumSamples() < realNewNumSamples * 2)
-        monoSummingBuffer.setSize(1, realNewNumSamples * 2);
+    if(monoSummingBuffer.getNumSamples() < newMaxBlocksize * 2)
+        monoSummingBuffer.setSize(1, newMaxBlocksize * 2);
     
     dspSpec.maximumBlockSize = realNewNumSamples;
     limiter.prepare(dspSpec);
@@ -448,8 +448,7 @@ void ImogenAudioProcessor::updateNoteStealing()
 
 void ImogenAudioProcessor::updateMidiLatch()
 {
-    const bool allowTailOff = true;
-    harmonizer.setMidiLatch(latchIsOn->get(), allowTailOff);
+    harmonizer.setMidiLatch(latchIsOn->get(), true);
 };
 
 void ImogenAudioProcessor::updateIOgains()
@@ -734,14 +733,13 @@ AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    if ( layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled() && (! (host.isLogic() || host.isGarageBand())) )
+    if ( (layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()) && (! (host.isLogic() || host.isGarageBand())) )
         return false;
     
     if ( layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled() )
         return false;
     
-    if ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()
-      || layouts.getMainInputChannelSet()  != juce::AudioChannelSet::stereo() )
+    if ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
     
     return true;
@@ -753,10 +751,7 @@ bool ImogenAudioProcessor::canAddBus(bool isInput)
     if (! host.isLogic() || host.isGarageBand())
         return false;
     
-    if (! isInput)
-        return false;
-    
-    return true;
+    return isInput;
 };
 
 
@@ -764,6 +759,7 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {
     return new ImogenAudioProcessorEditor(*this);
 };
+
 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

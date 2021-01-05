@@ -64,15 +64,15 @@ void HarmonizerVoice::renderNextBlock(AudioBuffer<float>& inputAudio, AudioBuffe
     {
         // puts shifted samples into the monoBuffer, from sample indices 0 to numSamples-1
         esola(inputAudio, epochIndices, numOfEpochsPerFrame,
-               ( 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) ) ); // shifting ratio
+               ( 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) )); // shifting ratio
         
         const int numSamples = inputAudio.getNumSamples();
         
         monoBuffer.applyGain(0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
         // write mono ESOLA signal to stereoBuffer w/ panning multipliers, from sample indices 0 to numSamples-1
-        stereoBuffer.copyFrom(0, 0, monoBuffer, 0, 0, numSamples);
-        stereoBuffer.copyFrom(1, 0, monoBuffer, 0, 0, numSamples);
+        stereoBuffer.copyFrom (0, 0, monoBuffer, 0, 0, numSamples);
+        stereoBuffer.copyFrom (1, 0, monoBuffer, 0, 0, numSamples);
         stereoBuffer.applyGain(0, 0, numSamples, panningMults[0]);
         stereoBuffer.applyGain(1, 0, numSamples, panningMults[1]);
         
@@ -113,8 +113,8 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
         
         if(targetLength >= highestIndexWrittenTo)
         {
-            const int finalEpoch = (i + numOfEpochsPerFrame < epochIndices.size()) ? epochIndices.getUnchecked(i + numOfEpochsPerFrame) : numSamples;
-            const int frameLength    = finalEpoch - epochIndices.getUnchecked(i) - 1;
+            const int frameLength = ( (i + numOfEpochsPerFrame < epochIndices.size()) ?
+                                      epochIndices.getUnchecked(i + numOfEpochsPerFrame) : numSamples ) - epochIndices.getUnchecked(i) - 1;
             const int bufferIncrease = frameLength - highestIndexWrittenTo + lastEpochIndex;
             fillWindowBuffer(frameLength);
             
@@ -149,11 +149,11 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
             {
                 writing[s] = reading[s] + reading[olaindex];
                 
-                const int finalWindowAdding = (wolaindex < finalWindow.size()) ? finalWindow.getUnchecked(wolaindex) : 0;
                 if(s < finalWindow.size())
-                    finalWindow.set(s, finalWindow.getUnchecked(s) + finalWindowAdding );
+                    finalWindow.set(s,
+                                    finalWindow.getUnchecked(s) + ( (wolaindex < finalWindow.size()) ? finalWindow.getUnchecked(wolaindex) : 0) );
                 else
-                    finalWindow.add(finalWindowAdding);
+                    finalWindow.add( ((wolaindex < finalWindow.size()) ? finalWindow.getUnchecked(wolaindex) : 0) );
                 
                 ++olaindex;
                 ++wolaindex;
@@ -170,10 +170,7 @@ void HarmonizerVoice::esola(AudioBuffer<float>& inputAudio, const Array<int>& ep
           float* w = monoBuffer.getWritePointer(0);
     
     for(int s = 0; s < numSamples; ++s)
-    {
-        const float denom = (s < finalWindow.size()) ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4;
-        w[s] = r[s] / denom;
-    }
+        w[s] = r[s] / ( (s < finalWindow.size()) ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
 };
 
 
@@ -374,7 +371,7 @@ void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, AudioBuffer<float
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
-    epochs.extractEpochSampleIndices(inputAudio, sampleRate, epochIndices);
+    epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
     
     currentInputFreq = pitch.getPitch(inputAudio, sampleRate);
     
@@ -383,12 +380,7 @@ void Harmonizer::renderVoices (AudioBuffer<float>& inputAudio, AudioBuffer<float
     const int averageDistanceBetweenEpochs = epochs.averageDistanceBetweenEpochs(epochIndices);
     const int periodInSamples = ceil((1 / currentInputFreq) * sampleRate);
     
-    int numOfEpochsPerFrame;
-    
-    if (averageDistanceBetweenEpochs >= periodInSamples)
-        numOfEpochsPerFrame = 2;
-    else
-        numOfEpochsPerFrame = ceil(periodInSamples / averageDistanceBetweenEpochs) * 2;
+    int numOfEpochsPerFrame = (averageDistanceBetweenEpochs >= periodInSamples) ? 2 : ceil(periodInSamples / averageDistanceBetweenEpochs) * 2;
     
     for (auto* voice : voices)
         if(voice->isVoiceActive())

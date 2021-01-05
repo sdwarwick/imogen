@@ -11,7 +11,6 @@
 #include "InputAnalysis.h"
 
 
-
 #define MIN_SAMPLES_NEEDED 32 // the minimum number of samples needed to calculate the pitch of a chunk
 
 
@@ -56,7 +55,6 @@ float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio) noexcept
     const float* in      = inputAudio.getReadPointer (0);
           float* yinData = yinBuffer .getWritePointer(0);
     
-    int   period;
     float delta      = 0.0f;
     float runningSum = 0.0f;
     
@@ -75,7 +73,7 @@ float PitchTracker::simpleYin(AudioBuffer<float>& inputAudio) noexcept
         else
             yinData[tau] = 1.0;
         
-        period = tau - 3;
+        int period = tau - 3;
         
         if (tau > 4 && (yinData[period] < tolerence) && (yinData[period] < yinData[period + 1]))
             return quadraticPeakPosition (yinBuffer.getReadPointer(0), period, yinBufferSize);
@@ -99,11 +97,13 @@ unsigned int PitchTracker::minElement(const float* data, const int dataSize) noe
 float PitchTracker::quadraticPeakPosition (const float *data, unsigned int pos, const int dataSize) noexcept
 {
     unsigned int x0, x2;
+    
     if (pos == 0 || pos == dataSize - 1)
         return pos;
     
     x0 = (pos < 1) ? pos : pos - 1;
     x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
+    
     if (x0 == pos)
         return (data[pos] <= data[x2]) ? pos : x2;
     
