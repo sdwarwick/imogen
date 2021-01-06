@@ -51,13 +51,15 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     
     updateSamplerate(sampleRate);
     
-    wetBuffer.setSize(2, samplesPerBlock, true, true, true);
-    dryBuffer.setSize(2, samplesPerBlock, true, true, true);
-    inBuffer .setSize(1, samplesPerBlock, true, true, true);
-    monoSummingBuffer.setSize(1, samplesPerBlock, true, true, true);
+    const int newblocksize = std::max(MAX_BUFFERSIZE, samplesPerBlock);
     
-    dspSpec.maximumBlockSize = samplesPerBlock;
-    dspSpec.sampleRate  = sampleRate;
+    wetBuffer.setSize(2, newblocksize, true, true, true);
+    dryBuffer.setSize(2, newblocksize, true, true, true);
+    inBuffer .setSize(1, newblocksize, true, true, true);
+    monoSummingBuffer.setSize(1, newblocksize, true, true, true);
+    
+    dspSpec.maximumBlockSize = newblocksize;
+    dspSpec.sampleRate  = newblocksize;
     dspSpec.numChannels = 2;
     
     limiter.prepare(dspSpec);
@@ -69,7 +71,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     bypassDelay.setDelay(2); // latency in samples of the ESOLA algorithm
     
     harmonizer.resetNoteOnCounter(); // ??
-    harmonizer.prepare(samplesPerBlock);
+    harmonizer.prepare(newblocksize);
     
     clearBuffers();
     
@@ -78,11 +80,11 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                                        const bool applyFadeIn, const bool applyFadeOut)
+void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+                                        MidiBuffer& midiMessages,
+                                        const bool applyFadeIn, const bool applyFadeOut,
+                                        const bool chopInput)
 {
-    const ScopedLock sl (lock);
-    
     AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
     
     const int totalNumSamples = inBus.getNumSamples();
@@ -122,8 +124,6 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         }
     }
     
-    bool chopInput = false; // if this flag is true, the processor will chop the input audio into chunks in between the timestamps of each midi message. If false, the midi messages will be applied in sequence first, then the entire block of audio rendered as one large segment.
-    
     if (chopInput)
         processWithChopping (input, output, midiMessages);
     else
@@ -138,10 +138,8 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
-    const ScopedLock sl (lock);
-    
     if (output.getNumChannels() > inBus.getNumChannels())
         for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
             output.clear(chan, 0, output.getNumSamples());
@@ -154,8 +152,6 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
         bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
     else
         bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock));
-    
-    ignoreUnused(midiMessages); // midi passes through unaffected
 };
 
 

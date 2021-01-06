@@ -9,7 +9,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
     modulatorInput(ModulatorInputSource::left),
-    wasBypassedLastCallback(true)
+    wasBypassedLastCallback(true),
+    choppingInput(false)
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
@@ -112,7 +113,9 @@ void ImogenAudioProcessor::killAllMidi()
 // audio rendering ----------------------------------------------------------------------------------------------------------------------------------
 
 template <typename SampleType>
-void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine)
+void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
+                                                MidiBuffer& midiMessages,
+                                                ImogenEngine<SampleType>& engine)
 {
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return; // our audio input is disabled! can't do processing
@@ -125,14 +128,16 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
-    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
+    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, choppingInput);
     
     wasBypassedLastCallback = false;
 };
 
 
 template <typename SampleType>
-void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine)
+void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer,
+                                                        MidiBuffer& midiMessages,
+                                                        ImogenEngine<SampleType>& engine)
 {
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return;
@@ -145,19 +150,12 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
-    if (! wasBypassedLastCallback)
-    {
-        // this is the first callback of processBlockBypassed() after the bypass has been activated.
-        // Process one more chunk and ramp the sound to 0 instead of killing the sound instantly
-        
-        engine.process (inBus, outBus, midiMessages, false, true);
-        wasBypassedLastCallback = true;
-        return;
-    }
-    
-    engine.processBypassed (inBus, outBus, midiMessages);
-    
     wasBypassedLastCallback = true;
+    
+    if (! wasBypassedLastCallback)
+        engine.process (inBus, outBus, midiMessages, false, true, choppingInput);
+    else
+        engine.processBypassed (inBus, outBus); // midi passes through unaffected when plugin is bypassed
 };
 
 
@@ -193,6 +191,8 @@ void ImogenAudioProcessor::updateAllParameters()
     updateMidiLatch();
     updatePedalPitch();
     updateDescant();
+    
+    // update chopping mode...
 };
 
 

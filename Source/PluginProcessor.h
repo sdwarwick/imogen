@@ -20,13 +20,12 @@ public:
     
     ~ImogenEngine();
     
-    // initializes the processor
-    void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
-    
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                  const bool applyFadeIn, const bool applyFadeOut);
+                  const bool applyFadeIn, const bool applyFadeOut, const bool chopInput);
     
-    void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
+    
+    void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
     
     void prepare (double sampleRate, int samplesPerBlock);
     
@@ -61,11 +60,14 @@ public:
     
 private:
     
-    CriticalSection lock; // this critical section will be locked while audio processing is active
-    
     void processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
     void processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    
+    void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
+                      const int startSample, const int numSamples);
+    
+    void renderChunk (const AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer);
     
     ImogenAudioProcessor& processor;
     
@@ -80,14 +82,6 @@ private:
     dsp::Limiter <SampleType> limiter;
     dsp::DryWetMixer<SampleType> dryWetMixer;
     dsp::DelayLine<SampleType> bypassDelay; // a delay line used for latency compensation when the processing is bypassed
-    
-    // takes the chunks in between midi messages and makes sure they don't exceed the internal preallocated buffer sizes
-    // if they do, this function breaks the in/out buffers into smaller chunks & calls renderChunk() on each of these in sequence.
-    void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
-                      const int startSample, const int numSamples);
-    
-    // this function actually does the audio processing on a chunk of audio.
-    void renderChunk (const AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer);
     
     bool resourcesReleased;
     bool initialized;
@@ -165,6 +159,10 @@ public:
     juce::File getPresetsFolder() const;
     
     // functions to update parameters ---------------------------------------------------------------------------------------------------------------
+    
+    void updateChunkChopping(const bool shouldChop) { choppingInput = shouldChop; };
+    void updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance);
+    
     void updateAdsr();
     void updateIOgains();
     void updateLimiter();
@@ -181,7 +179,7 @@ public:
     void updatePedalPitch();
     void updateDescant();
     
-    void updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance);
+    
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
@@ -229,6 +227,8 @@ private:
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;
     float prevideb, prevodeb;
+    
+    bool choppingInput;
     
     PluginHostType host;
     
