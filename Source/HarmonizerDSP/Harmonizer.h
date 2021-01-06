@@ -281,7 +281,7 @@ private:
     int descantLowerThresh;
     int descantInterval;
     
-    EpochFinder epochs;
+    EpochFinder<float> epochs;
     Array<int> epochIndices;
     
     PitchTracker pitch;

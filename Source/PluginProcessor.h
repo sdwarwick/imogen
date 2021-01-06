@@ -105,15 +105,16 @@ public:
 private:
     
     // the top-level processBlock call redirects here, just so that this function can be wrapped & templated for either float or double AudioBuffer types.
-    void processBlockWrapped(AudioBuffer<float>& buffer, MidiBuffer& midiMessages, const bool applyFadeIn, const bool applyFadeOut);
+    void processBlockWrapped (AudioBuffer<float>& inBus, AudioBuffer<float>& output, MidiBuffer& midiMessages,
+                              const bool applyFadeIn, const bool applyFadeOut);
     
     // takes the chunks in between midi messages and makes sure they don't exceed the internal preallocated buffer sizes
     // if they do, this function breaks the in/out buffers into smaller chunks & calls renderChunk() on each of these in sequence.
-    void renderBlock(AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
-                             const int startSample, const int numSamples);
+    void renderBlock (AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
+                      const int startSample, const int numSamples);
     
     // this function actually does the audio processing on a chunk of audio.
-    void renderChunk(const AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
+    void renderChunk (const AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
     
     void updateAllParameters();
     void updateSampleRate(const double newSamplerate);
@@ -186,6 +187,8 @@ private:
     void initialize(const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
     
     void increaseBufferSizes(const int newMaxBlocksize);
+    
+    void resizeBuffers(const int newBlocksize);
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
