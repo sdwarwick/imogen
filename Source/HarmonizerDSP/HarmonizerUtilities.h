@@ -184,10 +184,8 @@ class MidiLatchManager
 {
 public:
     
-    MidiLatchManager(const int maxNumVoices)
-    {
-        currentlyHeldNotes.ensureStorageAllocated(maxNumVoices);
-    };
+    MidiLatchManager()
+    { };
     
     Array<int> turnOffLatch()
     {

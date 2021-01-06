@@ -12,13 +12,12 @@
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-    parent(h), isQuickFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64),
-        synthesisBuffer(1, MAX_BUFFERSIZE), monoBuffer(1, MAX_BUFFERSIZE), stereoBuffer(2, MAX_BUFFERSIZE), window(1, MAX_BUFFERSIZE)
+    parent(h), isQuickFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
     
-    const double initSamplerate = (parent->getSamplerate() > 0) ? parent->getSamplerate() : 44100.0;
+    const double initSamplerate = std::max<double>(parent->getSamplerate(), 44100.0);
     
     adsr        .setSampleRate(initSamplerate);
     quickRelease.setSampleRate(initSamplerate);
@@ -27,9 +26,6 @@ HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
     adsr        .setParameters(parent->getCurrentAdsrParams());
     quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters(parent->getCurrentQuickAttackParams());
-    
-    finalWindow.ensureStorageAllocated(MAX_BUFFERSIZE);
-    finalWindow.clearQuick();
 };
 
 template<typename SampleType>
@@ -349,20 +345,8 @@ template class HarmonizerVoice<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12), lastMidiTimeStamp(0), lastMidiChannel(1)
+    pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12), lastMidiTimeStamp(0), lastMidiChannel(1)
 {
-    currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    currentlyActiveNotes.clearQuick();
-    
-    currentlyActiveNoReleased.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    currentlyActiveNoReleased.clearQuick();
-    
-    unLatched.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    unLatched.clearQuick();
-    
-    epochIndices.ensureStorageAllocated(MAX_BUFFERSIZE);
-    epochIndices.clearQuick();
-    
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
     adsrParams.sustain = 0.8f;
@@ -381,8 +365,6 @@ Harmonizer<SampleType>::Harmonizer():
     updateStereoWidth(100);
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
-    
-    aggregateMidiBuffer.ensureSize(MAX_BUFFERSIZE * 2);
 };
 
 template<typename SampleType>
@@ -408,7 +390,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     epochIndices.ensureStorageAllocated(blocksize);
     epochIndices.clearQuick();
     
-    aggregateMidiBuffer.ensureSize(blocksize);
+    aggregateMidiBuffer.ensureSize(ceil(blocksize * 1.5f));
     
     newMaxNumVoices(voices.size());
     

@@ -8,39 +8,71 @@
               pluginVST3Category="Fx,Pitch Shift" pluginRTASCategory="4,64"
               pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
               pluginFormats="buildAU,buildVST3" pluginManufacturerCode="BenV"
-              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Midi/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/"
+              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;&#10;"
               displaySplashScreen="1" cppLanguageStandard="17" maxBinaryFileSize="20971520">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
-      <GROUP id="{7280FBDB-5D91-B8BB-2422-189E249894A5}" name="GUI">
-        <FILE id="T4QvQh" name="PluginEditor.cpp" compile="1" resource="0"
-              file="Source/PluginEditor.cpp"/>
-        <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-      </GROUP>
       <GROUP id="{AB7F125B-A848-2EF9-A38B-3810A8791D22}" name="DSP">
-        <FILE id="oQCkb1" name="ImogenEngine.cpp" compile="1" resource="0"
+        <FILE id="s9uudl" name="ImogenEngine.cpp" compile="1" resource="0"
               file="Source/ImogenEngine.cpp"/>
-        <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"
+        <FILE id="oTttNq" name="PluginProcessor.cpp" compile="1" resource="0"
               file="Source/PluginProcessor.cpp"/>
-        <FILE id="Ng4KOy" name="PluginProcessor.h" compile="0" resource="0"
+        <FILE id="TuPrOv" name="PluginProcessor.h" compile="0" resource="0"
               file="Source/PluginProcessor.h"/>
         <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
-          <FILE id="aUPC7B" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
-          <FILE id="xCpozC" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
+          <FILE id="ALhBKM" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
+          <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
           <GROUP id="{BBDCBAF8-D2B1-B319-ED70-E66CCD4EA18F}" name="InputAnalysis">
-            <FILE id="TJGYOz" name="InputAnalysis.cpp" compile="1" resource="0"
+            <FILE id="FH8v8E" name="InputAnalysis.cpp" compile="1" resource="0"
                   file="Source/HarmonizerDSP/InputAnalysis.cpp"/>
-            <FILE id="uXRjy7" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
+            <FILE id="bk2ZSN" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
           </GROUP>
           <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
-            <FILE id="rJjaxI" name="HarmonizerUtilities.h" compile="0" resource="0"
+            <FILE id="z1rWG8" name="HarmonizerUtilities.h" compile="0" resource="0"
                   file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
             <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
-              <FILE id="wxVlaC" name="PanningManager.cpp" compile="1" resource="0"
+              <FILE id="G1IxaB" name="PanningManager.cpp" compile="1" resource="0"
                     file="Source/HarmonizerDSP/PanningManager.cpp"/>
-              <FILE id="AMjikC" name="PanningManager.h" compile="0" resource="0"
+              <FILE id="P63s62" name="PanningManager.h" compile="0" resource="0"
                     file="Source/HarmonizerDSP/PanningManager.h"/>
             </GROUP>
+          </GROUP>
+        </GROUP>
+      </GROUP>
+      <GROUP id="{7280FBDB-5D91-B8BB-2422-189E249894A5}" name="GUI">
+        <FILE id="E7gPhi" name="PluginEditor.cpp" compile="1" resource="0"
+              file="Source/PluginEditor.cpp"/>
+        <FILE id="Ap6zea" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+        <GROUP id="{27897AB0-D6F3-54AD-89AC-1DAFE19D8DDF}" name="Graphics">
+          <FILE id="uzFE7E" name="LookAndFeel.h" compile="0" resource="0" file="Source/Graphics/LookAndFeel.h"/>
+          <GROUP id="{5B685E86-D1DA-2F32-AF0D-2A7394AFCFDA}" name="StaffDisplay">
+            <FILE id="HtlF3Y" name="StaffDisplay.cpp" compile="1" resource="0"
+                  file="Source/Graphics/StaffDisplay.cpp"/>
+            <FILE id="rm8Vn3" name="StaffDisplay.h" compile="0" resource="0" file="Source/Graphics/StaffDisplay.h"/>
+          </GROUP>
+          <GROUP id="{0D309468-25F3-C3AC-4E02-8E5E50275F85}" name="MidiControlPanel">
+            <FILE id="zaMhTz" name="MidiControlPanel.cpp" compile="1" resource="0"
+                  file="Source/Graphics/MidiControlPanel.cpp"/>
+            <FILE id="SxC7ZD" name="MidiControlPanel.h" compile="0" resource="0"
+                  file="Source/Graphics/MidiControlPanel.h"/>
+          </GROUP>
+          <GROUP id="{501E3718-40B7-047D-42CD-8FBF33890D22}" name="IOControlPanel">
+            <FILE id="gec65k" name="IOControlPanel.cpp" compile="1" resource="0"
+                  file="Source/Graphics/IOControlPanel.cpp"/>
+            <FILE id="IVTRuv" name="IOControlPanel.h" compile="0" resource="0"
+                  file="Source/Graphics/IOControlPanel.h"/>
+            <FILE id="pY2sTe" name="LimiterControlPanel.h" compile="0" resource="0"
+                  file="Source/Graphics/LimiterControlPanel.h"/>
+          </GROUP>
+          <GROUP id="{F81918AC-7CE6-FBD9-9B56-1F21E32B78DE}" name="HelpScreen">
+            <FILE id="v6KzXO" name="HelpScreen.cpp" compile="1" resource="0" file="Source/Graphics/HelpScreen.cpp"/>
+            <FILE id="Md8rzZ" name="HelpScreen.h" compile="0" resource="0" file="Source/Graphics/HelpScreen.h"/>
+          </GROUP>
+          <FILE id="vPvUxa" name="EnableSidechainWarning.h" compile="0" resource="0"
+                file="Source/Graphics/EnableSidechainWarning.h"/>
+          <GROUP id="{38442FFC-AF2D-9451-5C27-5D7A74537B76}" name="Images">
+            <FILE id="lusnVB" name="closeIcon.png" compile="0" resource="1" file="GraphicAssets/closeIcon.png"/>
+            <FILE id="TWwUgh" name="grandStaff.png" compile="0" resource="1" file="GraphicAssets/grandStaff.png"/>
           </GROUP>
         </GROUP>
       </GROUP>
@@ -48,38 +80,6 @@
         <FILE id="yiULVe" name="GlobalDefinitions.h" compile="0" resource="0"
               file="Source/GlobalDefinitions.h"/>
         <FILE id="oNyqZ2" name="GeneralUtils.h" compile="0" resource="0" file="Source/GeneralUtils.h"/>
-      </GROUP>
-    </GROUP>
-    <GROUP id="{27897AB0-D6F3-54AD-89AC-1DAFE19D8DDF}" name="Graphics">
-      <FILE id="gKbSEX" name="EnableSidechainWarning.h" compile="0" resource="0"
-            file="Source/Graphics/EnableSidechainWarning.h"/>
-      <FILE id="vGGdhL" name="LookAndFeel.h" compile="0" resource="0" file="Source/Graphics/LookAndFeel.h"/>
-      <GROUP id="{5B685E86-D1DA-2F32-AF0D-2A7394AFCFDA}" name="StaffDisplay">
-        <FILE id="zE12pr" name="StaffDisplay.cpp" compile="1" resource="0"
-              file="Source/Graphics/StaffDisplay.cpp"/>
-        <FILE id="qgg0VY" name="StaffDisplay.h" compile="0" resource="0" file="Source/Graphics/StaffDisplay.h"/>
-      </GROUP>
-      <GROUP id="{0D309468-25F3-C3AC-4E02-8E5E50275F85}" name="MidiControlPanel">
-        <FILE id="CSuczt" name="MidiControlPanel.cpp" compile="1" resource="0"
-              file="Source/Graphics/MidiControlPanel.cpp"/>
-        <FILE id="pfhfAd" name="MidiControlPanel.h" compile="0" resource="0"
-              file="Source/Graphics/MidiControlPanel.h"/>
-      </GROUP>
-      <GROUP id="{501E3718-40B7-047D-42CD-8FBF33890D22}" name="IOControlPanel">
-        <FILE id="iuy3kM" name="IOControlPanel.cpp" compile="1" resource="0"
-              file="Source/Graphics/IOControlPanel.cpp"/>
-        <FILE id="WxQPWJ" name="IOControlPanel.h" compile="0" resource="0"
-              file="Source/Graphics/IOControlPanel.h"/>
-        <FILE id="OK081y" name="LimiterControlPanel.h" compile="0" resource="0"
-              file="Source/Graphics/LimiterControlPanel.h"/>
-      </GROUP>
-      <GROUP id="{F81918AC-7CE6-FBD9-9B56-1F21E32B78DE}" name="HelpScreen">
-        <FILE id="gLZAFp" name="HelpScreen.cpp" compile="1" resource="0" file="Source/Graphics/HelpScreen.cpp"/>
-        <FILE id="VWHuqH" name="HelpScreen.h" compile="0" resource="0" file="Source/Graphics/HelpScreen.h"/>
-      </GROUP>
-      <GROUP id="{38442FFC-AF2D-9451-5C27-5D7A74537B76}" name="Images">
-        <FILE id="lusnVB" name="closeIcon.png" compile="0" resource="1" file="GraphicAssets/closeIcon.png"/>
-        <FILE id="TWwUgh" name="grandStaff.png" compile="0" resource="1" file="GraphicAssets/grandStaff.png"/>
       </GROUP>
     </GROUP>
   </MAINGROUP>
