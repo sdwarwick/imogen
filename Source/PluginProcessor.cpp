@@ -563,7 +563,7 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
             suspendProcessing (true);
             
             for(int i = 0; i < newNumVoices - currentVoices; ++i)
-                harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
+                harmonizer.addVoice(new HarmonizerVoice<float>(&harmonizer));
             
             harmonizer.newMaxNumVoices(std::max(newNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
             // increases storage overheads for internal harmonizer functions dealing with arrays of notes, etc

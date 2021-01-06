@@ -13,14 +13,14 @@
 #include <JuceHeader.h>
 #include "GlobalDefinitions.h"
 
-
+template<typename SampleType>
 class PitchTracker
 {
 public:
     PitchTracker();
     ~PitchTracker();
     
-    float getPitch(const AudioBuffer<float>& inputAudio, const double samplerate);
+    SampleType getPitch(const AudioBuffer<SampleType>& inputAudio, const double samplerate);
     
     void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
     
@@ -32,31 +32,31 @@ public:
     void increaseBuffersize(const int newMaxBlocksize) { yinBuffer.setSize(1, newMaxBlocksize, true, true, true); };
     
 private:
-    AudioBuffer<float> yinBuffer;
-    float prevDetectedPitch;
+    AudioBuffer<SampleType> yinBuffer;
+    SampleType prevDetectedPitch;
    
     float tolerence;
     float minHz, maxHz;
     
-    float simpleYin(const AudioBuffer<float>& inputAudio) noexcept;
+    SampleType simpleYin(const AudioBuffer<SampleType>& inputAudio) noexcept;
     
-    unsigned int minElement(const float* data, const int dataSize) noexcept;
+    unsigned int minElement(const SampleType* data, const int dataSize) noexcept;
     
-    float quadraticPeakPosition (const float* data, unsigned int pos, const int dataSize) noexcept;
+    SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchTracker)
 };
 
 
 
-
+template<typename SampleType>
 class EpochFinder
 {
 public:
     EpochFinder();
     ~EpochFinder();
     
-    void extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray);
+    void extractEpochSampleIndices(const AudioBuffer<SampleType>& inputAudio, const double samplerate, Array<int>& outputArray);
     
     int averageDistanceBetweenEpochs(const Array<int>& epochIndices);
     
@@ -66,9 +66,9 @@ public:
 private:
     CriticalSection lock;
     
-    Array<float> y;
-    Array<float> y2;
-    Array<float> y3;
+    Array<SampleType> y;
+    Array<SampleType> y2;
+    Array<SampleType> y3;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EpochFinder)
 };

@@ -13,17 +13,18 @@
 
 #define MIN_SAMPLES_NEEDED 32 // the minimum number of samples needed to calculate the pitch of a chunk
 
-
-PitchTracker::PitchTracker(): prevDetectedPitch(0.0f), tolerence(0.15f), minHz(50.0f), maxHz(2000.0f)
+template <typename SampleType>
+PitchTracker<SampleType>::PitchTracker(): prevDetectedPitch(0), tolerence(0.15f), minHz(50.0f), maxHz(2000.0f)
 {
     yinBuffer.setSize(1, MAX_BUFFERSIZE);
 };
 
-PitchTracker::~PitchTracker()
+template <typename SampleType>
+PitchTracker<SampleType>::~PitchTracker()
 { };
 
-
-float PitchTracker::getPitch(const AudioBuffer<float>& inputAudio, const double samplerate)
+template <typename SampleType>
+SampleType PitchTracker<SampleType>::getPitch(const AudioBuffer<SampleType>& inputAudio, const double samplerate)
 {
     if (inputAudio.getNumSamples() < MIN_SAMPLES_NEEDED)
         return prevDetectedPitch;
@@ -44,8 +45,8 @@ float PitchTracker::getPitch(const AudioBuffer<float>& inputAudio, const double 
     return prevDetectedPitch;
 };
 
-
-float PitchTracker::simpleYin(const AudioBuffer<float>& inputAudio) noexcept
+template <typename SampleType>
+SampleType PitchTracker<SampleType>::simpleYin(const AudioBuffer<SampleType>& inputAudio) noexcept
 {
     const int yinBufferSize = roundToInt(inputAudio.getNumSamples()/2);
     
@@ -78,8 +79,8 @@ float PitchTracker::simpleYin(const AudioBuffer<float>& inputAudio) noexcept
     return quadraticPeakPosition (yinBuffer.getReadPointer(0), minElement(yinBuffer.getReadPointer(0), yinBufferSize), yinBufferSize);
 };
 
-
-unsigned int PitchTracker::minElement(const float* data, const int dataSize) noexcept
+template <typename SampleType>
+unsigned int PitchTracker<SampleType>::minElement(const SampleType* data, const int dataSize) noexcept
 {
     unsigned int j, pos = 0;
     auto tmp = data[0];
@@ -91,8 +92,8 @@ unsigned int PitchTracker::minElement(const float* data, const int dataSize) noe
     return pos;
 };
 
-
-float PitchTracker::quadraticPeakPosition (const float* data, unsigned int pos, const int dataSize) noexcept
+template <typename SampleType>
+SampleType PitchTracker<SampleType>::quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept
 {
     unsigned int x0, x2;
     
@@ -111,13 +112,16 @@ float PitchTracker::quadraticPeakPosition (const float* data, unsigned int pos, 
     auto s0 = data[x0];
     auto s2 = data[x2];
     return pos + 0.5 * (s0 - s2 ) / (s0 - 2.* data[pos] + s2);
-}
+};
+
+template class PitchTracker<float>;
+template class PitchTracker<double>;
 
 #undef MIN_SAMPLES_NEEDED
 
 
-
-EpochFinder::EpochFinder()
+template <typename SampleType>
+EpochFinder<SampleType>::EpochFinder()
 {
     y .ensureStorageAllocated(MAX_BUFFERSIZE);
     y2.ensureStorageAllocated(MAX_BUFFERSIZE);
@@ -128,18 +132,20 @@ EpochFinder::EpochFinder()
     y3.clearQuick();
 };
 
-EpochFinder::~EpochFinder()
+template <typename SampleType>
+EpochFinder<SampleType>::~EpochFinder()
 { };
 
-void EpochFinder::increaseBufferSizes(const int newMaxBlocksize)
+template <typename SampleType>
+void EpochFinder<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
     y .ensureStorageAllocated(newMaxBlocksize);
     y2.ensureStorageAllocated(newMaxBlocksize);
     y3.ensureStorageAllocated(newMaxBlocksize);
 };
 
-
-void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio, const double samplerate, Array<int>& outputArray)
+template <typename SampleType>
+void EpochFinder<SampleType>::extractEpochSampleIndices(const AudioBuffer<SampleType>& inputAudio, const double samplerate, Array<int>& outputArray)
 {
     /*
      EXTRACT EPOCH INDICES
@@ -183,11 +189,11 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     }
     
     // third stage
-    float runningSum = 0.0f;
+    SampleType runningSum = 0;
     for(int i = 0; i < 2 * windowLength + 2; ++i)
         runningSum += ( (i < y2.size()) ? y2.getUnchecked(i) : 0 );
     
-    float meanVal = 0.0f;
+    SampleType meanVal = 0;
     for(int i = 0; i < numSamples; ++i)
     {
         if((i - windowLength < 0) || (i + windowLength >= numSamples))
@@ -228,7 +234,7 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     
     // last stage
     auto last = y.getUnchecked(0);
-    float act;
+    SampleType act;
     outputArray.add(0);
     for(int i = 0; i < numSamples; ++i)
     {
@@ -240,19 +246,24 @@ void EpochFinder::extractEpochSampleIndices(const AudioBuffer<float>& inputAudio
     outputArray.add(numSamples - 1);
 };
 
-
-int EpochFinder::averageDistanceBetweenEpochs(const Array<int>& epochIndices)
+template <typename SampleType>
+int EpochFinder<SampleType>::averageDistanceBetweenEpochs(const Array<int>& epochIndices)
 {
-    int averageDistance = 0;
+    SampleType floatAverageDistance = 0;
     
     for (int i = 0; i < epochIndices.size() - 1; ++i)
     {
         const int distance = epochIndices.getUnchecked(i + 1) - epochIndices.getUnchecked(i);
-        averageDistance = ceil((averageDistance + distance) / 2);
+        floatAverageDistance = (floatAverageDistance + distance) / 2;
     }
+    
+    const int averageDistance = roundToInt(floatAverageDistance);
     
     if (! (averageDistance > 0))
         return 1;
     
     return averageDistance;
 };
+
+template class EpochFinder<float>;
+template class EpochFinder<double>;

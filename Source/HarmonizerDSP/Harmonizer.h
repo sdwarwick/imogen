@@ -16,7 +16,7 @@
 #include "PanningManager.h"
 #include "InputAnalysis.h"
 
-
+template<typename SampleType>
 class Harmonizer; // forward declaration...
 
 
@@ -24,16 +24,16 @@ class Harmonizer; // forward declaration...
 /*
  HarmonizerVoice : represents a "voice", or instance of the DSP algorithm, that the Harmonizer can use to generate sound. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
  */
-
+template<typename SampleType>
 class HarmonizerVoice
 {
 public:
-    HarmonizerVoice(Harmonizer* h);
+    HarmonizerVoice(Harmonizer<SampleType>* h);
     
     ~HarmonizerVoice();
     
     
-    void renderNextBlock(const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
+    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                          const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq);
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
@@ -58,54 +58,56 @@ public:
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes(const int newMaxBlocksize);
     
+    int currentlyPlayingNote;
+    uint32 noteOnTime;
+    int currentMidipan;
     
-private:
+    void clearBuffers();
     
-    friend class Harmonizer;
-    
-    void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
+    float currentVelocityMultiplier;
+    float lastRecievedVelocity;
+    float currentOutputFreq;
     
     void updateSampleRate(const double newSamplerate);
-    
-    
-    void esola (const AudioBuffer<float>& inputAudio,
-                const Array<int>& epochIndices, const int numOfEpochsPerFrame,
-                const float shiftingRatio);
-    
-    Harmonizer* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
     ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
+    
+    
+private:
+    
+    void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
+    
+    void esola (const AudioBuffer<SampleType>& inputAudio,
+                const Array<int>& epochIndices, const int numOfEpochsPerFrame,
+                const float shiftingRatio);
+    
+    Harmonizer<SampleType>* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
+    
     bool isQuickFading;
     bool noteTurnedOff;
-    int currentlyPlayingNote;
-    float currentOutputFreq;
-    float currentVelocityMultiplier;
-    float lastRecievedVelocity;
-    uint32 noteOnTime;
+    
     bool keyIsDown;
-    int currentMidipan;
     float panningMults[2];
     
     int currentAftertouch;
     
-    AudioBuffer<float> synthesisBuffer;
-    AudioBuffer<float> monoBuffer;
-    AudioBuffer<float> stereoBuffer;
+    AudioBuffer<SampleType> synthesisBuffer;
+    AudioBuffer<SampleType> monoBuffer;
+    AudioBuffer<SampleType> stereoBuffer;
     
-    AudioBuffer<float> window;
-    Array<float> finalWindow;
+    AudioBuffer<SampleType> window;
+    Array<SampleType> finalWindow;
     
     void fillWindowBuffer(const int numSamples);
     
-    void clearBuffers();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HarmonizerVoice)
 };
 
 
-
+template<typename SampleType>
 class Harmonizer
 {
 public:
@@ -123,7 +125,7 @@ public:
     MidiBuffer& returnMidiBuffer() { return aggregateMidiBuffer; };
     
     
-    void renderVoices (const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer);
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
     int getNumActiveVoices() const;
     
@@ -169,7 +171,7 @@ public:
     void updatePitchbendSettings(const int rangeUp, const int rangeDown);
     
     // Adds a new voice to the harmonizer. The object passed in will be managed by the synthesiser, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
-    HarmonizerVoice* addVoice(HarmonizerVoice* newVoice);
+    HarmonizerVoice<SampleType>* addVoice(HarmonizerVoice<SampleType>* newVoice);
     
     // removes a specified # of voices, attempting to remove inactive voices first
     void removeNumVoices(const int voicesToRemove);
@@ -182,7 +184,7 @@ public:
     int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; };
     void setPedalPitchInterval(const int newInterval);
     int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; };
-    HarmonizerVoice* getCurrentPedalPitchVoice();
+    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice();
     
     void setDescant(const bool isOn);
     bool isDescantOn() const noexcept { return descantIsOn; };
@@ -190,18 +192,27 @@ public:
     int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
     void setDescantInterval(const int newInterval);
     int getCurrentDescantInterval() const noexcept { return descantInterval; };
-    HarmonizerVoice* getCurrentDescantVoice();
+    HarmonizerVoice<SampleType>* getCurrentDescantVoice();
     
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void increaseBufferSizes(const int newMaxBlocksize);
     void newMaxNumVoices(const int newMaxNumVoices);
+    
+    bool sustainPedalDown, sostenutoPedalDown;
+    
+    PanningManager panner;
+    
+    bool adsrIsOn;
+    VelocityHelper velocityConverter;
+    PitchConverter pitchConverter;
+    PitchBendHelper bendTracker;
     
     
 protected:
     
     CriticalSection lock;
     
-    OwnedArray<HarmonizerVoice> voices;
+    OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     // MIDI
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
@@ -222,16 +233,14 @@ protected:
     void handleLegato(const bool isOn);
     
     // voice allocation
-    HarmonizerVoice* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const;
-    HarmonizerVoice* findVoiceToSteal (const int midiNoteNumber) const;
+    HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const;
+    HarmonizerVoice<SampleType>* findVoiceToSteal (const int midiNoteNumber) const;
     
     
 private:
     
-    friend class HarmonizerVoice;
-    
-    void startVoice (HarmonizerVoice* voice, const int midiPitch, const float velocity, const bool isKeyboard);
-    void stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff);
+    void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
+    void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
     
     // turns off a list of given pitches at once. Used for turning off midi latch
     void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff);
@@ -243,18 +252,12 @@ private:
     
     void applyDescant();
     
-    PitchConverter pitchConverter;
-    PitchBendHelper bendTracker;
-    VelocityHelper velocityConverter;
-    PanningManager panner;
-    
     bool latchIsOn;
     MidiLatchManager latchManager;
     
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;
     ADSR::Parameters quickAttackParams;
-    bool adsrIsOn;
     
     float currentInputFreq;
     
@@ -263,8 +266,6 @@ private:
     uint32 lastNoteOnCounter;
     int lowestPannedNote;
     int lastPitchWheelValue;
-    
-    bool sustainPedalDown, sostenutoPedalDown;
     
     mutable Array<int> currentlyActiveNotes;
     mutable Array<int> currentlyActiveNoReleased;
@@ -281,10 +282,10 @@ private:
     int descantLowerThresh;
     int descantInterval;
     
-    EpochFinder epochs;
+    EpochFinder<SampleType> epochs;
     Array<int> epochIndices;
     
-    PitchTracker pitch;
+    PitchTracker<SampleType> pitch;
     
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;

@@ -10,8 +10,8 @@
 
 #include "Harmonizer.h"
 
-
-HarmonizerVoice::HarmonizerVoice(Harmonizer* h):
+template<typename SampleType>
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
     parent(h), isQuickFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64),
         synthesisBuffer(1, MAX_BUFFERSIZE), monoBuffer(1, MAX_BUFFERSIZE), stereoBuffer(2, MAX_BUFFERSIZE), window(1, MAX_BUFFERSIZE)
 {
@@ -32,12 +32,12 @@ HarmonizerVoice::HarmonizerVoice(Harmonizer* h):
     finalWindow.clearQuick();
 };
 
-
-HarmonizerVoice::~HarmonizerVoice()
+template<typename SampleType>
+HarmonizerVoice<SampleType>::~HarmonizerVoice()
 { };
 
-
-void HarmonizerVoice::clearBuffers()
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::clearBuffers()
 {
     monoBuffer.clear();
     stereoBuffer.clear();
@@ -46,8 +46,8 @@ void HarmonizerVoice::clearBuffers()
     finalWindow.clearQuick();
 };
 
-
-void HarmonizerVoice::renderNextBlock(const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer,
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                                       const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq)
 {
     if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
@@ -92,8 +92,8 @@ void HarmonizerVoice::renderNextBlock(const AudioBuffer<float>& inputAudio, Audi
         clearCurrentNote();
 };
 
-
-void HarmonizerVoice::esola(const AudioBuffer<float>& inputAudio,
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::esola(const AudioBuffer<SampleType>& inputAudio,
                             const Array<int>& epochIndices, const int numOfEpochsPerFrame,
                             const float shiftingRatio)
 {
@@ -171,23 +171,24 @@ void HarmonizerVoice::esola(const AudioBuffer<float>& inputAudio,
           auto* w = monoBuffer.getWritePointer(0);
     
     for(int s = 0; s < numSamples; ++s)
-        w[s] = r[s] / ( (s < finalWindow.size()) ? (std::max<float>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
+        w[s] = r[s] / ( (s < finalWindow.size()) ? (std::max<SampleType>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
 };
 
-
-void HarmonizerVoice::fillWindowBuffer(const int numSamples)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::fillWindowBuffer(const int numSamples)
 {
     window.clear();
     auto* writing = window.getWritePointer(0);
-    const auto samplemultiplier = MathConstants<float>::pi / static_cast<float> (numSamples - 1);
+    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
     
     for(int i = 0; i < numSamples; ++i)
-        writing[i] = static_cast<float> (0.5 - 0.5 * (std::cos(static_cast<float> (2 * i) * samplemultiplier)) );
+        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
 };
 
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
-void HarmonizerVoice::clearCurrentNote() 
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::clearCurrentNote()
 {
     currentVelocityMultiplier = 0.0f;
     lastRecievedVelocity      = 0.0f;
@@ -214,8 +215,8 @@ void HarmonizerVoice::clearCurrentNote()
 
 
 // MIDI -----------------------------------------------------------------------------------------------------------
-
-void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::startNote(const int midiPitch, const float velocity)
 {
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
@@ -230,7 +231,8 @@ void HarmonizerVoice::startNote(const int midiPitch, const float velocity)
         quickRelease.noteOn();
 };
 
-void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allowTailOff)
 {
     if (allowTailOff)
     {
@@ -249,13 +251,14 @@ void HarmonizerVoice::stopNote(const float velocity, const bool allowTailOff)
     noteTurnedOff = true;
 };
 
-void HarmonizerVoice::aftertouchChanged(const int newAftertouchValue)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
 };
 
-
-void HarmonizerVoice::setPan(const int newPan) 
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::setPan(const int newPan)
 {
     jassert(isPositiveAndBelow(newPan, 128));
     
@@ -277,14 +280,14 @@ void HarmonizerVoice::setPan(const int newPan)
     }
 };
 
-
-bool HarmonizerVoice::isPlayingButReleased() const noexcept
+template<typename SampleType>
+bool HarmonizerVoice<SampleType>::isPlayingButReleased() const noexcept
 {
     return isVoiceActive() && ! (keyIsDown || parent->sostenutoPedalDown || parent->sustainPedalDown);
 };
 
-
-void HarmonizerVoice::updateSampleRate(const double newSamplerate)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::updateSampleRate(const double newSamplerate)
 {
     adsr        .setSampleRate(newSamplerate);
     quickRelease.setSampleRate(newSamplerate);
@@ -300,7 +303,8 @@ void HarmonizerVoice::updateSampleRate(const double newSamplerate)
  DANGER!!!
  FOR NON REAL TIME ONLY!!!!!!!!
  ++++++++++++++++++++++++++++++++++++++*/
-void HarmonizerVoice::increaseBufferSizes(const int newMaxBlocksize)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
     synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
     monoBuffer     .setSize(1, newMaxBlocksize, true, true, true);
@@ -310,12 +314,16 @@ void HarmonizerVoice::increaseBufferSizes(const int newMaxBlocksize)
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template class HarmonizerVoice<float>;
+template class HarmonizerVoice<double>;
 
-Harmonizer::Harmonizer():
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename SampleType>
+Harmonizer<SampleType>::Harmonizer():
     pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), latchManager(MAX_POSSIBLE_NUMBER_OF_VOICES), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12), lastMidiTimeStamp(0), lastMidiChannel(1)
 {
     currentlyActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
@@ -352,13 +360,14 @@ Harmonizer::Harmonizer():
     aggregateMidiBuffer.ensureSize(MAX_BUFFERSIZE * 2);
 };
 
-Harmonizer::~Harmonizer()
+template<typename SampleType>
+Harmonizer<SampleType>::~Harmonizer()
 {
     voices.clear();
 };
 
-
-void Harmonizer::clearBuffers()
+template<typename SampleType>
+void Harmonizer<SampleType>::clearBuffers()
 {
     for (auto* voice : voices)
         voice->clearBuffers(); 
@@ -369,9 +378,8 @@ void Harmonizer::clearBuffers()
 
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
-
-
-void Harmonizer::renderVoices (const AudioBuffer<float>& inputAudio, AudioBuffer<float>& outputBuffer)
+template<typename SampleType>
+void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer)
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
@@ -392,7 +400,8 @@ void Harmonizer::renderVoices (const AudioBuffer<float>& inputAudio, AudioBuffer
             // this method will ADD the voice's output to outputBuffer
 };
 
-int Harmonizer::getNumActiveVoices() const
+template<typename SampleType>
+int Harmonizer<SampleType>::getNumActiveVoices() const
 {
     int actives = 0;
     for(auto* voice : voices)
@@ -402,7 +411,8 @@ int Harmonizer::getNumActiveVoices() const
     return actives;
 };
 
-bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButReleased) const
+template<typename SampleType>
+bool Harmonizer<SampleType>::isPitchActive(const int midiPitch, const bool countRingingButReleased) const
 {
     for(auto* voice : voices)
     {
@@ -417,7 +427,8 @@ bool Harmonizer::isPitchActive(const int midiPitch, const bool countRingingButRe
     return false;
 };
 
-void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
+template<typename SampleType>
+void Harmonizer<SampleType>::setCurrentPlaybackSampleRate(const double newRate)
 {
     jassert(newRate > 0);
     
@@ -432,7 +443,8 @@ void Harmonizer::setCurrentPlaybackSampleRate(const double newRate)
     }
 };
 
-void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
+template<typename SampleType>
+void Harmonizer<SampleType>::setConcertPitchHz(const int newConcertPitchhz)
 {
     jassert(newConcertPitchhz > 0);
     
@@ -450,8 +462,8 @@ void Harmonizer::setConcertPitchHz(const int newConcertPitchhz)
 
 
 // stereo width -------------------------------------------------------------------------------------------------------------------------------------
-
-void Harmonizer::updateStereoWidth(const int newWidth)
+template<typename SampleType>
+void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
 {
     jassert(isPositiveAndBelow(newWidth, 101));
     
@@ -474,7 +486,8 @@ void Harmonizer::updateStereoWidth(const int newWidth)
     }
 };
 
-void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
+template<typename SampleType>
+void Harmonizer<SampleType>::updateLowestPannedNote(const int newPitchThresh) noexcept
 {
     if(lowestPannedNote != newPitchThresh)
     {
@@ -499,7 +512,8 @@ void Harmonizer::updateLowestPannedNote(const int newPitchThresh) noexcept
 
 
 // this function is called any time the harmonizer's overall pitch collection is changed. With standard keyboard input, this would be once every note event; for chord triggering, this should be called once after the new chord note on/off events have been handled.
-void Harmonizer::pitchCollectionChanged()
+template<typename SampleType>
+void Harmonizer<SampleType>::pitchCollectionChanged()
 {
     if(pedalPitchIsOn)
         applyPedalPitch();
@@ -509,8 +523,8 @@ void Harmonizer::pitchCollectionChanged()
 };
 
 // report active notes --------------------------------------------------------
-
-Array<int> Harmonizer::reportActiveNotes() const
+template<typename SampleType>
+Array<int> Harmonizer<SampleType>::reportActiveNotes() const
 {
     currentlyActiveNotes.clearQuick();
     
@@ -524,7 +538,8 @@ Array<int> Harmonizer::reportActiveNotes() const
     return currentlyActiveNotes;
 };
 
-Array<int> Harmonizer::reportActivesNoReleased() const
+template<typename SampleType>
+Array<int> Harmonizer<SampleType>::reportActivesNoReleased() const
 {
     currentlyActiveNoReleased.clearQuick();
     
@@ -540,8 +555,8 @@ Array<int> Harmonizer::reportActivesNoReleased() const
 
 
 // midi velocity sensitivity ---------------------------------------------------
-
-void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
+template<typename SampleType>
+void Harmonizer<SampleType>::updateMidiVelocitySensitivity(const int newSensitivity)
 {
     const float newSens = newSensitivity/100.0f;
     
@@ -558,8 +573,8 @@ void Harmonizer::updateMidiVelocitySensitivity(const int newSensitivity)
 
 
 // midi latch ------------------------------------------------------------------
-
-void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
+template<typename SampleType>
+void Harmonizer<SampleType>::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
 {
     if(latchIsOn != shouldBeOn)
     {
@@ -583,7 +598,8 @@ void Harmonizer::setMidiLatch(const bool shouldBeOn, const bool allowTailOff)
     }
 };
 
-void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff)
+template<typename SampleType>
+void Harmonizer<SampleType>::turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff)
 {
     if(! toTurnOff.isEmpty())
     {
@@ -595,8 +611,8 @@ void Harmonizer::turnOffList(Array<int>& toTurnOff, const float velocity, const 
 
 
 // functions for propogating midi events to HarmonizerVoices -----------------------------------------------------------
-
-void Harmonizer::handleMidiEvent(const MidiMessage& m, const int samplePosition)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleMidiEvent(const MidiMessage& m, const int samplePosition)
 {
     bool shouldAddToAggregateMidiBuffer = true;
     lastMidiChannel = m.getChannel();
@@ -626,7 +642,8 @@ void Harmonizer::handleMidiEvent(const MidiMessage& m, const int samplePosition)
     }
 };
 
-void Harmonizer::noteOn(const int midiPitch, const float velocity, const bool isKeyboard)
+template<typename SampleType>
+void Harmonizer<SampleType>::noteOn(const int midiPitch, const float velocity, const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
     
@@ -657,7 +674,8 @@ void Harmonizer::noteOn(const int midiPitch, const float velocity, const bool is
     }
 };
 
-void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const float velocity, const bool isKeyboard)
+template<typename SampleType>
+void Harmonizer<SampleType>::startVoice(HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
     if(voice != nullptr)
     {
@@ -675,7 +693,8 @@ void Harmonizer::startVoice(HarmonizerVoice* voice, const int midiPitch, const f
     }
 };
 
-void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partofList, const bool isKeyboard)
+template<typename SampleType>
+void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partofList, const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch or descant.
     // N.B. the `partofList` flag should be false if this is a singular note off event; this flag should be true if this is a note off event in a known sequence of many quick note offs, so that pedal pitch & descant will not be updated after every single one of these events.
@@ -730,7 +749,8 @@ void Harmonizer::noteOff (const int midiNoteNumber, const float velocity, const 
     }
 };
 
-void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const bool allowTailOff)
+template<typename SampleType>
+void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
 {
     if(voice != nullptr)
     {
@@ -740,7 +760,8 @@ void Harmonizer::stopVoice (HarmonizerVoice* voice, const float velocity, const 
     }
 };
 
-void Harmonizer::allNotesOff(const bool allowTailOff)
+template<typename SampleType>
+void Harmonizer<SampleType>::allNotesOff(const bool allowTailOff)
 {
     const ScopedLock sl (lock);
     
@@ -754,7 +775,8 @@ void Harmonizer::allNotesOff(const bool allowTailOff)
     lastPedalPitch   = -1;
 };
 
-void Harmonizer::handlePitchWheel(const int wheelValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handlePitchWheel(const int wheelValue)
 {
     if(lastPitchWheelValue != wheelValue)
     {
@@ -769,7 +791,8 @@ void Harmonizer::handlePitchWheel(const int wheelValue)
     }
 };
 
-void Harmonizer::updatePitchbendSettings(const int rangeUp, const int rangeDown)
+template<typename SampleType>
+void Harmonizer<SampleType>::updatePitchbendSettings(const int rangeUp, const int rangeDown)
 {
     if(bendTracker.getCurrentRangeUp() != rangeUp || bendTracker.getCurrentRangeDown() != rangeDown)
     {
@@ -785,7 +808,8 @@ void Harmonizer::updatePitchbendSettings(const int rangeUp, const int rangeDown)
     }
 };
 
-void Harmonizer::handleAftertouch(const int midiNoteNumber, const int aftertouchValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleAftertouch(const int midiNoteNumber, const int aftertouchValue)
 {
     const ScopedLock sl (lock);
     
@@ -794,7 +818,8 @@ void Harmonizer::handleAftertouch(const int midiNoteNumber, const int aftertouch
             voice->aftertouchChanged (aftertouchValue);
 };
 
-void Harmonizer::handleChannelPressure(const int channelPressureValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleChannelPressure(const int channelPressureValue)
 {
     const ScopedLock sl (lock);
     
@@ -802,7 +827,8 @@ void Harmonizer::handleChannelPressure(const int channelPressureValue)
         voice->aftertouchChanged(channelPressureValue);
 };
 
-void Harmonizer::handleController(const int controllerNumber, const int controllerValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleController(const int controllerNumber, const int controllerValue)
 {
     switch (controllerNumber)
     {
@@ -820,7 +846,8 @@ void Harmonizer::handleController(const int controllerNumber, const int controll
     }
 };
 
-void Harmonizer::handleSustainPedal(const bool isDown)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleSustainPedal(const bool isDown)
 {
     const ScopedLock sl (lock);
     
@@ -834,7 +861,8 @@ void Harmonizer::handleSustainPedal(const bool isDown)
     }
 };
 
-void Harmonizer::handleSostenutoPedal(const bool isDown)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleSostenutoPedal(const bool isDown)
 {
     const ScopedLock sl (lock);
     
@@ -848,50 +876,58 @@ void Harmonizer::handleSostenutoPedal(const bool isDown)
     }
 };
 
-void Harmonizer::handleSoftPedal(const bool isDown)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleSoftPedal(const bool isDown)
 {
     ignoreUnused(isDown);
 };
 
-void Harmonizer::handleModWheel(const int wheelValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleModWheel(const int wheelValue)
 {
     ignoreUnused(wheelValue);
 };
 
-void Harmonizer::handleBreathController(const int controlValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleBreathController(const int controlValue)
 {
     ignoreUnused(controlValue);
 };
 
-void Harmonizer::handleFootController(const int controlValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleFootController(const int controlValue)
 {
     ignoreUnused(controlValue);
 };
 
-void Harmonizer::handlePortamentoTime(const int controlValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handlePortamentoTime(const int controlValue)
 {
     ignoreUnused(controlValue);
 };
 
-void Harmonizer::handleMainVolume(const int controlValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleMainVolume(const int controlValue)
 {
     ignoreUnused(controlValue);
 };
 
-void Harmonizer::handleBalance(const int controlValue)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleBalance(const int controlValue)
 {
     ignoreUnused(controlValue);
 };
 
-void Harmonizer::handleLegato(const bool isOn)
+template<typename SampleType>
+void Harmonizer<SampleType>::handleLegato(const bool isOn)
 {
     ignoreUnused(isOn);
 };
 
 
 // pedal pitch -----------------------------------------------------------------------------------------------------------
-
-void Harmonizer::applyPedalPitch()
+template<typename SampleType>
+void Harmonizer<SampleType>::applyPedalPitch()
 {
     const ScopedLock sl (lock);
     
@@ -940,7 +976,8 @@ void Harmonizer::applyPedalPitch()
     }
 };
 
-void Harmonizer::setPedalPitch(const bool isOn) 
+template<typename SampleType>
+void Harmonizer<SampleType>::setPedalPitch(const bool isOn)
 {
     if(pedalPitchIsOn != isOn)
     {
@@ -957,7 +994,8 @@ void Harmonizer::setPedalPitch(const bool isOn)
     }
 };
 
-void Harmonizer::setPedalPitchUpperThresh(const int newThresh)
+template<typename SampleType>
+void Harmonizer<SampleType>::setPedalPitchUpperThresh(const int newThresh)
 {
     if(pedalPitchUpperThresh != newThresh)
     {
@@ -967,7 +1005,8 @@ void Harmonizer::setPedalPitchUpperThresh(const int newThresh)
     }
 };
 
-void Harmonizer::setPedalPitchInterval(const int newInterval)
+template<typename SampleType>
+void Harmonizer<SampleType>::setPedalPitchInterval(const int newInterval)
 {
     if(pedalPitchInterval != newInterval)
     {
@@ -977,7 +1016,8 @@ void Harmonizer::setPedalPitchInterval(const int newInterval)
     }
 };
 
-HarmonizerVoice* Harmonizer::getCurrentPedalPitchVoice()
+template<typename SampleType>
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
 {
     if(! pedalPitchIsOn)
         return nullptr;
@@ -990,8 +1030,8 @@ HarmonizerVoice* Harmonizer::getCurrentPedalPitchVoice()
 };
 
 // descant ----------------------------------------------------------------------------------------------------------------
-
-void Harmonizer::applyDescant()
+template<typename SampleType>
+void Harmonizer<SampleType>::applyDescant()
 {
     const ScopedLock sl (lock);
     
@@ -1040,7 +1080,8 @@ void Harmonizer::applyDescant()
     }
 };
 
-void Harmonizer::setDescant(const bool isOn)
+template<typename SampleType>
+void Harmonizer<SampleType>::setDescant(const bool isOn)
 {
     if(descantIsOn != isOn)
     {
@@ -1057,7 +1098,8 @@ void Harmonizer::setDescant(const bool isOn)
     }
 };
 
-void Harmonizer::setDescantLowerThresh(const int newThresh)
+template<typename SampleType>
+void Harmonizer<SampleType>::setDescantLowerThresh(const int newThresh)
 {
     if(descantLowerThresh != newThresh)
     {
@@ -1067,7 +1109,8 @@ void Harmonizer::setDescantLowerThresh(const int newThresh)
     }
 };
 
-void Harmonizer::setDescantInterval(const int newInterval)
+template<typename SampleType>
+void Harmonizer<SampleType>::setDescantInterval(const int newInterval)
 {
     if(descantInterval != newInterval)
     {
@@ -1077,7 +1120,8 @@ void Harmonizer::setDescantInterval(const int newInterval)
     }
 };
 
-HarmonizerVoice* Harmonizer::getCurrentDescantVoice()
+template<typename SampleType>
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice()
 {
     if(! descantIsOn)
         return nullptr;
@@ -1091,8 +1135,8 @@ HarmonizerVoice* Harmonizer::getCurrentDescantVoice()
 
 
 // voice allocation----------------------------------------------------------------------------------------------------------------------------------
-
-HarmonizerVoice* Harmonizer::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const
+template<typename SampleType>
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const
 {
     const ScopedLock sl (lock);
     
@@ -1106,7 +1150,8 @@ HarmonizerVoice* Harmonizer::findFreeVoice (const int midiNoteNumber, const bool
     return nullptr;
 };
 
-HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
+template<typename SampleType>
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int midiNoteNumber) const
 {
     // This voice-stealing algorithm applies the following heuristics:
     // - Re-use the oldest notes first
@@ -1115,11 +1160,11 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
     jassert (! voices.isEmpty());
     
     // These are the voices we want to protect (ie: only steal if unavoidable)
-    HarmonizerVoice* low = nullptr; // Lowest sounding note, might be sustained, but NOT in release phase
-    HarmonizerVoice* top = nullptr; // Highest sounding note, might be sustained, but NOT in release phase
+    HarmonizerVoice<SampleType>* low = nullptr; // Lowest sounding note, might be sustained, but NOT in release phase
+    HarmonizerVoice<SampleType>* top = nullptr; // Highest sounding note, might be sustained, but NOT in release phase
     
     // this is a list of voices we can steal, sorted by how long they've been running
-    Array<HarmonizerVoice*> usableVoices;
+    Array<HarmonizerVoice<SampleType>*> usableVoices;
     usableVoices.ensureStorageAllocated (voices.size());
     
     for (auto* voice : voices)
@@ -1131,7 +1176,7 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
             // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations..
             struct Sorter
             {
-                bool operator() (const HarmonizerVoice* a, const HarmonizerVoice* b) const noexcept { return a->wasStartedBefore (*b); }
+                bool operator() (const HarmonizerVoice<SampleType>* a, const HarmonizerVoice<SampleType>* b) const noexcept { return a->wasStartedBefore (*b); }
             };
             
             std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
@@ -1182,8 +1227,8 @@ HarmonizerVoice* Harmonizer::findVoiceToSteal (const int midiNoteNumber) const
 
 
 // update ADSR settings------------------------------------------------------------------------------------------------------------------------------
-
-void Harmonizer::updateADSRsettings(const float attack, const float decay, const float sustain, const float release)
+template<typename SampleType>
+void Harmonizer<SampleType>::updateADSRsettings(const float attack, const float decay, const float sustain, const float release)
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
@@ -1201,7 +1246,8 @@ void Harmonizer::updateADSRsettings(const float attack, const float decay, const
     }
 };
 
-void Harmonizer::updateQuickReleaseMs(const int newMs)
+template<typename SampleType>
+void Harmonizer<SampleType>::updateQuickReleaseMs(const int newMs)
 {
     jassert(newMs > 0);
     const float desiredR = newMs / 1000.0f;
@@ -1218,7 +1264,8 @@ void Harmonizer::updateQuickReleaseMs(const int newMs)
     }
 };
 
-void Harmonizer::updateQuickAttackMs(const int newMs)
+template<typename SampleType>
+void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 {
     jassert(newMs > 0);
     const float desiredA = newMs / 1000.0f;
@@ -1238,7 +1285,8 @@ void Harmonizer::updateQuickAttackMs(const int newMs)
 
 // functions for management of HarmonizerVoices------------------------------------------------------------------------------------------------------
 
-HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
+template<typename SampleType>
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
 {
     const ScopedLock sl (lock);
     
@@ -1247,7 +1295,8 @@ HarmonizerVoice* Harmonizer::addVoice(HarmonizerVoice* newVoice)
     return voices.add(newVoice);
 };
 
-void Harmonizer::removeNumVoices(const int voicesToRemove)
+template<typename SampleType>
+void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 {
     const ScopedLock sl (lock);
     
@@ -1266,7 +1315,7 @@ void Harmonizer::removeNumVoices(const int voicesToRemove)
         
         const int indexRemoving = std::max(indexToRemove, 0);
         
-        HarmonizerVoice* removing = voices[indexRemoving];
+        HarmonizerVoice<SampleType>* removing = voices[indexRemoving];
         if(removing->isVoiceActive())
         {
             panner.panValTurnedOff(removing->currentMidipan);
@@ -1288,7 +1337,8 @@ void Harmonizer::removeNumVoices(const int voicesToRemove)
  DANGER!!!
  FOR NON REAL TIME ONLY!!!!!!!!
  ++++++++++++++++++++++++++++++++++++++*/
-void Harmonizer::increaseBufferSizes(const int newMaxBlocksize)
+template<typename SampleType>
+void Harmonizer<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
     for(auto* voice : voices)
         voice->increaseBufferSizes(newMaxBlocksize);
@@ -1302,8 +1352,8 @@ void Harmonizer::increaseBufferSizes(const int newMaxBlocksize)
     aggregateMidiBuffer.ensureSize(newMaxBlocksize * 2);
 };
 
-
-void Harmonizer::newMaxNumVoices(const int newMaxNumVoices)
+template<typename SampleType>
+void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
 {
     currentlyActiveNotes.ensureStorageAllocated(newMaxNumVoices);
     currentlyActiveNotes.clearQuick();
@@ -1316,3 +1366,8 @@ void Harmonizer::newMaxNumVoices(const int newMaxNumVoices)
     
     latchManager.newMaxNumVoices(newMaxNumVoices);
 };
+
+
+template class Harmonizer<float>;
+template class Harmonizer<double>;
+

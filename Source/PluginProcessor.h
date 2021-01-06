@@ -123,7 +123,7 @@ private:
     void updateSampleRate(const double newSamplerate);
     void clearBuffers();
     
-    Harmonizer harmonizer;
+    Harmonizer<float> harmonizer;
     
     AudioBuffer<float> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
