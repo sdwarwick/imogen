@@ -325,19 +325,24 @@ void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, Mid
         
         processBlockWrapped (inBus, outBus, midiMessages, false, true);
         wasBypassedLastCallback = true;
-        clearBuffers();
         return;
     }
     
+    processBlockBypassedWrapped (inBus, outBus, midiMessages);
+};
+
+
+void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<float>& inBus, AudioBuffer<float> output, MidiBuffer& midiMessages)
+{
     updateSampleRate(getSampleRate());
     updateAllParameters();
     
-    if (outBus.getNumChannels() > inBus.getNumChannels())
-        for (int chan = inBus.getNumChannels(); chan < outBus.getNumChannels(); ++chan)
-            outBus.clear(chan, 0, outBus.getNumSamples());
+    if (output.getNumChannels() > inBus.getNumChannels())
+        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
+            output.clear(chan, 0, output.getNumSamples());
     
     dsp::AudioBlock<float> inBlock  (inBus);
-    dsp::AudioBlock<float> outBlock (outBus);
+    dsp::AudioBlock<float> outBlock (output);
     
     // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
     if (inBlock == outBlock)
@@ -346,6 +351,8 @@ void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, Mid
         bypassDelay.process (dsp::ProcessContextNonReplacing<float> (inBlock, outBlock));
     
     wasBypassedLastCallback = true;
+    
+    ignoreUnused(midiMessages); // midi passes through unaffected
 };
 
 

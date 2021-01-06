@@ -20,8 +20,6 @@ public:
     PitchTracker();
     ~PitchTracker();
     
-    //	float findPitch(AudioBuffer<float>& inputAudio, const int inputChan, const double samplerate);
-    
     float getPitch(const AudioBuffer<float>& inputAudio, const double samplerate);
     
     void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
@@ -36,9 +34,7 @@ public:
 private:
     AudioBuffer<float> yinBuffer;
     float prevDetectedPitch;
-    //	Array<float> powerTerms;
-    //	int yinBufferSize;
-    
+   
     float tolerence;
     float minHz, maxHz;
     
@@ -47,16 +43,6 @@ private:
     unsigned int minElement(const float* data, const int dataSize) noexcept;
     
     float quadraticPeakPosition (const float* data, unsigned int pos, const int dataSize) noexcept;
-    
-    //	void difference(AudioBuffer<float>& inputBuffer, const int inputChan, const int inputBufferLength);
-    //
-    //	void fastDifference(AudioBuffer<float>& inputAudio, const int inputChan);
-    //
-    //	void cumulativeMeanNormalizedDifference() const;
-    //
-    //	int absoluteThreshold();
-    //
-    //	float parabolicInterpolation(int tauEstimate) const;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchTracker)
 };

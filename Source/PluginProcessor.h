@@ -116,6 +116,9 @@ private:
     // this function actually does the audio processing on a chunk of audio.
     void renderChunk (const AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
     
+    // this is where the top-level process callbacks are routed to when the plugin is in bypass mode
+    void processBlockBypassedWrapped (AudioBuffer<float>& inBus, AudioBuffer<float> output, MidiBuffer& midiMessages);
+    
     void updateAllParameters();
     void updateSampleRate(const double newSamplerate);
     void clearBuffers();
