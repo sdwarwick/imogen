@@ -61,6 +61,12 @@ public:
     
 private:
     
+    CriticalSection lock; // this critical section will be locked while audio processing is active
+    
+    void processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    
+    void processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    
     ImogenAudioProcessor& processor;
     
     Harmonizer<SampleType> harmonizer;
@@ -82,8 +88,6 @@ private:
     
     // this function actually does the audio processing on a chunk of audio.
     void renderChunk (const AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer);
-    
-    void writeToDryBuffer (const AudioBuffer<SampleType>& input);
     
     bool resourcesReleased;
     bool initialized;
@@ -113,11 +117,25 @@ public:
     
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
-    void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override;
-    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
+    void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override
+    {
+        processBlockWrapped (buffer, midiMessages, floatEngine);
+    };
+    
+    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override
+    {
+        processBlockWrapped (buffer, midiMessages, doubleEngine);
+    };
    
-    void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override;
-    void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override;
+    void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override
+    {
+        processBlockBypassedWrapped (buffer, midiMessages, floatEngine);
+    };
+    
+    void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override
+    {
+        processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
+    };
     
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; };
@@ -195,6 +213,12 @@ public:
     bool limiterIsOn;
     
 private:
+    
+    template <typename SampleType>
+    void processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    
+    template <typename SampleType>
+    void processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
     
     ImogenEngine<float>  floatEngine;
     ImogenEngine<double> doubleEngine;

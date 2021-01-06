@@ -38,7 +38,7 @@ public:
     
     
     void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq);
+                         const Array<int>& epochIndices, const int numOfEpochsPerFrame, const SampleType currentInputFreq);
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
@@ -265,7 +265,7 @@ private:
     ADSR::Parameters quickReleaseParams;
     ADSR::Parameters quickAttackParams;
     
-    float currentInputFreq;
+    SampleType currentInputFreq;
     
     double sampleRate;
     bool shouldStealNotes;

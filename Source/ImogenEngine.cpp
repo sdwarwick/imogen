@@ -16,16 +16,12 @@ ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     processor(p),
     inBuffer(1, MAX_BUFFERSIZE), wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE), monoSummingBuffer(1, MAX_BUFFERSIZE * 2),
     resourcesReleased(true), initialized(false)
-{
-    initialize (44100.0, MAX_BUFFERSIZE, 12);
-};
+{ };
 
 
 template<typename SampleType>
 ImogenEngine<SampleType>::~ImogenEngine()
-{
-    
-};
+{ };
 
 
 template<typename SampleType>
@@ -44,7 +40,6 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     
     prepare (initSamplerate, std::max(initSamplesPerBlock, MAX_BUFFERSIZE));
     
-    resourcesReleased = false;
     initialized = true;
 };
 
@@ -83,38 +78,10 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::reset()
-{
-    harmonizer.allNotesOff(false);
-    harmonizer.resetNoteOnCounter();
-    clearBuffers();
-    dryWetMixer.reset();
-    limiter.reset();
-    bypassDelay.reset();
-};
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::releaseResources()
-{
-    harmonizer.releaseResources();
-    
-    monoSummingBuffer.setSize(0, 0, false, false, false);
-    wetBuffer        .setSize(0, 0, false, false, false);
-    dryBuffer        .setSize(0, 0, false, false, false);
-    inBuffer         .setSize(0, 0, false, false, false);
-    
-    clearBuffers();
-    
-    resourcesReleased = true;
-};
-
-
-template<typename SampleType>
 void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
                                         const bool applyFadeIn, const bool applyFadeOut)
 {
-    updateSamplerate(processor.getSampleRate());
+    const ScopedLock sl (lock);
     
     AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
     
@@ -155,13 +122,70 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         }
     }
     
+    bool chopInput = false; // if this flag is true, the processor will chop the input audio into chunks in between the timestamps of each midi message. If false, the midi messages will be applied in sequence first, then the entire block of audio rendered as one large segment.
+    
+    if (chopInput)
+        processWithChopping (input, output, midiMessages);
+    else
+        processNoChopping (input, output, midiMessages);
+        
+    if (applyFadeIn)
+        output.applyGainRamp(0, totalNumSamples, 0.0f, 1.0f);
+    
+    if (applyFadeOut)
+        output.applyGainRamp(0, totalNumSamples, 1.0f, 0.0f);
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+{
+    const ScopedLock sl (lock);
+    
+    if (output.getNumChannels() > inBus.getNumChannels())
+        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
+            output.clear(chan, 0, output.getNumSamples());
+    
+    dsp::AudioBlock<SampleType> inBlock  (inBus);
+    dsp::AudioBlock<SampleType> outBlock (output);
+    
+    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
+    if (inBlock == outBlock)
+        bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
+    else
+        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock));
+    
+    ignoreUnused(midiMessages); // midi passes through unaffected
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+{
+    harmonizer.clearMidiBuffer();
+    
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
-    int  numSamples  = totalNumSamples;
+    std::for_each (midiIterator,
+                   midiMessages.cend(),
+                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
+    
+    midiMessages.swapWith(harmonizer.returnMidiBuffer());
+    
+    renderBlock (input, output, 0, input.getNumSamples());
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+{
+    harmonizer.clearMidiBuffer();
+    
+    auto midiIterator = midiMessages.findNextSamplePosition(0);
+    
+    int  numSamples  = input.getNumSamples();
     int  startSample = 0;
     bool firstEvent  = true;
-    
-    harmonizer.clearMidiBuffer();
     
     for (; numSamples > 0; ++midiIterator)
     {
@@ -202,32 +226,6 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
                    [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
     
     midiMessages.swapWith(harmonizer.returnMidiBuffer());
-    
-    if (applyFadeOut)
-        output.applyGainRamp(0, totalNumSamples, 1.0f, 0.0f);
-    
-    if (applyFadeIn)
-        output.applyGainRamp(0, totalNumSamples, 0.0f, 1.0f);
-};
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
-{
-    if (output.getNumChannels() > inBus.getNumChannels())
-        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
-            output.clear(chan, 0, output.getNumSamples());
-    
-    dsp::AudioBlock<SampleType> inBlock  (inBus);
-    dsp::AudioBlock<SampleType> outBlock (output);
-    
-    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
-    if (inBlock == outBlock)
-        bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
-    else
-        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock));
-    
-    ignoreUnused(midiMessages); // midi passes through unaffected
 };
 
 
@@ -269,10 +267,6 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
 template<typename SampleType>
 void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output)
 {
-    // regardless of the input channel(s) setup, the inBuffer fed to this function should be a mono buffer with its audio content in channel 0
-    // outBuffer should be a stereo buffer with the same length in samples as inBuffer
-    // # of samples in the I/O buffers must be less than or equal to MAX_BUFFERSIZE
-    
     const int numSamples = input.getNumSamples();
     
     AudioBuffer<SampleType> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
@@ -281,10 +275,14 @@ void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input
     
     inBufferProxy.applyGain(processor.inputGainMultiplier); // apply input gain
     
-    writeToDryBuffer (inBufferProxy); // puts input samples into dryBuffer w/ proper panning applied
-    
     AudioBuffer<SampleType> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
+    
+    // write to dry buffer & apply panning...
+    dryProxy.copyFrom (0, 0, inBufferProxy, 0, 0, numSamples);
+    dryProxy.copyFrom (1, 0, inBufferProxy, 0, 0, numSamples);
+    dryProxy.applyGain(0, 0, numSamples, processor.dryvoxpanningmults[0]);
+    dryProxy.applyGain(1, 0, numSamples, processor.dryvoxpanningmults[1]);
     
     dryWetMixer.pushDrySamples( dsp::AudioBlock<SampleType>(dryProxy) );
     
@@ -306,18 +304,6 @@ void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::writeToDryBuffer (const AudioBuffer<SampleType>& input)
-{
-    const int numSamples = input.getNumSamples();
-    
-    dryBuffer.copyFrom (0, 0, input, 0, 0, numSamples);
-    dryBuffer.copyFrom (1, 0, input, 0, 0, numSamples);
-    dryBuffer.applyGain(0, 0, numSamples, processor.dryvoxpanningmults[0]);
-    dryBuffer.applyGain(1, 0, numSamples, processor.dryvoxpanningmults[1]);
-};
-
-
-template<typename SampleType>
 void ImogenEngine<SampleType>::clearBuffers()
 {
     harmonizer.clearBuffers();
@@ -326,6 +312,38 @@ void ImogenEngine<SampleType>::clearBuffers()
     dryBuffer.clear();
     inBuffer.clear();
     monoSummingBuffer.clear();
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::reset()
+{
+    harmonizer.allNotesOff(false);
+    harmonizer.resetNoteOnCounter();
+    clearBuffers();
+    dryWetMixer.reset();
+    limiter.reset();
+    bypassDelay.reset();
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::releaseResources()
+{
+    harmonizer.releaseResources();
+    
+    monoSummingBuffer.setSize(0, 0, false, false, false);
+    wetBuffer        .setSize(0, 0, false, false, false);
+    dryBuffer        .setSize(0, 0, false, false, false);
+    inBuffer         .setSize(0, 0, false, false, false);
+    
+    clearBuffers();
+    
+    dryWetMixer.reset();
+    limiter.reset();
+    bypassDelay.reset();
+    
+    resourcesReleased = true;
 };
 
 
@@ -345,8 +363,7 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
             for(int i = 0; i < newNumVoices - currentVoices; ++i)
                 harmonizer.addVoice(new HarmonizerVoice<SampleType>(&harmonizer));
             
-            harmonizer.newMaxNumVoices(std::max(newNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
-            // increases storage overheads for internal harmonizer functions dealing with arrays of notes, etc
+            harmonizer.newMaxNumVoices(newNumVoices); // increases storage overheads for internal harmonizer functions dealing with arrays of notes
             
             processor.suspendProcessing (false);
         }
@@ -367,7 +384,7 @@ void ImogenEngine<SampleType>::updateSamplerate(const int newSamplerate)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDryWet(const float newWetMixProportion)
 {
-    dryWetMixer.setWetMixProportion(newWetMixProportion);
+    dryWetMixer.setWetMixProportion(newWetMixProportion / 100.0f);
     
     // need to set latency!!!
 };

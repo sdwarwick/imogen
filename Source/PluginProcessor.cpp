@@ -50,6 +50,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         doubleEngine.initialize(initSamplerate, initSamplesPerBlock, 12);
     else
         floatEngine .initialize(initSamplerate, initSamplesPerBlock, 12);
+    
+    updateAllParameters();
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -79,6 +81,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         if (! doubleEngine.hasBeenReleased())
             doubleEngine.releaseResources();
     }
+    
+    updateAllParameters();
 };
 
 
@@ -98,14 +102,17 @@ void ImogenAudioProcessor::reset()
 
 void ImogenAudioProcessor::killAllMidi()
 {
-    floatEngine .reset();
-    doubleEngine.reset();
+    if (isUsingDoublePrecision())
+        doubleEngine.reset();
+    else
+        floatEngine.reset();
 };
 
 
 // audio rendering ----------------------------------------------------------------------------------------------------------------------------------
 
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+template <typename SampleType>
+void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine)
 {
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return; // our audio input is disabled! can't do processing
@@ -113,33 +120,19 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     if (buffer.getNumSamples() == 0) // some hosts are crazy
         return;
     
-    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<float> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
+    updateAllParameters();
     
-    floatEngine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
+    AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
-    wasBypassedLastCallback = false;
-};
-
-
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
-{
-    if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
-        return; // our audio input is disabled! can't do processing
-    
-    if (buffer.getNumSamples() == 0) // some hosts are crazy
-        return;
-    
-    AudioBuffer<double> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<double> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
-    
-    doubleEngine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
+    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
     wasBypassedLastCallback = false;
 };
 
 
-void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
+template <typename SampleType>
+void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine)
 {
     if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return;
@@ -147,53 +140,29 @@ void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, Mid
     if (buffer.getNumSamples() == 0)
         return;
     
-    AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<float> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
+    updateAllParameters();
+    
+    AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
     if (! wasBypassedLastCallback)
     {
         // this is the first callback of processBlockBypassed() after the bypass has been activated.
         // Process one more chunk and ramp the sound to 0 instead of killing the sound instantly
         
-        floatEngine.process (inBus, outBus, midiMessages, false, true);
+        engine.process (inBus, outBus, midiMessages, false, true);
         wasBypassedLastCallback = true;
         return;
     }
     
-    floatEngine.processBypassed (inBus, outBus, midiMessages);
+    engine.processBypassed (inBus, outBus, midiMessages);
     
     wasBypassedLastCallback = true;
 };
-
-void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages)
-{
-    if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
-        return;
-    
-    if (buffer.getNumSamples() == 0)
-        return;
-    
-    AudioBuffer<double> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<double> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
-    
-    if (! wasBypassedLastCallback)
-    {
-        doubleEngine.process (inBus, outBus, midiMessages, false, true);
-        wasBypassedLastCallback = true;
-        return;
-    }
-    
-    doubleEngine.processBypassed (inBus, outBus, midiMessages);
-    
-    wasBypassedLastCallback = true;
-};
-
 
 
 /*===========================================================================================================================
  ============================================================================================================================*/
-
-
 
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 {
@@ -226,13 +195,6 @@ void ImogenAudioProcessor::updateAllParameters()
     updateDescant();
 };
 
-void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateSamplerate(newSamplerate);
-    else
-        floatEngine .updateSamplerate(newSamplerate);
-};
 
 void ImogenAudioProcessor::updateDryVoxPan()
 {
@@ -620,6 +582,3 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ImogenAudioProcessor();
 };
-
-
-

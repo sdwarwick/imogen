@@ -71,7 +71,7 @@ void HarmonizerVoice<SampleType>::clearBuffers()
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                      const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq)
+                                      const Array<int>& epochIndices, const int numOfEpochsPerFrame, const SampleType currentInputFreq)
 {
     if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
         stopNote(1.0f, false);
@@ -87,9 +87,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
     {
         const int numSamples = inputAudio.getNumSamples();
         
+        const float shiftingRatio = 1 / (1 + ((currentInputFreq - currentOutputFreq) / currentOutputFreq));
+        
         // puts shifted samples into the monoBuffer, from sample indices 0 to numSamples-1
-        esola(inputAudio, epochIndices, numOfEpochsPerFrame,
-               ( 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) )); // shifting ratio
+        esola(inputAudio, epochIndices, numOfEpochsPerFrame, shiftingRatio); // shifting ratio
         
         monoBuffer.applyGain (0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
