@@ -21,6 +21,10 @@ public:
     PanningManager();
     ~PanningManager() {};
     
+    void releaseResources();
+    
+    void prepare (const int numVoices);
+    
     // used to change the # of polyphony voices currently active
     void setNumberOfVoices(const int newNumVoices);
     

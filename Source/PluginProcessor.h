@@ -5,6 +5,7 @@
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
 
+
 class ImogenAudioProcessorEditor; // forward declaration...
 
 class ImogenAudioProcessor;
@@ -19,7 +20,9 @@ public:
     
     ~ImogenEngine();
     
-    // the top-level processBlock call redirects here, just so that this function can be wrapped & templated for either float or double AudioBuffer types.
+    // initializes the processor
+    void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
+    
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
                   const bool applyFadeIn, const bool applyFadeOut);
     
@@ -29,26 +32,32 @@ public:
     
     void reset();
     
+    void releaseResources();
+    
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); };
     
-    void updateSamplerate(const int newSamplerate);
-    void updateDryWet(const float newWetMixProportion);
-    void updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn);
-    void updateQuickKill(const int newMs);
+    void updateSamplerate (const int newSamplerate);
+    void updateDryWet     (const float newWetMixProportion);
+    void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
+    void updateQuickKill  (const int newMs);
     void updateQuickAttack(const int newMs);
     void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     void updatePitchbendSettings(const int rangeUp, const int rangeDown);
-    void updatePedalPitch(const bool isOn, const int upperThresh, const int interval);
-    void updateDescant(const bool isOn, const int lowerThresh, const int interval);
+    void updatePedalPitch  (const bool isOn, const int upperThresh, const int interval);
+    void updateDescant     (const bool isOn, const int lowerThresh, const int interval);
     void updateConcertPitch(const int newConcertPitchHz);
     void updateNoteStealing(const bool shouldSteal);
-    void updateMidiLatch(const bool isLatched);
-    void updateLimiter(const float thresh, const float release);
+    void updateMidiLatch   (const bool isLatched);
+    void updateLimiter     (const float thresh, const float release);
     void updatePitchDetectionSettings (const float newMinHz, const float newMaxHz, const float newTolerance);
     
+    void clearBuffers();
+    
+    bool hasBeenReleased()    const noexcept { return resourcesReleased; };
+    bool hasBeenInitialized() const noexcept { return initialized; };
     
 private:
     
@@ -66,7 +75,6 @@ private:
     dsp::DryWetMixer<SampleType> dryWetMixer;
     dsp::DelayLine<SampleType> bypassDelay; // a delay line used for latency compensation when the processing is bypassed
     
-    
     // takes the chunks in between midi messages and makes sure they don't exceed the internal preallocated buffer sizes
     // if they do, this function breaks the in/out buffers into smaller chunks & calls renderChunk() on each of these in sequence.
     void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
@@ -75,15 +83,10 @@ private:
     // this function actually does the audio processing on a chunk of audio.
     void renderChunk (const AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer);
     
-    // initializes the processor
-    void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
-    
     void writeToDryBuffer (const AudioBuffer<SampleType>& input);
     
-    void resizeBuffers (const int newBlocksize);
-    
-    void clearBuffers();
-    
+    bool resourcesReleased;
+    bool initialized;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
@@ -105,16 +108,16 @@ public:
     ~ImogenAudioProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
-    
-    void releaseResources() override { reset(); };
+    void releaseResources() override;
+    void reset() override;
     
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override;
+    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
    
-    void processBlockBypassed (AudioBuffer<float>&  buffer, MidiBuffer& midiMessages) override;
-    
-    void reset() override;
+    void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override;
+    void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override;
     
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; };
@@ -166,8 +169,7 @@ public:
     
     Array<int> returnActivePitches() const { return floatEngine.returnActivePitches(); };
     
-    
-    void killAllMidi() { reset(); };
+    void killAllMidi();
     
     AudioProcessorValueTreeState tree;
     
@@ -179,7 +181,7 @@ public:
     
     bool shouldWarnUserToEnableSidechain() const;
     
-    bool supportsDoublePrecisionProcessing() const override { return false; };
+    bool supportsDoublePrecisionProcessing() const override { return true; };
     
     void updateTrackProperties (const TrackProperties& properties) override; // informs the plugin about the properties of the DAW mixer track it's loaded on
     
@@ -194,7 +196,8 @@ public:
     
 private:
     
-    ImogenEngine<float> floatEngine;
+    ImogenEngine<float>  floatEngine;
+    ImogenEngine<double> doubleEngine;
     
     void updateAllParameters();
     void updateSampleRate(const double newSamplerate);

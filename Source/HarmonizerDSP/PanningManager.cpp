@@ -11,14 +11,30 @@
 #include "PanningManager.h"
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
+{ };
+
+
+void PanningManager::releaseResources()
 {
-    possiblePanVals        .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    panValsInAssigningOrder.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    arrayIndexesMapped     .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    unsentPanVals          .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
-    absDistances           .ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    possiblePanVals.clear();
+    panValsInAssigningOrder.clear();
+    arrayIndexesMapped.clear();
+    unsentPanVals.clear();
+    absDistances.clear();
+};
+
+
+void PanningManager::prepare (const int numVoices)
+{
+    possiblePanVals.ensureStorageAllocated(numVoices);
+    panValsInAssigningOrder.ensureStorageAllocated(numVoices);
+    arrayIndexesMapped.ensureStorageAllocated(numVoices);
+    unsentPanVals.ensureStorageAllocated(numVoices);
+    absDistances.ensureStorageAllocated(numVoices);
     
-    setNumberOfVoices(1);
+    setNumberOfVoices(numVoices);
+    
+    updateStereoWidth(lastRecievedStereoWidth);
 };
 
 

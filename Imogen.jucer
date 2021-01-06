@@ -12,6 +12,8 @@
               displaySplashScreen="1" cppLanguageStandard="17" maxBinaryFileSize="20971520">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
+      <FILE id="oQCkb1" name="ImogenEngine.cpp" compile="1" resource="0"
+            file="Source/ImogenEngine.cpp"/>
       <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="Ng4KOy" name="PluginProcessor.h" compile="0" resource="0"

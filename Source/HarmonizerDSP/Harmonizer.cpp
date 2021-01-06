@@ -37,6 +37,29 @@ HarmonizerVoice<SampleType>::~HarmonizerVoice()
 { };
 
 template<typename SampleType>
+void HarmonizerVoice<SampleType>::prepare (const int blocksize)
+{
+    monoBuffer     .setSize(1, blocksize, true, true, true);
+    stereoBuffer   .setSize(2, blocksize, true, true, true);
+    synthesisBuffer.setSize(1, blocksize, true, true, true);
+    window         .setSize(1, blocksize, true, true, true);
+    
+    finalWindow.ensureStorageAllocated(blocksize);
+};
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::releaseResources()
+{
+    monoBuffer  .setSize(0, 0, false, false, false);
+    stereoBuffer.setSize(0, 0, false, false, false);
+    synthesisBuffer.setSize(0, 0, false, false, false);
+    window.setSize(0, 0, false, false, false);
+    finalWindow.clear();
+};
+
+
+template<typename SampleType>
 void HarmonizerVoice<SampleType>::clearBuffers()
 {
     monoBuffer.clear();
@@ -68,7 +91,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
         esola(inputAudio, epochIndices, numOfEpochsPerFrame,
                ( 1.0f / (1.0f + ((currentInputFreq - currentOutputFreq)/currentOutputFreq)) )); // shifting ratio
         
-        monoBuffer.applyGain(0, numSamples, currentVelocityMultiplier); // midi velocity gain
+        monoBuffer.applyGain (0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
         // write mono ESOLA signal to stereoBuffer w/ panning multipliers, from sample indices 0 to numSamples-1
         stereoBuffer.copyFrom (0, 0, monoBuffer, 0, 0, numSamples);
@@ -385,9 +408,9 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
     
-    currentInputFreq = pitch.getPitch(inputAudio, sampleRate);
+    currentInputFreq = pitch.getPitch (inputAudio, sampleRate);
     
-    jassert(currentInputFreq > 0);
+    jassert (currentInputFreq > 0);
     
     const int averageDistanceBetweenEpochs = epochs.averageDistanceBetweenEpochs(epochIndices);
     const int periodInSamples = ceil((1 / currentInputFreq) * sampleRate);
@@ -1337,20 +1360,6 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
  DANGER!!!
  FOR NON REAL TIME ONLY!!!!!!!!
  ++++++++++++++++++++++++++++++++++++++*/
-template<typename SampleType>
-void Harmonizer<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
-{
-    for(auto* voice : voices)
-        voice->increaseBufferSizes(newMaxBlocksize);
-    
-    epochIndices.ensureStorageAllocated(newMaxBlocksize);
-    epochIndices.clearQuick();
-    epochs.increaseBufferSizes(newMaxBlocksize);
-    
-    pitch.increaseBuffersize(newMaxBlocksize);
-    
-    aggregateMidiBuffer.ensureSize(newMaxBlocksize * 2);
-};
 
 template<typename SampleType>
 void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
@@ -1365,6 +1374,50 @@ void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
     unLatched.clearQuick();
     
     latchManager.newMaxNumVoices(newMaxNumVoices);
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::releaseResources()
+{
+    epochIndices.clear();
+    currentlyActiveNotes.clear();
+    currentlyActiveNoReleased.clear();
+    unLatched.clear();
+    aggregateMidiBuffer.clear();
+    
+    for(auto* voice : voices)
+        voice->releaseResources();
+    
+    epochs.releaseResources();
+    pitch .releaseResources();
+    panner.releaseResources();
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::prepare (const int blocksize)
+{
+    epochIndices.ensureStorageAllocated(blocksize);
+    epochIndices.clearQuick();
+    
+    aggregateMidiBuffer.ensureSize(blocksize);
+    
+    const int currentNumVoices = voices.size();
+    currentlyActiveNotes     .ensureStorageAllocated(currentNumVoices);
+    currentlyActiveNoReleased.ensureStorageAllocated(currentNumVoices);
+    unLatched                .ensureStorageAllocated(currentNumVoices);
+    currentlyActiveNotes     .clearQuick();
+    currentlyActiveNoReleased.clearQuick();
+    unLatched                .clearQuick();
+    
+    panner.prepare(currentNumVoices);
+    
+    for(auto* voice : voices)
+        voice->prepare(blocksize);
+    
+    epochs.prepare(blocksize);
+    pitch .prepare(blocksize);
 };
 
 

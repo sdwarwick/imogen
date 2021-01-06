@@ -20,6 +20,10 @@ public:
     PitchTracker();
     ~PitchTracker();
     
+    void releaseResources();
+    
+    void prepare (const int blocksize);
+    
     SampleType getPitch(const AudioBuffer<SampleType>& inputAudio, const double samplerate);
     
     void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
@@ -60,8 +64,9 @@ public:
     
     int averageDistanceBetweenEpochs(const Array<int>& epochIndices);
     
-    // DANGER!!! FOR NON REAL TIME USE ONLY!!!
-    void increaseBufferSizes(const int newMaxBlocksize);
+    void prepare (const int blocksize);
+    
+    void releaseResources();
     
 private:
     CriticalSection lock;

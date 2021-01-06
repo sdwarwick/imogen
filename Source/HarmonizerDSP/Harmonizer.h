@@ -32,6 +32,10 @@ public:
     
     ~HarmonizerVoice();
     
+    void releaseResources();
+    
+    void prepare (const int blocksize);
+    
     
     void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                          const Array<int>& epochIndices, const int numOfEpochsPerFrame, const float currentInputFreq);
@@ -115,6 +119,10 @@ public:
     
     ~Harmonizer();
     
+    void releaseResources();
+    
+    void prepare (const int blocksize);
+    
     void setPitchDetectionRange(const float newMinHz, const float newMaxHz) { pitch.setHzLimits(newMinHz, newMaxHz); };
     void setPitchDetectionTolerance(const float newTolerance) { pitch.setTolerence(newTolerance); };
 
@@ -194,7 +202,6 @@ public:
     HarmonizerVoice<SampleType>* getCurrentDescantVoice();
     
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
-    void increaseBufferSizes(const int newMaxBlocksize);
     void newMaxNumVoices(const int newMaxNumVoices);
     
     bool sustainPedalDown, sostenutoPedalDown;

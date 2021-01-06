@@ -24,6 +24,18 @@ PitchTracker<SampleType>::~PitchTracker()
 { };
 
 template <typename SampleType>
+void PitchTracker<SampleType>::releaseResources()
+{
+    yinBuffer.setSize(0, 0, false, false, false);
+};
+
+template <typename SampleType>
+void PitchTracker<SampleType>::prepare (const int blocksize)
+{
+    yinBuffer.setSize(1, blocksize);
+};
+
+template <typename SampleType>
 SampleType PitchTracker<SampleType>::getPitch(const AudioBuffer<SampleType>& inputAudio, const double samplerate)
 {
     if (inputAudio.getNumSamples() < MIN_SAMPLES_NEEDED)
@@ -122,26 +134,26 @@ template class PitchTracker<double>;
 
 template <typename SampleType>
 EpochFinder<SampleType>::EpochFinder()
-{
-    y .ensureStorageAllocated(MAX_BUFFERSIZE);
-    y2.ensureStorageAllocated(MAX_BUFFERSIZE);
-    y3.ensureStorageAllocated(MAX_BUFFERSIZE);
-    
-    y .clearQuick();
-    y2.clearQuick();
-    y3.clearQuick();
-};
+{ };
 
 template <typename SampleType>
 EpochFinder<SampleType>::~EpochFinder()
 { };
 
 template <typename SampleType>
-void EpochFinder<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
+void EpochFinder<SampleType>::releaseResources()
 {
-    y .ensureStorageAllocated(newMaxBlocksize);
-    y2.ensureStorageAllocated(newMaxBlocksize);
-    y3.ensureStorageAllocated(newMaxBlocksize);
+    y .clear();
+    y2.clear();
+    y3.clear();
+};
+
+template <typename SampleType>
+void EpochFinder<SampleType>::prepare(const int blocksize)
+{
+    y .ensureStorageAllocated(blocksize);
+    y2.ensureStorageAllocated(blocksize);
+    y3.ensureStorageAllocated(blocksize);
 };
 
 template <typename SampleType>
