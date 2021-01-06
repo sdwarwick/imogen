@@ -5,7 +5,7 @@
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
-    inBuffer(1, MAX_BUFFERSIZE), wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE), monoSummingBuffer(1, MAX_BUFFERSIZE * 2),
+    floatEngine(*this),
     limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
     modulatorInput(ModulatorInputSource::left),
@@ -42,8 +42,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     limiterToggle      = dynamic_cast<AudioParameterBool*> (tree.getParameter("limiterIsOn"));              jassert(limiterToggle);
     limiterThresh      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("limiterThresh"));            jassert(limiterThresh);
     limiterRelease     = dynamic_cast<AudioParameterInt*>  (tree.getParameter("limiterRelease"));           jassert(limiterRelease);
-    
-    initialize(44100.0, MAX_BUFFERSIZE, 12);
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -53,62 +51,14 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {
-    // setLatencySamples(newLatency); // TOTAL plugin latency!
-    
-    updateSampleRate(sampleRate);
-    
-    wetBuffer.setSize(2, samplesPerBlock, true, true, true);
-    dryBuffer.setSize(2, samplesPerBlock, true, true, true);
-    inBuffer .setSize(1, samplesPerBlock, true, true, true);
-    harmonizer.increaseBufferSizes(samplesPerBlock);
-    
-    monoSummingBuffer.setSize(1, samplesPerBlock);
-    
-    dspSpec.maximumBlockSize = samplesPerBlock;
-    dspSpec.sampleRate = sampleRate;
-    dspSpec.maximumBlockSize = samplesPerBlock;
-    dspSpec.numChannels = 2;
-    
-    limiter.prepare(dspSpec);
-  
-    dryWetMixer.prepare(dspSpec);
-    dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
-    
-    bypassDelay.prepare(dspSpec);
-    bypassDelay.setDelay(2); // latency in samples of the ESOLA algorithm
-    
-    harmonizer.resetNoteOnCounter(); // ??
-    
-    updateAllParameters();
-    clearBuffers();
+    floatEngine.prepare(sampleRate, samplesPerBlock);
 };
 
-
-void ImogenAudioProcessor::initialize(const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
-{
-    for (int i = 0; i < initNumVoices; ++i)
-        harmonizer.addVoice(new HarmonizerVoice(&harmonizer));
-    
-    harmonizer.newMaxNumVoices(std::max(initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
-    harmonizer.setPitchDetectionRange(40.0, 2000.0);
-    harmonizer.setPitchDetectionTolerance(0.15);
-    
-    // setLatencySamples(newLatency); // TOTAL plugin latency!
-    
-    dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
-    
-    prepareToPlay(initSamplerate, std::max(initSamplesPerBlock, MAX_BUFFERSIZE));
-};
 
 
 void ImogenAudioProcessor::reset()
 {
-    harmonizer.allNotesOff(false);
-    harmonizer.resetNoteOnCounter();
-    clearBuffers();
-    dryWetMixer.reset();
-    limiter.reset();
-    bypassDelay.reset();
+    floatEngine.reset();
 };
 
 
@@ -125,185 +75,9 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     AudioBuffer<float> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<float> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
-    processBlockWrapped (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
+    floatEngine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
+    
     wasBypassedLastCallback = false;
-};
-
-
-void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<float>& inBus, AudioBuffer<float>& output,
-                                                MidiBuffer& midiMessages,
-                                                const bool applyFadeIn, const bool applyFadeOut)
-{
-    updateSampleRate(getSampleRate());
-    updateAllParameters();
-    
-    AudioBuffer<float> input; // input needs to be a MONO buffer!
-    
-    const int totalNumSamples = inBus.getNumSamples();
-    
-    switch (modulatorInput)
-    {
-        case ModulatorInputSource::left:
-            input = AudioBuffer<float> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
-            break;
-            
-        case ModulatorInputSource::right:
-            input = AudioBuffer<float> (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1), 1, totalNumSamples);
-            break;
-            
-        case ModulatorInputSource::mixToMono:
-        {
-            if (inBus.getNumChannels() == 1)
-            {
-                input = AudioBuffer<float> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
-                break;
-            }
-            
-            if(isNonRealtime() && monoSummingBuffer.getNumSamples() < totalNumSamples)
-                monoSummingBuffer.setSize(1, totalNumSamples);
-            
-            monoSummingBuffer.copyFrom(0, 0, inBus, 0, 0, totalNumSamples);
-            
-            const int totalNumChannels = inBus.getNumChannels();
-            
-            for(int channel = 1; channel < totalNumChannels; ++channel)
-                monoSummingBuffer.addFrom(0, 0, inBus, channel, 0, totalNumSamples);
-            
-            monoSummingBuffer.applyGain(0, totalNumSamples, 1.0f / totalNumChannels);
-            
-            input = AudioBuffer<float> (monoSummingBuffer.getArrayOfWritePointers(), 1, totalNumSamples);
-            break;
-        }
-    }
-    
-    auto midiIterator = midiMessages.findNextSamplePosition(0);
-    
-    int  numSamples  = totalNumSamples;
-    int  startSample = 0;
-    bool firstEvent  = true;
-    
-    harmonizer.clearMidiBuffer();
-    
-    for (; numSamples > 0; ++midiIterator)
-    {
-        if (midiIterator == midiMessages.cend())
-        {
-            renderBlock(input, output, startSample, numSamples);
-            break;
-        }
-        
-        const auto metadata = *midiIterator;
-        const int  samplePosition = metadata.samplePosition;
-        const int  samplesToNextMidiMessage = samplePosition - startSample;
-        
-        if (samplesToNextMidiMessage >= numSamples)
-        {
-            renderBlock(input, output, startSample, numSamples);
-            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
-            break;
-        }
-        
-        if (firstEvent && samplesToNextMidiMessage == 0)
-        {
-            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
-            continue;
-        }
-        
-        firstEvent = false;
-        
-        renderBlock(input, output, startSample, samplesToNextMidiMessage);
-        harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
-        
-        startSample += samplesToNextMidiMessage;
-        numSamples  -= samplesToNextMidiMessage;
-    }
-    
-    std::for_each (midiIterator,
-                   midiMessages.cend(),
-                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
-    
-    midiMessages.swapWith(harmonizer.returnMidiBuffer());
-    
-    if (applyFadeOut)
-        output.applyGainRamp(0, totalNumSamples, 1.0f, 0.0f);
-    
-    if (applyFadeIn)
-        output.applyGainRamp(0, totalNumSamples, 0.0f, 1.0f);
-};
-
-
-void ImogenAudioProcessor::renderBlock (AudioBuffer<float>& input, AudioBuffer<float>& output,
-                                        const int startSample, const int numSamples)
-{
-    if (isNonRealtime())
-    {
-        AudioBuffer<float> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples);
-        AudioBuffer<float> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples);
-        
-        if (wetBuffer.getNumSamples() < numSamples)
-            resizeBuffers(numSamples);
-        
-        renderChunk(inProxy, outProxy);
-    }
-    else
-    {
-        int chunkStartSample = startSample;
-        int samplesLeft      = numSamples;
-    
-        while(samplesLeft > 0)
-        {
-            const int chunkNumSamples = std::min(samplesLeft, wetBuffer.getNumSamples());
-            
-            AudioBuffer<float> inProxy  (input .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
-            AudioBuffer<float> outProxy (output.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
-            
-            renderChunk(inProxy, outProxy);
-            
-            chunkStartSample += chunkNumSamples;
-            samplesLeft      -= chunkNumSamples;
-        }
-    }
-};
-
-
-void ImogenAudioProcessor::renderChunk (const AudioBuffer<float>& input, AudioBuffer<float>& output)
-{
-    // regardless of the input channel(s) setup, the inBuffer fed to this function should be a mono buffer with its audio content in channel 0
-    // outBuffer should be a stereo buffer with the same length in samples as inBuffer
-    // # of samples in the I/O buffers must be less than or equal to MAX_BUFFERSIZE
-    
-    updateSampleRate(getSampleRate());
-    updateAllParameters();
-    
-    const int numSamples = input.getNumSamples();
-    
-    AudioBuffer<float> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
-    
-    inBufferProxy.copyFrom(0, 0, input, 0, 0, numSamples); // copy to input storage buffer so that input gain can be applied
-
-    inBufferProxy.applyGain(inputGainMultiplier); // apply input gain
-    
-    writeToDryBuffer(inBufferProxy); // puts input samples into dryBuffer w/ proper panning applied
-    
-    AudioBuffer<float> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
-    AudioBuffer<float> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
-    
-    dryWetMixer.pushDrySamples( dsp::AudioBlock<float>(dryProxy) );
-
-    harmonizer.renderVoices(inBufferProxy, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
-    
-    dryWetMixer.mixWetSamples( dsp::AudioBlock<float>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
-    
-    output.makeCopyOf(wetProxy, true); // transfer from wetBuffer to output buffer
-    
-    output.applyGain(outputGainMultiplier); // apply master output gain
-    
-    // output limiter
-    if(limiterIsOn)
-    {
-        dsp::AudioBlock<float> limiterBlock (output);
-        limiter.process(dsp::ProcessContextReplacing<float>(limiterBlock));
-    }
 };
 
 
@@ -323,85 +97,21 @@ void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>& buffer, Mid
         // this is the first callback of processBlockBypassed() after the bypass has been activated.
         // Process one more chunk and ramp the sound to 0 instead of killing the sound instantly
         
-        processBlockWrapped (inBus, outBus, midiMessages, false, true);
+        floatEngine.process (inBus, outBus, midiMessages, false, true);
         wasBypassedLastCallback = true;
         return;
     }
     
-    processBlockBypassedWrapped (inBus, outBus, midiMessages);
-};
-
-
-void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<float>& inBus, AudioBuffer<float> output, MidiBuffer& midiMessages)
-{
-    updateSampleRate(getSampleRate());
-    updateAllParameters();
-    
-    if (output.getNumChannels() > inBus.getNumChannels())
-        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
-            output.clear(chan, 0, output.getNumSamples());
-    
-    dsp::AudioBlock<float> inBlock  (inBus);
-    dsp::AudioBlock<float> outBlock (output);
-    
-    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
-    if (inBlock == outBlock)
-        bypassDelay.process (dsp::ProcessContextReplacing<float> (inBlock));
-    else
-        bypassDelay.process (dsp::ProcessContextNonReplacing<float> (inBlock, outBlock));
+    floatEngine.processBypassed (inBus, outBus, midiMessages);
     
     wasBypassedLastCallback = true;
-    
-    ignoreUnused(midiMessages); // midi passes through unaffected
 };
 
-
-void ImogenAudioProcessor::writeToDryBuffer(const AudioBuffer<float>& input)
-{
-    // writes from "input" into dryBuffer & applies panning
-    
-    const int numSamples = input.getNumSamples();
-    
-    dryBuffer.copyFrom (0, 0, input, 0, 0, numSamples);
-    dryBuffer.copyFrom (1, 0, input, 0, 0, numSamples);
-    dryBuffer.applyGain(0, 0, numSamples, dryvoxpanningmults[0]);
-    dryBuffer.applyGain(1, 0, numSamples, dryvoxpanningmults[1]);
-};
-
-
-void ImogenAudioProcessor::resizeBuffers(const int newBlocksize)
-{
-    suspendProcessing (true);
-    
-    wetBuffer.setSize(2, newBlocksize, true, true, true);
-    dryBuffer.setSize(2, newBlocksize, true, true, true);
-    inBuffer .setSize(1, newBlocksize, true, true, true);
-    harmonizer.increaseBufferSizes(newBlocksize);
-    
-    monoSummingBuffer.setSize(1, newBlocksize);
-    
-    dspSpec.maximumBlockSize = newBlocksize;
-    limiter.prepare(dspSpec);
-    dryWetMixer.prepare(dspSpec);
-    bypassDelay.prepare(dspSpec);
-    
-    suspendProcessing (false);
-};
 
 
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-
-void ImogenAudioProcessor::clearBuffers()
-{
-    harmonizer.clearBuffers();
-    harmonizer.clearMidiBuffer();
-    wetBuffer.clear();
-    dryBuffer.clear();
-    inBuffer.clear();
-    monoSummingBuffer.clear();
-};
 
 
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
@@ -437,8 +147,7 @@ void ImogenAudioProcessor::updateAllParameters()
 
 void ImogenAudioProcessor::updateSampleRate(const double newSamplerate)
 {
-    if(harmonizer.getSamplerate() != newSamplerate)
-        harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
+    floatEngine.updateSamplerate(newSamplerate);
 };
 
 void ImogenAudioProcessor::updateDryVoxPan()
@@ -456,70 +165,62 @@ void ImogenAudioProcessor::updateDryVoxPan()
 
 void ImogenAudioProcessor::updateDryWet()
 {
-    dryWetMixer.setWetMixProportion(dryWet->get() / 100.0f);
-    
-    // need to set latency!!!
+    floatEngine.updateDryWet(dryWet->get());
 };
 
 void ImogenAudioProcessor::updateAdsr()
 {
-    harmonizer.updateADSRsettings(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
-    harmonizer.setADSRonOff      (adsrToggle->get());
+    floatEngine.updateAdsr(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
 };
 
 void ImogenAudioProcessor::updateQuickKillMs()
 {
-    harmonizer.updateQuickReleaseMs(quickKillMs->get());
+    floatEngine.updateQuickKill(quickKillMs->get());
 };
 
 void ImogenAudioProcessor::updateQuickAttackMs()
 {
-    harmonizer.updateQuickAttackMs(quickAttackMs->get());
+    floatEngine.updateQuickAttack(quickAttackMs->get());
 };
 
 void ImogenAudioProcessor::updateStereoWidth()
 {
-    harmonizer.updateLowestPannedNote(lowestPanned->get());
-    harmonizer.updateStereoWidth     (stereoWidth->get());
+    floatEngine.updateStereoWidth(stereoWidth->get(), lowestPanned->get());
 };
 
 void ImogenAudioProcessor::updateMidiVelocitySensitivity()
 {
-    harmonizer.updateMidiVelocitySensitivity(velocitySens->get());
+    floatEngine.updateMidiVelocitySensitivity(velocitySens->get());
 };
 
 void ImogenAudioProcessor::updatePitchbendSettings()
 {
-    harmonizer.updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
+    floatEngine.updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
 };
 
 void ImogenAudioProcessor::updatePedalPitch()
 {
-    harmonizer.setPedalPitch           (pedalPitchIsOn->get());
-    harmonizer.setPedalPitchUpperThresh(pedalPitchThresh->get());
-    harmonizer.setPedalPitchInterval   (pedalPitchInterval->get());
+    floatEngine.updatePedalPitch(pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
 };
 
 void ImogenAudioProcessor::updateDescant()
 {
-    harmonizer.setDescant           (descantIsOn->get());
-    harmonizer.setDescantLowerThresh(descantThresh->get());
-    harmonizer.setDescantInterval   (descantInterval->get());
+    floatEngine.updateDescant(descantIsOn->get(), descantThresh->get(), descantInterval->get());
 };
 
 void ImogenAudioProcessor::updateConcertPitch()
 {
-    harmonizer.setConcertPitchHz(concertPitchHz->get());
+    floatEngine.updateConcertPitch(concertPitchHz->get());
 };
 
 void ImogenAudioProcessor::updateNoteStealing()
 {
-    harmonizer.setNoteStealingEnabled(voiceStealing->get());
+    floatEngine.updateNoteStealing(voiceStealing->get());
 };
 
 void ImogenAudioProcessor::updateMidiLatch()
 {
-    harmonizer.setMidiLatch(latchIsOn->get(), true);
+    floatEngine.updateMidiLatch(latchIsOn->get());
 };
 
 void ImogenAudioProcessor::updateIOgains()
@@ -538,44 +239,14 @@ void ImogenAudioProcessor::updateIOgains()
 void ImogenAudioProcessor::updateLimiter()
 {
     limiterIsOn = limiterToggle->get();
-    limiter.setThreshold(limiterThresh->get());
-    limiter.setRelease(limiterRelease->get());
+    floatEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
 };
-
 
 void ImogenAudioProcessor::updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance)
 {
-    harmonizer.setPitchDetectionRange(newMinHz, newMaxHz);
-    harmonizer.setPitchDetectionTolerance(newTolerance);
+    floatEngine.updatePitchDetectionSettings(newMinHz, newMaxHz, newTolerance);
 };
 
-
-
-// DANGER -- suspends processing & reallocates memory for new max num voices if the requested # of harmony voices is larger than the storage size preallocated at startup
-void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
-{
-    const int currentVoices = harmonizer.getNumVoices();
-    
-    if(currentVoices != newNumVoices)
-    {
-        if(newNumVoices > currentVoices)
-        {
-            suspendProcessing (true);
-            
-            for(int i = 0; i < newNumVoices - currentVoices; ++i)
-                harmonizer.addVoice(new HarmonizerVoice<float>(&harmonizer));
-            
-            harmonizer.newMaxNumVoices(std::max(newNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
-            // increases storage overheads for internal harmonizer functions dealing with arrays of notes, etc
-            
-            suspendProcessing (false);
-        }
-        else
-            harmonizer.removeNumVoices(currentVoices - newNumVoices);
-        
-        // update GUI numVoices ComboBox
-    }
-};
 
 
 
@@ -591,7 +262,7 @@ void ImogenAudioProcessor::savePreset(juce::String presetName)
     File writingTo = getPresetsFolder().getChildFile(presetName);
     
     auto xml(tree.copyState().createXml());
-    xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
+   // xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
     xml->writeTo(writingTo);
     updateHostDisplay();
 };
@@ -655,7 +326,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto xml(tree.copyState().createXml());
-    xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
+ //   xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
     copyXmlToBinary (*xml, destData);
 };
 
@@ -733,9 +404,9 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-    if(harmonizer.isADSRon())
-        return double(adsrRelease->get()); // ADSR release time in seconds
-    
+//    if(harmonizer.isADSRon())
+//        return double(adsrRelease->get()); // ADSR release time in seconds
+//
     return double(quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
 };
 
@@ -825,3 +496,452 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 
 
+
+template<typename SampleType>
+ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
+    processor(p), inBuffer(1, MAX_BUFFERSIZE), wetBuffer(2, MAX_BUFFERSIZE), dryBuffer(2, MAX_BUFFERSIZE), monoSummingBuffer(1, MAX_BUFFERSIZE * 2)
+{
+    initialize (44100.0, MAX_BUFFERSIZE, 12);
+};
+
+
+template<typename SampleType>
+ImogenEngine<SampleType>::~ImogenEngine()
+{
+    
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
+{
+    for (int i = 0; i < initNumVoices; ++i)
+        harmonizer.addVoice(new HarmonizerVoice<SampleType>(&harmonizer));
+    
+    harmonizer.newMaxNumVoices(std::max(initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
+    harmonizer.setPitchDetectionRange(40.0, 2000.0);
+    harmonizer.setPitchDetectionTolerance(0.15);
+    
+    // setLatencySamples(newLatency); // TOTAL plugin latency!
+    
+    dryWetMixer.setMixingRule(dsp::DryWetMixingRule::linear);
+    
+    prepare (initSamplerate, std::max(initSamplesPerBlock, MAX_BUFFERSIZE));
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
+{
+    // setLatencySamples(newLatency); // TOTAL plugin latency!
+    
+    updateSamplerate(sampleRate);
+    
+    wetBuffer.setSize(2, samplesPerBlock, true, true, true);
+    dryBuffer.setSize(2, samplesPerBlock, true, true, true);
+    inBuffer .setSize(1, samplesPerBlock, true, true, true);
+    harmonizer.increaseBufferSizes(samplesPerBlock);
+    
+    monoSummingBuffer.setSize(1, samplesPerBlock);
+    
+    dspSpec.maximumBlockSize = samplesPerBlock;
+    dspSpec.sampleRate = sampleRate;
+    dspSpec.maximumBlockSize = samplesPerBlock;
+    dspSpec.numChannels = 2;
+    
+    limiter.prepare(dspSpec);
+    
+    dryWetMixer.prepare(dspSpec);
+    dryWetMixer.setWetLatency(2); // latency in samples of the ESOLA algorithm
+    
+    bypassDelay.prepare(dspSpec);
+    bypassDelay.setDelay(2); // latency in samples of the ESOLA algorithm
+    
+    harmonizer.resetNoteOnCounter(); // ??
+    
+    clearBuffers();
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::reset()
+{
+    harmonizer.allNotesOff(false);
+    harmonizer.resetNoteOnCounter();
+    clearBuffers();
+    dryWetMixer.reset();
+    limiter.reset();
+    bypassDelay.reset();
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
+                                               const bool applyFadeIn, const bool applyFadeOut)
+{
+    updateSamplerate(processor.getSampleRate());
+    
+    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
+    
+    const int totalNumSamples = inBus.getNumSamples();
+    
+    switch (processor.modulatorInput)
+    {
+        case ImogenAudioProcessor::ModulatorInputSource::left:
+            input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
+            break;
+            
+        case ImogenAudioProcessor::ModulatorInputSource::right:
+            input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1), 1, totalNumSamples);
+            break;
+            
+        case ImogenAudioProcessor::ModulatorInputSource::mixToMono:
+        {
+            if (inBus.getNumChannels() == 1)
+            {
+                input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
+                break;
+            }
+            
+            if(processor.isNonRealtime() && monoSummingBuffer.getNumSamples() < totalNumSamples)
+                monoSummingBuffer.setSize(1, totalNumSamples);
+            
+            monoSummingBuffer.copyFrom(0, 0, inBus, 0, 0, totalNumSamples);
+            
+            const int totalNumChannels = inBus.getNumChannels();
+            
+            for(int channel = 1; channel < totalNumChannels; ++channel)
+                monoSummingBuffer.addFrom(0, 0, inBus, channel, 0, totalNumSamples);
+            
+            monoSummingBuffer.applyGain(0, totalNumSamples, 1.0f / totalNumChannels);
+            
+            input = AudioBuffer<SampleType> (monoSummingBuffer.getArrayOfWritePointers(), 1, totalNumSamples);
+            break;
+        }
+    }
+    
+    auto midiIterator = midiMessages.findNextSamplePosition(0);
+    
+    int  numSamples  = totalNumSamples;
+    int  startSample = 0;
+    bool firstEvent  = true;
+    
+    harmonizer.clearMidiBuffer();
+    
+    for (; numSamples > 0; ++midiIterator)
+    {
+        if (midiIterator == midiMessages.cend())
+        {
+            renderBlock (input, output, startSample, numSamples);
+            break;
+        }
+        
+        const auto metadata = *midiIterator;
+        const int  samplePosition = metadata.samplePosition;
+        const int  samplesToNextMidiMessage = samplePosition - startSample;
+        
+        if (samplesToNextMidiMessage >= numSamples)
+        {
+            renderBlock (input, output, startSample, numSamples);
+            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
+            break;
+        }
+        
+        if (firstEvent && samplesToNextMidiMessage == 0)
+        {
+            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
+            continue;
+        }
+        
+        firstEvent = false;
+        
+        renderBlock (input, output, startSample, samplesToNextMidiMessage);
+        harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
+        
+        startSample += samplesToNextMidiMessage;
+        numSamples  -= samplesToNextMidiMessage;
+    }
+    
+    std::for_each (midiIterator,
+                   midiMessages.cend(),
+                   [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
+    
+    midiMessages.swapWith(harmonizer.returnMidiBuffer());
+    
+    if (applyFadeOut)
+        output.applyGainRamp(0, totalNumSamples, 1.0f, 0.0f);
+    
+    if (applyFadeIn)
+        output.applyGainRamp(0, totalNumSamples, 0.0f, 1.0f);
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+{
+    updateSamplerate(processor.getSampleRate());
+    
+    if (output.getNumChannels() > inBus.getNumChannels())
+        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
+            output.clear(chan, 0, output.getNumSamples());
+    
+    dsp::AudioBlock<SampleType> inBlock  (inBus);
+    dsp::AudioBlock<SampleType> outBlock (output);
+    
+    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
+    if (inBlock == outBlock)
+        bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
+    else
+        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock));
+
+    ignoreUnused(midiMessages); // midi passes through unaffected
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
+                                       const int startSample, const int numSamples)
+{
+    if (processor.isNonRealtime())
+    {
+        AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples);
+        AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples);
+        
+        if (wetBuffer.getNumSamples() < numSamples)
+            resizeBuffers(numSamples);
+        
+        renderChunk (inProxy, outProxy);
+    }
+    else
+    {
+        int chunkStartSample = startSample;
+        int samplesLeft      = numSamples;
+        
+        while(samplesLeft > 0)
+        {
+            const int chunkNumSamples = std::min(samplesLeft, wetBuffer.getNumSamples());
+            
+            AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
+            AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
+            
+            renderChunk (inProxy, outProxy);
+            
+            chunkStartSample += chunkNumSamples;
+            samplesLeft      -= chunkNumSamples;
+        }
+    }
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output)
+{
+    // regardless of the input channel(s) setup, the inBuffer fed to this function should be a mono buffer with its audio content in channel 0
+    // outBuffer should be a stereo buffer with the same length in samples as inBuffer
+    // # of samples in the I/O buffers must be less than or equal to MAX_BUFFERSIZE
+    
+    updateSamplerate(processor.getSampleRate());
+    
+    const int numSamples = input.getNumSamples();
+    
+    AudioBuffer<SampleType> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
+    
+    inBufferProxy.copyFrom(0, 0, input, 0, 0, numSamples); // copy to input storage buffer so that input gain can be applied
+    
+    inBufferProxy.applyGain(processor.inputGainMultiplier); // apply input gain
+    
+    writeToDryBuffer(inBufferProxy); // puts input samples into dryBuffer w/ proper panning applied
+    
+    AudioBuffer<SampleType> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
+    AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
+    
+    dryWetMixer.pushDrySamples( dsp::AudioBlock<SampleType>(dryProxy) );
+    
+    harmonizer.renderVoices (inBufferProxy, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
+    
+    dryWetMixer.mixWetSamples( dsp::AudioBlock<SampleType>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
+    
+    output.makeCopyOf(wetProxy, true); // transfer from wetBuffer to output buffer
+    
+    output.applyGain(processor.outputGainMultiplier); // apply master output gain
+    
+    // output limiter
+    if(processor.limiterIsOn)
+    {
+        dsp::AudioBlock<SampleType> limiterBlock (output);
+        limiter.process(dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+    }
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::writeToDryBuffer (const AudioBuffer<SampleType>& input)
+{
+    const int numSamples = input.getNumSamples();
+    
+    dryBuffer.copyFrom (0, 0, input, 0, 0, numSamples);
+    dryBuffer.copyFrom (1, 0, input, 0, 0, numSamples);
+    dryBuffer.applyGain(0, 0, numSamples, processor.dryvoxpanningmults[0]);
+    dryBuffer.applyGain(1, 0, numSamples, processor.dryvoxpanningmults[1]);
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::resizeBuffers(const int newBlocksize)
+{
+    wetBuffer.setSize(2, newBlocksize, true, true, true);
+    dryBuffer.setSize(2, newBlocksize, true, true, true);
+    inBuffer .setSize(1, newBlocksize, true, true, true);
+    harmonizer.increaseBufferSizes(newBlocksize);
+    
+    monoSummingBuffer.setSize(1, newBlocksize);
+    
+    dspSpec.maximumBlockSize = newBlocksize;
+    limiter.prepare(dspSpec);
+    dryWetMixer.prepare(dspSpec);
+    bypassDelay.prepare(dspSpec);
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::clearBuffers()
+{
+    harmonizer.clearBuffers();
+    harmonizer.clearMidiBuffer();
+    wetBuffer.clear();
+    dryBuffer.clear();
+    inBuffer.clear();
+    monoSummingBuffer.clear();
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
+{
+    const int currentVoices = harmonizer.getNumVoices();
+    
+    if(currentVoices != newNumVoices)
+    {
+        if(newNumVoices > currentVoices)
+        {
+            processor.suspendProcessing (true);
+            
+            for(int i = 0; i < newNumVoices - currentVoices; ++i)
+                harmonizer.addVoice(new HarmonizerVoice<SampleType>(&harmonizer));
+            
+            harmonizer.newMaxNumVoices(std::max(newNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
+            // increases storage overheads for internal harmonizer functions dealing with arrays of notes, etc
+            
+            processor.suspendProcessing (false);
+        }
+        else
+            harmonizer.removeNumVoices(currentVoices - newNumVoices);
+        
+        // update GUI numVoices ComboBox
+    }
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateSamplerate(const int newSamplerate)
+{
+    if(harmonizer.getSamplerate() != newSamplerate)
+        harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateDryWet(const float newWetMixProportion)
+{
+    dryWetMixer.setWetMixProportion(newWetMixProportion);
+    
+    // need to set latency!!!
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn)
+{
+    harmonizer.updateADSRsettings(attack, decay, sustain, release);
+    harmonizer.setADSRonOff(isOn);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateQuickKill(const int newMs)
+{
+    harmonizer.updateQuickReleaseMs(newMs);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateQuickAttack(const int newMs)
+{
+    harmonizer.updateQuickAttackMs(newMs);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateStereoWidth(const int newStereoWidth, const int lowestPannedNote)
+{
+    harmonizer.updateLowestPannedNote(lowestPannedNote);
+    harmonizer.updateStereoWidth     (newStereoWidth);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateMidiVelocitySensitivity(const int newSensitivity)
+{
+    harmonizer.updateMidiVelocitySensitivity(newSensitivity);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updatePitchbendSettings(const int rangeUp, const int rangeDown)
+{
+    harmonizer.updatePitchbendSettings(rangeUp, rangeDown);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updatePedalPitch(const bool isOn, const int upperThresh, const int interval)
+{
+    harmonizer.setPedalPitch           (isOn);
+    harmonizer.setPedalPitchUpperThresh(upperThresh);
+    harmonizer.setPedalPitchInterval   (interval);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateDescant(const bool isOn, const int lowerThresh, const int interval)
+{
+    harmonizer.setDescant           (isOn);
+    harmonizer.setDescantLowerThresh(lowerThresh);
+    harmonizer.setDescantInterval   (interval);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateConcertPitch(const int newConcertPitchHz)
+{
+    harmonizer.setConcertPitchHz(newConcertPitchHz);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateNoteStealing(const bool shouldSteal)
+{
+    harmonizer.setNoteStealingEnabled(shouldSteal);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateMidiLatch(const bool isLatched)
+{
+    harmonizer.setMidiLatch(isLatched, true);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release)
+{
+    limiter.setThreshold(thresh);
+    limiter.setRelease(release);
+};
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance)
+{
+    harmonizer.setPitchDetectionRange(newMinHz, newMaxHz);
+    harmonizer.setPitchDetectionTolerance(newTolerance);
+};
+
+
+
+template class ImogenEngine<float>;
+template class ImogenEngine<double>;

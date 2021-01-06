@@ -7,6 +7,89 @@
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
+class ImogenAudioProcessor;
+
+
+
+template<typename SampleType>
+class ImogenEngine
+{
+public:
+    ImogenEngine(ImogenAudioProcessor& p);
+    
+    ~ImogenEngine();
+    
+    // the top-level processBlock call redirects here, just so that this function can be wrapped & templated for either float or double AudioBuffer types.
+    void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
+                  const bool applyFadeIn, const bool applyFadeOut);
+    
+    void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    
+    void prepare (double sampleRate, int samplesPerBlock);
+    
+    void reset();
+    
+    void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
+    
+    Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); };
+    
+    void updateSamplerate(const int newSamplerate);
+    void updateDryWet(const float newWetMixProportion);
+    void updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn);
+    void updateQuickKill(const int newMs);
+    void updateQuickAttack(const int newMs);
+    void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
+    void updateMidiVelocitySensitivity(const int newSensitivity);
+    void updatePitchbendSettings(const int rangeUp, const int rangeDown);
+    void updatePedalPitch(const bool isOn, const int upperThresh, const int interval);
+    void updateDescant(const bool isOn, const int lowerThresh, const int interval);
+    void updateConcertPitch(const int newConcertPitchHz);
+    void updateNoteStealing(const bool shouldSteal);
+    void updateMidiLatch(const bool isLatched);
+    void updateLimiter(const float thresh, const float release);
+    void updatePitchDetectionSettings (const float newMinHz, const float newMaxHz, const float newTolerance);
+    
+    
+private:
+    
+    ImogenAudioProcessor& processor;
+    
+    Harmonizer<SampleType> harmonizer;
+    
+    AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
+    AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+    AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
+    AudioBuffer<SampleType> monoSummingBuffer; // this buffer is used in case a multichannel input needs to be summed to mono.
+    
+    dsp::ProcessSpec dspSpec;
+    dsp::Limiter <SampleType> limiter;
+    dsp::DryWetMixer<SampleType> dryWetMixer;
+    dsp::DelayLine<SampleType> bypassDelay; // a delay line used for latency compensation when the processing is bypassed
+    
+    
+    // takes the chunks in between midi messages and makes sure they don't exceed the internal preallocated buffer sizes
+    // if they do, this function breaks the in/out buffers into smaller chunks & calls renderChunk() on each of these in sequence.
+    void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
+                      const int startSample, const int numSamples);
+    
+    // this function actually does the audio processing on a chunk of audio.
+    void renderChunk (const AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer);
+    
+    // initializes the processor
+    void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
+    
+    void writeToDryBuffer (const AudioBuffer<SampleType>& input);
+    
+    void resizeBuffers (const int newBlocksize);
+    
+    void clearBuffers();
+    
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
+};
+
+
+
 
 //==============================================================================
 /**
@@ -80,11 +163,11 @@ public:
     void updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance);
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
-    Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); };
+    
+    Array<int> returnActivePitches() const { return floatEngine.returnActivePitches(); };
+    
     
     void killAllMidi() { reset(); };
-    
-    void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     AudioProcessorValueTreeState tree;
     
@@ -99,65 +182,46 @@ public:
     bool supportsDoublePrecisionProcessing() const override { return false; };
     
     void updateTrackProperties (const TrackProperties& properties) override; // informs the plugin about the properties of the DAW mixer track it's loaded on
+    
+    void updateNumVoices(const int newNumVoices) { floatEngine.updateNumVoices(newNumVoices); };
         
     //==============================================================================
     
+    int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
+    float inputGainMultiplier, outputGainMultiplier;
+    ModulatorInputSource modulatorInput;
+    bool limiterIsOn;
+    
 private:
     
-    // the top-level processBlock call redirects here, just so that this function can be wrapped & templated for either float or double AudioBuffer types.
-    void processBlockWrapped (AudioBuffer<float>& inBus, AudioBuffer<float>& output, MidiBuffer& midiMessages,
-                              const bool applyFadeIn, const bool applyFadeOut);
-    
-    // takes the chunks in between midi messages and makes sure they don't exceed the internal preallocated buffer sizes
-    // if they do, this function breaks the in/out buffers into smaller chunks & calls renderChunk() on each of these in sequence.
-    void renderBlock (AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer,
-                      const int startSample, const int numSamples);
-    
-    // this function actually does the audio processing on a chunk of audio.
-    void renderChunk (const AudioBuffer<float>& inBuffer, AudioBuffer<float>& outBuffer);
-    
-    // this is where the top-level process callbacks are routed to when the plugin is in bypass mode
-    void processBlockBypassedWrapped (AudioBuffer<float>& inBus, AudioBuffer<float> output, MidiBuffer& midiMessages);
+    ImogenEngine<float> floatEngine;
     
     void updateAllParameters();
     void updateSampleRate(const double newSamplerate);
-    void clearBuffers();
-    
-    Harmonizer<float> harmonizer;
-    
-    AudioBuffer<float> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
-    AudioBuffer<float> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-    AudioBuffer<float> dryBuffer; // this buffer is used for panning & delaying the dry signal
-    AudioBuffer<float> monoSummingBuffer; // this buffer is used in case a multichannel input needs to be summed to mono.
-    
-    dsp::ProcessSpec dspSpec;
-    dsp::Limiter <float> limiter;
-    dsp::DryWetMixer<float> dryWetMixer;
-    dsp::DelayLine<float> bypassDelay; // a delay line used for latency compensation when the processing is bypassed
-    
-    // these variables store CURRENT states:
-    bool limiterIsOn;
-    float inputGainMultiplier, outputGainMultiplier;
-    
-    int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
     
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;
     float prevideb, prevodeb;
     
-    ModulatorInputSource modulatorInput;
+    PluginHostType host;
+    
+    AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    
+    AudioProcessor::BusesProperties makeBusProperties() const;
+    
+    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
-    AudioParameterInt* 	 dryPan             = nullptr;
-    AudioParameterInt* 	 dryWet             = nullptr;
-    AudioParameterInt* 	 inputChan          = nullptr;
+    AudioParameterInt*   dryPan             = nullptr;
+    AudioParameterInt*   dryWet             = nullptr;
+    AudioParameterInt*   inputChan          = nullptr;
     AudioParameterFloat* adsrAttack         = nullptr;
     AudioParameterFloat* adsrDecay          = nullptr;
     AudioParameterFloat* adsrSustain        = nullptr;
     AudioParameterFloat* adsrRelease        = nullptr;
     AudioParameterBool*  adsrToggle         = nullptr;
-    AudioParameterInt*	 quickKillMs        = nullptr;
-    AudioParameterInt* 	 quickAttackMs      = nullptr;
+    AudioParameterInt*   quickKillMs        = nullptr;
+    AudioParameterInt*   quickAttackMs      = nullptr;
     AudioParameterInt*   stereoWidth        = nullptr;
     AudioParameterInt*   lowestPanned       = nullptr;
     AudioParameterInt*   velocitySens       = nullptr;
@@ -167,36 +231,21 @@ private:
     AudioParameterInt*   pedalPitchThresh   = nullptr;
     AudioParameterInt*   pedalPitchInterval = nullptr;
     AudioParameterBool*  descantIsOn        = nullptr;
-    AudioParameterInt*	 descantThresh      = nullptr;
-    AudioParameterInt*	 descantInterval    = nullptr;
-    AudioParameterInt*	 concertPitchHz     = nullptr;
+    AudioParameterInt*   descantThresh      = nullptr;
+    AudioParameterInt*   descantInterval    = nullptr;
+    AudioParameterInt*   concertPitchHz     = nullptr;
     AudioParameterBool*  voiceStealing      = nullptr;
     AudioParameterBool*  latchIsOn          = nullptr;
     AudioParameterFloat* inputGain          = nullptr;
-    AudioParameterFloat* outputGain	        = nullptr;
-    AudioParameterBool*	 limiterToggle      = nullptr;
+    AudioParameterFloat* outputGain         = nullptr;
+    AudioParameterBool*  limiterToggle      = nullptr;
     AudioParameterFloat* limiterThresh      = nullptr;
     AudioParameterInt*   limiterRelease     = nullptr;
     
-    PluginHostType host;
-    
-    
-    void writeToDryBuffer(const AudioBuffer<float>& input);
-    
-    AudioProcessorValueTreeState::ParameterLayout createParameters() const;
-    
-    AudioProcessor::BusesProperties makeBusProperties() const;
-    
-    void initialize(const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
-    
-    void increaseBufferSizes(const int newMaxBlocksize);
-    
-    void resizeBuffers(const int newBlocksize);
-    
-    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
-    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
+
+
 
 
 

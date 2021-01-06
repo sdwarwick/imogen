@@ -124,7 +124,6 @@ public:
     
     MidiBuffer& returnMidiBuffer() { return aggregateMidiBuffer; };
     
-    
     void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
     int getNumActiveVoices() const;
