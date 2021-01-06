@@ -71,7 +71,8 @@ void HarmonizerVoice<SampleType>::clearBuffers()
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                      const Array<int>& epochIndices, const int numOfEpochsPerFrame, const SampleType currentInputFreq)
+                                                  const Array<int>& epochIndices, const int numOfEpochsPerFrame,
+                                                  const SampleType currentInputFreq)
 {
     if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
         stopNote(1.0f, false);
@@ -90,7 +91,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
         const float shiftingRatio = 1 / (1 + ((currentInputFreq - currentOutputFreq) / currentOutputFreq));
         
         // puts shifted samples into the monoBuffer, from sample indices 0 to numSamples-1
-        esola(inputAudio, epochIndices, numOfEpochsPerFrame, shiftingRatio); // shifting ratio
+        esola (inputAudio, epochIndices, numOfEpochsPerFrame, shiftingRatio);
         
         monoBuffer.applyGain (0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
@@ -117,9 +118,9 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
 };
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::esola(const AudioBuffer<SampleType>& inputAudio,
-                            const Array<int>& epochIndices, const int numOfEpochsPerFrame,
-                            const float shiftingRatio)
+void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAudio,
+                                         const Array<int>& epochIndices, const int numOfEpochsPerFrame,
+                                         const float shiftingRatio)
 {
     const int numSamples = inputAudio.getNumSamples();
     
@@ -399,6 +400,66 @@ void Harmonizer<SampleType>::clearBuffers()
     pitch.clearBuffer();
     epochIndices.clearQuick();
 };
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::prepare (const int blocksize)
+{
+    epochIndices.ensureStorageAllocated(blocksize);
+    epochIndices.clearQuick();
+    
+    aggregateMidiBuffer.ensureSize(blocksize);
+    
+    newMaxNumVoices(voices.size());
+    
+    for(auto* voice : voices)
+        voice->prepare(blocksize);
+    
+    epochs.prepare(blocksize);
+    pitch .prepare(blocksize);
+};
+
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
+{
+    currentlyActiveNotes.ensureStorageAllocated(newMaxNumVoices);
+    currentlyActiveNotes.clearQuick();
+    
+    currentlyActiveNoReleased.ensureStorageAllocated(newMaxNumVoices);
+    currentlyActiveNoReleased.clearQuick();
+    
+    unLatched.ensureStorageAllocated(newMaxNumVoices);
+    unLatched.clearQuick();
+    
+    latchManager.newMaxNumVoices(newMaxNumVoices);
+    
+    panner.prepare(newMaxNumVoices);
+};
+
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::releaseResources()
+{
+    epochIndices.clear();
+    currentlyActiveNotes.clear();
+    currentlyActiveNoReleased.clear();
+    unLatched.clear();
+    aggregateMidiBuffer.clear();
+    
+    for(auto* voice : voices)
+        voice->releaseResources();
+    
+    epochs.releaseResources();
+    pitch .releaseResources();
+    panner.releaseResources();
+    
+    latchManager.reset();
+};
+
+
 
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
@@ -1356,70 +1417,6 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
     panner.setNumberOfVoices(voicesLeft);
 };
 
-
-/*+++++++++++++++++++++++++++++++++++++
- DANGER!!!
- FOR NON REAL TIME ONLY!!!!!!!!
- ++++++++++++++++++++++++++++++++++++++*/
-
-template<typename SampleType>
-void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
-{
-    currentlyActiveNotes.ensureStorageAllocated(newMaxNumVoices);
-    currentlyActiveNotes.clearQuick();
-    
-    currentlyActiveNoReleased.ensureStorageAllocated(newMaxNumVoices);
-    currentlyActiveNoReleased.clearQuick();
-    
-    unLatched.ensureStorageAllocated(newMaxNumVoices);
-    unLatched.clearQuick();
-    
-    latchManager.newMaxNumVoices(newMaxNumVoices);
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::releaseResources()
-{
-    epochIndices.clear();
-    currentlyActiveNotes.clear();
-    currentlyActiveNoReleased.clear();
-    unLatched.clear();
-    aggregateMidiBuffer.clear();
-    
-    for(auto* voice : voices)
-        voice->releaseResources();
-    
-    epochs.releaseResources();
-    pitch .releaseResources();
-    panner.releaseResources();
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::prepare (const int blocksize)
-{
-    epochIndices.ensureStorageAllocated(blocksize);
-    epochIndices.clearQuick();
-    
-    aggregateMidiBuffer.ensureSize(blocksize);
-    
-    const int currentNumVoices = voices.size();
-    currentlyActiveNotes     .ensureStorageAllocated(currentNumVoices);
-    currentlyActiveNoReleased.ensureStorageAllocated(currentNumVoices);
-    unLatched                .ensureStorageAllocated(currentNumVoices);
-    currentlyActiveNotes     .clearQuick();
-    currentlyActiveNoReleased.clearQuick();
-    unLatched                .clearQuick();
-    
-    panner.prepare(currentNumVoices);
-    
-    for(auto* voice : voices)
-        voice->prepare(blocksize);
-    
-    epochs.prepare(blocksize);
-    pitch .prepare(blocksize);
-};
 
 
 template class Harmonizer<float>;

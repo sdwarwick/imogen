@@ -49,7 +49,8 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
-    updateSamplerate(sampleRate);
+    if(harmonizer.getSamplerate() != sampleRate)
+        harmonizer.setCurrentPlaybackSampleRate(sampleRate);
     
     const int newblocksize = std::max(MAX_BUFFERSIZE, samplesPerBlock);
     
@@ -59,7 +60,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     monoSummingBuffer.setSize(1, newblocksize, true, true, true);
     
     dspSpec.maximumBlockSize = newblocksize;
-    dspSpec.sampleRate  = newblocksize;
+    dspSpec.sampleRate  = sampleRate;
     dspSpec.numChannels = 2;
     
     limiter.prepare(dspSpec);
@@ -89,7 +90,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
     
     const int totalNumSamples = inBus.getNumSamples();
     
-    switch (processor.modulatorInput)
+    switch (processor.modulatorInput) // isolate a mono input buffer from the input Bus
     {
         case ImogenAudioProcessor::ModulatorInputSource::left:
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
@@ -370,12 +371,6 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
     }
 };
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateSamplerate(const int newSamplerate)
-{
-    if(harmonizer.getSamplerate() != newSamplerate)
-        harmonizer.setCurrentPlaybackSampleRate(newSamplerate);
-};
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDryWet(const float newWetMixProportion)

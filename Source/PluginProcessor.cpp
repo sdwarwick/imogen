@@ -339,6 +339,24 @@ void ImogenAudioProcessor::updatePitchDetectionSettings(const float newMinHz, co
 
 
 
+Array<int> ImogenAudioProcessor::returnActivePitches() const
+{
+    if (isUsingDoublePrecision())
+        return doubleEngine.returnActivePitches();
+    
+    return floatEngine.returnActivePitches();
+};
+
+
+void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.updateNumVoices(newNumVoices);
+    else
+        floatEngine.updateNumVoices(newNumVoices);
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

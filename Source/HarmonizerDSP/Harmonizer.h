@@ -32,13 +32,13 @@ public:
     
     ~HarmonizerVoice();
     
-    void releaseResources();
+    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                         const Array<int>& epochIndices, const int numOfEpochsPerFrame, const SampleType currentInputFreq);
     
     void prepare (const int blocksize);
     
+    void releaseResources();
     
-    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const Array<int>& epochIndices, const int numOfEpochsPerFrame, const SampleType currentInputFreq);
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
@@ -119,10 +119,13 @@ public:
     
     ~Harmonizer();
     
-    void releaseResources();
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
     void prepare (const int blocksize);
     
+    void releaseResources();
+    
+
     void setPitchDetectionRange(const float newMinHz, const float newMaxHz) { pitch.setHzLimits(newMinHz, newMaxHz); };
     void setPitchDetectionTolerance(const float newTolerance) { pitch.setTolerence(newTolerance); };
 
@@ -131,8 +134,6 @@ public:
     void clearMidiBuffer() { aggregateMidiBuffer.clear(); lastMidiTimeStamp = 0.0; };
     
     MidiBuffer& returnMidiBuffer() { return aggregateMidiBuffer; };
-    
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
     int getNumActiveVoices() const;
     

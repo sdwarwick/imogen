@@ -106,10 +106,11 @@ public:
     ~ImogenAudioProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    
     void releaseResources() override;
+    
     void reset() override;
     
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override
     {
@@ -130,6 +131,9 @@ public:
     {
         processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
     };
+    
+    
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; };
@@ -180,10 +184,9 @@ public:
     void updateDescant();
     
     
-    
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
-    Array<int> returnActivePitches() const { return floatEngine.returnActivePitches(); };
+    Array<int> returnActivePitches() const;
     
     void killAllMidi();
     
@@ -201,8 +204,8 @@ public:
     
     void updateTrackProperties (const TrackProperties& properties) override; // informs the plugin about the properties of the DAW mixer track it's loaded on
     
-    void updateNumVoices(const int newNumVoices) { floatEngine.updateNumVoices(newNumVoices); };
-        
+    void updateNumVoices(const int newNumVoices);
+    
     //==============================================================================
     
     int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
@@ -222,7 +225,7 @@ private:
     ImogenEngine<double> doubleEngine;
     
     void updateAllParameters();
-    void updateSampleRate(const double newSamplerate);
+    
     
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;

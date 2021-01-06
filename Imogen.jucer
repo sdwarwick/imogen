@@ -12,31 +12,35 @@
               displaySplashScreen="1" cppLanguageStandard="17" maxBinaryFileSize="20971520">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
-      <FILE id="oQCkb1" name="ImogenEngine.cpp" compile="1" resource="0"
-            file="Source/ImogenEngine.cpp"/>
-      <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"
-            file="Source/PluginProcessor.cpp"/>
-      <FILE id="Ng4KOy" name="PluginProcessor.h" compile="0" resource="0"
-            file="Source/PluginProcessor.h"/>
-      <FILE id="T4QvQh" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
-      <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
-        <FILE id="aUPC7B" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
-        <FILE id="xCpozC" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
-        <GROUP id="{BBDCBAF8-D2B1-B319-ED70-E66CCD4EA18F}" name="InputAnalysis">
-          <FILE id="TJGYOz" name="InputAnalysis.cpp" compile="1" resource="0"
-                file="Source/HarmonizerDSP/InputAnalysis.cpp"/>
-          <FILE id="uXRjy7" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
-        </GROUP>
-        <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
-          <FILE id="rJjaxI" name="HarmonizerUtilities.h" compile="0" resource="0"
-                file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
-          <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
-            <FILE id="wxVlaC" name="PanningManager.cpp" compile="1" resource="0"
-                  file="Source/HarmonizerDSP/PanningManager.cpp"/>
-            <FILE id="AMjikC" name="PanningManager.h" compile="0" resource="0"
-                  file="Source/HarmonizerDSP/PanningManager.h"/>
+      <GROUP id="{7280FBDB-5D91-B8BB-2422-189E249894A5}" name="GUI">
+        <FILE id="T4QvQh" name="PluginEditor.cpp" compile="1" resource="0"
+              file="Source/PluginEditor.cpp"/>
+        <FILE id="KPYOwP" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      </GROUP>
+      <GROUP id="{AB7F125B-A848-2EF9-A38B-3810A8791D22}" name="DSP">
+        <FILE id="oQCkb1" name="ImogenEngine.cpp" compile="1" resource="0"
+              file="Source/ImogenEngine.cpp"/>
+        <FILE id="OyRQU7" name="PluginProcessor.cpp" compile="1" resource="0"
+              file="Source/PluginProcessor.cpp"/>
+        <FILE id="Ng4KOy" name="PluginProcessor.h" compile="0" resource="0"
+              file="Source/PluginProcessor.h"/>
+        <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
+          <FILE id="aUPC7B" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
+          <FILE id="xCpozC" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
+          <GROUP id="{BBDCBAF8-D2B1-B319-ED70-E66CCD4EA18F}" name="InputAnalysis">
+            <FILE id="TJGYOz" name="InputAnalysis.cpp" compile="1" resource="0"
+                  file="Source/HarmonizerDSP/InputAnalysis.cpp"/>
+            <FILE id="uXRjy7" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
+          </GROUP>
+          <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
+            <FILE id="rJjaxI" name="HarmonizerUtilities.h" compile="0" resource="0"
+                  file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
+            <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
+              <FILE id="wxVlaC" name="PanningManager.cpp" compile="1" resource="0"
+                    file="Source/HarmonizerDSP/PanningManager.cpp"/>
+              <FILE id="AMjikC" name="PanningManager.h" compile="0" resource="0"
+                    file="Source/HarmonizerDSP/PanningManager.h"/>
+            </GROUP>
           </GROUP>
         </GROUP>
       </GROUP>
