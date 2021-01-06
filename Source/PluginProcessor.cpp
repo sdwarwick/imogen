@@ -63,25 +63,24 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {
     if (isUsingDoublePrecision())
-    {
-        if (! doubleEngine.hasBeenInitialized())
-            doubleEngine.initialize (sampleRate, samplesPerBlock, 12);
-        else
-            doubleEngine.prepare (sampleRate, samplesPerBlock);
-        
-        if (! floatEngine.hasBeenReleased())
-            floatEngine.releaseResources();
-    }
+        prepareToPlayWrapped (sampleRate, samplesPerBlock, doubleEngine, floatEngine);
     else
-    {
-        if (! floatEngine.hasBeenInitialized())
-            floatEngine.initialize (sampleRate, samplesPerBlock, 12);
-        else
-            floatEngine.prepare (sampleRate, samplesPerBlock);
-        
-        if (! doubleEngine.hasBeenReleased())
-            doubleEngine.releaseResources();
-    }
+        prepareToPlayWrapped (sampleRate, samplesPerBlock, floatEngine,  doubleEngine);
+};
+
+
+template <typename SampleType1, typename SampleType2>
+void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
+                                                 ImogenEngine<SampleType1>& activeEngine,
+                                                 ImogenEngine<SampleType2>& idleEngine)
+{
+    if (! activeEngine.hasBeenInitialized())
+        activeEngine.initialize (sampleRate, samplesPerBlock, 12);
+    else
+        activeEngine.prepare (sampleRate, samplesPerBlock);
+    
+    if (! idleEngine.hasBeenReleased())
+        idleEngine.releaseResources();
     
     updateAllParameters();
 };

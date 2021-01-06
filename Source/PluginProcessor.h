@@ -221,6 +221,11 @@ private:
     template <typename SampleType>
     void processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
     
+    template <typename SampleType1, typename SampleType2>
+    void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
+                               ImogenEngine<SampleType1>& activeEngine,
+                               ImogenEngine<SampleType2>& idleEngine);
+    
     ImogenEngine<float>  floatEngine;
     ImogenEngine<double> doubleEngine;
     
