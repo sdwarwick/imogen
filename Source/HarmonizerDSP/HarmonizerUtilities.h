@@ -97,7 +97,7 @@ public:
     
     int getLastRecievedPitchbend() const noexcept { return lastRecievedPitchbend; };
     
-    float newNoteRecieved(const int newMidiPitch)
+    float newNoteRecieved(const int newMidiPitch) const
     {
         jassert(isPositiveAndBelow(newMidiPitch, 128));
         return getMidifloat(newMidiPitch, lastRecievedPitchbend);
@@ -116,7 +116,7 @@ private:
     
     int lastRecievedPitchbend;
     
-    float getMidifloat(const int midiPitch, const int pitchbend)
+    float getMidifloat(const int midiPitch, const int pitchbend) const
     {
         jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
         if(pitchbend == 64)
@@ -159,7 +159,7 @@ public:
         return getGainMult(midiVelocity / 127.0f, sensitivity);
     };
     
-    float floatVelocity(const float floatVelocity)
+    float floatVelocity(const float floatVelocity) const
     {
         jassert(floatVelocity >= 0.0f && floatVelocity <= 1.0f);
         return getGainMult(floatVelocity, sensitivity);
@@ -170,7 +170,7 @@ private:
     
     float sensitivity;
     
-    float getGainMult(const float floatVelocity, const float floatSensitivity)
+    float getGainMult(const float floatVelocity, const float floatSensitivity) const
     {
         return ((1.0f - floatVelocity) * (1.0f - floatSensitivity) + floatVelocity);
     };

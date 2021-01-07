@@ -141,7 +141,7 @@ public:
     const juce::String getName() const override { return JucePlugin_Name; };
     
     bool  acceptsMidi()  const override { return true;  };
-    bool  producesMidi() const override { return true; };
+    bool  producesMidi() const override { return true;  };
     bool  supportsMPE()  const override { return false; };
     bool  isMidiEffect() const override { return false; };
     
@@ -208,10 +208,15 @@ public:
     
     //==============================================================================
     
-    int dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
-    float inputGainMultiplier, outputGainMultiplier;
-    ModulatorInputSource modulatorInput;
-    bool limiterIsOn;
+    float getDryPanningMult(const int index) const { return dryvoxpanningmults[index]; };
+    
+    float getInputGainMult()  const noexcept { return inputGainMultiplier.load(); };
+    float getOutputGainMult() const noexcept { return outputGainMultiplier.load(); };
+    
+    ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; };
+    
+    bool isLimiterOn() const noexcept { return limiterIsOn.load(); };
+
     
 private:
     
@@ -231,6 +236,12 @@ private:
     
     void updateAllParameters();
     
+    float dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
+    std::atomic_long inputGainMultiplier, outputGainMultiplier;
+    
+    ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
+    
+    std::atomic_bool limiterIsOn;
     
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;

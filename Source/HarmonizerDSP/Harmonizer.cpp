@@ -75,7 +75,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
     
     // don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
     bool voiceIsOnRightNow;
-    if(!isQuickFading && parent->adsrIsOn)
+    if(!isQuickFading && parent->isADSRon())
         voiceIsOnRightNow = adsr.isActive();
     else
         voiceIsOnRightNow = isQuickFading ? quickRelease.isActive() : !noteTurnedOff;
@@ -97,7 +97,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
         stereoBuffer.applyGain(0, 0, numSamples, panningMults[0]);
         stereoBuffer.applyGain(1, 0, numSamples, panningMults[1]);
         
-        if(parent->adsrIsOn) // only apply the envelope if the ADSR on/off user toggle is ON
+        if(parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
             adsr        .applyEnvelopeToBuffer(stereoBuffer, 0, numSamples);
         else
             quickAttack .applyEnvelopeToBuffer(stereoBuffer, 0, numSamples); // to prevent pops at start of notes
@@ -241,8 +241,8 @@ void HarmonizerVoice<SampleType>::startNote(const int midiPitch, const float vel
 {
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
-    currentVelocityMultiplier = parent->velocityConverter.floatVelocity(velocity);
-    currentOutputFreq         = parent->pitchConverter.mtof(parent->bendTracker.newNoteRecieved(midiPitch));
+    currentVelocityMultiplier = parent->getWeightedVelocity(velocity);
+    currentOutputFreq         = parent->getOutputFrequency(midiPitch);
     isQuickFading = false;
     noteTurnedOff = false;
     
@@ -285,7 +285,7 @@ void HarmonizerVoice<SampleType>::setPan(const int newPan)
     
     if(currentMidipan != newPan)
     {
-        parent->panner.panValTurnedOff(currentMidipan);
+        parent->panValTurnedOff(currentMidipan);
         if(newPan == 64) // save time for the simplest case
         {
             panningMults[0] = 0.5f;
@@ -483,7 +483,7 @@ bool Harmonizer<SampleType>::isPitchActive(const int midiPitch, const bool count
 {
     for(auto* voice : voices)
     {
-        if(voice->isVoiceActive() && voice->currentlyPlayingNote == midiPitch)
+        if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
         {
             if(countRingingButReleased)
                 return true;
@@ -523,7 +523,7 @@ void Harmonizer<SampleType>::setConcertPitchHz(const int newConcertPitchhz)
         
         for(auto* voice : voices)
             if(voice->isVoiceActive())
-                voice->currentOutputFreq = pitchConverter.mtof(bendTracker.newNoteRecieved(voice->currentlyPlayingNote));
+               voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
     }
 };
 
@@ -545,8 +545,8 @@ void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
             if(voice->isVoiceActive())
             {
                 if(voice->getCurrentlyPlayingNote() >= lowestPannedNote)
-                    voice->setPan(panner.getClosestNewPanValFromOld(voice->currentMidipan));
-                else if(voice->currentMidipan != 64)
+                    voice->setPan(panner.getClosestNewPanValFromOld(voice->getCurrentMidiPan()));
+                else if(voice->getCurrentMidiPan() != 64)
                     voice->setPan(64);
             }
         }
@@ -565,9 +565,9 @@ void Harmonizer<SampleType>::updateLowestPannedNote(const int newPitchThresh) no
         {
             if(voice->isVoiceActive())
             {
-                if(voice->currentlyPlayingNote < newPitchThresh && voice->currentMidipan != 64)
+                if(voice->getCurrentlyPlayingNote() < newPitchThresh && voice->getCurrentMidiPan() != 64)
                     voice->setPan(64);
-                else if(voice->currentlyPlayingNote >= newPitchThresh && voice->currentMidipan == 64)
+                else if(voice->getCurrentlyPlayingNote() >= newPitchThresh && voice->getCurrentMidiPan() == 64)
                     voice->setPan(panner.getNextPanVal());
             }
         }
@@ -612,7 +612,7 @@ Array<int> Harmonizer<SampleType>::reportActivesNoReleased() const
     
     for (auto* voice : voices)
         if (voice->isVoiceActive() && !(voice->isPlayingButReleased()))
-            currentlyActiveNoReleased.add(voice->currentlyPlayingNote);
+            currentlyActiveNoReleased.add(voice->getCurrentlyPlayingNote());
     
     if(! currentlyActiveNoReleased.isEmpty())
         currentlyActiveNoReleased.sort();
@@ -634,7 +634,7 @@ void Harmonizer<SampleType>::updateMidiVelocitySensitivity(const int newSensitiv
         
         for(auto* voice : voices)
             if(voice->isVoiceActive())
-                voice->currentVelocityMultiplier = velocityConverter.floatVelocity(voice->lastRecievedVelocity);
+                voice->setVelocityMultiplier(velocityConverter.floatVelocity(voice->getLastRecievedVelocity()));
     }
 };
 
@@ -672,7 +672,7 @@ void Harmonizer<SampleType>::turnOffList(Array<int>& toTurnOff, const float velo
     {
         const ScopedLock sl (lock);
         for(int i = 0; i < toTurnOff.size(); ++i)
-            noteOff(toTurnOff.getUnchecked(i), velocity, allowTailOff, true, false);
+            noteOff (toTurnOff.getUnchecked(i), velocity, allowTailOff, true, false);
     }
 };
 
@@ -746,7 +746,7 @@ void Harmonizer<SampleType>::startVoice(HarmonizerVoice<SampleType>* voice, cons
 {
     if(voice != nullptr)
     {
-        voice->noteOnTime = ++lastNoteOnCounter;
+        voice->setNoteOnTime(++lastNoteOnCounter);
         
         if(! voice->isKeyDown())
             voice->setKeyDown (isKeyboard);
@@ -823,7 +823,7 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
     {
         voice->stopNote (velocity, allowTailOff);
         if(! allowTailOff)
-            panner.panValTurnedOff(voice->currentMidipan);
+            panner.panValTurnedOff(voice->getCurrentMidiPan());
     }
 };
 
@@ -842,6 +842,8 @@ void Harmonizer<SampleType>::allNotesOff(const bool allowTailOff)
     lastPedalPitch   = -1;
 };
 
+
+
 template<typename SampleType>
 void Harmonizer<SampleType>::handlePitchWheel(const int wheelValue)
 {
@@ -854,7 +856,7 @@ void Harmonizer<SampleType>::handlePitchWheel(const int wheelValue)
         
         for (auto* voice : voices)
             if(voice->isVoiceActive())
-                voice->currentOutputFreq = pitchConverter.mtof(bendTracker.newNoteRecieved(voice->currentlyPlayingNote));
+                voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
     }
 };
 
@@ -870,7 +872,7 @@ void Harmonizer<SampleType>::updatePitchbendSettings(const int rangeUp, const in
             const ScopedLock sl (lock);
             for(auto* voice : voices)
                 if(voice->isVoiceActive())
-                    voice->currentOutputFreq = pitchConverter.mtof(bendTracker.newNoteRecieved(voice->currentlyPlayingNote));
+                    voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
         }
     }
 };
@@ -1002,8 +1004,8 @@ void Harmonizer<SampleType>::applyPedalPitch()
     
     int currentLowest = 128;
     for(auto* voice : voices)
-        if(voice->isVoiceActive() && voice->currentlyPlayingNote < currentLowest && voice->currentlyPlayingNote != lastPedalPitch)
-            currentLowest = voice->currentlyPlayingNote;
+        if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() < currentLowest && voice->getCurrentlyPlayingNote() != lastPedalPitch)
+            currentLowest = voice->getCurrentlyPlayingNote();
     
     if(currentLowest == 128) // pathological case -- ie, no notes playing, some error encountered, etc
     {
@@ -1090,7 +1092,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
         return nullptr;
     
     for(auto* voice : voices)
-        if(voice->isVoiceActive() && voice->currentlyPlayingNote == lastPedalPitch)
+        if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == lastPedalPitch)
             return voice;
     
     return nullptr;
@@ -1106,8 +1108,8 @@ void Harmonizer<SampleType>::applyDescant()
     
     int currentHighest = -1;
     for(auto* voice : voices)
-        if(voice->isVoiceActive() && voice->currentlyPlayingNote > currentHighest && voice->currentlyPlayingNote != lastDescantPitch)
-            currentHighest = voice->currentlyPlayingNote;
+        if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() > currentHighest && voice->getCurrentlyPlayingNote() != lastDescantPitch)
+            currentHighest = voice->getCurrentlyPlayingNote();
     
     if(currentHighest == -1) // pathological case -- ie, no notes playing, some error encountered, etc
     {
@@ -1194,7 +1196,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice()
         return nullptr;
     
     for(auto* voice : voices)
-        if(voice->isVoiceActive() && voice->currentlyPlayingNote == lastDescantPitch)
+        if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == lastDescantPitch)
             return voice;
     
     return nullptr;
@@ -1309,7 +1311,7 @@ void Harmonizer<SampleType>::updateADSRsettings(const float attack, const float 
         adsrParams.release = release;
         
         for (auto* voice : voices)
-            voice->adsr.setParameters(adsrParams);
+            voice->setAdsrParameters(adsrParams);
     }
 };
 
@@ -1325,8 +1327,8 @@ void Harmonizer<SampleType>::updateQuickReleaseMs(const int newMs)
         quickAttackParams .release = desiredR;
         for(auto* voice : voices)
         {
-            voice->quickRelease.setParameters(quickReleaseParams);
-            voice->quickAttack .setParameters(quickAttackParams);
+            voice->setQuickReleaseParameters(quickReleaseParams);
+            voice->setQuickAttackParameters(quickAttackParams);
         }
     }
 };
@@ -1343,8 +1345,8 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
         quickReleaseParams.attack = desiredA;
         for(auto* voice : voices)
         {
-            voice->quickAttack .setParameters(quickAttackParams);
-            voice->quickRelease.setParameters(quickReleaseParams);
+            voice->setQuickAttackParameters(quickAttackParams);
+            voice->setQuickReleaseParameters(quickReleaseParams);
         }
     }
 };
@@ -1385,9 +1387,9 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
         HarmonizerVoice<SampleType>* removing = voices[indexRemoving];
         if(removing->isVoiceActive())
         {
-            panner.panValTurnedOff(removing->currentMidipan);
-            if(latchIsOn && latchManager.isNoteLatched(removing->currentlyPlayingNote))
-                latchManager.noteOffRecieved(removing->currentlyPlayingNote);
+            panner.panValTurnedOff(removing->getCurrentMidiPan());
+            if(latchIsOn && latchManager.isNoteLatched(removing->getCurrentlyPlayingNote()))
+                latchManager.noteOffRecieved(removing->getCurrentlyPlayingNote());
         }
         
         voices.remove(indexRemoving);

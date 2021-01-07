@@ -90,7 +90,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
     
     const int totalNumSamples = inBus.getNumSamples();
     
-    switch (processor.modulatorInput) // isolate a mono input buffer from the input Bus
+    switch (processor.getModulatorSource()) // isolate a mono input buffer from the input Bus
     {
         case ImogenAudioProcessor::ModulatorInputSource::left:
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
@@ -115,7 +115,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
             
             const int totalNumChannels = inBus.getNumChannels();
             
-            for(int channel = 1; channel < totalNumChannels; ++channel)
+            for (int channel = 1; channel < totalNumChannels; ++channel)
                 monoSummingBuffer.addFrom(0, 0, inBus, channel, 0, totalNumSamples);
             
             monoSummingBuffer.applyGain(0, totalNumSamples, 1.0f / totalNumChannels);
@@ -131,10 +131,10 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         processNoChopping (input, output, midiMessages);
         
     if (applyFadeIn)
-        output.applyGainRamp(0, totalNumSamples, 0.0f, 1.0f);
+        output.applyGainRamp (0, totalNumSamples, 0.0f, 1.0f);
     
     if (applyFadeOut)
-        output.applyGainRamp(0, totalNumSamples, 1.0f, 0.0f);
+        output.applyGainRamp (0, totalNumSamples, 1.0f, 0.0f);
 };
 
 
@@ -148,11 +148,13 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
     dsp::AudioBlock<SampleType> inBlock  (inBus);
     dsp::AudioBlock<SampleType> outBlock (output);
     
+    // should I include the mono input selection / summing to mono process here...???
+    
     // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
     if (inBlock == outBlock)
         bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
     else
-        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock));
+        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock) );
 };
 
 
@@ -167,7 +169,7 @@ void ImogenEngine<SampleType>::processNoChopping (AudioBuffer<SampleType>& input
                    midiMessages.cend(),
                    [&] (const MidiMessageMetadata& meta) { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
     
-    midiMessages.swapWith(harmonizer.returnMidiBuffer());
+    midiMessages.swapWith (harmonizer.returnMidiBuffer());
     
     renderBlock (input, output, 0, input.getNumSamples());
 };
@@ -270,7 +272,7 @@ void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input
     
     inBufferProxy.copyFrom (0, 0, input, 0, 0, numSamples); // copy to input storage buffer so that input gain can be applied
     
-    inBufferProxy.applyGain(processor.inputGainMultiplier); // apply input gain
+    inBufferProxy.applyGain (processor.getInputGainMult()); // apply input gain
     
     AudioBuffer<SampleType> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
@@ -278,24 +280,24 @@ void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input
     // write to dry buffer & apply panning...
     dryProxy.copyFrom (0, 0, inBufferProxy, 0, 0, numSamples);
     dryProxy.copyFrom (1, 0, inBufferProxy, 0, 0, numSamples);
-    dryProxy.applyGain(0, 0, numSamples, processor.dryvoxpanningmults[0]);
-    dryProxy.applyGain(1, 0, numSamples, processor.dryvoxpanningmults[1]);
+    dryProxy.applyGain (0, 0, numSamples, processor.getDryPanningMult(0));
+    dryProxy.applyGain (1, 0, numSamples, processor.getDryPanningMult(1));
     
     dryWetMixer.pushDrySamples( dsp::AudioBlock<SampleType>(dryProxy) );
     
     harmonizer.renderVoices (inBufferProxy, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
     
-    dryWetMixer.mixWetSamples( dsp::AudioBlock<SampleType>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
+    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
     
-    output.makeCopyOf(wetProxy, true); // transfer from wetBuffer to output buffer
+    output.makeCopyOf (wetProxy, true); // transfer from wetBuffer to output buffer
     
-    output.applyGain(processor.outputGainMultiplier); // apply master output gain
+    output.applyGain (processor.getOutputGainMult()); // apply master output gain
     
     // output limiter
-    if(processor.limiterIsOn)
+    if (processor.isLimiterOn())
     {
         dsp::AudioBlock<SampleType> limiterBlock (output);
-        limiter.process(dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+        limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
 };
 

@@ -54,6 +54,7 @@ public:
     void setKeyDown(bool isNowDown) noexcept { keyIsDown = isNowDown; }
     
     void setPan(const int newPan);
+    int getCurrentMidiPan() const noexcept { return currentMidipan; };
     
     void startNote(const int midiPitch,  const float velocity);
     void stopNote (const float velocity, const bool allowTailOff);
@@ -62,21 +63,23 @@ public:
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes(const int newMaxBlocksize);
     
-    int currentlyPlayingNote;
-    uint32 noteOnTime;
-    int currentMidipan;
+    uint32 getNoteOnTime() const noexcept { return noteOnTime; };
+    void setNoteOnTime(const uint32 newTime) { noteOnTime = newTime; };
     
     void clearBuffers();
     
-    float currentVelocityMultiplier;
-    float lastRecievedVelocity;
-    float currentOutputFreq;
+    float getCurrentVelocityMultiplier() const noexcept { return currentVelocityMultiplier; };
+    void setVelocityMultiplier(const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; };
+    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; };
+    
+    void setCurrentOutputFreq(const float newFreq) noexcept { currentOutputFreq = newFreq; };
+    float getCurrentOutputFreq() const noexcept { return currentOutputFreq; };
     
     void updateSampleRate(const double newSamplerate);
     
-    ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
-    ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
-    ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
+    void setAdsrParameters(const ADSR::Parameters newParams) { adsr.setParameters(newParams); };
+    void setQuickReleaseParameters(const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); };
+    void setQuickAttackParameters (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); };
     
     
 private:
@@ -87,7 +90,19 @@ private:
                 const Array<int>& epochIndices, const int numOfEpochsPerFrame,
                 const float shiftingRatio);
     
+    ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
+    ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
+    ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
+    
     Harmonizer<SampleType>* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
+    
+    int currentlyPlayingNote;
+    float currentOutputFreq;
+    uint32 noteOnTime;
+    int currentMidipan;
+    
+    float currentVelocityMultiplier;
+    float lastRecievedVelocity;
     
     bool isQuickFading;
     bool noteTurnedOff;
@@ -202,20 +217,21 @@ public:
     int getCurrentDescantInterval() const noexcept { return descantInterval; };
     HarmonizerVoice<SampleType>* getCurrentDescantVoice();
     
+    void panValTurnedOff(const int midipitch) { panner.panValTurnedOff(midipitch); };
+    
+    // returns a float velocity weighted according to the current midi velocity sensitivity settings
+    float getWeightedVelocity(const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); };
+    
+    // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
+    float getOutputFrequency(const int midipitch) const { return pitchConverter.mtof(bendTracker.newNoteRecieved(midipitch)); };
+    
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void newMaxNumVoices(const int newMaxNumVoices);
     
     bool sustainPedalDown, sostenutoPedalDown;
     
-    PanningManager panner;
     
-    bool adsrIsOn;
-    VelocityHelper velocityConverter;
-    PitchConverter pitchConverter;
-    PitchBendHelper bendTracker;
-    
-    
-protected:
+private:
     
     CriticalSection lock;
     
@@ -243,14 +259,11 @@ protected:
     HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const;
     HarmonizerVoice<SampleType>* findVoiceToSteal (const int midiNoteNumber) const;
     
-    
-private:
-    
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
     
     // turns off a list of given pitches at once. Used for turning off midi latch
-    void turnOffList(Array<int>& toTurnOff, const float velocity, const bool allowTailOff);
+    void turnOffList (Array<int>& toTurnOff, const float velocity, const bool allowTailOff);
     
     // this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, descant, etc
     void pitchCollectionChanged();
@@ -293,6 +306,13 @@ private:
     Array<int> epochIndices;
     
     PitchTracker<SampleType> pitch;
+    
+    PanningManager  panner;
+    VelocityHelper  velocityConverter;
+    PitchConverter  pitchConverter;
+    PitchBendHelper bendTracker;
+    
+    bool adsrIsOn;
     
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;

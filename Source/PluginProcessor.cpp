@@ -149,12 +149,12 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
-    wasBypassedLastCallback = true;
-    
     if (! wasBypassedLastCallback)
         engine.process (inBus, outBus, midiMessages, false, true, choppingInput);
     else
         engine.processBypassed (inBus, outBus); // midi passes through unaffected when plugin is bypassed
+    
+    wasBypassedLastCallback = true;
 };
 
 
@@ -308,23 +308,23 @@ void ImogenAudioProcessor::updateIOgains()
 {
     const float newIn = inputGain->get();
     if(newIn != prevideb)
-        inputGainMultiplier = Decibels::decibelsToGain(newIn);
+        inputGainMultiplier.store(newIn);
     prevideb = newIn;
     
     const float newOut = outputGain->get();
     if(newOut != prevodeb)
-        outputGainMultiplier = Decibels::decibelsToGain(newOut);
+        outputGainMultiplier.store(newOut);
     prevodeb = newOut;
 };
 
 void ImogenAudioProcessor::updateLimiter()
 {
-    limiterIsOn = limiterToggle->get();
+    limiterIsOn.store(limiterToggle->get());
     
     if (isUsingDoublePrecision())
         doubleEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
     else
-        floatEngine .updateLimiter(limiterThresh->get(), limiterRelease->get());
+        floatEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
 };
 
 void ImogenAudioProcessor::updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance)
