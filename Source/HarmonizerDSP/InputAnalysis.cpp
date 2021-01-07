@@ -258,6 +258,39 @@ void EpochFinder<SampleType>::extractEpochSampleIndices(const AudioBuffer<Sample
     outputArray.add(numSamples - 1);
 };
 
+
+template <typename SampleType>
+void EpochFinder<SampleType>::makeSubsetOfEpochIndicesArray (const Array<int>& epochIndices, Array<int>& outputArray,
+                                                             const int sampleOffset, const int numSamples)
+{
+    outputArray.clearQuick();
+    
+    const int endSample = sampleOffset + numSamples - 1;
+    
+    for (int i = 0; i < epochIndices.size(); ++i)
+    {
+        const int realSampleIndex = epochIndices.getUnchecked(i);
+        
+        if (realSampleIndex >= sampleOffset && realSampleIndex <= endSample)
+            outputArray.add (realSampleIndex - sampleOffset);
+    }
+    
+    if (outputArray.size() == 1)
+    {
+        if (! outputArray.contains(0))
+            outputArray.add(0);
+        if (! outputArray.contains(endSample))
+            outputArray.add(endSample);
+        outputArray.sort();
+    }
+    else if (outputArray.isEmpty())
+    {
+        outputArray.add(0);
+        outputArray.add(endSample);
+    }
+};
+
+
 template <typename SampleType>
 int EpochFinder<SampleType>::averageDistanceBetweenEpochs(const Array<int>& epochIndices)
 {

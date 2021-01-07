@@ -60,7 +60,10 @@ public:
     EpochFinder();
     ~EpochFinder();
     
-    void extractEpochSampleIndices(const AudioBuffer<SampleType>& inputAudio, const double samplerate, Array<int>& outputArray);
+    void extractEpochSampleIndices (const AudioBuffer<SampleType>& inputAudio, const double samplerate, Array<int>& outputArray);
+    
+    void makeSubsetOfEpochIndicesArray (const Array<int>& epochIndices, Array<int>& outputArray,
+                                        const int sampleOffset, const int numSamples);
     
     int averageDistanceBetweenEpochs(const Array<int>& epochIndices);
     

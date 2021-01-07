@@ -381,6 +381,7 @@ void Harmonizer<SampleType>::clearBuffers()
     
     pitch.clearBuffer();
     epochIndices.clearQuick();
+    slicedEpochIndices.clearQuick();
 };
 
 
@@ -389,6 +390,9 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
 {
     epochIndices.ensureStorageAllocated(blocksize);
     epochIndices.clearQuick();
+    
+    slicedEpochIndices.ensureStorageAllocated(blocksize);
+    slicedEpochIndices.clearQuick();
     
     aggregateMidiBuffer.ensureSize(ceil(blocksize * 1.5f));
     
@@ -446,26 +450,37 @@ void Harmonizer<SampleType>::releaseResources()
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer)
+void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                                           const int startSampleOfOriginalProcessBuffer)
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
-    epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
-    
-    currentInputFreq = pitch.getPitch (inputAudio, sampleRate);
+    // get subset of epochIndices array accounting for sample offset # numSamples
     
     jassert (currentInputFreq > 0);
     
-    const int averageDistanceBetweenEpochs = epochs.averageDistanceBetweenEpochs(epochIndices);
+    epochs.makeSubsetOfEpochIndicesArray (epochIndices, slicedEpochIndices, startSampleOfOriginalProcessBuffer, inputAudio.getNumSamples());
+    
+    const int averageDistanceBetweenEpochs = epochs.averageDistanceBetweenEpochs (slicedEpochIndices);
     const int periodInSamples = ceil((1 / currentInputFreq) * sampleRate);
     
     int numOfEpochsPerFrame = (averageDistanceBetweenEpochs >= periodInSamples) ? 2 : ceil(periodInSamples / averageDistanceBetweenEpochs) * 2;
     
     for (auto* voice : voices)
         if(voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, epochIndices, numOfEpochsPerFrame, currentInputFreq);
-            // this method will ADD the voice's output to outputBuffer
+            voice->renderNextBlock (inputAudio, outputBuffer, slicedEpochIndices, numOfEpochsPerFrame, currentInputFreq);
 };
+
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::analyzeInput (const AudioBuffer<SampleType>& input)
+{
+    epochs.extractEpochSampleIndices (input, sampleRate, epochIndices);
+    
+    currentInputFreq = pitch.getPitch (input, sampleRate); // do some kind of time curve for changes in pitch during block...?
+};
+
 
 template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const

@@ -28,11 +28,11 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
     for (int i = 0; i < initNumVoices; ++i)
-        harmonizer.addVoice(new HarmonizerVoice<SampleType>(&harmonizer));
+        harmonizer.addVoice (new HarmonizerVoice<SampleType>(&harmonizer));
     
-    harmonizer.newMaxNumVoices(std::max(initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
-    harmonizer.setPitchDetectionRange(40.0, 2000.0);
-    harmonizer.setPitchDetectionTolerance(0.15);
+    harmonizer.newMaxNumVoices (std::max (initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
+    harmonizer.setPitchDetectionRange (40.0, 2000.0);
+    harmonizer.setPitchDetectionTolerance (0.15);
     
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
@@ -52,7 +52,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     if(harmonizer.getSamplerate() != sampleRate)
         harmonizer.setCurrentPlaybackSampleRate(sampleRate);
     
-    const int newblocksize = std::max(MAX_BUFFERSIZE, samplesPerBlock);
+    const int newblocksize = std::max (MAX_BUFFERSIZE, samplesPerBlock);
     
     wetBuffer.setSize(2, newblocksize, true, true, true);
     dryBuffer.setSize(2, newblocksize, true, true, true);
@@ -124,6 +124,8 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
             break;
         }
     }
+    
+    analyzeInput (input);
     
     if (chopInput)
         processWithChopping (input, output, midiMessages);
@@ -232,45 +234,12 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
                                             const int startSample, const int numSamples)
 {
-    if (processor.isNonRealtime())
-    {
-        AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples);
-        AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples);
-        
-        if (wetBuffer.getNumSamples() < numSamples)
-            prepare (processor.getSampleRate(), numSamples);
-        
-        renderChunk (inProxy, outProxy);
-    }
-    else
-    {
-        int chunkStartSample = startSample;
-        int samplesLeft      = numSamples;
-        
-        while(samplesLeft > 0)
-        {
-            const int chunkNumSamples = std::min(samplesLeft, wetBuffer.getNumSamples());
-            
-            AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, chunkStartSample, chunkNumSamples);
-            AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, chunkStartSample, chunkNumSamples);
-            
-            renderChunk (inProxy, outProxy);
-            
-            chunkStartSample += chunkNumSamples;
-            samplesLeft      -= chunkNumSamples;
-        }
-    }
-};
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output)
-{
-    const int numSamples = input.getNumSamples();
+    AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples);
+    AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples);
     
     AudioBuffer<SampleType> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
     
-    inBufferProxy.copyFrom (0, 0, input, 0, 0, numSamples); // copy to input storage buffer so that input gain can be applied
+    inBufferProxy.copyFrom (0, 0, inProxy, 0, 0, numSamples); // copy to input storage buffer so that input gain can be applied
     
     inBufferProxy.applyGain (processor.getInputGainMult()); // apply input gain
     
@@ -278,25 +247,25 @@ void ImogenEngine<SampleType>::renderChunk (const AudioBuffer<SampleType>& input
     AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples);
     
     // write to dry buffer & apply panning...
-    dryProxy.copyFrom (0, 0, inBufferProxy, 0, 0, numSamples);
-    dryProxy.copyFrom (1, 0, inBufferProxy, 0, 0, numSamples);
+    dryProxy.copyFrom  (0, 0, inBufferProxy, 0, 0, numSamples);
+    dryProxy.copyFrom  (1, 0, inBufferProxy, 0, 0, numSamples);
     dryProxy.applyGain (0, 0, numSamples, processor.getDryPanningMult(0));
     dryProxy.applyGain (1, 0, numSamples, processor.getDryPanningMult(1));
     
     dryWetMixer.pushDrySamples( dsp::AudioBlock<SampleType>(dryProxy) );
     
-    harmonizer.renderVoices (inBufferProxy, wetProxy); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
+    harmonizer.renderVoices (inBufferProxy, wetProxy, startSample); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
     
     dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
     
-    output.makeCopyOf (wetProxy, true); // transfer from wetBuffer to output buffer
+    outProxy.makeCopyOf (wetProxy, true); // transfer from wetBuffer to output buffer
     
-    output.applyGain (processor.getOutputGainMult()); // apply master output gain
+    outProxy.applyGain (processor.getOutputGainMult()); // apply master output gain
     
     // output limiter
     if (processor.isLimiterOn())
     {
-        dsp::AudioBlock<SampleType> limiterBlock (output);
+        dsp::AudioBlock<SampleType> limiterBlock (outProxy);
         limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
 };

@@ -60,14 +60,14 @@ public:
     
 private:
     
+    void analyzeInput (const AudioBuffer<SampleType>& input) { harmonizer.analyzeInput(input); };
+    
     void processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
     void processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
     void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
                       const int startSample, const int numSamples);
-    
-    void renderChunk (const AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer);
     
     ImogenAudioProcessor& processor;
     

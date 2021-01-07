@@ -134,7 +134,10 @@ public:
     
     ~Harmonizer();
     
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                       const int startSampleOfOriginalProcessBuffer);
+    
+    void analyzeInput (const AudioBuffer<SampleType>& input);
     
     void prepare (const int blocksize);
     
@@ -304,6 +307,7 @@ private:
     
     EpochFinder<SampleType> epochs;
     Array<int> epochIndices;
+    Array<int> slicedEpochIndices;
     
     PitchTracker<SampleType> pitch;
     

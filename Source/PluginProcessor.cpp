@@ -10,7 +10,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
     modulatorInput(ModulatorInputSource::left),
     wasBypassedLastCallback(true),
-    choppingInput(false)
+    choppingInput(true)
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
