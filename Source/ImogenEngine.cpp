@@ -86,6 +86,40 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
                                         const bool applyFadeIn, const bool applyFadeOut,
                                         const bool chopInput)
 {
+    const int totalNumSamples = inBus.getNumSamples();
+    
+    if (! (totalNumSamples > wetBuffer.getNumSamples()))
+    {
+        processWrapped (inBus, output, midiMessages, applyFadeIn, applyFadeOut, chopInput);
+        return;
+    }
+    
+    // simple check to make sure a buggy host doesn't send chunks bigger than the size allotted in prepareToPlay...
+    int samplesLeft = totalNumSamples;
+    int startSample = 0;
+    
+    while (samplesLeft > 0)
+    {
+        const int chunkNumSamples = std::min (wetBuffer.getNumSamples(), samplesLeft);
+        
+        AudioBuffer<SampleType> inBusProxy (inBus.getArrayOfWritePointers(), inBus.getNumChannels(), startSample, chunkNumSamples);
+        AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2, startSample, chunkNumSamples);
+        
+        processWrapped (inBusProxy, outputProxy, midiMessages, applyFadeIn, applyFadeOut, chopInput);
+        // TO DO: update midi message timestamps...
+        
+        startSample += chunkNumSamples;
+        samplesLeft -= chunkNumSamples;
+    }
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+                                               MidiBuffer& midiMessages,
+                                               const bool applyFadeIn, const bool applyFadeOut,
+                                               const bool chopInput)
+{
     AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
     
     const int totalNumSamples = inBus.getNumSamples();
@@ -131,7 +165,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         processWithChopping (input, output, midiMessages);
     else
         processNoChopping (input, output, midiMessages);
-        
+    
     if (applyFadeIn)
         output.applyGainRamp (0, totalNumSamples, 0.0f, 1.0f);
     
@@ -140,28 +174,10 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
 };
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
-{
-    if (output.getNumChannels() > inBus.getNumChannels())
-        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
-            output.clear(chan, 0, output.getNumSamples());
-    
-    dsp::AudioBlock<SampleType> inBlock  (inBus);
-    dsp::AudioBlock<SampleType> outBlock (output);
-    
-    // should I include the mono input selection / summing to mono process here...???
-    
-    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
-    if (inBlock == outBlock)
-        bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
-    else
-        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock) );
-};
-
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+void ImogenEngine<SampleType>::processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
+                                                  MidiBuffer& midiMessages)
 {
     harmonizer.clearMidiBuffer();
     
@@ -178,7 +194,8 @@ void ImogenEngine<SampleType>::processNoChopping (AudioBuffer<SampleType>& input
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+void ImogenEngine<SampleType>::processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
+                                                    MidiBuffer& midiMessages)
 {
     harmonizer.clearMidiBuffer();
     
@@ -234,8 +251,8 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
                                             const int startSample, const int numSamples)
 {
-    AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples);
-    AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples);
+    AudioBuffer<SampleType> inProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples); // main input
+    AudioBuffer<SampleType> outProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples); // main output
     
     AudioBuffer<SampleType> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
     
@@ -269,6 +286,60 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
         limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
 };
+
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
+{
+    const int totalNumSamples = inBus.getNumSamples();
+    
+    if (! (totalNumSamples > wetBuffer.getNumSamples()))
+    {
+        processBypassedWrapped (inBus, output);
+        return;
+    }
+    
+    // simple check to make sure a buggy host doesn't send chunks bigger than the size allotted in prepareToPlay...
+    int samplesLeft = totalNumSamples;
+    int startSample = 0;
+    
+    while (samplesLeft > 0)
+    {
+        const int chunkNumSamples = std::min (wetBuffer.getNumSamples(), samplesLeft);
+        
+        AudioBuffer<SampleType> inBusProxy (inBus.getArrayOfWritePointers(), inBus.getNumChannels(), startSample, chunkNumSamples);
+        AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2, startSample, chunkNumSamples);
+        
+        processBypassedWrapped (inBusProxy, outputProxy);
+        
+        startSample += chunkNumSamples;
+        samplesLeft -= chunkNumSamples;
+    }
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
+{
+    if (output.getNumChannels() > inBus.getNumChannels())
+        for (int chan = inBus.getNumChannels(); chan < output.getNumChannels(); ++chan)
+            output.clear(chan, 0, output.getNumSamples());
+    
+    dsp::AudioBlock<SampleType> inBlock  (inBus);
+    dsp::AudioBlock<SampleType> outBlock (output);
+    
+    // should I include the mono input selection / summing to mono process here...???
+    
+    // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
+    if (inBlock == outBlock)
+        bypassDelay.process (dsp::ProcessContextReplacing   <SampleType> (inBlock) );
+    else
+        bypassDelay.process (dsp::ProcessContextNonReplacing<SampleType> (inBlock, outBlock) );
+};
+
+
+
 
 
 template<typename SampleType>

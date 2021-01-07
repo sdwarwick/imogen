@@ -60,6 +60,11 @@ public:
     
 private:
     
+    void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
+                         const bool applyFadeIn, const bool applyFadeOut, const bool chopInput);
+    
+    void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
+    
     void analyzeInput (const AudioBuffer<SampleType>& input) { harmonizer.analyzeInput(input); };
     
     void processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
