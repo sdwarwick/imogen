@@ -88,7 +88,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
 {
     const int totalNumSamples = inBus.getNumSamples();
     
-    if (! (totalNumSamples > wetBuffer.getNumSamples()))
+    if (totalNumSamples <= wetBuffer.getNumSamples())
     {
         processWrapped (inBus, output, midiMessages, applyFadeIn, applyFadeOut, chopInput);
         return;
@@ -124,7 +124,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     const int totalNumSamples = inBus.getNumSamples();
     
-    switch (processor.getModulatorSource()) // isolate a mono input buffer from the input Bus
+    switch (processor.getModulatorSource()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
         case ImogenAudioProcessor::ModulatorInputSource::left:
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
@@ -294,7 +294,7 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 {
     const int totalNumSamples = inBus.getNumSamples();
     
-    if (! (totalNumSamples > wetBuffer.getNumSamples()))
+    if (totalNumSamples <= wetBuffer.getNumSamples())
     {
         processBypassedWrapped (inBus, output);
         return;

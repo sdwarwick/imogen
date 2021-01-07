@@ -177,10 +177,13 @@ public:
     bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; };
     
     Array<int> reportActiveNotes() const; // returns an array of the currently active pitches
-    Array<int> reportActivesNoReleased() const; // the same, but excludes notes that are still ringing but whose key has been released
+    Array<int>& reportActivesNoReleased() const; // the same, but excludes notes that are still ringing but whose key has been released
     
     // turn off all notes
     void allNotesOff(const bool allowTailOff);
+    
+    // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
+    void playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld);
     
     void setMidiLatch(const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; };
@@ -241,7 +244,7 @@ private:
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     // MIDI
-    void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
+    void noteOn(const int midiPitch, const float velocity, const bool isKeyboard, const bool partOfList);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partOfList, const bool isKeyboard);
     void handlePitchWheel(const int wheelValue);
     void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
@@ -265,8 +268,11 @@ private:
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
     
+    // turns on a list of given pitches at once
+    void turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord);
+    
     // turns off a list of given pitches at once. Used for turning off midi latch
-    void turnOffList (Array<int>& toTurnOff, const float velocity, const bool allowTailOff);
+    void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord);
     
     // this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, descant, etc
     void pitchCollectionChanged();
