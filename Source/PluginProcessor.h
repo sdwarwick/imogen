@@ -56,6 +56,8 @@ public:
     void updatePitchDetectionSettings (const float newMinHz, const float newMaxHz, const float newTolerance);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
+    void updateDryGain (const float newDryGain);
+    void updateWetGain (const float newWetGain);
     
     void clearBuffers();
     
@@ -99,8 +101,11 @@ private:
     float dryPanningMults[2];
     float prevDryPanningMults[2];
     
-    float inputGainMultiplier, prevInputGainMultiplier;
-    float outputGainMultiplier, prevOutputGainMultiplier;
+    float dryGain, prevDryGain;
+    float wetGain, prevWetGain;
+    
+    float inputGain, prevInputGain;
+    float outputGain, prevOutputGain;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
@@ -197,6 +202,7 @@ public:
     
     void updateAdsr();
     void updateIOgains();
+    void updateDryWetGains();
     void updateLimiter();
     void updateStereoWidth();
     void updateQuickKillMs();
@@ -255,6 +261,9 @@ private:
                                ImogenEngine<SampleType1>& activeEngine,
                                ImogenEngine<SampleType2>& idleEngine);
     
+    template<typename SampleType>
+    void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
+    
     ImogenEngine<float>  floatEngine;
     ImogenEngine<double> doubleEngine;
     
@@ -264,7 +273,7 @@ private:
     
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;
-    float prevideb, prevodeb;
+    float prevideb, prevodeb, prevddeb, prevwdeb;
     
     bool choppingInput;
     
@@ -275,9 +284,6 @@ private:
     AudioProcessor::BusesProperties makeBusProperties() const;
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
-    
-    template<typename SampleType>
-    void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     AudioParameterInt*   dryPan             = nullptr;
@@ -309,6 +315,8 @@ private:
     AudioParameterBool*  limiterToggle      = nullptr;
     AudioParameterFloat* limiterThresh      = nullptr;
     AudioParameterInt*   limiterRelease     = nullptr;
+    AudioParameterFloat* dryGain            = nullptr;
+    AudioParameterFloat* wetGain            = nullptr;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

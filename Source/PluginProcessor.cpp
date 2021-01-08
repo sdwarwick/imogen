@@ -8,7 +8,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     floatEngine(*this), doubleEngine(*this),
     modulatorInput(ModulatorInputSource::left),
     limiterIsOn(true),
-    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
+    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f), prevddeb(0.0f), prevwdeb(0.0f),
     choppingInput(true),
     wasBypassedLastCallback(true)
 {
@@ -43,18 +43,21 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     limiterToggle      = dynamic_cast<AudioParameterBool*> (tree.getParameter("limiterIsOn"));              jassert(limiterToggle);
     limiterThresh      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("limiterThresh"));            jassert(limiterThresh);
     limiterRelease     = dynamic_cast<AudioParameterInt*>  (tree.getParameter("limiterRelease"));           jassert(limiterRelease);
+    dryGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("dryGain"));                  jassert(dryGain);
+    wetGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("wetGain"));                  jassert(wetGain);
     
     const double initSamplerate   = std::max<double>(44100.0, getSampleRate());
     const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
+    const int initNumVoices = std::max(MAX_POSSIBLE_NUMBER_OF_VOICES, 12);
     
     if (isUsingDoublePrecision())
     {
-        doubleEngine.initialize(initSamplerate, initSamplesPerBlock, 12);
+        doubleEngine.initialize(initSamplerate, initSamplesPerBlock, initNumVoices);
         updateAllParameters(doubleEngine);
     }
     else
     {
-        floatEngine.initialize(initSamplerate, initSamplesPerBlock, 12);
+        floatEngine.initialize(initSamplerate, initSamplesPerBlock, initNumVoices);
         updateAllParameters(floatEngine);
     }
 };
@@ -206,6 +209,18 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
         prevodeb = newOut;
     }
     
+    if (const float newDry = dryGain->get(); newDry != prevddeb)
+    {
+        activeEngine.updateDryGain (Decibels::decibelsToGain(newDry));
+        prevddeb = newDry;
+    }
+    
+    if (const float newWet = wetGain->get(); newWet != prevwdeb)
+    {
+        activeEngine.updateWetGain (Decibels::decibelsToGain(newWet));
+        prevwdeb = newWet;
+    }
+    
     limiterIsOn.store(limiterToggle->get());
 
     activeEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
@@ -230,6 +245,10 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
     
     // update chopping mode
 };
+
+
+
+
 
 
 void ImogenAudioProcessor::updateDryVoxPan()
@@ -343,10 +362,32 @@ void ImogenAudioProcessor::updateMidiLatch()
         floatEngine .updateMidiLatch(latchIsOn->get());
 };
 
+void ImogenAudioProcessor::updateDryWetGains()
+{
+    const float newDry = dryGain->get();
+    if (newDry != prevddeb)
+    {
+        if (isUsingDoublePrecision())
+            doubleEngine.updateDryGain (Decibels::decibelsToGain(newDry));
+        else
+            floatEngine.updateDryGain (Decibels::decibelsToGain(newDry));
+        prevddeb = newDry;
+    }
+    
+    const float newWet = wetGain->get();
+    if (newWet != prevwdeb)
+    {
+        if (isUsingDoublePrecision())
+            doubleEngine.updateWetGain (Decibels::decibelsToGain(newWet));
+        else
+            floatEngine.updateWetGain (Decibels::decibelsToGain(newWet));
+        prevwdeb = newWet;
+    }
+};
+
 void ImogenAudioProcessor::updateIOgains()
 {
     const float newIn = inputGain->get();
-    
     if (newIn != prevideb)
     {
         const float newInGain = Decibels::decibelsToGain(newIn);
@@ -358,7 +399,6 @@ void ImogenAudioProcessor::updateIOgains()
     }
     
     const float newOut = outputGain->get();
-    
     if(newOut != prevodeb)
     {
         const float newOutGain = Decibels::decibelsToGain(newOut);
@@ -509,6 +549,9 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 {
     std::vector<std::unique_ptr<RangedAudioParameter>> params;
     
+    NormalisableRange<float> gainRange = NormalisableRange<float>(-60.0f, 0.0f, 0.01f);
+    
+    
     // general
     params.push_back(std::make_unique<AudioParameterInt>	("dryPan", "Dry vox pan", 0, 127, 64));
     
@@ -549,8 +592,12 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     params.push_back(std::make_unique<AudioParameterBool>	("latchIsOn", "MIDI latch on/off", false));
     
     // input & output gain
-    params.push_back(std::make_unique<AudioParameterFloat>	("inputGain", "Input Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), 0.0f));
-    params.push_back(std::make_unique<AudioParameterFloat>	("outputGain", "Output Gain", NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -4.0f));
+    params.push_back(std::make_unique<AudioParameterFloat>	("inputGain", "Input gain",   gainRange, 0.0f));
+    params.push_back(std::make_unique<AudioParameterFloat>	("outputGain", "Output gain", gainRange, -4.0f));
+    
+    // dry & wet gain -- NEED TO MAKE GUI SLIDERS FOR THESE!!
+    params.push_back(std::make_unique<AudioParameterFloat>  ("dryGain", "Dry gain", gainRange, 0.0f));
+    params.push_back(std::make_unique<AudioParameterFloat>  ("wetGain", "Wet gain", gainRange, 0.0f));
     
     // output limiter
     params.push_back(std::make_unique<AudioParameterBool>	("limiterIsOn", "Limiter on/off", true));

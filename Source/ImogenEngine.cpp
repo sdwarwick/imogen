@@ -21,11 +21,17 @@ ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     prevDryPanningMults[0] = 0.5f;
     prevDryPanningMults[1] = 0.5f;
     
-    inputGainMultiplier = 1.0f;
-    prevInputGainMultiplier = 1.0f;
+    inputGain = 1.0f;
+    prevInputGain = 1.0f;
     
-    outputGainMultiplier = 1.0f;
-    prevOutputGainMultiplier = 1.0f;
+    outputGain = 1.0f;
+    prevOutputGain = 1.0f;
+    
+    dryGain = 1.0f;
+    prevDryGain = 1.0f;
+    
+    wetGain = 1.0f;
+    prevWetGain = 1.0f;
 };
 
 
@@ -44,8 +50,8 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     harmonizer.setPitchDetectionRange (40.0, 2000.0);
     harmonizer.setPitchDetectionTolerance (0.15);
     
-    prevOutputGainMultiplier = outputGainMultiplier;
-    prevInputGainMultiplier  = inputGainMultiplier;
+    prevOutputGain = outputGain;
+    prevInputGain  = inputGain;
     
     prevDryPanningMults[0] = dryPanningMults[0];
     prevDryPanningMults[1] = dryPanningMults[1];
@@ -294,14 +300,14 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
     AudioBuffer<SampleType> inputProxy  (input .getArrayOfWritePointers(), 1, startSample, numSamples); // main input
     AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2, startSample, numSamples); // main output
     
-    AudioBuffer<SampleType> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples); // internal inBuffer alias
+    AudioBuffer<SampleType> inputBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples); // internal inBuffer alias
     
-    if (inputProxy.getReadPointer(0) == inBufferProxy.getReadPointer(0))
-        inBufferProxy.applyGainRamp (0, numSamples, prevInputGainMultiplier, inputGainMultiplier);
+    // master input gain
+    if (inputProxy.getReadPointer(0) == inputBufferProxy.getReadPointer(0))
+        inputBufferProxy.applyGainRamp (0, numSamples, prevInputGain, inputGain);
     else
-        inBufferProxy.copyFromWithRamp (0, 0, inputProxy.getReadPointer(0), numSamples, prevInputGainMultiplier, inputGainMultiplier);
-    
-    prevInputGainMultiplier = inputGainMultiplier; // check here to make sure that numSamples > 2 ... ??
+        inputBufferProxy.copyFromWithRamp (0, 0, inputProxy.getReadPointer(0), numSamples, prevInputGain, inputGain);
+    prevInputGain = inputGain; // check here to make sure that numSamples > 2 ... ??
     
     AudioBuffer<SampleType> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples); // proxy for internal dry buffer
     AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples); // proxy for internal wet buffer
@@ -309,21 +315,29 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
     // write to dry buffer & apply panning (w/ panning multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
     {
-        dryProxy.copyFromWithRamp (chan, 0, inBufferProxy.getReadPointer(0), numSamples, prevDryPanningMults[chan], dryPanningMults[chan]);
+        dryProxy.copyFromWithRamp (chan, 0, inputBufferProxy.getReadPointer(0), numSamples, prevDryPanningMults[chan], dryPanningMults[chan]);
         prevDryPanningMults[chan] = dryPanningMults[chan];
     }
     
+    // dry gain
+    dryProxy.applyGainRamp (0, numSamples, prevDryGain, dryGain);
+    prevDryGain = dryGain;
+    
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryProxy) );
     
-    harmonizer.renderVoices (inBufferProxy, wetProxy, startSample); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
+    harmonizer.renderVoices (inputBufferProxy, wetProxy, startSample); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
+    
+    // wet gain
+    wetProxy.applyGainRamp (0, numSamples, prevWetGain, wetGain);
+    prevWetGain = wetGain;
     
     dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetProxy) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
     
     outputProxy.makeCopyOf (wetProxy, true); // transfer from wetBuffer to output buffer
     
-    outputProxy.applyGainRamp (0, numSamples, prevOutputGainMultiplier, outputGainMultiplier);
-    
-    prevOutputGainMultiplier = outputGainMultiplier;
+    // master output gain
+    outputProxy.applyGainRamp (0, numSamples, prevOutputGain, outputGain);
+    prevOutputGain = outputGain;
     
     if (! processor.isLimiterOn())
         return;
@@ -425,8 +439,11 @@ void ImogenEngine<SampleType>::reset()
     dryPanningMults[0] = 0.5f;
     dryPanningMults[1] = 0.5f;
     
-    prevInputGainMultiplier  = inputGainMultiplier;
-    prevOutputGainMultiplier = outputGainMultiplier;
+    prevInputGain  = inputGain;
+    prevOutputGain = outputGain;
+    
+    prevDryGain = dryGain;
+    prevWetGain = wetGain;
 };
 
 
@@ -491,17 +508,33 @@ void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateInputGain (const float newInGain)
 {
-    prevInputGainMultiplier = inputGainMultiplier;
-    inputGainMultiplier = newInGain;
+    prevInputGain = inputGain;
+    inputGain = newInGain;
 };
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateOutputGain (const float newOutGain)
 {
-    
+    prevOutputGain = outputGain;
+    outputGain = newOutGain;
 };
 
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateDryGain (const float newDryGain)
+{
+    prevDryGain = dryGain;
+    dryGain = newDryGain;
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateWetGain (const float newWetGain)
+{
+    prevWetGain = wetGain;
+    wetGain = newWetGain;
+};
 
 
 
