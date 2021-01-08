@@ -101,7 +101,7 @@ private:
     uint32 noteOnTime;
     int currentMidipan;
     
-    float currentVelocityMultiplier;
+    float currentVelocityMultiplier, prevVelocityMultiplier;
     float lastRecievedVelocity;
     
     bool isQuickFading;
@@ -109,6 +109,7 @@ private:
     
     bool keyIsDown;
     float panningMults[2];
+    float prevPanningMults[2];
     
     int currentAftertouch;
     

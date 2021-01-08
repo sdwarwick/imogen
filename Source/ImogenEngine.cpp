@@ -15,7 +15,18 @@ template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     processor(p),
     resourcesReleased(true), initialized(false)
-{ };
+{
+    dryPanningMults[0] = 0.5f;
+    dryPanningMults[1] = 0.5f;
+    prevDryPanningMults[0] = 0.5f;
+    prevDryPanningMults[1] = 0.5f;
+    
+    inputGainMultiplier = 1.0f;
+    prevInputGainMultiplier = 1.0f;
+    
+    outputGainMultiplier = 1.0f;
+    prevOutputGainMultiplier = 1.0f;
+};
 
 
 template<typename SampleType>
@@ -32,6 +43,12 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     harmonizer.newMaxNumVoices (std::max (initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
     harmonizer.setPitchDetectionRange (40.0, 2000.0);
     harmonizer.setPitchDetectionTolerance (0.15);
+    
+    prevOutputGainMultiplier = outputGainMultiplier;
+    prevInputGainMultiplier  = inputGainMultiplier;
+    
+    prevDryPanningMults[0] = dryPanningMults[0];
+    prevDryPanningMults[1] = dryPanningMults[1];
     
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
@@ -148,25 +165,25 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     switch (processor.getModulatorSource()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
-        case ImogenAudioProcessor::ModulatorInputSource::left:
+        case (ImogenAudioProcessor::ModulatorInputSource::left):
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
             break;
             
-        case ImogenAudioProcessor::ModulatorInputSource::right:
+        case (ImogenAudioProcessor::ModulatorInputSource::right):
             input = AudioBuffer<SampleType> ( (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1)), 1, totalNumSamples);
             break;
             
-        case ImogenAudioProcessor::ModulatorInputSource::mixToMono:
+        case (ImogenAudioProcessor::ModulatorInputSource::mixToMono):
         {
-            if (inBus.getNumChannels() == 1)
+            const int totalNumChannels = inBus.getNumChannels();
+            
+            if (totalNumChannels == 1)
             {
                 input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, totalNumSamples);
                 break;
             }
             
             inBuffer.copyFrom (0, 0, inBus, 0, 0, totalNumSamples);
-            
-            const int totalNumChannels = inBus.getNumChannels();
             
             for (int channel = 1; channel < totalNumChannels; ++channel)
                 inBuffer.addFrom (0, 0, inBus, channel, 0, totalNumSamples);
@@ -280,18 +297,23 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
     AudioBuffer<SampleType> inBufferProxy (inBuffer.getArrayOfWritePointers(), 1, 0, numSamples); // internal inBuffer alias
     
     if (inputProxy.getReadPointer(0) == inBufferProxy.getReadPointer(0))
-        inBufferProxy.applyGain (processor.getInputGainMult()); // it's possible that inputProxy already refers to the same memory as inBufferProxy because the inBuffer is used in the summing to mono process
+        inBufferProxy.applyGainRamp (0, numSamples, prevInputGainMultiplier, inputGainMultiplier);
     else
-        inBufferProxy.copyFrom (0, 0, inputProxy.getReadPointer(0), numSamples, processor.getInputGainMult());
+        inBufferProxy.copyFromWithRamp (0, 0, inputProxy.getReadPointer(0), numSamples, prevInputGainMultiplier, inputGainMultiplier);
+    
+    prevInputGainMultiplier = inputGainMultiplier; // check here to make sure that numSamples > 2 ... ??
     
     AudioBuffer<SampleType> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples); // proxy for internal dry buffer
     AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples); // proxy for internal wet buffer
     
-    // write to dry buffer & apply panning
+    // write to dry buffer & apply panning (w/ panning multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
-        dryProxy.copyFrom (chan, 0, inBufferProxy.getReadPointer(0), numSamples, processor.getDryPanningMult(chan));
+    {
+        dryProxy.copyFromWithRamp (chan, 0, inBufferProxy.getReadPointer(0), numSamples, prevDryPanningMults[chan], dryPanningMults[chan]);
+        prevDryPanningMults[chan] = dryPanningMults[chan];
+    }
     
-    dryWetMixer.pushDrySamples( dsp::AudioBlock<SampleType>(dryProxy) );
+    dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryProxy) );
     
     harmonizer.renderVoices (inBufferProxy, wetProxy, startSample); // puts the harmonizer's rendered stereo output into "wetProxy" (= "wetBuffer")
     
@@ -299,7 +321,9 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
     
     outputProxy.makeCopyOf (wetProxy, true); // transfer from wetBuffer to output buffer
     
-    outputProxy.applyGain (processor.getOutputGainMult()); // apply master output gain
+    outputProxy.applyGainRamp (0, numSamples, prevOutputGainMultiplier, outputGainMultiplier);
+    
+    prevOutputGainMultiplier = outputGainMultiplier;
     
     if (! processor.isLimiterOn())
         return;
@@ -395,6 +419,14 @@ void ImogenEngine<SampleType>::reset()
     harmonizer.allNotesOff(false);
     
     releaseResources();
+    
+    prevDryPanningMults[0] = 0.5f;
+    prevDryPanningMults[1] = 0.5f;
+    dryPanningMults[0] = 0.5f;
+    dryPanningMults[1] = 0.5f;
+    
+    prevInputGainMultiplier  = inputGainMultiplier;
+    prevOutputGainMultiplier = outputGainMultiplier;
 };
 
 
@@ -443,6 +475,34 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
     else
         harmonizer.removeNumVoices(currentVoices - newNumVoices);
 };
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
+{
+    prevDryPanningMults[0] = dryPanningMults[0];
+    prevDryPanningMults[1] = dryPanningMults[1];
+    const float Rpan = newMidiPan / 127.0f;
+    dryPanningMults[1] = Rpan;
+    dryPanningMults[0] = 1.0f - Rpan;
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateInputGain (const float newInGain)
+{
+    prevInputGainMultiplier = inputGainMultiplier;
+    inputGainMultiplier = newInGain;
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateOutputGain (const float newOutGain)
+{
+    
+};
+
+
 
 
 template<typename SampleType>

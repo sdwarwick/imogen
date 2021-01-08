@@ -12,10 +12,13 @@
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-    parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64)
+    parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
+    
+    prevPanningMults[0] = 0.5f;
+    prevPanningMults[1] = 0.5f;
     
     const double initSamplerate = std::max<double>(parent->getSamplerate(), 44100.0);
     
@@ -39,6 +42,11 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     window         .setSize(1, blocksize, true, true, true);
     
     finalWindow.ensureStorageAllocated(blocksize);
+    
+    prevPanningMults[0] = panningMults[0];
+    prevPanningMults[1] = panningMults[1];
+    
+    prevVelocityMultiplier = currentVelocityMultiplier;
 };
 
 
@@ -48,6 +56,9 @@ void HarmonizerVoice<SampleType>::releaseResources()
     synthesisBuffer.setSize(0, 0, false, false, false);
     window.setSize(0, 0, false, false, false);
     finalWindow.clear();
+    
+    prevPanningMults[0] = panningMults[0];
+    prevPanningMults[1] = panningMults[1];
 };
 
 
@@ -64,7 +75,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
                                                   const Array<int>& epochIndices, const int numOfEpochsPerFrame,
                                                   const SampleType currentInputFreq)
 {
-    if(! (parent->isSustainPedalDown() || parent->isSostenutoPedalDown()) && !keyIsDown)
+    if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
         stopNote(1.0f, false);
     
     // don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
@@ -87,18 +98,24 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
     // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     esola (inputAudio, epochIndices, numOfEpochsPerFrame, shiftingRatio);
     
-    synthesisBuffer.applyGain (0, numSamples, currentVelocityMultiplier); // midi velocity gain
+    // midi velocity gain (changes ramped)
+    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
+    prevVelocityMultiplier = currentVelocityMultiplier;
     
     if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
-        adsr        .applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples);
+        adsr.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples);
     else
-        quickAttack .applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
+        quickAttack.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
     
-    if(isQuickFading) // quick fade out for stopNote() w/ allowTailOff = false:
-        quickRelease.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples);
+    if (isQuickFading)
+        quickRelease.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ allowTailOff = false
     
-    outputBuffer.addFrom(0, 0, synthesisBuffer, 0, 0, numSamples, panningMults[0]);
-    outputBuffer.addFrom(1, 0, synthesisBuffer, 1, 0, numSamples, panningMults[1]);
+    // write to output & apply panning (w/ gain multipliers ramped)
+    for (int chan = 0; chan < 2; ++chan)
+    {
+        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples, prevPanningMults[chan], panningMults[chan]);
+        prevPanningMults[chan] = panningMults[chan];
+    }
 };
 
 template<typename SampleType>
@@ -207,6 +224,8 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     keyIsDown     = false;
     
     setPan(64);
+    prevPanningMults[0] = panningMults[0];
+    prevPanningMults[1] = panningMults[1];
     
     if(quickRelease.isActive())
        quickRelease.reset();
@@ -274,6 +293,9 @@ void HarmonizerVoice<SampleType>::setPan(const int newPan)
         return;
 
     parent->panValTurnedOff(currentMidipan);
+    
+    prevPanningMults[0] = panningMults[0];
+    prevPanningMults[1] = panningMults[1];
     
     if(newPan == 64) // save time for the simplest case
     {

@@ -40,6 +40,7 @@ public:
     
     void updateSamplerate (const int newSamplerate);
     void updateDryWet     (const float newWetMixProportion);
+    void updateDryVoxPan  (const int newMidiPan);
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
     void updateQuickKill  (const int newMs);
     void updateQuickAttack(const int newMs);
@@ -53,6 +54,8 @@ public:
     void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const float thresh, const float release);
     void updatePitchDetectionSettings (const float newMinHz, const float newMaxHz, const float newTolerance);
+    void updateInputGain  (const float newInGain);
+    void updateOutputGain (const float newOutGain);
     
     void clearBuffers();
     
@@ -92,6 +95,12 @@ private:
     bool initialized;
     
     MidiBuffer choppingMidibuffer;
+    
+    float dryPanningMults[2];
+    float prevDryPanningMults[2];
+    
+    float inputGainMultiplier, prevInputGainMultiplier;
+    float outputGainMultiplier, prevOutputGainMultiplier;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
@@ -227,11 +236,6 @@ public:
     
     //==============================================================================
     
-    float getDryPanningMult(const int index) const { return dryvoxpanningmults[index]; };
-    
-    float getInputGainMult()  const noexcept { return inputGainMultiplier.load(); };
-    float getOutputGainMult() const noexcept { return outputGainMultiplier.load(); };
-    
     ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; };
     
     bool isLimiterOn() const noexcept { return limiterIsOn.load(); };
@@ -253,9 +257,6 @@ private:
     
     ImogenEngine<float>  floatEngine;
     ImogenEngine<double> doubleEngine;
-    
-    float dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
-    std::atomic_long inputGainMultiplier, outputGainMultiplier;
     
     ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
     

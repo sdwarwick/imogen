@@ -6,7 +6,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
     floatEngine(*this), doubleEngine(*this),
-    inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     modulatorInput(ModulatorInputSource::left),
     limiterIsOn(true),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
@@ -121,7 +120,7 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
                                                 MidiBuffer& midiMessages,
                                                 ImogenEngine<SampleType>& engine)
 {
-    if ( (buffer.getNumSamples() == 0) || (buffer.getNumChannels() == 0) ) // some hosts are crazy
+    if (buffer.getNumChannels() == 0)
         return;
     
     if (! engine.hasBeenInitialized())
@@ -130,7 +129,10 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
     if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
         return; // our audio input is disabled! can't do processing
     
-    updateAllParameters(engine);
+    updateAllParameters (engine);
+    
+    if (buffer.getNumSamples() == 0)
+        return;
     
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
@@ -146,7 +148,7 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
                                                         MidiBuffer& midiMessages,
                                                         ImogenEngine<SampleType>& engine)
 {
-    if ( (buffer.getNumSamples() == 0) || (buffer.getNumChannels() == 0) ) // some hosts are crazy
+    if (buffer.getNumChannels() == 0)
         return;
     
     if (! engine.hasBeenInitialized())
@@ -155,7 +157,10 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
     if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
         return; // our audio input is disabled! can't do processing
     
-    updateAllParameters(engine);
+    updateAllParameters (engine);
+    
+    if (buffer.getNumSamples() == 0)
+        return;
     
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
@@ -183,8 +188,23 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& activeEngine)
 {
-    updateIOgains();
-    updateDryVoxPan();
+    if (const int newDryPan = dryPan->get(); newDryPan != prevDryPan)
+    {
+        activeEngine.updateDryVoxPan(newDryPan);
+        prevDryPan = newDryPan;
+    }
+    
+    if (const float newIn = inputGain->get(); newIn != prevideb)
+    {
+        activeEngine.updateInputGain (Decibels::decibelsToGain(newIn));
+        prevideb = newIn;
+    }
+    
+    if (const float newOut = outputGain->get(); newOut != prevodeb)
+    {
+        activeEngine.updateOutputGain (Decibels::decibelsToGain(newOut));
+        prevodeb = newOut;
+    }
     
     limiterIsOn.store(limiterToggle->get());
 
@@ -216,13 +236,15 @@ void ImogenAudioProcessor::updateDryVoxPan()
 {
     const int newDryPan = dryPan->get();
     
-    if(newDryPan != prevDryPan)
-    {
-        const float Rpan = newDryPan / 127.0f;
-        dryvoxpanningmults[1] = Rpan;
-        dryvoxpanningmults[0] = 1.0f - Rpan;
-        prevDryPan = newDryPan;
-    }
+    if (newDryPan == prevDryPan)
+        return;
+
+    if (isUsingDoublePrecision())
+        doubleEngine.updateDryVoxPan(newDryPan);
+    else
+        floatEngine.updateDryVoxPan(newDryPan);
+    
+    prevDryPan = newDryPan;
 };
 
 void ImogenAudioProcessor::updateDryWet()
@@ -324,14 +346,28 @@ void ImogenAudioProcessor::updateMidiLatch()
 void ImogenAudioProcessor::updateIOgains()
 {
     const float newIn = inputGain->get();
-    if(newIn != prevideb)
-        inputGainMultiplier.store(newIn);
-    prevideb = newIn;
+    
+    if (newIn != prevideb)
+    {
+        const float newInGain = Decibels::decibelsToGain(newIn);
+        if (isUsingDoublePrecision())
+            doubleEngine.updateInputGain(newInGain);
+        else
+            floatEngine.updateInputGain(newInGain);
+        prevideb = newIn;
+    }
     
     const float newOut = outputGain->get();
+    
     if(newOut != prevodeb)
-        outputGainMultiplier.store(newOut);
-    prevodeb = newOut;
+    {
+        const float newOutGain = Decibels::decibelsToGain(newOut);
+        if (isUsingDoublePrecision())
+            doubleEngine.updateOutputGain(newOutGain);
+        else
+            floatEngine.updateOutputGain(newOutGain);
+        prevodeb = newOut;
+    }
 };
 
 void ImogenAudioProcessor::updateLimiter()
