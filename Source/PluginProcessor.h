@@ -71,7 +71,6 @@ private:
     
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
-    void analyzeInput (const AudioBuffer<SampleType>& input);
     
     void renderNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     

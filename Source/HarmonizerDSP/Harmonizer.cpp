@@ -93,22 +93,22 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
     
     const int numSamples = inputAudio.getNumSamples();
     
-    const float shiftingRatio = 1 / (1 + ((currentInputFreq - currentOutputFreq) / currentOutputFreq));
+    const float shiftingRatio = 1 / ( 1 + ( (currentInputFreq - currentOutputFreq) / currentOutputFreq ) );
     
     // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     esola (inputAudio, epochIndices, numOfEpochsPerFrame, shiftingRatio);
     
-    // midi velocity gain (changes ramped)
+    // midi velocity gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
-        adsr.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples);
+        adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
     else
-        quickAttack.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
+        quickAttack.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
     
     if (isQuickFading)
-        quickRelease.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ allowTailOff = false
+        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ allowTailOff = false
     
     // write to output & apply panning (w/ gain multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)

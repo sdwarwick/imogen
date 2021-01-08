@@ -123,8 +123,6 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         return;
     }
     
-    // simple check to make sure a buggy host doesn't send chunks bigger than the size allotted in prepareToPlay...
-    
     int samplesLeft = totalNumSamples;
     int startSample = 0;
     
@@ -201,7 +199,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         }
     }
     
-    analyzeInput (input);
+    harmonizer.analyzeInput (input);
     
     if (processor.shouldChopInput())
         renderWithChopping (input, output, midiMessages);
@@ -242,13 +240,19 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::renderWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
                                                     MidiBuffer& midiMessages)
 {
-    harmonizer.clearMidiBuffer();
+    int  numSamples = input.getNumSamples();
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
-    int  numSamples  = input.getNumSamples();
+    if (midiIterator == midiMessages.cend())
+    {
+        renderBlock (input, output, 0, numSamples);
+        return;
+    }
+    
+    harmonizer.clearMidiBuffer();
+    
     int  startSample = 0;
-    bool firstEvent  = true;
     
     for (; numSamples > 0; ++midiIterator)
     {
@@ -259,26 +263,23 @@ void ImogenEngine<SampleType>::renderWithChopping (AudioBuffer<SampleType>& inpu
         }
         
         const auto metadata = *midiIterator;
-        const int  samplePosition = metadata.samplePosition;
-        const int  samplesToNextMidiMessage = samplePosition - startSample;
+        const int  samplesToNextMidiMessage = metadata.samplePosition - startSample;
         
         if (samplesToNextMidiMessage >= numSamples)
         {
             renderBlock (input, output, startSample, numSamples);
-            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
+            harmonizer.handleMidiEvent (metadata.getMessage(), metadata.samplePosition);
             break;
         }
         
-        if (firstEvent && samplesToNextMidiMessage == 0)
+        if (samplesToNextMidiMessage == 0)
         {
-            harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
+            harmonizer.handleMidiEvent (metadata.getMessage(), metadata.samplePosition);
             continue;
         }
         
-        firstEvent = false;
-        
         renderBlock (input, output, startSample, samplesToNextMidiMessage);
-        harmonizer.handleMidiEvent(metadata.getMessage(), samplePosition);
+        harmonizer.handleMidiEvent (metadata.getMessage(), metadata.samplePosition);
         
         startSample += samplesToNextMidiMessage;
         numSamples  -= samplesToNextMidiMessage;
@@ -307,7 +308,8 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
         inputBufferProxy.applyGainRamp (0, numSamples, prevInputGain, inputGain);
     else
         inputBufferProxy.copyFromWithRamp (0, 0, inputProxy.getReadPointer(0), numSamples, prevInputGain, inputGain);
-    prevInputGain = inputGain; // check here to make sure that numSamples > 2 ... ??
+    
+    prevInputGain = inputGain;
     
     AudioBuffer<SampleType> dryProxy (dryBuffer.getArrayOfWritePointers(), 2, 0, numSamples); // proxy for internal dry buffer
     AudioBuffer<SampleType> wetProxy (wetBuffer.getArrayOfWritePointers(), 2, 0, numSamples); // proxy for internal wet buffer
@@ -345,14 +347,6 @@ void ImogenEngine<SampleType>::renderBlock (AudioBuffer<SampleType>& input, Audi
     dsp::AudioBlock<SampleType> limiterBlock (outputProxy);
     limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
 };
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::analyzeInput (const AudioBuffer<SampleType>& input)
-{
-    harmonizer.analyzeInput (input);
-};
-
 
 
 template<typename SampleType>
@@ -401,8 +395,6 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
     
     dsp::AudioBlock<SampleType> inBlock  (inBus);
     dsp::AudioBlock<SampleType> outBlock (output);
-    
-    // should I include the mono input selection / summing to mono process here...???
     
     // delay line for latency compensation, so that DAW track's total latency will not change whether or not plugin bypass is active
     if (inBlock == outBlock)
