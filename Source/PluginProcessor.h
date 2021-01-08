@@ -4,6 +4,7 @@
 
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
+#include "Freezer.h"
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
@@ -21,7 +22,7 @@ public:
     ~ImogenEngine();
     
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                  const bool applyFadeIn, const bool applyFadeOut, const bool chopInput);
+                  const bool applyFadeIn, const bool applyFadeOut);
     
     void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
@@ -35,7 +36,7 @@ public:
     
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
-    Array<int> returnActivePitches() const { return harmonizer.reportActiveNotes(); };
+    void returnActivePitches(Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); };
     
     void updateSamplerate (const int newSamplerate);
     void updateDryWet     (const float newWetMixProportion);
@@ -61,15 +62,15 @@ public:
 private:
     
     void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                         const bool applyFadeIn, const bool applyFadeOut, const bool chopInput);
+                         const bool applyFadeIn, const bool applyFadeOut);
     
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
-    void analyzeInput (const AudioBuffer<SampleType>& input) { harmonizer.analyzeInput(input); };
+    void analyzeInput (const AudioBuffer<SampleType>& input);
     
-    void processNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    void renderNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
-    void processWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    void renderWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
     void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
                       const int startSample, const int numSamples);
@@ -81,7 +82,6 @@ private:
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
-    AudioBuffer<SampleType> monoSummingBuffer; // this buffer is used in case a multichannel input needs to be summed to mono.
     
     dsp::ProcessSpec dspSpec;
     dsp::Limiter <SampleType> limiter;
@@ -121,21 +121,33 @@ public:
     
     void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override
     {
+        if (isUsingDoublePrecision())
+            return;
+            
         processBlockWrapped (buffer, midiMessages, floatEngine);
     };
     
     void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override
     {
+        if (! isUsingDoublePrecision())
+            return;
+        
         processBlockWrapped (buffer, midiMessages, doubleEngine);
     };
    
     void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override
     {
+        if (isUsingDoublePrecision())
+            return;
+        
         processBlockBypassedWrapped (buffer, midiMessages, floatEngine);
     };
     
     void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override
     {
+        if (! isUsingDoublePrecision())
+            return;
+        
         processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
     };
     
@@ -193,7 +205,7 @@ public:
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
-    Array<int> returnActivePitches() const;
+    void returnActivePitches(Array<int>& outputArray) const;
     
     void killAllMidi();
     
@@ -224,6 +236,7 @@ public:
     
     bool isLimiterOn() const noexcept { return limiterIsOn.load(); };
 
+    bool shouldChopInput() const noexcept { return choppingInput; };
     
 private:
     
@@ -240,8 +253,6 @@ private:
     
     ImogenEngine<float>  floatEngine;
     ImogenEngine<double> doubleEngine;
-    
-    void updateAllParameters();
     
     float dryvoxpanningmults[2]; // stores gain multiplier values, which when applied to the input signal, achieve the desired dry vox panning
     std::atomic_long inputGainMultiplier, outputGainMultiplier;
@@ -263,6 +274,9 @@ private:
     AudioProcessor::BusesProperties makeBusProperties() const;
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
+    
+    template<typename SampleType>
+    void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     AudioParameterInt*   dryPan             = nullptr;

@@ -55,9 +55,9 @@ void StaffDisplay::paint (juce::Graphics& g)
     
     g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::staffDisplayBackgroundColourId));
     
-    drawPitches(audioProcessor.returnActivePitches(), g);
+    audioProcessor.returnActivePitches(currentlyActive);
     
-    currentlyActive = audioProcessor.returnActivePitches();
+    drawPitches(currentlyActive, g);
     
 };
 
@@ -73,7 +73,7 @@ void StaffDisplay::resized()
 };
 
 
-void StaffDisplay::drawPitches(Array<int> activePitches, Graphics& g)
+void StaffDisplay::drawPitches(const Array<int>& activePitches, Graphics& g)
 {
     // TO DO :: draw ledger lines, if needed !
     

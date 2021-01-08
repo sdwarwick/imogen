@@ -49,11 +49,15 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
     
     if (isUsingDoublePrecision())
+    {
         doubleEngine.initialize(initSamplerate, initSamplesPerBlock, 12);
+        updateAllParameters(doubleEngine);
+    }
     else
-        floatEngine .initialize(initSamplerate, initSamplesPerBlock, 12);
-    
-    updateAllParameters();
+    {
+        floatEngine.initialize(initSamplerate, initSamplesPerBlock, 12);
+        updateAllParameters(floatEngine);
+    }
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -83,7 +87,7 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
     if (! idleEngine.hasBeenReleased())
         idleEngine.releaseResources();
     
-    updateAllParameters();
+    updateAllParameters(activeEngine);
 };
 
 
@@ -117,18 +121,21 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
                                                 MidiBuffer& midiMessages,
                                                 ImogenEngine<SampleType>& engine)
 {
-    if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
-        return; // our audio input is disabled! can't do processing
-    
-    if (buffer.getNumSamples() == 0) // some hosts are crazy
+    if ( (buffer.getNumSamples() == 0) || (buffer.getNumChannels() == 0) ) // some hosts are crazy
         return;
     
-    updateAllParameters();
+    if (! engine.hasBeenInitialized())
+        return;
+    
+    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
+        return; // our audio input is disabled! can't do processing
+    
+    updateAllParameters(engine);
     
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
-    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, choppingInput);
+    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
     wasBypassedLastCallback = false;
 };
@@ -139,21 +146,24 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
                                                         MidiBuffer& midiMessages,
                                                         ImogenEngine<SampleType>& engine)
 {
-    if( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
+    if ( (buffer.getNumSamples() == 0) || (buffer.getNumChannels() == 0) ) // some hosts are crazy
         return;
     
-    if (buffer.getNumSamples() == 0)
+    if (! engine.hasBeenInitialized())
         return;
     
-    updateAllParameters();
+    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
+        return; // our audio input is disabled! can't do processing
+    
+    updateAllParameters(engine);
     
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
     AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
     
     if (! wasBypassedLastCallback)
-        engine.process (inBus, outBus, midiMessages, false, true, choppingInput);
+        engine.process (inBus, outBus, midiMessages, false, true); // render 1 more output frame & ramp gain to 0
     else
-        engine.processBypassed (inBus, outBus); // midi passes through unaffected when plugin is bypassed
+        engine.processBypassed (inBus, outBus); // N.B. midi passes through unaffected when plugin is bypassed
     
     wasBypassedLastCallback = true;
 };
@@ -170,29 +180,35 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
 
-void ImogenAudioProcessor::updateAllParameters()
+template<typename SampleType>
+void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& activeEngine)
 {
     updateIOgains();
-    updateLimiter();
     updateDryVoxPan();
-    updateDryWet();
-    updateQuickKillMs();
-    updateQuickAttackMs();
-    updateNoteStealing();
+    
+    limiterIsOn.store(limiterToggle->get());
+
+    activeEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
+    activeEngine.updateDryWet(dryWet->get());
+    activeEngine.updateQuickKill(quickKillMs->get());
+    activeEngine.updateQuickAttack(quickAttackMs->get());
+    activeEngine.updateNoteStealing(voiceStealing->get());
     
     // these parameter functions have the potential to alter the pitch & other properties of currently playing harmonizer voices:
-    updateConcertPitch();
-    updatePitchbendSettings();
-    updateStereoWidth();
-    updateMidiVelocitySensitivity();
-    updateAdsr();
+    activeEngine.updateConcertPitch(concertPitchHz->get());
+    activeEngine.updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
+    activeEngine.updateStereoWidth(stereoWidth->get(), lowestPanned->get());
+    activeEngine.updateMidiVelocitySensitivity(velocitySens->get());
+    activeEngine.updateAdsr(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
     
     // these parameter functions have the potential to trigger or turn off midi notes / harmonizer voices:
-    updateMidiLatch();
-    updatePedalPitch();
-    updateDescant();
+    activeEngine.updateMidiLatch(latchIsOn->get());
+    activeEngine.updatePedalPitch(pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+    activeEngine.updateDescant(descantIsOn->get(), descantThresh->get(), descantInterval->get());
     
-    // update chopping mode...
+    // update num voices
+    
+    // update chopping mode
 };
 
 
@@ -339,12 +355,12 @@ void ImogenAudioProcessor::updatePitchDetectionSettings(const float newMinHz, co
 
 
 
-Array<int> ImogenAudioProcessor::returnActivePitches() const
+void ImogenAudioProcessor::returnActivePitches(Array<int>& outputArray) const
 {
     if (isUsingDoublePrecision())
-        return doubleEngine.returnActivePitches();
-    
-    return floatEngine.returnActivePitches();
+        doubleEngine.returnActivePitches(outputArray);
+    else
+        floatEngine.returnActivePitches(outputArray);
 };
 
 

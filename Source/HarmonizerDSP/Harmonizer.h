@@ -133,7 +133,7 @@ public:
     ~Harmonizer();
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                       const int startSampleOfOriginalProcessBuffer);
+                       const int sampleOffsetFromOriginalAnalyzedBuffer);
     
     void analyzeInput (const AudioBuffer<SampleType>& input);
     
@@ -174,8 +174,8 @@ public:
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; };
     bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; };
     
-    Array<int> reportActiveNotes() const; // returns an array of the currently active pitches
-    Array<int>& reportActivesNoReleased() const; // the same, but excludes notes that are still ringing but whose key has been released
+    void reportActiveNotes(Array<int>& outputArray) const; // returns an array of the currently active pitches
+    void reportActivesNoReleased(Array<int>& outputArray) const; // the same, but excludes notes that are still ringing but whose key has been released
     
     // turn off all notes
     void allNotesOff(const bool allowTailOff);

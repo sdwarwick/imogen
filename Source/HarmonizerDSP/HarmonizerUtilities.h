@@ -187,9 +187,14 @@ public:
     MidiLatchManager()
     { };
     
-    Array<int> turnOffLatch()
+    void turnOffLatch(Array<int>& outputArray)
     {
-        return currentlyHeldNotes;
+        outputArray.clearQuick();
+        
+        for (int i = 0; i < currentlyHeldNotes.size(); ++i)
+            outputArray.add(currentlyHeldNotes.getUnchecked(i));
+        
+        currentlyHeldNotes.clearQuick();
     };
     
     void noteOnRecieved(const int pitch)

@@ -271,28 +271,34 @@ void EpochFinder<SampleType>::makeSubsetOfEpochIndicesArray (const Array<int>& e
     {
         const int realSampleIndex = epochIndices.getUnchecked(i);
         
-        if (realSampleIndex >= sampleOffset && realSampleIndex <= endSample)
-            outputArray.add (realSampleIndex - sampleOffset);
+        if (realSampleIndex < sampleOffset)
+            continue;
+        
+        if (realSampleIndex > endSample)
+            break;
+        
+        outputArray.add (realSampleIndex - sampleOffset);
+        
+        if (realSampleIndex == endSample)
+            break;
     }
     
     if (outputArray.size() == 1)
     {
-        if (! outputArray.contains(0))
-            outputArray.add(0);
-        if (! outputArray.contains(endSample))
-            outputArray.add(endSample);
+        outputArray.addIfNotAlreadyThere (0);
+        outputArray.addIfNotAlreadyThere (numSamples - 1);
         outputArray.sort();
     }
     else if (outputArray.isEmpty())
     {
-        outputArray.add(0);
-        outputArray.add(endSample);
+        outputArray.add (0);
+        outputArray.add (numSamples - 1);
     }
 };
 
 
 template <typename SampleType>
-int EpochFinder<SampleType>::averageDistanceBetweenEpochs(const Array<int>& epochIndices)
+int EpochFinder<SampleType>::averageDistanceBetweenEpochs (const Array<int>& epochIndices)
 {
     SampleType floatAverageDistance = 0;
     
@@ -304,7 +310,7 @@ int EpochFinder<SampleType>::averageDistanceBetweenEpochs(const Array<int>& epoc
     
     const int averageDistance = roundToInt(floatAverageDistance);
     
-    if (! (averageDistance > 0))
+    if (averageDistance < 1)
         return 1;
     
     return averageDistance;

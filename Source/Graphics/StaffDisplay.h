@@ -44,7 +44,7 @@ private:
     int yCoordLookupTable[127];
     bool useFlats;
     
-    void drawPitches(Array<int> activePitches, Graphics& g);
+    void drawPitches(const Array<int>& activePitches, Graphics& g);
     void drawNotehead(const int x, const int y, Graphics& g);
     void drawAccidental(const int x, const int y, Graphics& g);
     
