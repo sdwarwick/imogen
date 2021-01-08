@@ -112,9 +112,7 @@ private:
     
     int currentAftertouch;
     
-    AudioBuffer<SampleType> synthesisBuffer;
-    AudioBuffer<SampleType> monoBuffer;
-    AudioBuffer<SampleType> stereoBuffer;
+    AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     
     AudioBuffer<SampleType> window;
     Array<SampleType> finalWindow;
@@ -234,8 +232,9 @@ public:
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void newMaxNumVoices(const int newMaxNumVoices);
     
-    bool sustainPedalDown, sostenutoPedalDown;
-    
+    bool isSustainPedalDown()   const noexcept { return sustainPedalDown; };
+    bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; };
+
     
 private:
     
@@ -327,6 +326,8 @@ private:
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;
     int lastMidiChannel;
+    
+    bool sustainPedalDown, sostenutoPedalDown;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

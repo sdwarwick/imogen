@@ -12,7 +12,7 @@
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-    parent(h), isQuickFading(false), noteTurnedOff(true), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), noteOnTime(0), keyIsDown(false), currentMidipan(64), currentAftertouch(64)
+    parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
@@ -35,8 +35,6 @@ HarmonizerVoice<SampleType>::~HarmonizerVoice()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
-    monoBuffer     .setSize(1, blocksize, true, true, true);
-    stereoBuffer   .setSize(2, blocksize, true, true, true);
     synthesisBuffer.setSize(1, blocksize, true, true, true);
     window         .setSize(1, blocksize, true, true, true);
     
@@ -47,8 +45,6 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::releaseResources()
 {
-    monoBuffer  .setSize(0, 0, false, false, false);
-    stereoBuffer.setSize(0, 0, false, false, false);
     synthesisBuffer.setSize(0, 0, false, false, false);
     window.setSize(0, 0, false, false, false);
     finalWindow.clear();
@@ -58,8 +54,6 @@ void HarmonizerVoice<SampleType>::releaseResources()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::clearBuffers()
 {
-    monoBuffer.clear();
-    stereoBuffer.clear();
     synthesisBuffer.clear();
     window.clear();
     finalWindow.clearQuick();
@@ -70,7 +64,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
                                                   const Array<int>& epochIndices, const int numOfEpochsPerFrame,
                                                   const SampleType currentInputFreq)
 {
-    if(! (parent->sustainPedalDown || parent->sostenutoPedalDown) && !keyIsDown)
+    if(! (parent->isSustainPedalDown() || parent->isSostenutoPedalDown()) && !keyIsDown)
         stopNote(1.0f, false);
     
     // don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
@@ -86,28 +80,21 @@ void HarmonizerVoice<SampleType>::renderNextBlock(const AudioBuffer<SampleType>&
         
         const float shiftingRatio = 1 / (1 + ((currentInputFreq - currentOutputFreq) / currentOutputFreq));
         
-        // puts shifted samples into the monoBuffer, from sample indices 0 to numSamples-1
+        // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
         esola (inputAudio, epochIndices, numOfEpochsPerFrame, shiftingRatio);
         
-        monoBuffer.applyGain (0, numSamples, currentVelocityMultiplier); // midi velocity gain
+        synthesisBuffer.applyGain (0, numSamples, currentVelocityMultiplier); // midi velocity gain
         
-        // write mono ESOLA signal to stereoBuffer w/ panning multipliers, from sample indices 0 to numSamples-1
-        stereoBuffer.copyFrom (0, 0, monoBuffer, 0, 0, numSamples);
-        stereoBuffer.copyFrom (1, 0, monoBuffer, 0, 0, numSamples);
-        stereoBuffer.applyGain(0, 0, numSamples, panningMults[0]);
-        stereoBuffer.applyGain(1, 0, numSamples, panningMults[1]);
-        
-        if(parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
-            adsr        .applyEnvelopeToBuffer(stereoBuffer, 0, numSamples);
+        if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
+            adsr        .applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples);
         else
-            quickAttack .applyEnvelopeToBuffer(stereoBuffer, 0, numSamples); // to prevent pops at start of notes
+            quickAttack .applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
         
         if(isQuickFading) // quick fade out for stopNote() w/ allowTailOff = false:
-            quickRelease.applyEnvelopeToBuffer(stereoBuffer, 0, numSamples);
+            quickRelease.applyEnvelopeToBuffer(synthesisBuffer, 0, numSamples);
         
-        // write to output
-        outputBuffer.addFrom(0, 0, stereoBuffer, 0, 0, numSamples);
-        outputBuffer.addFrom(1, 0, stereoBuffer, 1, 0, numSamples);
+        outputBuffer.addFrom(0, 0, synthesisBuffer, 0, 0, numSamples, panningMults[0]);
+        outputBuffer.addFrom(1, 0, synthesisBuffer, 1, 0, numSamples, panningMults[1]);
     }
     else
         clearCurrentNote();
@@ -127,7 +114,6 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
     
     finalWindow.clearQuick();
     synthesisBuffer.clear();
-    monoBuffer.clear();
     
     for(int i = 0; i < epochIndices.size() - numOfEpochsPerFrame; ++i)
     {
@@ -189,7 +175,7 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
     
     // normalize & write to output
     const auto* r = synthesisBuffer.getReadPointer(0);
-          auto* w = monoBuffer.getWritePointer(0);
+          auto* w = synthesisBuffer.getWritePointer(0);
     
     for(int s = 0; s < numSamples; ++s)
         w[s] = r[s] / ( (s < finalWindow.size()) ? (std::max<SampleType>(finalWindow.getUnchecked(s), 1e-4)) : 1e-4 );
@@ -304,7 +290,7 @@ void HarmonizerVoice<SampleType>::setPan(const int newPan)
 template<typename SampleType>
 bool HarmonizerVoice<SampleType>::isPlayingButReleased() const noexcept
 {
-    return isVoiceActive() && ! (keyIsDown || parent->sostenutoPedalDown || parent->sustainPedalDown);
+    return isVoiceActive() && ! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown());
 };
 
 template<typename SampleType>
@@ -328,8 +314,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
     synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
-    monoBuffer     .setSize(1, newMaxBlocksize, true, true, true);
-    stereoBuffer   .setSize(2, newMaxBlocksize, true, true, true);
     window         .setSize(1, newMaxBlocksize, true, true, true);
     finalWindow.ensureStorageAllocated(newMaxBlocksize);
 };
@@ -345,7 +329,9 @@ template class HarmonizerVoice<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    pitchConverter(440, 69, 12), bendTracker(2, 2), velocityConverter(100), latchIsOn(false), adsrIsOn(true), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), sustainPedalDown(false), sostenutoPedalDown(false), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12), lastMidiTimeStamp(0), lastMidiChannel(1)
+    latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12),
+    velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
+    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false)
 {
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
@@ -773,8 +759,6 @@ void Harmonizer<SampleType>::noteOn(const int midiPitch, const float velocity, c
     
     const ScopedLock sl (lock);
     
-    const bool isAutomatedEvent = ( (! isKeyboard) || partOfList );
-    
     // If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
     for (auto* voice : voices)
     {
@@ -789,6 +773,8 @@ void Harmonizer<SampleType>::noteOn(const int midiPitch, const float velocity, c
     
     if (latchIsOn)
         latchManager.noteOnRecieved(midiPitch);
+    
+    const bool isAutomatedEvent = ( (! isKeyboard) || partOfList );
         
     if (isAutomatedEvent)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn(lastMidiChannel, midiPitch, velocity), ++lastMidiTimeStamp);
@@ -799,20 +785,20 @@ void Harmonizer<SampleType>::noteOn(const int midiPitch, const float velocity, c
 template<typename SampleType>
 void Harmonizer<SampleType>::startVoice(HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
-    if (voice != nullptr)
-    {
-        voice->setNoteOnTime(++lastNoteOnCounter);
-        
-        if (! voice->isKeyDown()) // if the key wasn't already marked as down...
-            voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
-        
-        if (midiPitch < lowestPannedNote)
-            voice->setPan(64);
-        else if (! voice->isVoiceActive())
-            voice->setPan(panner.getNextPanVal());
-        
-        voice->startNote (midiPitch, velocity);
-    }
+    if (! voice)
+        return;
+    
+    voice->setNoteOnTime(++lastNoteOnCounter);
+    
+    if (! voice->isKeyDown()) // if the key wasn't already marked as down...
+        voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
+    
+    if (midiPitch < lowestPannedNote)
+        voice->setPan(64);
+    else if (! voice->isVoiceActive())
+        voice->setPan(panner.getNextPanVal());
+    
+    voice->startNote (midiPitch, velocity);
 };
 
 template<typename SampleType>
@@ -823,40 +809,41 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     
     const ScopedLock sl (lock);
     
+    if (latchIsOn && isKeyboard)
+    {
+        latchManager.noteOffRecieved(midiNoteNumber);
+        return;
+    }
+    
     const bool isAutomatedEvent = ( (! isKeyboard) || partofList );
     
     bool stoppedVoice = false;
     
-    if (latchIsOn && isKeyboard)
-        latchManager.noteOffRecieved(midiNoteNumber);
-    else
+    for (auto* voice : voices)
     {
-        for (auto* voice : voices)
+        if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
         {
-            if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
+            if ( isAutomatedEvent && (! voice->isKeyDown()) )
+            { // this is an "auto- note-off" : ie, it's part of an automated list of notes to turn off, or it's coming from pedal pitch/descant and not the keyboard.
+              // check that the note being auto-turned off is note still being held down by a physical keyboard key, and if it's not, then turn it off without checking the state of the sustain or sostenuto pedal.
+                stopVoice (voice, velocity, allowTailOff);
+                stoppedVoice = true;
+            }
+            else
             {
-                if ( isAutomatedEvent && (! voice->isKeyDown()) )
-                { // this is an "auto- note-off" : ie, it's part of an automated list of notes to turn off, or it's coming from pedal pitch/descant and not the keyboard.
-                  // check that the note being auto-turned off is note still being held down by a physical keyboard key, and if it's not, then turn it off without checking the state of the sustain or sostenuto pedal.
+                voice->setKeyDown (false);
+                
+                if (! (sustainPedalDown || sostenutoPedalDown) )
+                {
                     stopVoice (voice, velocity, allowTailOff);
                     stoppedVoice = true;
                 }
-                else
-                {
-                    voice->setKeyDown (false);
-                    
-                    if (! (sustainPedalDown || sostenutoPedalDown) )
-                    {
-                        stopVoice (voice, velocity, allowTailOff);
-                        stoppedVoice = true;
-                    }
-                }
-                
-                break; // there should only be one instance of a midi note playing at a time, so we can save time here by breaking the loop once we've found it & taken the appropriate action
             }
+            
+            break; // there should only be one instance of a midi note playing at a time, so we can save time here by breaking the loop once we've found it & taken the appropriate action
         }
     }
-    
+
     if (stoppedVoice)
     {
         if (midiNoteNumber == lastDescantPitch)
@@ -876,12 +863,10 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
 template<typename SampleType>
 void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
 {
-    if (voice != nullptr)
-    {
-        voice->stopNote (velocity, allowTailOff);
-        if (! allowTailOff)
-            panner.panValTurnedOff(voice->getCurrentMidiPan());
-    }
+    if (! voice)
+        return;
+
+    voice->stopNote (velocity, allowTailOff);
 };
 
 template<typename SampleType>

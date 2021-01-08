@@ -74,6 +74,8 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     harmonizer.resetNoteOnCounter(); // ??
     harmonizer.prepare(newblocksize);
     
+    choppingMidibuffer.ensureSize(samplesPerBlock);
+    
     clearBuffers();
     
     resourcesReleased = false;
@@ -105,8 +107,22 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         AudioBuffer<SampleType> inBusProxy (inBus.getArrayOfWritePointers(), inBus.getNumChannels(), startSample, chunkNumSamples);
         AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2, startSample, chunkNumSamples);
         
-        processWrapped (inBusProxy, outputProxy, midiMessages, applyFadeIn, applyFadeOut, chopInput);
-        // TO DO: update midi message timestamps...
+        auto midiIterator = midiMessages.findNextSamplePosition (startSample);
+        auto midiEnd      = midiMessages.findNextSamplePosition (startSample + chunkNumSamples - 1);
+        
+        choppingMidibuffer.clear();
+        
+        std::for_each (midiIterator,
+                       midiEnd,
+                       [&] (const MidiMessageMetadata& meta)
+                       {
+                           choppingMidibuffer.addEvent (meta.getMessage(), meta.samplePosition - startSample);
+                       } );
+        
+        bool actuallyFadingIn  = (startSample == 0) ? applyFadeIn  : false;
+        bool actuallyFadingOut = (startSample == 0) ? applyFadeOut : false;
+        
+        processWrapped (inBusProxy, outputProxy, choppingMidibuffer, actuallyFadingIn, actuallyFadingOut, chopInput);
         
         startSample += chunkNumSamples;
         samplesLeft -= chunkNumSamples;
@@ -351,6 +367,7 @@ void ImogenEngine<SampleType>::clearBuffers()
     dryBuffer.clear();
     inBuffer.clear();
     monoSummingBuffer.clear();
+    choppingMidibuffer.clear();
 };
 
 

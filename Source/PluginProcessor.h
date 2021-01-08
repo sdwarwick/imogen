@@ -91,6 +91,8 @@ private:
     bool resourcesReleased;
     bool initialized;
     
+    MidiBuffer choppingMidibuffer;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
 

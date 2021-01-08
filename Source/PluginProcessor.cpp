@@ -6,11 +6,12 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
     floatEngine(*this), doubleEngine(*this),
-    limiterIsOn(true), inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
-    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
+    inputGainMultiplier(1.0f), outputGainMultiplier(1.0f),
     modulatorInput(ModulatorInputSource::left),
-    wasBypassedLastCallback(true),
-    choppingInput(true)
+    limiterIsOn(true),
+    prevDryPan(64), prevideb(0.0f), prevodeb(0.0f),
+    choppingInput(true),
+    wasBypassedLastCallback(true)
 {
     // setLatencySamples(newLatency); // TOTAL plugin latency!
     
