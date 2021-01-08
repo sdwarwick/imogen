@@ -66,7 +66,8 @@ public:
     
 private:
     
-    void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
+    void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+                         MidiBuffer& midiMessages,
                          const bool applyFadeIn, const bool applyFadeOut);
     
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
@@ -95,8 +96,6 @@ private:
     bool resourcesReleased;
     bool initialized;
     
-    MidiBuffer choppingMidibuffer;
-    
     float dryPanningMults[2];
     float prevDryPanningMults[2];
     
@@ -105,6 +104,13 @@ private:
     
     float inputGain, prevInputGain;
     float outputGain, prevOutputGain;
+    
+    MidiBuffer midiChoppingBuffer;
+    
+    void copyRangeOfMidiBuffer (const MidiBuffer& inputBuffer, MidiBuffer& outputBuffer,
+                                const int startSampleOfInput,
+                                const int startSampleOfOutput,
+                                const int numSamples);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
