@@ -116,21 +116,45 @@ void ImogenAudioProcessor::killAllMidi()
 };
 
 
-// audio rendering ----------------------------------------------------------------------------------------------------------------------------------
+/*
+ These two functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
+ The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
+ In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
+ */
+void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages)
+{
+    if (isUsingDoublePrecision())
+        return;
+    
+    processBlockWrapped (buffer, midiMessages, floatEngine);
+};
 
+
+void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
+{
+    if (! isUsingDoublePrecision())
+        return;
+    
+    processBlockWrapped (buffer, midiMessages, doubleEngine);
+};
+
+// LAYER 2:
 template <typename SampleType>
 void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
                                                 MidiBuffer& midiMessages,
                                                 ImogenEngine<SampleType>& engine)
 {
+    // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
+    // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
+    
+    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
+        return; // our audio input is disabled! can't do processing
+    
     if (buffer.getNumChannels() == 0)
         return;
     
     if (! engine.hasBeenInitialized())
         return;
-    
-    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
-        return; // our audio input is disabled! can't do processing
     
     updateAllParameters (engine);
     
@@ -146,19 +170,46 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
 };
 
 
+
+/*
+ These two functions represent the top-level callbacks made by the host during audio processing when the plugin is bypassed in the signal chain. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
+ The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
+ In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
+ */
+void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages)
+{
+    if (isUsingDoublePrecision())
+        return;
+    
+    processBlockBypassedWrapped (buffer, midiMessages, floatEngine);
+};
+
+
+void ImogenAudioProcessor::processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages)
+{
+    if (! isUsingDoublePrecision())
+        return;
+    
+    processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
+};
+
+// LAYER 2:
 template <typename SampleType>
 void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer,
                                                         MidiBuffer& midiMessages,
                                                         ImogenEngine<SampleType>& engine)
 {
+    // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
+    // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
+    
+    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
+        return; // our audio input is disabled! can't do processing
+    
     if (buffer.getNumChannels() == 0)
         return;
     
     if (! engine.hasBeenInitialized())
         return;
-    
-    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
-        return; // our audio input is disabled! can't do processing
     
     updateAllParameters (engine);
     

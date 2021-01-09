@@ -66,6 +66,8 @@ public:
     
 private:
     
+    static constexpr int internalBlocksize = 32; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This is for the pitch detection and the ESOLA algorithm.
+    
     void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                          MidiBuffer& midiMessages,
                          const bool applyFadeIn, const bool applyFadeOut);
@@ -77,12 +79,26 @@ private:
     
     void renderWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
-    void renderBlock (AudioBuffer<SampleType>& inBuffer, AudioBuffer<SampleType>& outBuffer,
-                      const int startSample, const int numSamples);
+    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
+                      const bool applyFadeIn, const bool applyFadeOut);
     
     ImogenAudioProcessor& processor;
     
     Harmonizer<SampleType> harmonizer;
+    
+    AudioBuffer<SampleType> inputCollectionBuffer; // this buffer is used to collect input samples if we recieve too few to do processing, so that the blocksizes fed to renderBlock can be regulated. THIS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
+    
+    AudioBuffer<SampleType> inputTransferBuffer; // buffer used to actually pass grains of regulated size into the renderBlock function. THiS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
+    
+    int numStoredInputSamples; // the # of overflow input samples left from the last frame too small to be processed on its own.
+    // INIT TO 0!!!
+    
+    AudioBuffer<SampleType> outputCollectionBuffer;
+    
+    AudioBuffer<SampleType> outputInterimBuffer;
+    
+    int numStoredOutputSamples;
+    
     
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
@@ -112,6 +128,8 @@ private:
                                 const int startSampleOfOutput,
                                 const int numSamples);
     
+    void usedOutputSamples (const int numSamples);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
 
@@ -138,37 +156,14 @@ public:
     void reset() override;
     
     
-    void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override
-    {
-        if (isUsingDoublePrecision())
-            return;
-            
-        processBlockWrapped (buffer, midiMessages, floatEngine);
-    };
+    void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override;
     
-    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override
-    {
-        if (! isUsingDoublePrecision())
-            return;
-        
-        processBlockWrapped (buffer, midiMessages, doubleEngine);
-    };
+    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
+    
    
-    void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override
-    {
-        if (isUsingDoublePrecision())
-            return;
-        
-        processBlockBypassedWrapped (buffer, midiMessages, floatEngine);
-    };
+    void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override;
     
-    void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override
-    {
-        if (! isUsingDoublePrecision())
-            return;
-        
-        processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
-    };
+    void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override;
     
     
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;

@@ -468,7 +468,9 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     // get subset of epochIndices array accounting for sample offset # numSamples
     
-    jassert (currentInputFreq > 0);
+    //jassert (currentInputFreq > 0);
+    
+    currentInputFreq = 1;
     
     epochs.makeSubsetOfEpochIndicesArray (epochIndices, slicedEpochIndices, sampleOffsetFromOriginalAnalyzedBuffer, inputAudio.getNumSamples());
     
