@@ -41,7 +41,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             adsrAttack.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
             adsrAttack.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
             addAndMakeVisible(adsrAttack);
-            adsrAttack.setValue(0.035f);
+            adsrAttack.setValue(audioProcessor.adsrAttack->get());
             adsrAttack.onValueChange = [this] { audioProcessor.updateAdsr(); };
             lookAndFeel.initializeLabel(attackLabel, "Attack");
             addAndMakeVisible(attackLabel);
@@ -52,7 +52,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             adsrDecay.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
             adsrDecay.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
             addAndMakeVisible(adsrDecay);
-            adsrDecay.setValue(0.06f);
+            adsrDecay.setValue(audioProcessor.adsrDecay->get());
             adsrDecay.onValueChange = [this] { audioProcessor.updateAdsr(); };
             lookAndFeel.initializeLabel(decayLabel, "Decay");
             addAndMakeVisible(decayLabel);
@@ -63,7 +63,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             adsrSustain.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
             adsrSustain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
             addAndMakeVisible(adsrSustain);
-            adsrSustain.setValue(0.8f);
+            adsrSustain.setValue(audioProcessor.adsrSustain->get());
             adsrSustain.onValueChange = [this] { audioProcessor.updateAdsr(); };
             lookAndFeel.initializeLabel(sustainLabel, "Sustain");
             addAndMakeVisible(sustainLabel);
@@ -74,7 +74,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             adsrRelease.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
             adsrRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
             addAndMakeVisible(adsrRelease);
-            adsrRelease.setValue(0.1f);
+            adsrRelease.setValue(audioProcessor.adsrRelease->get());
             adsrRelease.onValueChange = [this] { audioProcessor.updateAdsr(); };
             lookAndFeel.initializeLabel(releaseLabel, "Release");
             addAndMakeVisible(releaseLabel);
@@ -85,7 +85,10 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             adsrOnOff.setButtonText("MIDI-triggered ADSR");
             addAndMakeVisible(adsrOnOff);
             adsrOnOff.onClick = [this] { audioProcessor.updateAdsr(); };
-            adsrOnOff.triggerClick();
+            
+            Button::ButtonState initState = (audioProcessor.adsrToggle->get()) ?
+                                            Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
+            adsrOnOff.setState (initState);
         }
     }
     
@@ -96,6 +99,11 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             latchToggle.setButtonText("MIDI latch");
             //addAndMakeVisible(latchToggle);
             latchToggle.onClick = [this] { audioProcessor.updateMidiLatch(); };
+            
+            Button::ButtonState initState = (audioProcessor.latchIsOn->get()) ?
+                                            Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
+            
+            latchToggle.setState (initState);
         }
         
         // "allow trail off" toggle
@@ -117,7 +125,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         quickKillMs.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         quickKillMs.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         addAndMakeVisible(quickKillMs);
-        quickKillMs.setValue(15);
+        quickKillMs.setValue(audioProcessor.quickKillMs->get());
         quickKillMs.setNumDecimalPlacesToDisplay(0);
         quickKillMs.onValueChange = [this] { audioProcessor.updateQuickKillMs(); };
         lookAndFeel.initializeLabel(quickKillmsLabel, "Quick kill ms");
@@ -131,7 +139,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             stereoWidth.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
             stereoWidth.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
             addAndMakeVisible(stereoWidth);
-            stereoWidth.setValue(100);
+            stereoWidth.setValue(audioProcessor.stereoWidth->get());
             stereoWidth.onValueChange = [this] { audioProcessor.updateStereoWidth(); };
             lookAndFeel.initializeLabel(stereowidthLabel, "Stereo width");
             addAndMakeVisible(stereowidthLabel);
@@ -142,7 +150,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             lowestPan.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
             lowestPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
             addAndMakeVisible(lowestPan);
-            lowestPan.setValue(0);
+            lowestPan.setValue(audioProcessor.lowestPanned->get());
             lowestPan.onValueChange = [this] { audioProcessor.updateStereoWidth(); };
             lookAndFeel.initializeLabel(lowestpanLabel, "Lowest panned pitch");
             addAndMakeVisible(lowestpanLabel);
@@ -154,7 +162,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         midiVelocitySens.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         midiVelocitySens.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         addAndMakeVisible(midiVelocitySens);
-        midiVelocitySens.setValue(100);
+        midiVelocitySens.setValue(audioProcessor.velocitySens->get());
         midiVelocitySens.onValueChange = [this] { audioProcessor.updateMidiVelocitySensitivity(); };
         lookAndFeel.initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
         addAndMakeVisible(midivelocitysensLabel);
@@ -164,7 +172,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     {
         {
             buildIntervalCombobox(pitchBendUp);
-            pitchBendUp.setSelectedId(2);
+            pitchBendUp.setSelectedId(audioProcessor.pitchBendUp->get());
             addAndMakeVisible(pitchBendUp);
             pitchBendUp.onChange = [this] { audioProcessor.updatePitchbendSettings(); };
             lookAndFeel.initializeLabel(pitchbendUpLabel, "Pitch bend range up");
@@ -172,7 +180,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         }
         {
             buildIntervalCombobox(pitchBendDown);
-            pitchBendDown.setSelectedId(2);
+            pitchBendDown.setSelectedId(audioProcessor.pitchBendDown->get());
             addAndMakeVisible(pitchBendDown);
             pitchBendDown.onChange = [this] { audioProcessor.updatePitchbendSettings(); };
             lookAndFeel.initializeLabel(pitchbendDownLabel, "Pitch bend range down");
@@ -185,7 +193,10 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         voiceStealing.setButtonText("Voice stealing");
         voiceStealing.onClick = [this] { audioProcessor.updateNoteStealing(); };
         addAndMakeVisible(voiceStealing);
-        voiceStealing.triggerClick();
+        
+        Button::ButtonState initState = (audioProcessor.voiceStealing->get()) ?
+                                        Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
+        voiceStealing.setState (initState);
     }
     
     // concert pitch
@@ -193,7 +204,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         concertPitch.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         concertPitch.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         addAndMakeVisible(concertPitch);
-        concertPitch.setValue(440);
+        concertPitch.setValue(audioProcessor.concertPitchHz->get());
         concertPitch.onValueChange = [this] { audioProcessor.updateConcertPitch(); };
         lookAndFeel.initializeLabel(concertPitchLabel, "Concert pitch (Hz)");
         addAndMakeVisible(concertPitchLabel);
@@ -215,16 +226,20 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         //addAndMakeVisible(pedalPitchToggle);
         pedalPitchToggle.onClick = [this] { audioProcessor.updatePedalPitch(); };
         
+        Button::ButtonState initState = (audioProcessor.pedalPitchIsOn->get()) ?
+                                        Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
+        pedalPitchToggle.setState (initState);
+        
         pedalPitchThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         pedalPitchThreshold.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         //addAndMakeVisible(pedalPitchThreshold);
-        pedalPitchThreshold.setValue(0);
+        pedalPitchThreshold.setValue(audioProcessor.pedalPitchThresh->get());
         pedalPitchThreshold.onValueChange = [this] { audioProcessor.updatePedalPitch(); };
         lookAndFeel.initializeLabel(pedalPitchThreshLabel, "Upper threshold");
         //addAndMakeVisible(pedalPitchThreshLabel);
         
         buildIntervalCombobox(pedalPitchInterval);
-        pedalPitchInterval.setSelectedId(12);
+        pedalPitchInterval.setSelectedId(audioProcessor.pedalPitchInterval->get());
         //addAndMakeVisible(pedalPitchInterval);
         pedalPitchInterval.onChange = [this] { audioProcessor.updatePedalPitch(); };
         lookAndFeel.initializeLabel(pedalPitchIntervalLabel, "Interval");
@@ -237,16 +252,20 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         //addAndMakeVisible(descantToggle);
         descantToggle.onClick = [this] { audioProcessor.updateDescant(); };
         
+        Button::ButtonState initState = (audioProcessor.descantIsOn->get()) ?
+                                        Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
+        descantToggle.setState (initState);
+        
         descantThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         descantThreshold.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         //addAndMakeVisible(descantThreshold);
-        descantThreshold.setValue(127);
+        descantThreshold.setValue(audioProcessor.descantThresh->get());
         descantThreshold.onValueChange = [this] { audioProcessor.updateDescant(); };
         lookAndFeel.initializeLabel(descantThreshLabel, "Lower threshold");
         //addAndMakeVisible(descantThreshLabel);
         
         buildIntervalCombobox(descantInterval);
-        descantInterval.setSelectedId(12);
+        descantInterval.setSelectedId(audioProcessor.descantInterval->get());
         //addAndMakeVisible(descantInterval);
         descantInterval.onChange = [this] { audioProcessor.updateDescant(); };
         lookAndFeel.initializeLabel(descantIntervalLabel, "Interval");

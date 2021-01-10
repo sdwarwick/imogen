@@ -321,7 +321,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     output.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
     prevOutputGain = outputGain;
     
-    if (! processor.isLimiterOn())
+    if (! processor.limiterToggle->get())
         return;
 
     dsp::AudioBlock<SampleType> limiterBlock (output);

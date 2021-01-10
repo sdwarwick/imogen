@@ -26,7 +26,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         dryPan.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
         dryPan.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         addAndMakeVisible(dryPan);
-        dryPan.setValue(64);
+        dryPan.setValue(audioProcessor.dryPan->get());
         dryPan.onValueChange = [this] { audioProcessor.updateDryVoxPan(); };
         lookAndFeel.initializeLabel(drypanLabel, "Modulator pan");
         addAndMakeVisible(drypanLabel);
@@ -37,7 +37,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         masterDryWet.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
         masterDryWet.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         addAndMakeVisible(masterDryWet);
-        masterDryWet.setValue(100);
+        masterDryWet.setValue(audioProcessor.dryWet->get());
         masterDryWet.onValueChange = [this] { audioProcessor.updateDryWet(); };
         lookAndFeel.initializeLabel(drywetLabel, "% wet signal");
         addAndMakeVisible(drywetLabel);
@@ -48,7 +48,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         inputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
         inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
         addAndMakeVisible(inputGain);
-        inputGain.setValue(0.0f);
+        inputGain.setValue(audioProcessor.inputGain->get());
         inputGain.onValueChange = [this] { audioProcessor.updateIOgains(); };
         lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
         addAndMakeVisible(inputGainLabel);
@@ -59,7 +59,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         outputGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
         outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
         addAndMakeVisible(outputGain);
-        outputGain.setValue(-4.0f);
+        outputGain.setValue(audioProcessor.outputGain->get());
         outputGain.onValueChange = [this] { audioProcessor.updateIOgains(); };
         lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
         addAndMakeVisible(outputgainLabel);
@@ -70,7 +70,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         inputChannel.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
         addAndMakeVisible(inputChannel);
-        inputChannel.setValue(0);
+        inputChannel.setValue(audioProcessor.inputChan->get());
         lookAndFeel.initializeLabel(inputChannelLabel, "Input channel");
         addAndMakeVisible(inputChannelLabel);
     }

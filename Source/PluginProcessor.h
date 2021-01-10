@@ -242,47 +242,8 @@ public:
     
     ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; };
     
-    bool isLimiterOn() const noexcept { return limiterIsOn.load(); };
-    
     template<typename SampleType>
     void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
-    
-    
-private:
-    
-    template <typename SampleType>
-    void processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
-    
-    template <typename SampleType>
-    void processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
-    
-    template <typename SampleType1, typename SampleType2>
-    void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
-                               ImogenEngine<SampleType1>& activeEngine,
-                               ImogenEngine<SampleType2>& idleEngine);
-    
-    
-    
-    ImogenEngine<float>  floatEngine;
-    ImogenEngine<double> doubleEngine;
-    
-    ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
-    
-    std::atomic_bool limiterIsOn;
-    
-    // variables to store previous parameter values, to avoid unnecessary update operations:
-    int prevDryPan;
-    float prevideb, prevodeb, prevddeb, prevwdeb;
-    
-    bool choppingInput;
-    
-    PluginHostType host;
-    
-    AudioProcessorValueTreeState::ParameterLayout createParameters() const;
-    
-    AudioProcessor::BusesProperties makeBusProperties() const;
-    
-    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     AudioParameterInt*   dryPan             = nullptr;
@@ -316,6 +277,41 @@ private:
     AudioParameterInt*   limiterRelease     = nullptr;
     AudioParameterFloat* dryGain            = nullptr;
     AudioParameterFloat* wetGain            = nullptr;
+    
+    
+private:
+    
+    template <typename SampleType>
+    void processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    
+    template <typename SampleType>
+    void processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    
+    template <typename SampleType1, typename SampleType2>
+    void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
+                               ImogenEngine<SampleType1>& activeEngine,
+                               ImogenEngine<SampleType2>& idleEngine);
+    
+    
+    
+    ImogenEngine<float>  floatEngine;
+    ImogenEngine<double> doubleEngine;
+    
+    ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
+    
+    // variables to store previous parameter values, to avoid unnecessary update operations:
+    int prevDryPan;
+    float prevideb, prevodeb, prevddeb, prevwdeb;
+    
+    bool choppingInput;
+    
+    PluginHostType host;
+    
+    AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    
+    AudioProcessor::BusesProperties makeBusProperties() const;
+    
+    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
