@@ -7,7 +7,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     tree(*this, nullptr, "PARAMETERS", createParameters()),
     floatEngine(*this), doubleEngine(*this),
     modulatorInput(ModulatorInputSource::left),
-    limiterIsOn(true),
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f), prevddeb(0.0f), prevwdeb(0.0f),
     choppingInput(true),
     wasBypassedLastCallback(true)
@@ -274,8 +273,6 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
         prevwdeb = newWet;
     }
     
-    limiterIsOn.store(limiterToggle->get());
-
     activeEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
     activeEngine.updateDryWet(dryWet->get());
     activeEngine.updateQuickKill(quickKillMs->get());
@@ -465,8 +462,6 @@ void ImogenAudioProcessor::updateIOgains()
 
 void ImogenAudioProcessor::updateLimiter()
 {
-    limiterIsOn.store(limiterToggle->get());
-    
     if (isUsingDoublePrecision())
         doubleEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
     else

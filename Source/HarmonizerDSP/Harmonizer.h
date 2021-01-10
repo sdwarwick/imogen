@@ -135,8 +135,6 @@ public:
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
-    void analyzeInput (const AudioBuffer<SampleType>& input);
-    
     void prepare (const int blocksize);
     
     void releaseResources();

@@ -136,10 +136,14 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
         AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
         
+        // put just the midi messages for this time segment into midiChoppingBuffer
+        // the harmonizer's midi output will be returned by being copied to this same region of the midiChoppingBuffer.
+        midiChoppingBuffer.clear();
         copyRangeOfMidiBuffer (midiMessages, midiChoppingBuffer, startSample, 0, chunkNumSamples);
         
         processWrapped (inBusProxy, outputProxy, midiChoppingBuffer, actuallyFadingIn, actuallyFadingOut);
         
+        // copy the harmonizer's midi output (the beginning chunk of midiChoppingBuffer) back to midiMessages
         copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
         
         startSample += chunkNumSamples;
@@ -292,8 +296,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
     prevInputGain = inputGain;
     
-    harmonizer.analyzeInput (inBuffer);
-    
     // write to dry buffer & apply panning (w/ panning multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
     {
@@ -389,14 +391,15 @@ void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& inputBuf
     if (midiIterator == midiEnd)
         return;
     
-    if (midiEnd == ++inputBuffer.cend())
+    if (midiEnd == ++(inputBuffer.cend()))
         midiEnd = inputBuffer.cend();
     
     const int sampleOffset = startSampleOfOutput - startSampleOfInput;
     
     std::for_each (midiIterator, midiEnd,
                    [&] (const MidiMessageMetadata& meta)
-                       { outputBuffer.addEvent (meta.getMessage(), meta.samplePosition + sampleOffset); } );
+                       { outputBuffer.addEvent (meta.getMessage(),
+                                                meta.samplePosition + sampleOffset); } );
 };
 
 

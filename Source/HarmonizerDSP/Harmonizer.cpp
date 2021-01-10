@@ -464,6 +464,10 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
+    epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
+    
+    currentInputFreq = pitch.getPitch (inputAudio, sampleRate); // do some kind of time curve for changes in pitch during block...?
+    
     // get subset of epochIndices array accounting for sample offset # numSamples
     
     //jassert (currentInputFreq > 0);
@@ -493,13 +497,6 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::analyzeInput (const AudioBuffer<SampleType>& input)
-{
-    epochs.extractEpochSampleIndices (input, sampleRate, epochIndices);
-    
-    currentInputFreq = pitch.getPitch (input, sampleRate); // do some kind of time curve for changes in pitch during block...?
-};
 
 
 template<typename SampleType>
