@@ -135,15 +135,13 @@ public:
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
+    void processMidi (MidiBuffer& midiMessages);
+    
     void prepare (const int blocksize);
     
     void releaseResources();
     
     void clearBuffers();
-    
-    void clearMidiBuffer() { aggregateMidiBuffer.clear(); lastMidiTimeStamp = 0.0; };
-    
-    MidiBuffer& returnMidiBuffer() { return aggregateMidiBuffer; };
     
     int getNumActiveVoices() const;
     

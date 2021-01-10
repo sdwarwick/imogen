@@ -456,6 +456,28 @@ void Harmonizer<SampleType>::releaseResources()
 };
 
 
+template<typename SampleType>
+void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
+{
+    aggregateMidiBuffer.clear();
+    lastMidiTimeStamp = 0;
+    
+    auto midiIterator = midiMessages.findNextSamplePosition(0);
+    
+    if (midiIterator == midiMessages.cend())
+        return;
+    
+    std::for_each (midiIterator,
+                   midiMessages.cend(),
+                   [&] (const MidiMessageMetadata& meta)
+                       { handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
+        
+    midiMessages.swapWith (aggregateMidiBuffer);
+    
+    lastMidiTimeStamp = 0;
+};
+
+
 
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
@@ -782,7 +804,7 @@ void Harmonizer<SampleType>::handleMidiEvent(const MidiMessage& m, const int sam
         handleController (m.getControllerNumber(), m.getControllerValue());
     
     if (shouldAddToAggregateMidiBuffer)
-        aggregateMidiBuffer.addEvent(m, samplePosition);
+        aggregateMidiBuffer.addEvent (m, samplePosition);
 };
 
 template<typename SampleType>
@@ -887,7 +909,10 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         lastPedalPitch = -1;
     
     if (latchIsOn)
+    {
         latchManager.noteOffRecieved(midiNoteNumber);
+        return;
+    }
     
     if (isAutomatedEvent)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff(lastMidiChannel, midiNoteNumber, velocity), ++lastMidiTimeStamp);

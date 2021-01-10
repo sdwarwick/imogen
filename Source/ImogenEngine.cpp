@@ -287,19 +287,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     processor.updateAllParameters(*this);
     
-    // first, deal with MIDI for this callback.
-    if (auto midiIterator = midiMessages.findNextSamplePosition(0);
-        midiIterator != midiMessages.cend())
-    {
-        harmonizer.clearMidiBuffer();
-        
-        std::for_each (midiIterator,
-                       midiMessages.cend(),
-                       [&] (const MidiMessageMetadata& meta)
-                           { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
-        
-        midiMessages.swapWith (harmonizer.returnMidiBuffer());
-    }
+    harmonizer.processMidi (midiMessages);
     
     // master input gain
     inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
@@ -473,7 +461,6 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::clearBuffers()
 {
     harmonizer.clearBuffers();
-    harmonizer.clearMidiBuffer();
     wetBuffer.clear();
     dryBuffer.clear();
     inBuffer .clear();
