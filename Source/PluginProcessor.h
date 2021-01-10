@@ -76,8 +76,7 @@ private:
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
     
-    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
-                      MidiBuffer& midiMessages);
+    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output);
     
     
     ImogenAudioProcessor& processor;
@@ -126,6 +125,8 @@ private:
                                 const int numSamples);
     
     bool lastRecievedFadeIn, lastRecievedFadeOut;
+    
+    bool firstLatencyPeriod;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
