@@ -77,8 +77,7 @@ private:
     
     
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
-                      MidiBuffer& midiMessages,
-                      const bool applyFadeIn, const bool applyFadeOut);
+                      MidiBuffer& midiMessages);
     
     
     ImogenAudioProcessor& processor;
@@ -126,8 +125,7 @@ private:
                                 const int startSampleOfOutput,
                                 const int numSamples);
     
-    void usedOutputSamples (const int numSamplesUsed);
-    void usedInputSamples  (const int numSamplesUsed);
+    bool lastRecievedFadeIn, lastRecievedFadeOut;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

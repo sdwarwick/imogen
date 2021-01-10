@@ -14,7 +14,8 @@
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     processor(p),
-    resourcesReleased(true), initialized(false)
+    resourcesReleased(true), initialized(false),
+    lastRecievedFadeIn(false), lastRecievedFadeOut(false)
 {
     dryPanningMults[0] = 0.5f;
     dryPanningMults[1] = 0.5f;
@@ -222,41 +223,59 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
             output.clear();
             return;
         }
+    }
+    else // render the new chunk of internalBlocksize samples
+    {
+        // alias buffer referring to just the chunk of the inputCollectionBuffer that we'll be reading from
+        AudioBuffer<SampleType> thisChunksInput  (inputCollectionBuffer.getArrayOfWritePointers(), 1, 0, internalBlocksize);
         
-        const int outputSamplesUsing = std::min (numStoredOutputSamples, numNewSamples);
+        // alias buffer referring to just the chunk of the outputCollectionBuffer that we'll be writing to
+        AudioBuffer<SampleType> thisChunksOutput (outputCollectionBuffer.getArrayOfWritePointers(), 2, numStoredOutputSamples, internalBlocksize);
         
-        for (int chan = 0; chan < 2; ++chan)
-            output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, outputSamplesUsing);
+        // appends the next rendered block of samples to the end of the outputCollectionBuffer
+        renderBlock (thisChunksInput, thisChunksOutput, midiMessages);
         
-        usedOutputSamples (outputSamplesUsing);
-    
-        return;
+        numStoredOutputSamples += internalBlocksize;
+        numStoredInputSamples  -= internalBlocksize;
+        
+        if (numStoredInputSamples > 0)
+        {
+            for (int chan = 0; chan < 2; ++chan)
+            {
+                inputInterimBuffer   .copyFrom (chan, 0, inputCollectionBuffer, chan, internalBlocksize, numStoredInputSamples);
+                inputCollectionBuffer.copyFrom (chan, 0, inputInterimBuffer,    chan, 0,                 numStoredInputSamples);
+            }
+        }
     }
     
-    // alias buffer referring to just the chunk of the inputCollectionBuffer that we'll be reading from
-    AudioBuffer<SampleType> thisChunksInput  (inputCollectionBuffer.getArrayOfWritePointers(), 1, 0, internalBlocksize);
-    
-    // alias buffer referring to just the chunk of the outputCollectionBuffer that we'll be writing to
-    AudioBuffer<SampleType> thisChunksOutput (outputCollectionBuffer.getArrayOfWritePointers(), 2, numStoredOutputSamples, internalBlocksize);
-    
-    // appends the next rendered block of samples to the end of the outputCollectionBuffer
-    renderBlock (thisChunksInput, thisChunksOutput, midiMessages, applyFadeIn, applyFadeOut);
-    
-    numStoredOutputSamples += internalBlocksize;
-    usedInputSamples (internalBlocksize);
+    jassert (numNewSamples <= numStoredOutputSamples);
     
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
     
-    usedOutputSamples (numNewSamples);
+    numStoredOutputSamples -= numNewSamples;
+    
+    if (numStoredOutputSamples > 0)
+    {
+        for (int chan = 0; chan < 2; ++chan)
+        {
+            outputInterimBuffer   .copyFrom (chan, 0, outputCollectionBuffer, chan, numNewSamples, numStoredOutputSamples);
+            outputCollectionBuffer.copyFrom (chan, 0, outputInterimBuffer,    chan, 0,             numStoredOutputSamples);
+        }
+    }
+    
+    if (applyFadeIn)
+        output.applyGainRamp(0, numNewSamples, 0.0f, 1.0f);
+    
+    if (applyFadeOut)
+        output.applyGainRamp(0, numNewSamples, 1.0f, 0.0f);
 };
 
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
-                                            MidiBuffer& midiMessages,
-                                            const bool applyFadeIn, const bool applyFadeOut)
+                                            MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
@@ -309,17 +328,11 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     output.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
     prevOutputGain = outputGain;
     
-    if (processor.isLimiterOn())
-    {
-        dsp::AudioBlock<SampleType> limiterBlock (output);
-        limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
-    }
-    
-    if (applyFadeIn)
-        output.applyGainRamp (0, internalBlocksize, 0.0f, 1.0f);
-    
-    if (applyFadeOut)
-        output.applyGainRamp (0, internalBlocksize, 1.0f, 0.0f);
+    if (! processor.isLimiterOn())
+        return;
+
+    dsp::AudioBlock<SampleType> limiterBlock (output);
+    limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
 };
 
 
@@ -358,105 +371,10 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
-    const int numNewSamples = inBus.getNumSamples();
     
-    jassert (numNewSamples <= internalBlocksize);
-    
-    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
-    
-    const int totalNumChannels = inBus.getNumChannels();
-    
-    if (totalNumChannels == 1)
-        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
-    else
-    {
-        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
-        
-        for (int channel = 1; channel < totalNumChannels; ++channel)
-            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
-        
-        inBuffer.applyGain (1.0f / totalNumChannels);
-        
-        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
-    }
-    
-    // copy new input samples recieved this frame into the back of the inputCollectionBuffer queue
-    inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
-    numStoredInputSamples += numNewSamples;
-    
-    if (numStoredInputSamples < internalBlocksize) // not calling renderBlock() this time, not enough samples to process!
-    {
-        if (numStoredOutputSamples == 0)
-        {
-            output.clear();
-            return;
-        }
-        
-        const int outputSamplesUsing = std::min (numStoredOutputSamples, numNewSamples);
-        
-        for (int chan = 0; chan < 2; ++chan)
-            output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, outputSamplesUsing);
-        
-        usedOutputSamples (outputSamplesUsing);
-        
-        return;
-    }
-    
-    // alias buffer referring to just the chunk of the inputCollectionBuffer that we'll be reading from
-    AudioBuffer<SampleType> thisChunksInput  (inputCollectionBuffer.getArrayOfWritePointers(), 1, 0, internalBlocksize);
-    
-    // alias buffer referring to just the chunk of the outputCollectionBuffer that we'll be writing to
-    AudioBuffer<SampleType> thisChunksOutput (outputCollectionBuffer.getArrayOfWritePointers(), 2, numStoredOutputSamples, internalBlocksize);
-    
-    // appends the next rendered block of samples to the end of the outputCollectionBuffer
-    for (int chan = 0; chan < 2; ++chan)
-        thisChunksOutput.copyFrom(chan, 0, thisChunksInput, 0, 0, internalBlocksize);
-    
-    numStoredOutputSamples += internalBlocksize;
-    usedInputSamples (internalBlocksize);
-    
-    for (int chan = 0; chan < 2; ++chan)
-        output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
-    
-    usedOutputSamples (numNewSamples);
 };
 
 
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::usedOutputSamples (const int numSamplesUsed)
-{
-    jassert (numStoredOutputSamples >= numSamplesUsed);
-    
-    numStoredOutputSamples -= numSamplesUsed;
-    
-    if (numStoredOutputSamples == 0)
-        return;
-    
-    for (int chan = 0; chan < 2; ++chan)
-    {
-        outputInterimBuffer   .copyFrom (chan, 0, outputCollectionBuffer, chan, numSamplesUsed, numStoredOutputSamples);
-        outputCollectionBuffer.copyFrom (chan, 0, outputInterimBuffer,    chan, 0,              numStoredOutputSamples);
-    }
-};
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::usedInputSamples (const int numSamplesUsed)
-{
-    jassert (numStoredInputSamples >= numSamplesUsed);
-    
-    numStoredInputSamples -= numSamplesUsed;
-    
-    if (numStoredInputSamples == 0)
-        return;
-    
-    for (int chan = 0; chan < 2; ++chan)
-    {
-        inputInterimBuffer   .copyFrom (chan, 0, inputCollectionBuffer, chan, numSamplesUsed, numStoredInputSamples);
-        inputCollectionBuffer.copyFrom (chan, 0, inputInterimBuffer,    chan, 0,              numStoredInputSamples);
-    }
-};
 
 
 
