@@ -141,10 +141,6 @@ public:
     
     void releaseResources();
     
-
-    void setPitchDetectionRange(const float newMinHz, const float newMaxHz) { pitch.setHzLimits(newMinHz, newMaxHz); };
-    void setPitchDetectionTolerance(const float newTolerance) { pitch.setTolerence(newTolerance); };
-
     void clearBuffers();
     
     void clearMidiBuffer() { aggregateMidiBuffer.clear(); lastMidiTimeStamp = 0.0; };

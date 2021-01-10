@@ -389,8 +389,7 @@ void Harmonizer<SampleType>::clearBuffers()
 {
     for (auto* voice : voices)
         voice->clearBuffers(); 
-    
-    pitch.clearBuffer();
+   
     epochIndices.clearQuick();
     slicedEpochIndices.clearQuick();
 };

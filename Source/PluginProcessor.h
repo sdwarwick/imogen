@@ -76,13 +76,10 @@ private:
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
     
-    void renderNoChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
-    
-    void renderWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
-    
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
                       MidiBuffer& midiMessages,
                       const bool applyFadeIn, const bool applyFadeOut);
+    
     
     ImogenAudioProcessor& processor;
     
@@ -109,7 +106,6 @@ private:
     dsp::ProcessSpec dspSpec;
     dsp::Limiter <SampleType> limiter;
     dsp::DryWetMixer<SampleType> dryWetMixer;
-    dsp::DelayLine<SampleType> bypassDelay; // a delay line used for latency compensation when the processing is bypassed
     
     bool resourcesReleased;
     bool initialized;

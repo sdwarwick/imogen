@@ -22,31 +22,26 @@ public:
     
     void releaseResources();
     
+    
     void prepare (const int blocksize);
     
     SampleType getPitch(const AudioBuffer<SampleType>& inputAudio, const double samplerate);
     
-    void setTolerence(const float newTolerence) noexcept { tolerence = newTolerence; }
-    
-    void setHzLimits(const float newMin, const float newMax) noexcept { minHz = newMin; maxHz = newMax; }
-    
-    void clearBuffer() { yinBuffer.clear(); };
-    
-    // DANGER!!! FOR NON REALTIME USE ONLY!!!
-    void increaseBuffersize(const int newMaxBlocksize) { yinBuffer.setSize(1, newMaxBlocksize, true, true, true); };
     
 private:
-    AudioBuffer<SampleType> yinBuffer;
-    SampleType prevDetectedPitch;
-   
-    float tolerence;
-    float minHz, maxHz;
     
-    SampleType simpleYin(const AudioBuffer<SampleType>& inputAudio) noexcept;
+    
+    void computeASDF (const AudioBuffer<SampleType>& input); // fills the ASDF buffer with computed ASDF values for the input signal
+    // "neighborhood"? what to use as sample x[n0]?
+    
     
     unsigned int minElement(const SampleType* data, const int dataSize) noexcept;
     
     SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
+    
+    
+    AudioBuffer<SampleType> asdfBuffer;
+    Array<int> asdfMinima;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchTracker)
 };

@@ -14,9 +14,9 @@
 #define MIN_SAMPLES_NEEDED 32 // the minimum number of samples needed to calculate the pitch of a chunk
 
 template <typename SampleType>
-PitchTracker<SampleType>::PitchTracker(): prevDetectedPitch(0), tolerence(0.15f), minHz(50.0f), maxHz(2000.0f)
+PitchTracker<SampleType>::PitchTracker()
 {
-    yinBuffer.setSize(1, MAX_BUFFERSIZE);
+    
 };
 
 template <typename SampleType>
@@ -26,70 +26,82 @@ PitchTracker<SampleType>::~PitchTracker()
 template <typename SampleType>
 void PitchTracker<SampleType>::releaseResources()
 {
-    yinBuffer.setSize(0, 0, false, false, false);
+    asdfBuffer.setSize(0, 0, false, false, false);
 };
 
 template <typename SampleType>
 void PitchTracker<SampleType>::prepare (const int blocksize)
 {
-    yinBuffer.setSize(1, blocksize);
+    asdfBuffer.setSize (1, blocksize);
 };
 
 template <typename SampleType>
-SampleType PitchTracker<SampleType>::getPitch(const AudioBuffer<SampleType>& inputAudio, const double samplerate)
+SampleType PitchTracker<SampleType>::getPitch (const AudioBuffer<SampleType>& inputAudio, const double samplerate)
 {
-    if (inputAudio.getNumSamples() < MIN_SAMPLES_NEEDED)
-        return prevDetectedPitch;
     
-    const auto period = simpleYin(inputAudio);
+    computeASDF (inputAudio);
     
-    if(! (period > 0))
-        return prevDetectedPitch;
-    
-    const auto detectedHz = samplerate / period;
-
-    if(detectedHz >= minHz && detectedHz <= maxHz)
-    {
-        prevDetectedPitch = detectedHz;
-        return detectedHz;
-    }
-    
-    return prevDetectedPitch;
+    return 1;
 };
 
+
+
 template <typename SampleType>
-SampleType PitchTracker<SampleType>::simpleYin(const AudioBuffer<SampleType>& inputAudio) noexcept
+void PitchTracker<SampleType>::computeASDF (const AudioBuffer<SampleType>& input)
 {
-    const int yinBufferSize = roundToInt(inputAudio.getNumSamples()/2);
     
-    const auto* in      = inputAudio.getReadPointer (0);
-          auto* yinData = yinBuffer .getWritePointer(0);
+    const int numSamples = input.getNumSamples();
     
-    float delta      = 0.0f;
-    float runningSum = 0.0f;
+    const float sampleMultiplier = 1.0f / numSamples;
     
-    yinData[0] = 1.0f;
-    for (int tau = 1; tau < yinBufferSize; ++tau)
+    const int xN = 0; // x[n0] - "neighborhood" sample??
+    
+    // compute individual ASDF values for each k value & save in asdfBuffer
+    
+    for (int k = 0; k < numSamples; ++k)
     {
-        yinData[tau] = 0.0;
-        for (int j = 0; j < yinBufferSize; ++j)
+        // k represents the "lag" in our difference function
+        
+        const int sampleOffset = floor((numSamples + k) / 2);
+        
+        const auto* r = input.getReadPointer(0);
+        
+        SampleType runningSum = 0;
+        
+        for (int n = 0; n < numSamples - 1; ++n)
         {
-            delta = in[j] - in[j + tau];
-            yinData[tau] += (delta * delta);
+            const int startingSample = n + xN - sampleOffset;
+            
+            const float difference = r[startingSample] - r[startingSample + k];
+            
+            runningSum += (difference * difference);
         }
-        runningSum += yinData[tau];
-        if (runningSum != 0)
-            yinData[tau] *= tau / runningSum;
-        else
-            yinData[tau] = 1.0;
         
-        int period = tau - 3;
-        
-        if (tau > 4 && (yinData[period] < tolerence) && (yinData[period] < yinData[period + 1]))
-            return quadraticPeakPosition (yinBuffer.getReadPointer(0), period, yinBufferSize);
+        asdfBuffer.setSample(0, k,
+                             runningSum * sampleMultiplier);
     }
-    return quadraticPeakPosition (yinBuffer.getReadPointer(0), minElement(yinBuffer.getReadPointer(0), yinBufferSize), yinBufferSize);
+    
+    // asdfBuffer now contains ASDF values for k values 0 through numSamples
+    
+    // identify the minima of the ASDF function
+    // cycle through the stored values of the ASDF function and identify the likely minima
+    
+    asdfMinima.clearQuick();
+    
+    const auto* r = asdfBuffer.getReadPointer(0);
+    
+    const float thresh = 1.0f; // or should this be 0?
+    
+    for (int k = 1; k < numSamples; ++k)
+    {
+        const float val = r[k];
+        
+        if (val <= thresh)
+            asdfMinima.add(k);
+    }
 };
+
+
 
 template <typename SampleType>
 unsigned int PitchTracker<SampleType>::minElement(const SampleType* data, const int dataSize) noexcept

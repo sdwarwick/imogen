@@ -46,7 +46,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     dryGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("dryGain"));                  jassert(dryGain);
     wetGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("wetGain"));                  jassert(wetGain);
     
-    setLatencySamples(ImogenEngine<float>::internalBlocksize);
+    setLatencySamples (ImogenEngine<float>::internalBlocksize);
     
     const double initSamplerate   = std::max<double>(44100.0, getSampleRate());
     const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
@@ -471,14 +471,6 @@ void ImogenAudioProcessor::updateLimiter()
         doubleEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
     else
         floatEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
-};
-
-void ImogenAudioProcessor::updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance)
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updatePitchDetectionSettings(newMinHz, newMaxHz, newTolerance);
-    else
-        floatEngine .updatePitchDetectionSettings(newMinHz, newMaxHz, newTolerance);
 };
 
 
