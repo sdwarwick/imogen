@@ -244,8 +244,10 @@ public:
     ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; };
     
     bool isLimiterOn() const noexcept { return limiterIsOn.load(); };
-
-    bool shouldChopInput() const noexcept { return choppingInput; };
+    
+    template<typename SampleType>
+    void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
+    
     
 private:
     
@@ -260,8 +262,7 @@ private:
                                ImogenEngine<SampleType1>& activeEngine,
                                ImogenEngine<SampleType2>& idleEngine);
     
-    template<typename SampleType>
-    void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
+    
     
     ImogenEngine<float>  floatEngine;
     ImogenEngine<double> doubleEngine;

@@ -141,12 +141,9 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         
         startSample += chunkNumSamples;
         samplesLeft -= chunkNumSamples;
-        
-        if ( (numStoredInputSamples + chunkNumSamples) >= internalBlocksize )
-        {
-            actuallyFadingIn  = false;
-            actuallyFadingOut = false;
-        }
+    
+        actuallyFadingIn  = false;
+        actuallyFadingOut = false;
     }
 };
 
@@ -167,12 +164,16 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     switch (processor.getModulatorSource()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
         case (ImogenAudioProcessor::ModulatorInputSource::left):
+        {
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
             break;
+        }
             
         case (ImogenAudioProcessor::ModulatorInputSource::right):
+        {
             input = AudioBuffer<SampleType> ( (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1)), 1, numNewSamples);
             break;
+        }
             
         case (ImogenAudioProcessor::ModulatorInputSource::mixToMono):
         {
@@ -216,7 +217,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
             midiMessages.swapWith (harmonizer.returnMidiBuffer());
         }
         
-        if (numStoredOutputSamples == 0)
+        if (numStoredOutputSamples == 0) // this should only trigger during the first latency period of all time!
         {
             output.clear();
             return;
@@ -259,10 +260,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
-    jassert (input .getNumSamples() == internalBlocksize);
-    jassert (output.getNumSamples() == internalBlocksize);
-    jassert (input .getNumChannels() == 1);
-    jassert (output.getNumChannels() == 2);
+    processor.updateAllParameters(*this);
     
     // first, deal with MIDI for this block.
     if (auto midiIterator = midiMessages.findNextSamplePosition(0);
@@ -297,7 +295,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
     
-    harmonizer.renderVoices (inBuffer, wetBuffer); // puts the harmonizer's rendered stereo output into wetProxy (= "wetBuffer")
+    harmonizer.renderVoices (inBuffer, wetBuffer); // puts the harmonizer's rendered stereo output into wetBuffer
     
     // wet gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
