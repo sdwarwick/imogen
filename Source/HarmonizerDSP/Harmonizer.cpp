@@ -461,8 +461,7 @@ void Harmonizer<SampleType>::releaseResources()
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                           const int sampleOffsetFromOriginalAnalyzedBuffer)
+void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer)
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
@@ -472,7 +471,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     currentInputFreq = 1;
     
-    epochs.makeSubsetOfEpochIndicesArray (epochIndices, slicedEpochIndices, sampleOffsetFromOriginalAnalyzedBuffer, inputAudio.getNumSamples());
+    epochs.makeSubsetOfEpochIndicesArray (epochIndices, slicedEpochIndices, 0, inputAudio.getNumSamples());
     
     // retrieve pitch for this precise chunk within the buffer passed to analyzeInput()
     // using sampleOffsetFromOriginalAnalyzedBuffer & inputAudio.getNumSamples()

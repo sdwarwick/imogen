@@ -46,6 +46,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     dryGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("dryGain"));                  jassert(dryGain);
     wetGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("wetGain"));                  jassert(wetGain);
     
+    setLatencySamples(ImogenEngine<float>::internalBlocksize);
+    
     const double initSamplerate   = std::max<double>(44100.0, getSampleRate());
     const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
     const int initNumVoices = std::max(MAX_POSSIBLE_NUMBER_OF_VOICES, 12);

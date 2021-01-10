@@ -133,8 +133,7 @@ public:
     
     ~Harmonizer();
     
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                       const int sampleOffsetFromOriginalAnalyzedBuffer);
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
     void analyzeInput (const AudioBuffer<SampleType>& input);
     

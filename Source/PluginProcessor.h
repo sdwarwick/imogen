@@ -64,9 +64,10 @@ public:
     bool hasBeenReleased()    const noexcept { return resourcesReleased; };
     bool hasBeenInitialized() const noexcept { return initialized; };
     
-private:
-    
     static constexpr int internalBlocksize = 32; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This is for the pitch detection and the ESOLA algorithm.
+    
+    
+private:
     
     void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                          MidiBuffer& midiMessages,
@@ -80,6 +81,7 @@ private:
     void renderWithChopping (AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
+                      MidiBuffer& midiMessages,
                       const bool applyFadeIn, const bool applyFadeOut);
     
     ImogenAudioProcessor& processor;
@@ -88,7 +90,7 @@ private:
     
     AudioBuffer<SampleType> inputCollectionBuffer; // this buffer is used to collect input samples if we recieve too few to do processing, so that the blocksizes fed to renderBlock can be regulated. THIS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
     
-    AudioBuffer<SampleType> inputTransferBuffer; // buffer used to actually pass grains of regulated size into the renderBlock function. THiS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
+    AudioBuffer<SampleType> inputInterimBuffer; // buffer used to actually pass grains of regulated size into the renderBlock function. THiS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
     
     int numStoredInputSamples; // the # of overflow input samples left from the last frame too small to be processed on its own.
     // INIT TO 0!!!
@@ -128,7 +130,8 @@ private:
                                 const int startSampleOfOutput,
                                 const int numSamples);
     
-    void usedOutputSamples (const int numSamples);
+    void usedOutputSamples (const int numSamplesUsed);
+    void usedInputSamples  (const int numSamplesUsed);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
