@@ -79,11 +79,16 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     const int aggregateBufferSizes = std::max (internalBlocksize * 2, samplesPerBlock);
     
     inputCollectionBuffer .setSize (1, aggregateBufferSizes, true, true, true);
-    inputInterimBuffer    .setSize (1, aggregateBufferSizes, true, true, true);
     outputCollectionBuffer.setSize (2, aggregateBufferSizes, true, true, true);
-    outputInterimBuffer   .setSize (2, aggregateBufferSizes, true, true, true);
+    copyingInterimBuffer  .setSize (2, aggregateBufferSizes, true, true, true);
     
-    midiChoppingBuffer.ensureSize (aggregateBufferSizes);
+    const int midiBufferSizes = std::max (aggregateBufferSizes * 2, samplesPerBlock * 4);
+    
+    midiChoppingBuffer.ensureSize  (midiBufferSizes * 2);
+    midiInputCollection.ensureSize (midiBufferSizes);
+    midiOutputCollection.ensureSize(midiBufferSizes);
+    
+    chunkMidiBuffer.ensureSize(aggregateBufferSizes);
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = internalBlocksize;
@@ -163,20 +168,6 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     // at this level, the buffer block sizes sent to us are garunteed to NEVER exceed the declared internalBlocksize, but they may still be SMALLER than this blocksize -- the individual buffers this function recieves may be as short as 1 sample long.
     // this is where the secret sauce happens that ensures the consistent block sizes fed to renderBlock()
     
-    // first, deal with MIDI for this callback.
-    if (auto midiIterator = midiMessages.findNextSamplePosition(0);
-        midiIterator != midiMessages.cend())
-    {
-        harmonizer.clearMidiBuffer();
-        
-        std::for_each (midiIterator,
-                       midiMessages.cend(),
-                       [&] (const MidiMessageMetadata& meta)
-                           { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
-        
-        midiMessages.swapWith (harmonizer.returnMidiBuffer());
-    }
-    
     const int numNewSamples = inBus.getNumSamples();
     
     jassert (numNewSamples <= internalBlocksize);
@@ -223,6 +214,9 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
     numStoredInputSamples += numNewSamples;
     
+    // add new midi events recieved into the back of the midiInputCollection buffer queue
+    addToEndOfMidiBuffer (midiMessages, midiInputCollection, numNewSamples);
+    
     if (numStoredInputSamples < internalBlocksize) // not calling renderBlock() this time, not enough samples to process!
     {
         if (numStoredOutputSamples == 0) // this should only trigger during the first latency period of all time!
@@ -242,20 +236,22 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         // alias buffer referring to just the chunk of the outputCollectionBuffer that we'll be writing to
         AudioBuffer<SampleType> thisChunksOutput (outputCollectionBuffer.getArrayOfWritePointers(), 2, numStoredOutputSamples, internalBlocksize);
         
+        // copy just the next internalBlocksize worth's of midi events into the chunkMidiBuffer
+        chunkMidiBuffer.clear();
+        copyRangeOfMidiBuffer (midiInputCollection, chunkMidiBuffer, 0, 0, internalBlocksize);
+        deleteMidiEventsAndPushUpRest (midiInputCollection, internalBlocksize);
+        
         // appends the next rendered block of samples to the end of the outputCollectionBuffer
-        renderBlock (thisChunksInput, thisChunksOutput);
+        renderBlock (thisChunksInput, thisChunksOutput, chunkMidiBuffer);
+        
+        // appends the returned midi buffer to the end of the midiOutputCollection buffer
+        addToEndOfMidiBuffer (chunkMidiBuffer, midiOutputCollection, internalBlocksize);
         
         numStoredOutputSamples += internalBlocksize;
         numStoredInputSamples  -= internalBlocksize;
         
         if (numStoredInputSamples > 0)
-        {   // copy left-over input samples that were at the end of the inputCollectionBuffer to the front of the buffer
-            for (int chan = 0; chan < 2; ++chan)
-            {
-                inputInterimBuffer   .copyFrom (chan, 0, inputCollectionBuffer, chan, internalBlocksize, numStoredInputSamples);
-                inputCollectionBuffer.copyFrom (chan, 0, inputInterimBuffer,    chan, 0,                 numStoredInputSamples);
-            }
-        }
+            pushUpLeftoverSamples (inputCollectionBuffer, internalBlocksize, numStoredInputSamples);
     }
     
     jassert (numNewSamples <= numStoredOutputSamples);
@@ -264,16 +260,14 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
     
+    // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
+    copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
+    deleteMidiEventsAndPushUpRest (midiOutputCollection, numNewSamples);
+    
     numStoredOutputSamples -= numNewSamples;
     
     if (numStoredOutputSamples > 0)
-    {
-        for (int chan = 0; chan < 2; ++chan)
-        {   // copy left-over output samples not needed for this callback from the end of the outputCollectionBuffer to the front of the buffer
-            outputInterimBuffer   .copyFrom (chan, 0, outputCollectionBuffer, chan, numNewSamples, numStoredOutputSamples);
-            outputCollectionBuffer.copyFrom (chan, 0, outputInterimBuffer,    chan, 0,             numStoredOutputSamples);
-        }
-    }
+        pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
     
     if (applyFadeIn)
         output.applyGainRamp(0, numNewSamples, 0.0f, 1.0f);
@@ -286,11 +280,26 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input,
-                                            AudioBuffer<SampleType>& output)
+                                            AudioBuffer<SampleType>& output,
+                                            MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
     processor.updateAllParameters(*this);
+    
+    // first, deal with MIDI for this callback.
+    if (auto midiIterator = midiMessages.findNextSamplePosition(0);
+        midiIterator != midiMessages.cend())
+    {
+        harmonizer.clearMidiBuffer();
+        
+        std::for_each (midiIterator,
+                       midiMessages.cend(),
+                       [&] (const MidiMessageMetadata& meta)
+                           { harmonizer.handleMidiEvent (meta.getMessage(), meta.samplePosition); } );
+        
+        midiMessages.swapWith (harmonizer.returnMidiBuffer());
+    }
     
     // master input gain
     inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
@@ -369,6 +378,62 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
     
 };
 
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
+                                                      const int numSamplesUsed, const int numSamplesLeft)
+{
+    for (int chan = 0; chan < 2; ++chan)
+    {
+        copyingInterimBuffer.copyFrom (chan, 0, targetBuffer,         chan, numSamplesUsed, numSamplesLeft);
+        targetBuffer        .copyFrom (chan, 0, copyingInterimBuffer, chan, 0,              numSamplesLeft);
+    }
+};
+
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::addToEndOfMidiBuffer (const MidiBuffer& sourceBuffer, MidiBuffer& aggregateBuffer,
+                                                     const int numSamples)
+{
+    auto sourceStart = sourceBuffer.findNextSamplePosition(0);
+    
+    if (sourceStart == sourceBuffer.cend())
+        return;
+    
+    const auto sourceEnd = sourceBuffer.findNextSamplePosition(numSamples - 1);
+    
+    if (sourceStart == sourceEnd)
+        return;
+    
+    int aggregateSamplePos = aggregateBuffer.getLastEventTime();
+    
+    std::for_each (sourceStart, sourceEnd,
+                   [&] (const MidiMessageMetadata& meta)
+                       { aggregateBuffer.addEvent (meta.getMessage(), ++aggregateSamplePos); } );
+};
+
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::deleteMidiEventsAndPushUpRest (MidiBuffer& targetBuffer,
+                                                              const int numSamplesUsed)
+{
+    MidiBuffer temp (targetBuffer);
+    
+    targetBuffer.clear();
+    
+    auto copyingStart = temp.findNextSamplePosition(numSamplesUsed);
+    
+    if (copyingStart == temp.cend())
+        return;
+    
+    std::for_each (copyingStart, temp.cend(),
+                   [&] (const MidiMessageMetadata& meta)
+                       { targetBuffer.addEvent (meta.getMessage(),
+                                                std::max (0, meta.samplePosition - numSamplesUsed)
+                                                ); } );
+};
 
 
 

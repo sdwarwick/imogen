@@ -76,7 +76,7 @@ private:
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
     
-    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output);
+    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
     
     ImogenAudioProcessor& processor;
@@ -85,14 +85,12 @@ private:
     
     AudioBuffer<SampleType> inputCollectionBuffer; // this buffer is used to collect input samples if we recieve too few to do processing, so that the blocksizes fed to renderBlock can be regulated. THIS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
     
-    AudioBuffer<SampleType> inputInterimBuffer; // buffer used to actually pass grains of regulated size into the renderBlock function. THiS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
-    
     int numStoredInputSamples; // the # of overflow input samples left from the last frame too small to be processed on its own.
     // INIT TO 0!!!
     
     AudioBuffer<SampleType> outputCollectionBuffer;
     
-    AudioBuffer<SampleType> outputInterimBuffer;
+    AudioBuffer<SampleType> copyingInterimBuffer;
     
     int numStoredOutputSamples;
     
@@ -119,10 +117,24 @@ private:
     
     MidiBuffer midiChoppingBuffer;
     
+    MidiBuffer midiInputCollection;
+    MidiBuffer midiOutputCollection;
+    MidiBuffer chunkMidiBuffer;
+    
     void copyRangeOfMidiBuffer (const MidiBuffer& inputBuffer, MidiBuffer& outputBuffer,
                                 const int startSampleOfInput,
                                 const int startSampleOfOutput,
                                 const int numSamples);
+    
+    void addToEndOfMidiBuffer (const MidiBuffer& sourceBuffer, MidiBuffer& aggregateBuffer,
+                               const int numSamples);
+    
+    void deleteMidiEventsAndPushUpRest (MidiBuffer& targetBuffer,
+                                        const int numSamplesUsed);
+    
+    void pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
+                                const int numSamplesUsed,
+                                const int numSamplesLeft);
     
     bool lastRecievedFadeIn, lastRecievedFadeOut;
     
