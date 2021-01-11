@@ -12,10 +12,6 @@
               displaySplashScreen="1" cppLanguageStandard="17" maxBinaryFileSize="20971520">
   <MAINGROUP id="adraHc" name="Imogen">
     <GROUP id="{CA323C75-94A6-E89A-ED42-55108B629A18}" name="Source">
-      <FILE id="T2evkj" name="EngineWithEnsuredInternalBlocksize.cpp" compile="1"
-            resource="0" file="Source/EngineWithEnsuredInternalBlocksize.cpp"/>
-      <FILE id="Ei3sis" name="EngineWithEnsuredInternalBlocksize.h" compile="0"
-            resource="0" file="Source/EngineWithEnsuredInternalBlocksize.h"/>
       <GROUP id="{AB7F125B-A848-2EF9-A38B-3810A8791D22}" name="DSP">
         <FILE id="s9uudl" name="ImogenEngine.cpp" compile="1" resource="0"
               file="Source/ImogenEngine.cpp"/>

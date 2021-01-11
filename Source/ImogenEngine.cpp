@@ -76,17 +76,17 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     if(harmonizer.getSamplerate() != sampleRate)
         harmonizer.setCurrentPlaybackSampleRate(sampleRate);
     
-    const int aggregateBufferSizes = std::max (internalBlocksize * 2, samplesPerBlock);
+    const int aggregateBufferSizes = internalBlocksize * 2;
     
     inputCollectionBuffer .setSize (1, aggregateBufferSizes, true, true, true);
     outputCollectionBuffer.setSize (2, aggregateBufferSizes, true, true, true);
     copyingInterimBuffer  .setSize (2, aggregateBufferSizes, true, true, true);
     
-    const int midiBufferSizes = std::max (aggregateBufferSizes * 2, samplesPerBlock * 4);
+    const int midiBufferSizes = std::max (aggregateBufferSizes * 2, samplesPerBlock * 2);
     
-    midiChoppingBuffer.ensureSize  (midiBufferSizes * 2);
-    midiInputCollection.ensureSize (midiBufferSizes);
-    midiOutputCollection.ensureSize(midiBufferSizes);
+    midiChoppingBuffer  .ensureSize (midiBufferSizes * 2);
+    midiInputCollection .ensureSize (midiBufferSizes);
+    midiOutputCollection.ensureSize (midiBufferSizes);
     
     chunkMidiBuffer.ensureSize(aggregateBufferSizes);
     
@@ -108,6 +108,73 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     
     resourcesReleased = false;
 };
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::clearBuffers()
+{
+    harmonizer.clearBuffers();
+    wetBuffer.clear();
+    dryBuffer.clear();
+    inBuffer .clear();
+    midiChoppingBuffer.clear();
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::reset()
+{
+    harmonizer.allNotesOff(false);
+    
+    releaseResources();
+    
+    prevDryPanningMults[0] = 0.5f;
+    prevDryPanningMults[1] = 0.5f;
+    dryPanningMults[0] = 0.5f;
+    dryPanningMults[1] = 0.5f;
+    
+    prevInputGain  = inputGain;
+    prevOutputGain = outputGain;
+    
+    prevDryGain = dryGain;
+    prevWetGain = wetGain;
+    
+    numStoredInputSamples  = 0;
+    numStoredOutputSamples = 0;
+    
+    firstLatencyPeriod = true;
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::releaseResources()
+{
+    harmonizer.releaseResources();
+    harmonizer.resetNoteOnCounter();
+    
+    wetBuffer.setSize(0, 0, false, false, false);
+    dryBuffer.setSize(0, 0, false, false, false);
+    inBuffer .setSize(0, 0, false, false, false);
+    
+    clearBuffers();
+    
+    dryWetMixer.reset();
+    limiter.reset();
+    
+    resourcesReleased  = true;
+    initialized        = false;
+    firstLatencyPeriod = true;
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+    AUDIO RENDERING
+ 
+    The internal algorithm always processes samples in blocks of internalBlocksize samples, regardless of the buffer sizes recieved from the host. This regulated-blocksize processing happens in the renderBlock() function.
+    In order to achieve this blocksize regulation, the processing is wrapped in several layers of buffer slicing and what essentially amounts to an audio & MIDI FIFO.
+ */
 
 
 template<typename SampleType>
@@ -280,8 +347,8 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input,
-                                            AudioBuffer<SampleType>& output,
-                                            MidiBuffer& midiMessages)
+                                                  AudioBuffer<SampleType>& output,
+                                                  MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
@@ -328,6 +395,15 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+    AUDIO RENDERING WHILE THE PLUGIN IS IN BYPASS MODE
+ 
+    With the current setup, when the plugin is in bypass mode, it continues the same FIFO wrapping process around internal blocks of internalBlocksize, in order to preserve the overall latency of the plugin.
+    In order to be able to use the same buffer system, while in bypass mode, the input will be summed to mono and copied to every output channel.
+ 
+    I am considering implementing the switch for the input selection process in processBypassedWrapped... ¯\_(ツ)_/¯
+ */
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
@@ -363,10 +439,78 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
+    const int numNewSamples = inBus.getNumSamples();
     
+    jassert (numNewSamples <= internalBlocksize);
+    
+    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
+    
+    // with current setup, input will be mixed to mono & copied to each output channel.
+    if (inBus.getNumChannels() == 1)
+        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
+    else
+    {
+        const int totalNumChannels = inBus.getNumChannels();
+        
+        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
+        
+        for (int channel = 1; channel < totalNumChannels; ++channel)
+            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
+        
+        inBuffer.applyGain (1.0f / totalNumChannels);
+        
+        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
+    }
+    
+    inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
+    numStoredInputSamples += numNewSamples;
+    
+    if (numStoredInputSamples < internalBlocksize)
+    {
+        if (numStoredOutputSamples == 0)
+        {
+            jassert (firstLatencyPeriod);
+            output.clear();
+            return;
+        }
+    }
+    else
+    {
+        firstLatencyPeriod = false;
+        
+        for (int chan = 0; chan < 2; ++chan)
+            outputCollectionBuffer.copyFrom (chan, numStoredOutputSamples, inputCollectionBuffer, 0, 0, internalBlocksize);
+        
+        numStoredOutputSamples += internalBlocksize;
+        numStoredInputSamples  -= internalBlocksize;
+        
+        if (numStoredInputSamples > 0)
+            pushUpLeftoverSamples (inputCollectionBuffer, internalBlocksize, numStoredInputSamples);
+    }
+    
+    jassert (numNewSamples <= numStoredOutputSamples);
+    
+    // write to output
+    for (int chan = 0; chan < 2; ++chan)
+        output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
+    
+    numStoredOutputSamples -= numNewSamples;
+    
+    if (numStoredOutputSamples > 0)
+        pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+    VARIOUS UTILITY FUNCTIONS
+ 
+    ... for helping with management of the audio & MIDI FIFO
+ */
+
+// copies samples from a later range of an AudioBuffer to the front of that AudioBuffer.
+// ex. take samples 45 - 50 of inputCollectionBuffer and copy them to sample indices 0 - 4 of inputCollectionBuffer
 template<typename SampleType>
 void ImogenEngine<SampleType>::pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
                                                       const int numSamplesUsed, const int numSamplesLeft)
@@ -378,8 +522,7 @@ void ImogenEngine<SampleType>::pushUpLeftoverSamples (AudioBuffer<SampleType>& t
     }
 };
 
-
-
+// appends midi events from one MidiBuffer to the end of an aggregateBuffer. The number of events copied will correspond to the numSamples argument.
 template<typename SampleType>
 void ImogenEngine<SampleType>::addToEndOfMidiBuffer (const MidiBuffer& sourceBuffer, MidiBuffer& aggregateBuffer,
                                                      const int numSamples)
@@ -401,8 +544,7 @@ void ImogenEngine<SampleType>::addToEndOfMidiBuffer (const MidiBuffer& sourceBuf
                        { aggregateBuffer.addEvent (meta.getMessage(), ++aggregateSamplePos); } );
 };
 
-
-
+// deletes midi events in the targetBuffer from timestamps 0 to numSamplesUsed, and copies any events left from that timestamp to the end of the targetBuffer to now be at the start of the targetBuffer
 template<typename SampleType>
 void ImogenEngine<SampleType>::deleteMidiEventsAndPushUpRest (MidiBuffer& targetBuffer,
                                                               const int numSamplesUsed)
@@ -419,13 +561,10 @@ void ImogenEngine<SampleType>::deleteMidiEventsAndPushUpRest (MidiBuffer& target
     std::for_each (copyingStart, temp.cend(),
                    [&] (const MidiMessageMetadata& meta)
                        { targetBuffer.addEvent (meta.getMessage(),
-                                                std::max (0, meta.samplePosition - numSamplesUsed)
-                                                ); } );
+                                                std::max (0, meta.samplePosition - numSamplesUsed) ); } );
 };
 
-
-
-
+// copies a range of events from one MidiBuffer to another MidiBuffer, applying a timestamp offset. The number of events copied will correspond to the numSamples argument.
 template<typename SampleType>
 void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& inputBuffer, MidiBuffer& outputBuffer,
                                                       const int startSampleOfInput,
@@ -456,63 +595,7 @@ void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& inputBuf
 };
 
 
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::clearBuffers()
-{
-    harmonizer.clearBuffers();
-    wetBuffer.clear();
-    dryBuffer.clear();
-    inBuffer .clear();
-    midiChoppingBuffer.clear();
-};
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::reset()
-{
-    harmonizer.allNotesOff(false);
-    
-    releaseResources();
-    
-    prevDryPanningMults[0] = 0.5f;
-    prevDryPanningMults[1] = 0.5f;
-    dryPanningMults[0] = 0.5f;
-    dryPanningMults[1] = 0.5f;
-    
-    prevInputGain  = inputGain;
-    prevOutputGain = outputGain;
-    
-    prevDryGain = dryGain;
-    prevWetGain = wetGain;
-    
-    numStoredInputSamples  = 0;
-    numStoredOutputSamples = 0;
-    
-    firstLatencyPeriod = true;
-};
-
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::releaseResources()
-{
-    harmonizer.releaseResources();
-    harmonizer.resetNoteOnCounter();
-    
-    wetBuffer.setSize(0, 0, false, false, false);
-    dryBuffer.setSize(0, 0, false, false, false);
-    inBuffer .setSize(0, 0, false, false, false);
-    
-    clearBuffers();
-    
-    dryWetMixer.reset();
-    limiter.reset();
-    
-    resourcesReleased  = true;
-    initialized        = false;
-    firstLatencyPeriod = true;
-};
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
 

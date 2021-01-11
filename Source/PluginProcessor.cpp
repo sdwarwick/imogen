@@ -90,7 +90,7 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
     if (! idleEngine.hasBeenReleased())
         idleEngine.releaseResources();
     
-    updateAllParameters(activeEngine);
+    updateAllParameters (activeEngine);
 };
 
 

@@ -460,12 +460,16 @@ template<typename SampleType>
 void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
 {
     aggregateMidiBuffer.clear();
-    lastMidiTimeStamp = 0;
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
     if (midiIterator == midiMessages.cend())
+    {
+        lastMidiTimeStamp = -1;
         return;
+    }
+    
+    lastMidiTimeStamp = 0;
     
     std::for_each (midiIterator,
                    midiMessages.cend(),
@@ -474,7 +478,7 @@ void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
         
     midiMessages.swapWith (aggregateMidiBuffer);
     
-    lastMidiTimeStamp = 0;
+    lastMidiTimeStamp = -1;
 };
 
 
@@ -513,7 +517,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
         numOfEpochsPerFrame = slicedEpochIndices.size();
     
     for (auto* voice : voices)
-        if(voice->isVoiceActive())
+        if (voice->isVoiceActive())
             voice->renderNextBlock (inputAudio, outputBuffer, slicedEpochIndices, numOfEpochsPerFrame, currentInputFreq);
 };
 
@@ -525,8 +529,8 @@ template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const
 {
     int actives = 0;
-    for(auto* voice : voices)
-        if(voice->isVoiceActive())
+    for (auto* voice : voices)
+        if (voice->isVoiceActive())
             ++actives;
     
     return actives;
@@ -535,14 +539,14 @@ int Harmonizer<SampleType>::getNumActiveVoices() const
 template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchActive(const int midiPitch, const bool countRingingButReleased) const
 {
-    for(auto* voice : voices)
+    for (auto* voice : voices)
     {
-        if(voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
+        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
         {
-            if(countRingingButReleased)
+            if (countRingingButReleased)
                 return true;
             
-            if(! voice->isPlayingButReleased())
+            if (! voice->isPlayingButReleased())
                 return true;
         }
     }
@@ -553,7 +557,7 @@ bool Harmonizer<SampleType>::isPitchActive(const int midiPitch, const bool count
 template<typename SampleType>
 void Harmonizer<SampleType>::setCurrentPlaybackSampleRate(const double newRate)
 {
-    jassert(newRate > 0);
+    jassert (newRate > 0);
     
     if (sampleRate == newRate)
         return;
@@ -569,7 +573,7 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate(const double newRate)
 template<typename SampleType>
 void Harmonizer<SampleType>::setConcertPitchHz(const int newConcertPitchhz)
 {
-    jassert(newConcertPitchhz > 0);
+    jassert (newConcertPitchhz > 0);
     
     if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
@@ -578,7 +582,7 @@ void Harmonizer<SampleType>::setConcertPitchHz(const int newConcertPitchhz)
     
     pitchConverter.setConcertPitchHz(newConcertPitchhz);
     
-    for(auto* voice : voices)
+    for (auto* voice : voices)
         if(voice->isVoiceActive())
            voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
 };
@@ -694,7 +698,7 @@ void Harmonizer<SampleType>::updateMidiVelocitySensitivity(const int newSensitiv
     velocityConverter.setFloatSensitivity(newSens);
     
     for (auto* voice : voices)
-        if(voice->isVoiceActive())
+        if (voice->isVoiceActive())
             voice->setVelocityMultiplier(velocityConverter.floatVelocity(voice->getLastRecievedVelocity()));
 };
 
@@ -708,13 +712,13 @@ void Harmonizer<SampleType>::setMidiLatch(const bool shouldBeOn, const bool allo
     
     latchIsOn = shouldBeOn;
     
-    if (! shouldBeOn)
-    {
-        latchManager.turnOffLatch(unLatched);
-        
-        if (! unLatched.isEmpty())
-            turnOffList (unLatched, !allowTailOff, allowTailOff, false);
-    }
+    if (shouldBeOn)
+        return;
+
+    latchManager.turnOffLatch(unLatched);
+    
+    if (! unLatched.isEmpty())
+        turnOffList (unLatched, !allowTailOff, allowTailOff, false);
 };
 
 
@@ -814,14 +818,16 @@ void Harmonizer<SampleType>::noteOn(const int midiPitch, const float velocity, c
     
     const ScopedLock sl (lock);
     
-    // If hitting a note that's still ringing, stop it first (it could still be playing because of the sustain or sostenuto pedal).
     for (auto* voice : voices)
     {
-        if (voice->getCurrentlyPlayingNote() != midiPitch)
+        if ( (voice->getCurrentlyPlayingNote() != midiPitch)
+             || (! voice->isVoiceActive()) )
             continue;
         
-        stopVoice (voice, 0.5f, true);
-        break; // there should be only one instance of a midi note playing at a time...
+        if (! voice->isPlayingButReleased())
+            return; // there should be only one instance of a midi note playing at a time...
+        
+        break;
     }
     
     startVoice (findFreeVoice(midiPitch, shouldStealNotes), midiPitch, velocity, isKeyboard);
@@ -843,7 +849,7 @@ void Harmonizer<SampleType>::startVoice(HarmonizerVoice<SampleType>* voice, cons
     if (! voice)
         return;
     
-    voice->setNoteOnTime(++lastNoteOnCounter);
+    voice->setNoteOnTime (++lastNoteOnCounter);
     
     if (! voice->isKeyDown()) // if the key wasn't already marked as down...
         voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
@@ -879,11 +885,14 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         if (voice->getCurrentlyPlayingNote() != midiNoteNumber)
             continue;
         
-        if ( isAutomatedEvent && (! voice->isKeyDown()) )
+        if (isAutomatedEvent)
         { // this is an "auto- note-off" : ie, it's part of an automated list of notes to turn off, or it's coming from pedal pitch/descant and not the keyboard.
           // check that the note being auto-turned off is note still being held down by a physical keyboard key, and if it's not, then turn it off without checking the state of the sustain or sostenuto pedal.
-            stopVoice (voice, velocity, allowTailOff);
-            stoppedVoice = true;
+            if (! voice->isKeyDown())
+            {
+                stopVoice (voice, velocity, allowTailOff);
+                stoppedVoice = true;
+            }
         }
         else
         {
@@ -935,7 +944,7 @@ void Harmonizer<SampleType>::allNotesOff(const bool allowTailOff)
     const ScopedLock sl (lock);
     
     for (auto* voice : voices)
-        if(voice->isVoiceActive())
+        if (voice->isVoiceActive())
             voice->stopNote (1.0f, allowTailOff);
     
     latchManager.reset();
@@ -958,7 +967,7 @@ void Harmonizer<SampleType>::handlePitchWheel(const int wheelValue)
     bendTracker.newPitchbendRecieved(wheelValue);
     
     for (auto* voice : voices)
-        if(voice->isVoiceActive())
+        if (voice->isVoiceActive())
             voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
 };
 
@@ -970,13 +979,13 @@ void Harmonizer<SampleType>::updatePitchbendSettings(const int rangeUp, const in
 
     bendTracker.setRange(rangeUp, rangeDown);
     
-    if(lastPitchWheelValue != 64)
-    {
-        const ScopedLock sl (lock);
-        for(auto* voice : voices)
-            if(voice->isVoiceActive())
-                voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
-    }
+    if (lastPitchWheelValue == 64)
+        return;
+
+    const ScopedLock sl (lock);
+    for (auto* voice : voices)
+        if (voice->isVoiceActive())
+            voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
 };
 
 template<typename SampleType>
@@ -994,7 +1003,7 @@ void Harmonizer<SampleType>::handleChannelPressure(const int channelPressureValu
 {
     const ScopedLock sl (lock);
     
-    for(auto* voice : voices)
+    for (auto* voice : voices)
         voice->aftertouchChanged(channelPressureValue);
 };
 
@@ -1027,12 +1036,12 @@ void Harmonizer<SampleType>::handleSustainPedal(const bool isDown)
     
     sustainPedalDown = isDown;
     
-    if(! isDown)
-    {
-        for (auto* voice : voices)
-            if (! voice->isKeyDown())
-                stopVoice (voice, 1.0f, true);
-    }
+    if (isDown)
+        return;
+
+    for (auto* voice : voices)
+        if (! voice->isKeyDown())
+            stopVoice (voice, 1.0f, true);
 };
 
 template<typename SampleType>
@@ -1045,12 +1054,12 @@ void Harmonizer<SampleType>::handleSostenutoPedal(const bool isDown)
     
     sostenutoPedalDown = isDown;
     
-    if(! isDown)
-    {
-        for (auto* voice : voices)
-            if (! voice->isKeyDown())
-                stopVoice (voice, 1.0f, true);
-    }
+    if (isDown)
+        return;
+
+    for (auto* voice : voices)
+        if (! voice->isKeyDown())
+            stopVoice (voice, 1.0f, true);
 };
 
 template<typename SampleType>
@@ -1112,23 +1121,20 @@ void Harmonizer<SampleType>::applyPedalPitch()
     
     int currentLowest = 128;
     for (auto* voice : voices)
+    {
         if (voice->isVoiceActive()
             && (voice->getCurrentlyPlayingNote() < currentLowest)
             && (voice->getCurrentlyPlayingNote() != lastPedalPitch))
-        { currentLowest = voice->getCurrentlyPlayingNote(); }
+        {
+            currentLowest = voice->getCurrentlyPlayingNote();
+        }
+    }
     
-    if(currentLowest == 128) // pathological case -- ie, no notes playing, some error encountered, etc
+    if ((currentLowest == 128)
+        || (currentLowest > pedalPitchUpperThresh))
     {
         if (lastPedalPitch > -1)
             noteOff (lastPedalPitch, 1.0f, false, false, false);
-        lastPedalPitch = -1;
-        return;
-    }
-    
-    if (currentLowest > pedalPitchUpperThresh)
-    {
-        if (lastPedalPitch > -1)
-            noteOff(lastPedalPitch, 1.0f, false, false, false);
         lastPedalPitch = -1;
         return;
     }
@@ -1142,7 +1148,10 @@ void Harmonizer<SampleType>::applyPedalPitch()
         noteOff (lastPedalPitch, 1.0f, false, false, false);
     
     if (newPedalPitch < 0)
+    {
+        lastPedalPitch = -1;
         return;
+    }
     
     if (! isPitchActive (newPedalPitch, false))
     {
@@ -1150,7 +1159,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         noteOn (newPedalPitch, velocity, false, false);
     }
     else
-        lastPedalPitch = -1; // if we get here, the new pedal pitch is already being played by a MIDI keyboard key
+        lastPedalPitch = -1;
 };
 
 template<typename SampleType>
@@ -1218,20 +1227,17 @@ void Harmonizer<SampleType>::applyDescant()
     
     int currentHighest = -1;
     for (auto* voice : voices)
+    {
         if (voice->isVoiceActive()
             && (voice->getCurrentlyPlayingNote() > currentHighest)
             && (voice->getCurrentlyPlayingNote() != lastDescantPitch))
-        { currentHighest = voice->getCurrentlyPlayingNote(); }
-    
-    if (currentHighest == -1) // pathological case -- ie, no notes playing, some error encountered, etc
-    {
-        if (lastDescantPitch > -1)
-            noteOff (lastDescantPitch, 1.0f, false, false, false);
-        lastDescantPitch = -1;
-        return;
+        {
+            currentHighest = voice->getCurrentlyPlayingNote();
+        }
     }
     
-    if (currentHighest < descantLowerThresh)
+    if ((currentHighest == -1)
+        || (currentHighest < descantLowerThresh))
     {
         if (lastDescantPitch > -1)
             noteOff (lastDescantPitch, 1.0f, false, false, false);
@@ -1248,7 +1254,10 @@ void Harmonizer<SampleType>::applyDescant()
         noteOff (lastDescantPitch, 1.0f, false, false, false);
     
     if (newDescantPitch > 127)
+    {
+        lastDescantPitch = -1;
         return;
+    }
     
     if (! isPitchActive(newDescantPitch, false))
     {
@@ -1297,7 +1306,7 @@ void Harmonizer<SampleType>::setDescantInterval(const int newInterval)
 
     descantInterval = newInterval;
     
-    if(descantIsOn)
+    if (descantIsOn)
         applyDescant();
 };
 
@@ -1478,6 +1487,26 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<Sa
     
     return voices.add(newVoice);
 };
+
+
+
+template<typename SampleType>
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch)
+{
+    for (auto* voice : voices)
+    {
+        if (! voice->isVoiceActive())
+            continue;
+        
+        if (voice->getCurrentlyPlayingNote() == midiPitch)
+            return voice;
+    }
+    
+    return nullptr;
+};
+
+
+
 
 template<typename SampleType>
 void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)

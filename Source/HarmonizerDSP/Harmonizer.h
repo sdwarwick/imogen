@@ -226,6 +226,8 @@ public:
     
     bool isSustainPedalDown()   const noexcept { return sustainPedalDown; };
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; };
+    
+    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch);
 
     
 private:
