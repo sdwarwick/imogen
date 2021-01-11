@@ -39,10 +39,7 @@
           </GROUP>
         </GROUP>
       </GROUP>
-      <GROUP id="{8B30E93C-AC0D-AFE5-1633-249DD671EFB4}" name="Freezer">
-        <FILE id="LFqOUT" name="Freezer.cpp" compile="1" resource="0" file="Source/Freezer/Freezer.cpp"/>
-        <FILE id="W8dtwi" name="Freezer.h" compile="0" resource="0" file="Source/Freezer/Freezer.h"/>
-      </GROUP>
+      <GROUP id="{8B30E93C-AC0D-AFE5-1633-249DD671EFB4}" name="Freezer"/>
       <GROUP id="{7280FBDB-5D91-B8BB-2422-189E249894A5}" name="GUI">
         <FILE id="E7gPhi" name="PluginEditor.cpp" compile="1" resource="0"
               file="Source/PluginEditor.cpp"/>

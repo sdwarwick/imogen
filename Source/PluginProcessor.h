@@ -4,7 +4,6 @@
 
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
-#include "Freezer.h"
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
@@ -207,7 +206,6 @@ public:
     
     // functions to update parameters ---------------------------------------------------------------------------------------------------------------
     
-    void updateChunkChopping(const bool shouldChop) { choppingInput = shouldChop; };
     void updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance);
     
     void updateAdsr();
@@ -314,8 +312,6 @@ private:
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;
     float prevideb, prevodeb, prevddeb, prevwdeb;
-    
-    bool choppingInput;
     
     PluginHostType host;
     
