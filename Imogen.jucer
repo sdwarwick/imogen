@@ -19,6 +19,7 @@
               file="Source/PluginProcessor.cpp"/>
         <FILE id="TuPrOv" name="PluginProcessor.h" compile="0" resource="0"
               file="Source/PluginProcessor.h"/>
+        <FILE id="SfqUBI" name="DelayBuffer.h" compile="0" resource="0" file="Source/DelayBuffer.h"/>
         <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
           <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>

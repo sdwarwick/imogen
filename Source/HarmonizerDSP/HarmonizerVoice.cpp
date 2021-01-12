@@ -33,6 +33,8 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     
     for (int w = 0; w < 8; ++w)
         wavelets.add(new WaveletGenerator<SampleType>);
+    
+    // call fill window buffer in constuctor !
 };
 
 template<typename SampleType>
@@ -54,25 +56,6 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 };
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::releaseResources()
-{
-    synthesisBuffer.setSize(0, 0, false, false, false);
-    window.setSize(0, 0, false, false, false);
-    finalWindow.clear();
-    
-    prevPanningMults[0] = panningMults[0];
-    prevPanningMults[1] = panningMults[1];
-};
-
-
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::clearBuffers()
-{
-    synthesisBuffer.clear();
-    window.clear();
-    finalWindow.clearQuick();
-};
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
@@ -124,7 +107,6 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 };
 
 
-
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAudio,
                                          const float shiftingRatio)
@@ -150,6 +132,29 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
     }
     
 };
+
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::releaseResources()
+{
+    synthesisBuffer.setSize(0, 0, false, false, false);
+    window.setSize(0, 0, false, false, false);
+    finalWindow.clear();
+    
+    prevPanningMults[0] = panningMults[0];
+    prevPanningMults[1] = panningMults[1];
+};
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::clearBuffers()
+{
+    synthesisBuffer.clear();
+    window.clear();
+    finalWindow.clearQuick();
+};
+
 
 
 

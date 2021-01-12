@@ -11,6 +11,9 @@
 #include "PluginProcessor.h"
 #include "GlobalDefinitions.h"
 
+#include "DelayBuffer.h"
+
+
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     processor(p),
@@ -328,14 +331,14 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
     
-    // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
-    copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
-    deleteMidiEventsAndPushUpRest (midiOutputCollection, numNewSamples);
-    
     numStoredOutputSamples -= numNewSamples;
     
     if (numStoredOutputSamples > 0)
         pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
+    
+    // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
+    copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
+    deleteMidiEventsAndPushUpRest (midiOutputCollection, numNewSamples);
     
     if (applyFadeIn)
         output.applyGainRamp(0, numNewSamples, 0.0f, 1.0f);
@@ -352,8 +355,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
                                                   MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
-    
-    processor.updateAllParameters(*this);
     
     harmonizer.processMidi (midiMessages);
     

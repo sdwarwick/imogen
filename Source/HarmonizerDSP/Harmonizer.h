@@ -124,7 +124,7 @@ private:
     void fillWindowBuffer(const int numSamples);
     
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HarmonizerVoice)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
 
 
@@ -206,7 +206,7 @@ public:
     int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; };
     void setPedalPitchInterval(const int newInterval);
     int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; };
-    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice();
+    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
     void setDescant(const bool isOn);
     bool isDescantOn() const noexcept { return descantIsOn; };
@@ -214,7 +214,7 @@ public:
     int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
     void setDescantInterval(const int newInterval);
     int getCurrentDescantInterval() const noexcept { return descantInterval; };
-    HarmonizerVoice<SampleType>* getCurrentDescantVoice();
+    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
     
     void panValTurnedOff(const int midipitch) { panner.panValTurnedOff(midipitch); };
     
@@ -230,7 +230,7 @@ public:
     bool isSustainPedalDown()   const noexcept { return sustainPedalDown; };
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; };
     
-    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch);
+    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
     
     AudioBuffer<SampleType> olaWindow;
 

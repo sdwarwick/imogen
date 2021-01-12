@@ -25,7 +25,14 @@ public:
               const float playbackSpeed, const int sampleOffset,
               const AudioBuffer<SampleType>& windowToUse)
     {
+        const int numSamples = floor (input.getNumSamples() * playbackSpeed);
         
+        SampleType* w = output.getWritePointer(0);
+        
+        for (int n = sampleOffset; n < sampleOffset + numSamples; ++n)
+        {
+         //   w[n] += (this wavelet)
+        }
     };
     
     
