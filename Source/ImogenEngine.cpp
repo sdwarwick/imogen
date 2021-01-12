@@ -176,7 +176,6 @@ void ImogenEngine<SampleType>::releaseResources()
     In order to achieve this blocksize regulation, the processing is wrapped in several layers of buffer slicing and what essentially amounts to an audio & MIDI FIFO.
  */
 
-
 template<typename SampleType>
 void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                                         MidiBuffer& midiMessages,
@@ -215,7 +214,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         
         processWrapped (inBusProxy, outputProxy, midiChoppingBuffer, actuallyFadingIn, actuallyFadingOut);
         
-        // copy the harmonizer's midi output (the beginning chunk of midiChoppingBuffer) back to midiMessages
+        // copy the harmonizer's midi output (the beginning chunk of midiChoppingBuffer) back to midiMessages, at the original startSample
         copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
         
         startSample += chunkNumSamples;
@@ -298,9 +297,11 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         firstLatencyPeriod = false;
         
         // alias buffer referring to just the chunk of the inputCollectionBuffer that we'll be reading from
+        // our start sample here is always 0 in the inputCollectionBuffer, with block size internalBlocksize
         AudioBuffer<SampleType> thisChunksInput  (inputCollectionBuffer.getArrayOfWritePointers(), 1, 0, internalBlocksize);
         
         // alias buffer referring to just the chunk of the outputCollectionBuffer that we'll be writing to
+        // our start sample here is numStoredOutputSamples - meaning we're appending these new output samples to the END of the outputCollectionBuffer
         AudioBuffer<SampleType> thisChunksOutput (outputCollectionBuffer.getArrayOfWritePointers(), 2, numStoredOutputSamples, internalBlocksize);
         
         // copy just the next internalBlocksize worth's of midi events into the chunkMidiBuffer
@@ -323,7 +324,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     jassert (numNewSamples <= numStoredOutputSamples);
     
-    // write to output
+    // write the next numNewSamples worth of output samples to the output, always starting from sample 0 of outputCollectionBuffer
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
     
@@ -537,11 +538,14 @@ void ImogenEngine<SampleType>::addToEndOfMidiBuffer (const MidiBuffer& sourceBuf
     if (sourceStart == sourceEnd)
         return;
     
-    int aggregateSamplePos = aggregateBuffer.getLastEventTime();
+    int aggregateStartSample = aggregateBuffer.getLastEventTime() + 1;
     
     std::for_each (sourceStart, sourceEnd,
                    [&] (const MidiMessageMetadata& meta)
-                       { aggregateBuffer.addEvent (meta.getMessage(), ++aggregateSamplePos); } );
+                       {
+                           aggregateBuffer.addEvent (meta.getMessage(),
+                                                     meta.samplePosition + aggregateStartSample);
+                       } );
 };
 
 // deletes midi events in the targetBuffer from timestamps 0 to numSamplesUsed, and copies any events left from that timestamp to the end of the targetBuffer to now be at the start of the targetBuffer
@@ -553,15 +557,18 @@ void ImogenEngine<SampleType>::deleteMidiEventsAndPushUpRest (MidiBuffer& target
     
     targetBuffer.clear();
     
-    auto copyingStart = temp.findNextSamplePosition(numSamplesUsed);
+    auto copyingStart = temp.findNextSamplePosition(numSamplesUsed - 1);
     
     if (copyingStart == temp.cend())
         return;
     
     std::for_each (copyingStart, temp.cend(),
                    [&] (const MidiMessageMetadata& meta)
-                       { targetBuffer.addEvent (meta.getMessage(),
-                                                std::max (0, meta.samplePosition - numSamplesUsed) ); } );
+                       {
+                           targetBuffer.addEvent (meta.getMessage(),
+                                                  std::max (0,
+                                                           (meta.samplePosition - numSamplesUsed + 1)) );
+                       } );
 };
 
 // copies a range of events from one MidiBuffer to another MidiBuffer, applying a timestamp offset. The number of events copied will correspond to the numSamples argument.
@@ -578,20 +585,20 @@ void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& inputBuf
     if (midiIterator == inputBuffer.cend())
         return;
     
-    auto midiEnd = ++(inputBuffer.findNextSamplePosition(startSampleOfInput + numSamples - 1));
+    const auto midiEnd = inputBuffer.findNextSamplePosition(startSampleOfInput + numSamples);
     
     if (midiIterator == midiEnd)
         return;
-    
-    if (midiEnd == ++(inputBuffer.cend()))
-        midiEnd = inputBuffer.cend();
     
     const int sampleOffset = startSampleOfOutput - startSampleOfInput;
     
     std::for_each (midiIterator, midiEnd,
                    [&] (const MidiMessageMetadata& meta)
-                       { outputBuffer.addEvent (meta.getMessage(),
-                                                meta.samplePosition + sampleOffset); } );
+                       {
+                           outputBuffer.addEvent (meta.getMessage(),
+                                                  std::max (0,
+                                                            meta.samplePosition + sampleOffset));
+                       } );
 };
 
 

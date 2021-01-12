@@ -35,6 +35,7 @@ public:
 private:
     
     Array<int> currentlyActive;
+    Array<int> previouslyActive;
     
     Image grandStaff;
     ImageComponent staffImage;

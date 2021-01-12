@@ -165,14 +165,13 @@ public:
     void reset() override;
     
     
-    void processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages) override;
+    void processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) override;
     
-    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
+    void processBlock (AudioBuffer<double>& buffer, MidiBuffer& midiMessages) override;
     
-   
-    void processBlockBypassed (AudioBuffer<float>&   buffer, MidiBuffer& midiMessages) override;
+    void processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) override;
     
-    void processBlockBypassed (AudioBuffer<double>&  buffer, MidiBuffer& midiMessages) override;
+    void processBlockBypassed (AudioBuffer<double>& buffer, MidiBuffer& midiMessages) override;
     
     
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;

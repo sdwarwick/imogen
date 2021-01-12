@@ -20,8 +20,12 @@
         <FILE id="TuPrOv" name="PluginProcessor.h" compile="0" resource="0"
               file="Source/PluginProcessor.h"/>
         <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
+          <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
+                file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>
           <FILE id="ALhBKM" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
+          <FILE id="dC6bL2" name="WaveletGenerator.h" compile="0" resource="0"
+                file="Source/HarmonizerDSP/WaveletGenerator.h"/>
           <GROUP id="{BBDCBAF8-D2B1-B319-ED70-E66CCD4EA18F}" name="InputAnalysis">
             <FILE id="FH8v8E" name="InputAnalysis.cpp" compile="1" resource="0"
                   file="Source/HarmonizerDSP/InputAnalysis.cpp"/>

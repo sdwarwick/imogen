@@ -43,22 +43,24 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     addAndMakeVisible(staffImage);
     
     currentlyActive.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    previouslyActive.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
 };
 
 StaffDisplay::~StaffDisplay()
 {
-    setLookAndFeel(nullptr);
+    setLookAndFeel (nullptr);
 };
 
 void StaffDisplay::paint (juce::Graphics& g)
 {
-    
     g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::staffDisplayBackgroundColourId));
     
-    audioProcessor.returnActivePitches(currentlyActive);
+    audioProcessor.returnActivePitches (currentlyActive);
     
-    drawPitches(currentlyActive, g);
+    if (currentlyActive != previouslyActive)
+        drawPitches(currentlyActive, g);
     
+    previouslyActive = currentlyActive;
 };
 
 void StaffDisplay::resized()
@@ -135,7 +137,7 @@ void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
     
     // x & y coords are the center of the notehead
     // use different x offset values for sharps / flats
-    if(useFlats)
+    if (useFlats)
     {
         
     }

@@ -15,6 +15,8 @@
 #include "HarmonizerUtilities.h"
 #include "PanningManager.h"
 #include "InputAnalysis.h"
+#include "WaveletGenerator.h"
+#include "GeneralUtils.h"
 
 template<typename SampleType>
 class Harmonizer; // forward declaration...
@@ -87,8 +89,9 @@ private:
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
     void esola (const AudioBuffer<SampleType>& inputAudio,
-                const Array<int>& epochIndices, const int numOfEpochsPerFrame,
                 const float shiftingRatio);
+    
+    OwnedArray< WaveletGenerator<SampleType> > wavelets; // these wavelet generators will be "launching" individual windowed wavelets of our audio for our OLA process
     
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
@@ -175,7 +178,7 @@ public:
     // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
     void playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld);
     
-    void setMidiLatch(const bool shouldBeOn, const bool allowTailOff);
+    void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; };
     
     void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
@@ -228,6 +231,8 @@ public:
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; };
     
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch);
+    
+    AudioBuffer<SampleType> olaWindow;
 
     
 private:

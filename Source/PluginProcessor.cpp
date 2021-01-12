@@ -95,15 +95,20 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
 
 void ImogenAudioProcessor::releaseResources()
 {
-    doubleEngine.releaseResources();
-    floatEngine .releaseResources();
+    if (! doubleEngine.hasBeenReleased())
+        doubleEngine.releaseResources();
+    
+    if (! floatEngine.hasBeenReleased())
+        floatEngine.releaseResources();
 };
 
 
 void ImogenAudioProcessor::reset()
 {
-    floatEngine .reset();
-    doubleEngine.reset();
+    if (isUsingDoublePrecision())
+        doubleEngine.reset();
+    else
+        floatEngine.reset();
 };
 
 
@@ -123,7 +128,7 @@ void ImogenAudioProcessor::killAllMidi()
  */
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages)
 {
-    if (isUsingDoublePrecision())
+    if (isUsingDoublePrecision()) // this would be a REALLY stupid host, butttt ¯\_(ツ)_/¯
         return;
     
     processBlockWrapped (buffer, midiMessages, floatEngine);
@@ -150,19 +155,23 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
     if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
         return; // our audio input is disabled! can't do processing
     
-    if (buffer.getNumChannels() == 0)
-        return;
-    
     if (! engine.hasBeenInitialized())
         return;
     
-    updateAllParameters (engine);
+    updateAllParameters (engine); // the host might use a 0-sample long audio buffer to tell us to update our state with new automation values, which is why the check for that is AFTER this call.
     
-    if (buffer.getNumSamples() == 0)
+    if ((buffer.getNumSamples() == 0) || (buffer.getNumChannels() == 0))
         return;
     
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
+    AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
+    
+    // it's possible that our GarageBand sidechain check failed, or returned a false positive, so this is a last-ditch attempt to verify that we have a valid input signal.
+    if ((inBus.getNumSamples() == 0) || (inBus.getNumChannels() == 0))
+        return;
+    
+    if (outBus.getNumChannels() != 2) // the output bus MUST be configured to stereo!
+        return;
     
     engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
@@ -205,19 +214,22 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
     if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
         return; // our audio input is disabled! can't do processing
     
-    if (buffer.getNumChannels() == 0)
-        return;
-    
     if (! engine.hasBeenInitialized())
         return;
     
     updateAllParameters (engine);
     
-    if (buffer.getNumSamples() == 0)
+    if ((buffer.getNumSamples() == 0) || (buffer.getNumChannels() == 0))
         return;
     
     AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-    AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0); // out bus must be configured to stereo
+    AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
+    
+    if ((inBus.getNumSamples() == 0) || (inBus.getNumChannels() == 0))
+        return;
+    
+    if (outBus.getNumChannels() != 2)
+        return;
     
     if (! wasBypassedLastCallback)
         engine.process (inBus, outBus, midiMessages, false, true); // render 1 more output frame & ramp gain to 0
