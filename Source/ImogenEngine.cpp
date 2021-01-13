@@ -14,11 +14,14 @@
 #include "DelayBuffer.h"
 
 
+#define PITCH_DETECTION_BLOCKSIZE 1280 // the number of samples required to do pitch detection on a chunk of audio
+
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     processor(p),
-    resourcesReleased(true), initialized(false),
-    lastRecievedFadeIn(false), lastRecievedFadeOut(false)
+    pitchDetectionDelayLine(PITCH_DETECTION_BLOCKSIZE, internalBlocksize),
+    limiterIsOn(false),
+    resourcesReleased(true), initialized(false)
 {
     dryPanningMults[0] = 0.5f;
     dryPanningMults[1] = 0.5f;
@@ -68,6 +71,8 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     inBuffer .setSize (1, internalBlocksize, true, true, true);
     dryBuffer.setSize (2, internalBlocksize, true, true, true);
     wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    
+    pitchDetectionBuffer.setSize (1, PITCH_DETECTION_BLOCKSIZE);
     
     initialized = true;
 };
@@ -154,6 +159,7 @@ void ImogenEngine<SampleType>::releaseResources()
 {
     harmonizer.releaseResources();
     harmonizer.resetNoteOnCounter();
+    // harmonizer.removeallvoices ?
     
     wetBuffer.setSize(0, 0, false, false, false);
     dryBuffer.setSize(0, 0, false, false, false);
@@ -253,7 +259,8 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
             
         case (ImogenAudioProcessor::ModulatorInputSource::right):
         {
-            input = AudioBuffer<SampleType> ( (inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1)), 1, numNewSamples);
+            const int channel = (inBus.getNumChannels() > 1);
+            input = AudioBuffer<SampleType> ( (inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
             break;
         }
             
@@ -356,6 +363,16 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
+    pitchDetectionDelayLine.writeSamples (input.getReadPointer(0), internalBlocksize);
+    
+    if (pitchDetectionDelayLine.numStoredSamples() >= PITCH_DETECTION_BLOCKSIZE)
+    {
+        pitchDetectionDelayLine.getDelayedSamples (pitchDetectionBuffer.getWritePointer(0), PITCH_DETECTION_BLOCKSIZE, PITCH_DETECTION_BLOCKSIZE);
+        // pitchDetector.estimatePitch (pitchDetectionBuffer);
+    }
+    
+    // pitchDetector.getMostRecentPitchEstimate();
+    
     harmonizer.processMidi (midiMessages);
     
     // master input gain
@@ -389,7 +406,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     output.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
     prevOutputGain = outputGain;
     
-    if (! processor.limiterToggle->get())
+    if (! limiterIsOn)
         return;
 
     dsp::AudioBlock<SampleType> limiterBlock (output);
@@ -756,8 +773,9 @@ void ImogenEngine<SampleType>::updateMidiLatch(const bool isLatched)
 };
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release)
+void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release, const bool isOn)
 {
+    limiterIsOn = isOn;
     limiter.setThreshold(thresh);
     limiter.setRelease(release);
 };
@@ -767,3 +785,5 @@ void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float rel
 template class ImogenEngine<float>;
 template class ImogenEngine<double>;
 
+
+#undef PITCH_DETECTION_BLOCKSIZE

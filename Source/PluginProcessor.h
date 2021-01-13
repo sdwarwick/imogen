@@ -4,7 +4,7 @@
 
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
-
+#include "DelayBuffer.h"
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
@@ -51,7 +51,7 @@ public:
     void updateConcertPitch(const int newConcertPitchHz);
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
-    void updateLimiter     (const float thresh, const float release);
+    void updateLimiter     (const float thresh, const float release, const bool isOn);
     void updatePitchDetectionSettings (const float newMinHz, const float newMaxHz, const float newTolerance);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
@@ -77,22 +77,18 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
     
-    
     ImogenAudioProcessor& processor;
     
     Harmonizer<SampleType> harmonizer;
     
-    AudioBuffer<SampleType> inputCollectionBuffer; // this buffer is used to collect input samples if we recieve too few to do processing, so that the blocksizes fed to renderBlock can be regulated. THIS BUFFER SHOULD BE SIZE internalBlocksize * 2 !!
-    
-    int numStoredInputSamples; // the # of overflow input samples left from the last frame too small to be processed on its own.
-    // INIT TO 0!!!
-    
+    AudioBuffer<SampleType> inputCollectionBuffer;
+    int numStoredInputSamples;
     AudioBuffer<SampleType> outputCollectionBuffer;
-    
+    int numStoredOutputSamples;
     AudioBuffer<SampleType> copyingInterimBuffer;
     
-    int numStoredOutputSamples;
-    
+    DelayBuffer<SampleType> pitchDetectionDelayLine;
+    AudioBuffer<SampleType> pitchDetectionBuffer;
     
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
@@ -101,6 +97,7 @@ private:
     dsp::ProcessSpec dspSpec;
     dsp::Limiter <SampleType> limiter;
     dsp::DryWetMixer<SampleType> dryWetMixer;
+    bool limiterIsOn;
     
     bool resourcesReleased;
     bool initialized;
@@ -134,8 +131,6 @@ private:
     void pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
                                 const int numSamplesUsed,
                                 const int numSamplesLeft);
-    
-    bool lastRecievedFadeIn, lastRecievedFadeOut;
     
     bool firstLatencyPeriod;
     

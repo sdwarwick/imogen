@@ -20,7 +20,8 @@ public:
     
     DelayBuffer (const uint32_t maxDelay, const uint32_t blockLength)
     {
-        lengthInSamples = blockLength * ( (maxDelay + (2 * blockLength) - 1) / blockLength );
+        lengthInSamples = blockLength * ( (maxDelay + (2 * blockLength) - 1)
+                                           / blockLength );
         
         base.setSize (1, 2 * lengthInSamples);
         
@@ -29,11 +30,14 @@ public:
         base.clear();
     };
     
-    ~DelayBuffer();
+    ~DelayBuffer()
+    { };
     
     
     void writeSamples (const SampleType* inputSamples, const uint32_t numSamples)
     {
+        jassert (numSamples <= lengthInSamples);
+        
         writeIndex += numSamples; // pre-increment write_index before writing new samples
         
         if (writeIndex >= 2 * lengthInSamples)
@@ -41,14 +45,21 @@ public:
         
         uint32_t imageIndex = writeIndex - lengthInSamples;
         
+        jassert (imageIndex >= 0);
+        
         base.copyFrom (0, writeIndex, inputSamples, numSamples);
         base.copyFrom (0, imageIndex, inputSamples, numSamples);
     };
     
     
-    void getDelayedSamples (SampleType* outputSamples, const uint32_t delay, const uint32_t numSamples)
+    void getDelayedSamples (SampleType* outputSamples, const uint32_t delay, const uint32_t numSamples) const
     {
+        jassert (delay <= lengthInSamples);
+        jassert (numSamples <= lengthInSamples);
+        
         uint32_t readIndex = writeIndex - delay;
+        
+        jassert (readIndex >= 0);
         
         const SampleType* reading = base.getReadPointer(0);
         
@@ -57,10 +68,19 @@ public:
     };
     
     
-    SampleType* pointToDelayedSamples (const uint32_t delay)
+    SampleType* pointToDelayedSamples (const uint32_t delay) const
     {
-        return base.getReadPointer(0, writeIndex - delay);
+        jassert (delay <= lengthInSamples);
+        return base.getReadPointer (0, writeIndex - delay);
     };
+    
+    
+    uint32_t numStoredSamples() const noexcept
+    {
+        jassert (writeIndex >= lengthInSamples);
+        return (writeIndex - lengthInSamples);
+    };
+    
     
     
 private:
@@ -70,5 +90,4 @@ private:
     uint32_t lengthInSamples;
     
     uint32_t writeIndex;
-    
 };

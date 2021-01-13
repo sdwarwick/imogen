@@ -32,7 +32,7 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     quickAttack .setParameters(parent->getCurrentQuickAttackParams());
     
     for (int w = 0; w < 8; ++w)
-        wavelets.add(new WaveletGenerator<SampleType>);
+        wavelets.add (new WaveletGenerator<SampleType>);
     
     // call fill window buffer in constuctor !
 };

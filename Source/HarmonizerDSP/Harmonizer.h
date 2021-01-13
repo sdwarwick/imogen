@@ -121,7 +121,7 @@ private:
     AudioBuffer<SampleType> window;
     Array<SampleType> finalWindow;
     
-    void fillWindowBuffer(const int numSamples);
+    void fillWindowBuffer (const int numSamples);
     
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
@@ -282,6 +282,8 @@ private:
     bool latchIsOn;
     MidiLatchManager latchManager;
     
+    bool intervalLatchIsOn;
+    
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;
     ADSR::Parameters quickAttackParams;
@@ -312,8 +314,6 @@ private:
     EpochFinder<SampleType> epochs;
     Array<int> epochIndices;
     Array<int> slicedEpochIndices;
-    
-    PitchTracker<SampleType> pitch;
     
     PanningManager  panner;
     VelocityHelper  velocityConverter;

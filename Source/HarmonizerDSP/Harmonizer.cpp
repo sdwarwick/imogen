@@ -73,7 +73,6 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
         voice->prepare(blocksize);
     
     epochs.prepare(blocksize);
-    pitch .prepare(blocksize);
 };
 
 
@@ -145,7 +144,6 @@ void Harmonizer<SampleType>::releaseResources()
         voice->releaseResources();
     
     epochs.releaseResources();
-    pitch .releaseResources();
     panner.releaseResources();
     
     latchManager.reset();
@@ -160,7 +158,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
     
-    currentInputFreq = pitch.getPitch (inputAudio, sampleRate); // do some kind of time curve for changes in pitch during block...?
+    //currentInputFreq = pitch.getPitch (inputAudio, sampleRate); // do some kind of time curve for changes in pitch during block...?
     
     // get subset of epochIndices array accounting for sample offset # numSamples
     
@@ -286,6 +284,8 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
         return;
     
     turnOffList (unLatched, !allowTailOff, allowTailOff, false);
+    
+    pitchCollectionChanged();
 };
 
 
@@ -586,10 +586,11 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     if (midiNoteNumber == lastPedalPitch)
         lastPedalPitch = -1;
     
+    if (latchIsOn)
+        latchManager.noteOffRecieved(midiNoteNumber);
+    
     if (isAutomatedEvent)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff(lastMidiChannel, midiNoteNumber, velocity), ++lastMidiTimeStamp);
-    else if (latchIsOn)
-        latchManager.noteOffRecieved(midiNoteNumber);
 };
 
 template<typename SampleType>

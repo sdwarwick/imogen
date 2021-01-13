@@ -284,7 +284,7 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
         prevwdeb = newWet;
     }
     
-    activeEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
+    activeEngine.updateLimiter(limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
     activeEngine.updateDryWet(dryWet->get());
     activeEngine.updateQuickKill(quickKillMs->get());
     activeEngine.updateQuickAttack(quickAttackMs->get());
@@ -474,9 +474,9 @@ void ImogenAudioProcessor::updateIOgains()
 void ImogenAudioProcessor::updateLimiter()
 {
     if (isUsingDoublePrecision())
-        doubleEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
+        doubleEngine.updateLimiter(limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
     else
-        floatEngine.updateLimiter(limiterThresh->get(), limiterRelease->get());
+        floatEngine.updateLimiter(limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
 };
 
 

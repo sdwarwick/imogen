@@ -31,7 +31,7 @@ public:
         
         for (int n = sampleOffset; n < sampleOffset + numSamples; ++n)
         {
-         //   w[n] += (this wavelet)
+         //   w[n] += (this wavelet) * window
         }
     };
     
