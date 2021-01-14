@@ -240,10 +240,10 @@ void Harmonizer<SampleType>::handleMidiEvent(const MidiMessage& m, const int sam
     lastMidiTimeStamp = samplePosition;
     
     if (m.isNoteOn())
-        noteOn (m.getNoteNumber(), m.getFloatVelocity(), true, false);
+        noteOn (m.getNoteNumber(), m.getFloatVelocity(), true);
     else if (m.isNoteOff())
     {
-        noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, false, true);
+        noteOff (m.getNoteNumber(), m.getFloatVelocity(), true, true);
         shouldAddToAggregateMidiBuffer = (! latchIsOn);
     }
     else if (m.isAllNotesOff() || m.isAllSoundOff())
@@ -328,7 +328,7 @@ void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float
     const ScopedLock sl (lock);
     
     for (int i = 0; i < toTurnOn.size(); ++i)
-        noteOn (toTurnOn.getUnchecked(i), velocity, false, true);
+        noteOn (toTurnOn.getUnchecked(i), velocity, false);
     
     if (! partOfChord)
         pitchCollectionChanged();
@@ -345,7 +345,7 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
     const ScopedLock sl (lock);
     
     for (int i = 0; i < toTurnOff.size(); ++i)
-        noteOff (toTurnOff.getUnchecked(i), velocity, allowTailOff, true, false);
+        noteOff (toTurnOff.getUnchecked(i), velocity, allowTailOff, false);
     
     if (! partOfChord)
         pitchCollectionChanged();
@@ -374,7 +374,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         || (currentLowest > pedalPitchUpperThresh))
     {
         if (lastPedalPitch > -1)
-            noteOff (lastPedalPitch, 1.0f, false, false, false);
+            noteOff (lastPedalPitch, 1.0f, false, false);
         lastPedalPitch = -1;
         return;
     }
@@ -385,7 +385,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         return;
     
     if (lastPedalPitch > -1)
-        noteOff (lastPedalPitch, 1.0f, false, false, false);
+        noteOff (lastPedalPitch, 1.0f, false, false);
     
     if (newPedalPitch < 0)
     {
@@ -404,7 +404,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         else
             velocity = 1.0f;
         
-        noteOn (newPedalPitch, velocity, false, false);
+        noteOn (newPedalPitch, velocity, false);
     }
     else
         lastPedalPitch = -1;
@@ -432,7 +432,7 @@ void Harmonizer<SampleType>::applyDescant()
         || (currentHighest < descantLowerThresh))
     {
         if (lastDescantPitch > -1)
-            noteOff (lastDescantPitch, 1.0f, false, false, false);
+            noteOff (lastDescantPitch, 1.0f, false, false);
         lastDescantPitch = -1;
         return;
     }
@@ -443,7 +443,7 @@ void Harmonizer<SampleType>::applyDescant()
         return;
     
     if (lastDescantPitch > -1)
-        noteOff (lastDescantPitch, 1.0f, false, false, false);
+        noteOff (lastDescantPitch, 1.0f, false, false);
     
     if (newDescantPitch > 127)
     {
@@ -462,7 +462,7 @@ void Harmonizer<SampleType>::applyDescant()
         else
             velocity = 1.0f;
         
-        noteOn (newDescantPitch, velocity, false, false);
+        noteOn (newDescantPitch, velocity, false);
     }
     else
         lastDescantPitch = -1;
@@ -484,8 +484,7 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
 // functions for propogating midi events to HarmonizerVoices ----------------------------------------------------------------------------------------
 
 template<typename SampleType>
-void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity,
-                                     const bool isKeyboard, const bool partOfList)
+void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
     
@@ -505,9 +504,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity,
     if (latchIsOn)
         latchManager.noteOnRecieved(midiPitch);
     
-    const bool isAutomatedEvent = ( (! isKeyboard) || partOfList );
-        
-    if (isAutomatedEvent)
+    if (! isKeyboard)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn(lastMidiChannel, midiPitch, velocity), ++lastMidiTimeStamp);
 };
 
@@ -533,7 +530,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
 template<typename SampleType>
 void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velocity,
                                       const bool allowTailOff,
-                                      const bool partofList, const bool isKeyboard)
+                                      const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch or descant.
     // N.B. the `partofList` flag should be false if this is a singular note off event; this flag should be true if this is a note off event in a known sequence of many quick note offs, so that pedal pitch & descant will not be updated after every single one of these events.
@@ -545,6 +542,8 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     if (! voice)
         return;
     
+    bool stoppedVoice = false;
+    
     if (isKeyboard)
     {
         voice->setKeyDown (false);
@@ -554,15 +553,8 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
             latchManager.noteOffRecieved(midiNoteNumber);
             return;
         }
-    }
-    
-    const bool isAutomatedEvent = ( (! isKeyboard) || partofList );
-    
-    bool stoppedVoice = false;
-    
-    if (isAutomatedEvent)
-    {
-        if (! voice->isKeyDown())
+        
+        if (! (sustainPedalDown || sostenutoPedalDown) )
         {
             stopVoice (voice, velocity, allowTailOff);
             stoppedVoice = true;
@@ -570,7 +562,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     }
     else
     {
-        if (! (sustainPedalDown || sostenutoPedalDown) )
+        if (! voice->isKeyDown())
         {
             stopVoice (voice, velocity, allowTailOff);
             stoppedVoice = true;
@@ -589,7 +581,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     if (latchIsOn)
         latchManager.noteOffRecieved(midiNoteNumber);
     
-    if (isAutomatedEvent)
+    if (! isKeyboard)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff(lastMidiChannel, midiNoteNumber, velocity), ++lastMidiTimeStamp);
 };
 
@@ -687,8 +679,14 @@ void Harmonizer<SampleType>::handleSustainPedal (const bool isDown)
         return;
 
     for (auto* voice : voices)
-        if (! voice->isKeyDown())
+    {
+        if ((! voice->isKeyDown())
+            && (voice->getCurrentlyPlayingNote() != lastPedalPitch)
+            && (voice->getCurrentlyPlayingNote() != lastDescantPitch))
+        {
             stopVoice (voice, 1.0f, true);
+        }
+    }
 };
 
 template<typename SampleType>
@@ -705,8 +703,14 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const bool isDown)
         return;
 
     for (auto* voice : voices)
-        if (! voice->isKeyDown())
+    {
+        if ((! voice->isKeyDown())
+            && (voice->getCurrentlyPlayingNote() != lastPedalPitch)
+            && (voice->getCurrentlyPlayingNote() != lastDescantPitch))
+        {
             stopVoice (voice, 1.0f, true);
+        }
+    }
 };
 
 template<typename SampleType>
@@ -843,28 +847,26 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     
     for (auto* voice : voices)
     {
-        if(voice->isVoiceActive())
+        usableVoices.add (voice);
+        
+        // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations..
+        struct Sorter
         {
-            usableVoices.add (voice);
+            bool operator() (const HarmonizerVoice<SampleType>* a, const HarmonizerVoice<SampleType>* b) const noexcept
+            { return a->wasStartedBefore (*b); }
+        };
+        
+        std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
+        
+        if (! voice->isPlayingButReleased()) // Don't protect released notes
+        {
+            auto note = voice->getCurrentlyPlayingNote();
             
-            // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations..
-            struct Sorter
-            {
-                bool operator() (const HarmonizerVoice<SampleType>* a, const HarmonizerVoice<SampleType>* b) const noexcept { return a->wasStartedBefore (*b); }
-            };
+            if (low == nullptr || note < low->getCurrentlyPlayingNote())
+                low = voice;
             
-            std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
-            
-            if (! voice->isPlayingButReleased()) // Don't protect released notes
-            {
-                auto note = voice->getCurrentlyPlayingNote();
-                
-                if (low == nullptr || note < low->getCurrentlyPlayingNote())
-                    low = voice;
-                
-                if (top == nullptr || note > top->getCurrentlyPlayingNote())
-                    top = voice;
-            }
+            if (top == nullptr || note > top->getCurrentlyPlayingNote())
+                top = voice;
         }
     }
     
@@ -1112,7 +1114,7 @@ void Harmonizer<SampleType>::setDescant(const bool isOn)
     if (! isOn)
     {
         if (lastDescantPitch > -1)
-            noteOff (lastDescantPitch, 1.0f, false, false, false);
+            noteOff (lastDescantPitch, 1.0f, false, false);
         lastDescantPitch = -1;
     }
     else
@@ -1156,7 +1158,7 @@ void Harmonizer<SampleType>::setPedalPitch(const bool isOn)
     if (! isOn)
     {
         if(lastPedalPitch > -1)
-            noteOff (lastPedalPitch, 1.0f, false, false, false);
+            noteOff (lastPedalPitch, 1.0f, false, false);
         lastPedalPitch = -1;
     }
     else

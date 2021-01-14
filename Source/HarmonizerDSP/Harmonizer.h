@@ -242,8 +242,8 @@ private:
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     // MIDI
-    void noteOn(const int midiPitch, const float velocity, const bool isKeyboard, const bool partOfList);
-    void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool partOfList, const bool isKeyboard);
+    void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
+    void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
     void handlePitchWheel(const int wheelValue);
     void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
     void handleChannelPressure(const int channelPressureValue);

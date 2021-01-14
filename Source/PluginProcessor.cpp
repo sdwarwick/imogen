@@ -10,8 +10,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     prevDryPan(64), prevideb(0.0f), prevodeb(0.0f), prevddeb(0.0f), prevwdeb(0.0f),
     wasBypassedLastCallback(true)
 {
-    // setLatencySamples(newLatency); // TOTAL plugin latency!
-    
     dryPan             = dynamic_cast<AudioParameterInt*>  (tree.getParameter("dryPan"));                   jassert(dryPan);
     dryWet             = dynamic_cast<AudioParameterInt*>  (tree.getParameter("masterDryWet"));             jassert(dryWet);
     inputChan          = dynamic_cast<AudioParameterInt*>  (tree.getParameter("inputChan"));                jassert(inputChan);
@@ -52,14 +50,18 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     
     if (isUsingDoublePrecision())
     {
-        doubleEngine.initialize(initSamplerate, initSamplesPerBlock, initNumVoices);
+        doubleEngine.initialize (initSamplerate, initSamplesPerBlock, initNumVoices);
         updateAllParameters(doubleEngine);
+        latencySamples = doubleEngine.reportLatency();
     }
     else
     {
-        floatEngine.initialize(initSamplerate, initSamplesPerBlock, initNumVoices);
+        floatEngine.initialize (initSamplerate, initSamplesPerBlock, initNumVoices);
         updateAllParameters(floatEngine);
+        latencySamples = floatEngine.reportLatency();
     }
+    
+    setLatencySamples (latencySamples);
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -90,6 +92,13 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
         idleEngine.releaseResources();
     
     updateAllParameters (activeEngine);
+    
+    if (const int newLatency = activeEngine.reportLatency();
+        latencySamples != newLatency)
+    {
+        latencySamples = newLatency;
+        setLatencySamples (newLatency);
+    }
 };
 
 
@@ -152,7 +161,7 @@ void ImogenAudioProcessor::processBlockWrapped (AudioBuffer<SampleType>& buffer,
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
     
-    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
+    if ( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return; // our audio input is disabled! can't do processing
     
     if (! engine.hasBeenInitialized())
@@ -211,7 +220,7 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (AudioBuffer<SampleType>&
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
     
-    if ( ( host.isLogic() || host.isGarageBand() ) && ( getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled() ) )
+    if ( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == AudioChannelSet::disabled()) )
         return; // our audio input is disabled! can't do processing
     
     if (! engine.hasBeenInitialized())

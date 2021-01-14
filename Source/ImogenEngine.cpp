@@ -19,7 +19,7 @@
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     processor(p),
-    pitchDetectionDelayLine(PITCH_DETECTION_BLOCKSIZE, internalBlocksize),
+    pitchDetectionDelayLine (PITCH_DETECTION_BLOCKSIZE, internalBlocksize),
     limiterIsOn(false),
     resourcesReleased(true), initialized(false)
 {
@@ -260,7 +260,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         case (ImogenAudioProcessor::ModulatorInputSource::right):
         {
             const int channel = (inBus.getNumChannels() > 1);
-            input = AudioBuffer<SampleType> ( (inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
+            input = AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
             break;
         }
             
@@ -557,7 +557,7 @@ void ImogenEngine<SampleType>::addToEndOfMidiBuffer (const MidiBuffer& sourceBuf
     if (sourceStart == sourceEnd)
         return;
     
-    int aggregateStartSample = aggregateBuffer.getLastEventTime() + 1;
+    int aggregateStartSample = (aggregateBuffer.getNumEvents() > 0) ? aggregateBuffer.getLastEventTime() + 1 : 0;
     
     std::for_each (sourceStart, sourceEnd,
                    [&] (const MidiMessageMetadata& meta)

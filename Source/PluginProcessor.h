@@ -33,6 +33,8 @@ public:
     
     void releaseResources();
     
+    int reportLatency() const noexcept { return internalBlocksize; };
+    
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     void returnActivePitches(Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); };
@@ -302,6 +304,8 @@ private:
     ImogenEngine<double> doubleEngine;
     
     ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
+    
+    int latencySamples;
     
     // variables to store previous parameter values, to avoid unnecessary update operations:
     int prevDryPan;
