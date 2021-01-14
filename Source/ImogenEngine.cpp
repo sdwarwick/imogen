@@ -14,7 +14,7 @@
 #include "DelayBuffer.h"
 
 
-#define PITCH_DETECTION_BLOCKSIZE 1280 // the number of samples required to do pitch detection on a chunk of audio
+#define PITCH_DETECTION_BLOCKSIZE 441000  // the number of samples required to do pitch detection on a chunk of audio
 
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
@@ -370,47 +370,48 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
         pitchDetectionDelayLine.getDelayedSamples (pitchDetectionBuffer.getWritePointer(0), PITCH_DETECTION_BLOCKSIZE, PITCH_DETECTION_BLOCKSIZE);
         // pitchDetector.estimatePitch (pitchDetectionBuffer);
     }
-    
-    // pitchDetector.getMostRecentPitchEstimate();
-    
-    harmonizer.processMidi (midiMessages);
-    
-    // master input gain
-    inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
-    prevInputGain = inputGain;
-    
-    // write to dry buffer & apply panning (w/ panning multipliers ramped)
-    for (int chan = 0; chan < 2; ++chan)
-    {
-        dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize, prevDryPanningMults[chan], dryPanningMults[chan]);
-        prevDryPanningMults[chan] = dryPanningMults[chan];
-    }
-    
-    // dry gain
-    dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain, dryGain);
-    prevDryGain = dryGain;
-    
-    dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
-    
-    harmonizer.renderVoices (inBuffer, wetBuffer); // puts the harmonizer's rendered stereo output into wetBuffer
-    
-    // wet gain
-    wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
-    prevWetGain = wetGain;
-    
-    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
-    
-    output.makeCopyOf (wetBuffer, true); // transfer from wetBuffer to output buffer
-    
-    // master output gain
-    output.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
-    prevOutputGain = outputGain;
-    
-    if (! limiterIsOn)
-        return;
 
-    dsp::AudioBlock<SampleType> limiterBlock (output);
-    limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+//
+//    // pitchDetector.getMostRecentPitchEstimate();
+//
+//    harmonizer.processMidi (midiMessages);
+//
+//    // master input gain
+//    inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
+//    prevInputGain = inputGain;
+//
+//    // write to dry buffer & apply panning (w/ panning multipliers ramped)
+//    for (int chan = 0; chan < 2; ++chan)
+//    {
+//        dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize, prevDryPanningMults[chan], dryPanningMults[chan]);
+//        prevDryPanningMults[chan] = dryPanningMults[chan];
+//    }
+//
+//    // dry gain
+//    dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain, dryGain);
+//    prevDryGain = dryGain;
+//
+//    dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
+//
+//    harmonizer.renderVoices (inBuffer, wetBuffer); // puts the harmonizer's rendered stereo output into wetBuffer
+//
+//    // wet gain
+//    wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
+//    prevWetGain = wetGain;
+//
+//    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
+//
+//    output.makeCopyOf (wetBuffer, true); // transfer from wetBuffer to output buffer
+//
+//    // master output gain
+//    output.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
+//    prevOutputGain = outputGain;
+//
+//    if (! limiterIsOn)
+//        return;
+//
+//    dsp::AudioBlock<SampleType> limiterBlock (output);
+//    limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
 };
 
 
