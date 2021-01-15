@@ -15,7 +15,7 @@ template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
     latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
-    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false)
+    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false)
 {
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
@@ -370,8 +370,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         }
     }
     
-    if ((currentLowest == 128)
-        || (currentLowest > pedalPitchUpperThresh))
+    if ((currentLowest == 128) || (currentLowest > pedalPitchUpperThresh))
     {
         if (lastPedalPitch > -1)
             noteOff (lastPedalPitch, 1.0f, false, false);
@@ -393,21 +392,22 @@ void Harmonizer<SampleType>::applyPedalPitch()
         return;
     }
     
-    if (! isPitchActive (newPedalPitch, false))
+    if (isPitchActive (newPedalPitch, false))
     {
-        lastPedalPitch = newPedalPitch;
-        
-        float velocity;
-        auto* voiceCopying = getVoicePlayingNote (currentLowest);
-        if (voiceCopying)
-            velocity = voiceCopying->getLastRecievedVelocity();
-        else
-            velocity = 1.0f;
-        
-        noteOn (newPedalPitch, velocity, false);
-    }
-    else
         lastPedalPitch = -1;
+        return;
+    }
+
+    lastPedalPitch = newPedalPitch;
+    
+    float velocity;
+    auto* voiceCopying = getVoicePlayingNote (currentLowest);
+    if (voiceCopying)
+        velocity = voiceCopying->getLastRecievedVelocity();
+    else
+        velocity = 1.0f;
+    
+    noteOn (newPedalPitch, velocity, false);
 };
 
 
@@ -428,8 +428,7 @@ void Harmonizer<SampleType>::applyDescant()
         }
     }
     
-    if ((currentHighest == -1)
-        || (currentHighest < descantLowerThresh))
+    if ((currentHighest == -1) || (currentHighest < descantLowerThresh))
     {
         if (lastDescantPitch > -1)
             noteOff (lastDescantPitch, 1.0f, false, false);
@@ -451,21 +450,22 @@ void Harmonizer<SampleType>::applyDescant()
         return;
     }
     
-    if (! isPitchActive(newDescantPitch, false))
+    if (isPitchActive (newDescantPitch, false))
     {
-        lastDescantPitch = newDescantPitch;
-        
-        float velocity;
-        auto* voiceCopying = getVoicePlayingNote (currentHighest);
-        if (voiceCopying)
-            velocity = voiceCopying->getLastRecievedVelocity();
-        else
-            velocity = 1.0f;
-        
-        noteOn (newDescantPitch, velocity, false);
-    }
-    else
         lastDescantPitch = -1;
+        return;
+    }
+
+    lastDescantPitch = newDescantPitch;
+    
+    float velocity;
+    auto* voiceCopying = getVoicePlayingNote (currentHighest);
+    if (voiceCopying)
+        velocity = voiceCopying->getLastRecievedVelocity();
+    else
+        velocity = 1.0f;
+    
+    noteOn (newDescantPitch, velocity, false);
 };
 
 
@@ -495,17 +495,19 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
         if ( (voice->getCurrentlyPlayingNote() == midiPitch)
               && (voice->isVoiceActive())
               && (! voice->isPlayingButReleased()) )
+        {
             return;
+        }
     }
     
-    startVoice (findFreeVoice (midiPitch, shouldStealNotes),
-                midiPitch, velocity, isKeyboard);
+    startVoice (findFreeVoice (midiPitch, shouldStealNotes), midiPitch, velocity, isKeyboard);
     
     if (latchIsOn)
         latchManager.noteOnRecieved(midiPitch);
     
     if (! isKeyboard)
-        aggregateMidiBuffer.addEvent (MidiMessage::noteOn(lastMidiChannel, midiPitch, velocity), ++lastMidiTimeStamp);
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
+                                      ++lastMidiTimeStamp);
 };
 
 template<typename SampleType>
@@ -550,7 +552,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         
         if (latchIsOn)
         {
-            latchManager.noteOffRecieved(midiNoteNumber);
+            latchManager.noteOffRecieved (midiNoteNumber);
             return;
         }
         
@@ -562,10 +564,16 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     }
     else
     {
+        if (latchIsOn)
+            latchManager.noteOffRecieved (midiNoteNumber);
+        
         if (! voice->isKeyDown())
         {
             stopVoice (voice, velocity, allowTailOff);
             stoppedVoice = true;
+            
+            aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, midiNoteNumber, velocity),
+                                          ++lastMidiTimeStamp);
         }
     }
     
@@ -577,12 +585,6 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     
     if (midiNoteNumber == lastPedalPitch)
         lastPedalPitch = -1;
-    
-    if (latchIsOn)
-        latchManager.noteOffRecieved(midiNoteNumber);
-    
-    if (! isKeyboard)
-        aggregateMidiBuffer.addEvent (MidiMessage::noteOff(lastMidiChannel, midiNoteNumber, velocity), ++lastMidiTimeStamp);
 };
 
 template<typename SampleType>
@@ -679,14 +681,8 @@ void Harmonizer<SampleType>::handleSustainPedal (const bool isDown)
         return;
 
     for (auto* voice : voices)
-    {
-        if ((! voice->isKeyDown())
-            && (voice->getCurrentlyPlayingNote() != lastPedalPitch)
-            && (voice->getCurrentlyPlayingNote() != lastDescantPitch))
-        {
+        if (! voice->isKeyDown())
             stopVoice (voice, 1.0f, true);
-        }
-    }
 };
 
 template<typename SampleType>
@@ -703,20 +699,17 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const bool isDown)
         return;
 
     for (auto* voice : voices)
-    {
-        if ((! voice->isKeyDown())
-            && (voice->getCurrentlyPlayingNote() != lastPedalPitch)
-            && (voice->getCurrentlyPlayingNote() != lastDescantPitch))
-        {
+        if (! voice->isKeyDown())
             stopVoice (voice, 1.0f, true);
-        }
-    }
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleSoftPedal (const bool isDown)
 {
-    ignoreUnused(isDown);
+    if (softPedalDown == isDown)
+        return;
+    
+    softPedalDown = isDown;
 };
 
 template<typename SampleType>

@@ -273,6 +273,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     }
     
     
+    // TO DO : SOFT PEDAL GAIN
+    
 };
 
 MidiControlPanel::~MidiControlPanel()

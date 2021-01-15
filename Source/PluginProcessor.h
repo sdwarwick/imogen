@@ -59,6 +59,7 @@ public:
     void updateOutputGain (const float newOutGain);
     void updateDryGain (const float newDryGain);
     void updateWetGain (const float newWetGain);
+    void updateSoftPedalGain (const float newGain);
     
     void clearBuffers();
     
@@ -283,6 +284,7 @@ public:
     AudioParameterInt*   limiterRelease     = nullptr;
     AudioParameterFloat* dryGain            = nullptr;
     AudioParameterFloat* wetGain            = nullptr;
+    AudioParameterFloat* softPedalGain      = nullptr;
     
     
 private:
@@ -306,10 +308,6 @@ private:
     ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
     
     int latencySamples;
-    
-    // variables to store previous parameter values, to avoid unnecessary update operations:
-    int prevDryPan;
-    float prevideb, prevodeb, prevddeb, prevwdeb;
     
     PluginHostType host;
     

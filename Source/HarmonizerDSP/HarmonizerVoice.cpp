@@ -13,7 +13,7 @@
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64)
+parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), softPedalMultiplier(1.0f), prevSoftPedalMultiplier(1.0f)
 {
     panningMults[0] = 0.5f;
     panningMults[1] = 0.5f;
@@ -89,6 +89,14 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     // midi velocity gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
     prevVelocityMultiplier = currentVelocityMultiplier;
+    
+    // soft pedal gain
+    if (parent->isSoftPedalDown())
+        softPedalMultiplier = parent->getSoftPedalMultiplier();
+    else
+        softPedalMultiplier = 1.0f;
+    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMultiplier);
+    prevSoftPedalMultiplier = softPedalMultiplier;
     
     if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
@@ -272,7 +280,16 @@ void HarmonizerVoice<SampleType>::setPan(const int newPan)
 template<typename SampleType>
 bool HarmonizerVoice<SampleType>::isPlayingButReleased() const noexcept
 {
-    return isVoiceActive() && ! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown());
+    bool isPlayingButReleased = isVoiceActive()
+                                && (! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown()));
+    
+    if (parent->isPedalPitchOn())
+        isPlayingButReleased = isPlayingButReleased && (currentlyPlayingNote != parent->getCurrentPedalPitchNote());
+    
+    if (parent->isDescantOn())
+        isPlayingButReleased = isPlayingButReleased && (currentlyPlayingNote != parent->getCurrentDescantNote());
+    
+    return isPlayingButReleased;
 };
 
 template<typename SampleType>

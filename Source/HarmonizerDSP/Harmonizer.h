@@ -123,6 +123,8 @@ private:
     
     void fillWindowBuffer (const int numSamples);
     
+    float softPedalMultiplier, prevSoftPedalMultiplier;
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
@@ -206,6 +208,7 @@ public:
     int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; };
     void setPedalPitchInterval(const int newInterval);
     int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; };
+    int getCurrentPedalPitchNote() const noexcept { return lastPedalPitch; };
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
     void setDescant(const bool isOn);
@@ -214,21 +217,25 @@ public:
     int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
     void setDescantInterval(const int newInterval);
     int getCurrentDescantInterval() const noexcept { return descantInterval; };
+    int getCurrentDescantNote() const noexcept { return lastDescantPitch; };
     HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
     
-    void panValTurnedOff(const int midipitch) { panner.panValTurnedOff(midipitch); };
+    void panValTurnedOff (const int midipitch) { panner.panValTurnedOff(midipitch); };
     
     // returns a float velocity weighted according to the current midi velocity sensitivity settings
-    float getWeightedVelocity(const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); };
+    float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); };
     
     // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
-    float getOutputFrequency(const int midipitch) const { return pitchConverter.mtof(bendTracker.newNoteRecieved(midipitch)); };
+    float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); };
     
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void newMaxNumVoices(const int newMaxNumVoices);
     
-    bool isSustainPedalDown()   const noexcept { return sustainPedalDown; };
+    bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   };
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; };
+    bool isSoftPedalDown()      const noexcept { return softPedalDown;      };
+    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; };
+    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; };
     
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
     
@@ -326,7 +333,9 @@ private:
     int lastMidiTimeStamp;
     int lastMidiChannel;
     
-    bool sustainPedalDown, sostenutoPedalDown;
+    bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
+    
+    float softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
