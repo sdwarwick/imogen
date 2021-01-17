@@ -125,20 +125,26 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
     // this block of code should process grains of audio 2 pitch periods long!
     // center these grains on the epochs of the signal
     
-    const int sampleIncrement = floor (inputAudio.getNumSamples() * shiftingRatio);
+    synthesisBuffer.clear();
+    
+    const int totalNumSamples = inputAudio.getNumSamples();
+    
+    const int sampleIncrement = floor (totalNumSamples * shiftingRatio);
+    const int olaIncrement    = floor (sampleIncrement / 2.0f);
     
     int totalNumSamplesWritten = 0;
+    int startSample = 0;
     
     for (auto* wavelet : wavelets)
     {
-        if (totalNumSamplesWritten >= inputAudio.getNumSamples())
-            break;
-        
-        wavelet->ola (inputAudio, synthesisBuffer, shiftingRatio, totalNumSamplesWritten, parent->olaWindow);
+        wavelet->ola (inputAudio, synthesisBuffer, shiftingRatio, startSample, parent->olaWindow);
         
         totalNumSamplesWritten += sampleIncrement;
+        startSample            += olaIncrement;
+        
+        if (totalNumSamplesWritten >= totalNumSamples)
+            break;
     }
-    
 };
 
 

@@ -263,35 +263,34 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& activeEngine)
 {
-    activeEngine.updateInputGain  (Decibels::decibelsToGain (inputGain->get()));
-    activeEngine.updateOutputGain (Decibels::decibelsToGain (outputGain->get()));
-    activeEngine.updateDryGain    (Decibels::decibelsToGain (dryGain->get()));
-    activeEngine.updateWetGain    (Decibels::decibelsToGain (wetGain->get()));
-    activeEngine.updateSoftPedalGain (Decibels::decibelsToGain (softPedalGain->get()));
+    activeEngine.updateInputGain    (Decibels::decibelsToGain (inputGain->get()));
+    activeEngine.updateOutputGain   (Decibels::decibelsToGain (outputGain->get()));
+    activeEngine.updateDryGain      (Decibels::decibelsToGain (dryGain->get()));
+    activeEngine.updateWetGain      (Decibels::decibelsToGain (wetGain->get()));
+    activeEngine.updateSoftPedalGain(Decibels::decibelsToGain (softPedalGain->get()));
     
-    activeEngine.updateLimiter(limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
-    activeEngine.updateDryWet(dryWet->get());
-    activeEngine.updateQuickKill(quickKillMs->get());
-    activeEngine.updateQuickAttack(quickAttackMs->get());
+    activeEngine.updateLimiter     (limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
+    activeEngine.updateDryWet      (dryWet->get());
+    activeEngine.updateQuickKill   (quickKillMs->get());
+    activeEngine.updateQuickAttack (quickAttackMs->get());
     activeEngine.updateNoteStealing(voiceStealing->get());
-    activeEngine.updateDryVoxPan(dryPan->get());
+    activeEngine.updateDryVoxPan   (dryPan->get());
     
     // these parameter functions have the potential to alter the pitch & other properties of currently playing harmonizer voices:
-    activeEngine.updateConcertPitch(concertPitchHz->get());
-    activeEngine.updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
-    activeEngine.updateStereoWidth(stereoWidth->get(), lowestPanned->get());
+    activeEngine.updateConcertPitch           (concertPitchHz->get());
+    activeEngine.updatePitchbendSettings      (pitchBendUp->get(), pitchBendDown->get());
+    activeEngine.updateStereoWidth            (stereoWidth->get(), lowestPanned->get());
     activeEngine.updateMidiVelocitySensitivity(velocitySens->get());
-    activeEngine.updateAdsr(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+    activeEngine.updateAdsr                   (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
     
     // these parameter functions have the potential to trigger or turn off midi notes / harmonizer voices:
-    activeEngine.updateMidiLatch(latchIsOn->get());
+    activeEngine.updateMidiLatch (latchIsOn->get());
     activeEngine.updatePedalPitch(pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
-    activeEngine.updateDescant(descantIsOn->get(), descantThresh->get(), descantInterval->get());
+    activeEngine.updateDescant   (descantIsOn->get(), descantThresh->get(), descantInterval->get());
     
     // update num voices
     
 };
-
 
 void ImogenAudioProcessor::updateDryVoxPan()
 {
@@ -478,17 +477,21 @@ void ImogenAudioProcessor::loadPreset(juce::String presetName)
 {
     File presetToLoad = getPresetsFolder().getChildFile(presetName);
     
-    if(presetToLoad.existsAsFile())
+    if (! presetToLoad.existsAsFile())
+        return;
+
+    suspendProcessing (true);
+    
+    auto xmlElement = juce::parseXML(presetToLoad);
+    
+    if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
     {
-        auto xmlElement = juce::parseXML(presetToLoad);
-        
-        if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
-        {
-            tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
-            updateNumVoices( xmlElement->getIntAttribute("numberOfVoices", 4) ); // TO DO : send notif to GUI to update numVoices comboBox
-            updateHostDisplay();
-        }
+        tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
+        updateNumVoices( xmlElement->getIntAttribute("numberOfVoices", 4) ); // TO DO : send notif to GUI to update numVoices comboBox
+        updateHostDisplay();
     }
+    
+    suspendProcessing (false);
 };
 
 

@@ -158,33 +158,13 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
     
-    //currentInputFreq = pitch.getPitch (inputAudio, sampleRate); // do some kind of time curve for changes in pitch during block...?
-    
-    // get subset of epochIndices array accounting for sample offset # numSamples
-    
     //jassert (currentInputFreq > 0);
     
     currentInputFreq = 1;
     
-    epochs.makeSubsetOfEpochIndicesArray (epochIndices, slicedEpochIndices, 0, inputAudio.getNumSamples());
-    
-    // retrieve pitch for this precise chunk within the buffer passed to analyzeInput()
-    // using sampleOffsetFromOriginalAnalyzedBuffer & inputAudio.getNumSamples()
-    
-    const int averageDistanceBetweenEpochs = epochs.averageDistanceBetweenEpochs (slicedEpochIndices);
-    
-    const int periodInSamples = ceil ( (1 / currentInputFreq) * sampleRate );
-    
-    int numOfEpochsPerFrame = (averageDistanceBetweenEpochs >= periodInSamples) ?
-                               3 :
-                               ceil(periodInSamples / averageDistanceBetweenEpochs) * 3;
-    
-    if (slicedEpochIndices.size() < numOfEpochsPerFrame)
-        numOfEpochsPerFrame = slicedEpochIndices.size();
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, slicedEpochIndices, numOfEpochsPerFrame, currentInputFreq);
+            voice->renderNextBlock (inputAudio, outputBuffer, epochIndices, 2, currentInputFreq);
 };
 
 
@@ -500,7 +480,9 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
         }
     }
     
-    startVoice (findFreeVoice (midiPitch, shouldStealNotes), midiPitch, velocity, isKeyboard);
+    bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
+    
+    startVoice (findFreeVoice (midiPitch, isStealing), midiPitch, velocity, isKeyboard);
     
     if (latchIsOn)
         latchManager.noteOnRecieved(midiPitch);

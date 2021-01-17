@@ -16,7 +16,8 @@ class WaveletGenerator
 {
 public:
     
-    WaveletGenerator() { };
+    WaveletGenerator(): windowIndex(0)
+    { };
     
     ~WaveletGenerator() { };
     
@@ -27,15 +28,29 @@ public:
     {
         const int numSamples = floor (input.getNumSamples() * playbackSpeed);
         
-        SampleType* w = output.getWritePointer(0);
+        const SampleType* r = input.getReadPointer(0);
+              SampleType* w = output.getWritePointer(0);
+        const SampleType* win = windowToUse.getReadPointer(0);
         
-        for (int n = sampleOffset; n < sampleOffset + numSamples; ++n)
+        int readingSample = 0;
+        int writingSample = sampleOffset;
+        
+        while (readingSample <= numSamples)
         {
-         //   w[n] += (this wavelet) * window
+            w[writingSample] += (r[readingSample] * win[windowIndex]);
+            
+            ++readingSample;
+            ++writingSample;
+            ++windowIndex;
+            
+            if (windowIndex >= windowToUse.getNumSamples())
+                windowIndex = 0;
         }
     };
     
     
 private:
+    
+    int windowIndex;
     
 };

@@ -633,19 +633,19 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
     if (currentVoices == newNumVoices)
         return;
     
+    processor.suspendProcessing (true);
+    
     if(newNumVoices > currentVoices)
     {
-        processor.suspendProcessing (true);
-        
         for(int i = 0; i < newNumVoices - currentVoices; ++i)
             harmonizer.addVoice(new HarmonizerVoice<SampleType>(&harmonizer));
         
         harmonizer.newMaxNumVoices(newNumVoices); // increases storage overheads for internal harmonizer functions dealing with arrays of notes
-        
-        processor.suspendProcessing (false);
     }
     else
         harmonizer.removeNumVoices(currentVoices - newNumVoices);
+    
+    processor.suspendProcessing (false);
 };
 
 
