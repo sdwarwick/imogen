@@ -30,14 +30,14 @@ public:
         
         const SampleType* r = input.getReadPointer(0);
               SampleType* w = output.getWritePointer(0);
-        const SampleType* win = windowToUse.getReadPointer(0);
+        //const SampleType* win = windowToUse.getReadPointer(0);
         
         int readingSample = 0;
         int writingSample = sampleOffset;
         
         while (readingSample <= numSamples)
         {
-            w[writingSample] += (r[readingSample] * win[windowIndex]);
+            //w[writingSample] += (r[readingSample] * win[windowIndex]);
             
             ++readingSample;
             ++writingSample;

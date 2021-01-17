@@ -16,6 +16,7 @@
 #include "PanningManager.h"
 #include "InputAnalysis.h"
 #include "WaveletGenerator.h"
+#include "Panner.h"
 #include "GeneralUtils.h"
 
 template<typename SampleType>
@@ -125,6 +126,7 @@ private:
     
     float softPedalMultiplier, prevSoftPedalMultiplier;
     
+    Panner panner;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };

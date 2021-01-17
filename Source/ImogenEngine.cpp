@@ -12,6 +12,7 @@
 #include "GlobalDefinitions.h"
 
 #include "DelayBuffer.h"
+#include "Panner.h"
 
 
 #define PITCH_DETECTION_BLOCKSIZE 441000  // the number of samples required to do pitch detection on a chunk of audio
@@ -651,11 +652,15 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
 {
+    jassert (isPositiveAndBelow (newMidiPan, 128));
+    
     prevDryPanningMults[0] = dryPanningMults[0];
     prevDryPanningMults[1] = dryPanningMults[1];
-    const float Rpan = newMidiPan / 127.0f;
-    dryPanningMults[1] = Rpan;
-    dryPanningMults[0] = 1.0f - Rpan;
+    
+    dryPanner.setMidiPan (newMidiPan);
+    
+    dryPanningMults[0] = dryPanner.getLeftGain();
+    dryPanningMults[1] = dryPanner.getRightGain();
 };
 
 

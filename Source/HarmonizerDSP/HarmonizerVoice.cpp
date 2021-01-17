@@ -256,9 +256,9 @@ void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue
 };
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::setPan(const int newPan)
+void HarmonizerVoice<SampleType>::setPan (const int newPan)
 {
-    jassert(isPositiveAndBelow(newPan, 128));
+    jassert (isPositiveAndBelow (newPan, 128));
     
     if (currentMidipan == newPan)
         return;
@@ -268,17 +268,10 @@ void HarmonizerVoice<SampleType>::setPan(const int newPan)
     prevPanningMults[0] = panningMults[0];
     prevPanningMults[1] = panningMults[1];
     
-    if(newPan == 64) // save time for the simplest case
-    {
-        panningMults[0] = 0.5f;
-        panningMults[1] = 0.5f;
-    }
-    else
-    {
-        const float Rpan = newPan / 127.0f;
-        panningMults[1] = Rpan; // R channel
-        panningMults[0] = 1.0f - Rpan; // L channel
-    }
+    panner.setMidiPan (newPan);
+    
+    panningMults[0] = panner.getLeftGain();
+    panningMults[1] = panner.getRightGain();
     
     currentMidipan = newPan;
 };

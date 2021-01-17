@@ -5,6 +5,7 @@
 #include "GlobalDefinitions.h"
 #include "Harmonizer.h"
 #include "DelayBuffer.h"
+#include "Panner.h"
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
@@ -136,6 +137,8 @@ private:
                                 const int numSamplesLeft);
     
     bool firstLatencyPeriod;
+    
+    Panner dryPanner;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

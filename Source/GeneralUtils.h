@@ -116,17 +116,40 @@ public:
     
     static std::pair<float, float> getPanningMultsFromMidiPan(const int midiPan)
     {
-        jassert(isPositiveAndBelow(midiPan, 128));
-        const float Rpan = midiPan / 127.0f;
-        return std::make_pair(1.0f - Rpan, Rpan); // L, R
+        jassert(isPositiveAndBelow (midiPan, 128));
+        
+        // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
+        const float panningAngle = 90 * midiPan / 127 * MathConstants<float>::pi / 180;
+        
+        float left  = std::sin (panningAngle);
+        float right = std::cos (panningAngle);
+        
+        if (left < 0.0f)  left = 0.0f;
+        if (left > 1.0f)  left = 1.0f;
+        if (right < 0.0f) right = 0.0f;
+        if (right > 1.0f) right = 1.0f;
+        
+        return std::make_pair(left, right); // L, R
     };
+    
     
     static void putPanningMultsFromMidiPanInArray(const int midiPan, int (&array)[2])
     {
         jassert(isPositiveAndBelow(midiPan, 128));
-        const float Rpan = midiPan / 127.0f;
-        array[0] = 1.0f - Rpan;
-        array[1] = Rpan;
+        
+        // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
+        const float panningAngle = 90 * midiPan / 127 * MathConstants<float>::pi / 180;
+        
+        float left  = std::sin (panningAngle);
+        float right = std::cos (panningAngle);
+        
+        if (left < 0.0f)  left = 0.0f;
+        if (left > 1.0f)  left = 1.0f;
+        if (right < 0.0f) right = 0.0f;
+        if (right > 1.0f) right = 1.0f;
+        
+        array[0] = left;
+        array[1] = right;
     };
     
 private:
