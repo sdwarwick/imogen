@@ -92,10 +92,36 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         asdfBuffer.setSample (0,
                               k - minPeriod,
                               runningSum / numSamples);
-    };
+    }
     
     
-    // find correct minimum peak of ASDF corresponding to the period
+    // apply a weighting function to the calculated ASDF values...
+    
+    
+    // find correct minimum of the ASDF
+    
+    const SampleType* r = asdfBuffer.getReadPointer(0);
+    
+    SampleType asdfMinimum = r[0]; // the ASDF value corresponding to the lag value
+    int minK = 0;    // the actual lag value
+    
+    for (int n = 1; n < asdfBuffer.getNumSamples(); ++n)
+    {
+        const SampleType currentSample = r[n];
+        
+        if (currentSample < asdfMinimum)
+        {
+            asdfMinimum = currentSample;
+            minK = n;
+        }
+    }
+    
+    // period = minK
+    // pitch confidence = asdfMinimum
+    
+    // if asdfMinimum is too high, then we have a low pitch confidence.
+    // if asdfMinimum is 0, we may not need to interpolate...
+    
     
     // quadratic interpolation to find accurate float period from integer period
     
