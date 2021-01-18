@@ -53,7 +53,6 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                                   const Array<int>& epochIndices, const int numOfEpochsPerFrame,
                                                    const SampleType currentInputFreq)
 {
     if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
@@ -103,7 +102,8 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     // write to output & apply panning (w/ gain multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
     {
-        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples, panner.getPrevGain(chan), panner.getGainMult(chan));
+        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
+                                      panner.getPrevGain(chan), panner.getGainMult(chan));
     }
 };
 

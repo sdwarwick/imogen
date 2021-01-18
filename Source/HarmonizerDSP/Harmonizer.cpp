@@ -51,19 +51,15 @@ void Harmonizer<SampleType>::clearBuffers()
     for (auto* voice : voices)
         voice->clearBuffers(); 
    
-    epochIndices.clearQuick();
-    slicedEpochIndices.clearQuick();
+//    epochIndices.clearQuick();
 };
 
 
 template<typename SampleType>
 void Harmonizer<SampleType>::prepare (const int blocksize)
 {
-    epochIndices.ensureStorageAllocated(blocksize);
-    epochIndices.clearQuick();
-    
-    slicedEpochIndices.ensureStorageAllocated(blocksize);
-    slicedEpochIndices.clearQuick();
+//    epochIndices.ensureStorageAllocated(blocksize);
+//    epochIndices.clearQuick();
     
     aggregateMidiBuffer.ensureSize(ceil(blocksize * 1.5f));
     
@@ -72,7 +68,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     for(auto* voice : voices)
         voice->prepare(blocksize);
     
-    epochs.prepare(blocksize);
+//    epochs.prepare(blocksize);
 };
 
 
@@ -134,7 +130,7 @@ void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
 template<typename SampleType>
 void Harmonizer<SampleType>::releaseResources()
 {
-    epochIndices.clear();
+//    epochIndices.clear();
     currentlyActiveNotes.clear();
     currentlyActiveNoReleased.clear();
     unLatched.clear();
@@ -143,7 +139,7 @@ void Harmonizer<SampleType>::releaseResources()
     for(auto* voice : voices)
         voice->releaseResources();
     
-    epochs.releaseResources();
+//    epochs.releaseResources();
     panner.releaseResources();
     
     latchManager.reset();
@@ -156,7 +152,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
-    epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
+//    epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
     
     //jassert (currentInputFreq > 0);
     
@@ -164,7 +160,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, epochIndices, 2, currentInputFreq);
+            voice->renderNextBlock (inputAudio, outputBuffer, currentInputFreq);
 };
 
 

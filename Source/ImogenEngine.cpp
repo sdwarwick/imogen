@@ -13,6 +13,7 @@
 
 #include "DelayBuffer.h"
 #include "Panner.h"
+#include "PitchDetector.h"
 
 
 #define PITCH_DETECTION_BLOCKSIZE 441000  // the number of samples required to do pitch detection on a chunk of audio
@@ -573,7 +574,7 @@ void ImogenEngine<SampleType>::deleteMidiEventsAndPushUpRest (MidiBuffer& target
                        {
                            targetBuffer.addEvent (meta.getMessage(),
                                                   std::max (0,
-                                                           (meta.samplePosition - numSamplesUsed + 1)) );
+                                                           (meta.samplePosition - numSamplesUsed)) );
                        } );
 };
 

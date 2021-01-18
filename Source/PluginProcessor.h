@@ -6,6 +6,7 @@
 #include "Harmonizer.h"
 #include "DelayBuffer.h"
 #include "Panner.h"
+#include "PitchDetector.h"
 
 class ImogenAudioProcessorEditor; // forward declaration...
 

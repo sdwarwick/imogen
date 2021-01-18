@@ -14,7 +14,6 @@
 #include "GlobalDefinitions.h"
 #include "HarmonizerUtilities.h"
 #include "PanningManager.h"
-#include "InputAnalysis.h"
 #include "WaveletGenerator.h"
 #include "Panner.h"
 #include "GeneralUtils.h"
@@ -36,7 +35,7 @@ public:
     ~HarmonizerVoice();
     
     void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const Array<int>& epochIndices, const int numOfEpochsPerFrame, const SampleType currentInputFreq);
+                         const SampleType currentInputFreq);
     
     void prepare (const int blocksize);
     
@@ -320,9 +319,8 @@ private:
     int descantLowerThresh;
     int descantInterval;
     
-    EpochFinder<SampleType> epochs;
-    Array<int> epochIndices;
-    Array<int> slicedEpochIndices;
+//    EpochFinder<SampleType> epochs;
+//    Array<int> epochIndices;
     
     PanningManager  panner;
     VelocityHelper  velocityConverter;

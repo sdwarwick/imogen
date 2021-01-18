@@ -20,6 +20,11 @@
               file="Source/PluginProcessor.cpp"/>
         <FILE id="TuPrOv" name="PluginProcessor.h" compile="0" resource="0"
               file="Source/PluginProcessor.h"/>
+        <GROUP id="{8B30E93C-AC0D-AFE5-1633-249DD671EFB4}" name="PitchDetector">
+          <FILE id="gU73r6" name="PitchDetector.cpp" compile="1" resource="0"
+                file="Source/PitchDetector.cpp"/>
+          <FILE id="cC7l8n" name="PitchDetector.h" compile="0" resource="0" file="Source/PitchDetector.h"/>
+        </GROUP>
         <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
           <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>
@@ -27,11 +32,6 @@
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
           <FILE id="dC6bL2" name="WaveletGenerator.h" compile="0" resource="0"
                 file="Source/HarmonizerDSP/WaveletGenerator.h"/>
-          <GROUP id="{BBDCBAF8-D2B1-B319-ED70-E66CCD4EA18F}" name="InputAnalysis">
-            <FILE id="FH8v8E" name="InputAnalysis.cpp" compile="1" resource="0"
-                  file="Source/HarmonizerDSP/InputAnalysis.cpp"/>
-            <FILE id="bk2ZSN" name="InputAnalysis.h" compile="0" resource="0" file="Source/HarmonizerDSP/InputAnalysis.h"/>
-          </GROUP>
           <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
             <FILE id="z1rWG8" name="HarmonizerUtilities.h" compile="0" resource="0"
                   file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
