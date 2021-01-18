@@ -41,22 +41,22 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     dryGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("dryGain"));                  jassert(dryGain);
     wetGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("wetGain"));                  jassert(wetGain);
     softPedalGain      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("softPedalGain"));            jassert(softPedalGain);
-    
-    setLatencySamples (ImogenEngine<float>::internalBlocksize);
+    minDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMinHz"));      jassert(minDetectedHz);
+    maxDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMaxHz"));      jassert(maxDetectedHz);
     
     const double initSamplerate   = std::max<double>(44100.0, getSampleRate());
-    const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
+    //const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
     const int initNumVoices = std::max(MAX_POSSIBLE_NUMBER_OF_VOICES, 12);
     
     if (isUsingDoublePrecision())
     {
-        doubleEngine.initialize (initSamplerate, initSamplesPerBlock, initNumVoices);
+        doubleEngine.initialize (initSamplerate, getBlockSize(), initNumVoices);
         updateAllParameters(doubleEngine);
         latencySamples = doubleEngine.reportLatency();
     }
     else
     {
-        floatEngine.initialize (initSamplerate, initSamplesPerBlock, initNumVoices);
+        floatEngine.initialize (initSamplerate, getBlockSize(), initNumVoices);
         updateAllParameters(floatEngine);
         latencySamples = floatEngine.reportLatency();
     }
@@ -263,6 +263,8 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& activeEngine)
 {
+    activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+    
     activeEngine.updateInputGain    (Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (Decibels::decibelsToGain (outputGain->get()));
     activeEngine.updateDryGain      (Decibels::decibelsToGain (dryGain->get()));
@@ -435,6 +437,14 @@ void ImogenAudioProcessor::updateLimiter()
 };
 
 
+void ImogenAudioProcessor::updatePitchDetectionSettings()
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+    else
+        floatEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+};
+
 
 
 void ImogenAudioProcessor::returnActivePitches(Array<int>& outputArray) const
@@ -559,7 +569,7 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
 {
     std::vector<std::unique_ptr<RangedAudioParameter>> params;
     
-    NormalisableRange<float> gainRange = NormalisableRange<float>(-60.0f, 0.0f, 0.01f);
+    NormalisableRange<float> gainRange (-60.0f, 0.0f, 0.01f);
     
     
     // general
@@ -616,7 +626,13 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     params.push_back(std::make_unique<AudioParameterFloat>  ("wetGain", "Wet gain", gainRange, 0.0f));
     
     // NEED GUI FOR THIS -- soft pedal gain multiplier
-    params.push_back(std::make_unique<AudioParameterFloat>  ("softPedalGain", "Soft pedal gain", gainRange, 1.0f));
+    params.push_back(std::make_unique<AudioParameterFloat>  ("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
+    
+    // NEED GUI -- PITCH DETECTION HZ RANGE
+    // Note that the minimum possible Hz value will impact the plugin's latency.
+    NormalisableRange<float> hzRange (20.0f, 10000.0f, 0.01f);
+    params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionMinHz", "Min possible Hz", hzRange, 80.0f));
+    params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionMaxHz", "Max possible Hz", hzRange, 2400.0f));
     
     return { params.begin(), params.end() };
 };

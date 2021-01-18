@@ -16,14 +16,13 @@
 #include "PitchDetector.h"
 
 
-#define PITCH_DETECTION_BLOCKSIZE 441000  // the number of samples required to do pitch detection on a chunk of audio
-
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
+    internalBlocksize(32),
     processor(p),
-    pitchDetectionDelayLine (PITCH_DETECTION_BLOCKSIZE, internalBlocksize),
     limiterIsOn(false),
-    resourcesReleased(true), initialized(false)
+    resourcesReleased(true), initialized(false),
+    pitchDetector(80.0f, 2400.0f, 44100.0)
 {
     inputGain = 1.0f;
     prevInputGain = 1.0f;
@@ -65,8 +64,6 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     inBuffer .setSize (1, internalBlocksize, true, true, true);
     dryBuffer.setSize (2, internalBlocksize, true, true, true);
     wetBuffer.setSize (2, internalBlocksize, true, true, true);
-    
-    pitchDetectionBuffer.setSize (1, PITCH_DETECTION_BLOCKSIZE);
     
     initialized = true;
 };
@@ -352,16 +349,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
-    pitchDetectionDelayLine.writeSamples (input.getReadPointer(0), internalBlocksize);
-    
-    if (pitchDetectionDelayLine.numStoredSamples() >= PITCH_DETECTION_BLOCKSIZE)
-    {
-        pitchDetectionDelayLine.getDelayedSamples (pitchDetectionBuffer.getWritePointer(0), PITCH_DETECTION_BLOCKSIZE, PITCH_DETECTION_BLOCKSIZE);
-        // pitchDetector.estimatePitch (pitchDetectionBuffer);
-    }
-
-    // pitchDetector.getMostRecentPitchEstimate();
-
     harmonizer.processMidi (midiMessages);
 
     // master input gain
@@ -776,9 +763,13 @@ void ImogenEngine<SampleType>::updateSoftPedalGain (const float newGain)
 };
 
 
+template<typename SampleType>
+void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
+{
+    pitchDetector.setHzRange (minHz, maxHz);
+};
+
+
 
 template class ImogenEngine<float>;
 template class ImogenEngine<double>;
-
-
-#undef PITCH_DETECTION_BLOCKSIZE

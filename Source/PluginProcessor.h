@@ -62,16 +62,17 @@ public:
     void updateDryGain (const float newDryGain);
     void updateWetGain (const float newWetGain);
     void updateSoftPedalGain (const float newGain);
+    void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     
     void clearBuffers();
     
     bool hasBeenReleased()    const noexcept { return resourcesReleased; };
     bool hasBeenInitialized() const noexcept { return initialized; };
     
-    static constexpr int internalBlocksize = 32; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This is for the pitch detection and the ESOLA algorithm.
-    
     
 private:
+    
+    int internalBlocksize; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This corresponds to the latency of the pitch detector, and, thus, the minimum possible Hz it can detect.
     
     void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                          MidiBuffer& midiMessages,
@@ -91,9 +92,6 @@ private:
     AudioBuffer<SampleType> outputCollectionBuffer;
     int numStoredOutputSamples;
     AudioBuffer<SampleType> copyingInterimBuffer;
-    
-    DelayBuffer<SampleType> pitchDetectionDelayLine;
-    AudioBuffer<SampleType> pitchDetectionBuffer;
     
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
@@ -137,6 +135,8 @@ private:
     bool firstLatencyPeriod;
     
     Panner dryPanner;
+    
+    PitchDetector<SampleType> pitchDetector;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
@@ -203,9 +203,6 @@ public:
     juce::File getPresetsFolder() const;
     
     // functions to update parameters ---------------------------------------------------------------------------------------------------------------
-    
-    void updatePitchDetectionSettings(const float newMinHz, const float newMaxHz, const float newTolerance);
-    
     void updateAdsr();
     void updateIOgains();
     void updateDryWetGains();
@@ -222,7 +219,7 @@ public:
     void updateMidiLatch();
     void updatePedalPitch();
     void updateDescant();
-    
+    void updatePitchDetectionSettings();
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
@@ -286,6 +283,8 @@ public:
     AudioParameterFloat* dryGain            = nullptr;
     AudioParameterFloat* wetGain            = nullptr;
     AudioParameterFloat* softPedalGain      = nullptr;
+    AudioParameterFloat* minDetectedHz      = nullptr;
+    AudioParameterFloat* maxDetectedHz      = nullptr;
     
     
 private:

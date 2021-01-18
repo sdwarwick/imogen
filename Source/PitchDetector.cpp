@@ -18,6 +18,8 @@ PitchDetector<SampleType>::PitchDetector(const int minHz, const int maxHz, const
     this->maxHz = maxHz;
     this->samplerate = samplerate;
     
+    asdfBuffer.setSize (1, 500);
+    
     setHzRange (minHz, maxHz, true);
 };
 
@@ -34,15 +36,17 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
 {
     jassert (newMaxHz > newMinHz);
     
-    if ((minHz != newMinHz) || allowRecalc)
-        maxPeriod = roundToInt (1.0f / minHz * samplerate);
+    if ((! allowRecalc)
+        || ((minHz == newMinHz) && (maxHz == newMaxHz)))
+        return;
     
-    if ((maxHz != newMaxHz) || allowRecalc)
-        minPeriod = roundToInt (1.0f / maxHz * samplerate);
+    maxPeriod = roundToInt (1.0f / minHz * samplerate);
+    minPeriod = roundToInt (1.0f / maxHz * samplerate);
     
-    jassert (maxPeriod > minPeriod);
+    if (! (maxPeriod > minPeriod))
+        ++maxPeriod;
     
-    const int numOfLagValues = maxPeriod - minPeriod;
+    const int numOfLagValues = maxPeriod - minPeriod + 1;
     
     if (asdfBuffer.getNumSamples() != numOfLagValues)
         asdfBuffer.setSize (1, numOfLagValues, true, true, true);
@@ -70,6 +74,10 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     // the value stored at the maximum index is the ASDF for lag maxPeriod.
     
     const int numSamples = inputAudio.getNumSamples();
+    
+    if (numSamples == 0)
+        return -1.0f;
+    
     const int middleIndex = floor (numSamples / 2);
     
     for (int k = minPeriod; k <= maxPeriod; ++k)
@@ -89,8 +97,12 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
             runningSum += (difference * difference);
         }
         
+        const int asdfBufferIndex = k - minPeriod;
+        
+        jassert (asdfBufferIndex < asdfBuffer.getNumSamples());
+        
         asdfBuffer.setSample (0,
-                              k - minPeriod,
+                              asdfBufferIndex,
                               runningSum / numSamples);
     }
     

@@ -26,6 +26,8 @@ public:
     
     int getMaxHz() const noexcept { return maxHz; };
     
+    int getMaxPeriod() const noexcept { return maxPeriod; };
+    
     void setHzRange (const int newMinHz, const int newMaxHz, const bool allowRecalc = false);
     
     double getSamplerate() const noexcept { return samplerate; };
