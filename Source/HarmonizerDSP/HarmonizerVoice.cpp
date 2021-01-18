@@ -15,12 +15,6 @@ template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
 parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), softPedalMultiplier(1.0f), prevSoftPedalMultiplier(1.0f)
 {
-    panningMults[0] = 0.5f;
-    panningMults[1] = 0.5f;
-    
-    prevPanningMults[0] = 0.5f;
-    prevPanningMults[1] = 0.5f;
-    
     const double initSamplerate = std::max<double>(parent->getSamplerate(), 44100.0);
     
     adsr        .setSampleRate(initSamplerate);
@@ -109,8 +103,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     // write to output & apply panning (w/ gain multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
     {
-        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples, prevPanningMults[chan], panningMults[chan]);
-        prevPanningMults[chan] = panningMults[chan];
+        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples, panner.getPrevGain(chan), panner.getGainMult(chan));
     }
 };
 
@@ -265,13 +258,7 @@ void HarmonizerVoice<SampleType>::setPan (const int newPan)
     
     parent->panValTurnedOff(currentMidipan);
     
-    prevPanningMults[0] = panningMults[0];
-    prevPanningMults[1] = panningMults[1];
-    
     panner.setMidiPan (newPan);
-    
-    panningMults[0] = panner.getLeftGain();
-    panningMults[1] = panner.getRightGain();
     
     currentMidipan = newPan;
 };

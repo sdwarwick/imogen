@@ -106,9 +106,6 @@ private:
     bool resourcesReleased;
     bool initialized;
     
-    float dryPanningMults[2];
-    float prevDryPanningMults[2];
-    
     float dryGain, prevDryGain;
     float wetGain, prevWetGain;
     

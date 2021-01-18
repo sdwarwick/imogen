@@ -16,15 +16,43 @@
 class Panner
 {
 public:
-    Panner(): lastRecievedMidiPan(64), leftGain(0.5f), rightGain(0.5f)
+    Panner(): lastRecievedMidiPan(64), leftGain(0.5f), rightGain(0.5f), prevLeftGain(0.5f), prevRightGain(0.5f)
     { };
     
     ~Panner()
     { };
     
+    int getLastMidiPan() const noexcept { return lastRecievedMidiPan; };
+    
     float getLeftGain()  const noexcept { return leftGain; };
     
     float getRightGain() const noexcept { return rightGain; };
+    
+    float getPrevLeftGain()  const noexcept { return prevLeftGain; };
+    
+    float getPrevRightGain() const noexcept { return prevRightGain; };
+    
+    
+    float getGainMult (const int chan) const
+    {
+        jassert (chan == 0 || chan == 1);
+        
+        if (chan == 0)
+            return leftGain;
+        
+        return rightGain;
+    };
+    
+    float getPrevGain (const int chan) const
+    {
+        jassert (chan == 0 || chan == 1);
+        
+        if (chan == 0)
+            return prevLeftGain;
+        
+        return prevRightGain;
+    };
+    
     
     void setMidiPan (const int newMidiPan)
     {
@@ -33,14 +61,17 @@ public:
         if (lastRecievedMidiPan == newMidiPan)
             return;
         
+        prevLeftGain  = leftGain;
+        prevRightGain = rightGain;
+        
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
         const float panningAngle = 90 * newMidiPan / 127 * MathConstants<float>::pi / 180;
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);
         
-        if (left < 0.0f)  left = 0.0f;
-        if (left > 1.0f)  left = 1.0f;
+        if (left < 0.0f)  left  = 0.0f;
+        if (left > 1.0f)  left  = 1.0f;
         if (right < 0.0f) right = 0.0f;
         if (right > 1.0f) right = 1.0f;
         
@@ -54,4 +85,6 @@ private:
     
     float leftGain;
     float rightGain;
+    
+    float prevLeftGain, prevRightGain;
 };

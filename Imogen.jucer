@@ -20,8 +20,6 @@
               file="Source/PluginProcessor.cpp"/>
         <FILE id="TuPrOv" name="PluginProcessor.h" compile="0" resource="0"
               file="Source/PluginProcessor.h"/>
-        <FILE id="SfqUBI" name="DelayBuffer.h" compile="0" resource="0" file="Source/DelayBuffer.h"/>
-        <FILE id="H0qQto" name="Panner.h" compile="0" resource="0" file="Source/Panner.h"/>
         <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
           <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>
@@ -44,6 +42,10 @@
                     file="Source/HarmonizerDSP/PanningManager.h"/>
             </GROUP>
           </GROUP>
+        </GROUP>
+        <GROUP id="{F07D8DCF-FE10-6A74-DF78-A7949872D15D}" name="DSP utils">
+          <FILE id="SfqUBI" name="DelayBuffer.h" compile="0" resource="0" file="Source/DelayBuffer.h"/>
+          <FILE id="H0qQto" name="Panner.h" compile="0" resource="0" file="Source/Panner.h"/>
         </GROUP>
       </GROUP>
       <GROUP id="{7280FBDB-5D91-B8BB-2422-189E249894A5}" name="GUI">

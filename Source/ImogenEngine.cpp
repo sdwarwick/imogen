@@ -24,11 +24,6 @@ ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     limiterIsOn(false),
     resourcesReleased(true), initialized(false)
 {
-    dryPanningMults[0] = 0.5f;
-    dryPanningMults[1] = 0.5f;
-    prevDryPanningMults[0] = 0.5f;
-    prevDryPanningMults[1] = 0.5f;
-    
     inputGain = 1.0f;
     prevInputGain = 1.0f;
     
@@ -59,9 +54,6 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     prevOutputGain = outputGain;
     prevInputGain  = inputGain;
     
-    prevDryPanningMults[0] = dryPanningMults[0];
-    prevDryPanningMults[1] = dryPanningMults[1];
-
     processor.setLatencySamples (internalBlocksize);
     
     prepare (initSamplerate, std::max (initSamplesPerBlock, MAX_BUFFERSIZE));
@@ -136,11 +128,6 @@ void ImogenEngine<SampleType>::reset()
     harmonizer.allNotesOff(false);
     
     releaseResources();
-    
-    prevDryPanningMults[0] = 0.5f;
-    prevDryPanningMults[1] = 0.5f;
-    dryPanningMults[0] = 0.5f;
-    dryPanningMults[1] = 0.5f;
     
     prevInputGain  = inputGain;
     prevOutputGain = outputGain;
@@ -383,8 +370,8 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     // write to dry buffer & apply panning (w/ panning multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
     {
-        dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize, prevDryPanningMults[chan], dryPanningMults[chan]);
-        prevDryPanningMults[chan] = dryPanningMults[chan];
+        dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize,
+                                    dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
     }
 
     // dry gain
@@ -652,15 +639,7 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
 {
-    jassert (isPositiveAndBelow (newMidiPan, 128));
-    
-    prevDryPanningMults[0] = dryPanningMults[0];
-    prevDryPanningMults[1] = dryPanningMults[1];
-    
     dryPanner.setMidiPan (newMidiPan);
-    
-    dryPanningMults[0] = dryPanner.getLeftGain();
-    dryPanningMults[1] = dryPanner.getRightGain();
 };
 
 
