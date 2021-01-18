@@ -70,10 +70,28 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     // the value stored at the maximum index is the ASDF for lag maxPeriod.
     
     const int numSamples = inputAudio.getNumSamples();
+    const int middleIndex = floor (numSamples / 2);
     
     for (int k = minPeriod; k <= maxPeriod; ++k)
     {
-        const int asdfBufferIndex = k - minPeriod;
+        const int sampleOffset = floor ((numSamples + k) / 2);
+        
+        const auto* r = inputAudio.getReadPointer(0);
+        
+        SampleType runningSum = 0;
+        
+        for (int n = 0; n < numSamples - 1; ++n)
+        {
+            const int startingSample = n + middleIndex - sampleOffset;
+            
+            const float difference = r[startingSample] - r[startingSample + k];
+            
+            runningSum += (difference * difference);
+        }
+        
+        asdfBuffer.setSample (0,
+                              k - minPeriod,
+                              runningSum / numSamples);
     };
     
     
