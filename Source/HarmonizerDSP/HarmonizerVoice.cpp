@@ -35,7 +35,7 @@ HarmonizerVoice<SampleType>::~HarmonizerVoice()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
-    synthesisBuffer.setSize(1, blocksize, true, true, true);
+    synthesisBuffer.setSize(1, blocksize * 2, true, true, true);
     synthesisBuffer.clear();
     
     copyingBuffer.setSize(1, blocksize, true, true, true);
@@ -127,10 +127,11 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
         else if (i < (indicesOfGrainOnsets.size() - 1))
             if (readingEndSample > indicesOfGrainOnsets.getUnchecked(i + 1))
                 readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
+                
+        const int grainSize = readingEndSample - readingStartSample + 1;
         
         while (synthesisIndex <= readingEndSample)
         {
-            const int grainSize = readingEndSample - readingStartSample + 1;
             synthesisBuffer.addFrom (0, synthesisIndex, inputAudio, 0, readingStartSample, grainSize);
             highestIndexWritten = synthesisIndex + grainSize;
             synthesisIndex += newPeriodInt;
@@ -146,14 +147,14 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
                                                  const int numSamplesUsed,
                                                  const int highestIndexWritten)
 {
+    targetBuffer.clear();
+    
     const int numSamplesLeft = highestIndexWritten - numSamplesUsed + 1;
     
     if (numSamplesLeft < 1)
         return;
     
     copyingBuffer.copyFrom (0, 0, targetBuffer, 0, numSamplesUsed, numSamplesLeft);
-    
-    targetBuffer.clear();
     
     targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
 };

@@ -37,7 +37,7 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
     jassert (newMaxHz > newMinHz);
     
     if ((! allowRecalc)
-        || ((minHz == newMinHz) && (maxHz == newMaxHz)))
+        && ((minHz == newMinHz) && (maxHz == newMaxHz)))
         return;
     
     maxPeriod = roundToInt (1.0f / minHz * samplerate);
@@ -77,6 +77,9 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     if (numSamples == 0)
         return -1.0f;
+        
+    if (numSamples < minPeriod)
+        return -1.0f;
     
     const int middleIndex = floor (numSamples / 2);
     
@@ -92,7 +95,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         {
             const int startingSample = n + middleIndex - sampleOffset;
             
-            const float difference = r[startingSample] - r[startingSample + k];
+            const SampleType difference = r[startingSample] - r[startingSample + k];
             
             runningSum += (difference * difference);
         }
