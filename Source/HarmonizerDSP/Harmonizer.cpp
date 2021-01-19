@@ -155,11 +155,15 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     const float origPeriod = 1.0f / currentInputFreq * sampleRate;
     
+    // need to indentify sample indices of pitch period onsets within input audio
+    
     // multiply each grain by the window at this stage!!
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer);
+        {
+            // voice->renderNextBlock (inputAudio, outputBuffer, origPeriod, indicesOfGrainOnsets);
+        }
 };
 
 

@@ -303,7 +303,8 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     const float newPitch = pitchDetector.detectPitch (input); // returns -1 if the current frame is unpitched
     
-    harmonizer.setCurrentInputFreq (newPitch);
+    if (harmonizer.getCurrentInputFreq() != newPitch)
+        harmonizer.setCurrentInputFreq (newPitch);
     
     harmonizer.processMidi (midiMessages);
     

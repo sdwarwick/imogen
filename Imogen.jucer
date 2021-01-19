@@ -30,8 +30,6 @@
                 file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>
           <FILE id="ALhBKM" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
-          <FILE id="dC6bL2" name="WaveletGenerator.h" compile="0" resource="0"
-                file="Source/HarmonizerDSP/WaveletGenerator.h"/>
           <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
             <FILE id="z1rWG8" name="HarmonizerUtilities.h" compile="0" resource="0"
                   file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>

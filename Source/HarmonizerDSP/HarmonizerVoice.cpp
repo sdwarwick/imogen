@@ -25,9 +25,6 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters(parent->getCurrentQuickAttackParams());
     
-    for (int w = 0; w < 8; ++w)
-        wavelets.add (new WaveletGenerator<SampleType>);
-    
     // call fill window buffer in constuctor !
 };
 
@@ -39,9 +36,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     synthesisBuffer.setSize(1, blocksize, true, true, true);
-    window         .setSize(1, blocksize, true, true, true);
-    
-    finalWindow.ensureStorageAllocated(blocksize);
     
     prevPanningMults[0] = panningMults[0];
     prevPanningMults[1] = panningMults[1];
@@ -52,7 +46,9 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer)
+void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                                                   const float origPeriod,
+                                                   const Array<int>& indicesOfGrainOnsets)
 {
     if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
         stopNote(1.0f, false);
@@ -75,7 +71,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     const float newPeriod = 1.0f / currentOutputFreq * parent->getSamplerate();
     
-    esola (inputAudio, newPeriod); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    esola (inputAudio, origPeriod, newPeriod, indicesOfGrainOnsets); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     // midi velocity gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
@@ -108,44 +104,43 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAudio,
-                                         const float newPeriod)
+                                         const float origPeriod,
+                                         const float newPeriod,
+                                         const Array<int>& indicesOfGrainOnsets)
 {
-    // the OlA will look something like this...
-    
-    
-    // this block of code should process grains of audio 2 pitch periods long!
-    // center these grains on the epochs of the signal
-    
     synthesisBuffer.clear();
     
-    const int totalNumSamples = inputAudio.getNumSamples();
+    const int origPeriodInt = roundToInt(origPeriod); // size of input grains in samples
     
-    const int period = floor (newPeriod);
-    const int hopsize = floor (period / 2);
-
-    int totalNumSamplesWritten = 0;
-    int startSample = 0;
-
-    for (auto* wavelet : wavelets)
+    const int newPeriodInt = floor (newPeriod); // OLA hop size
+    
+    int synthesisIndex = 0; // starting index for each synthesis grain being written
+    
+    for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
-        wavelet->ola (inputAudio, synthesisBuffer, startSample);
-
-        totalNumSamplesWritten += period;
-        startSample            += hopsize;
-
-        if (totalNumSamplesWritten >= totalNumSamples)
-            break;
+        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
+        
+        int readingEndSample = readingStartSample + origPeriodInt;
+        
+        if (readingEndSample > inputAudio.getNumSamples())
+            readingEndSample = inputAudio.getNumSamples();
+        else if (i < (indicesOfGrainOnsets.size() - 1))
+            if (readingEndSample > indicesOfGrainOnsets.getUnchecked(i + 1))
+                readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
+        
+        while (synthesisIndex < readingEndSample)
+        {
+            synthesisBuffer.addFrom (0, synthesisIndex, inputAudio, 0, readingStartSample, origPeriodInt);
+            synthesisIndex += newPeriodInt;
+        }
     }
 };
-
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::releaseResources()
 {
     synthesisBuffer.setSize(0, 0, false, false, false);
-    window.setSize(0, 0, false, false, false);
-    finalWindow.clear();
     
     prevPanningMults[0] = panningMults[0];
     prevPanningMults[1] = panningMults[1];
@@ -156,8 +151,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::clearBuffers()
 {
     synthesisBuffer.clear();
-    window.clear();
-    finalWindow.clearQuick();
 };
 
 
@@ -166,12 +159,12 @@ void HarmonizerVoice<SampleType>::clearBuffers()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::fillWindowBuffer(const int numSamples)
 {
-    window.clear();
-    auto* writing = window.getWritePointer(0);
-    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
-    
-    for(int i = 0; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
+//    window.clear();
+//    auto* writing = window.getWritePointer(0);
+//    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
+//
+//    for(int i = 0; i < numSamples; ++i)
+//        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
 };
 
 
@@ -297,8 +290,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
     synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
-    window         .setSize(1, newMaxBlocksize, true, true, true);
-    finalWindow.ensureStorageAllocated(newMaxBlocksize);
 };
 
 

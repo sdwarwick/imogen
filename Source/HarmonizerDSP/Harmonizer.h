@@ -14,7 +14,6 @@
 #include "GlobalDefinitions.h"
 #include "HarmonizerUtilities.h"
 #include "PanningManager.h"
-#include "WaveletGenerator.h"
 #include "Panner.h"
 #include "GeneralUtils.h"
 
@@ -34,7 +33,8 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
+    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                         const float origPeriod, const Array<int>& indicesOfGrainOnsets);
     
     void prepare (const int blocksize);
     
@@ -88,9 +88,7 @@ private:
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
     void esola (const AudioBuffer<SampleType>& inputAudio,
-                const float newPeriod);
-    
-    OwnedArray< WaveletGenerator<SampleType> > wavelets; // these wavelet generators will be "launching" individual windowed wavelets of our audio for our OLA process
+                const float origPeriod, const float newPeriod, const Array<int>& indicesOfGrainOnsets);
     
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
@@ -116,9 +114,6 @@ private:
     int currentAftertouch;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
-    
-    AudioBuffer<SampleType> window;
-    Array<SampleType> finalWindow;
     
     void fillWindowBuffer (const int numSamples);
     
