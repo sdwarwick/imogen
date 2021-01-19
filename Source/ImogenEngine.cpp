@@ -18,9 +18,11 @@
 
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
-    internalBlocksize(32),
+    internalBlocksize(512),
     processor(p),
     limiterIsOn(false),
+    inputBuffer(1, internalBlocksize, internalBlocksize),
+    outputBuffer(2, internalBlocksize, internalBlocksize),
     resourcesReleased(true), initialized(false),
     pitchDetector(80.0f, 2400.0f, 44100.0)
 {
@@ -58,9 +60,6 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     
     prepare (initSamplerate, std::max (initSamplesPerBlock, MAX_BUFFERSIZE));
     
-    numStoredInputSamples  = 0;
-    numStoredOutputSamples = 0;
-    
     inBuffer .setSize (1, internalBlocksize, true, true, true);
     dryBuffer.setSize (2, internalBlocksize, true, true, true);
     wetBuffer.setSize (2, internalBlocksize, true, true, true);
@@ -76,10 +75,6 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
         harmonizer.setCurrentPlaybackSampleRate(sampleRate);
     
     const int aggregateBufferSizes = internalBlocksize * 2;
-    
-    inputCollectionBuffer .setSize (1, aggregateBufferSizes, true, true, true);
-    outputCollectionBuffer.setSize (2, aggregateBufferSizes, true, true, true);
-    copyingInterimBuffer  .setSize (2, aggregateBufferSizes, true, true, true);
     
     const int midiBufferSizes = std::max (aggregateBufferSizes * 2, samplesPerBlock * 2);
     
@@ -102,8 +97,6 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     harmonizer.prepare (aggregateBufferSizes);
     
     clearBuffers();
-    
-    firstLatencyPeriod = true;
     
     resourcesReleased = false;
 };
@@ -132,11 +125,6 @@ void ImogenEngine<SampleType>::reset()
     
     prevDryGain = dryGain;
     prevWetGain = wetGain;
-    
-    numStoredInputSamples  = 0;
-    numStoredOutputSamples = 0;
-    
-    firstLatencyPeriod = true;
 };
 
 
@@ -158,7 +146,6 @@ void ImogenEngine<SampleType>::releaseResources()
     
     resourcesReleased  = true;
     initialized        = false;
-    firstLatencyPeriod = true;
 };
 
 
@@ -272,95 +259,61 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         }
     }
     
-    // copy new input samples recieved this frame into the back of the inputCollectionBuffer queue
-    inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
-    numStoredInputSamples += numNewSamples;
+    inputBuffer.writeSamples (input, 0, 0, numNewSamples, 0);
     
     // add new midi events recieved into the back of the midiInputCollection buffer queue
     addToEndOfMidiBuffer (midiMessages, midiInputCollection, numNewSamples);
     
-    if (numStoredInputSamples < internalBlocksize) // not calling renderBlock() this time, not enough samples to process!
+    if (inputBuffer.numStoredSamples() >= internalBlocksize) // render the new chunk of internalBlocksize samples
     {
-        if (numStoredOutputSamples == 0) // this should only trigger during the first latency period of all time!
-        {
-            jassert (firstLatencyPeriod);
-            output.clear();
-            return;
-        }
-    }
-    else // render the new chunk of internalBlocksize samples
-    {
-        firstLatencyPeriod = false;
-        
-        // alias buffer referring to just the chunk of the inputCollectionBuffer that we'll be reading from
-        // our start sample here is always 0 in the inputCollectionBuffer, with block size internalBlocksize
-        AudioBuffer<SampleType> thisChunksInput  (inputCollectionBuffer.getArrayOfWritePointers(), 1, 0, internalBlocksize);
-        
-        // alias buffer referring to just the chunk of the outputCollectionBuffer that we'll be writing to
-        // our start sample here is numStoredOutputSamples - meaning we're appending these new output samples to the END of the outputCollectionBuffer
-        AudioBuffer<SampleType> thisChunksOutput (outputCollectionBuffer.getArrayOfWritePointers(), 2, numStoredOutputSamples, internalBlocksize);
+        inputBuffer.getDelayedSamples(inBuffer, 0, 0, internalBlocksize, internalBlocksize, 0);
         
         // copy just the next internalBlocksize worth's of midi events into the chunkMidiBuffer
         chunkMidiBuffer.clear();
         copyRangeOfMidiBuffer (midiInputCollection, chunkMidiBuffer, 0, 0, internalBlocksize);
         deleteMidiEventsAndPushUpRest (midiInputCollection, internalBlocksize);
         
-        // appends the next rendered block of samples to the end of the outputCollectionBuffer
-        renderBlock (thisChunksInput, thisChunksOutput, chunkMidiBuffer);
+        renderBlock (inBuffer, chunkMidiBuffer);
         
         // appends the returned midi buffer to the end of the midiOutputCollection buffer
         addToEndOfMidiBuffer (chunkMidiBuffer, midiOutputCollection, internalBlocksize);
-        
-        numStoredOutputSamples += internalBlocksize;
-        numStoredInputSamples  -= internalBlocksize;
-        
-        if (numStoredInputSamples > 0)
-            pushUpLeftoverSamples (inputCollectionBuffer, internalBlocksize, numStoredInputSamples);
     }
     
-    jassert (numNewSamples <= numStoredOutputSamples);
-    
-    // write the next numNewSamples worth of output samples to the output, always starting from sample 0 of outputCollectionBuffer
     for (int chan = 0; chan < 2; ++chan)
-        output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
-    
-    numStoredOutputSamples -= numNewSamples;
-    
-    if (numStoredOutputSamples > 0)
-        pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
+        outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
     
     // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
     copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
     deleteMidiEventsAndPushUpRest (midiOutputCollection, numNewSamples);
     
     if (applyFadeIn)
-        output.applyGainRamp(0, numNewSamples, 0.0f, 1.0f);
+        output.applyGainRamp (0, numNewSamples, 0.0f, 1.0f);
     
     if (applyFadeOut)
-        output.applyGainRamp(0, numNewSamples, 1.0f, 0.0f);
+        output.applyGainRamp (0, numNewSamples, 1.0f, 0.0f);
 };
 
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input,
-                                                  AudioBuffer<SampleType>& output,
                                                   MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
     harmonizer.processMidi (midiMessages);
-
+    
     // master input gain
-    inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
+    if (input.getReadPointer(0) == inBuffer.getReadPointer(0))
+        inBuffer.applyGainRamp (0, internalBlocksize, prevInputGain, inputGain);
+    else
+        inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
     prevInputGain = inputGain;
 
     // write to dry buffer & apply panning (w/ panning multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
-    {
         dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize,
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
-    }
 
     // dry gain
     dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain, dryGain);
@@ -376,17 +329,18 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
 
-    output.makeCopyOf (wetBuffer, true); // transfer from wetBuffer to output buffer
-
     // master output gain
-    output.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
+    wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
     prevOutputGain = outputGain;
 
-    if (! limiterIsOn)
-        return;
-
-    dsp::AudioBlock<SampleType> limiterBlock (output);
-    limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+    if (limiterIsOn)
+    {
+        dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
+        limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+    }
+    
+    for (int chan = 0; chan < 2; ++chan)
+        outputBuffer.writeSamples (wetBuffer, chan, 0, internalBlocksize, chan);
 };
 
 
@@ -434,65 +388,65 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
-    const int numNewSamples = inBus.getNumSamples();
-    
-    jassert (numNewSamples <= internalBlocksize);
-    
-    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
-    
-    // with current setup, input will be mixed to mono & copied to each output channel.
-    if (inBus.getNumChannels() == 1)
-        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
-    else
-    {
-        const int totalNumChannels = inBus.getNumChannels();
-        
-        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
-        
-        for (int channel = 1; channel < totalNumChannels; ++channel)
-            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
-        
-        inBuffer.applyGain (1.0f / totalNumChannels);
-        
-        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
-    }
-    
-    inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
-    numStoredInputSamples += numNewSamples;
-    
-    if (numStoredInputSamples < internalBlocksize)
-    {
-        if (numStoredOutputSamples == 0)
-        {
-            jassert (firstLatencyPeriod);
-            output.clear();
-            return;
-        }
-    }
-    else
-    {
-        firstLatencyPeriod = false;
-        
-        for (int chan = 0; chan < 2; ++chan)
-            outputCollectionBuffer.copyFrom (chan, numStoredOutputSamples, inputCollectionBuffer, 0, 0, internalBlocksize);
-        
-        numStoredOutputSamples += internalBlocksize;
-        numStoredInputSamples  -= internalBlocksize;
-        
-        if (numStoredInputSamples > 0)
-            pushUpLeftoverSamples (inputCollectionBuffer, internalBlocksize, numStoredInputSamples);
-    }
-    
-    jassert (numNewSamples <= numStoredOutputSamples);
-    
-    // write to output
-    for (int chan = 0; chan < 2; ++chan)
-        output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
-    
-    numStoredOutputSamples -= numNewSamples;
-    
-    if (numStoredOutputSamples > 0)
-        pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
+//    const int numNewSamples = inBus.getNumSamples();
+//
+//    jassert (numNewSamples <= internalBlocksize);
+//
+//    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
+//
+//    // with current setup, input will be mixed to mono & copied to each output channel.
+//    if (inBus.getNumChannels() == 1)
+//        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
+//    else
+//    {
+//        const int totalNumChannels = inBus.getNumChannels();
+//
+//        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
+//
+//        for (int channel = 1; channel < totalNumChannels; ++channel)
+//            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
+//
+//        inBuffer.applyGain (1.0f / totalNumChannels);
+//
+//        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
+//    }
+//
+//    inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
+//    numStoredInputSamples += numNewSamples;
+//
+//    if (numStoredInputSamples < internalBlocksize)
+//    {
+//        if (numStoredOutputSamples == 0)
+//        {
+//            jassert (firstLatencyPeriod);
+//            output.clear();
+//            return;
+//        }
+//    }
+//    else
+//    {
+//        firstLatencyPeriod = false;
+//
+//        for (int chan = 0; chan < 2; ++chan)
+//            outputCollectionBuffer.copyFrom (chan, numStoredOutputSamples, inputCollectionBuffer, 0, 0, internalBlocksize);
+//
+//        numStoredOutputSamples += internalBlocksize;
+//        numStoredInputSamples  -= internalBlocksize;
+//
+//        if (numStoredInputSamples > 0)
+//            pushUpLeftoverSamples (inputCollectionBuffer, internalBlocksize, numStoredInputSamples);
+//    }
+//
+//    jassert (numNewSamples <= numStoredOutputSamples);
+//
+//    // write to output
+//    for (int chan = 0; chan < 2; ++chan)
+//        output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
+//
+//    numStoredOutputSamples -= numNewSamples;
+//
+//    if (numStoredOutputSamples > 0)
+//        pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
 };
 
 
@@ -510,11 +464,11 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
                                                       const int numSamplesUsed, const int numSamplesLeft)
 {
-    for (int chan = 0; chan < 2; ++chan)
-    {
-        copyingInterimBuffer.copyFrom (chan, 0, targetBuffer,         chan, numSamplesUsed, numSamplesLeft);
-        targetBuffer        .copyFrom (chan, 0, copyingInterimBuffer, chan, 0,              numSamplesLeft);
-    }
+//    for (int chan = 0; chan < 2; ++chan)
+//    {
+//        copyingInterimBuffer.copyFrom (chan, 0, targetBuffer,         chan, numSamplesUsed, numSamplesLeft);
+//        targetBuffer        .copyFrom (chan, 0, copyingInterimBuffer, chan, 0,              numSamplesLeft);
+//    }
 };
 
 // appends midi events from one MidiBuffer to the end of an aggregateBuffer. The number of events copied will correspond to the numSamples argument.

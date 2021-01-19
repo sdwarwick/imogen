@@ -8,12 +8,12 @@ class DelayBuffer
 {
 public:
     
-    DelayBuffer (const uint32_t maxDelay, const uint32_t blockLength)
+    DelayBuffer (const uint32_t numChannels, const uint32_t maxDelay, const uint32_t blockLength)
     {
-        lengthInSamples = blockLength * ( (maxDelay + (2 * blockLength) - 1)
-                                           / blockLength );
+        lengthInSamples = blockLength  *  ( (maxDelay + (2 * blockLength) - 1)
+                                             / blockLength );
         
-        base.setSize (1, 2 * lengthInSamples);
+        base.setSize (numChannels, 2 * lengthInSamples);
         
         writeIndex = lengthInSamples; // this is the MINIMUM write index!
         
@@ -24,7 +24,16 @@ public:
     { };
     
     
-    void writeSamples (const SampleType* inputSamples, const uint32_t numSamples)
+    void setSize (const uint32_t numChannels, const uint32_t maxDelay, const uint32_t blockLength)
+    {
+        lengthInSamples = blockLength  *  ( (maxDelay + (2 * blockLength) - 1)
+                                           / blockLength );
+        
+        base.setSize (numChannels, 2 * lengthInSamples, true, true, true);
+    };
+    
+    
+    void writeSamples (const SampleType* inputSamples, const uint32_t numSamples, const uint32_t destChannel)
     {
         jassert (numSamples <= lengthInSamples);
         
@@ -37,12 +46,31 @@ public:
         
         jassert (imageIndex >= 0);
         
-        base.copyFrom (0, writeIndex, inputSamples, numSamples);
-        base.copyFrom (0, imageIndex, inputSamples, numSamples);
+        base.copyFrom (destChannel, writeIndex, inputSamples, numSamples);
+        base.copyFrom (destChannel, imageIndex, inputSamples, numSamples);
     };
     
     
-    void getDelayedSamples (SampleType* outputSamples, const uint32_t delay, const uint32_t numSamples) const
+    void writeSamples (const AudioBuffer<SampleType>& inputBuffer, const uint32_t inputChannel, const uint32_t inputStartSample,
+                       const uint32_t numSamples, const uint32_t destChannel)
+    {
+        jassert (numSamples <= lengthInSamples);
+        
+        writeIndex += numSamples; // pre-increment write_index before writing new samples
+        
+        if (writeIndex >= 2 * lengthInSamples)
+            writeIndex = lengthInSamples;  // back up write_index to beginning
+        
+        uint32_t imageIndex = writeIndex - lengthInSamples;
+        
+        jassert (imageIndex >= 0);
+        
+        base.copyFrom (destChannel, writeIndex, inputBuffer, inputChannel, inputStartSample, numSamples);
+        base.copyFrom (destChannel, imageIndex, inputBuffer, inputChannel, inputStartSample, numSamples);
+    };
+    
+    
+    void getDelayedSamples (SampleType* outputSamples, const uint32_t delay, const uint32_t numSamples, const uint32_t readingChannel) const
     {
         jassert (delay <= lengthInSamples);
         jassert (numSamples <= lengthInSamples);
@@ -51,17 +79,31 @@ public:
         
         jassert (readIndex >= 0);
         
-        const SampleType* reading = base.getReadPointer(0);
+        const SampleType* reading = base.getReadPointer(readingChannel);
         
         for (int n = 0; n < numSamples; ++n)
             outputSamples[n] = reading[readIndex++];
     };
     
     
-    SampleType* pointToDelayedSamples (const uint32_t delay) const
+    void getDelayedSamples (AudioBuffer<SampleType> destBuffer, const uint32_t destChannel, const uint32_t destStartSample,
+                            const uint32_t delay, const uint32_t numSamples, const uint32_t readingChannel) const
     {
         jassert (delay <= lengthInSamples);
-        return base.getReadPointer (0, writeIndex - delay);
+        jassert (numSamples <= lengthInSamples);
+        
+        uint32_t readIndex = writeIndex - delay;
+        
+        jassert (readIndex >= 0);
+        
+        destBuffer.copyFrom (destChannel, destStartSample, base, readingChannel, readIndex, numSamples);
+    };
+    
+    
+    SampleType* pointToDelayedSamples (const uint32_t delay, const uint32_t readingChannel) const
+    {
+        jassert (delay <= lengthInSamples);
+        return base.getReadPointer (readingChannel, writeIndex - delay);
     };
     
     

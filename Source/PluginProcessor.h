@@ -81,17 +81,14 @@ private:
     void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
     
-    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages);
+    void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
     ImogenAudioProcessor& processor;
     
     Harmonizer<SampleType> harmonizer;
     
-    AudioBuffer<SampleType> inputCollectionBuffer;
-    int numStoredInputSamples;
-    AudioBuffer<SampleType> outputCollectionBuffer;
-    int numStoredOutputSamples;
-    AudioBuffer<SampleType> copyingInterimBuffer;
+    DelayBuffer<SampleType> inputBuffer;
+    DelayBuffer<SampleType> outputBuffer;
     
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
@@ -131,8 +128,6 @@ private:
     void pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
                                 const int numSamplesUsed,
                                 const int numSamplesLeft);
-    
-    bool firstLatencyPeriod;
     
     Panner dryPanner;
     
