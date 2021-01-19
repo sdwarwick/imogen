@@ -13,7 +13,7 @@
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), softPedalMultiplier(1.0f), prevSoftPedalMultiplier(1.0f)
+parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f)
 {
     const double initSamplerate = std::max<double>(parent->getSamplerate(), 44100.0);
     
@@ -36,11 +36,15 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     synthesisBuffer.setSize(1, blocksize, true, true, true);
+    synthesisBuffer.clear();
     
-    prevPanningMults[0] = panningMults[0];
-    prevPanningMults[1] = panningMults[1];
+    copyingBuffer.setSize(1, blocksize, true, true, true);
+    
+    highestSBindexWritten = 0;
     
     prevVelocityMultiplier = currentVelocityMultiplier;
+    
+    prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
 };
 
 
@@ -78,12 +82,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     // soft pedal gain
+    const float softPedalMult = parent->getSoftPedalMultiplier();
     if (parent->isSoftPedalDown())
-        softPedalMultiplier = parent->getSoftPedalMultiplier();
-    else
-        softPedalMultiplier = 1.0f;
-    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMultiplier);
-    prevSoftPedalMultiplier = softPedalMultiplier;
+        synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
+    prevSoftPedalMultiplier = softPedalMult;
     
     if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
@@ -95,10 +97,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     // write to output & apply panning (w/ gain multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
-    {
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
                                       panner.getPrevGain(chan), panner.getGainMult(chan));
-    }
+    
+    moveUpSamples (synthesisBuffer, numSamples, highestSBindexWritten);
 };
 
 
@@ -108,13 +110,11 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
                                          const float newPeriod,
                                          const Array<int>& indicesOfGrainOnsets)
 {
-    synthesisBuffer.clear();
-    
     const int origPeriodInt = roundToInt(origPeriod); // size of input grains in samples
-    
-    const int newPeriodInt = floor (newPeriod); // OLA hop size
+    const int newPeriodInt  = floor (newPeriod); // OLA hop size
     
     int synthesisIndex = 0; // starting index for each synthesis grain being written
+    int highestIndexWritten = 0; // highest written-to index in the synthesis buffer
     
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
@@ -122,18 +122,40 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
         
         int readingEndSample = readingStartSample + origPeriodInt;
         
-        if (readingEndSample > inputAudio.getNumSamples())
-            readingEndSample = inputAudio.getNumSamples();
+        if (readingEndSample >= inputAudio.getNumSamples())
+            readingEndSample = inputAudio.getNumSamples() - 1;
         else if (i < (indicesOfGrainOnsets.size() - 1))
             if (readingEndSample > indicesOfGrainOnsets.getUnchecked(i + 1))
                 readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
         
-        while (synthesisIndex < readingEndSample)
+        while (synthesisIndex <= readingEndSample)
         {
-            synthesisBuffer.addFrom (0, synthesisIndex, inputAudio, 0, readingStartSample, origPeriodInt);
+            const int grainSize = readingEndSample - readingStartSample + 1;
+            synthesisBuffer.addFrom (0, synthesisIndex, inputAudio, 0, readingStartSample, grainSize);
+            highestIndexWritten = synthesisIndex + grainSize;
             synthesisIndex += newPeriodInt;
         }
     }
+    
+    highestSBindexWritten = highestIndexWritten;
+};
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& targetBuffer,
+                                                 const int numSamplesUsed,
+                                                 const int highestIndexWritten)
+{
+    const int numSamplesLeft = highestIndexWritten - numSamplesUsed + 1;
+    
+    if (numSamplesLeft < 1)
+        return;
+    
+    copyingBuffer.copyFrom (0, 0, targetBuffer, 0, numSamplesUsed, numSamplesLeft);
+    
+    targetBuffer.clear();
+    
+    targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
 };
 
 
@@ -193,6 +215,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
         quickAttack.reset();
     
     clearBuffers();
+    synthesisBuffer.clear();
 };
 
 

@@ -90,6 +90,8 @@ private:
     void esola (const AudioBuffer<SampleType>& inputAudio,
                 const float origPeriod, const float newPeriod, const Array<int>& indicesOfGrainOnsets);
     
+    void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed, const int highestIndexWritten);
+    
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
     ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
@@ -114,10 +116,12 @@ private:
     int currentAftertouch;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
+    int highestSBindexWritten;
+    AudioBuffer<SampleType> copyingBuffer;
     
     void fillWindowBuffer (const int numSamples);
     
-    float softPedalMultiplier, prevSoftPedalMultiplier;
+    float prevSoftPedalMultiplier;
     
     Panner panner;
     
