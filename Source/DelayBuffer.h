@@ -54,19 +54,7 @@ public:
     void writeSamples (const AudioBuffer<SampleType>& inputBuffer, const uint32_t inputChannel, const uint32_t inputStartSample,
                        const uint32_t numSamples, const uint32_t destChannel)
     {
-        jassert (numSamples <= lengthInSamples);
-        
-        writeIndex += numSamples; // pre-increment write_index before writing new samples
-        
-        if (writeIndex >= 2 * lengthInSamples)
-            writeIndex = lengthInSamples;  // back up write_index to beginning
-        
-        uint32_t imageIndex = writeIndex - lengthInSamples;
-        
-        jassert (imageIndex >= 0);
-        
-        base.copyFrom (destChannel, writeIndex, inputBuffer, inputChannel, inputStartSample, numSamples);
-        base.copyFrom (destChannel, imageIndex, inputBuffer, inputChannel, inputStartSample, numSamples);
+        writeSamples (inputBuffer.getReadPointer(inputChannel, inputStartSample), numSamples, destChannel);
     };
     
     
@@ -97,6 +85,8 @@ public:
         jassert (readIndex >= 0);
         
         destBuffer.copyFrom (destChannel, destStartSample, base, readingChannel, readIndex, numSamples);
+        
+        // getDelayedSamples (destBuffer.getWritePointer(destChannel, destStartSample), delay, numSamples, readingChannel);
     };
     
     

@@ -147,14 +147,14 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
                                                  const int numSamplesUsed,
                                                  const int highestIndexWritten)
 {
-    targetBuffer.clear();
-    
     const int numSamplesLeft = highestIndexWritten - numSamplesUsed + 1;
     
     if (numSamplesLeft < 1)
         return;
     
     copyingBuffer.copyFrom (0, 0, targetBuffer, 0, numSamplesUsed, numSamplesLeft);
+    
+    targetBuffer.clear();
     
     targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
 };

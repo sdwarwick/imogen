@@ -393,6 +393,9 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
+    
+    // harmonizer.processMidi(<#MidiBuffer &midiMessages#>);
+    
 //    const int numNewSamples = inBus.getNumSamples();
 //
 //    jassert (numNewSamples <= internalBlocksize);
@@ -462,19 +465,6 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
  
     ... for helping with management of the audio & MIDI FIFO
  */
-
-// copies samples from a later range of an AudioBuffer to the front of that AudioBuffer.
-// ex. take samples 45 - 50 of inputCollectionBuffer and copy them to sample indices 0 - 4 of inputCollectionBuffer
-template<typename SampleType>
-void ImogenEngine<SampleType>::pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
-                                                      const int numSamplesUsed, const int numSamplesLeft)
-{
-//    for (int chan = 0; chan < 2; ++chan)
-//    {
-//        copyingInterimBuffer.copyFrom (chan, 0, targetBuffer,         chan, numSamplesUsed, numSamplesLeft);
-//        targetBuffer        .copyFrom (chan, 0, copyingInterimBuffer, chan, 0,              numSamplesLeft);
-//    }
-};
 
 // appends midi events from one MidiBuffer to the end of an aggregateBuffer. The number of events copied will correspond to the numSamples argument.
 template<typename SampleType>
