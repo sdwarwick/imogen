@@ -34,8 +34,7 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const SampleType currentInputFreq);
+    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
     
     void prepare (const int blocksize);
     
@@ -89,7 +88,7 @@ private:
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
     void esola (const AudioBuffer<SampleType>& inputAudio,
-                const float shiftingRatio);
+                const float newPeriod);
     
     OwnedArray< WaveletGenerator<SampleType> > wavelets; // these wavelet generators will be "launching" individual windowed wavelets of our audio for our OLA process
     
@@ -153,14 +152,15 @@ public:
     
     bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
 
-    int getCurrentInputFreq() const noexcept { return currentInputFreq; };
+    SampleType getCurrentInputFreq() const noexcept { return currentInputFreq; };
+    void setCurrentInputFreq (const SampleType newInputFreq) { currentInputFreq = newInputFreq; };
     
     void handleMidiEvent(const MidiMessage& m, const int samplePosition);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     
     void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; };
     
-    void   setCurrentPlaybackSampleRate(const double newRate);
+    void setCurrentPlaybackSampleRate(const double newRate);
     double getSamplerate() const noexcept { return sampleRate; };
     
     void setConcertPitchHz(const int newConcertPitchhz);

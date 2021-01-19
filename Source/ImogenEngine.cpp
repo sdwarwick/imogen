@@ -301,6 +301,10 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
+    const float newPitch = pitchDetector.detectPitch (input); // returns -1 if the current frame is unpitched
+    
+    harmonizer.setCurrentInputFreq (newPitch);
+    
     harmonizer.processMidi (midiMessages);
     
     // master input gain

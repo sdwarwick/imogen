@@ -148,19 +148,18 @@ void Harmonizer<SampleType>::releaseResources()
 
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer)
+void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
+                                           AudioBuffer<SampleType>& outputBuffer)
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
-//    epochs.extractEpochSampleIndices (inputAudio, sampleRate, epochIndices);
+    const float origPeriod = 1.0f / currentInputFreq * sampleRate;
     
-    //jassert (currentInputFreq > 0);
-    
-    currentInputFreq = 1;
+    // multiply each grain by the window at this stage!!
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, currentInputFreq);
+            voice->renderNextBlock (inputAudio, outputBuffer);
 };
 
 

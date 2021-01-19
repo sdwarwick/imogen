@@ -23,28 +23,22 @@ public:
     
     
     void ola (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output,
-              const float playbackSpeed, const int sampleOffset,
-              const AudioBuffer<SampleType>& windowToUse)
+              const int sampleOffset)
     {
-        const int numSamples = floor (input.getNumSamples() * playbackSpeed);
-        
         const SampleType* r = input.getReadPointer(0);
               SampleType* w = output.getWritePointer(0);
-        //const SampleType* win = windowToUse.getReadPointer(0);
         
         int readingSample = 0;
         int writingSample = sampleOffset;
         
-        while (readingSample <= numSamples)
+        jassert (sampleOffset + input.getNumSamples() < output.getNumSamples());
+        
+        while (readingSample < input.getNumSamples())
         {
-            //w[writingSample] += (r[readingSample] * win[windowIndex]);
+            w[writingSample] += r[readingSample];
             
             ++readingSample;
             ++writingSample;
-            ++windowIndex;
-            
-            if (windowIndex >= windowToUse.getNumSamples())
-                windowIndex = 0;
         }
     };
     

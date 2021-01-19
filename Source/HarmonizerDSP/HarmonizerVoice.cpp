@@ -52,8 +52,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                                   const SampleType currentInputFreq)
+void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer)
 {
     if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
         stopNote(1.0f, false);
@@ -74,10 +73,9 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     const int numSamples = inputAudio.getNumSamples();
     
-    const float shiftingRatio = 1 / ( 1 + ( (currentInputFreq - currentOutputFreq) / currentOutputFreq ) );
+    const float newPeriod = 1.0f / currentOutputFreq * parent->getSamplerate();
     
-    // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
-    esola (inputAudio, shiftingRatio);
+    esola (inputAudio, newPeriod); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     // midi velocity gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
@@ -110,7 +108,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAudio,
-                                         const float shiftingRatio)
+                                         const float newPeriod)
 {
     // the OlA will look something like this...
     
@@ -122,19 +120,19 @@ void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAud
     
     const int totalNumSamples = inputAudio.getNumSamples();
     
-    const int sampleIncrement = floor (totalNumSamples * shiftingRatio);
-    const int olaIncrement    = floor (sampleIncrement / 2.0f);
-    
+    const int period = floor (newPeriod);
+    const int hopsize = floor (period / 2);
+
     int totalNumSamplesWritten = 0;
     int startSample = 0;
-    
+
     for (auto* wavelet : wavelets)
     {
-        wavelet->ola (inputAudio, synthesisBuffer, shiftingRatio, startSample, parent->olaWindow);
-        
-        totalNumSamplesWritten += sampleIncrement;
-        startSample            += olaIncrement;
-        
+        wavelet->ola (inputAudio, synthesisBuffer, startSample);
+
+        totalNumSamplesWritten += period;
+        startSample            += hopsize;
+
         if (totalNumSamplesWritten >= totalNumSamples)
             break;
     }
