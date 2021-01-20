@@ -341,7 +341,6 @@ private:
     
     AudioBuffer<SampleType> windowBuffer;
     void fillWindowBuffer (const int numSamples);
-    int lastWindowIndex = 0;
     int windowSize;
     
     void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);

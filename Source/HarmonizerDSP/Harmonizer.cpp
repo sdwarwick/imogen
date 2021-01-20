@@ -185,17 +185,26 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     
     // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
+    
+    int windowIndex = windowSize - indicesOfGrainOnsets.getUnchecked(1) + 1; // first element in array will always be 0
+    
+    if (windowIndex < 0)
+        windowIndex = windowSize - windowIndex;
+    else if (windowIndex >= windowSize)
+        windowIndex = windowIndex % windowSize;
+    
+    jassert (isPositiveAndBelow (windowIndex, windowSize));
+    
     SampleType* writing = inputStorageBuffer.getWritePointer(0);
     const SampleType* win = windowBuffer.getReadPointer(0);
     
     for (int s = 0; s < inputAudio.getNumSamples(); ++s)
     {
-        writing[s] *= win[lastWindowIndex];
+        writing[s] *= win[windowIndex];
         
-        ++lastWindowIndex;
-        
-        if (lastWindowIndex >= windowSize) // window size = input period
-            lastWindowIndex = 0;
+        ++windowIndex;
+        if (windowIndex >= windowSize) // window size = input period
+            windowIndex = 0;
     }
     
     AudioBuffer<SampleType> inputProxy (inputStorageBuffer.getArrayOfWritePointers(), 1, inputAudio.getNumSamples());
@@ -212,16 +221,20 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
 {
     targetArray.clearQuick();
     
-    targetArray.add(0);
-    
     const int extraSamplesBeforeFirstGrain = 0; // THIS is the key calculation here !!
     
     int nextGrain = extraSamplesBeforeFirstGrain;
     
     while (nextGrain < inputAudio.getNumSamples())
     {
-        targetArray.add(nextGrain);
+        targetArray.add (nextGrain);
         nextGrain += period;
+    }
+    
+    if (! targetArray.contains(0))
+    {
+        targetArray.add(0);
+        targetArray.sort();
     }
 };
 
@@ -244,14 +257,6 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 
     for (int i = 0; i < numSamples; ++i)
         writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
-    
-    if (lastWindowIndex > 0)
-        lastWindowIndex += (numSamples - windowSize);
-    
-    if (lastWindowIndex < 0)
-        lastWindowIndex = numSamples - lastWindowIndex;
-    
-    jassert (isPositiveAndBelow (lastWindowIndex, numSamples));
     
     windowSize = numSamples;
 };

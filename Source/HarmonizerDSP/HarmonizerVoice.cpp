@@ -104,7 +104,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio,
+void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio, // window has already been applied, we're just splicing here
                                         const int origPeriod, // size of input grains in samples
                                         const int newPeriod,  // OLA hop size
                                         const Array<int>& indicesOfGrainOnsets) // sample indices of the beginning of each grain
@@ -114,13 +114,13 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
-        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should be 0
+        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should always be 0
         
         int readingEndSample = readingStartSample + origPeriod;
         
         if (readingEndSample > inputAudio.getNumSamples())
             readingEndSample = inputAudio.getNumSamples();
-        else if (i < (indicesOfGrainOnsets.size() - 1))
+        else if ((i + 1) < indicesOfGrainOnsets.size())
         {
             const int nextGrainStart = indicesOfGrainOnsets.getUnchecked(i + 1);
             if (readingEndSample > nextGrainStart)
@@ -135,7 +135,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         if (grainSize < 1)
             continue;
         
-        const int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod);
+        const int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod); // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing
         
         if (hop < 1)
             continue;
