@@ -37,10 +37,9 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     synthesisBuffer.setSize(1, blocksize * 2, true, true, true);
     synthesisBuffer.clear();
+    highestSBindexWritten = 0;
     
     copyingBuffer.setSize(1, blocksize, true, true, true);
-    
-    highestSBindexWritten = 0;
     
     prevVelocityMultiplier = currentVelocityMultiplier;
     
@@ -120,7 +119,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         
         if (readingEndSample > inputAudio.getNumSamples())
             readingEndSample = inputAudio.getNumSamples();
-        else if ((i + 1) < indicesOfGrainOnsets.size())
+        else if (i < 2) // this check only needs to be performed for the first couple of frames
         {
             const int nextGrainStart = indicesOfGrainOnsets.getUnchecked(i + 1);
             if (readingEndSample > nextGrainStart)
@@ -128,17 +127,17 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         }
         
         if (synthesisIndex >= readingEndSample)
-            continue;
+            continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
                 
         const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this input grain
         
-        if (grainSize < 1)
+        if (grainSize < 1) // possible edge case
             continue;
         
-        const int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod); // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing
+        int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod); // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing
         
-        if (hop < 1)
-            continue;
+        if (hop < 1) // possible pathological case?
+            hop = 1;
         
         while (synthesisIndex < readingEndSample)
         {
@@ -162,14 +161,15 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
     if (numSamplesLeft < 1)
     {
         targetBuffer.clear();
+        highestSBindexWritten = 0;
         return;
     }
     
     copyingBuffer.copyFrom (0, 0, targetBuffer, 0, numSamplesUsed, numSamplesLeft);
-    
     targetBuffer.clear();
-    
     targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
+    
+    highestSBindexWritten = numSamplesLeft - 1;
 };
 
 

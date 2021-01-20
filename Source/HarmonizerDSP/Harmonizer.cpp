@@ -185,26 +185,26 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     
     // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
-    
-    int windowIndex = windowSize - indicesOfGrainOnsets.getUnchecked(1) + 1; // first element in array will always be 0
-    
-    if (windowIndex < 0)
-        windowIndex = windowSize - windowIndex;
-    else if (windowIndex >= windowSize)
-        windowIndex = windowIndex % windowSize;
-    
-    jassert (isPositiveAndBelow (windowIndex, windowSize));
-    
-    SampleType* writing = inputStorageBuffer.getWritePointer(0);
-    const SampleType* win = windowBuffer.getReadPointer(0);
-    
-    for (int s = 0; s < inputAudio.getNumSamples(); ++s)
     {
-        writing[s] *= win[windowIndex];
+        int windowIndex = windowSize - indicesOfGrainOnsets.getUnchecked(1) + 1; // first element in array will always be 0
         
-        ++windowIndex;
-        if (windowIndex >= windowSize) // window size = input period
-            windowIndex = 0;
+        while (windowIndex < 0)
+            windowIndex += windowSize;
+    
+        if (windowIndex >= windowSize)
+            windowIndex = windowIndex % windowSize;
+    
+        SampleType* writing = inputStorageBuffer.getWritePointer(0);
+        const SampleType* win = windowBuffer.getReadPointer(0);
+    
+        for (int s = 0; s < inputAudio.getNumSamples(); ++s)
+        {
+            writing[s] *= win[windowIndex];
+            
+            ++windowIndex;
+            if (windowIndex >= windowSize) // window size = input period in samples
+                windowIndex = 0;
+        }
     }
     
     AudioBuffer<SampleType> inputProxy (inputStorageBuffer.getArrayOfWritePointers(), 1, inputAudio.getNumSamples());
@@ -221,20 +221,21 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
 {
     targetArray.clearQuick();
     
+    // attempt to center analysis grains on the points of maximum energy in each pitch period
+    // the length of the grains should be 1 pitch period.
+    // note that the grains may not start or end exactly with the chunk of audio, but extraneous samples should only be left at the beginning or end of the audio; the rest of the grains should always be spaced 1 period apart
+    
     const int extraSamplesBeforeFirstGrain = 0; // THIS is the key calculation here !!
     
     int nextGrain = extraSamplesBeforeFirstGrain;
+    
+    if (nextGrain > 0) // make sure first element of output array is always 0
+        targetArray.add(0);
     
     while (nextGrain < inputAudio.getNumSamples())
     {
         targetArray.add (nextGrain);
         nextGrain += period;
-    }
-    
-    if (! targetArray.contains(0))
-    {
-        targetArray.add(0);
-        targetArray.sort();
     }
 };
 
