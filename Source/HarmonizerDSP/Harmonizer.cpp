@@ -214,13 +214,15 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
     
     targetArray.add(0);
     
-    const int totalNumSamples = inputAudio.getNumSamples();
+    const int extraSamplesBeforeFirstGrain = 0; // THIS is the key calculation here !!
     
-    const int numGrains = ceil (totalNumSamples / period);
+    int nextGrain = extraSamplesBeforeFirstGrain;
     
-    const int leftoverSamples = totalNumSamples - (numGrains * period);
-    
-    targetArray.sort();
+    while (nextGrain < inputAudio.getNumSamples())
+    {
+        targetArray.add(nextGrain);
+        nextGrain += period;
+    }
 };
 
 
