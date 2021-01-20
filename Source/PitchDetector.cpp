@@ -146,6 +146,28 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
 };
 
 
+template<typename SampleType>
+SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept
+{
+    unsigned int x0, x2;
+    
+    if (pos == 0 || pos == dataSize - 1)
+        return pos;
+    
+    x0 = (pos < 1)            ? pos     : pos - 1;
+    x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
+    
+    if (x0 == pos)
+        return (data[pos] <= data[x2]) ? pos : x2;
+    
+    if (x2 == pos)
+        return (data[pos] <= data[x0]) ? pos : x0;
+    
+    auto s0 = data[x0];
+    auto s2 = data[x2];
+    return pos + 0.5 * (s0 - s2) / (s0 - 2.0 * data[pos] + s2);
+};
+
 
 template class PitchDetector<float>;
 template class PitchDetector<double>;

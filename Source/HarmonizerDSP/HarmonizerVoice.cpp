@@ -82,9 +82,8 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     // soft pedal gain
-    const float softPedalMult = parent->getSoftPedalMultiplier();
-    if (parent->isSoftPedalDown())
-        synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
+    const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f;
+    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
     prevSoftPedalMultiplier = softPedalMult;
     
     if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON

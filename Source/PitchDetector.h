@@ -46,5 +46,8 @@ private:
     
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
+    
+    SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchDetector)
 };
