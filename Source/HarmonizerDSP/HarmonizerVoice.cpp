@@ -38,6 +38,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     synthesisBuffer.setSize(1, blocksize * 2, true, true, true);
     synthesisBuffer.clear();
     highestSBindexWritten = 0;
+    synthesisIndex = 0;
     
     copyingBuffer.setSize(1, blocksize, true, true, true);
     
@@ -108,7 +109,15 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
                                         const int newPeriod,  // OLA hop size
                                         const Array<int>& indicesOfGrainOnsets) // sample indices of the beginning of each grain
 {
-    int synthesisIndex = 0; // starting index for each synthesis grain being written
+    const int totalNumInputSamples = inputAudio.getNumSamples();
+    
+    if (synthesisIndex >= totalNumInputSamples) // don't need any of the analysis frames from this audio chunk, already written enough samples from previous frames...
+    {
+        synthesisIndex -= totalNumInputSamples;
+        if (synthesisIndex < 0) synthesisIndex = 0;
+        return;
+    }
+    
     int highestIndexWritten = 0; // highest written-to index in the synthesis buffer
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
@@ -117,27 +126,23 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         
         int readingEndSample = readingStartSample + origPeriod;
         
-        if (readingEndSample > inputAudio.getNumSamples())
-            readingEndSample = inputAudio.getNumSamples();
-        else if (i < 2) // this check only needs to be performed for the first couple of frames
-        {
-            const int nextGrainStart = indicesOfGrainOnsets.getUnchecked(i + 1);
-            if (readingEndSample > nextGrainStart)
-                readingEndSample = nextGrainStart;
-        }
+        if (readingEndSample > totalNumInputSamples)
+            readingEndSample = totalNumInputSamples;
+        else if (i < 2   // this check only needs to be performed for the first couple of frames
+                 && (i + 1) < indicesOfGrainOnsets.size())
+            readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
         
         if (synthesisIndex >= readingEndSample)
             continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
                 
         const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this input grain
         
-        if (grainSize < 1) // possible edge case
+        if (grainSize < 1)
             continue;
         
-        int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod); // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing
-        
-        if (hop < 1) // possible pathological case?
-            hop = 1;
+        // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
+        int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod);
+        if (hop < 1) hop = 1; // edge case
         
         while (synthesisIndex < readingEndSample)
         {
@@ -146,6 +151,9 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
             synthesisIndex += hop;
         }
     }
+    
+    synthesisIndex -= totalNumInputSamples;
+    if (synthesisIndex < 0) synthesisIndex = 0;
     
     highestSBindexWritten = highestIndexWritten;
 };

@@ -116,6 +116,7 @@ private:
     int currentAftertouch;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
+    int synthesisIndex = 0; // starting index for each synthesis grain being written
     int highestSBindexWritten;
     AudioBuffer<SampleType> copyingBuffer;
     

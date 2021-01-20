@@ -186,7 +186,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
     {
-        int windowIndex = windowSize - indicesOfGrainOnsets.getUnchecked(1) + 1; // first element in array will always be 0
+        int windowIndex = windowSize - indicesOfGrainOnsets.getUnchecked(1); // first element in array will always be 0
         
         while (windowIndex < 0)
             windowIndex += windowSize;
@@ -222,15 +222,20 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
     targetArray.clearQuick();
     
     // attempt to center analysis grains on the points of maximum energy in each pitch period
+    
+    // the output array should contain sample indices for the BEGINNING of grains -- so this function must first identify pitch peaks, then apply a sample offset to CENTER grains on these indices.
+    
     // the length of the grains should be 1 pitch period.
     // note that the grains may not start or end exactly with the chunk of audio, but extraneous samples should only be left at the beginning or end of the audio; the rest of the grains should always be spaced 1 period apart
     
-    const int extraSamplesBeforeFirstGrain = 0; // THIS is the key calculation here !!
+    int extraSamplesBeforeFirstGrain = 0; // THIS is the key calculation here !!
+    // this value should always be less than the period
+    
+    
+    if (extraSamplesBeforeFirstGrain > 0) // make sure first element of output array is always 0
+        targetArray.add(0);
     
     int nextGrain = extraSamplesBeforeFirstGrain;
-    
-    if (nextGrain > 0) // make sure first element of output array is always 0
-        targetArray.add(0);
     
     while (nextGrain < inputAudio.getNumSamples())
     {
