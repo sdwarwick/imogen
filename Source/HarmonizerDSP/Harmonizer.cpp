@@ -35,6 +35,8 @@ Harmonizer<SampleType>::Harmonizer():
     updateStereoWidth(100);
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
+    
+    windowSize = 0;
 };
 
 
@@ -68,6 +70,12 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     for(auto* voice : voices)
         voice->prepare(blocksize);
     
+    windowBuffer.setSize (1, blocksize, true, true, true);
+    
+    indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
+    
+    inputStorageBuffer.setSize(1, blocksize, true, true, true);
+    
 //    epochs.prepare(blocksize);
 };
 
@@ -83,6 +91,8 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     const ScopedLock sl (lock);
     
     sampleRate = newRate;
+    
+    setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
         voice->updateSampleRate(newRate);
@@ -100,6 +110,8 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
     const ScopedLock sl (lock);
     
     pitchConverter.setConcertPitchHz(newConcertPitchhz);
+    
+    setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
         if(voice->isVoiceActive())
@@ -146,6 +158,19 @@ void Harmonizer<SampleType>::releaseResources()
 };
 
 
+template<typename SampleType>
+void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
+{
+    currentInputFreq = newInputFreq;
+    
+    currentInputPeriod = roundToInt (1.0f / newInputFreq * sampleRate);
+    
+    fillWindowBuffer (currentInputPeriod);
+};
+
+
+
+
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
 void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
@@ -153,23 +178,81 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
-    const float origPeriod = 1.0f / currentInputFreq * sampleRate;
+    inputStorageBuffer.copyFrom (0, 0, inputAudio, 0, 0, inputAudio.getNumSamples());
     
-    // need to indentify sample indices of pitch period onsets within input audio
     
-    // multiply each grain by the window at this stage!!
+    extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
+    
+    
+    // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
+    SampleType* writing = inputStorageBuffer.getWritePointer(0);
+    const SampleType* win = windowBuffer.getReadPointer(0);
+    
+    for (int s = 0; s < inputAudio.getNumSamples(); ++s)
+    {
+        writing[s] *= win[lastWindowIndex];
+        
+        ++lastWindowIndex;
+        
+        if (lastWindowIndex >= windowSize) // window size = input period
+            lastWindowIndex = 0;
+    }
+    
+    AudioBuffer<SampleType> inputProxy (inputStorageBuffer.getArrayOfWritePointers(), 1, inputAudio.getNumSamples());
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-        {
-            // voice->renderNextBlock (inputAudio, outputBuffer, origPeriod, indicesOfGrainOnsets);
-        }
+            voice->renderNextBlock (inputProxy, outputBuffer, currentInputPeriod, indicesOfGrainOnsets);
+};
+
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period)
+{
+    targetArray.clearQuick();
+    
+    targetArray.add(0);
+    
+    const int totalNumSamples = inputAudio.getNumSamples();
+    
+    const int numGrains = ceil (totalNumSamples / period);
+    
+    const int leftoverSamples = totalNumSamples - (numGrains * period);
+    
+    targetArray.sort();
 };
 
 
 
 
+template<typename SampleType>
+void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
+{
+    if (windowSize == numSamples)
+        return;
+    
+    jassert (numSamples <= windowBuffer.getNumSamples());
+    
+    windowBuffer.clear();
+    
+    auto* writing = windowBuffer.getWritePointer(0);
+    
+    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
 
+    for (int i = 0; i < numSamples; ++i)
+        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
+    
+    if (lastWindowIndex > 0)
+        lastWindowIndex += (numSamples - windowSize);
+    
+    if (lastWindowIndex < 0)
+        lastWindowIndex = numSamples - lastWindowIndex;
+    
+    jassert (isPositiveAndBelow (lastWindowIndex, numSamples));
+    
+    windowSize = numSamples;
+};
 
 
 

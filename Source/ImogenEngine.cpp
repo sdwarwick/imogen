@@ -303,7 +303,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     const float newPitch = pitchDetector.detectPitch (input); // returns -1 if the current frame is unpitched
     
-    if (harmonizer.getCurrentInputFreq() != newPitch)
+    if (harmonizer.getCurrentInputFreq() != newPitch && newPitch > 0.0f)
         harmonizer.setCurrentInputFreq (newPitch);
     
     harmonizer.processMidi (midiMessages);
@@ -393,68 +393,37 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
+    // harmonizer.processMidi(midiMessages);
     
-    // harmonizer.processMidi(<#MidiBuffer &midiMessages#>);
+    const int numNewSamples = inBus.getNumSamples();
     
-//    const int numNewSamples = inBus.getNumSamples();
-//
-//    jassert (numNewSamples <= internalBlocksize);
-//
-//    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
-//
-//    // with current setup, input will be mixed to mono & copied to each output channel.
-//    if (inBus.getNumChannels() == 1)
-//        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
-//    else
-//    {
-//        const int totalNumChannels = inBus.getNumChannels();
-//
-//        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
-//
-//        for (int channel = 1; channel < totalNumChannels; ++channel)
-//            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
-//
-//        inBuffer.applyGain (1.0f / totalNumChannels);
-//
-//        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
-//    }
-//
-//    inputCollectionBuffer.copyFrom (0, numStoredInputSamples, input, 0, 0, numNewSamples);
-//    numStoredInputSamples += numNewSamples;
-//
-//    if (numStoredInputSamples < internalBlocksize)
-//    {
-//        if (numStoredOutputSamples == 0)
-//        {
-//            jassert (firstLatencyPeriod);
-//            output.clear();
-//            return;
-//        }
-//    }
-//    else
-//    {
-//        firstLatencyPeriod = false;
-//
-//        for (int chan = 0; chan < 2; ++chan)
-//            outputCollectionBuffer.copyFrom (chan, numStoredOutputSamples, inputCollectionBuffer, 0, 0, internalBlocksize);
-//
-//        numStoredOutputSamples += internalBlocksize;
-//        numStoredInputSamples  -= internalBlocksize;
-//
-//        if (numStoredInputSamples > 0)
-//            pushUpLeftoverSamples (inputCollectionBuffer, internalBlocksize, numStoredInputSamples);
-//    }
-//
-//    jassert (numNewSamples <= numStoredOutputSamples);
-//
-//    // write to output
-//    for (int chan = 0; chan < 2; ++chan)
-//        output.copyFrom (chan, 0, outputCollectionBuffer, chan, 0, numNewSamples);
-//
-//    numStoredOutputSamples -= numNewSamples;
-//
-//    if (numStoredOutputSamples > 0)
-//        pushUpLeftoverSamples (outputCollectionBuffer, numNewSamples, numStoredOutputSamples);
+    jassert (numNewSamples <= internalBlocksize);
+    
+    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
+    
+    const int totalNumChannels = inBus.getNumChannels();
+    
+    if (totalNumChannels == 1)
+        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
+    else
+    {
+        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
+        
+        for (int channel = 1; channel < totalNumChannels; ++channel)
+            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
+        
+        inBuffer.applyGain (1.0f / totalNumChannels);
+        
+        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
+    }
+    
+    inputBuffer.writeSamples (input, 0, 0, numNewSamples, 0);
+    
+    if (inputBuffer.numStoredSamples() >= internalBlocksize)
+        inputBuffer.getDelayedSamples(inBuffer, 0, 0, internalBlocksize, internalBlocksize, 0);
+    
+    for (int chan = 0; chan < 2; ++chan)
+        outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
 };
 
 

@@ -131,7 +131,9 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         }
     }
     
-    // period = minK
+    
+    int period = minK + minPeriod;
+    
     // pitch confidence = asdfMinimum
     
     // if asdfMinimum is too high, then we have a low pitch confidence.
@@ -140,7 +142,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     // quadratic interpolation to find accurate float period from integer period
     
-    // pitch in hz = 1 / period * samplerate
+    return 1.0f / period * samplerate;
 };
 
 

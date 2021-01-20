@@ -34,7 +34,7 @@ public:
     ~HarmonizerVoice();
     
     void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const float origPeriod, const Array<int>& indicesOfGrainOnsets);
+                         const int origPeriod, const Array<int>& indicesOfGrainOnsets);
     
     void prepare (const int blocksize);
     
@@ -87,8 +87,8 @@ private:
     
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
-    void esola (const AudioBuffer<SampleType>& inputAudio,
-                const float origPeriod, const float newPeriod, const Array<int>& indicesOfGrainOnsets);
+    void sola (const AudioBuffer<SampleType>& inputAudio,
+                const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets);
     
     void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed, const int highestIndexWritten);
     
@@ -118,8 +118,6 @@ private:
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     int highestSBindexWritten;
     AudioBuffer<SampleType> copyingBuffer;
-    
-    void fillWindowBuffer (const int numSamples);
     
     float prevSoftPedalMultiplier;
     
@@ -152,7 +150,7 @@ public:
     bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
 
     SampleType getCurrentInputFreq() const noexcept { return currentInputFreq; };
-    void setCurrentInputFreq (const SampleType newInputFreq) { currentInputFreq = newInputFreq; };
+    void setCurrentInputFreq (const SampleType newInputFreq);
     
     void handleMidiEvent(const MidiMessage& m, const int samplePosition);
     void updateMidiVelocitySensitivity(const int newSensitivity);
@@ -248,6 +246,10 @@ private:
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
+    Array<int> indicesOfGrainOnsets;
+    
+    AudioBuffer<SampleType> inputStorageBuffer;
+    
     // MIDI
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
@@ -296,6 +298,7 @@ private:
     ADSR::Parameters quickAttackParams;
     
     SampleType currentInputFreq;
+    int currentInputPeriod;
     
     double sampleRate;
     bool shouldStealNotes;
@@ -335,6 +338,13 @@ private:
     bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
     
     float softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
+    
+    AudioBuffer<SampleType> windowBuffer;
+    void fillWindowBuffer (const int numSamples);
+    int lastWindowIndex = 0;
+    int windowSize;
+    
+    void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

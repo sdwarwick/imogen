@@ -51,7 +51,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                                   const float origPeriod,
+                                                   const int origPeriod,
                                                    const Array<int>& indicesOfGrainOnsets)
 {
     if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
@@ -71,11 +71,11 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         return;
     }
     
-    const int numSamples = inputAudio.getNumSamples();
-    
     const float newPeriod = 1.0f / currentOutputFreq * parent->getSamplerate();
     
-    esola (inputAudio, origPeriod, newPeriod, indicesOfGrainOnsets); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    
+    const int numSamples = inputAudio.getNumSamples();
     
     // midi velocity gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
@@ -105,36 +105,47 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::esola (const AudioBuffer<SampleType>& inputAudio,
-                                         const float origPeriod,
-                                         const float newPeriod,
-                                         const Array<int>& indicesOfGrainOnsets)
+void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio,
+                                        const int origPeriod, // size of input grains in samples
+                                        const int newPeriod,  // OLA hop size
+                                        const Array<int>& indicesOfGrainOnsets) // sample indices of the beginning of each grain
 {
-    const int origPeriodInt = roundToInt(origPeriod); // size of input grains in samples
-    const int newPeriodInt  = floor (newPeriod); // OLA hop size
-    
     int synthesisIndex = 0; // starting index for each synthesis grain being written
     int highestIndexWritten = 0; // highest written-to index in the synthesis buffer
-    
+   
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
-        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
+        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should be 0
         
-        int readingEndSample = readingStartSample + origPeriodInt;
+        int readingEndSample = readingStartSample + origPeriod;
         
-        if (readingEndSample >= inputAudio.getNumSamples())
-            readingEndSample = inputAudio.getNumSamples() - 1;
+        if (readingEndSample > inputAudio.getNumSamples())
+            readingEndSample = inputAudio.getNumSamples();
         else if (i < (indicesOfGrainOnsets.size() - 1))
-            if (readingEndSample > indicesOfGrainOnsets.getUnchecked(i + 1))
-                readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
-                
-        const int grainSize = readingEndSample - readingStartSample + 1;
+        {
+            const int nextGrainStart = indicesOfGrainOnsets.getUnchecked(i + 1);
+            if (readingEndSample > nextGrainStart)
+                readingEndSample = nextGrainStart;
+        }
         
-        while (synthesisIndex <= readingEndSample)
+        if (synthesisIndex >= readingEndSample)
+            continue;
+                
+        const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this input grain
+        
+        if (grainSize < 1)
+            continue;
+        
+        const int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod);
+        
+        if (hop < 1)
+            continue;
+        
+        while (synthesisIndex < readingEndSample)
         {
             synthesisBuffer.addFrom (0, synthesisIndex, inputAudio, 0, readingStartSample, grainSize);
             highestIndexWritten = synthesisIndex + grainSize;
-            synthesisIndex += newPeriodInt;
+            synthesisIndex += hop;
         }
     }
     
@@ -150,7 +161,10 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
     const int numSamplesLeft = highestIndexWritten - numSamplesUsed + 1;
     
     if (numSamplesLeft < 1)
+    {
+        targetBuffer.clear();
         return;
+    }
     
     copyingBuffer.copyFrom (0, 0, targetBuffer, 0, numSamplesUsed, numSamplesLeft);
     
@@ -174,20 +188,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::clearBuffers()
 {
     synthesisBuffer.clear();
-};
-
-
-
-
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::fillWindowBuffer(const int numSamples)
-{
-//    window.clear();
-//    auto* writing = window.getWritePointer(0);
-//    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
-//
-//    for(int i = 0; i < numSamples; ++i)
-//        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
 };
 
 
