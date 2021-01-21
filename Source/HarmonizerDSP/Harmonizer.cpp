@@ -53,9 +53,7 @@ template<typename SampleType>
 void Harmonizer<SampleType>::clearBuffers()
 {
     for (auto* voice : voices)
-        voice->clearBuffers(); 
-   
-//    epochIndices.clearQuick();
+        voice->clearBuffers();
 };
 
 
@@ -72,8 +70,6 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     windowBuffer.setSize (1, blocksize, true, true, true);
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
-    
-    inputStorageBuffer.setSize(1, blocksize, true, true, true);
     
     intervalsLatchedTo.ensureStorageAllocated(voices.size());
 };
@@ -138,7 +134,6 @@ void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
 template<typename SampleType>
 void Harmonizer<SampleType>::releaseResources()
 {
-//    epochIndices.clear();
     currentlyActiveNotes.clear();
     currentlyActiveNoReleased.clear();
     aggregateMidiBuffer.clear();
@@ -146,7 +141,6 @@ void Harmonizer<SampleType>::releaseResources()
     for(auto* voice : voices)
         voice->releaseResources();
     
-//    epochs.releaseResources();
     panner.releaseResources();
 };
 
@@ -217,127 +211,123 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
                                            AudioBuffer<SampleType>& outputBuffer,
                                            const bool frameIsPitched)
 {
-    outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
+    outputBuffer.clear();
     
     // how to handle unpitched frames???
     
-    inputStorageBuffer.copyFrom (0, 0, inputAudio, 0, 0, inputAudio.getNumSamples());
-    
-    extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod, roundToInt(currentInputFloatPeriod / 2.0f));
-    
-    // multiply the input signal by the window function in-place before sending into the HarmonizerVoices:
-    multiplyGrainsByWindow (inputStorageBuffer,
-                            windowBuffer.getReadPointer(0),
-                            windowSize - indicesOfGrainOnsets.getUnchecked(1), // starting index of window buffer
-                            windowSize);
-    
-    AudioBuffer<SampleType> inputProxy (inputStorageBuffer.getArrayOfWritePointers(), 1, inputAudio.getNumSamples());
+    extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputProxy, outputBuffer, currentInputPeriod, indicesOfGrainOnsets);
+            voice->renderNextBlock (inputAudio, outputBuffer, currentInputPeriod, indicesOfGrainOnsets, windowBuffer);
 };
 
 
-
 template<typename SampleType>
-void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio,
-                                                       const int period, const int periodHalved)
+void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
+                                                          const AudioBuffer<SampleType>& inputAudio,
+                                                          const int period)
 {
     targetArray.clearQuick();
     
-    // attempt to center analysis grains on the points of maximum energy in each pitch period
+    int analysisIndex = 0;
     
-    // the output array should contain sample indices for the BEGINNING of grains -- so this function must first identify pitch peaks, then apply a sample offset to CENTER grains on these indices.
+    SampleType localMin;
+    unsigned int indexOfLocalMin;
     
-    // the length of the grains should be 1 pitch period.
-    // note that the grains may not start or end exactly with the chunk of audio, but extraneous samples should only be left at the beginning or end of the audio; the rest of the grains should always be spaced 1 period apart
-    
-    const int analysisLimit = std::min (inputAudio.getNumSamples(),
-                                        period * 2);
-    
-    SampleType localMin = 1.0f;
-    int indexOfLocalMin = 0;
-    
-    SampleType localMax = -1.0f;
-    int indexOfLocalMax = 0;
+    SampleType localMax;
+    unsigned int indexOfLocalMax;
     
     const SampleType* reading = inputAudio.getReadPointer(0);
     
-    for (int s = 0; s < analysisLimit; ++s) // identify the local maxima & minima
+    while (analysisIndex < inputAudio.getNumSamples())
     {
-        const SampleType currentSample = reading[s];
+        localMin = reading[analysisIndex];
+        indexOfLocalMin = analysisIndex;
         
-        if (currentSample < localMin)
+        localMax = reading[analysisIndex];
+        indexOfLocalMax = analysisIndex;
+        
+        // identify the local maxima & minima
+        for (int s = analysisIndex + 1;
+             s < std::min (analysisIndex + windowSize, inputAudio.getNumSamples());
+             ++s)
         {
-            localMin = currentSample;
-            indexOfLocalMin = s;
+            const SampleType currentSample = reading[s];
+            
+            if (currentSample < localMin)
+            {
+                localMin = currentSample;
+                indexOfLocalMin = s;
+            }
+            
+            if (currentSample > localMax)
+            {
+                localMax = currentSample;
+                indexOfLocalMax = s;
+            }
+            
+            if (localMin <= -1.0f)
+                break;
+            
+            if (localMax >= 1.0f)
+                break;
         }
         
-        if (currentSample > localMax)
+        int positiveGrain = indexOfLocalMax - period;
+        if (positiveGrain < 0) positiveGrain += windowSize;
+        
+        int negativeGrain = indexOfLocalMin - period;
+        if (negativeGrain < 0) negativeGrain += windowSize;
+        
+        const int  lastGrainEnd = targetArray.isEmpty() ? period : targetArray.getLast() + period;
+        const bool usePositiveGrain = abs(positiveGrain - lastGrainEnd) < abs(negativeGrain - lastGrainEnd);
+        
+        const int peakIndex = usePositiveGrain ? indexOfLocalMax : indexOfLocalMin;
+        
+        int grainStart = usePositiveGrain ? positiveGrain : negativeGrain;
+        
+        // quick little localized interpolation...
         {
-            localMax = currentSample;
-            indexOfLocalMax = s;
+            const int alt = (usePositiveGrain ? -1 : 1);
+            const SampleType cur = reading[peakIndex];
+            const SampleType s1 = (peakIndex + 1) < inputAudio.getNumSamples() ? reading[peakIndex + 1] : alt;
+            const SampleType s0 = (peakIndex - 1) >= 0                         ? reading[peakIndex - 1] : alt;
+        
+            if (usePositiveGrain)
+            {
+                if (s0 > cur)
+                {
+                    if (grainStart > 0)
+                        --grainStart;
+                }
+                else if (s1 > cur)
+                {
+                    if ((grainStart + 1) < inputAudio.getNumSamples())
+                        ++grainStart;
+                }
+            }
+            else
+            {
+                if (s0 < cur)
+                {
+                    if (grainStart > 0)
+                        --grainStart;
+                }
+                else if (s1 < cur)
+                {
+                    if ((grainStart + 1) < inputAudio.getNumSamples())
+                        ++grainStart;
+                }
+            }
         }
         
-        if (localMin <= -1.0f)
-            break;
+        if ((analysisIndex == 0) && (grainStart > 0))
+            targetArray.add (0);
         
-        if (localMax >= 1.0f)
-            break;
-    }
-    
-    
-    // determine whether to use positive or negative peak...
-    
-    int positiveOffset; // the # of extra samples we'd have before the first analysis grain if we use positive peaks
-    int negativeOffset; // the # of extra samples we'd have before the first analysis grain if we use negative peaks
-    
-    positiveOffset = indexOfLocalMax - periodHalved;
-    if (positiveOffset >= period)
-        positiveOffset = positiveOffset % period;
-    else if (positiveOffset < 0)
-            positiveOffset += period;
-    
-    negativeOffset = indexOfLocalMin - periodHalved;
-    if (negativeOffset >= period)
-        negativeOffset = negativeOffset % period;
-    else if (negativeOffset < 0)
-            negativeOffset += period;
-    
-    // sample index of the start of our first full analysis grain -- choosing the peak that leaves the fewest extra samples @ beginning
-    int grainStart = std::min (positiveOffset, negativeOffset);
-    
-    if (grainStart > 0) // make sure first element of output array is always 0
-        targetArray.add(0);
-    
-    jassert (grainStart < inputAudio.getNumSamples()); // we should have at least 1 full analysis grain in our audio buffer being sent for OLA
-    
-    while (grainStart < inputAudio.getNumSamples())
-    {
         targetArray.add (grainStart);
-        grainStart += period;
-    }
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
-                                                     const SampleType* windowToUse,
-                                                     const int windowStartIndex, const int windowSize)
-{
-    SampleType* writing = audioToWindow.getWritePointer(0);
-    
-    int windowIndex = windowStartIndex;
-    
-    for (int s = 0; s < audioToWindow.getNumSamples(); ++s)
-    {
-        writing[s] *= windowToUse[windowIndex];
         
-        ++windowIndex;
-        
-        if (windowIndex >= windowSize)
-            windowIndex = 0;
+        analysisIndex = grainStart + period; // grains should be length 2 period with 50 % overlap
     }
 };
 

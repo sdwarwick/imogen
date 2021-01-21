@@ -34,7 +34,8 @@ public:
     ~HarmonizerVoice();
     
     void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const int origPeriod, const Array<int>& indicesOfGrainOnsets);
+                         const int origPeriod, const Array<int>& indicesOfGrainOnsets,
+                         const AudioBuffer<SampleType>& windowToUse);
     
     void prepare (const int blocksize);
     
@@ -88,7 +89,8 @@ private:
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
     void sola (const AudioBuffer<SampleType>& inputAudio,
-                const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets);
+               const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
+               const AudioBuffer<SampleType>& windowToUse);
     
     void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed, const int highestIndexWritten);
     
@@ -253,8 +255,6 @@ private:
     
     Array<int> indicesOfGrainOnsets;
     
-    AudioBuffer<SampleType> inputStorageBuffer;
-    
     // MIDI
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
@@ -325,9 +325,6 @@ private:
     int descantLowerThresh;
     int descantInterval;
     
-//    EpochFinder<SampleType> epochs;
-//    Array<int> epochIndices;
-    
     PanningManager  panner;
     VelocityHelper  velocityConverter;
     PitchConverter  pitchConverter;
@@ -347,12 +344,9 @@ private:
     void fillWindowBuffer (const int numSamples);
     int windowSize;
     
-    void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio,
-                                   const int period, const int periodHalved);
     
-    void multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
-                                 const SampleType* windowToUse,
-                                 const int windowStartIndex, const int windowSize);
+    void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
+
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

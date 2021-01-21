@@ -52,7 +52,8 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                                                    const int origPeriod,
-                                                   const Array<int>& indicesOfGrainOnsets)
+                                                   const Array<int>& indicesOfGrainOnsets,
+                                                   const AudioBuffer<SampleType>& windowToUse)
 {
     if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
         stopNote(1.0f, false);
@@ -73,7 +74,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     const float newPeriod = (float) (parent->getSamplerate() / currentOutputFreq);
     
-    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     const int numSamples = inputAudio.getNumSamples();
     
@@ -105,9 +106,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio, // window has already been applied, we're just splicing here
-                                        const int origPeriod, // size of input grains in samples
+                                        const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
-                                        const Array<int>& indicesOfGrainOnsets) // sample indices of the beginning of each grain
+                                        const Array<int>& indicesOfGrainOnsets, // sample indices of the beginning of each analysis grain
+                                        const AudioBuffer<SampleType>& windowToUse) // Hanning window, length origPeriod * 2
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();
     
@@ -118,6 +120,8 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         return;
     }
     
+    const int analysisGrain = 2 * origPeriod;
+    
     int highestIndexWritten = 0; // highest written-to index in the synthesis buffer
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
@@ -125,23 +129,35 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should always be 0
         
         const int readingEndSample = ((i + 1) < indicesOfGrainOnsets.size()) ?
-                                     indicesOfGrainOnsets.getUnchecked(i + 1) : std::min (readingStartSample + origPeriod,
+                                     indicesOfGrainOnsets.getUnchecked(i + 1) : std::min (readingStartSample + analysisGrain,
                                                                                           totalNumInputSamples);
-        
         if (synthesisIndex >= readingEndSample)
             continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
                 
         const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this input grain
         
         if (grainSize < 1)
-            continue;
+            continue; // nothing to OLA
         
         // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
-        const int hop = (grainSize == origPeriod) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / origPeriod), 1);
+        const int hop = (grainSize == analysisGrain) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / analysisGrain), 1);
         
         while (synthesisIndex < readingEndSample)
         {
-            synthesisBuffer.addFrom (0, synthesisIndex, inputAudio, 0, readingStartSample, grainSize);
+            auto* writing = synthesisBuffer.getWritePointer(0);
+            const auto* reading = inputAudio.getReadPointer(0);
+            const auto* window = windowToUse.getReadPointer(0);
+            
+            for (int s = synthesisIndex, a = readingStartSample, windowIndex = readingEndSample % analysisGrain;
+                 s < synthesisIndex + grainSize;
+                 ++s, ++a)
+            {
+                writing[s] += (reading[a] * window[windowIndex]);
+                
+                ++windowIndex;
+                if (windowIndex == analysisGrain) windowIndex = 0;
+            }
+            
             highestIndexWritten = synthesisIndex + grainSize;
             synthesisIndex += hop;
         }
