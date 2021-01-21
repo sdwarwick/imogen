@@ -52,6 +52,9 @@ private:
     
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
+    void calculateASDF (const SampleType* inputAudio, const int numSamples, SampleType* outputData);
+    
+    unsigned int indexOfMinElement (const SampleType* data, const int dataSize);
     
     SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
     

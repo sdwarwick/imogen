@@ -156,7 +156,7 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
 {
     currentInputFreq = newInputFreq;
     
-    currentInputFloatPeriod = 1.0f / newInputFreq * sampleRate;
+    currentInputFloatPeriod = (float) (sampleRate / newInputFreq);
     
     currentInputPeriod = roundToInt (currentInputFloatPeriod);
     
@@ -222,7 +222,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod, roundToInt(currentInputFloatPeriod / 2.0f));
     
-    // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
+    // multiply the input signal by the window function in-place before sending into the HarmonizerVoices:
     multiplyGrainsByWindow (inputStorageBuffer, windowBuffer, windowSize - indicesOfGrainOnsets.getUnchecked(1), windowSize);
     
 
@@ -274,7 +274,14 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
             localMax = currentSample;
             indexOfLocalMax = s;
         }
+        
+        if (localMin <= -1.0f)
+            break;
+        
+        if (localMax >= 1.0f)
+            break;
     }
+    
     
     // determine whether to use positive or negative peak...
     
@@ -293,7 +300,7 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
     else if (negativeOffset < 0)
             negativeOffset += period;
     
-    // sample index of the start of our first full analysis grain
+    // sample index of the start of our first full analysis grain -- choosing the peak that leaves the fewest extra samples @ beginning
     int grainStart = std::min (positiveOffset, negativeOffset);
     
     if (grainStart > 0) // make sure first element of output array is always 0

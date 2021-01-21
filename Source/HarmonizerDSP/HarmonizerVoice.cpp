@@ -71,7 +71,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         return;
     }
     
-    const float newPeriod = 1.0f / currentOutputFreq * parent->getSamplerate();
+    const float newPeriod = (float) (parent->getSamplerate() / currentOutputFreq);
     
     sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
@@ -111,7 +111,8 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();
     
-    if (synthesisIndex >= totalNumInputSamples) // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
+    if (synthesisIndex >= totalNumInputSamples)
+        // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
     {
         synthesisIndex -= totalNumInputSamples;
         return;
@@ -123,12 +124,9 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     {
         const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should always be 0
         
-        int readingEndSample = readingStartSample + origPeriod;
-        
-        if (readingEndSample > totalNumInputSamples)
-            readingEndSample = totalNumInputSamples;
-        else if (i < 2)   // this check only needs to be performed for the first couple of frames, && i+1 should always be within range here
-            readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
+        const int readingEndSample = ((i + 1) < indicesOfGrainOnsets.size()) ?
+                                     indicesOfGrainOnsets.getUnchecked(i + 1) : std::min (readingStartSample + origPeriod,
+                                                                                          totalNumInputSamples);
         
         if (synthesisIndex >= readingEndSample)
             continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
@@ -139,8 +137,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
             continue;
         
         // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
-        int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod);
-        if (hop < 1) hop = 1; // edge case??
+        const int hop = (grainSize == origPeriod) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / origPeriod), 1);
         
         while (synthesisIndex < readingEndSample)
         {
