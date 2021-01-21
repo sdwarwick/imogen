@@ -53,10 +53,14 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     
     harmonizer.newMaxNumVoices (std::max (initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
     
+    harmonizer.setCurrentPlaybackSampleRate (initSamplerate);
+    
     prevOutputGain = outputGain;
     prevInputGain  = inputGain;
     
     processor.setLatencySamples (internalBlocksize);
+    
+    pitchDetector.setSamplerate (initSamplerate);
     
     prepare (initSamplerate, std::max (initSamplesPerBlock, MAX_BUFFERSIZE));
     
@@ -71,8 +75,11 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 template<typename SampleType>
 void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 {
-    if(harmonizer.getSamplerate() != sampleRate)
+    if (harmonizer.getSamplerate() != sampleRate)
         harmonizer.setCurrentPlaybackSampleRate(sampleRate);
+    
+    if (pitchDetector.getSamplerate() != sampleRate)
+        pitchDetector.setSamplerate(sampleRate);
     
     const int aggregateBufferSizes = internalBlocksize * 2;
     
@@ -687,6 +694,20 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
     pitchDetector.setHzRange (minHz, maxHz);
+    
+    const int newMaxPeriod = pitchDetector.getMaxPeriod();
+    if (internalBlocksize != newMaxPeriod)
+    {
+        internalBlocksize = newMaxPeriod;
+        
+        processor.setLatencySamples (internalBlocksize);
+        
+        inBuffer .setSize (1, internalBlocksize, true, true, true);
+        dryBuffer.setSize (2, internalBlocksize, true, true, true);
+        wetBuffer.setSize (2, internalBlocksize, true, true, true);
+        
+        prepare (processor.getSampleRate(), internalBlocksize);
+    }
 };
 
 

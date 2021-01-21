@@ -452,6 +452,12 @@ void ImogenAudioProcessor::updatePitchDetectionWrapped (ImogenEngine<SampleType>
 {
     activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
     activeEngine.updatePitchDetectionConfidenceThresh(confidenceThresh->get());
+    
+    if (latencySamples != activeEngine.reportLatency())
+    {
+        latencySamples = activeEngine.reportLatency();
+        setLatencySamples (latencySamples);
+    }
 };
 
 
