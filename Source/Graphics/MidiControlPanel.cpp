@@ -19,6 +19,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     sustainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
     releaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
     adsrOnOffLink  (std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
+    latchToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "latchIsOn", latchToggle)),
+    intervalLockLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "intervalLock", intervalLock)),
     stereoWidthLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
     lowestPanLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
     midiVelocitySensLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
@@ -86,32 +88,45 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
             addAndMakeVisible(adsrOnOff);
             adsrOnOff.onClick = [this] { audioProcessor.updateAdsr(); };
             
-            Button::ButtonState initState = (audioProcessor.adsrToggle->get()) ?
-                                            Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
-            adsrOnOff.setState (initState);
+            adsrOnOff.setState (buttonStateFromBool (audioProcessor.adsrToggle->get()));
+            adsrOnOff.setToggleState (audioProcessor.adsrToggle->get(), dontSendNotification);
         }
     }
     
     // Midi latch
     {
-        // on/off toggle
-        {
-            latchToggle.setButtonText("MIDI latch");
-            //addAndMakeVisible(latchToggle);
-            latchToggle.onClick = [this] { audioProcessor.updateMidiLatch(); };
-            
-            Button::ButtonState initState = (audioProcessor.latchIsOn->get()) ?
-                                            Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
-            
-            latchToggle.setState (initState);
-        }
+        latchToggle.setButtonText("MIDI latch");
+        //addAndMakeVisible(latchToggle);
+        latchToggle.onClick = [this]
+                              {
+                                  audioProcessor.updateMidiLatch();
+                                  if (latchToggle.getToggleState() == true)
+                                  {
+                                      intervalLock.setState (buttonStateFromBool (false));
+                                      intervalLock.setToggleState (false, dontSendNotification);
+                                  }
+                              };
         
-        // "allow trail off" toggle
-        {
-            latchTailOff.setButtonText("Allow trail-off on unlatch");
-            //addAndMakeVisible(latchTailOff);
-            latchTailOff.onClick = [this] { audioProcessor.updateMidiLatch(); };
-        }
+        latchToggle.setState (buttonStateFromBool (audioProcessor.latchIsOn->get()));
+        latchToggle.setToggleState (audioProcessor.latchIsOn->get(), dontSendNotification);
+    }
+    
+    // interval lock
+    {
+        intervalLock.setButtonText("Interval lock");
+        //addAndMakeVisible(intervalLock);
+        intervalLock.onClick = [this]
+                               {
+                                   audioProcessor.updateIntervalLock();
+                                   if (intervalLock.getToggleState() == true)
+                                   {
+                                       latchToggle.setState (buttonStateFromBool (false));
+                                       latchToggle.setToggleState (false, dontSendNotification);
+                                   }
+                               };
+        
+        intervalLock.setState (buttonStateFromBool (audioProcessor.intervalLockIsOn->get()));
+        intervalLock.setToggleState (audioProcessor.intervalLockIsOn->get(), dontSendNotification);
     }
     
     // kill all midi button
@@ -194,9 +209,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         voiceStealing.onClick = [this] { audioProcessor.updateNoteStealing(); };
         addAndMakeVisible(voiceStealing);
         
-        Button::ButtonState initState = (audioProcessor.voiceStealing->get()) ?
-                                        Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
-        voiceStealing.setState (initState);
+        voiceStealing.setState (buttonStateFromBool (audioProcessor.voiceStealing->get()));
+        voiceStealing.setToggleState (audioProcessor.voiceStealing->get(), dontSendNotification);
     }
     
     // concert pitch
@@ -226,9 +240,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         //addAndMakeVisible(pedalPitchToggle);
         pedalPitchToggle.onClick = [this] { audioProcessor.updatePedalPitch(); };
         
-        Button::ButtonState initState = (audioProcessor.pedalPitchIsOn->get()) ?
-                                        Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
-        pedalPitchToggle.setState (initState);
+        pedalPitchToggle.setState (buttonStateFromBool (audioProcessor.pedalPitchIsOn->get()));
+        pedalPitchToggle.setToggleState (audioProcessor.pedalPitchIsOn->get(), dontSendNotification);
         
         pedalPitchThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         pedalPitchThreshold.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
@@ -252,9 +265,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
         //addAndMakeVisible(descantToggle);
         descantToggle.onClick = [this] { audioProcessor.updateDescant(); };
         
-        Button::ButtonState initState = (audioProcessor.descantIsOn->get()) ?
-                                        Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
-        descantToggle.setState (initState);
+        descantToggle.setState (buttonStateFromBool (audioProcessor.descantIsOn->get()));
+        descantToggle.setToggleState (audioProcessor.descantIsOn->get(), dontSendNotification);
         
         descantThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         descantThreshold.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
@@ -420,3 +432,12 @@ void MidiControlPanel::updateNumVoicesCombobox(const int newNumVoices)
 {
     numberOfVoices.setSelectedId(newNumVoices);
 };
+
+
+Button::ButtonState MidiControlPanel::buttonStateFromBool (const bool isOn)
+{
+    if (isOn)
+        return Button::ButtonState::buttonDown;
+    
+    return Button::ButtonState::buttonNormal;
+}

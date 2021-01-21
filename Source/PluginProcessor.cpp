@@ -33,6 +33,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     concertPitchHz     = dynamic_cast<AudioParameterInt*>  (tree.getParameter("concertPitch"));             jassert(concertPitchHz);
     voiceStealing      = dynamic_cast<AudioParameterBool*> (tree.getParameter("voiceStealing"));            jassert(voiceStealing);
     latchIsOn          = dynamic_cast<AudioParameterBool*> (tree.getParameter("latchIsOn"));                jassert(latchIsOn);
+    intervalLockIsOn   = dynamic_cast<AudioParameterBool*> (tree.getParameter("intervalLock"));             jassert(intervalLockIsOn);
     inputGain          = dynamic_cast<AudioParameterFloat*>(tree.getParameter("inputGain"));                jassert(inputGain);
     outputGain         = dynamic_cast<AudioParameterFloat*>(tree.getParameter("outputGain"));               jassert(outputGain);
     limiterToggle      = dynamic_cast<AudioParameterBool*> (tree.getParameter("limiterIsOn"));              jassert(limiterToggle);
@@ -288,6 +289,7 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
     
     // these parameter functions have the potential to trigger or turn off midi notes / harmonizer voices:
     activeEngine.updateMidiLatch (latchIsOn->get());
+    activeEngine.updateIntervalLock(intervalLockIsOn->get());
     activeEngine.updatePedalPitch(pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
     activeEngine.updateDescant   (descantIsOn->get(), descantThresh->get(), descantInterval->get());
     
@@ -397,6 +399,14 @@ void ImogenAudioProcessor::updateMidiLatch()
         doubleEngine.updateMidiLatch(latchIsOn->get());
     else
         floatEngine .updateMidiLatch(latchIsOn->get());
+};
+
+void ImogenAudioProcessor::updateIntervalLock()
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.updateIntervalLock(intervalLockIsOn->get());
+    else
+        floatEngine.updateIntervalLock(intervalLockIsOn->get());
 };
 
 void ImogenAudioProcessor::updateDryWetGains()
@@ -625,6 +635,8 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     params.push_back(std::make_unique<AudioParameterBool>	("voiceStealing", "Voice stealing", false));
     // midi latch
     params.push_back(std::make_unique<AudioParameterBool>	("latchIsOn", "MIDI latch on/off", false));
+    // interval lock
+    params.push_back(std::make_unique<AudioParameterBool>   ("intervalLock", "MIDI interval lock", false));
     
     // input & output gain
     params.push_back(std::make_unique<AudioParameterFloat>	("inputGain", "Input gain",   gainRange, 0.0f));

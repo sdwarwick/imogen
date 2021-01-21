@@ -31,6 +31,8 @@
           <FILE id="ALhBKM" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
           <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
+            <FILE id="E1mk0W" name="FancyMidiBuffer.h" compile="0" resource="0"
+                  file="Source/HarmonizerDSP/FancyMidiBuffer.h"/>
             <FILE id="z1rWG8" name="HarmonizerUtilities.h" compile="0" resource="0"
                   file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
             <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">

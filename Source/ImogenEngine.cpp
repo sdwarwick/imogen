@@ -14,15 +14,16 @@
 #include "DelayBuffer.h"
 #include "Panner.h"
 #include "PitchDetector.h"
+#include "FancyMidiBuffer.h"
 
 
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
     internalBlocksize(512),
     processor(p),
-    limiterIsOn(false),
     inputBuffer(1, internalBlocksize, internalBlocksize),
     outputBuffer(2, internalBlocksize, internalBlocksize),
+    limiterIsOn(false),
     resourcesReleased(true), initialized(false),
     pitchDetector(80.0f, 2400.0f, 44100.0)
 {
@@ -67,6 +68,9 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     inBuffer .setSize (1, internalBlocksize, true, true, true);
     dryBuffer.setSize (2, internalBlocksize, true, true, true);
     wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    
+//    inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
+//    outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
     
     initialized = true;
 };
@@ -270,8 +274,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     inputBuffer.writeSamples (input, 0, 0, numNewSamples, 0);
     
-    // add new midi events recieved into the back of the midiInputCollection buffer queue
-    addToEndOfMidiBuffer (midiMessages, midiInputCollection, numNewSamples);
+    midiInputCollection.appendToEnd (midiMessages, numNewSamples);
     
     if (inputBuffer.numStoredSamples() >= internalBlocksize) // render the new chunk of internalBlocksize samples
     {
@@ -280,12 +283,11 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         // copy just the next internalBlocksize worth's of midi events into the chunkMidiBuffer
         chunkMidiBuffer.clear();
         copyRangeOfMidiBuffer (midiInputCollection, chunkMidiBuffer, 0, 0, internalBlocksize);
-        deleteMidiEventsAndPushUpRest (midiInputCollection, internalBlocksize);
+        midiInputCollection.deleteEventsAndPushUpRest(internalBlocksize);
         
         renderBlock (inBuffer, chunkMidiBuffer);
         
-        // appends the returned midi buffer to the end of the midiOutputCollection buffer
-        addToEndOfMidiBuffer (chunkMidiBuffer, midiOutputCollection, internalBlocksize);
+        midiOutputCollection.appendToEnd (chunkMidiBuffer, internalBlocksize);
     }
     
     for (int chan = 0; chan < 2; ++chan)
@@ -293,7 +295,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
     copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
-    deleteMidiEventsAndPushUpRest (midiOutputCollection, numNewSamples);
+    midiOutputCollection.deleteEventsAndPushUpRest(numNewSamples);
     
     if (applyFadeIn)
         output.applyGainRamp (0, numNewSamples, 0.0f, 1.0f);
@@ -439,60 +441,6 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-    VARIOUS UTILITY FUNCTIONS
- 
-    ... for helping with management of the audio & MIDI FIFO
- */
-
-// appends midi events from one MidiBuffer to the end of an aggregateBuffer. The number of events copied will correspond to the numSamples argument.
-template<typename SampleType>
-void ImogenEngine<SampleType>::addToEndOfMidiBuffer (const MidiBuffer& sourceBuffer, MidiBuffer& aggregateBuffer,
-                                                     const int numSamples)
-{
-    auto sourceStart = sourceBuffer.findNextSamplePosition(0);
-    
-    if (sourceStart == sourceBuffer.cend())
-        return;
-    
-    const auto sourceEnd = sourceBuffer.findNextSamplePosition(numSamples - 1);
-    
-    if (sourceStart == sourceEnd)
-        return;
-    
-    int aggregateStartSample = (aggregateBuffer.getNumEvents() > 0) ? aggregateBuffer.getLastEventTime() + 1 : 0;
-    
-    std::for_each (sourceStart, sourceEnd,
-                   [&] (const MidiMessageMetadata& meta)
-                       {
-                           aggregateBuffer.addEvent (meta.getMessage(),
-                                                     meta.samplePosition + aggregateStartSample);
-                       } );
-};
-
-// deletes midi events in the targetBuffer from timestamps 0 to numSamplesUsed, and copies any events left from that timestamp to the end of the targetBuffer to now be at the start of the targetBuffer
-template<typename SampleType>
-void ImogenEngine<SampleType>::deleteMidiEventsAndPushUpRest (MidiBuffer& targetBuffer,
-                                                              const int numSamplesUsed)
-{
-    MidiBuffer temp (targetBuffer);
-    
-    targetBuffer.clear();
-    
-    auto copyingStart = temp.findNextSamplePosition(numSamplesUsed - 1);
-    
-    if (copyingStart == temp.cend())
-        return;
-    
-    std::for_each (copyingStart, temp.cend(),
-                   [&] (const MidiMessageMetadata& meta)
-                       {
-                           targetBuffer.addEvent (meta.getMessage(),
-                                                  std::max (0,
-                                                           (meta.samplePosition - numSamplesUsed)) );
-                       } );
-};
 
 // copies a range of events from one MidiBuffer to another MidiBuffer, applying a timestamp offset. The number of events copied will correspond to the numSamples argument.
 template<typename SampleType>
@@ -674,6 +622,12 @@ void ImogenEngine<SampleType>::updateMidiLatch(const bool isLatched)
 };
 
 template<typename SampleType>
+void ImogenEngine<SampleType>::updateIntervalLock(const bool isLocked)
+{
+    harmonizer.setIntervalLatch (isLocked, true);
+};
+
+template<typename SampleType>
 void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release, const bool isOn)
 {
     limiterIsOn = isOn;
@@ -707,6 +661,9 @@ void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, con
         inBuffer .setSize (1, internalBlocksize, true, true, true);
         dryBuffer.setSize (2, internalBlocksize, true, true, true);
         wetBuffer.setSize (2, internalBlocksize, true, true, true);
+        
+        inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
+        outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
         
         prepare (processor.getSampleRate(), internalBlocksize);
     }

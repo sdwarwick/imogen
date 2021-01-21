@@ -47,7 +47,11 @@ public:
     
     // Midi latch
     ToggleButton latchToggle;
-    ToggleButton latchTailOff;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> latchToggleLink;
+    
+    // interval lock
+    ToggleButton intervalLock;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> intervalLockLink;
     
     // stereo width of harmony output
     Slider stereoWidth;
@@ -118,6 +122,8 @@ private:
     
     void buildIntervalCombobox(ComboBox& box);
     void buildVoicesCombobox(ComboBox& box);
+    
+    Button::ButtonState buttonStateFromBool (const bool isOn);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };

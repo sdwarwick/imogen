@@ -442,9 +442,15 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     
     latchIsOn = shouldBeOn;
     
-    if (! shouldBeOn)
+    if (shouldBeOn)
     {
-        turnOffAllKeyupNotes (allowTailOff, true);
+        intervalLatchIsOn = false;
+    }
+    else
+    {
+        if (! intervalLatchIsOn)
+            turnOffAllKeyupNotes (allowTailOff, true);
+        
         pitchCollectionChanged();
     }
 };
@@ -461,6 +467,8 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
     
     if (shouldBeOn)
     {
+        latchIsOn = false;
+        
         intervalsLatchedTo.clearQuick();
         
         reportActivesNoReleased (currentlyActiveNoReleased);
@@ -472,7 +480,8 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
     }
     else
     {
-        turnOffAllKeyupNotes (allowTailOff, true);
+        if (! latchIsOn)
+            turnOffAllKeyupNotes (allowTailOff, true);
         
         pitchCollectionChanged();
     }

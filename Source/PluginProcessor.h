@@ -7,6 +7,7 @@
 #include "DelayBuffer.h"
 #include "Panner.h"
 #include "PitchDetector.h"
+#include "FancyMidiBuffer.h"
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
@@ -55,6 +56,7 @@ public:
     void updateConcertPitch(const int newConcertPitchHz);
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
+    void updateIntervalLock(const bool isLocked);
     void updateLimiter     (const float thresh, const float release, const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
@@ -110,21 +112,17 @@ private:
     
     MidiBuffer midiChoppingBuffer;
     
-    MidiBuffer midiInputCollection;
-    MidiBuffer midiOutputCollection;
-    MidiBuffer chunkMidiBuffer;
+    FancyMidiBuffer midiInputCollection;
+    FancyMidiBuffer midiOutputCollection;
+    FancyMidiBuffer chunkMidiBuffer;
+    
     
     void copyRangeOfMidiBuffer (const MidiBuffer& inputBuffer, MidiBuffer& outputBuffer,
                                 const int startSampleOfInput,
                                 const int startSampleOfOutput,
                                 const int numSamples);
     
-    void addToEndOfMidiBuffer (const MidiBuffer& sourceBuffer, MidiBuffer& aggregateBuffer,
-                               const int numSamples);
-    
-    void deleteMidiEventsAndPushUpRest (MidiBuffer& targetBuffer,
-                                        const int numSamplesUsed);
-    
+
     void pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
                                 const int numSamplesUsed,
                                 const int numSamplesLeft);
@@ -212,6 +210,7 @@ public:
     void updateDryWet();
     void updateConcertPitch();
     void updateMidiLatch();
+    void updateIntervalLock();
     void updatePedalPitch();
     void updateDescant();
     void updatePitchDetectionSettings();
@@ -270,6 +269,7 @@ public:
     AudioParameterInt*   concertPitchHz     = nullptr;
     AudioParameterBool*  voiceStealing      = nullptr;
     AudioParameterBool*  latchIsOn          = nullptr;
+    AudioParameterBool*  intervalLockIsOn   = nullptr;
     AudioParameterFloat* inputGain          = nullptr;
     AudioParameterFloat* outputGain         = nullptr;
     AudioParameterBool*  limiterToggle      = nullptr;
