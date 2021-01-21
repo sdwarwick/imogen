@@ -183,7 +183,7 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, cons
     
     toTurnOff.ensureStorageAllocated (voices.size());
     
-    const int pedalPitchCheck = includePedalPitchAndDescant ? lastPedalPitch : -1;
+    const int pedalPitchCheck = includePedalPitchAndDescant ? lastPedalPitch   : -1;
     const int descantCheck    = includePedalPitchAndDescant ? lastDescantPitch : -1;
     
     for (auto* voice : voices)
@@ -193,6 +193,9 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, cons
         {
             toTurnOff.add(voice);
         }
+    
+    if (toTurnOff.isEmpty())
+        return;
     
     for (auto* voice : toTurnOff)
     {
@@ -223,9 +226,11 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod, roundToInt(currentInputFloatPeriod / 2.0f));
     
     // multiply the input signal by the window function in-place before sending into the HarmonizerVoices:
-    multiplyGrainsByWindow (inputStorageBuffer, windowBuffer, windowSize - indicesOfGrainOnsets.getUnchecked(1), windowSize);
+    multiplyGrainsByWindow (inputStorageBuffer,
+                            windowBuffer.getReadPointer(0),
+                            windowSize - indicesOfGrainOnsets.getUnchecked(1), // starting index of window buffer
+                            windowSize);
     
-
     AudioBuffer<SampleType> inputProxy (inputStorageBuffer.getArrayOfWritePointers(), 1, inputAudio.getNumSamples());
     
     for (auto* voice : voices)
@@ -318,17 +323,16 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
 
 template<typename SampleType>
 void Harmonizer<SampleType>::multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
-                                                     const AudioBuffer<SampleType>& windowToUse,
+                                                     const SampleType* windowToUse,
                                                      const int windowStartIndex, const int windowSize)
 {
     SampleType* writing = audioToWindow.getWritePointer(0);
-    const SampleType* window = windowToUse.getReadPointer(0);
     
     int windowIndex = windowStartIndex;
     
     for (int s = 0; s < audioToWindow.getNumSamples(); ++s)
     {
-        writing[s] *= window[windowIndex];
+        writing[s] *= windowToUse[windowIndex];
         
         ++windowIndex;
         
@@ -443,9 +447,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     latchIsOn = shouldBeOn;
     
     if (shouldBeOn)
-    {
         intervalLatchIsOn = false;
-    }
     else
     {
         if (! intervalLatchIsOn)
@@ -599,12 +601,8 @@ void Harmonizer<SampleType>::applyPedalPitch()
 
     lastPedalPitch = newPedalPitch;
     
-    float velocity;
     auto* voiceCopying = getVoicePlayingNote (currentLowest);
-    if (voiceCopying)
-        velocity = voiceCopying->getLastRecievedVelocity();
-    else
-        velocity = 1.0f;
+    const float velocity = (voiceCopying) ? voiceCopying->getLastRecievedVelocity() : 1.0f;
     
     noteOn (newPedalPitch, velocity, false);
 };
@@ -657,12 +655,8 @@ void Harmonizer<SampleType>::applyDescant()
 
     lastDescantPitch = newDescantPitch;
     
-    float velocity;
     auto* voiceCopying = getVoicePlayingNote (currentHighest);
-    if (voiceCopying)
-        velocity = voiceCopying->getLastRecievedVelocity();
-    else
-        velocity = 1.0f;
+    const float velocity = (voiceCopying) ? voiceCopying->getLastRecievedVelocity() : 1.0f;
     
     noteOn (newDescantPitch, velocity, false);
 };
@@ -702,11 +696,8 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
     bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
     
     startVoice (findFreeVoice (midiPitch, isStealing), midiPitch, velocity, isKeyboard);
-    
-    if (! isKeyboard)
-        aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
-                                      ++lastMidiTimeStamp);
 };
+
 
 template<typename SampleType>
 void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
@@ -725,6 +716,10 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         voice->setPan(panner.getNextPanVal());
     
     voice->startNote (midiPitch, velocity);
+    
+    if (! isKeyboard)
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
+                                      ++lastMidiTimeStamp);
 };
 
 template<typename SampleType>

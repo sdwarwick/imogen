@@ -119,6 +119,7 @@ private:
     float getMidifloat(const int midiPitch, const int pitchbend) const
     {
         jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
+        
         if(pitchbend == 64)
             return midiPitch;
         

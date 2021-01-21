@@ -351,7 +351,7 @@ private:
                                    const int period, const int periodHalved);
     
     void multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
-                                 const AudioBuffer<SampleType>& windowToUse,
+                                 const SampleType* windowToUse,
                                  const int windowStartIndex, const int windowSize);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)

@@ -47,6 +47,23 @@ ImogenEngine<SampleType>::~ImogenEngine()
 
 
 template<typename SampleType>
+void ImogenEngine<SampleType>::changeBlocksize (const int newBlocksize)
+{
+    if (internalBlocksize == newBlocksize)
+        return;
+    
+    processor.setLatencySamples (internalBlocksize);
+    
+    inBuffer .setSize (1, internalBlocksize, true, true, true);
+    dryBuffer.setSize (2, internalBlocksize, true, true, true);
+    wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    
+    inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
+    outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
+};
+
+
+template<typename SampleType>
 void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
     for (int i = 0; i < initNumVoices; ++i)
@@ -63,14 +80,9 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     
     pitchDetector.setSamplerate (initSamplerate);
     
+    changeBlocksize (initSamplesPerBlock);
+    
     prepare (initSamplerate, std::max (initSamplesPerBlock, MAX_BUFFERSIZE));
-    
-    inBuffer .setSize (1, internalBlocksize, true, true, true);
-    dryBuffer.setSize (2, internalBlocksize, true, true, true);
-    wetBuffer.setSize (2, internalBlocksize, true, true, true);
-    
-//    inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
-//    outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
     
     initialized = true;
 };
@@ -652,21 +664,9 @@ void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, con
     pitchDetector.setHzRange (minHz, maxHz);
     
     const int newMaxPeriod = pitchDetector.getMaxPeriod();
+    
     if (internalBlocksize != newMaxPeriod)
-    {
-        internalBlocksize = newMaxPeriod;
-        
-        processor.setLatencySamples (internalBlocksize);
-        
-        inBuffer .setSize (1, internalBlocksize, true, true, true);
-        dryBuffer.setSize (2, internalBlocksize, true, true, true);
-        wetBuffer.setSize (2, internalBlocksize, true, true, true);
-        
-        inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
-        outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
-        
-        prepare (processor.getSampleRate(), internalBlocksize);
-    }
+        changeBlocksize (newMaxPeriod);
 };
 
 

@@ -65,7 +65,9 @@ public:
         prevRightGain = rightGain;
         
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
-        const float panningAngle = 90 * newMidiPan / 127 * MathConstants<float>::pi / 180;
+        
+        // original:
+        float panningAngle = (90.0f * newMidiPan / 127.0f * MathConstants<float>::pi) / 180.0f;
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);

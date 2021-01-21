@@ -82,10 +82,6 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
     
-    
-    // apply a weighting function to the calculated ASDF values...
-    
-    
     const unsigned int minIndex = indexOfMinElement (asdfBuffer.getReadPointer(0), asdfDataSize);
     
     if (asdfBuffer.getSample (0, minIndex) > confidenceThresh)
@@ -107,24 +103,31 @@ void PitchDetector<SampleType>::calculateASDF (const SampleType* inputAudio, con
     // in the ASDF buffer, the value stored at index 0 is the ASDF for lag minPeriod.
     // the value stored at the maximum index is the ASDF for lag maxPeriod.
     
-    const int middleIndex = floor (numSamples / 2);
+    const int middleIndex = floor (numSamples / 2.0f);
+    
+    SampleType differenceRunningSum = 0.0;
     
     for (int k = minPeriod; k <= maxPeriod; ++k)
     {
-        const int sampleOffset = floor ((numSamples + k) / 2);
+        const int sampleOffset = floor ((numSamples + k) / 2.0f);
         
-        SampleType runningSum = 0;
+        const int index = k - minPeriod; // the actual asdfBuffer index
         
-        for (int n = 0; n < numSamples - 1; ++n)
+        outputData[index] = 0.0;
+        
+        for (int n = 0; n < numSamples; ++n)
         {
             const int startingSample = n + middleIndex - sampleOffset;
             
             const SampleType difference = inputAudio[startingSample] - inputAudio[startingSample + k];
             
-            runningSum += (difference * difference);
+            outputData[index] += (difference * difference);
         }
         
-        outputData[k - minPeriod] = runningSum / numSamples; // normalize
+        differenceRunningSum += outputData[index];
+        
+        if (differenceRunningSum > 0)
+            outputData[index] *= (index / differenceRunningSum);
     }
 };
 

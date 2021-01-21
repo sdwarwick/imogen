@@ -23,6 +23,8 @@ public:
     
     ~ImogenEngine();
     
+    void changeBlocksize (const int newBlocksize);
+    
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
                   const bool applyFadeIn, const bool applyFadeOut);
     
