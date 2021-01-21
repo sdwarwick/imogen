@@ -75,14 +75,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 template<typename SampleType>
 void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 {
-    if (harmonizer.getSamplerate() != sampleRate)
-        harmonizer.setCurrentPlaybackSampleRate(sampleRate);
-    
-    if (pitchDetector.getSamplerate() != sampleRate)
-        pitchDetector.setSamplerate(sampleRate);
-    
     const int aggregateBufferSizes = internalBlocksize * 2;
-    
     const int midiBufferSizes = std::max (aggregateBufferSizes * 2, samplesPerBlock * 2);
     
     midiChoppingBuffer  .ensureSize (midiBufferSizes * 2);
@@ -90,6 +83,20 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     midiOutputCollection.ensureSize (midiBufferSizes);
     
     chunkMidiBuffer.ensureSize(aggregateBufferSizes);
+    
+    harmonizer.resetNoteOnCounter(); // ??
+    harmonizer.prepare (aggregateBufferSizes);
+    
+    clearBuffers();
+    
+    if (sampleRate == 0)
+        return;
+    
+    if (harmonizer.getSamplerate() != sampleRate)
+        harmonizer.setCurrentPlaybackSampleRate(sampleRate);
+    
+    if (pitchDetector.getSamplerate() != sampleRate)
+        pitchDetector.setSamplerate(sampleRate);
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = internalBlocksize;
@@ -99,11 +106,6 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     
     dryWetMixer.prepare (dspSpec);
     dryWetMixer.setWetLatency(0); // latency in samples of the ESOLA algorithm
-    
-    harmonizer.resetNoteOnCounter(); // ??
-    harmonizer.prepare (aggregateBufferSizes);
-    
-    clearBuffers();
     
     resourcesReleased = false;
 };

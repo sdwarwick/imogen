@@ -182,6 +182,9 @@ public:
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; };
     
+    void setIntervalLatch (const bool shouldBeOn, const bool allowTailOff);
+    bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; };
+    
     void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
     void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
     bool isADSRon() const noexcept { return adsrIsOn; };
@@ -238,7 +241,8 @@ public:
     
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
     
-    AudioBuffer<SampleType> olaWindow;
+    // turns off any pitches whose keys are not being held anymore
+    void turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant);
 
     
 private:
@@ -290,9 +294,9 @@ private:
     void applyDescant();
     
     bool latchIsOn;
-    MidiLatchManager latchManager;
     
     bool intervalLatchIsOn;
+    Array<int> intervalsLatchedTo;
     
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;
@@ -310,8 +314,6 @@ private:
     
     mutable Array<int> currentlyActiveNotes;
     mutable Array<int> currentlyActiveNoReleased;
-    
-    Array<int> unLatched;
     
     bool pedalPitchIsOn;
     int lastPedalPitch;
@@ -345,7 +347,8 @@ private:
     void fillWindowBuffer (const int numSamples);
     int windowSize;
     
-    void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
+    void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio,
+                                   const int period, const int periodHalved);
     
     void multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
                                  const AudioBuffer<SampleType>& windowToUse,

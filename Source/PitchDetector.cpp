@@ -83,13 +83,12 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const int middleIndex = floor (numSamples / 2);
     
-    int highestAsdfIndex; // highest sample index written to in asdfBuffer
+    const auto* r = inputAudio.getReadPointer(0);
+    auto* w = asdfBuffer.getWritePointer(0);
     
     for (int k = minPeriod; k <= maxPeriod; ++k) // the difference function
     {
         const int sampleOffset = floor ((numSamples + k) / 2);
-        
-        const auto* r = inputAudio.getReadPointer(0);
         
         SampleType runningSum = 0;
         
@@ -106,12 +105,10 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         jassert (isPositiveAndBelow (asdfBufferIndex, asdfBuffer.getNumSamples()));
         
-        asdfBuffer.setSample (0,
-                              asdfBufferIndex,
-                              runningSum / numSamples);
-        
-        highestAsdfIndex = asdfBufferIndex;
+        w[asdfBufferIndex] = runningSum / numSamples; // normalize
     }
+    
+    const int highestAsdfIndex = maxPeriod - minPeriod; // highest sample index written to in asdfBuffer
     
     
     // apply a weighting function to the calculated ASDF values...
@@ -119,14 +116,14 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     // find correct minimum of the ASDF
     
-    const SampleType* r = asdfBuffer.getReadPointer(0);
+    const auto* reading = asdfBuffer.getReadPointer(0);
     
-    SampleType asdfMinimum = r[0]; // the ASDF value corresponding to the lag value
+    SampleType asdfMinimum = reading[0]; // the ASDF value corresponding to the lag value
     int minK = 0;    // the actual lag value (this is the period!)
     
     for (int n = 1; n <= highestAsdfIndex; ++n)
     {
-        const SampleType currentSample = r[n];
+        const SampleType currentSample = reading[n];
         
         if (currentSample < asdfMinimum)
         {
@@ -159,10 +156,10 @@ SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* d
     const unsigned int x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
     
     if (x0 == pos)
-        return (data[pos] <= data[x2]) ? pos : x2;
+        return (data[pos] >= data[x2]) ? pos : x2;
     
     if (x2 == pos)
-        return (data[pos] <= data[x0]) ? pos : x0;
+        return (data[pos] >= data[x0]) ? pos : x0;
     
     const auto s0 = data[x0];
     const auto s2 = data[x2];

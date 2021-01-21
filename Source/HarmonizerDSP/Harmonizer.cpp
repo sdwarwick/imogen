@@ -37,6 +37,8 @@ Harmonizer<SampleType>::Harmonizer():
     setCurrentPlaybackSampleRate(44100.0);
     
     windowSize = 0;
+    
+    intervalLatchIsOn = false;
 };
 
 
@@ -60,9 +62,6 @@ void Harmonizer<SampleType>::clearBuffers()
 template<typename SampleType>
 void Harmonizer<SampleType>::prepare (const int blocksize)
 {
-//    epochIndices.ensureStorageAllocated(blocksize);
-//    epochIndices.clearQuick();
-    
     aggregateMidiBuffer.ensureSize(ceil(blocksize * 1.5f));
     
     newMaxNumVoices(voices.size());
@@ -76,7 +75,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     
     inputStorageBuffer.setSize(1, blocksize, true, true, true);
     
-//    epochs.prepare(blocksize);
+    intervalsLatchedTo.ensureStorageAllocated(voices.size());
 };
 
 
@@ -129,12 +128,9 @@ void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
     currentlyActiveNoReleased.ensureStorageAllocated(newMaxNumVoices);
     currentlyActiveNoReleased.clearQuick();
     
-    unLatched.ensureStorageAllocated(newMaxNumVoices);
-    unLatched.clearQuick();
-    
-    latchManager.newMaxNumVoices(newMaxNumVoices);
-    
     panner.prepare(newMaxNumVoices);
+    
+    intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
 };
 
 
@@ -145,7 +141,6 @@ void Harmonizer<SampleType>::releaseResources()
 //    epochIndices.clear();
     currentlyActiveNotes.clear();
     currentlyActiveNoReleased.clear();
-    unLatched.clear();
     aggregateMidiBuffer.clear();
     
     for(auto* voice : voices)
@@ -153,8 +148,6 @@ void Harmonizer<SampleType>::releaseResources()
     
 //    epochs.releaseResources();
     panner.releaseResources();
-    
-    latchManager.reset();
 };
 
 
@@ -168,6 +161,48 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
     currentInputPeriod = roundToInt (currentInputFloatPeriod);
     
     fillWindowBuffer (currentInputPeriod);
+    
+    if (intervalLatchIsOn)
+    {
+        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
+        
+        currentlyActiveNotes.clearQuick();
+        
+        for (int i = 0; i < intervalsLatchedTo.size(); ++i)
+            currentlyActiveNotes.add (currentMidiPitch + intervalsLatchedTo.getUnchecked(i));
+        
+        playChord (currentlyActiveNotes, 1.0f, false);
+    }
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant)
+{
+    Array< HarmonizerVoice<SampleType>* > toTurnOff;
+    
+    toTurnOff.ensureStorageAllocated (voices.size());
+    
+    const int pedalPitchCheck = includePedalPitchAndDescant ? lastPedalPitch : -1;
+    const int descantCheck    = includePedalPitchAndDescant ? lastDescantPitch : -1;
+    
+    for (auto* voice : voices)
+        if (voice->isVoiceActive() && ! voice->isKeyDown()
+            && voice->getCurrentlyPlayingNote() != pedalPitchCheck
+            && voice->getCurrentlyPlayingNote() != descantCheck)
+        {
+            toTurnOff.add(voice);
+        }
+    
+    for (auto* voice : toTurnOff)
+    {
+        const float velocity = allowTailOff ? 0.0f : 1.0f;
+        
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, voice->getCurrentlyPlayingNote(), velocity),
+                                      ++lastMidiTimeStamp);
+        
+        stopVoice (voice, velocity, allowTailOff);
+    }
 };
 
 
@@ -181,9 +216,11 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
+    // how to handle unpitched frames???
+    
     inputStorageBuffer.copyFrom (0, 0, inputAudio, 0, 0, inputAudio.getNumSamples());
     
-    extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
+    extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod, roundToInt(currentInputFloatPeriod / 2.0f));
     
     // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
     multiplyGrainsByWindow (inputStorageBuffer, windowBuffer, windowSize - indicesOfGrainOnsets.getUnchecked(1), windowSize);
@@ -199,7 +236,8 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period)
+void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio,
+                                                       const int period, const int periodHalved)
 {
     targetArray.clearQuick();
     
@@ -221,7 +259,7 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
     
     const SampleType* reading = inputAudio.getReadPointer(0);
     
-    for (int s = 0; s < analysisLimit; ++s)
+    for (int s = 0; s < analysisLimit; ++s) // identify the local maxima & minima
     {
         const SampleType currentSample = reading[s];
         
@@ -239,8 +277,6 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
     }
     
     // determine whether to use positive or negative peak...
-    
-    const int periodHalved = roundToInt (currentInputFloatPeriod / 2.0f); // half the grain length
     
     int positiveOffset; // the # of extra samples we'd have before the first analysis grain if we use positive peaks
     int negativeOffset; // the # of extra samples we'd have before the first analysis grain if we use negative peaks
@@ -399,17 +435,40 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     
     latchIsOn = shouldBeOn;
     
-    if (shouldBeOn)
-        return;
+    if (! shouldBeOn)
+    {
+        turnOffAllKeyupNotes (allowTailOff, true);
+        pitchCollectionChanged();
+    }
+};
 
-    latchManager.turnOffLatch(unLatched);
-    
-    if (unLatched.isEmpty())
+
+// interval latch
+template<typename SampleType>
+void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool allowTailOff)
+{
+    if (intervalLatchIsOn == shouldBeOn)
         return;
     
-    turnOffList (unLatched, !allowTailOff, allowTailOff, false);
+    intervalLatchIsOn = shouldBeOn;
     
-    pitchCollectionChanged();
+    if (shouldBeOn)
+    {
+        intervalsLatchedTo.clearQuick();
+        
+        reportActivesNoReleased (currentlyActiveNoReleased);
+        
+        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
+        
+        for (int i = 0; i < currentlyActiveNoReleased.size(); ++i)
+            intervalsLatchedTo.add (currentMidiPitch - currentlyActiveNoReleased.getUnchecked(i));
+    }
+    else
+    {
+        turnOffAllKeyupNotes (allowTailOff, true);
+        
+        pitchCollectionChanged();
+    }
 };
 
 
@@ -628,9 +687,6 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
     
     startVoice (findFreeVoice (midiPitch, isStealing), midiPitch, velocity, isKeyboard);
     
-    if (latchIsOn)
-        latchManager.noteOnRecieved(midiPitch);
-    
     if (! isKeyboard)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
                                       ++lastMidiTimeStamp);
@@ -677,10 +733,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         voice->setKeyDown (false);
         
         if (latchIsOn)
-        {
-            latchManager.noteOffRecieved (midiNoteNumber);
             return;
-        }
         
         if (! (sustainPedalDown || sostenutoPedalDown) )
         {
@@ -688,19 +741,13 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
             stoppedVoice = true;
         }
     }
-    else
+    else if (! voice->isKeyDown())
     {
-        if (latchIsOn)
-            latchManager.noteOffRecieved (midiNoteNumber);
+        stopVoice (voice, velocity, allowTailOff);
+        stoppedVoice = true;
         
-        if (! voice->isKeyDown())
-        {
-            stopVoice (voice, velocity, allowTailOff);
-            stoppedVoice = true;
-            
-            aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, midiNoteNumber, velocity),
-                                          ++lastMidiTimeStamp);
-        }
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, midiNoteNumber, velocity),
+                                      ++lastMidiTimeStamp);
     }
     
     if (! stoppedVoice)
@@ -731,7 +778,6 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
         if (voice->isVoiceActive())
             voice->stopNote (1.0f, allowTailOff);
     
-    latchManager.reset();
     panner.reset(false);
     lastDescantPitch = -1;
     lastPedalPitch   = -1;
@@ -1055,11 +1101,7 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
         
         HarmonizerVoice<SampleType>* removing = voices[indexRemoving];
         if (removing->isVoiceActive())
-        {
             panner.panValTurnedOff(removing->getCurrentMidiPan());
-            if (latchIsOn && latchManager.isNoteLatched(removing->getCurrentlyPlayingNote()))
-                latchManager.noteOffRecieved(removing->getCurrentlyPlayingNote());
-        }
         
         voices.remove(indexRemoving);
         
