@@ -56,13 +56,13 @@ public:
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const float thresh, const float release, const bool isOn);
-    void updatePitchDetectionSettings (const float newMinHz, const float newMaxHz, const float newTolerance);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateDryGain (const float newDryGain);
     void updateWetGain (const float newWetGain);
     void updateSoftPedalGain (const float newGain);
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
+    void updatePitchDetectionConfidenceThresh (const float newThresh);
     
     void clearBuffers();
     
@@ -280,6 +280,7 @@ public:
     AudioParameterFloat* softPedalGain      = nullptr;
     AudioParameterFloat* minDetectedHz      = nullptr;
     AudioParameterFloat* maxDetectedHz      = nullptr;
+    AudioParameterFloat* confidenceThresh   = nullptr;
     
     
 private:
@@ -311,6 +312,9 @@ private:
     AudioProcessor::BusesProperties makeBusProperties() const;
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
+    
+    template <typename SampleType>
+    void updatePitchDetectionWrapped (ImogenEngine<SampleType>& activeEngine);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

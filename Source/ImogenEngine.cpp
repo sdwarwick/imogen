@@ -303,7 +303,9 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     const float newPitch = pitchDetector.detectPitch (input); // returns -1 if the current frame is unpitched
     
-    if (harmonizer.getCurrentInputFreq() != newPitch && newPitch > 0.0f)
+    const bool frameIsPitched = (newPitch != -1.0f);
+    
+    if (frameIsPitched && harmonizer.getCurrentInputFreq() != newPitch)
         harmonizer.setCurrentInputFreq (newPitch);
     
     harmonizer.processMidi (midiMessages);
@@ -326,7 +328,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
-    harmonizer.renderVoices (inBuffer, wetBuffer); // puts the harmonizer's rendered stereo output into wetBuffer
+    harmonizer.renderVoices (inBuffer, wetBuffer, frameIsPitched); // puts the harmonizer's rendered stereo output into wetBuffer
 
     // wet gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
@@ -685,6 +687,13 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
     pitchDetector.setHzRange (minHz, maxHz);
+};
+
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float newThresh)
+{
+    pitchDetector.setConfidenceThresh (static_cast<SampleType>(newThresh));
 };
 
 

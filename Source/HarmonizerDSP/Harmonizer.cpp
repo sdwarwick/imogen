@@ -163,7 +163,9 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
 {
     currentInputFreq = newInputFreq;
     
-    currentInputPeriod = roundToInt (1.0f / newInputFreq * sampleRate);
+    currentInputFloatPeriod = 1.0f / newInputFreq * sampleRate;
+    
+    currentInputPeriod = roundToInt (currentInputFloatPeriod);
     
     fillWindowBuffer (currentInputPeriod);
 };
@@ -174,39 +176,19 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
 void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
-                                           AudioBuffer<SampleType>& outputBuffer)
+                                           AudioBuffer<SampleType>& outputBuffer,
+                                           const bool frameIsPitched)
 {
     outputBuffer.clear(); // outputBuffer will be a subset of samples of the AudioProcessor's "wetBuffer", which will contain the previous sample values from the last frame's output when passed into this method, so we clear the proxy buffer before processing.
     
     inputStorageBuffer.copyFrom (0, 0, inputAudio, 0, 0, inputAudio.getNumSamples());
     
-    
     extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
     
-    
     // multiply the input signal by the window function in-place before sending into the HarmonizerVoices
-    {
-        int windowIndex = windowSize - indicesOfGrainOnsets.getUnchecked(1); // first element in array will always be 0
-        
-        while (windowIndex < 0)
-            windowIndex += windowSize;
+    multiplyGrainsByWindow (inputStorageBuffer, windowBuffer, windowSize - indicesOfGrainOnsets.getUnchecked(1), windowSize);
     
-        if (windowIndex >= windowSize)
-            windowIndex = windowIndex % windowSize;
-    
-        SampleType* writing = inputStorageBuffer.getWritePointer(0);
-        const SampleType* win = windowBuffer.getReadPointer(0);
-    
-        for (int s = 0; s < inputAudio.getNumSamples(); ++s)
-        {
-            writing[s] *= win[windowIndex];
-            
-            ++windowIndex;
-            if (windowIndex >= windowSize) // window size = input period in samples
-                windowIndex = 0;
-        }
-    }
-    
+
     AudioBuffer<SampleType> inputProxy (inputStorageBuffer.getArrayOfWritePointers(), 1, inputAudio.getNumSamples());
     
     for (auto* voice : voices)
@@ -228,22 +210,89 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray, 
     // the length of the grains should be 1 pitch period.
     // note that the grains may not start or end exactly with the chunk of audio, but extraneous samples should only be left at the beginning or end of the audio; the rest of the grains should always be spaced 1 period apart
     
-    int extraSamplesBeforeFirstGrain = 0; // THIS is the key calculation here !!
-    // this value should always be less than the period
+    const int analysisLimit = std::min (inputAudio.getNumSamples(),
+                                        period * 2);
     
+    SampleType localMin = 1.0f;
+    int indexOfLocalMin = 0;
     
-    if (extraSamplesBeforeFirstGrain > 0) // make sure first element of output array is always 0
+    SampleType localMax = -1.0f;
+    int indexOfLocalMax = 0;
+    
+    const SampleType* reading = inputAudio.getReadPointer(0);
+    
+    for (int s = 0; s < analysisLimit; ++s)
+    {
+        const SampleType currentSample = reading[s];
+        
+        if (currentSample < localMin)
+        {
+            localMin = currentSample;
+            indexOfLocalMin = s;
+        }
+        
+        if (currentSample > localMax)
+        {
+            localMax = currentSample;
+            indexOfLocalMax = s;
+        }
+    }
+    
+    // determine whether to use positive or negative peak...
+    
+    const int periodHalved = roundToInt (currentInputFloatPeriod / 2.0f); // half the grain length
+    
+    int positiveOffset; // the # of extra samples we'd have before the first analysis grain if we use positive peaks
+    int negativeOffset; // the # of extra samples we'd have before the first analysis grain if we use negative peaks
+    
+    positiveOffset = indexOfLocalMax - periodHalved;
+    if (positiveOffset >= period)
+        positiveOffset = positiveOffset % period;
+    else if (positiveOffset < 0)
+            positiveOffset += period;
+    
+    negativeOffset = indexOfLocalMin - periodHalved;
+    if (negativeOffset >= period)
+        negativeOffset = negativeOffset % period;
+    else if (negativeOffset < 0)
+            negativeOffset += period;
+    
+    // sample index of the start of our first full analysis grain
+    int grainStart = std::min (positiveOffset, negativeOffset);
+    
+    if (grainStart > 0) // make sure first element of output array is always 0
         targetArray.add(0);
     
-    int nextGrain = extraSamplesBeforeFirstGrain;
+    jassert (grainStart < inputAudio.getNumSamples()); // we should have at least 1 full analysis grain in our audio buffer being sent for OLA
     
-    while (nextGrain < inputAudio.getNumSamples())
+    while (grainStart < inputAudio.getNumSamples())
     {
-        targetArray.add (nextGrain);
-        nextGrain += period;
+        targetArray.add (grainStart);
+        grainStart += period;
     }
 };
 
+
+template<typename SampleType>
+void Harmonizer<SampleType>::multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
+                                                     const AudioBuffer<SampleType>& windowToUse,
+                                                     const int windowStartIndex, const int windowSize)
+{
+    SampleType* writing = audioToWindow.getWritePointer(0);
+    const SampleType* window = windowToUse.getReadPointer(0);
+    
+    int windowIndex = windowStartIndex;
+    
+    for (int s = 0; s < audioToWindow.getNumSamples(); ++s)
+    {
+        writing[s] *= window[windowIndex];
+        
+        ++windowIndex;
+        
+        if (windowIndex >= windowSize)
+            windowIndex = 0;
+    }
+};
 
 
 

@@ -43,6 +43,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     softPedalGain      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("softPedalGain"));            jassert(softPedalGain);
     minDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMinHz"));      jassert(minDetectedHz);
     maxDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMaxHz"));      jassert(maxDetectedHz);
+    confidenceThresh   = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceThresh")); jassert(confidenceThresh);
     
     const double initSamplerate   = std::max<double>(44100.0, getSampleRate());
     //const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
@@ -263,7 +264,7 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& activeEngine)
 {
-    activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+    updatePitchDetectionWrapped (activeEngine);
     
     activeEngine.updateInputGain    (Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (Decibels::decibelsToGain (outputGain->get()));
@@ -440,9 +441,17 @@ void ImogenAudioProcessor::updateLimiter()
 void ImogenAudioProcessor::updatePitchDetectionSettings()
 {
     if (isUsingDoublePrecision())
-        doubleEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+        updatePitchDetectionWrapped (doubleEngine);
     else
-        floatEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+        updatePitchDetectionWrapped (floatEngine);
+};
+
+
+template <typename SampleType>
+void ImogenAudioProcessor::updatePitchDetectionWrapped (ImogenEngine<SampleType>& activeEngine)
+{
+    activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+    activeEngine.updatePitchDetectionConfidenceThresh(confidenceThresh->get());
 };
 
 
@@ -628,11 +637,13 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     // NEED GUI FOR THIS -- soft pedal gain multiplier
     params.push_back(std::make_unique<AudioParameterFloat>  ("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
     
-    // NEED GUI -- PITCH DETECTION HZ RANGE
+    // NEED GUI -- PITCH DETECTION SETTINGS
     // Note that the minimum possible Hz value will impact the plugin's latency.
     NormalisableRange<float> hzRange (20.0f, 10000.0f, 0.01f);
     params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionMinHz", "Min possible Hz", hzRange, 80.0f));
     params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionMaxHz", "Max possible Hz", hzRange, 2400.0f));
+    params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionConfidenceThresh", "Confidence thresh",
+                                                             NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
     
     return { params.begin(), params.end() };
 };

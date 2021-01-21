@@ -83,7 +83,9 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const int middleIndex = floor (numSamples / 2);
     
-    for (int k = minPeriod; k <= maxPeriod; ++k)
+    int highestAsdfIndex; // highest sample index written to in asdfBuffer
+    
+    for (int k = minPeriod; k <= maxPeriod; ++k) // the difference function
     {
         const int sampleOffset = floor ((numSamples + k) / 2);
         
@@ -102,14 +104,14 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         const int asdfBufferIndex = k - minPeriod;
         
-        jassert (asdfBufferIndex < asdfBuffer.getNumSamples());
+        jassert (isPositiveAndBelow (asdfBufferIndex, asdfBuffer.getNumSamples()));
         
         asdfBuffer.setSample (0,
                               asdfBufferIndex,
                               runningSum / numSamples);
+        
+        highestAsdfIndex = asdfBufferIndex;
     }
-    
-    const int highestAsdfIndex = maxPeriod - minPeriod;
     
     
     // apply a weighting function to the calculated ASDF values...
@@ -120,9 +122,9 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const SampleType* r = asdfBuffer.getReadPointer(0);
     
     SampleType asdfMinimum = r[0]; // the ASDF value corresponding to the lag value
-    int minK = 0;    // the actual lag value
+    int minK = 0;    // the actual lag value (this is the period!)
     
-    for (int n = 1; n < highestAsdfIndex; ++n)
+    for (int n = 1; n <= highestAsdfIndex; ++n)
     {
         const SampleType currentSample = r[n];
         
@@ -137,10 +139,12 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     // period = minK + minPeriod
     // pitch confidence = asdfMinimum
     
-    // if asdfMinimum is too high, then we have a low pitch confidence.
+    // if asdfMinimum is too high, then we have a low pitch confidence & determine the frame to be unpitched
+    if (asdfMinimum > confidenceThresh)
+        return -1.0f;
     
     // quadratic interpolation to find accurate float period from integer period
-    SampleType realPeriod = quadraticPeakPosition (asdfBuffer.getReadPointer(0), highestAsdfIndex, minK);
+    SampleType realPeriod = quadraticPeakPosition (asdfBuffer.getReadPointer(0), minK, highestAsdfIndex);
     
     realPeriod += minPeriod; // account for offset in ASDF buffer - index 0 held the value for lag minPeriod
     
@@ -151,13 +155,8 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
 template<typename SampleType>
 SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept
 {
-    unsigned int x0, x2;
-    
-    if (pos == 0 || pos == dataSize - 1)
-        return pos;
-    
-    x0 = (pos < 1)            ? pos     : pos - 1;
-    x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
+    const unsigned int x0 = (pos == 0)           ? pos     : pos - 1;
+    const unsigned int x2 = (pos + 1 < dataSize) ? pos + 1 : pos;
     
     if (x0 == pos)
         return (data[pos] <= data[x2]) ? pos : x2;
@@ -165,8 +164,9 @@ SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* d
     if (x2 == pos)
         return (data[pos] <= data[x0]) ? pos : x0;
     
-    auto s0 = data[x0];
-    auto s2 = data[x2];
+    const auto s0 = data[x0];
+    const auto s2 = data[x2];
+    
     return pos + 0.5 * (s0 - s2) / (s0 - 2.0 * data[pos] + s2);
 };
 

@@ -136,7 +136,7 @@ public:
     
     ~Harmonizer();
     
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer);
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer, const bool frameIsPitched);
     
     void processMidi (MidiBuffer& midiMessages);
     
@@ -300,6 +300,7 @@ private:
     
     SampleType currentInputFreq;
     int currentInputPeriod;
+    float currentInputFloatPeriod;
     
     double sampleRate;
     bool shouldStealNotes;
@@ -345,6 +346,10 @@ private:
     int windowSize;
     
     void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
+    
+    void multiplyGrainsByWindow (AudioBuffer<SampleType>& audioToWindow,
+                                 const AudioBuffer<SampleType>& windowToUse,
+                                 const int windowStartIndex, const int windowSize);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

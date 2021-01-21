@@ -111,10 +111,9 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();
     
-    if (synthesisIndex >= totalNumInputSamples) // don't need any of the analysis frames from this audio chunk, already written enough samples from previous frames...
+    if (synthesisIndex >= totalNumInputSamples) // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
     {
         synthesisIndex -= totalNumInputSamples;
-        if (synthesisIndex < 0) synthesisIndex = 0;
         return;
     }
     
@@ -128,8 +127,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         
         if (readingEndSample > totalNumInputSamples)
             readingEndSample = totalNumInputSamples;
-        else if (i < 2   // this check only needs to be performed for the first couple of frames
-                 && (i + 1) < indicesOfGrainOnsets.size())
+        else if (i < 2)   // this check only needs to be performed for the first couple of frames, && i+1 should always be within range here
             readingEndSample = indicesOfGrainOnsets.getUnchecked(i + 1);
         
         if (synthesisIndex >= readingEndSample)
@@ -142,7 +140,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         
         // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
         int hop = (grainSize == origPeriod) ? newPeriod : roundToInt (newPeriod * grainSize / origPeriod);
-        if (hop < 1) hop = 1; // edge case
+        if (hop < 1) hop = 1; // edge case??
         
         while (synthesisIndex < readingEndSample)
         {
@@ -150,12 +148,15 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
             highestIndexWritten = synthesisIndex + grainSize;
             synthesisIndex += hop;
         }
+        
+        if (synthesisIndex >= totalNumInputSamples)
+            break;
     }
+    
+    highestSBindexWritten = highestIndexWritten;
     
     synthesisIndex -= totalNumInputSamples;
     if (synthesisIndex < 0) synthesisIndex = 0;
-    
-    highestSBindexWritten = highestIndexWritten;
 };
 
 

@@ -30,6 +30,10 @@ public:
     
     void setHzRange (const int newMinHz, const int newMaxHz, const bool allowRecalc = false);
     
+    SampleType getCurrentConfidenceThresh() const noexcept { return confidenceThresh; };
+    
+    void setConfidenceThresh (const SampleType newThresh) { confidenceThresh = newThresh; };
+    
     double getSamplerate() const noexcept { return samplerate; };
     
     void setSamplerate (const double newSamplerate, const bool recalcHzRange = true);
@@ -43,6 +47,8 @@ private:
     int minPeriod, maxPeriod;
     
     double samplerate;
+    
+    SampleType confidenceThresh;
     
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
