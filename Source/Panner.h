@@ -66,8 +66,9 @@ public:
         
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
         
-        // original:
-        float panningAngle = (90.0f * newMidiPan / 127.0f * MathConstants<float>::pi) / 180.0f;
+        const float panningAngle = (90.0f * newMidiPan / 127.0f * MathConstants<float>::pi) / 180.0f;
+        
+        jassert (panningAngle >= 0.0f && panningAngle <= 90.0f);
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);

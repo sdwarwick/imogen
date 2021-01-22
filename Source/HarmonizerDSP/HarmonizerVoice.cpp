@@ -35,12 +35,16 @@ HarmonizerVoice<SampleType>::~HarmonizerVoice()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
-    synthesisBuffer.setSize(1, blocksize * 2, true, true, true);
+    // blocksize = maximum period
+    
+    synthesisBuffer.setSize(1, blocksize * 4, true, true, true);
     synthesisBuffer.clear();
     highestSBindexWritten = 0;
     synthesisIndex = 0;
     
-    copyingBuffer.setSize(1, blocksize, true, true, true);
+    windowingBuffer.setSize(1, blocksize * 2);
+    
+    copyingBuffer.setSize(1, blocksize * 2, true, true, true);
     
     prevVelocityMultiplier = currentVelocityMultiplier;
     
@@ -105,7 +109,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio, // window has already been applied, we're just splicing here
+void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio, 
                                         const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
                                         const Array<int>& indicesOfGrainOnsets, // sample indices of the beginning of each analysis grain
@@ -116,6 +120,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     if (synthesisIndex >= totalNumInputSamples)
         // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
     {
+        highestSBindexWritten = synthesisIndex;
         synthesisIndex -= totalNumInputSamples;
         return;
     }
@@ -126,43 +131,58 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
-        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should always be 0
+        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // Beginning of this analysis grain. first element in array should always be 0
         
-        const int readingEndSample = ((i + 1) < indicesOfGrainOnsets.size()) ?
-                                     indicesOfGrainOnsets.getUnchecked(i + 1) : std::min (readingStartSample + analysisGrain,
-                                                                                          totalNumInputSamples);
+        int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples); // end of this analysis grain
+        
+        if ((i == 0) && (indicesOfGrainOnsets.getUnchecked(1) < origPeriod)) // there are some extra samples @ the beginning of the buffer before the first full analysis grain
+            readingEndSample = indicesOfGrainOnsets.getUnchecked(1);
+        
         if (synthesisIndex >= readingEndSample)
             continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
                 
-        const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this input grain
+        const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this analysis grain
         
         if (grainSize < 1)
             continue; // nothing to OLA
         
+        // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once
+        
+        const auto* r = inputAudio.getReadPointer(0);
+        const auto* win = windowToUse.getReadPointer(0);
+        auto* w = windowingBuffer.getWritePointer(0);
+        
+        for (int s = readingStartSample, // reading index from orignal audio
+             wi = 0,                     // writing index in the windowing multiplication storage buffer
+             winR = (grainSize == analysisGrain) ? 0 : analysisGrain - (readingStartSample % analysisGrain);  // starting index in the window buffer
+             s < readingEndSample;
+             ++s, ++wi, ++winR)
+        {
+            if (winR == analysisGrain) winR = 0; // wraparound window index
+            w[wi] = r[s] * win[winR];
+        }
+        
         // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
         const int hop = (grainSize == analysisGrain) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / analysisGrain), 1);
         
+        // 2. resynthesis / OLA
         while (synthesisIndex < readingEndSample)
         {
             auto* writing = synthesisBuffer.getWritePointer(0);
-            const auto* reading = inputAudio.getReadPointer(0);
-            const auto* window = windowToUse.getReadPointer(0);
+            const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
             
-            for (int s = synthesisIndex, a = readingStartSample, windowIndex = readingEndSample % analysisGrain;
-                 s < synthesisIndex + grainSize;
-                 ++s, ++a)
+            for (int s = synthesisIndex, r = 0;
+                 r < grainSize;
+                 ++s, ++r)
             {
-                writing[s] += (reading[a] * window[windowIndex]);
-                
-                ++windowIndex;
-                if (windowIndex == analysisGrain) windowIndex = 0;
+                writing[s] += reading[r];
             }
             
             highestIndexWritten = synthesisIndex + grainSize;
             synthesisIndex += hop;
         }
         
-        if (synthesisIndex >= totalNumInputSamples)
+        if (synthesisIndex >= totalNumInputSamples || readingEndSample == totalNumInputSamples)
             break;
     }
     
@@ -178,7 +198,7 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
                                                  const int numSamplesUsed,
                                                  const int highestIndexWritten)
 {
-    const int numSamplesLeft = highestIndexWritten - numSamplesUsed + 1;
+    const int numSamplesLeft = highestIndexWritten - numSamplesUsed;
     
     if (numSamplesLeft < 1)
     {
@@ -191,7 +211,7 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
     targetBuffer.clear();
     targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
     
-    highestSBindexWritten = numSamplesLeft - 1;
+    highestSBindexWritten = numSamplesLeft;
 };
 
 

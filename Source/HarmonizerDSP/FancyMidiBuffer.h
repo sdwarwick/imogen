@@ -25,7 +25,7 @@ public:
         if (sourceStart == sourceBuffer.cend())
             return;
         
-        const auto sourceEnd = sourceBuffer.findNextSamplePosition(numSamples - 1);
+        const auto sourceEnd = sourceBuffer.findNextSamplePosition(sourceStartSample + numSamples - 1);
         
         if (sourceStart == sourceEnd)
             return;
@@ -43,14 +43,17 @@ public:
     
     void deleteEventsAndPushUpRest (const int numSamplesUsed)
     {
+        if (this->findNextSamplePosition(numSamplesUsed - 1) == this->cend())
+        {
+            this->clear();
+            return;
+        }
+        
         MidiBuffer temp (*this);
         
         this->clear();
         
         auto copyingStart = temp.findNextSamplePosition (numSamplesUsed - 1);
-        
-        if (copyingStart == temp.cend())
-            return;
         
         std::for_each (copyingStart, temp.cend(),
                        [&] (const MidiMessageMetadata& meta)

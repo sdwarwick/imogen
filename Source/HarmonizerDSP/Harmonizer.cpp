@@ -232,21 +232,15 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
     
     int analysisIndex = 0;
     
-    SampleType localMin;
-    unsigned int indexOfLocalMin;
-    
-    SampleType localMax;
-    unsigned int indexOfLocalMax;
-    
     const SampleType* reading = inputAudio.getReadPointer(0);
     
     while (analysisIndex < inputAudio.getNumSamples())
     {
-        localMin = reading[analysisIndex];
-        indexOfLocalMin = analysisIndex;
+        SampleType localMin = reading[analysisIndex];
+        unsigned int indexOfLocalMin = analysisIndex;
         
-        localMax = reading[analysisIndex];
-        indexOfLocalMax = analysisIndex;
+        SampleType localMax = reading[analysisIndex];
+        unsigned int indexOfLocalMax = analysisIndex;
         
         // identify the local maxima & minima
         for (int s = analysisIndex + 1;
@@ -274,53 +268,19 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
                 break;
         }
         
-        int positiveGrain = indexOfLocalMax - period;
-        if (positiveGrain < 0) positiveGrain += windowSize;
+        const int lastGrainStart = targetArray.isEmpty() ? 0 : targetArray.getLast();
+        
+        int positiveGrain = indexOfLocalMax - period; // center grains on maxima by subtracting 1/2 the grainsize - which is the period in this case
+        if (positiveGrain < lastGrainStart) positiveGrain += windowSize;
         
         int negativeGrain = indexOfLocalMin - period;
-        if (negativeGrain < 0) negativeGrain += windowSize;
+        if (negativeGrain < lastGrainStart) negativeGrain += windowSize;
         
-        const int  lastGrainEnd = targetArray.isEmpty() ? period : targetArray.getLast() + period;
-        const bool usePositiveGrain = abs(positiveGrain - lastGrainEnd) < abs(negativeGrain - lastGrainEnd);
+        // see whether picking the negative or positive peak results in grain spacing closer to a perfect 50% overlap
+        const int lastGrainEnd = lastGrainStart + windowSize;
+        const bool usePositiveGrain = abs(positiveGrain - lastGrainEnd - period) < abs(negativeGrain - lastGrainEnd - period);
         
-        const int peakIndex = usePositiveGrain ? indexOfLocalMax : indexOfLocalMin;
-        
-        int grainStart = usePositiveGrain ? positiveGrain : negativeGrain;
-        
-        // quick little localized interpolation...
-        {
-            const int alt = (usePositiveGrain ? -1 : 1);
-            const SampleType cur = reading[peakIndex];
-            const SampleType s1 = (peakIndex + 1) < inputAudio.getNumSamples() ? reading[peakIndex + 1] : alt;
-            const SampleType s0 = (peakIndex - 1) >= 0                         ? reading[peakIndex - 1] : alt;
-        
-            if (usePositiveGrain)
-            {
-                if (s0 > cur)
-                {
-                    if (grainStart > 0)
-                        --grainStart;
-                }
-                else if (s1 > cur)
-                {
-                    if ((grainStart + 1) < inputAudio.getNumSamples())
-                        ++grainStart;
-                }
-            }
-            else
-            {
-                if (s0 < cur)
-                {
-                    if (grainStart > 0)
-                        --grainStart;
-                }
-                else if (s1 < cur)
-                {
-                    if ((grainStart + 1) < inputAudio.getNumSamples())
-                        ++grainStart;
-                }
-            }
-        }
+        const int grainStart = usePositiveGrain ? positiveGrain : negativeGrain;
         
         if ((analysisIndex == 0) && (grainStart > 0))
             targetArray.add (0);
@@ -737,22 +697,19 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
             return;
         
         if (! (sustainPedalDown || sostenutoPedalDown) )
-        {
-            stopVoice (voice, velocity, allowTailOff);
             stoppedVoice = true;
-        }
     }
     else if (! voice->isKeyDown())
     {
-        stopVoice (voice, velocity, allowTailOff);
         stoppedVoice = true;
-        
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, midiNoteNumber, velocity),
                                       ++lastMidiTimeStamp);
     }
     
     if (! stoppedVoice)
         return;
+    
+    stopVoice (voice, velocity, allowTailOff);
 
     if (midiNoteNumber == lastDescantPitch)
         lastDescantPitch = -1;

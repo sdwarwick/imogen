@@ -121,6 +121,7 @@ private:
     int synthesisIndex = 0; // starting index for each synthesis grain being written
     int highestSBindexWritten;
     AudioBuffer<SampleType> copyingBuffer;
+    AudioBuffer<SampleType> windowingBuffer;
     
     float prevSoftPedalMultiplier;
     
