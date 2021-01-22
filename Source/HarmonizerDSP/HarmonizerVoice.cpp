@@ -78,7 +78,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     const float newPeriod = (float) (parent->getSamplerate() / currentOutputFreq);
     
-    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     const int numSamples = inputAudio.getNumSamples();
     
@@ -112,8 +112,8 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio, 
                                         const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
-                                        const Array<int>& indicesOfGrainOnsets, // sample indices of the beginning of each analysis grain
-                                        const AudioBuffer<SampleType>& windowToUse) // Hanning window, length origPeriod * 2
+                                        const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
+                                        const SampleType* window) // Hanning window, length origPeriod * 2
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();
     
@@ -127,70 +127,86 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     const int analysisGrain = 2 * origPeriod;
     
-    int highestIndexWritten = 0; // highest written-to index in the synthesis buffer
+    if (indicesOfGrainOnsets.getUnchecked(0) > 0) // extra samples @ start before first full analysis grain
+    {
+        const int readingEndSample = indicesOfGrainOnsets.getUnchecked(1);
+        
+        olaFrame (inputAudio.getReadPointer(0), 0, readingEndSample, window, analysisGrain, newPeriod);
+    }
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
-        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // Beginning of this analysis grain. first element in array should always be 0
+        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should always be 0
         
-        int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples); // end of this analysis grain
-        
-        if ((i == 0) && (indicesOfGrainOnsets.getUnchecked(1) < origPeriod)) // there are some extra samples @ the beginning of the buffer before the first full analysis grain
-            readingEndSample = indicesOfGrainOnsets.getUnchecked(1);
+        const int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples); // end of this analysis grain
         
         if (synthesisIndex >= readingEndSample)
             continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
-                
-        const int grainSize = readingEndSample - readingStartSample; // # of samples being OLA'd for this analysis grain
         
-        if (grainSize < 1)
-            continue; // nothing to OLA
-        
-        // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once
-        
-        const auto* r = inputAudio.getReadPointer(0);
-        const auto* win = windowToUse.getReadPointer(0);
-        auto* w = windowingBuffer.getWritePointer(0);
-        
-        for (int s = readingStartSample, // reading index from orignal audio
-             wi = 0,                     // writing index in the windowing multiplication storage buffer
-             winR = (grainSize == analysisGrain) ? 0 : analysisGrain - (readingStartSample % analysisGrain);  // starting index in the window buffer
-             s < readingEndSample;
-             ++s, ++wi, ++winR)
-        {
-            if (winR == analysisGrain) winR = 0; // wraparound window index
-            w[wi] = r[s] * win[winR];
-        }
-        
-        // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
-        const int hop = (grainSize == analysisGrain) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / analysisGrain), 1);
-        
-        // 2. resynthesis / OLA
-        while (synthesisIndex < readingEndSample)
-        {
-            auto* writing = synthesisBuffer.getWritePointer(0);
-            const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
-            
-            for (int s = synthesisIndex, r = 0;
-                 r < grainSize;
-                 ++s, ++r)
-            {
-                writing[s] += reading[r];
-            }
-            
-            highestIndexWritten = synthesisIndex + grainSize;
-            synthesisIndex += hop;
-        }
+        olaFrame (inputAudio.getReadPointer(0), readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
         
         if (synthesisIndex >= totalNumInputSamples || readingEndSample == totalNumInputSamples)
             break;
     }
     
-    highestSBindexWritten = highestIndexWritten;
-    
     synthesisIndex -= totalNumInputSamples;
     if (synthesisIndex < 0) synthesisIndex = 0;
 };
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const int readingStartSample, const int readingEndSample,
+                                            const SampleType* window, const int windowSize, const int newPeriod)
+{
+    // this processes one analysis frame of input samples, from readingStartSample to readingEndSample
+    
+    // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once
+    
+    if (synthesisIndex > readingEndSample)
+        return;
+
+    const int grainSize = readingEndSample - readingStartSample;
+    
+    if (grainSize < 1)
+        return;
+    
+    auto* w = windowingBuffer.getWritePointer(0);
+    
+    for (int s = readingStartSample, // reading index from orignal audio
+         wi = 0,                     // writing index in the windowing multiplication storage buffer
+         winR = (grainSize == windowSize) ? 0 : windowSize - (readingEndSample % windowSize); // starting index in the window buffer
+         s < readingEndSample;
+         ++s, ++wi, ++winR)
+    {
+        if (winR == windowSize) winR = 0; // wraparound window index
+        w[wi] = inputAudio[s] * window[winR];
+    }
+    
+    // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
+    const int hop = (grainSize == windowSize) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / windowSize), 1);
+    
+    int highestIndexWritten = 0;
+    
+    // 2. resynthesis / OLA
+    while (synthesisIndex < readingEndSample)
+    {
+        auto* writing = synthesisBuffer.getWritePointer(0);
+        const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
+        
+        for (int s = synthesisIndex, r = 0;
+             r < grainSize;
+             ++s, ++r)
+        {
+            writing[s] += reading[r];
+        }
+        
+        highestIndexWritten = synthesisIndex + grainSize;
+        synthesisIndex += hop;
+    }
+    
+    highestSBindexWritten = highestIndexWritten;
+};
+
 
 
 template<typename SampleType>

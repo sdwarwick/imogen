@@ -67,9 +67,10 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     for(auto* voice : voices)
         voice->prepare(blocksize);
     
-    windowBuffer.setSize (1, blocksize, true, true, true);
+    windowBuffer.setSize (1, blocksize * 2, true, true, true);
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
+    peakIndices.ensureStorageAllocated(blocksize);
     
     intervalsLatchedTo.ensureStorageAllocated(voices.size());
 };
@@ -154,7 +155,7 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
     
     currentInputPeriod = roundToInt (currentInputFloatPeriod);
     
-    fillWindowBuffer (currentInputPeriod);
+    fillWindowBuffer (currentInputPeriod * 2);
     
     if (intervalLatchIsOn)
     {
@@ -213,7 +214,13 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     outputBuffer.clear();
     
+    if (inputAudio.getNumSamples() == 0)
+        return;
+    
     // how to handle unpitched frames???
+    
+    if (windowSize != currentInputPeriod * 2)
+        fillWindowBuffer (currentInputPeriod * 2);
     
     extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
     
@@ -225,8 +232,124 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 
 template<typename SampleType>
 void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
-                                                          const AudioBuffer<SampleType>& inputAudio,
-                                                          const int period)
+                                                       const AudioBuffer<SampleType>& inputAudio,
+                                                       const int period)
+{
+    // PART ONE - find sample indices of points of maximum energy for every pitch period
+    
+    extractPeakIndicesForEachPeriod (peakIndices, inputAudio, period); // these peaks are once per period, but are NOT garunteed to be evenly spaced or exhibit any symmetry!
+    
+    
+    // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, centred on points of maximum energy, w/ approx 50% overlap
+    
+    targetArray.clearQuick();
+    
+    // step 1 - shift from peak indices to grain onset indices
+    // because the length of the window is 2 * period and we want 50% overlap, we should be placing a grain onset index for every peak index detected, because they are 1 period apart.
+    
+    for (int p = 0; p < peakIndices.size(); ++p)
+    {
+        const int peakIndex = peakIndices.getUnchecked (p);
+        
+        int grainStart = peakIndex - period; // offset the peak index by the period so that each grain will be centered on a peak
+        
+        if (grainStart > 0)
+            targetArray.add (grainStart);
+    }
+    
+    /*
+     step 2 - attempt to preserve/create symmetry such that for all grains grainStart[p]:
+     
+         continuous grains in the same "stream":
+         grainStart[p - 2] = grainStart[p] - (2 * period)
+         grainStart[p + 2] = grainStart[p] + (2 * period)
+ 
+         neighboring overlapping grains:
+         grainStart[p - 1] = grainStart[p] - period
+         grainStart[p + 1] = grainStart[p] + period
+     */
+    
+    const int periodDoubled = 2 * period;
+    const int numSamples = inputAudio.getNumSamples();
+    
+    for (int p = 0; p < targetArray.size(); ++p)
+    {
+        int g = targetArray.getUnchecked (p);
+        
+        if ((p - 1) >= 0)
+        {
+            if ((p - 2) >= 0)
+            {
+                // this is the neighboring grain in the SAME CONTINUOUS STREAM of grains! The symmetry here is most important
+                // shift the CURRENT grain (grainStart[p]) to make this equation true: grainStart[p - 2] = grainStart[p] - 2 * period
+                
+                const int target_g00 = g - periodDoubled;
+                
+                if (target_g00 > 0)
+                {
+                    const int actual_g00 = targetArray.getUnchecked (p - 2);
+                
+                    if (target_g00 != actual_g00)
+                    {
+                        const int newG = g + target_g00 - actual_g00;
+                        
+                        if (newG >= 0)
+                        {
+                            targetArray.set (p, newG);
+                            g = newG;
+                        }
+                    }
+                }
+            }
+            
+            // this is the neighboring OVERLAPPING grain - the overlap need not be *exactly* 50%, but keeping it as synchronous as possible is desirable - so we're only correcting this index if the OLA % of the grain's current position is lower than 25% or higher than 75%
+            
+            const int target_g0 = g - period;
+            const int actual_g0 = targetArray.getUnchecked (p - 1);
+            
+            if (target_g0 != actual_g0 && target_g0 > 0)
+            {
+                const float olaPcnt = abs(g - actual_g0) / periodDoubled;
+            
+                if (olaPcnt > 0.75f || olaPcnt < 0.25f)
+                    targetArray.set (p - 1, target_g0);
+            }
+        }
+        
+        if ((p + 1) < targetArray.size())
+        {
+            if ((p + 2) < targetArray.size())
+            {
+                // this is the neighboring grain in the SAME CONTINUOUS STREAM of grains! The symmetry here is most important
+                // shift the FUTURE grain (grainStart[p + 2]) to make this equation true: grainStart[p + 2] = grainStart[p] + 2 * period
+                
+                const int target_g2 = g + periodDoubled;
+                
+                if ((target_g2 != targetArray.getUnchecked (p + 2)) && (target_g2 < numSamples))
+                    targetArray.set (p + 2, target_g2);
+            }
+            
+            // this is the neighboring OVERLAPPING grain - the overlap need not be *exactly* 50%, but keeping it as synchronous as possible is desirable - so we're only correcting this index if the OLA % of the grain's current position is lower than 25% or higher than 75%
+            
+            const int target_g1 = g + period;
+            const int actual_g1 = targetArray.getUnchecked (p + 1);
+            
+            if (target_g1 != actual_g1 && target_g1 < numSamples)
+            {
+                const float olaPcnt = abs(g - actual_g1) / periodDoubled;
+            
+                if (olaPcnt > 0.75f || olaPcnt < 0.25f)
+                    targetArray.set (p + 1, target_g1);
+            }
+        }
+    }
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::extractPeakIndicesForEachPeriod (Array<int>& targetArray,
+                                                              const AudioBuffer<SampleType>& inputAudio,
+                                                              const int period)
 {
     targetArray.clearQuick();
     
@@ -234,17 +357,17 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
     
     const SampleType* reading = inputAudio.getReadPointer(0);
     
+    bool usedPositivePeakLastTime = false;
+    
     while (analysisIndex < inputAudio.getNumSamples())
     {
         SampleType localMin = reading[analysisIndex];
-        unsigned int indexOfLocalMin = analysisIndex;
-        
         SampleType localMax = reading[analysisIndex];
-        unsigned int indexOfLocalMax = analysisIndex;
+        int indexOfLocalMin = analysisIndex;
+        int indexOfLocalMax = analysisIndex;
         
-        // identify the local maxima & minima
         for (int s = analysisIndex + 1;
-             s < std::min (analysisIndex + windowSize, inputAudio.getNumSamples());
+             s < std::min (analysisIndex + period, inputAudio.getNumSamples());
              ++s)
         {
             const SampleType currentSample = reading[s];
@@ -260,34 +383,21 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
                 localMax = currentSample;
                 indexOfLocalMax = s;
             }
-            
-            if (localMin <= -1.0f)
-                break;
-            
-            if (localMax >= 1.0f)
-                break;
         }
         
-        const int lastGrainStart = targetArray.isEmpty() ? 0 : targetArray.getLast();
+        const int prevPeak = targetArray.isEmpty() ? 0 : targetArray.getLast();
         
-        int positiveGrain = indexOfLocalMax - period; // center grains on maxima by subtracting 1/2 the grainsize - which is the period in this case
-        if (positiveGrain < lastGrainStart) positiveGrain += windowSize;
+        const int posOffset = abs(indexOfLocalMax - prevPeak);
+        const int negOffset = abs(indexOfLocalMin - prevPeak);
         
-        int negativeGrain = indexOfLocalMin - period;
-        if (negativeGrain < lastGrainStart) negativeGrain += windowSize;
+        const bool usePositivePeak = (posOffset == negOffset) ? usedPositivePeakLastTime : posOffset < negOffset;
         
-        // see whether picking the negative or positive peak results in grain spacing closer to a perfect 50% overlap
-        const int lastGrainEnd = lastGrainStart + windowSize;
-        const bool usePositiveGrain = abs(positiveGrain - lastGrainEnd - period) < abs(negativeGrain - lastGrainEnd - period);
+        const int peakIndex = usePositivePeak ? indexOfLocalMax : indexOfLocalMin;
         
-        const int grainStart = usePositiveGrain ? positiveGrain : negativeGrain;
+        targetArray.add (peakIndex);
         
-        if ((analysisIndex == 0) && (grainStart > 0))
-            targetArray.add (0);
-        
-        targetArray.add (grainStart);
-        
-        analysisIndex = grainStart + period; // grains should be length 2 period with 50 % overlap
+        analysisIndex = peakIndex + period;
+        usedPositivePeakLastTime = usePositivePeak;
     }
 };
 
@@ -308,7 +418,7 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
 
     for (int i = 0; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2 * i) * samplemultiplier)) );
+        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2.0 * i) * samplemultiplier)) );
     
     windowSize = numSamples;
 };

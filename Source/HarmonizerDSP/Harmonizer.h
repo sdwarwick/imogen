@@ -90,7 +90,10 @@ private:
     
     void sola (const AudioBuffer<SampleType>& inputAudio,
                const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
-               const AudioBuffer<SampleType>& windowToUse);
+               const SampleType* window);
+    
+    void olaFrame (const SampleType* inputAudio, const int readingStartSample, const int readingEndSample,
+                   const SampleType* window, const int windowSize, const int newPeriod);
     
     void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed, const int highestIndexWritten);
     
@@ -255,6 +258,7 @@ private:
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     Array<int> indicesOfGrainOnsets;
+    Array<int> peakIndices;
     
     // MIDI
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
@@ -347,6 +351,8 @@ private:
     
     
     void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
+    
+    void extractPeakIndicesForEachPeriod (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
 
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)

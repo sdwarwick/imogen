@@ -91,6 +91,8 @@
         <FILE id="oNyqZ2" name="GeneralUtils.h" compile="0" resource="0" file="Source/GeneralUtils.h"/>
       </GROUP>
     </GROUP>
+    <FILE id="NCP0Zz" name="RangeWrappedInt.h" compile="0" resource="0"
+          file="Source/RangeWrappedInt.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
