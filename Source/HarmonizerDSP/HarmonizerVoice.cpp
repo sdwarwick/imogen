@@ -131,17 +131,19 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     if (indicesOfGrainOnsets.getUnchecked(0) > 0) // extra samples @ start before first full analysis grain
     {
-        const int peak1 = indicesOfGrainOnsets.getUnchecked(1);
+        int endSample;
         
-        const int readingEndSample = peak1 < (origPeriod * 2) ? peak1 : indicesOfGrainOnsets.getUnchecked(0); 
+        if (indicesOfGrainOnsets.size() >= 2)
+            endSample = std::min (indicesOfGrainOnsets.getUnchecked(1), analysisGrain);
+        else
+            endSample = std::min (indicesOfGrainOnsets.getUnchecked(0), analysisGrain);
         
-        olaFrame (input, 0, readingEndSample, window, analysisGrain, newPeriod);
+        olaFrame (input, 0, endSample, window, analysisGrain, newPeriod);
     }
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
         const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
-        
         const int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples);
         
         olaFrame (input, readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
@@ -150,9 +152,8 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
             break;
     }
     
-    const int highestAnalysisIndex = indicesOfGrainOnsets.getLast() + analysisGrain;
-    
-    if (highestAnalysisIndex < totalNumInputSamples)
+    if (int highestAnalysisIndex = indicesOfGrainOnsets.getLast() + analysisGrain;
+        highestAnalysisIndex < totalNumInputSamples)
         olaFrame (input, highestAnalysisIndex, totalNumInputSamples, window, analysisGrain, newPeriod);
     
     synthesisIndex -= totalNumInputSamples;

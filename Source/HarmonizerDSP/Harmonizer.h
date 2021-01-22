@@ -259,6 +259,8 @@ private:
     
     Array<int> indicesOfGrainOnsets;
     Array<int> peakIndices;
+    Array<int> peakCandidates;
+    Array<int> candidateDeltas;
     
     // MIDI
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
@@ -351,8 +353,8 @@ private:
     
     void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
     
-    void extractPeakIndicesForEachPeriod (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
-
+    void findPeaks (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

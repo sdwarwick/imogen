@@ -71,6 +71,8 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
     peakIndices.ensureStorageAllocated(blocksize);
+    peakCandidates.ensureStorageAllocated(blocksize);
+    candidateDeltas.ensureStorageAllocated(blocksize);
     
     intervalsLatchedTo.ensureStorageAllocated(voices.size());
 };
@@ -204,7 +206,7 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
     // PART ONE - find sample indices of points of maximum energy for every pitch period
     // this function identifies a local extrema for every period of the fundamental frequency of the input audio, but these peaks are not garunteed to be spaced evenly, or exhibit any symmetry. The only garuntee is that there are as many peaks are there are full repitions of the signal's period & that each peak represents a local extrema.
     
-    extractPeakIndicesForEachPeriod (peakIndices, inputAudio, period);
+    findPeaks (peakIndices, inputAudio, period);
     
     
     // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, centred on points of maximum energy, w/ approx 50% overlap
@@ -223,6 +225,10 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
         if (grainStart > 0)
             targetArray.add (grainStart);
     }
+    
+    const int last = targetArray.getLast() + period; 
+    if (last < inputAudio.getNumSamples())
+        targetArray.add (last);
 
     
     /*
@@ -239,10 +245,6 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
     
     const int periodDoubled = 2 * period;
     const int numSamples = inputAudio.getNumSamples();
-    
-    const int last = targetArray.getLast() + period; // just in case...
-    if (last < numSamples)
-        targetArray.add (last);
     
     for (int p = 0; p < targetArray.size(); ++p)
     {
@@ -264,7 +266,7 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
                 
                 const int targetG = g00 + periodDoubled;
                 
-                if (targetG < numSamples && g != targetG)
+                if (targetG < numSamples)
                 {
                     targetArray.set (p, targetG);
                     g = targetG;
@@ -294,7 +296,7 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
                 
                 const int target_g2 = g + periodDoubled;
                 
-                if ((target_g2 != targetArray.getUnchecked (p + 2)) && (target_g2 < numSamples))
+                if (target_g2 < numSamples)
                     targetArray.set (p + 2, target_g2);
             }
             
@@ -316,25 +318,30 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::extractPeakIndicesForEachPeriod (Array<int>& targetArray,
-                                                              const AudioBuffer<SampleType>& inputAudio,
-                                                              const int period)
+void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
+                                        const AudioBuffer<SampleType>& inputAudio,
+                                        const int period)
 {
     targetArray.clearQuick();
     
-    int analysisIndex = 0;
-    
     const SampleType* reading = inputAudio.getReadPointer(0);
     
-    while (analysisIndex < inputAudio.getNumSamples())
+    const int totalNumSamples = inputAudio.getNumSamples();
+    
+    const int outputGrain = 2 * period;
+    
+    int analysisIndex = 0;
+    
+    while (analysisIndex < totalNumSamples)
     {
+        peakCandidates.clearQuick();
+        candidateDeltas.clearQuick();
+        
         SampleType localMin = reading[analysisIndex];
         SampleType localMax = reading[analysisIndex];
-        int indexOfLocalMin = analysisIndex;
-        int indexOfLocalMax = analysisIndex;
         
         for (int s = analysisIndex + 1;
-             s < std::min (analysisIndex + period, inputAudio.getNumSamples());
+             s < std::min (analysisIndex + period, totalNumSamples);
              ++s)
         {
             const SampleType currentSample = reading[s];
@@ -342,28 +349,115 @@ void Harmonizer<SampleType>::extractPeakIndicesForEachPeriod (Array<int>& target
             if (currentSample < localMin)
             {
                 localMin = currentSample;
-                indexOfLocalMin = s;
+                peakCandidates.add (s);
             }
             
             if (currentSample > localMax)
             {
                 localMax = currentSample;
-                indexOfLocalMax = s;
+                peakCandidates.add (s);
             }
         }
         
-        const int prevPeak = targetArray.isEmpty() ? 0 : targetArray.getLast();
+        if (peakCandidates.isEmpty())
+        {
+            if (targetArray.isEmpty())
+                peakCandidates.add (0);
+            else
+                peakCandidates.add (std::min (targetArray.getLast() + period, totalNumSamples));
+        }
+ 
+        while (peakCandidates.size() > 10)
+        {
+            int indexOfWeakestPeak = peakCandidates.getUnchecked (0);
+            SampleType weakestPeak = abs(reading[indexOfWeakestPeak]);
+            
+            for (int p = 1; p < peakCandidates.size(); ++p)
+            {
+                const int index = peakCandidates.getUnchecked (p);
+                const SampleType sample = abs(reading[index]);
+                
+                if (sample < weakestPeak)
+                {
+                    weakestPeak = sample;
+                    indexOfWeakestPeak = index;
+                }
+            }
+            
+            peakCandidates.remove (indexOfWeakestPeak);
+        }
         
-        const int posDelta = abs(indexOfLocalMax - prevPeak - period); // for peaks perfectly spaced 1 period apart, this will be 0
-        const int negDelta = abs(indexOfLocalMin - prevPeak - period);
+        int peakIndex;
         
-        const int peakIndex = (posDelta < negDelta) ? indexOfLocalMax : indexOfLocalMin;
+        if (targetArray.isEmpty())
+        {
+            int strongestPeakIndex = peakCandidates.getUnchecked (0);
+            SampleType strongestPeak = abs(reading[strongestPeakIndex]);
+            
+            for (int p = 1; p < peakCandidates.size(); ++p)
+            {
+                const int index = peakCandidates.getUnchecked (p);
+                const SampleType current = abs (reading[index]);
+                
+                if (current >= strongestPeak)
+                {
+                    strongestPeak = current;
+                    strongestPeakIndex = index;
+                }
+            }
+            
+            peakIndex = strongestPeakIndex;
+        }
+        else
+        {
+            int lastPeakIndex, target;
+            
+            if (targetArray.size() == 1)
+            {
+                lastPeakIndex = targetArray.getUnchecked (0);
+                target = lastPeakIndex + period;
+            }
+            else
+            {
+                lastPeakIndex = targetArray.getUnchecked (targetArray.size() - 2);
+                target = lastPeakIndex + outputGrain;
+            }
+            
+            for (int p = 0; p < peakCandidates.size(); ++p)
+            {
+                const int delta = abs (peakCandidates.getUnchecked(p) - target);
+                candidateDeltas.add (delta);
+                
+                if (delta == 0 || delta == 1)
+                    break;
+            }
+            
+            int minDelta = candidateDeltas.getUnchecked (0);
+            int indexOfMinDelta = 0;
+            
+            for (int d = 1; d < candidateDeltas.size(); ++d)
+            {
+                const int delta = candidateDeltas.getUnchecked (d);
+                
+                if (delta <= minDelta)
+                {
+                    minDelta = delta;
+                    indexOfMinDelta = d;
+                }
+                
+                if (minDelta == 0 || minDelta == 1)
+                    break;
+            }
+            
+            peakIndex = peakCandidates.getUnchecked (indexOfMinDelta);
+        }
         
         targetArray.add (peakIndex);
-        
         analysisIndex = peakIndex + 1;
     }
 };
+
+
 
 
 // calculate Hanning window ------------------------------------------------------
