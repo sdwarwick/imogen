@@ -279,8 +279,8 @@ private:
     void handleLegato(const bool isOn);
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) const;
-    HarmonizerVoice<SampleType>* findVoiceToSteal (const int midiNoteNumber) const;
+    HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable);
+    HarmonizerVoice<SampleType>* findVoiceToSteal (const int midiNoteNumber);
     
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
@@ -309,7 +309,6 @@ private:
     
     SampleType currentInputFreq;
     int currentInputPeriod;
-    float currentInputFloatPeriod;
     
     double sampleRate;
     bool shouldStealNotes;

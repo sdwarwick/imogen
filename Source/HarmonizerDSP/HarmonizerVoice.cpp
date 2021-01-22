@@ -117,6 +117,8 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();
     
+    const auto* input = inputAudio.getReadPointer(0);
+    
     if (synthesisIndex >= totalNumInputSamples)
         // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
     {
@@ -125,29 +127,33 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         return;
     }
     
-    const int analysisGrain = 2 * origPeriod;
+    const int analysisGrain = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
     if (indicesOfGrainOnsets.getUnchecked(0) > 0) // extra samples @ start before first full analysis grain
     {
-        const int readingEndSample = indicesOfGrainOnsets.getUnchecked(1);
+        const int peak1 = indicesOfGrainOnsets.getUnchecked(1);
         
-        olaFrame (inputAudio.getReadPointer(0), 0, readingEndSample, window, analysisGrain, newPeriod);
+        const int readingEndSample = peak1 < (origPeriod * 2) ? peak1 : indicesOfGrainOnsets.getUnchecked(0); 
+        
+        olaFrame (input, 0, readingEndSample, window, analysisGrain, newPeriod);
     }
    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
-        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i); // first element in array should always be 0
+        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
         
-        const int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples); // end of this analysis grain
+        const int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples);
         
-        if (synthesisIndex >= readingEndSample)
-            continue; // skipping this analysis frame bc we've already written enough samples from previous synthesis frames...
-        
-        olaFrame (inputAudio.getReadPointer(0), readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
+        olaFrame (input, readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
         
         if (synthesisIndex >= totalNumInputSamples || readingEndSample == totalNumInputSamples)
             break;
     }
+    
+    const int highestAnalysisIndex = indicesOfGrainOnsets.getLast() + analysisGrain;
+    
+    if (highestAnalysisIndex < totalNumInputSamples)
+        olaFrame (input, highestAnalysisIndex, totalNumInputSamples, window, analysisGrain, newPeriod);
     
     synthesisIndex -= totalNumInputSamples;
     if (synthesisIndex < 0) synthesisIndex = 0;
@@ -156,11 +162,10 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const int readingStartSample, const int readingEndSample,
-                                            const SampleType* window, const int windowSize, const int newPeriod)
+                                            const SampleType* window, const int windowSize, // window size = origPeriod * 2
+                                            const int newPeriod)
 {
     // this processes one analysis frame of input samples, from readingStartSample to readingEndSample
-    
-    // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once
     
     if (synthesisIndex > readingEndSample)
         return;
@@ -169,6 +174,8 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
     
     if (grainSize < 1)
         return;
+    
+    // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once
     
     auto* w = windowingBuffer.getWritePointer(0);
     
@@ -338,8 +345,7 @@ void HarmonizerVoice<SampleType>::setPan (const int newPan)
 template<typename SampleType>
 bool HarmonizerVoice<SampleType>::isPlayingButReleased() const noexcept
 {
-    bool isPlayingButReleased = isVoiceActive()
-                                && (! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown()));
+    bool isPlayingButReleased = isVoiceActive() && (! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown()));
     
     if (parent->isPedalPitchOn())
         isPlayingButReleased = isPlayingButReleased && (currentlyPlayingNote != parent->getCurrentPedalPitchNote());
