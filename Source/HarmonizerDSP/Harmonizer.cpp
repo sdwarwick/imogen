@@ -226,9 +226,12 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
             targetArray.add (grainStart);
     }
     
-    const int last = targetArray.getLast() + period; 
-    if (last < inputAudio.getNumSamples())
+    int last = targetArray.getLast() + period;
+    while (last < inputAudio.getNumSamples())
+    {
         targetArray.add (last);
+        last += period;
+    }
 
     
     /*
@@ -337,8 +340,11 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
         peakCandidates.clearQuick();
         candidateDeltas.clearQuick();
         
+        // first 2 peak candidates
         SampleType localMin = reading[analysisIndex];
+        int indexOfLocalMin = analysisIndex;
         SampleType localMax = reading[analysisIndex];
+        int indexOfLocalMax = analysisIndex;
         
         for (int s = analysisIndex + 1;
              s < std::min (analysisIndex + period, totalNumSamples);
@@ -349,42 +355,71 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
             if (currentSample < localMin)
             {
                 localMin = currentSample;
-                peakCandidates.add (s);
+                indexOfLocalMin = s;
             }
             
             if (currentSample > localMax)
             {
                 localMax = currentSample;
-                peakCandidates.add (s);
+                indexOfLocalMax = s;
             }
         }
         
-        if (peakCandidates.isEmpty())
+        peakCandidates.add (indexOfLocalMax);
+        
+        if (indexOfLocalMin != indexOfLocalMax)
+            peakCandidates.add (indexOfLocalMin);
+        
+        // the rest
+        while (peakCandidates.size() < 10)
         {
-            if (targetArray.isEmpty())
-                peakCandidates.add (0);
-            else
-                peakCandidates.add (std::min (targetArray.getLast() + period, totalNumSamples));
-        }
- 
-        while (peakCandidates.size() > 10)
-        {
-            int indexOfWeakestPeak = peakCandidates.getUnchecked (0);
-            SampleType weakestPeak = abs(reading[indexOfWeakestPeak]);
-            
-            for (int p = 1; p < peakCandidates.size(); ++p)
+            // find the sample to start with, for variable initialization - the first sample in our analysis window we haven't already chosen as a peak candidate
+            int starting = -1;
+            int i = analysisIndex;
+            while (i < std::min (analysisIndex + period, totalNumSamples))
             {
-                const int index = peakCandidates.getUnchecked (p);
-                const SampleType sample = abs(reading[index]);
-                
-                if (sample < weakestPeak)
+                if (! peakCandidates.contains (i))
                 {
-                    weakestPeak = sample;
-                    indexOfWeakestPeak = index;
+                    starting = i;
+                    break;
+                }
+                ++i;
+            }
+            
+            if (starting == -1)
+                break;
+            
+            SampleType localMin = reading[starting];
+            int indexOfLocalMin = starting;
+            SampleType localMax = reading[starting];
+            int indexOfLocalMax = starting;
+            
+            for (int s = analysisIndex;
+                 s < std::min (analysisIndex + period, totalNumSamples);
+                 ++s)
+            {
+                if (peakCandidates.contains (s))
+                    continue;
+                
+                const SampleType currentSample = reading[s];
+                
+                if (currentSample < localMin)
+                {
+                    localMin = currentSample;
+                    indexOfLocalMin = s;
+                }
+                
+                if (currentSample > localMax)
+                {
+                    localMax = currentSample;
+                    indexOfLocalMax = s;
                 }
             }
             
-            peakCandidates.remove (indexOfWeakestPeak);
+            peakCandidates.add (indexOfLocalMax);
+            
+            if (indexOfLocalMin != indexOfLocalMax)
+                peakCandidates.add (indexOfLocalMin);
         }
         
         int peakIndex;

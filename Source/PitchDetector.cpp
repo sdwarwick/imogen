@@ -105,13 +105,19 @@ void PitchDetector<SampleType>::calculateASDF (const SampleType* inputAudio, con
     
     const int middleIndex = floor (numSamples / 2.0f);
     
-    SampleType differenceRunningSum = 0.0;
+    const int minLag = samplesToFirstZeroCrossing (inputAudio, numSamples);
     
     for (int k = minPeriod; k <= maxPeriod; ++k)
     {
-        const int sampleOffset = floor ((numSamples + k) / 2.0f);
-        
         const int index = k - minPeriod; // the actual asdfBuffer index
+        
+        if (k < minLag)
+        {
+            outputData[index] = 1.0;
+            continue;
+        }
+        
+        const int sampleOffset = floor ((numSamples + k) / 2.0f);
         
         outputData[index] = 0.0;
         
@@ -124,11 +130,54 @@ void PitchDetector<SampleType>::calculateASDF (const SampleType* inputAudio, con
             outputData[index] += (difference * difference);
         }
         
-        differenceRunningSum += outputData[index];
-        
-        if (differenceRunningSum > 0)
-            outputData[index] *= (index / differenceRunningSum);
+        outputData[index] /= numSamples; // normalize
     }
+};
+
+
+template<typename SampleType>
+unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples)
+{
+    int analysisStart = 0;
+    
+    // find first sample not 0
+    if (inputAudio[0] == 0)
+    {
+        int startingSample = 1;
+        
+        while (startingSample < numSamples)
+        {
+            if (inputAudio[startingSample] != 0)
+            {
+                analysisStart = startingSample;
+                break;
+            }
+            ++startingSample;
+        }
+        
+        if (startingSample == numSamples - 1)
+            return 0;
+    }
+    
+    int numSamps = 0;
+    
+    const bool startedPositive = inputAudio[analysisStart] > 0.0;
+    
+    for (int s = analysisStart + 1; s < numSamples; ++s)
+    {
+        bool isNowPositive = inputAudio[s] > 0.0;
+        
+        if (startedPositive != isNowPositive)
+        {
+            numSamps = s + 1;
+            break;
+        }
+    }
+    
+    if (numSamps == numSamples)
+        return 0;
+    
+    return numSamps;
 };
 
 

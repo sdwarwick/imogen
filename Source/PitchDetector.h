@@ -54,6 +54,8 @@ private:
     
     void calculateASDF (const SampleType* inputAudio, const int numSamples, SampleType* outputData);
     
+    unsigned int samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples);
+    
     unsigned int indexOfMinElement (const SampleType* data, const int dataSize);
     
     SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
