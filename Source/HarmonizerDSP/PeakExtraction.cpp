@@ -27,6 +27,10 @@ void Harmonizer<SampleType>::extractGrainOnsetIndices (Array<int>& targetArray,
     {
         
     }
+    else if (peakIndices.size() < targetNumPeaks)
+    {
+        
+    }
     
     
     // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, centred on points of maximum energy, w/ approx 50% overlap
@@ -154,16 +158,17 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
     const int outputGrain = 2 * period;
     const int halfPeriod  = ceil (period / 2.0f);
     
-    int analysisIndex = halfPeriod; // marks the center of the analysis windows (which are 1 period long)
+    int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) [but start @ 0]
     
-    while (analysisIndex < totalNumSamples)
+    while ((analysisIndex - halfPeriod) < totalNumSamples)
     {
         peakCandidates.clearQuick();
         candidateDeltas.clearQuick();
-        peakSearchingIndexOrder.fill (0);
         
-        const int grainStart = analysisIndex - halfPeriod; // starting point of this analysis grain
-        const int grainEnd = std::min (analysisIndex + halfPeriod, totalNumSamples); // ending sample
+        const int grainStart = std::max (analysisIndex - halfPeriod, 0); // starting point of this analysis grain
+        const int grainEnd   = targetArray.isEmpty()  ?                  // ending sample of this analysis grain
+                               std::min (period, totalNumSamples) :
+                               std::min (analysisIndex + halfPeriod, totalNumSamples);
         
         while (peakCandidates.size() < 10) // 10 is arbitrary...
         {
@@ -175,15 +180,12 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
             {
                 int target = targetArray.getUnchecked (targetArray.size() - 2) + outputGrain;
                 
-                const int delta1 = abs (peakCandidates.getLast() - target);
-                
-                if (delta1 < 3)
+                if ((abs (peakCandidates.getLast() - target)) < 3)
                     break;
                 
-                const int delta2 = abs (peakCandidates.getUnchecked(peakCandidates.size() - 2) - target);
-                
-                if (delta2 < 3)
-                    break;
+                if (peakCandidates.size() > 1)
+                    if ((abs (peakCandidates.getUnchecked (peakCandidates.size() - 2) - target)) < 3)
+                        break;
             }
         }
         
@@ -213,20 +215,20 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
             int target;
             
             if (targetArray.size() == 1)
-                target = targetArray.getUnchecked (0) + period;
+                target = targetArray.getUnchecked(0) + period;
             else
-                target = targetArray.getUnchecked (targetArray.size() - 2) + outputGrain;
+                target = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
             
             for (int p = 0; p < peakCandidates.size(); ++p)
             {
                 const int delta = abs (peakCandidates.getUnchecked(p) - target);
                 candidateDeltas.add (delta);
                 
-                if (delta < 2)
+                if (delta < 2) // good enough match, we can skip the rest...
                     break;
             }
             
-            int minDelta = candidateDeltas.getUnchecked (0);
+            int minDelta = candidateDeltas.getUnchecked(0);
             int indexOfMinDelta = 0;
             
             for (int d = 1; d < candidateDeltas.size(); ++d)
@@ -239,7 +241,7 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
                     indexOfMinDelta = d;
                 }
                 
-                if (minDelta == 0)
+                if (minDelta == 0) // perfect match
                     break;
             }
             
@@ -263,7 +265,6 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
     {
         if (! candidates.contains (startSample))
             candidates.add (startSample);
-        
         return;
     }
     
@@ -274,19 +275,50 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
     
     peakSearchingIndexOrder.set (0, predictedPeak);
     
-    for (int s = predictedPeak + 1, i = 1;
-         s <= endSample;
-         ++s, i += 2)
+    int p = 1, m = -1;
+    bool posLastTime = false;
+    
+    for (int n = 1;
+         n < numSamples;
+         ++n)
     {
-        peakSearchingIndexOrder.set (i, s);
+        const int pos = predictedPeak + p;
+        const int neg = predictedPeak + m;
+        
+        if (posLastTime)
+        {
+            if (neg >= startSample)
+            {
+                peakSearchingIndexOrder.set (n, neg);
+                posLastTime = false;
+                --m;
+                continue;
+            }
+            
+            jassert (pos <= endSample);
+        
+            peakSearchingIndexOrder.set (n, pos);
+            posLastTime = true;
+            ++p;
+        }
+        else
+        {
+            if (pos <= endSample)
+            {
+                peakSearchingIndexOrder.set (n, pos);
+                posLastTime = true;
+                ++p;
+                continue;
+            }
+            
+            jassert (neg >= startSample);
+        
+            peakSearchingIndexOrder.set (n, neg);
+            posLastTime = false;
+            --m;
+        }
     }
     
-    for (int s = predictedPeak - 1, i = 2;
-         s >= startSample;
-         --s, i += 2)
-    {
-        peakSearchingIndexOrder.set (i, s);
-    }
     
     int starting = predictedPeak;
     
@@ -311,8 +343,8 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
         starting = newStart;
     }
     
-    SampleType localMin = input[starting];
-    SampleType localMax = input[starting];
+    SampleType localMin = input[starting] / numSamples; // normalized...
+    SampleType localMax = localMin;
     int indexOfLocalMin = starting;
     int indexOfLocalMax = starting;
     
@@ -336,7 +368,7 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
             multiplier = 1.0 / divisor;
         }
         
-        const SampleType currentSample = input[s] * multiplier;
+        const SampleType currentSample = input[s] * multiplier / numSamples; // normalize
         
         if (currentSample < localMin)
         {
@@ -357,11 +389,8 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
     }
     else
     {
-        const int firstPeak  = std::min (indexOfLocalMax, indexOfLocalMin);
-        const int secondPeak = (firstPeak == indexOfLocalMax) ? indexOfLocalMin : indexOfLocalMax;
-        
-        candidates.add (firstPeak);
-        candidates.add (secondPeak);
+        candidates.add (std::min (indexOfLocalMax, indexOfLocalMin));
+        candidates.add (std::max (indexOfLocalMax, indexOfLocalMin));
     }
 };
 

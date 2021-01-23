@@ -111,7 +111,7 @@ void PitchDetector<SampleType>::calculateASDF (const SampleType* inputAudio, con
     {
         const int index = k - minPeriod; // the actual asdfBuffer index
         
-        if (k < minLag)
+        if (k <= minLag)
         {
             outputData[index] = 1.0;
             continue;
@@ -165,7 +165,12 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
     
     for (int s = analysisStart + 1; s < numSamples; ++s)
     {
-        bool isNowPositive = inputAudio[s] > 0.0;
+        const auto currentSample = inputAudio[s];
+        
+        if (currentSample == 0.0)
+            continue;
+        
+        bool isNowPositive = currentSample > 0.0;
         
         if (startedPositive != isNowPositive)
         {
