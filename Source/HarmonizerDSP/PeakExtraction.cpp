@@ -170,22 +170,75 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
                                std::min (period, totalNumSamples) :
                                std::min (analysisIndex + halfPeriod, totalNumSamples);
         
-        while (peakCandidates.size() < 10) // 10 is arbitrary...
+        if (grainStart == grainEnd)
         {
-            // identifies the local max & min within the specified analysis window & adds them to the peakCandidates array
-            getPeakCandidateInRange (peakCandidates, reading, grainStart, grainEnd,
-                                     analysisIndex); // predicted peak - sample index 1 period away from prev peak
+            if (! peakCandidates.contains (grainStart))
+                peakCandidates.add (grainStart);
+        }
+        else
+        {
+            peakSearchingIndexOrder.set (0, analysisIndex);
             
-            if (targetArray.size() > 1) // stop finding peak candidates early, we've already got a good match
+            int p = 1, m = -1;
+            bool posLastTime = false;
+            
+            for (int n = 1;
+                 n < (grainEnd - grainStart);
+                 ++n)
             {
-                int target = targetArray.getUnchecked (targetArray.size() - 2) + outputGrain;
+                const int pos = analysisIndex + p;
+                const int neg = analysisIndex + m;
                 
-                if ((abs (peakCandidates.getLast() - target)) < 3)
-                    break;
+                if (posLastTime)
+                {
+                    if (neg >= grainStart)
+                    {
+                        peakSearchingIndexOrder.set (n, neg);
+                        posLastTime = false;
+                        --m;
+                        continue;
+                    }
+                    
+                    jassert (pos <= grainEnd);
+                    
+                    peakSearchingIndexOrder.set (n, pos);
+                    posLastTime = true;
+                    ++p;
+                }
+                else
+                {
+                    if (pos <= grainEnd)
+                    {
+                        peakSearchingIndexOrder.set (n, pos);
+                        posLastTime = true;
+                        ++p;
+                        continue;
+                    }
+                    
+                    jassert (neg >= grainStart);
+                    
+                    peakSearchingIndexOrder.set (n, neg);
+                    posLastTime = false;
+                    --m;
+                }
+            }
+            
+            while (peakCandidates.size() < 10) // 10 is arbitrary...
+            {
+                // identifies the local max & min within the specified analysis window & adds them to the peakCandidates array
+                getPeakCandidateInRange (peakCandidates, reading, grainStart, grainEnd, analysisIndex);
                 
-                if (peakCandidates.size() > 1)
-                    if ((abs (peakCandidates.getUnchecked (peakCandidates.size() - 2) - target)) < 3)
+                if (targetArray.size() > 1) // stop finding peak candidates early, we've already got a good match
+                {
+                    int target = targetArray.getUnchecked (targetArray.size() - 2) + outputGrain;
+                    
+                    if ((abs (peakCandidates.getLast() - target)) < 3)
                         break;
+                    
+                    if (peakCandidates.size() > 1)
+                        if ((abs (peakCandidates.getUnchecked (peakCandidates.size() - 2) - target)) < 3)
+                            break;
+                }
             }
         }
         
@@ -261,65 +314,11 @@ template<typename SampleType>
 void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                                       const int startSample, const int endSample, const int predictedPeak)
 {
-    if (startSample == endSample)
-    {
-        if (! candidates.contains (startSample))
-            candidates.add (startSample);
-        return;
-    }
-    
     const int numSamples = endSample - startSample;
     
     if (numSamples < 1)
         return;
-    
-    peakSearchingIndexOrder.set (0, predictedPeak);
-    
-    int p = 1, m = -1;
-    bool posLastTime = false;
-    
-    for (int n = 1;
-         n < numSamples;
-         ++n)
-    {
-        const int pos = predictedPeak + p;
-        const int neg = predictedPeak + m;
-        
-        if (posLastTime)
-        {
-            if (neg >= startSample)
-            {
-                peakSearchingIndexOrder.set (n, neg);
-                posLastTime = false;
-                --m;
-                continue;
-            }
-            
-            jassert (pos <= endSample);
-        
-            peakSearchingIndexOrder.set (n, pos);
-            posLastTime = true;
-            ++p;
-        }
-        else
-        {
-            if (pos <= endSample)
-            {
-                peakSearchingIndexOrder.set (n, pos);
-                posLastTime = true;
-                ++p;
-                continue;
-            }
-            
-            jassert (neg >= startSample);
-        
-            peakSearchingIndexOrder.set (n, neg);
-            posLastTime = false;
-            --m;
-        }
-    }
-    
-    
+
     int starting = predictedPeak;
     
     if (! candidates.isEmpty() && candidates.contains (predictedPeak))
