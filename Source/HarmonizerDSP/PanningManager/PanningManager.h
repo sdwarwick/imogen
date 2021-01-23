@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "GlobalDefinitions.h"
+#include "Utils/GlobalDefinitions.h"
 
 
 class PanningManager

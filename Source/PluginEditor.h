@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "GlobalDefinitions.h"
+#include "Utils/GlobalDefinitions.h"
 #include "PluginProcessor.h"
 #include "StaffDisplay.h"
 #include "MidiControlPanel.h"

@@ -11,12 +11,12 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "GlobalDefinitions.h"
+#include "Utils/GlobalDefinitions.h"
 #include "HarmonizerUtilities.h"
-#include "PanningManager.h"
-#include "Panner.h"
-#include "GeneralUtils.h"
-#include "GrainExtractor.h"
+#include "PanningManager/PanningManager.h"
+#include "Utils/Panner.h"
+#include "Utils/GeneralUtils.h"
+#include "GrainExtractor/GrainExtractor.h"
 
 template<typename SampleType>
 class Harmonizer; // forward declaration...
@@ -24,7 +24,7 @@ class Harmonizer; // forward declaration...
 
 
 /*
- HarmonizerVoice : represents a "voice", or instance of the DSP algorithm, that the Harmonizer can use to generate sound. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
+ HarmonizerVoice : represents a "voice" that the Harmonizer can use to generate one monophonic note. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
  */
 template<typename SampleType>
 class HarmonizerVoice

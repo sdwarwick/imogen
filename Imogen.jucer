@@ -8,7 +8,7 @@
               pluginVST3Category="Fx,Pitch Shift" pluginRTASCategory="4,64"
               pluginAAXCategory="4,64" pluginVSTCategory="kPlugCategEffect"
               pluginFormats="buildAU,buildVST3" pluginManufacturerCode="BenV"
-              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;&#10;"
+              pluginCode="Imog" headerPath="/Users/benvining/Documents/Imogen VST/Imogen/Source/&#10;/Users/benvining/Documents/Imogen VST/Imogen/GraphicAssets/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Utils/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/PitchDetector/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/GrainExtractor/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/HarmonizerDSP/PanningManager/&#10;/Users/benvining/Documents/Imogen VST/Imogen/Source/Graphics/&#10;&#10;"
               displaySplashScreen="1" cppLanguageStandard="17" maxBinaryFileSize="20971520"
               pluginAUMainType="'aufx'">
   <MAINGROUP id="adraHc" name="Imogen">
@@ -21,9 +21,9 @@
         <FILE id="TuPrOv" name="PluginProcessor.h" compile="0" resource="0"
               file="Source/PluginProcessor.h"/>
         <GROUP id="{8B30E93C-AC0D-AFE5-1633-249DD671EFB4}" name="PitchDetector">
-          <FILE id="gU73r6" name="PitchDetector.cpp" compile="1" resource="0"
-                file="Source/PitchDetector.cpp"/>
-          <FILE id="cC7l8n" name="PitchDetector.h" compile="0" resource="0" file="Source/PitchDetector.h"/>
+          <FILE id="uNZgwJ" name="PitchDetector.cpp" compile="1" resource="0"
+                file="Source/PitchDetector/PitchDetector.cpp"/>
+          <FILE id="bCtXEH" name="PitchDetector.h" compile="0" resource="0" file="Source/PitchDetector/PitchDetector.h"/>
         </GROUP>
         <GROUP id="{2B5BA820-0A3F-44DA-4DE4-6E4FE5007509}" name="Harmonizer framework">
           <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
@@ -33,29 +33,27 @@
                 file="Source/HarmonizerDSP/HarmonizerMidi.cpp"/>
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
           <GROUP id="{8A2C9B0D-0EFB-C589-057F-FAFABCBBBC3D}" name="Grain extractor">
-            <FILE id="pMhs9y" name="PsolaPeakFinding.cpp" compile="1" resource="0"
-                  file="Source/PsolaPeakFinding.cpp"/>
-            <FILE id="YPevtF" name="GrainExtractor.cpp" compile="1" resource="0"
-                  file="Source/HarmonizerDSP/GrainExtractor.cpp"/>
-            <FILE id="sDHUU2" name="GrainExtractor.h" compile="0" resource="0"
-                  file="Source/HarmonizerDSP/GrainExtractor.h"/>
+            <FILE id="GW6roZ" name="PsolaPeakFinding.cpp" compile="1" resource="0"
+                  file="Source/HarmonizerDSP/GrainExtractor/PsolaPeakFinding.cpp"/>
+            <FILE id="XsXAGK" name="GrainExtractor.cpp" compile="1" resource="0"
+                  file="Source/HarmonizerDSP/GrainExtractor/GrainExtractor.cpp"/>
+            <FILE id="xbwTOu" name="GrainExtractor.h" compile="0" resource="0"
+                  file="Source/HarmonizerDSP/GrainExtractor/GrainExtractor.h"/>
           </GROUP>
           <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
-            <FILE id="E1mk0W" name="FancyMidiBuffer.h" compile="0" resource="0"
-                  file="Source/HarmonizerDSP/FancyMidiBuffer.h"/>
             <FILE id="z1rWG8" name="HarmonizerUtilities.h" compile="0" resource="0"
                   file="Source/HarmonizerDSP/HarmonizerUtilities.h"/>
             <GROUP id="{7FF4BC12-78F7-7953-EC9A-CDA74364E294}" name="PanningManager">
-              <FILE id="G1IxaB" name="PanningManager.cpp" compile="1" resource="0"
-                    file="Source/HarmonizerDSP/PanningManager.cpp"/>
-              <FILE id="P63s62" name="PanningManager.h" compile="0" resource="0"
-                    file="Source/HarmonizerDSP/PanningManager.h"/>
+              <FILE id="Q5aYMD" name="PanningManager.h" compile="0" resource="0"
+                    file="Source/HarmonizerDSP/PanningManager/PanningManager.h"/>
+              <FILE id="TNq95d" name="PanningManager.cpp" compile="1" resource="0"
+                    file="Source/HarmonizerDSP/PanningManager/PanningManager.cpp"/>
             </GROUP>
           </GROUP>
         </GROUP>
         <GROUP id="{F07D8DCF-FE10-6A74-DF78-A7949872D15D}" name="DSP utils">
-          <FILE id="SfqUBI" name="DelayBuffer.h" compile="0" resource="0" file="Source/DelayBuffer.h"/>
-          <FILE id="H0qQto" name="Panner.h" compile="0" resource="0" file="Source/Panner.h"/>
+          <FILE id="NB6dA8" name="Panner.h" compile="0" resource="0" file="Source/Utils/Panner.h"/>
+          <FILE id="uu0ebm" name="DelayBuffer.h" compile="0" resource="0" file="Source/Utils/DelayBuffer.h"/>
         </GROUP>
       </GROUP>
       <GROUP id="{7280FBDB-5D91-B8BB-2422-189E249894A5}" name="GUI">
@@ -96,13 +94,15 @@
         </GROUP>
       </GROUP>
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
-        <FILE id="yiULVe" name="GlobalDefinitions.h" compile="0" resource="0"
-              file="Source/GlobalDefinitions.h"/>
-        <FILE id="oNyqZ2" name="GeneralUtils.h" compile="0" resource="0" file="Source/GeneralUtils.h"/>
+        <FILE id="TFnQ2v" name="FancyMidiBuffer.h" compile="0" resource="0"
+              file="Source/Utils/FancyMidiBuffer.h"/>
+        <FILE id="q4wp9o" name="GlobalDefinitions.h" compile="0" resource="0"
+              file="Source/Utils/GlobalDefinitions.h"/>
+        <FILE id="FeHXOq" name="GeneralUtils.h" compile="0" resource="0" file="Source/Utils/GeneralUtils.h"/>
       </GROUP>
+      <FILE id="VesTyu" name="RangeWrappedInt.h" compile="0" resource="0"
+            file="Source/Utils/RangeWrappedInt.h"/>
     </GROUP>
-    <FILE id="NCP0Zz" name="RangeWrappedInt.h" compile="0" resource="0"
-          file="Source/RangeWrappedInt.h"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>

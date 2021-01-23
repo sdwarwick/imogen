@@ -9,12 +9,12 @@
 */
 
 #include "PluginProcessor.h"
-#include "GlobalDefinitions.h"
+#include "Utils/GlobalDefinitions.h"
 
-#include "DelayBuffer.h"
-#include "Panner.h"
-#include "PitchDetector.h"
-#include "FancyMidiBuffer.h"
+#include "Utils/DelayBuffer.h"
+#include "Utils/Panner.h"
+#include "PitchDetector/PitchDetector.h"
+#include "Utils/FancyMidiBuffer.h"
 
 
 template<typename SampleType>
