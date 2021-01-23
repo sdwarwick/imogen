@@ -91,9 +91,6 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const SampleType* reading = inputAudio.getReadPointer(0);
     
-    // in the ASDF buffer, the value stored at index 0 is the ASDF for lag minPeriod.
-    // the value stored at the maximum index is the ASDF for lag maxPeriod.
-    
     int minLag = samplesToFirstZeroCrossing (reading, numSamples); // little trick to avoid picking too small a period
     int maxLag = maxPeriod;
     
@@ -107,12 +104,17 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     if (minLag == maxLag)
         ++maxLag;
-    
-    jassert (maxLag > minLag);
+        
+    if (maxLag < minLag)
+        maxLag = minLag + 1;
     
     const int middleIndex = floor (numSamples / 2.0f);
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
+    
+    // in the ASDF buffer, the value stored at index 0 is the ASDF for lag minPeriod.
+    // the value stored at the maximum index is the ASDF for lag maxPeriod.
+    // always write the same datasize to the ASDF buffer (with regard to this member variables), even if the k range is being limited this frame by the minLag & maxLag local variables.
     
     for (int k = minPeriod; // always write the same datasize to asdfBuffer, even if k values are being limited this frame
             k <= maxPeriod;
@@ -141,13 +143,13 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] /= numSamples; // normalize
         
-        if (index > 4) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
+        if (index >= 4) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
         {
             const SampleType confidence = asdfData[index - 2];
             
             if (confidence < confidenceThresh
-                && confidence < asdfData[index - 1]
                 && confidence < asdfData[index]
+                && confidence < asdfData[index - 1]
                 && confidence < asdfData[index - 3]
                 && confidence < asdfData[index - 4])
                 

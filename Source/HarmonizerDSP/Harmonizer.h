@@ -16,6 +16,7 @@
 #include "PanningManager.h"
 #include "Panner.h"
 #include "GeneralUtils.h"
+#include "GrainExtractor.h"
 
 template<typename SampleType>
 class Harmonizer; // forward declaration...
@@ -253,15 +254,10 @@ public:
     
 private:
     
-    CriticalSection lock;
-    
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
+    GrainExtractor<SampleType> grains;
     Array<int> indicesOfGrainOnsets;
-    Array<int> peakIndices;
-    Array<int> peakCandidates;
-    Array<float> candidateDeltas;
-    Array<int> peakSearchingIndexOrder;
     
     // MIDI
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
@@ -350,17 +346,6 @@ private:
     AudioBuffer<SampleType> windowBuffer;
     void fillWindowBuffer (const int numSamples);
     int windowSize;
-    
-    
-    void extractGrainOnsetIndices (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
-    
-    void findPeaks (Array<int>& targetArray, const AudioBuffer<SampleType>& inputAudio, const int period);
-    
-    void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
-                                  const int startSample, const int endSample, const int predictedPeak);
-    
-    void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
-    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

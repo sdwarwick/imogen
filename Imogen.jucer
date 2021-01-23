@@ -29,11 +29,17 @@
           <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>
           <FILE id="ALhBKM" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
-          <FILE id="dG3XKw" name="PeakExtraction.cpp" compile="1" resource="0"
-                file="Source/HarmonizerDSP/PeakExtraction.cpp"/>
           <FILE id="Iz5U55" name="HarmonizerMidi.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerMidi.cpp"/>
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
+          <GROUP id="{8A2C9B0D-0EFB-C589-057F-FAFABCBBBC3D}" name="Grain extractor">
+            <FILE id="pMhs9y" name="PsolaPeakFinding.cpp" compile="1" resource="0"
+                  file="Source/PsolaPeakFinding.cpp"/>
+            <FILE id="YPevtF" name="GrainExtractor.cpp" compile="1" resource="0"
+                  file="Source/HarmonizerDSP/GrainExtractor.cpp"/>
+            <FILE id="sDHUU2" name="GrainExtractor.h" compile="0" resource="0"
+                  file="Source/HarmonizerDSP/GrainExtractor.h"/>
+          </GROUP>
           <GROUP id="{DA6CC54E-B41F-3716-E9D6-BE6E9E2ABD98}" name="MidiUtilities">
             <FILE id="E1mk0W" name="FancyMidiBuffer.h" compile="0" resource="0"
                   file="Source/HarmonizerDSP/FancyMidiBuffer.h"/>

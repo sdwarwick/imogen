@@ -173,8 +173,6 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
 template<typename SampleType>
 void Harmonizer<SampleType>::playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld)
 {
-    const ScopedLock sl (lock);
-    
     // turn off the pitches that were previously on that are not included in the list of desired pitches
     
     reportActivesNoReleased (currentlyActiveNoReleased);
@@ -205,8 +203,6 @@ void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float
     if (toTurnOn.isEmpty())
         return;
     
-    const ScopedLock sl (lock);
-    
     for (int i = 0; i < toTurnOn.size(); ++i)
         noteOn (toTurnOn.getUnchecked(i), velocity, false);
     
@@ -222,8 +218,6 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
     if (toTurnOff.isEmpty())
         return;
     
-    const ScopedLock sl (lock);
-    
     for (int i = 0; i < toTurnOff.size(); ++i)
         noteOff (toTurnOff.getUnchecked(i), velocity, allowTailOff, false);
     
@@ -236,8 +230,6 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
 template<typename SampleType>
 void Harmonizer<SampleType>::applyPedalPitch()
 {
-    const ScopedLock sl (lock);
-    
     int currentLowest = 128; // find the current lowest note being played by a keyboard key
     
     for (auto* voice : voices)
@@ -291,8 +283,6 @@ void Harmonizer<SampleType>::applyPedalPitch()
 template<typename SampleType>
 void Harmonizer<SampleType>::applyDescant()
 {
-    const ScopedLock sl (lock);
-    
     int currentHighest = -1;
     for (auto* voice : voices)
     {
@@ -360,8 +350,6 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
     
-    const ScopedLock sl (lock);
-    
     for (auto* voice : voices)
     {
         if ( (voice->getCurrentlyPlayingNote() == midiPitch)
@@ -408,8 +396,6 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
 {
     // N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch or descant.
     // N.B. the `partofList` flag should be false if this is a singular note off event; this flag should be true if this is a note off event in a known sequence of many quick note offs, so that pedal pitch & descant will not be updated after every single one of these events.
-    
-    const ScopedLock sl (lock);
     
     auto* voice = getVoicePlayingNote (midiNoteNumber);
     
@@ -459,8 +445,6 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
 template<typename SampleType>
 void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
 {
-    const ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             voice->stopNote (1.0f, allowTailOff);
@@ -477,8 +461,6 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
     if (lastPitchWheelValue == wheelValue)
         return;
     
-    const ScopedLock sl (lock);
-    
     lastPitchWheelValue = wheelValue;
     bendTracker.newPitchbendRecieved(wheelValue);
     
@@ -491,8 +473,6 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
 template<typename SampleType>
 void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const int aftertouchValue)
 {
-    const ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
             voice->aftertouchChanged (aftertouchValue);
@@ -501,8 +481,6 @@ void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const i
 template<typename SampleType>
 void Harmonizer<SampleType>::handleChannelPressure (const int channelPressureValue)
 {
-    const ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         voice->aftertouchChanged(channelPressureValue);
 };
@@ -532,8 +510,6 @@ void Harmonizer<SampleType>::handleSustainPedal (const bool isDown)
     if (sustainPedalDown == isDown)
         return;
     
-    const ScopedLock sl (lock);
-    
     sustainPedalDown = isDown;
     
     if (isDown)
@@ -549,8 +525,6 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const bool isDown)
 {
     if (sostenutoPedalDown == isDown)
         return;
-    
-    const ScopedLock sl (lock);
     
     sostenutoPedalDown = isDown;
     

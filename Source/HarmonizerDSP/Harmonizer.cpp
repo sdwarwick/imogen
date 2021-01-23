@@ -70,12 +70,10 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     windowBuffer.setSize (1, blocksize * 2, true, true, true);
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
-    peakIndices.ensureStorageAllocated(blocksize);
-    peakCandidates.ensureStorageAllocated(blocksize);
-    candidateDeltas.ensureStorageAllocated(blocksize);
-    peakSearchingIndexOrder.ensureStorageAllocated(blocksize);
     
     intervalsLatchedTo.ensureStorageAllocated(voices.size());
+    
+    grains.prepare(blocksize);
 };
 
 
@@ -86,8 +84,6 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     
     if (sampleRate == newRate)
         return;
-    
-    const ScopedLock sl (lock);
     
     sampleRate = newRate;
     
@@ -105,8 +101,6 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
     
     if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
-    
-    const ScopedLock sl (lock);
     
     pitchConverter.setConcertPitchHz(newConcertPitchhz);
     
@@ -190,7 +184,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     if (windowSize != currentInputPeriod * 2)
         fillWindowBuffer (currentInputPeriod * 2);
     
-    extractGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
+    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
@@ -287,8 +281,6 @@ void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
     
-    const ScopedLock sl (lock);
-    
     panner.updateStereoWidth(newWidth);
     
     for (auto* voice : voices)
@@ -308,8 +300,6 @@ void Harmonizer<SampleType>::updateLowestPannedNote(const int newPitchThresh) no
 {
     if (lowestPannedNote == newPitchThresh)
         return;
-    
-    const ScopedLock sl (lock);
     
     lowestPannedNote = newPitchThresh;
     
@@ -341,8 +331,6 @@ void Harmonizer<SampleType>::updateMidiVelocitySensitivity(const int newSensitiv
     if (velocityConverter.getCurrentSensitivity() == newSens)
         return;
     
-    const ScopedLock sl (lock);
-    
     velocityConverter.setFloatSensitivity(newSens);
     
     for (auto* voice : voices)
@@ -363,7 +351,6 @@ void Harmonizer<SampleType>::updatePitchbendSettings(const int rangeUp, const in
     if (lastPitchWheelValue == 64)
         return;
     
-    const ScopedLock sl (lock);
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
@@ -483,8 +470,6 @@ void Harmonizer<SampleType>::updateQuickReleaseMs(const int newMs)
     if (quickReleaseParams.release == desiredR)
         return;
     
-    const ScopedLock sl (lock);
-    
     quickReleaseParams.release = desiredR;
     quickAttackParams .release = desiredR;
     
@@ -505,8 +490,6 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
     if (quickAttackParams.attack == desiredA)
         return;
     
-    const ScopedLock sl (lock);
-    
     quickAttackParams .attack = desiredA;
     quickReleaseParams.attack = desiredA;
     
@@ -524,8 +507,6 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
  template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) 
 {
-    const ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (! voice->isVoiceActive())
             return voice;
@@ -633,8 +614,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
 {
-    const ScopedLock sl (lock);
-    
     panner.setNumberOfVoices(voices.size() + 1);
     
     return voices.add(newVoice);
@@ -644,8 +623,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<Sa
 template<typename SampleType>
 void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 {
-    const ScopedLock sl (lock);
-    
     int voicesRemoved = 0;
     while(voicesRemoved < voicesToRemove)
     {
