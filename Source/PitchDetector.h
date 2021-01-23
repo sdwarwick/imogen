@@ -41,10 +41,14 @@ public:
     float detectPitch (const AudioBuffer<SampleType>& inputAudio);
     
     
+    
 private:
     
     int minHz, maxHz;
     int minPeriod, maxPeriod;
+    
+    SampleType lastEstimatedPeriod;
+    bool lastFrameWasPitched = false;
     
     double samplerate;
     
@@ -58,7 +62,10 @@ private:
     
     unsigned int indexOfMinElement (const SampleType* data, const int dataSize);
     
+    float foundThePeriod (const SampleType* asdfData, const int minIndex, const int asdfDataSize);
+    
     SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchDetector)
 };

@@ -21,6 +21,8 @@ PitchDetector<SampleType>::PitchDetector(const int minHz, const int maxHz, const
     asdfBuffer.setSize (1, 500);
     
     setHzRange (minHz, maxHz, true);
+    
+    lastEstimatedPeriod = minPeriod;
 };
 
 
@@ -74,69 +76,108 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const int numSamples = inputAudio.getNumSamples();
     
     if (numSamples < minPeriod)
+    {
+        lastFrameWasPitched = false;
         return -1.0f;
+    }
     
     jassert (asdfBuffer.getNumSamples() > (maxPeriod - minPeriod));
     
-    calculateASDF (inputAudio.getReadPointer(0), numSamples, asdfBuffer.getWritePointer(0));
+    const SampleType* reading = inputAudio.getReadPointer(0);
     
-    const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
-    
-    const unsigned int minIndex = indexOfMinElement (asdfBuffer.getReadPointer(0), asdfDataSize);
-    
-    if (asdfBuffer.getSample (0, minIndex) > confidenceThresh)
-        return -1.0f;
-    
-    // quadratic interpolation to find accurate float period from integer period
-    SampleType realPeriod = quadraticPeakPosition (asdfBuffer.getReadPointer(0), minIndex, asdfDataSize);
-    
-    realPeriod += minPeriod; // account for offset in ASDF buffer - index 0 held the value for lag minPeriod
-    
-    return (float) (samplerate / realPeriod);
-};
-
-
-
-template<typename SampleType>
-void PitchDetector<SampleType>::calculateASDF (const SampleType* inputAudio, const int numSamples, SampleType* outputData)
-{
     // in the ASDF buffer, the value stored at index 0 is the ASDF for lag minPeriod.
     // the value stored at the maximum index is the ASDF for lag maxPeriod.
     
+    int minLag = samplesToFirstZeroCrossing (reading, numSamples); // little trick to avoid picking too small a period
+    int maxLag = maxPeriod;
+    
+    if (lastFrameWasPitched) // pitch shouldn't halve or double between consecutive voiced frames...
+    {
+        minLag = std::max (minLag, roundToInt (lastEstimatedPeriod / 2.0));
+        maxLag = std::min (maxLag, roundToInt (lastEstimatedPeriod * 2.0));
+    }
+    
+    minLag = std::max (minLag, minPeriod);
+    
+    if (minLag == maxLag)
+        ++maxLag;
+    
+    jassert (maxLag > minLag);
+    
     const int middleIndex = floor (numSamples / 2.0f);
     
-    const int minLag = samplesToFirstZeroCrossing (inputAudio, numSamples);
+    SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
-    for (int k = minPeriod; k <= maxPeriod; ++k)
+    for (int k = minPeriod; // always write the same datasize to asdfBuffer, even if k values are being limited this frame
+            k <= maxPeriod;
+            ++k)
     {
-        const int index = k - minPeriod; // the actual asdfBuffer index
+        const int index = k - minPeriod; // the actual asdfBuffer index for this k value's data
         
-        if (k <= minLag)
+        if (k < minLag || k > maxLag) // range compression of k is done here
         {
-            outputData[index] = 1.0;
+            asdfData[index] = 2.0;
             continue;
         }
         
-        const int sampleOffset = floor ((numSamples + k) / 2.0f);
+        asdfData[index] = 0.0;
         
-        outputData[index] = 0.0;
+        const int sampleOffset = floor ((numSamples + k) / 2.0f);
         
         for (int n = 0; n < numSamples; ++n)
         {
             const int startingSample = n + middleIndex - sampleOffset;
             
-            const SampleType difference = inputAudio[startingSample] - inputAudio[startingSample + k];
+            const SampleType difference = reading[startingSample] - reading[startingSample + k];
             
-            outputData[index] += (difference * difference);
+            asdfData[index] += (difference * difference);
         }
         
-        outputData[index] /= numSamples; // normalize
+        asdfData[index] /= numSamples; // normalize
+        
+        if (index > 3) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
+        {
+            const SampleType confidence = asdfData[index - 2];
+            
+            if (confidence != 2.0
+                && confidence < confidenceThresh
+                && confidence < asdfData[index - 1]
+                && confidence < asdfData[index])
+                
+                return foundThePeriod (asdfData, index - 2, index + 1);
+        }
     }
+    
+    const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
+    
+    const unsigned int minIndex = indexOfMinElement (asdfData, asdfDataSize);
+    const SampleType confidence = asdfData[minIndex];
+    
+    if (confidence > confidenceThresh || confidence == 2.0)
+    {
+        lastFrameWasPitched = false;
+        return -1.0f;
+    }
+    
+    return foundThePeriod (asdfData, minIndex, asdfDataSize);
 };
 
 
 template<typename SampleType>
-unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples)
+float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
+                                                 const int minIndex,
+                                                 const int asdfDataSize)
+{
+    SampleType realPeriod = quadraticPeakPosition (asdfData, minIndex, asdfDataSize);
+    realPeriod += minPeriod;
+    lastEstimatedPeriod = realPeriod;
+    lastFrameWasPitched = true;
+    return (float) (samplerate / realPeriod); // return pitch in hz
+};
+
+
+template<typename SampleType>
+unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numInputSamples)
 {
     int analysisStart = 0;
     
@@ -145,7 +186,7 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
     {
         int startingSample = 1;
         
-        while (startingSample < numSamples)
+        while (startingSample < numInputSamples)
         {
             if (inputAudio[startingSample] != 0)
             {
@@ -155,22 +196,22 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
             ++startingSample;
         }
         
-        if (startingSample == numSamples - 1)
+        if (startingSample == numInputSamples - 1)
             return 0;
     }
     
-    int numSamps = 0;
+    int numSamps = 0; // detected # samples to first zero crossing of signal
     
     const bool startedPositive = inputAudio[analysisStart] > 0.0;
     
-    for (int s = analysisStart + 1; s < numSamples; ++s)
+    for (int s = analysisStart + 1; s < numInputSamples; ++s)
     {
         const auto currentSample = inputAudio[s];
         
         if (currentSample == 0.0)
             continue;
         
-        bool isNowPositive = currentSample > 0.0;
+        const bool isNowPositive = currentSample > 0.0;
         
         if (startedPositive != isNowPositive)
         {
@@ -179,7 +220,7 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
         }
     }
     
-    if (numSamps == numSamples)
+    if (numSamps >= floor (numInputSamples / 2.0f))
         return 0;
     
     return numSamps;
