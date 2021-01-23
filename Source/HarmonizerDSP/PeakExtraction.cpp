@@ -177,51 +177,7 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
         }
         else
         {
-            peakSearchingIndexOrder.set (0, analysisIndex);
-            
-            int p = 1, m = -1;
-            bool posLastTime = false;
-            
-            for (int n = 1;
-                 n < (grainEnd - grainStart);
-                 ++n)
-            {
-                const int pos = analysisIndex + p;
-                const int neg = analysisIndex + m;
-                
-                if (posLastTime)
-                {
-                    if (neg >= grainStart)
-                    {
-                        peakSearchingIndexOrder.set (n, neg);
-                        posLastTime = false;
-                        --m;
-                        continue;
-                    }
-                    
-                    jassert (pos <= grainEnd);
-                    
-                    peakSearchingIndexOrder.set (n, pos);
-                    posLastTime = true;
-                    ++p;
-                }
-                else
-                {
-                    if (pos <= grainEnd)
-                    {
-                        peakSearchingIndexOrder.set (n, pos);
-                        posLastTime = true;
-                        ++p;
-                        continue;
-                    }
-                    
-                    jassert (neg >= grainStart);
-                    
-                    peakSearchingIndexOrder.set (n, neg);
-                    posLastTime = false;
-                    --m;
-                }
-            }
+            sortSampleIndicesForPeakSearching (peakSearchingIndexOrder, grainStart, grainEnd, analysisIndex);
             
             while (peakCandidates.size() < 10) // 10 is arbitrary...
             {
@@ -244,7 +200,7 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
         
         int peakIndex;
         
-        if (targetArray.isEmpty())
+        if (targetArray.isEmpty() || targetArray.size() == 1)
         {
             int strongestPeakIndex = peakCandidates.getUnchecked (0);
             SampleType strongestPeak = abs(reading[strongestPeakIndex]);
@@ -265,12 +221,7 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
         }
         else
         {
-            int target;
-            
-            if (targetArray.size() == 1)
-                target = targetArray.getUnchecked(0) + period;
-            else
-                target = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
+            const int target = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
             
             for (int p = 0; p < peakCandidates.size(); ++p)
             {
@@ -391,6 +342,61 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
         candidates.add (std::min (indexOfLocalMax, indexOfLocalMin));
         candidates.add (std::max (indexOfLocalMax, indexOfLocalMin));
     }
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output,
+                                                                const int startSample, const int endSample,
+                                                                const int predictedPeak)
+{
+    
+    output.set (0, predictedPeak);
+    
+    int p = 1, m = -1;
+    bool posLastTime = false;
+    
+    for (int n = 1;
+         n < (endSample - startSample);
+         ++n)
+    {
+        const int pos = predictedPeak + p;
+        const int neg = predictedPeak + m;
+        
+        if (posLastTime)
+        {
+            if (neg >= startSample)
+            {
+                output.set (n, neg);
+                posLastTime = false;
+                --m;
+                continue;
+            }
+            
+            jassert (pos <= endSample);
+            
+            output.set (n, pos);
+            posLastTime = true;
+            ++p;
+        }
+        else
+        {
+            if (pos <= endSample)
+            {
+                output.set (n, pos);
+                posLastTime = true;
+                ++p;
+                continue;
+            }
+            
+            jassert (neg >= startSample);
+            
+            peakSearchingIndexOrder.set (n, neg);
+            posLastTime = false;
+            --m;
+        }
+    }
+    
 };
 
 

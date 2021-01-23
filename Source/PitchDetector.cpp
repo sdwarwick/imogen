@@ -61,6 +61,12 @@ void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const
     if (samplerate == newSamplerate)
         return;
     
+    if (lastFrameWasPitched)
+    {
+        SampleType lastHz = samplerate / lastEstimatedPeriod;
+        lastEstimatedPeriod = newSamplerate / lastHz;
+    }
+    
     samplerate = newSamplerate;
     
     if (recalcHzRange)
@@ -135,14 +141,15 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] /= numSamples; // normalize
         
-        if (index > 3) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
+        if (index > 4) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
         {
             const SampleType confidence = asdfData[index - 2];
             
-            if (confidence != 2.0
-                && confidence < confidenceThresh
+            if (confidence < confidenceThresh
                 && confidence < asdfData[index - 1]
-                && confidence < asdfData[index])
+                && confidence < asdfData[index]
+                && confidence < asdfData[index - 3]
+                && confidence < asdfData[index - 4])
                 
                 return foundThePeriod (asdfData, index - 2, index + 1);
         }
@@ -153,7 +160,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const unsigned int minIndex = indexOfMinElement (asdfData, asdfDataSize);
     const SampleType confidence = asdfData[minIndex];
     
-    if (confidence > confidenceThresh || confidence == 2.0)
+    if (confidence > confidenceThresh)
     {
         lastFrameWasPitched = false;
         return -1.0f;

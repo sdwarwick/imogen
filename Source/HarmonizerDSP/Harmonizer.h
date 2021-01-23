@@ -359,6 +359,8 @@ private:
     void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                   const int startSample, const int endSample, const int predictedPeak);
     
+    void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
