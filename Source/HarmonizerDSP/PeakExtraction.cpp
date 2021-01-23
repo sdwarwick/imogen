@@ -170,10 +170,12 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
                                std::min (period, totalNumSamples) :
                                std::min (analysisIndex + halfPeriod, totalNumSamples);
         
+        if (grainStart > grainEnd)
+            return;
+        
         if (grainStart == grainEnd)
         {
-            if (! peakCandidates.contains (grainStart))
-                peakCandidates.add (grainStart);
+            peakCandidates.add (grainStart);
         }
         else
         {
@@ -221,35 +223,47 @@ void Harmonizer<SampleType>::findPeaks (Array<int>& targetArray,
         }
         else
         {
-            const int target = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
-            
-            for (int p = 0; p < peakCandidates.size(); ++p)
+            if (peakCandidates.size() == 1)
             {
-                const int delta = abs (peakCandidates.getUnchecked(p) - target);
-                candidateDeltas.add (delta);
-                
-                if (delta < 2) // good enough match, we can skip the rest...
-                    break;
+                peakIndex = peakCandidates.getUnchecked(0);
             }
-            
-            int minDelta = candidateDeltas.getUnchecked(0);
-            int indexOfMinDelta = 0;
-            
-            for (int d = 1; d < candidateDeltas.size(); ++d)
+            else
             {
-                const int delta = candidateDeltas.getUnchecked (d);
+                const int target1 = targetArray.getLast() + period;
+                const int target2 = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
                 
-                if (delta <= minDelta)
+                for (int p = 0; p < peakCandidates.size(); ++p)
                 {
-                    minDelta = delta;
-                    indexOfMinDelta = d;
+                    const int delta1 = abs (peakCandidates.getUnchecked(p) - target1);
+                    const int delta2 = abs (peakCandidates.getUnchecked(p) - target2) * 2; // weight this delta 
+                    
+                    const float avgDelta = (delta1 + delta2) / 2.0f;
+                    
+                    candidateDeltas.add (avgDelta);
+                    
+                    if (avgDelta < 2.0f) // good enough match, we can skip the rest...
+                        break;
                 }
-                
-                if (minDelta == 0) // perfect match
-                    break;
-            }
             
-            peakIndex = peakCandidates.getUnchecked (indexOfMinDelta);
+                float minDelta = candidateDeltas.getUnchecked(0);
+                int indexOfMinDelta = 0;
+            
+                for (int d = 1; d < candidateDeltas.size(); ++d)
+                {
+                    const float delta = candidateDeltas.getUnchecked (d);
+                    
+                    if (delta <= minDelta)
+                    {
+                        minDelta = delta;
+                        indexOfMinDelta = d;
+                    }
+                    
+                    if (minDelta == 0.0f) // perfect match
+                        break;
+                }
+            
+                peakIndex = peakCandidates.getUnchecked (indexOfMinDelta);
+            }
         }
         
         targetArray.add (peakIndex);
@@ -272,7 +286,7 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
 
     int starting = predictedPeak;
     
-    if (! candidates.isEmpty() && candidates.contains (predictedPeak))
+    if (candidates.contains (predictedPeak)) // find the sample closest to the predicted peak that's not already chosen as a peak candidate
     {
         int newStart = -1;
         
@@ -293,10 +307,13 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
         starting = newStart;
     }
     
-    SampleType localMin = input[starting] / numSamples; // normalized...
+    SampleType localMin = input[starting];
     SampleType localMax = localMin;
     int indexOfLocalMin = starting;
     int indexOfLocalMax = starting;
+    
+    SampleType multiplier = 1.0; // multiplier to add to the sample values to favor peaks closer to the center of the analysis window
+    const SampleType multIncrement = 1.0 / numSamples;
     
     for (int i = 0;
          i < numSamples;
@@ -307,18 +324,7 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
         if (candidates.contains (s))
             continue;
         
-        // apply a weighting function to this sample - make it less pos/neg if it's further from the center of the analysis window (ie, i > 0)
-        SampleType multiplier;
-        
-        if (i == 0)
-            multiplier = 1.0;
-        else
-        {
-            int divisor = (i % 2 == 0) ? i - 1 : i;
-            multiplier = 1.0 / divisor;
-        }
-        
-        const SampleType currentSample = input[s] * multiplier / numSamples; // normalize
+        const SampleType currentSample = input[s] * multiplier;
         
         if (currentSample < localMin)
         {
@@ -330,6 +336,11 @@ void Harmonizer<SampleType>::getPeakCandidateInRange (Array<int>& candidates, co
         {
             localMax = currentSample;
             indexOfLocalMax = s;
+        }
+        
+        if (i % 2 == 1)
+        {
+            multiplier -= multIncrement;
         }
     }
     

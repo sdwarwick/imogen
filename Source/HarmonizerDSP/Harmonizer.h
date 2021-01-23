@@ -260,7 +260,7 @@ private:
     Array<int> indicesOfGrainOnsets;
     Array<int> peakIndices;
     Array<int> peakCandidates;
-    Array<int> candidateDeltas;
+    Array<float> candidateDeltas;
     Array<int> peakSearchingIndexOrder;
     
     // MIDI
