@@ -29,6 +29,8 @@
           <FILE id="U9D46L" name="HarmonizerVoice.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerVoice.cpp"/>
           <FILE id="ALhBKM" name="Harmonizer.cpp" compile="1" resource="0" file="Source/HarmonizerDSP/Harmonizer.cpp"/>
+          <FILE id="dG3XKw" name="PeakExtraction.cpp" compile="1" resource="0"
+                file="Source/HarmonizerDSP/PeakExtraction.cpp"/>
           <FILE id="Iz5U55" name="HarmonizerMidi.cpp" compile="1" resource="0"
                 file="Source/HarmonizerDSP/HarmonizerMidi.cpp"/>
           <FILE id="rp9pZF" name="Harmonizer.h" compile="0" resource="0" file="Source/HarmonizerDSP/Harmonizer.h"/>
