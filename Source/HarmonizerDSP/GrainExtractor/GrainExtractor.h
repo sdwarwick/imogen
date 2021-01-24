@@ -46,7 +46,6 @@ public:
     
 private:
     
-    
     Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
     
@@ -65,6 +64,7 @@ private:
     
     void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                   const int startSample, const int endSample, const int predictedPeak);
+    
     
     // arrays used in finding of PSOLA peaks
     Array<int> peakCandidates;

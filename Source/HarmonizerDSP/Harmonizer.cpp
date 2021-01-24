@@ -181,25 +181,15 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     if (getNumActiveVoices() == 0)
         return;
     
-    // what constant rate to space grains for unpitched frames...?
-    // for unpitched const grainrate, report grain size as the period & use another precalculated window
+    const int periodThisFrame = frameIsPitched ? currentInputPeriod : unpitchedGrainRate;
     
-    if (frameIsPitched)
-        grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
-    else
-        grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, unpitchedGrainRate);
-        
-    if (indicesOfGrainOnsets.isEmpty())
-        return;
+    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, periodThisFrame);
+    
+    AudioBuffer<SampleType>& windowToUse = frameIsPitched ? windowBuffer : unpitchedWindow;
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-        {
-            if (frameIsPitched)
-                voice->renderNextBlock (inputAudio, outputBuffer, currentInputPeriod, indicesOfGrainOnsets, windowBuffer);
-            else
-                voice->renderNextBlock (inputAudio, outputBuffer, unpitchedGrainRate, indicesOfGrainOnsets, unpitchedWindow);
-        }
+            voice->renderNextBlock (inputAudio, outputBuffer, periodThisFrame, indicesOfGrainOnsets, windowToUse);
 };
 
 
@@ -595,8 +585,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
         }
     }
     
-    // Eliminate pathological cases (ie: only 1 note playing): we always give precedence to the lowest note(s)
-    if (top == low)
+    if (top == low)  // Eliminate pathological cases (ie: only 1 note playing): we always give precedence to the lowest note(s)
         top = nullptr;
     
     for (auto* voice : usableVoices)
@@ -604,14 +593,9 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
             return voice;
     
     for (auto* voice : usableVoices)
-        if (voice != low && voice != top && voice->isPlayingButReleased())
-            return voice;
-    
-    for (auto* voice : usableVoices)
         if (voice != low && voice != top && ! voice->isKeyDown())
             return voice;
     
-    // Oldest voice that isn't protected
     for (auto* voice : usableVoices)
         if (voice != low && voice != top)
             return voice;
@@ -629,8 +613,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
         lastPedalPitch = -1;
         return pedalVoice;
     }
-    
-    // return top & bottom keyboard note voices
     
     if (top) // bass note gets priority
         return top;

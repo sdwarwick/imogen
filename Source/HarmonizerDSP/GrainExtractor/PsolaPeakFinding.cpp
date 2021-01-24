@@ -65,7 +65,6 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     while ((analysisIndex - halfPeriod) < totalNumSamples)
     {
         peakCandidates.clearQuick();
-        candidateDeltas.clearQuick();
         
         // bounds of the current analysis grain. analysisIndex = the next predicted peak = the middle of this analysis grain
         const int grainStart = std::max (0, analysisIndex - halfPeriod);
@@ -80,35 +79,13 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            //  1. organize the sample indices of this analysis window from the center out so that we can refer to this order later.
-            //  the list will start with the predicted peak ( = the center of the analysis wndow = the analysisIndex).
-            //  then predictedPeak + 1, then predictedPeak - 1, then + 2, then - 2, etc.
-            
             sortSampleIndicesForPeakSearching (peakSearchingIndexOrder, grainStart, grainEnd, analysisIndex);
             
-            //  2. create a collection of peak candidates within the current analysis window
-            
             while (peakCandidates.size() < numPeaksToTest) 
-            {
-                //  identifies the local max & min within the specified analysis window & adds them to the peakCandidates array
-                
                 getPeakCandidateInRange (peakCandidates, reading, grainStart, grainEnd, analysisIndex);
-                
-                if (targetArray.size() > 1)
-                {
-                    int target = targetArray.getUnchecked (targetArray.size() - 2) + outputGrain;
-                    
-                    if ((abs (peakCandidates.getLast() - target)) < 2) // stop finding peak candidates early, we've already got a good match
-                        break;
-                    
-                    if (peakCandidates.size() > 1)
-                        if ((abs (peakCandidates.getUnchecked (peakCandidates.size() - 2) - target)) < 2)
-                            break;
-                }
-            }
         }
         
-        //  3. choose which peak index we're picking for this analysis window based on our list of candidates
+        // choose which peak candidate we're picking for this analysis window based on our list of candidates
         
         int peakIndex;
         
@@ -144,7 +121,10 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 // for each candidate, create delta values based on how far away they are from this peak's predicated location based on both the last identified peak and the second to last peak.
                 // we want the candidate that is closest to being 2 periods away from the peak before last, and is also the closest to being 1 period away from the last found peak.
                 
+                candidateDeltas.clearQuick();
+                
                 // 1. calculate delta values for each peak candidate
+                // delta represents how far off this peak candidate is from the expected peak location. in a way it's a measure of jitter
                 
                 const int target1 = targetArray.getLast() + period;
                 const int target2 = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
@@ -157,35 +137,54 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                     const float avgDelta = (delta1 + delta2) / 2.0f;
                     
                     candidateDeltas.add (avgDelta);
-                    
-                    if (avgDelta < 1.5f)
-                        break;
                 }
+            
+                // 2. whittle our peak candidates down to the 4 minimum delta values
                 
-                // 2. find the minimum delta value - the candidate it corresponds to is chosen as the peak
+                const int finalHandfulSize = std::min (4, candidateDeltas.size());
                 
-                float minDelta = candidateDeltas.getUnchecked(0);
-                int indexOfMinDelta = 0;
+                int finalHandful[finalHandfulSize]; // stores the indices in the candidateDeltas array of the lowest 3 delta values. These indices are also the indices in the peakCandidates array where these peaks' actual sample indices are stored.
                 
-                for (int d = 1; d < candidateDeltas.size(); ++d)
+                for (int i = 0; i < finalHandfulSize; ++i)
                 {
-                    const float delta = candidateDeltas.getUnchecked (d);
+                    float minDelta = candidateDeltas.getUnchecked(0);
+                    int indexOfMinDelta = 0;
                     
-                    if (delta <= minDelta)
+                    for (int d = 1; d < candidateDeltas.size(); ++d)
                     {
-                        minDelta = delta;
-                        indexOfMinDelta = d;
+                        const float delta = candidateDeltas.getUnchecked(d);
+                        
+                        if (delta <= minDelta)
+                        {
+                            minDelta = delta;
+                            indexOfMinDelta = d;
+                        }
                     }
                     
-                    if (minDelta < 1.5f)
-                        break;
+                    finalHandful[i] = indexOfMinDelta;
+                    candidateDeltas.remove (indexOfMinDelta);
                 }
                 
-                peakIndex = peakCandidates.getUnchecked (indexOfMinDelta);
+                // 3. choose the strongest overall peak from these final 4 candidates
+                
+                int chosenPeak = peakCandidates.getUnchecked (finalHandful[0]);
+                SampleType strongestPeak = abs (reading[chosenPeak]);
+                
+                for (int c = 1; c < finalHandfulSize; ++c)
+                {
+                    const int testing = peakCandidates.getUnchecked (finalHandful[c]);
+                    const SampleType testingPeak = abs (reading[testing]);
+                    
+                    if (testingPeak > strongestPeak)
+                    {
+                        strongestPeak = testingPeak;
+                        chosenPeak = testing;
+                    }
+                }
+                
+                peakIndex = chosenPeak;
             }
         }
-        
-        // 4. output the chosen peak & advance the analysisIndex for the next frame
         
         targetArray.add (peakIndex);
         
@@ -210,15 +209,14 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     {
         int newStart = -1;
         
-        for (int i = 0; i < numSamples; ++i)
+        for (int i = 1; i < numSamples; ++i)
         {
             const int s = peakSearchingIndexOrder.getUnchecked(i);
             
-            if (! candidates.contains (s))
-            {
-                newStart = s;
-                break;
-            }
+            if (candidates.contains (s))
+                continue;
+            
+            newStart = s;
         }
         
         if (newStart == -1)
@@ -340,6 +338,7 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
         }
     }
 };
+
 
 
 template class GrainExtractor<float>;

@@ -68,9 +68,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     const int totalNumSamples = inputAudio.getNumSamples();
     
-    // PART ONE -- identify sample indices of points of interest for synchronicity, whether it's points of maximum energy every pitch period (PSOLA), or epochs, etc
-    // regardless of synchronicity / peak picking algorithm used, the indices of the points of interest should be placed into the peakIndices array
-    
     // identifies peak indices for each pitch period & places them in the peakIndices array
     findPsolaPeaks (peakIndices, inputAudio.getReadPointer(0), totalNumSamples, period);
     
@@ -83,10 +80,12 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     for (int p = 0; p < peakIndices.size(); ++p)
     {
         // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
-        int grainStart = peakIndices.getUnchecked(p) - period;
+        const int grainStart = peakIndices.getUnchecked(p) - period;
         
-        if (grainStart >= 0)
-            targetArray.add (grainStart);
+        if (grainStart < 0)
+            continue;
+        
+        targetArray.add (grainStart);
     }
     
     // fill in hypothetial missed grains @ start of audio
@@ -95,9 +94,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     while (first >= 0)
     {
-        if (! targetArray.contains (first))
-            targetArray.insert (0, first);
-        
+        targetArray.insert (0, first);
         first -= period;
     }
     
@@ -107,11 +104,13 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     while (last < inputAudio.getNumSamples())
     {
-        if (! targetArray.contains (last))
-            targetArray.add (last);
-        
+        targetArray.add (last);
         last += period;
     }
+    
+    
+    jassert (! targetArray.isEmpty());
+    
 };
 
 
