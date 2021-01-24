@@ -47,26 +47,57 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
                                                        const int period)
 {
     targetArray.clearQuick();
-    
-    // PART ONE - find sample indices of points of maximum energy for every pitch period
-    
-    findPsolaPeaks (peakIndices, inputAudio, period);
-    
-    // eliminate unneeded peaks too close together ??
+    peakIndices.clearQuick();
     
     const int totalNumSamples = inputAudio.getNumSamples();
+    
+    // identifies peak indices for each pitch period & places them in the peakIndices array
+    findPsolaPeaks (peakIndices, inputAudio.getReadPointer(0), totalNumSamples, period);
+    
+    if (peakIndices.isEmpty())
+        return;
     
     // if any periods are missing a peak, fill them in
     for (int p = 0;
          p < totalNumSamples;
          p += period)
     {
-        if (! isPeriodRepresentedByAPeak (peakIndices, p, std::min(p + period, totalNumSamples)))
+        const int thisPeriodStart = p;
+        const int thisPeriodEnd = std::min (p + period, totalNumSamples);
+        
+        if (! isPeriodRepresentedByAPeak (peakIndices, thisPeriodStart, thisPeriodEnd))
         {
             // fill in missing peak for this period, attempting to evenly space it with the surrounding peaks
         }
     }
     
+    // if any periods got more than one peak, filter them out
+    for (int p = 0;
+         p < totalNumSamples;
+         p += period)
+    {
+        const int thisPeriodStart = p;
+        const int thisPeriodEnd = std::min (p + period, totalNumSamples);
+        
+        // find index of first peak within this period
+        int thisPeak = 0;
+        for (int i = 0; i < peakIndices.size(); ++i)
+        {
+            if (peakIndices.getUnchecked(i) >= thisPeriodStart)
+            {
+                thisPeak = peakIndices.getUnchecked(i);
+                break;
+            }
+        }
+        
+        if (thisPeak < peakIndices.size() - 2)
+        {
+            if (peakIndices.getUnchecked(thisPeak + 1) > thisPeriodEnd)
+            {
+                // we've got an extra peak this period
+            }
+        }
+    }
     
     
     
@@ -85,11 +116,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
             targetArray.add (grainStart);
     }
     
-    
-    
-    
-   
-    // if the peak finding alg missed any @ the beginning or end, fill them in here
     
     int first = (targetArray.size() > 1) ? targetArray.getUnchecked(1) : targetArray.getUnchecked(0);
     first -= period;
@@ -112,9 +138,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
         
         last += period;
     }
-    
-    
-    
 };
 
 
@@ -122,9 +145,11 @@ template<typename SampleType>
 bool GrainExtractor<SampleType>::isPeriodRepresentedByAPeak (const Array<int>& peaks,
                                                              const int periodMinSample, const int periodMaxSample)
 {
-    // return true if the peaks array contains, at any index, an element that is >= periodMinSample && < periodMaxSample
+    for (int s = periodMinSample; s < periodMaxSample; ++s)
+        if (peaks.contains(s))
+            return true;
     
-    
+    return false;
 };
 
 

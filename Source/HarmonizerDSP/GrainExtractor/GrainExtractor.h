@@ -55,7 +55,8 @@ private:
     void releasePsolaResources();
     
     void findPsolaPeaks (Array<int>& targetArray,
-                         const AudioBuffer<SampleType>& inputAudio,
+                         const SampleType* reading,
+                         const int totalNumSamples,
                          const int period);
     
     void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);

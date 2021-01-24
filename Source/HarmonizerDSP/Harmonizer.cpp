@@ -186,6 +186,9 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
     
+    if (indicesOfGrainOnsets.isEmpty())
+        return;
+    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             voice->renderNextBlock (inputAudio, outputBuffer, currentInputPeriod, indicesOfGrainOnsets, windowBuffer);

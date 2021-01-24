@@ -52,14 +52,10 @@ void GrainExtractor<SampleType>::setNumPeakCandidatesToTest (const int newNumCan
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
-                                                 const AudioBuffer<SampleType>& inputAudio,
+                                                 const SampleType* reading,
+                                                 const int totalNumSamples,
                                                  const int period)
 {
-    targetArray.clearQuick();
-    
-    const SampleType* reading = inputAudio.getReadPointer(0);
-    const int totalNumSamples = inputAudio.getNumSamples();
-    
     const int outputGrain = 2 * period;
     const int halfPeriod  = ceil (period / 2.0f);
     
@@ -72,8 +68,11 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         
         // bounds of the current analysis grain. analysisIndex = the next predicted peak = the middle of this analysis grain
         
-        const int grainStart = std::max (0,               analysisIndex - halfPeriod);
-        const int grainEnd   = std::min (totalNumSamples, grainStart + period);
+        const int grainStart = std::max (0,
+                                         analysisIndex - halfPeriod);
+        
+        const int grainEnd   = std::min (totalNumSamples,
+                                         grainStart + period);
         
         if (grainStart > grainEnd)
             return;
@@ -84,17 +83,17 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            // 1. organize the sample indices of this analysis window from the center out so that we can refer to this order later.
-            // the list will start with the predicted peak ( = the center of the analysis wndow = the analysisIndex).
-            // then predictedPeak + 1, then predictedPeak - 1, then + 2, then - 2, etc.
+            //  1. organize the sample indices of this analysis window from the center out so that we can refer to this order later.
+            //  the list will start with the predicted peak ( = the center of the analysis wndow = the analysisIndex).
+            //  then predictedPeak + 1, then predictedPeak - 1, then + 2, then - 2, etc.
             
             sortSampleIndicesForPeakSearching (peakSearchingIndexOrder, grainStart, grainEnd, analysisIndex);
             
-            // 2. create a collection of peak candidates within the current analysis window
+            //  2. create a collection of peak candidates within the current analysis window
             
             while (peakCandidates.size() < numPeaksToTest) 
             {
-                // identifies the local max & min within the specified analysis window & adds them to the peakCandidates array
+                //  identifies the local max & min within the specified analysis window & adds them to the peakCandidates array
                 
                 getPeakCandidateInRange (peakCandidates, reading, grainStart, grainEnd, analysisIndex);
                 
@@ -105,14 +104,14 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                     if ((abs (peakCandidates.getLast() - target)) < 3)
                         break;
                     
-                    if (peakCandidates.size() > 1) // the peak finding function may add 1 or 2 candidates at a time
+                    if (peakCandidates.size() > 1)
                         if ((abs (peakCandidates.getUnchecked (peakCandidates.size() - 2) - target)) < 3)
                             break;
                 }
             }
         }
         
-        // 3. choose which peak index we're picking based on our list of candidates
+        //  3. choose which peak index we're picking based on our list of candidates
         
         int peakIndex;
         
@@ -162,7 +161,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                     
                     candidateDeltas.add (avgDelta);
                     
-                    if (avgDelta < 2.0f) // good enough match, we can skip the rest...
+                    if (avgDelta < 2.0f)
                         break;
                 }
                 
@@ -181,7 +180,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                         indexOfMinDelta = d;
                     }
                     
-                    if (minDelta < 1.0f) // perfect match
+                    if (minDelta < 2.0f)
                         break;
                 }
                 
@@ -193,15 +192,11 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         
         targetArray.add (peakIndex);
         
-        // analysisIndex marks the middle of our next analysis window, so it's where our next predicted peak should be
-        
+        // analysisIndex marks the middle of our next analysis window, so it's where our next predicted peak should be:
         if (targetArray.size() == 1)
             analysisIndex = peakIndex + period;
         else
-        {
-            const int predictedPeak = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
-            analysisIndex = std::max (predictedPeak, peakIndex + period);
-        }
+            analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
     }
 };
 
