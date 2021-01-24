@@ -60,7 +60,7 @@ private:
     
     unsigned int samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples);
     
-    unsigned int indexOfMinElement (const SampleType* data, const int dataSize);
+    int indexOfMinElement (const SampleType* data, const int dataSize);
     
     float foundThePeriod (const SampleType* asdfData, const int minIndex, const int asdfDataSize);
     

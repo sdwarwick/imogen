@@ -351,8 +351,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
-    if (frameIsPitched)
-        harmonizer.renderVoices (inBuffer, wetBuffer, frameIsPitched); // puts the harmonizer's rendered stereo output into wetBuffer
+    harmonizer.renderVoices (inBuffer, wetBuffer, frameIsPitched); // puts the harmonizer's rendered stereo output into wetBuffer
 
     // wet gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);

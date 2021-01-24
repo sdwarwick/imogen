@@ -42,6 +42,23 @@ void GrainExtractor<SampleType>::releaseResources()
 
 
 template<typename SampleType>
+void GrainExtractor<SampleType>::getGrainOnsetIndicesForUnpitchedAudio (Array<int>& targetArray,
+                                                                        const AudioBuffer<SampleType>& inputAudio,
+                                                                        const int grainRate)
+{
+    targetArray.clearQuick();
+    
+    targetArray.add (0);
+    
+    for (int i = grainRate;
+         i < inputAudio.getNumSamples();
+         i += grainRate)
+        targetArray.add (i);
+};
+
+
+
+template<typename SampleType>
 void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
                                                        const AudioBuffer<SampleType>& inputAudio,
                                                        const int period)
@@ -51,84 +68,42 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     const int totalNumSamples = inputAudio.getNumSamples();
     
+    // PART ONE -- identify sample indices of points of interest for synchronicity, whether it's points of maximum energy every pitch period (PSOLA), or epochs, etc
+    // regardless of synchronicity / peak picking algorithm used, the indices of the points of interest should be placed into the peakIndices array
+    
     // identifies peak indices for each pitch period & places them in the peakIndices array
     findPsolaPeaks (peakIndices, inputAudio.getReadPointer(0), totalNumSamples, period);
     
-    if (peakIndices.isEmpty())
-        return;
-    
-    // if any periods are missing a peak, fill them in
-    for (int p = 0;
-         p < totalNumSamples;
-         p += period)
-    {
-        const int thisPeriodStart = p;
-        const int thisPeriodEnd = std::min (p + period, totalNumSamples);
-        
-        if (! isPeriodRepresentedByAPeak (peakIndices, thisPeriodStart, thisPeriodEnd))
-        {
-            // fill in missing peak for this period, attempting to evenly space it with the surrounding peaks
-        }
-    }
-    
-    // if any periods got more than one peak, filter them out
-    for (int p = 0;
-         p < totalNumSamples;
-         p += period)
-    {
-        const int thisPeriodStart = p;
-        const int thisPeriodEnd = std::min (p + period, totalNumSamples);
-        
-        // find index of first peak within this period
-        int thisPeak = 0;
-        for (int i = 0; i < peakIndices.size(); ++i)
-        {
-            if (peakIndices.getUnchecked(i) >= thisPeriodStart)
-            {
-                thisPeak = peakIndices.getUnchecked(i);
-                break;
-            }
-        }
-        
-        if (thisPeak < peakIndices.size() - 2)
-        {
-            if (peakIndices.getUnchecked(thisPeak + 1) > thisPeriodEnd)
-            {
-                // we've got an extra peak this period
-            }
-        }
-    }
+    jassert (! peakIndices.isEmpty());
     
     
-    
-    // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, centred on points of maximum energy, w/ approx 50% overlap
-    
-    
-    // shift from peak indices to grain onset indices
+    // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
+    // in order to do this, such that the output grains are centered on our indices from peakIndices, we subtract from each index half the length of the output analysis grains -- which in this case, is the period, because our grains are 2 periods long.
     
     for (int p = 0; p < peakIndices.size(); ++p)
     {
         const int peakIndex = peakIndices.getUnchecked (p);
         
-        int grainStart = peakIndex - period; // offset the peak index by the period so that each grain will be centered on a peak
+        int grainStart = peakIndex - period; // offset the peak index by the period so that the peakIndex will be in the center of the grain
         
-        if (grainStart > 0)
+        if (grainStart >= 0)
             targetArray.add (grainStart);
     }
     
-    
-    int first = (targetArray.size() > 1) ? targetArray.getUnchecked(1) : targetArray.getUnchecked(0);
+    // fill in hypothetial missed grains @ start of audio
+    int first = targetArray.getUnchecked(0);
     first -= period;
     
     while (first >= 0)
     {
         if (! targetArray.contains (first))
-            targetArray.add (first);
+            targetArray.insert (0, first);
         
         first -= period;
     }
     
-    int last = (targetArray.size() > 1) ? targetArray.getUnchecked(targetArray.size() - 2) : targetArray.getUnchecked(0);
+    // fill in hypothetical missed grains @ end of audio
+    int last = targetArray.getLast();
     last += period;
     
     while (last < inputAudio.getNumSamples())

@@ -82,10 +82,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const int numSamples = inputAudio.getNumSamples();
     
     if (numSamples < minPeriod)
-    {
-        lastFrameWasPitched = false;
         return -1.0f;
-    }
     
     jassert (asdfBuffer.getNumSamples() > (maxPeriod - minPeriod));
     
@@ -143,7 +140,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] /= numSamples; // normalize
         
-        if (index >= 4) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
+        if (index > 3) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
         {
             const SampleType confidence = asdfData[index - 2];
             
@@ -159,7 +156,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
     
-    const unsigned int minIndex = indexOfMinElement (asdfData, asdfDataSize);
+    const int minIndex = indexOfMinElement (asdfData, asdfDataSize);
     const SampleType confidence = asdfData[minIndex];
     
     if (confidence > confidenceThresh)
@@ -209,11 +206,9 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
             return 0;
     }
     
-    int numSamps = 0; // detected # samples to first zero crossing of signal
-    
     const bool startedPositive = inputAudio[analysisStart] > 0.0;
     
-    for (int s = analysisStart + 1; s < numInputSamples; ++s)
+    for (int s = analysisStart + 1; s < floor (numInputSamples / 2.0f); ++s)
     {
         const auto currentSample = inputAudio[s];
         
@@ -223,21 +218,15 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
         const bool isNowPositive = currentSample > 0.0;
         
         if (startedPositive != isNowPositive)
-        {
-            numSamps = s + 1;
-            break;
-        }
+            return s + 1;
     }
     
-    if (numSamps >= floor (numInputSamples / 2.0f))
-        return 0;
-    
-    return numSamps;
+    return 0;
 };
 
 
 template<typename SampleType>
-unsigned int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const int dataSize)
+int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const int dataSize)
 {
     // find minimum of ASDF output data - indicating that index (lag value) to be the period
     
@@ -246,7 +235,7 @@ unsigned int PitchDetector<SampleType>::indexOfMinElement (const SampleType* dat
     if (min == 0)
         return 0;
     
-    unsigned int minIndex = 0;
+    int minIndex = 0;
     
     for (int n = 1; n < dataSize; ++n)
     {

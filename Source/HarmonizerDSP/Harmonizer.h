@@ -254,6 +254,8 @@ public:
     
 private:
     
+    static constexpr int unpitchedGrainRate = 30;
+    
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     GrainExtractor<SampleType> grains;
@@ -346,6 +348,9 @@ private:
     AudioBuffer<SampleType> windowBuffer;
     void fillWindowBuffer (const int numSamples);
     int windowSize;
+    
+    AudioBuffer<SampleType> unpitchedWindow;
+    void initializeUnpitchedWindow();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

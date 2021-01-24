@@ -20,6 +20,8 @@ void GrainExtractor<SampleType>::prepareForPsola (const int maxBlocksize)
     // the peak candidate finding function may output 2 peaks each time it's called, so have an extra slot available in case it outputs up to index newNumCandidatesToTest + 1
     peakCandidates .ensureStorageAllocated (numPeaksToTest + 1);
     candidateDeltas.ensureStorageAllocated (numPeaksToTest + 1);
+    
+    lastBlocksize = maxBlocksize;
 };
 
 
@@ -42,12 +44,11 @@ void GrainExtractor<SampleType>::setNumPeakCandidatesToTest (const int newNumCan
         return;
     
     // the peak candidate finding function may output 2 peaks each time it's called, so have an extra slot available in case it outputs up to index newNumCandidatesToTest + 1
-    peakCandidates .ensureStorageAllocated (newNumCandidatesToTest + 1);
-    candidateDeltas.ensureStorageAllocated (newNumCandidatesToTest + 1);
+    peakCandidates   .ensureStorageAllocated (newNumCandidatesToTest + 1);
+    candidateDeltas  .ensureStorageAllocated (newNumCandidatesToTest + 1);
     
     numPeaksToTest = newNumCandidatesToTest;
 };
-
 
 
 template<typename SampleType>

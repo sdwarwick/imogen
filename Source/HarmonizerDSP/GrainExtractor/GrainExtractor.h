@@ -35,6 +35,11 @@ public:
                                const int period);
     
     
+    void getGrainOnsetIndicesForUnpitchedAudio (Array<int>& targetArray,
+                                                const AudioBuffer<SampleType>& inputAudio,
+                                                const int grainRate);
+    
+    
     // sets the number of peak candidates to test in each analysis window for the PSOLA peak-picking algorithm. Values between 5 & 10 are recommended, and this value must not be lower than 1
     void setNumPeakCandidatesToTest (const int newNumCandidatesToTest);
     
@@ -72,4 +77,5 @@ private:
     // the number of peak candidates that will be tested for each analysis window during the PSOLA peak picking process
     int numPeaksToTest = 10;
     
+    int lastBlocksize = 0;
 };

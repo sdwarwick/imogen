@@ -68,6 +68,8 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
         voice->prepare(blocksize);
     
     windowBuffer.setSize (1, blocksize * 2, true, true, true);
+    unpitchedWindow.setSize (1, unpitchedGrainRate * 2, true, true, true);
+    initializeUnpitchedWindow();
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
     
@@ -176,22 +178,28 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     outputBuffer.clear();
     
-    if (inputAudio.getNumSamples() == 0)
+    if (getNumActiveVoices() == 0)
         return;
     
-    // how to handle unpitched frames???
+    // what constant rate to space grains for unpitched frames...?
+    // for unpitched const grainrate, report grain size as the period & use another precalculated window
     
-    if (windowSize != currentInputPeriod * 2)
-        fillWindowBuffer (currentInputPeriod * 2);
-    
-    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
-    
+    if (frameIsPitched)
+        grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, currentInputPeriod);
+    else
+        grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, unpitchedGrainRate);
+        
     if (indicesOfGrainOnsets.isEmpty())
         return;
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, currentInputPeriod, indicesOfGrainOnsets, windowBuffer);
+        {
+            if (frameIsPitched)
+                voice->renderNextBlock (inputAudio, outputBuffer, currentInputPeriod, indicesOfGrainOnsets, windowBuffer);
+            else
+                voice->renderNextBlock (inputAudio, outputBuffer, unpitchedGrainRate, indicesOfGrainOnsets, unpitchedWindow);
+        }
 };
 
 
@@ -215,6 +223,22 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
         writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2.0 * i) * samplemultiplier)) );
     
     windowSize = numSamples;
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::initializeUnpitchedWindow()
+{
+    unpitchedWindow.clear();
+    
+    const int numSamples = unpitchedGrainRate * 2;
+    
+    auto* writing = unpitchedWindow.getWritePointer(0);
+    
+    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
+    
+    for (int i = 0; i < numSamples; ++i)
+        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2.0 * i) * samplemultiplier)) );
 };
 
 
