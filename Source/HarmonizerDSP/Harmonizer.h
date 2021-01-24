@@ -254,7 +254,7 @@ public:
     
 private:
     
-    static constexpr int unpitchedGrainRate = 30;
+    static constexpr int unpitchedGrainRate = 50;
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     

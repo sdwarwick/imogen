@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "GrainExtractor.h"
+#include "GrainExtractor/GrainExtractor.h"
 
 
 template<typename SampleType>
@@ -64,18 +64,20 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
                                                        const int period)
 {
     targetArray.clearQuick();
-    peakIndices.clearQuick();
     
     const int totalNumSamples = inputAudio.getNumSamples();
+    const SampleType* reading = inputAudio.getReadPointer(0);
     
-    // identifies peak indices for each pitch period & places them in the peakIndices array
-    findPsolaPeaks (peakIndices, inputAudio.getReadPointer(0), totalNumSamples, period);
+    // identify  peak indices for each pitch period & places them in the peakIndices array
+    
+    // findPsolaPeaks (peakIndices, reading, totalNumSamples, period);
+    
+    findZeroCrossings (peakIndices, reading, totalNumSamples, period);
     
     jassert (! peakIndices.isEmpty());
     
     
     // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
-    // in order to do this, such that the output grains are centered on our indices from peakIndices, we subtract from each index half the length of the output analysis grains -- which in this case, is the period, because our grains are 2 periods long.
     
     for (int p = 0; p < peakIndices.size(); ++p)
     {

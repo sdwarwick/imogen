@@ -35,6 +35,8 @@
           <GROUP id="{8A2C9B0D-0EFB-C589-057F-FAFABCBBBC3D}" name="Grain extractor">
             <FILE id="GW6roZ" name="PsolaPeakFinding.cpp" compile="1" resource="0"
                   file="Source/HarmonizerDSP/GrainExtractor/PsolaPeakFinding.cpp"/>
+            <FILE id="XfEc94" name="ZeroCrossingFinding.cpp" compile="1" resource="0"
+                  file="Source/HarmonizerDSP/GrainExtractor/ZeroCrossingFinding.cpp"/>
             <FILE id="XsXAGK" name="GrainExtractor.cpp" compile="1" resource="0"
                   file="Source/HarmonizerDSP/GrainExtractor/GrainExtractor.cpp"/>
             <FILE id="xbwTOu" name="GrainExtractor.h" compile="0" resource="0"

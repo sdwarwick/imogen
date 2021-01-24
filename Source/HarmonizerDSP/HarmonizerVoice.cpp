@@ -129,32 +129,19 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     const int analysisGrain = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
-    if (indicesOfGrainOnsets.getUnchecked(0) > 0) // extra samples @ start before first full analysis grain
-    {
-        int endSample;
-        
-        if (indicesOfGrainOnsets.size() > 1)
-            endSample = std::min (indicesOfGrainOnsets.getUnchecked(1), analysisGrain);
-        else
-            endSample = std::min (indicesOfGrainOnsets.getUnchecked(0), analysisGrain);
-        
-        olaFrame (input, 0, endSample, window, analysisGrain, newPeriod);
-    }
-   
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
         const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
-        const int readingEndSample = std::min (readingStartSample + analysisGrain, totalNumInputSamples);
+        const int readingEndSample = readingStartSample + analysisGrain;
+        
+        if (readingEndSample > totalNumInputSamples)
+            break;
         
         olaFrame (input, readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
         
         if (synthesisIndex >= totalNumInputSamples || readingEndSample == totalNumInputSamples)
             break;
     }
-    
-    if (int highestAnalysisIndex = indicesOfGrainOnsets.getLast() + analysisGrain; // extra samples @ end, after last analysis grain
-        highestAnalysisIndex < totalNumInputSamples)
-        olaFrame (input, highestAnalysisIndex, totalNumInputSamples, window, analysisGrain, newPeriod);
     
     synthesisIndex -= totalNumInputSamples;
     if (synthesisIndex < 0) synthesisIndex = 0;
@@ -170,28 +157,20 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
     
     if (synthesisIndex > readingEndSample)
         return;
+    
+    jassert ((readingEndSample - readingStartSample) == windowSize);
 
-    const int grainSize = readingEndSample - readingStartSample;
-    
-    if (grainSize < 1)
-        return;
-    
-    // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once
+    // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once per analysis grain
     
     auto* w = windowingBuffer.getWritePointer(0);
     
     for (int s = readingStartSample, // reading index from orignal audio
-         wi = 0,                     // writing index in the windowing multiplication storage buffer
-         winR = (grainSize == windowSize) ? 0 : windowSize - (readingEndSample % windowSize); // starting index in the window buffer
+         wi = 0;                     // writing index in the windowing multiplication storage buffer
          s < readingEndSample;
-         ++s, ++wi, ++winR)
+         ++s, ++wi)
     {
-        if (winR == windowSize) winR = 0; // wraparound window index
-        w[wi] = inputAudio[s] * window[winR];
+        w[wi] = inputAudio[s] * window[wi];
     }
-    
-    // closest integer # of samples representing the %age of the new desired period this OLA chunk is synthesizing:
-    const int hop = (grainSize == windowSize) ? newPeriod : std::max (roundToInt (newPeriod * grainSize / windowSize), 1);
     
     int highestIndexWritten = 0;
     
@@ -202,14 +181,14 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
         const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
         
         for (int s = synthesisIndex, r = 0;
-             r < grainSize;
+             r < windowSize;
              ++s, ++r)
         {
             writing[s] += reading[r];
         }
         
-        highestIndexWritten = synthesisIndex + grainSize;
-        synthesisIndex += hop;
+        highestIndexWritten = synthesisIndex + windowSize;
+        synthesisIndex += newPeriod;
     }
     
     highestSBindexWritten = highestIndexWritten;

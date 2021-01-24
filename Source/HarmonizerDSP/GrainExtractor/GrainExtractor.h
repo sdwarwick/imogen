@@ -46,6 +46,8 @@ public:
     
 private:
     
+    int lastBlocksize = 0;
+    
     Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
     
@@ -71,8 +73,21 @@ private:
     Array<float> candidateDeltas;
     Array<int> peakSearchingIndexOrder;
     
-    // the number of peak candidates that will be tested for each analysis window during the PSOLA peak picking process
-    int numPeaksToTest = 10;
+    int numPeaksToTest = 15; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
     
-    int lastBlocksize = 0;
+    static constexpr int numDeltasToTest = 10; // final # of candidates for which delta values are calculated
+    static constexpr int defaultFinalHandfulSize = 4; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
+    
+    
+    // functions used for simple zero-crossing mode
+    
+    void findZeroCrossings (Array<int>& targetArray,
+                            const SampleType* reading,
+                            const int totalNumSamples,
+                            const int period);
+    
+    void getZeroCrossingForPeriod (Array<int>& targetArray,
+                                   const SampleType* reading,
+                                   const int startSample,
+                                   const int endSample);
 };

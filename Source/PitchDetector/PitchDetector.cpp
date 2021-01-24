@@ -184,44 +184,29 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
 template<typename SampleType>
 unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numInputSamples)
 {
-    int analysisStart = 0;
+    if (inputAudio[0] == 0.0)
+        return 0;
     
-    // find first sample not 0
-    if (inputAudio[0] == 0)
-    {
-        int startingSample = 1;
-        
-        while (startingSample < numInputSamples)
-        {
-            if (inputAudio[startingSample] != 0)
-            {
-                analysisStart = startingSample;
-                break;
-            }
-            ++startingSample;
-        }
-        
-        if (startingSample == numInputSamples - 1)
-            return 0;
-    }
+    const bool startedPositive = inputAudio[0] > 0.0;
     
-    const bool startedPositive = inputAudio[analysisStart] > 0.0;
-    
-    for (int s = analysisStart + 1; s < floor (numInputSamples / 2.0f); ++s)
+    for (int s = 1; s < floor (numInputSamples / 2.0f); ++s)
     {
         const auto currentSample = inputAudio[s];
         
         if (currentSample == 0.0)
-            continue;
+        {
+            return s;
+        }
         
         const bool isNowPositive = currentSample > 0.0;
         
         if (startedPositive != isNowPositive)
-            return s + 1;
+            return s;
     }
     
     return 0;
 };
+
 
 
 template<typename SampleType>
