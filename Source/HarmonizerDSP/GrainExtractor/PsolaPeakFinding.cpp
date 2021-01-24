@@ -118,9 +118,6 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             }
             else
             {
-                // for each candidate, create delta values based on how far away they are from this peak's predicated location based on both the last identified peak and the second to last peak.
-                // we want the candidate that is closest to being 2 periods away from the peak before last, and is also the closest to being 1 period away from the last found peak.
-                
                 candidateDeltas.clearQuick();
                 
                 // 1. calculate delta values for each peak candidate
@@ -143,11 +140,14 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 
                 const int finalHandfulSize = std::min (4, candidateDeltas.size());
                 
-                int finalHandful[finalHandfulSize]; // stores the indices in the candidateDeltas array of the lowest 3 delta values. These indices are also the indices in the peakCandidates array where these peaks' actual sample indices are stored.
+                int finalHandful[finalHandfulSize]; // stores the indices in the peakCandidates array of the sample indices w lowest 3 delta values
+                float finalHandfulDeltas[finalHandfulSize];
+                
+                float lowestDelta = candidateDeltas.getUnchecked(0); // variable to store the lowest delta of any peak candidate
                 
                 for (int i = 0; i < finalHandfulSize; ++i)
                 {
-                    float minDelta = candidateDeltas.getUnchecked(0);
+                    float minDelta = lowestDelta;
                     int indexOfMinDelta = 0;
                     
                     for (int d = 1; d < candidateDeltas.size(); ++d)
@@ -162,18 +162,35 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                     }
                     
                     finalHandful[i] = indexOfMinDelta;
-                    candidateDeltas.remove (indexOfMinDelta);
+                    finalHandfulDeltas[i] = minDelta;
+                    lowestDelta = minDelta;
+                    candidateDeltas.set (indexOfMinDelta, 100.0f);
                 }
                 
-                // 3. choose the strongest overall peak from these final 4 candidates
                 
-                int chosenPeak = peakCandidates.getUnchecked (finalHandful[0]);
-                SampleType strongestPeak = abs (reading[chosenPeak]);
+                // start with the candidate in our final handful with the lowest overall delta value...
+                int lowestDeltaCandidate = 0;
                 
                 for (int c = 1; c < finalHandfulSize; ++c)
+                    if (finalHandfulDeltas[c] == lowestDelta)
+                    {
+                        lowestDeltaCandidate = c;
+                        break;
+                    }
+                
+                
+                // 3. choose the strongest overall peak from these final 4 candidates, weighted by their delta values
+                
+                int chosenPeak = peakCandidates.getUnchecked (finalHandful[lowestDeltaCandidate]);
+                SampleType strongestPeak = (abs(reading[chosenPeak])) ;
+                
+                for (int c = 0; c < finalHandfulSize; ++c)
                 {
+                    if (c == lowestDeltaCandidate)
+                        continue;
+                    
                     const int testing = peakCandidates.getUnchecked (finalHandful[c]);
-                    const SampleType testingPeak = abs (reading[testing]);
+                    const SampleType testingPeak = (abs(reading[testing])) ; // weighting function should decrease peaks with higher deltas
                     
                     if (testingPeak > strongestPeak)
                     {
