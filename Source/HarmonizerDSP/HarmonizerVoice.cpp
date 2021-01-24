@@ -287,7 +287,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 
 // MIDI -----------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::startNote(const int midiPitch, const float velocity)
+void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity, const bool wasStolen)
 {
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
@@ -298,7 +298,8 @@ void HarmonizerVoice<SampleType>::startNote(const int midiPitch, const float vel
     
     adsr.noteOn();
     quickAttack.noteOn();
-    if(! quickRelease.isActive())
+    
+    if (! quickRelease.isActive())
         quickRelease.noteOn();
 };
 

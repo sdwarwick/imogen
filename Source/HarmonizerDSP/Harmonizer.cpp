@@ -559,15 +559,18 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     HarmonizerVoice<SampleType>* low = nullptr; // Lowest sounding note, might be sustained, but NOT in release phase
     HarmonizerVoice<SampleType>* top = nullptr; // Highest sounding note, might be sustained, but NOT in release phase
     
+    // protect these, only use if necessary. These will be nullptrs if pedal / descant is currently off
+    HarmonizerVoice<SampleType>* descantVoice = getCurrentDescantVoice();
+    HarmonizerVoice<SampleType>* pedalVoice = getCurrentPedalPitchVoice();
+    
     // this is a list of voices we can steal, sorted by how long they've been running
     Array< HarmonizerVoice<SampleType>* > usableVoices;
     usableVoices.ensureStorageAllocated (voices.size());
     
     for (auto* voice : voices)
     {
-        if ((pedalPitchIsOn && voice->getCurrentlyPlayingNote() == lastPedalPitch)
-            || (descantIsOn && voice->getCurrentlyPlayingNote() == lastDescantPitch))
-            continue; // save these, only use if absolutely necessary
+        if (voice == descantVoice || voice == pedalVoice)
+            continue;
         
         usableVoices.add (voice);
         
@@ -615,20 +618,21 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     
     // only protected top & bottom voices are left now - time to use the pedal pitch & descant voices...
     
-    if (descantIsOn) // give preference to the bass
+    if (descantVoice) // save bass
     {
         lastDescantPitch = -1;
-        return getCurrentDescantVoice();
+        return descantVoice;
     }
-    
-    if (pedalPitchIsOn)
+
+    if (pedalVoice)
     {
         lastPedalPitch = -1;
-        return getCurrentPedalPitchVoice();
+        return pedalVoice;
     }
     
-    // Duophonic synth: give priority to the bass note
-    if (top != nullptr)
+    // return top & bottom keyboard note voices
+    
+    if (top) // bass note gets priority
         return top;
     
     return low;

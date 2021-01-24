@@ -47,9 +47,6 @@ public:
 private:
     
     
-    bool isPeriodRepresentedByAPeak (const Array<int>& peaks, const int periodMinSample, const int periodMaxSample);
-    
-    
     Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
     

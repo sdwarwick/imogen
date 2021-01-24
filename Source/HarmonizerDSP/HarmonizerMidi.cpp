@@ -31,11 +31,11 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, cons
     
     if (toTurnOff.isEmpty())
         return;
+        
+    const float velocity = allowTailOff ? 0.0f : 1.0f;
     
     for (auto* voice : toTurnOff)
     {
-        const float velocity = allowTailOff ? 0.0f : 1.0f;
-        
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, voice->getCurrentlyPlayingNote(), velocity),
                                       ++lastMidiTimeStamp);
         
@@ -377,12 +377,14 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     if (! voice->isKeyDown()) // if the key wasn't already marked as down...
         voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
     
+    const bool wasStolen = voice->isVoiceActive();
+    
     if (midiPitch < lowestPannedNote)
         voice->setPan(64);
-    else if (! voice->isVoiceActive())
+    else if (! wasStolen)
         voice->setPan(panner.getNextPanVal());
     
-    voice->startNote (midiPitch, velocity);
+    voice->startNote (midiPitch, velocity, wasStolen);
     
     if (! isKeyboard)
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),

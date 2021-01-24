@@ -82,9 +82,8 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     for (int p = 0; p < peakIndices.size(); ++p)
     {
-        const int peakIndex = peakIndices.getUnchecked (p);
-        
-        int grainStart = peakIndex - period; // offset the peak index by the period so that the peakIndex will be in the center of the grain
+        // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
+        int grainStart = peakIndices.getUnchecked(p) - period;
         
         if (grainStart >= 0)
             targetArray.add (grainStart);
@@ -115,17 +114,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     }
 };
 
-
-template<typename SampleType>
-bool GrainExtractor<SampleType>::isPeriodRepresentedByAPeak (const Array<int>& peaks,
-                                                             const int periodMinSample, const int periodMaxSample)
-{
-    for (int s = periodMinSample; s < periodMaxSample; ++s)
-        if (peaks.contains(s))
-            return true;
-    
-    return false;
-};
 
 
 template class GrainExtractor<float>;

@@ -42,8 +42,8 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
         && ((minHz == newMinHz) && (maxHz == newMaxHz)))
         return;
     
-    maxPeriod = roundToInt (1.0f / minHz * samplerate);
-    minPeriod = roundToInt (1.0f / maxHz * samplerate);
+    maxPeriod = roundToInt (samplerate / minHz);
+    minPeriod = roundToInt (samplerate / maxHz);
     
     if (! (maxPeriod > minPeriod))
         ++maxPeriod;
@@ -99,11 +99,10 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     minLag = std::max (minLag, minPeriod);
     
-    if (minLag == maxLag)
-        ++maxLag;
-        
     if (maxLag < minLag)
         maxLag = minLag + 1;
+    else if (minLag == maxLag)
+        ++maxLag;
     
     const int middleIndex = floor (numSamples / 2.0f);
     

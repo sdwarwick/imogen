@@ -59,7 +59,7 @@ public:
     void setPan(const int newPan);
     int getCurrentMidiPan() const noexcept { return currentMidipan; };
     
-    void startNote(const int midiPitch,  const float velocity);
+    void startNote(const int midiPitch,  const float velocity, const bool wasStolen);
     void stopNote (const float velocity, const bool allowTailOff);
     void aftertouchChanged(const int newAftertouchValue);
     

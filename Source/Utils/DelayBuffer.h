@@ -13,21 +13,19 @@ public:
         lengthInSamples = blockLength  *  ( (maxDelay + (2 * blockLength) - 1)
                                              / blockLength );
         
-        base.setSize (numChannels, 2 * lengthInSamples);
-        
-        writeIndex = lengthInSamples; // this is the MINIMUM write index!
-        
+        base.setSize (numChannels, lengthInSamples);
         base.clear();
+        
+        writeIndex = 0;
     };
-    
     
     DelayBuffer()
     {
         lengthInSamples = 0;
         writeIndex = 0;
         base.setSize (0, 0);
+        base.clear();
     };
-    
     
     ~DelayBuffer()
     { };
@@ -43,10 +41,12 @@ public:
         
         lengthInSamples = newLengthInSamples;
         
-        base.setSize (newNumChannels, 2 * lengthInSamples, true, true, true);
+        base.setSize (newNumChannels, lengthInSamples, true, true, true);
         
-        if ((writeIndex < lengthInSamples) || (writeIndex >= 2 * lengthInSamples))
-            writeIndex = lengthInSamples;
+        if (writeIndex < 0)
+            writeIndex = lengthInSamples + writeIndex;
+        else if (writeIndex >= lengthInSamples)
+            writeIndex -= lengthInSamples;
     };
     
     
@@ -57,11 +57,17 @@ public:
         
         jassert (numSamples < lengthInSamples);
         
-        if ((writeIndex + numSamples) >= base.getNumSamples())
-            writeIndex = lengthInSamples;
+        SampleType* writing = base.getWritePointer(0);
         
-        base.copyFrom (destChannel, writeIndex,                   inputSamples, numSamples);
-        base.copyFrom (destChannel, writeIndex - lengthInSamples, inputSamples, numSamples);
+        int index = writeIndex;
+        
+        for (int s = 0;
+             s < numSamples;
+             ++s, ++index)
+        {
+            if (index >= lengthInSamples) index = 0;
+            writing[index] = inputSamples[s];
+        }
         
         writeIndex += numSamples;
     };
@@ -80,14 +86,19 @@ public:
         jassert (delay <= lengthInSamples);
         jassert (numSamples <= lengthInSamples);
         
-        int readIndex = writeIndex - delay;
+        const int initRead = writeIndex - delay;
         
-        jassert (readIndex >= 0);
+        int readIndex = initRead > 0 ? initRead : lengthInSamples + initRead;
         
         const SampleType* reading = base.getReadPointer(readingChannel);
         
-        for (int n = 0; n < numSamples; ++n)
-            outputSamples[n] = reading[readIndex++];
+        for (int n = 0;
+             n < numSamples;
+             ++n, ++readIndex)
+        {
+            if (readIndex >= lengthInSamples) readIndex = 0;
+            outputSamples[n] = reading[readIndex];
+        }
     };
     
     
@@ -101,15 +112,19 @@ public:
     
     SampleType* pointToDelayedSamples (const int delay, const int readingChannel) const
     {
-        jassert (delay <= lengthInSamples);
-        return base.getReadPointer (readingChannel, writeIndex - delay);
+        const int initRead = writeIndex - delay;
+        const int readIndex = initRead > 0 ? initRead : lengthInSamples + initRead;
+        
+        return base.getReadPointer (readingChannel, readIndex);
     };
     
     
     int numStoredSamples() const noexcept
     {
-        jassert (writeIndex >= lengthInSamples);
-        return (writeIndex - lengthInSamples);
+        if (writeIndex - lengthInSamples <= 0)
+            return 0;
+            
+        return writeIndex - lengthInSamples;
     };
     
     
