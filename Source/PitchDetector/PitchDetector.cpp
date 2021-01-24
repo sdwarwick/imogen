@@ -139,7 +139,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] /= numSamples; // normalize
         
-        if (index > 3) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
+        if (index > 3 && k - 2 > minLag) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
         {
             const SampleType confidence = asdfData[index - 2];
             

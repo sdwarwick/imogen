@@ -55,7 +55,7 @@ public:
         if (base.getNumSamples() == 0 || base.getNumChannels() == 0 || lengthInSamples == 0)
             return;
         
-        jassert (numSamples < lengthInSamples);
+        jassert (numSamples <= lengthInSamples);
         
         SampleType* writing = base.getWritePointer(0);
         

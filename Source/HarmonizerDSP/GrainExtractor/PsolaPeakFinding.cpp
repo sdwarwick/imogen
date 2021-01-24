@@ -242,6 +242,9 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         
         const int s = peakSearchingIndexOrder.getUnchecked(i);
         
+        if (s == starting)
+            continue;
+        
         if (candidates.contains (s))
             continue;
         
