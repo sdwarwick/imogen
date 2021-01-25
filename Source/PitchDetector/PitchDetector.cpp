@@ -12,7 +12,7 @@
 
 
 template<typename SampleType>
-PitchDetector<SampleType>::PitchDetector(const int minHz, const int maxHz, const double samplerate)
+PitchDetector<SampleType>::PitchDetector(const int minHz, const int maxHz, const double samplerate): confidenceThresh(0.25)
 {
     this->minHz = minHz;
     this->maxHz = maxHz;
@@ -23,6 +23,8 @@ PitchDetector<SampleType>::PitchDetector(const int minHz, const int maxHz, const
     setHzRange (minHz, maxHz, true);
     
     lastEstimatedPeriod = minPeriod;
+    
+    periodCandidates.ensureStorageAllocated (periodCandidatesToTest);
 };
 
 
@@ -113,7 +115,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     // always write the same datasize to the ASDF buffer (with regard to this member variables), even if the k range is being limited this frame by the minLag & maxLag local variables.
     
     for (int k = minPeriod; // always write the same datasize to asdfBuffer, even if k values are being limited this frame
-            k <= maxPeriod;
+            k <= maxPeriod; // k = delay = lag = period
             ++k)
     {
         const int index = k - minPeriod; // the actual asdfBuffer index for this k value's data
@@ -126,11 +128,11 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] = 0.0;
         
-        const int sampleOffset = floor ((numSamples + k) / 2.0f);
+        const int sampleOffset = middleIndex - (floor ((numSamples + k) / 2.0f));
         
         for (int n = 0; n < numSamples; ++n)
         {
-            const int startingSample = n + middleIndex - sampleOffset;
+            const int startingSample = n + sampleOffset;
             
             const SampleType difference = reading[startingSample] - reading[startingSample + k];
             
@@ -139,32 +141,134 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] /= numSamples; // normalize
         
-        if (index > 3 && k - 2 > minLag) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
-        {
-            const SampleType confidence = asdfData[index - 2];
-            
-            if (confidence < confidenceThresh
-                && confidence < asdfData[index]
-                && confidence < asdfData[index - 1]
-                && confidence < asdfData[index - 3]
-                && confidence < asdfData[index - 4])
-                
-                return foundThePeriod (asdfData, index - 2, index + 1);
-        }
+//        if (index > 3 && k - 2 > minLag) // test to see if we've found a good enough match already, so we can stop computing ASDF values...
+//        {
+//            const SampleType confidence = asdfData[index - 2];
+//
+//            if (confidence < confidenceThresh
+//                && confidence < asdfData[index]
+//                && confidence < asdfData[index - 1]
+//                && confidence < asdfData[index - 3]
+//                && confidence < asdfData[index - 4])
+//
+//                return foundThePeriod (asdfData, index - 2, index + 1);
+//        }
     }
     
     const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
     
     const int minIndex = indexOfMinElement (asdfData, asdfDataSize);
-    const SampleType confidence = asdfData[minIndex];
     
-    if (confidence > confidenceThresh)
+    const SampleType greatestConfidence = asdfData[minIndex];
+    
+    if (greatestConfidence > confidenceThresh)
     {
         lastFrameWasPitched = false;
         return -1.0f;
     }
     
-    return foundThePeriod (asdfData, minIndex, asdfDataSize);
+    if ((! lastFrameWasPitched) || (greatestConfidence < 0.05))
+        return foundThePeriod (asdfData, minIndex, asdfDataSize);
+    
+    periodCandidates.clearQuick();
+    
+    periodCandidates.add (minIndex);
+    
+    for (int c = 1; c < std::min(periodCandidatesToTest, asdfDataSize); ++c)
+        getNextBestPeriodCandidate (periodCandidates, asdfData, asdfDataSize);
+    
+    
+    // candidate deltas: how far away each period candidate is from the last estimated period
+    
+    int candidateDeltas[periodCandidates.size()];
+    
+    const int deltaOffset = minPeriod - lastEstimatedPeriod;
+    
+    for (int c = 0; c < periodCandidates.size(); ++c)
+        candidateDeltas[c] = abs(periodCandidates.getUnchecked(c) + deltaOffset);
+    
+    int minDelta = candidateDeltas[0];
+    int maxDelta = candidateDeltas[0];
+    
+    for (int c = 1; c < periodCandidates.size(); ++c)
+    {
+        const int delta = candidateDeltas[c];
+        
+        if (delta < minDelta)
+            minDelta = delta;
+        
+        if (delta > maxDelta)
+            maxDelta = delta;
+    }
+    
+    const int deltaRange = std::max (maxDelta - minDelta, 1);
+    
+    // weight the asdf data based on each candidate's delta value
+    
+    SampleType weightedCandidateConfidence[periodCandidates.size()];
+    
+    for (int c = 0; c < periodCandidates.size(); ++c)
+        weightedCandidateConfidence[c] = asdfData[periodCandidates.getUnchecked(c)] * (1.0 + ((candidateDeltas[c] / deltaRange) * 0.75));
+    
+    // choose the estimated period based on the lowest weighted asdf data value
+    
+    int indexOfPeriod = 0;
+    SampleType confidence = weightedCandidateConfidence[0];
+    
+    for (int c = 1; c < periodCandidates.size(); ++c)
+    {
+        const SampleType current = weightedCandidateConfidence[c];
+        
+        if (current < confidence)
+        {
+            indexOfPeriod = c;
+            confidence = current;
+        }
+    }
+    
+    return foundThePeriod (asdfData, periodCandidates.getUnchecked(indexOfPeriod), asdfDataSize);
+};
+
+
+template<typename SampleType>
+void PitchDetector<SampleType>::getNextBestPeriodCandidate (Array<int>& candidates,
+                                                            const SampleType* asdfData,
+                                                            const int dataSize)
+{
+    int initIndex = 0;
+    
+    for (int i = 0; i < dataSize; ++i)
+    {
+        if (candidates.contains(i))
+            continue;
+        
+        initIndex = i;
+    }
+    
+    SampleType min = asdfData[initIndex];
+    int minIndex = initIndex;
+    
+    for (int i = 0; i < dataSize; ++i)
+    {
+        if (candidates.contains(i))
+            continue;
+        
+        const SampleType current = asdfData[i];
+        
+        if (current == 0.0)
+        {
+            candidates.add (i);
+            return;
+        }
+        
+        if (current < min)
+        {
+            min = current;
+            minIndex = i;
+        }
+    }
+    
+    candidates.add (minIndex);
 };
 
 
@@ -175,6 +279,9 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
 {
     SampleType realPeriod = quadraticPeakPosition (asdfData, minIndex, asdfDataSize);
     realPeriod += minPeriod;
+    
+    jassert (realPeriod <= maxPeriod);
+    
     lastEstimatedPeriod = realPeriod;
     lastFrameWasPitched = true;
     return (float) (samplerate / realPeriod); // return pitch in hz
@@ -194,9 +301,7 @@ unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const Sample
         const auto currentSample = inputAudio[s];
         
         if (currentSample == 0.0)
-        {
             return s;
-        }
         
         const bool isNowPositive = currentSample > 0.0;
         
@@ -216,7 +321,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     
     SampleType min = data[0];
     
-    if (min == 0)
+    if (min == 0.0)
         return 0;
     
     int minIndex = 0;
@@ -225,7 +330,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     {
         const SampleType current = data[n];
         
-        if (current == 0)
+        if (current == 0.0)
             return n;
         
         if (current < min)

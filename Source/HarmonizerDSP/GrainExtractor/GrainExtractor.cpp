@@ -87,7 +87,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
 
         if (grainStart < 0)
         {
-            if (peakIndices.size() > 1)
+            if (p < peakIndices.size() - 2)
                 continue;
             
             // edge case for really large periods

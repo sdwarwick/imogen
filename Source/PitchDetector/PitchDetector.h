@@ -56,7 +56,6 @@ private:
     
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
-    void calculateASDF (const SampleType* inputAudio, const int numSamples, SampleType* outputData);
     
     unsigned int samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples);
     
@@ -65,6 +64,12 @@ private:
     float foundThePeriod (const SampleType* asdfData, const int minIndex, const int asdfDataSize);
     
     SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
+    
+    
+    Array<int> periodCandidates;
+    static constexpr int periodCandidatesToTest = 10;
+    
+    void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
     
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchDetector)

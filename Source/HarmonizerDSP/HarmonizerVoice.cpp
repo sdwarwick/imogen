@@ -265,6 +265,9 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     
     clearBuffers();
     synthesisBuffer.clear();
+    
+    synthesisIndex = 0;
+    highestSBindexWritten = 0;
 };
 
 
