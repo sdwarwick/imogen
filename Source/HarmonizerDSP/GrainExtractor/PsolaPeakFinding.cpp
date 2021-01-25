@@ -215,7 +215,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
 {
     candidateDeltas.clearQuick();
     
-    // 1. calculate delta values for each peak candidate left
+    // 1. calculate delta values for each peak candidate
     // delta represents how far off this peak candidate is from the expected peak location - in a way it's a measure of the jitter that picking a peak candidate as this frame's peak would introduce to the overall alignment of the stream of grains based on the previous grains
     
     for (int p = 0; p < candidates.size(); ++p)
@@ -277,33 +277,58 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    const float deltaRange = std::max<float> (highestDelta - lowestDelta, 0.01f);
+    const float deltaRange = highestDelta - lowestDelta;
     
-    const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
-    
-    int strongestPeakIndex = candidates.getUnchecked (finalHandfulIndexs[lowestDeltaCandidate]);
-    SampleType strongestPeak = (abs(reading[strongestPeakIndex])) * startingWeight;
-    
-    for (int c = 0; c < finalHandfulSize; ++c)
+    if (deltaRange > 1.0f)
     {
-        if (c == lowestDeltaCandidate)
-            continue;
+        int strongestPeakIndex = candidates.getUnchecked (finalHandfulIndexs[lowestDeltaCandidate]);
         
-        const int testingIndex = candidates.getUnchecked (finalHandfulIndexs[c]);
+        const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
         
-        const float testingDelta = finalHandfulDeltas[c];
-        const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
-        
-        const SampleType testingPeak = (abs(reading[testingIndex])) * weight;
-        
-        if (testingPeak < strongestPeak)
-            continue;
-        
-        strongestPeak = testingPeak;
-        strongestPeakIndex = testingIndex;
-    }
+        SampleType strongestPeak = (abs(reading[strongestPeakIndex])) * startingWeight;
     
-    return strongestPeakIndex;
+        for (int c = 0; c < finalHandfulSize; ++c)
+        {
+            if (c == lowestDeltaCandidate)
+                continue;
+            
+            const int testingIndex = candidates.getUnchecked (finalHandfulIndexs[c]);
+            
+            const float testingDelta = finalHandfulDeltas[c];
+            const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
+            
+            const SampleType testingPeak = (abs(reading[testingIndex])) * weight;
+            
+            if (testingPeak < strongestPeak)
+                continue;
+            
+            strongestPeak = testingPeak;
+            strongestPeakIndex = testingIndex;
+        }
+    
+        return strongestPeakIndex;
+    }
+    else
+    {
+        // there is little or no variation in candidate's delta values, so pick the strongest overall peak
+        
+        int strongestPeakIndex = candidates.getUnchecked(finalHandfulIndexs[0]);
+        SampleType strongestPeak = abs(reading[strongestPeakIndex]);
+        
+        for (int c = 1; c < finalHandfulSize; ++c)
+        {
+            const int testingIndex = candidates.getUnchecked(finalHandfulIndexs[c]);
+            const SampleType testingPeak = abs(reading[testingIndex]);
+            
+            if (testingPeak < strongestPeak)
+                continue;
+            
+            strongestPeak = testingPeak;
+            strongestPeakIndex = testingIndex;
+        }
+        
+        return strongestPeakIndex;
+    }
 };
 
 

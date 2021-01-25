@@ -64,7 +64,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     
     newMaxNumVoices(voices.size());
     
-    for(auto* voice : voices)
+    for (auto* voice : voices)
         voice->prepare(blocksize);
     
     windowBuffer.setSize (1, blocksize * 2, true, true, true);
@@ -109,7 +109,7 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
     setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
-        if(voice->isVoiceActive())
+        if (voice->isVoiceActive())
             voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
 };
 
@@ -138,7 +138,7 @@ void Harmonizer<SampleType>::releaseResources()
     currentlyActiveNoReleased.clear();
     aggregateMidiBuffer.clear();
     
-    for(auto* voice : voices)
+    for (auto* voice : voices)
         voice->releaseResources();
     
     panner.releaseResources();
@@ -293,7 +293,7 @@ void Harmonizer<SampleType>::reportActivesNoReleased(Array<int>& outputArray) co
 template<typename SampleType>
 void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
 {
-    jassert(isPositiveAndBelow(newWidth, 101));
+    jassert (isPositiveAndBelow (newWidth, 101));
     
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
@@ -302,11 +302,11 @@ void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
     
     for (auto* voice : voices)
     {
-        if(voice->isVoiceActive())
+        if (voice->isVoiceActive())
         {
-            if(voice->getCurrentlyPlayingNote() >= lowestPannedNote)
-                voice->setPan(panner.getClosestNewPanValFromOld(voice->getCurrentMidiPan()));
-            else if(voice->getCurrentMidiPan() != 64)
+            if (voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+                voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
+            else if (voice->getCurrentMidiPan() != 64)
                 voice->setPan(64);
         }
     }
@@ -490,7 +490,7 @@ void Harmonizer<SampleType>::updateQuickReleaseMs(const int newMs)
     quickReleaseParams.release = desiredR;
     quickAttackParams .release = desiredR;
     
-    for(auto* voice : voices)
+    for (auto* voice : voices)
     {
         voice->setQuickReleaseParameters(quickReleaseParams);
         voice->setQuickAttackParameters(quickAttackParams);
@@ -510,7 +510,7 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
     quickAttackParams .attack = desiredA;
     quickReleaseParams.attack = desiredA;
     
-    for(auto* voice : voices)
+    for (auto* voice : voices)
     {
         voice->setQuickAttackParameters(quickAttackParams);
         voice->setQuickReleaseParameters(quickReleaseParams);
@@ -602,19 +602,19 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     
     // only protected top & bottom voices are left now - time to use the pedal pitch & descant voices...
     
-    if (descantVoice) // save bass
+    if (descantVoice != nullptr) // save bass
     {
         lastDescantPitch = -1;
         return descantVoice;
     }
 
-    if (pedalVoice)
+    if (pedalVoice != nullptr)
     {
         lastPedalPitch = -1;
         return pedalVoice;
     }
     
-    if (top) // bass note gets priority
+    if (top != nullptr) // bass note gets priority
         return top;
     
     return low;

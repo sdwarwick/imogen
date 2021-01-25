@@ -273,7 +273,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
     lastPedalPitch = newPedalPitch;
     
     auto* voiceCopying = getVoicePlayingNote (currentLowest);
-    const float velocity = (voiceCopying) ? voiceCopying->getLastRecievedVelocity() : 1.0f;
+    const float velocity = (voiceCopying != nullptr) ? voiceCopying->getLastRecievedVelocity() : 1.0f;
     
     noteOn (newPedalPitch, velocity, false);
 };
@@ -325,7 +325,7 @@ void Harmonizer<SampleType>::applyDescant()
     lastDescantPitch = newDescantPitch;
     
     auto* voiceCopying = getVoicePlayingNote (currentHighest);
-    const float velocity = (voiceCopying) ? voiceCopying->getLastRecievedVelocity() : 1.0f;
+    const float velocity = (voiceCopying != nullptr) ? voiceCopying->getLastRecievedVelocity() : 1.0f;
     
     noteOn (newDescantPitch, velocity, false);
 };
@@ -369,7 +369,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 template<typename SampleType>
 void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
-    if (! voice)
+    if (voice == nullptr)
         return;
     
     voice->setNoteOnTime (++lastNoteOnCounter);
@@ -401,7 +401,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     
     auto* voice = getVoicePlayingNote (midiNoteNumber);
     
-    if (! voice)
+    if (voice == nullptr)
         return;
     
     bool stoppedVoice = false;
@@ -438,7 +438,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
 template<typename SampleType>
 void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
 {
-    if (! voice)
+    if (voice == nullptr)
         return;
     
     voice->stopNote (velocity, allowTailOff);

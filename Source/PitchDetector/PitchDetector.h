@@ -67,7 +67,7 @@ private:
     
     
     Array<int> periodCandidates;
-    static constexpr int periodCandidatesToTest = 10;
+    static constexpr int periodCandidatesToTest = 15;
     
     void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
     

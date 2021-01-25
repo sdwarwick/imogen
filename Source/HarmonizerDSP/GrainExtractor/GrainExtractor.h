@@ -72,8 +72,8 @@ private:
     Array<float> candidateDeltas;
     Array<int> peakSearchingIndexOrder;
     
-    static constexpr int numPeaksToTest = 15; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
-    static constexpr int defaultFinalHandfulSize = 7; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
+    static constexpr int numPeaksToTest = 10; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
+    static constexpr int defaultFinalHandfulSize = 5; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
     
     
     // functions used for simple zero-crossing mode
