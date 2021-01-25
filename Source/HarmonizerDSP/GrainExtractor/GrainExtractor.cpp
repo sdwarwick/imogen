@@ -70,14 +70,14 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     // identify  peak indices for each pitch period & places them in the peakIndices array
     
-    // findPsolaPeaks (peakIndices, reading, totalNumSamples, period);
+    findPsolaPeaks (peakIndices, reading, totalNumSamples, period);
     
-    findZeroCrossings (peakIndices, reading, totalNumSamples, period);
+    // findZeroCrossings (peakIndices, reading, totalNumSamples, period);
     
     jassert (! peakIndices.isEmpty());
     
     
-    // PART TWO - create array of grain onset indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
+    // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
     for (int p = 0; p < peakIndices.size(); ++p)
     {
@@ -89,27 +89,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
         
         targetArray.add (grainStart);
     }
-    
-    // fill in hypothetial missed grains @ start of audio
-    int first = targetArray.getUnchecked(0);
-    first -= period;
-    
-    while (first >= 0)
-    {
-        targetArray.insert (0, first);
-        first -= period;
-    }
-    
-    // fill in hypothetical missed grains @ end of audio
-    int last = targetArray.getLast();
-    last += period;
-    
-    while (last < inputAudio.getNumSamples())
-    {
-        targetArray.add (last);
-        last += period;
-    }
-    
     
     jassert (! targetArray.isEmpty());
     

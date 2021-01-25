@@ -40,10 +40,6 @@ public:
                                                 const int grainRate);
     
     
-    // sets the number of peak candidates to test in each analysis window for the PSOLA peak-picking algorithm. Values between 5 & 10 are recommended, and this value must not be lower than 1
-    void setNumPeakCandidatesToTest (const int newNumCandidatesToTest);
-    
-    
 private:
     
     int lastBlocksize = 0;
@@ -73,10 +69,8 @@ private:
     Array<float> candidateDeltas;
     Array<int> peakSearchingIndexOrder;
     
-    int numPeaksToTest = 15; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
-    
-    static constexpr int numDeltasToTest = 10; // final # of candidates for which delta values are calculated
-    static constexpr int defaultFinalHandfulSize = 4; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
+    static constexpr int numPeaksToTest = 15; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
+    static constexpr int defaultFinalHandfulSize = 7; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
     
     
     // functions used for simple zero-crossing mode

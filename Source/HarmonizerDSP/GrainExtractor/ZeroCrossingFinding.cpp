@@ -23,9 +23,7 @@ void GrainExtractor<SampleType>::findZeroCrossings (Array<int>& targetArray,
          p < totalNumSamples;
          p += period)
     {
-        const int thisPeriodEnd = std::min (totalNumSamples, p + period);
-        
-        getZeroCrossingForPeriod (targetArray, reading, p, thisPeriodEnd);
+        getZeroCrossingForPeriod (targetArray, reading, p, std::min (totalNumSamples, p + period));
     }
 };
 
@@ -38,7 +36,7 @@ void GrainExtractor<SampleType>::getZeroCrossingForPeriod (Array<int>& targetArr
 {
     if (reading[startSample] == 0.0)
     {
-        targetArray.add (0);
+        targetArray.add (startSample);
         return;
     }
     

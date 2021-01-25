@@ -129,6 +129,8 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     const int analysisGrain = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
+    int highestSampleAnalyzed = 0;
+    
     for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
     {
         const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
@@ -139,11 +141,13 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         
         olaFrame (input, readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
         
+        highestSampleAnalyzed = readingEndSample;
+        
         if (synthesisIndex >= totalNumInputSamples || readingEndSample == totalNumInputSamples)
             break;
     }
     
-    synthesisIndex -= totalNumInputSamples;
+    synthesisIndex -= (highestSampleAnalyzed - indicesOfGrainOnsets.getFirst());
     if (synthesisIndex < 0) synthesisIndex = 0;
 };
 
