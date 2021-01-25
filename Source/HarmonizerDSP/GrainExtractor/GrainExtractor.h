@@ -63,6 +63,9 @@ private:
     void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                   const int startSample, const int endSample, const int predictedPeak);
     
+    int chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
+                                  const int deltaTarget1, const int deltaTarget2);
+    
     
     // arrays used in finding of PSOLA peaks
     Array<int> peakCandidates;

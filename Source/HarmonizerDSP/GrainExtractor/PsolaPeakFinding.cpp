@@ -80,7 +80,13 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            if (targetArray.isEmpty() || targetArray.size() == 1)
+            if (targetArray.size() > 1)
+            {
+                peakIndex = chooseIdealPeakCandidate (peakCandidates, reading,
+                                                      targetArray.getLast() + period,
+                                                      targetArray.getUnchecked(targetArray.size() - 2) + outputGrain);
+            }
+            else
             {
                 // for the first two peaks, choose the point of overall maximum energy in the analysis window, because we have no deltas to compare to for these peaks
                 
@@ -101,104 +107,6 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 
                 peakIndex = strongestPeakIndex;
             }
-            else
-            {
-                candidateDeltas.clearQuick();
-                
-                // 1. calculate delta values for each peak candidate left
-                // delta represents how far off this peak candidate is from the expected peak location - in a way it's a measure of the jitter that picking a peak candidate as this frame's peak would introduce to the overall alignment of the stream of grains based on the previous grains
-                {
-                    // this frame's peak's expected location based on the last peak found (ie, the neighboring OVERLAPPING output OLA grain):
-                    const int target1 = targetArray.getLast() + period;
-                    // this frame's peak's expected location based on the second to last peak found (the neighboring CONSECUTIVE OLA grain):
-                    const int target2 = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
-                
-                    for (int p = 0; p < peakCandidates.size(); ++p)
-                    {
-                        const int delta1 = abs (peakCandidates.getUnchecked(p) - target1);
-                        const float delta2 = abs (peakCandidates.getUnchecked(p) - target2) * 1.5f; // weight this delta, this value is of more consequence
-                        
-                        candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
-                    }
-                }
-            
-                // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
-                
-                const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
-                
-                int   finalHandfulIndexs[finalHandfulSize]; // candidate's index in peakCandidates array
-                float finalHandfulDeltas[finalHandfulSize]; // delta value for candidate
-                
-                for (int i = 0; i < finalHandfulSize; ++i)
-                {
-                    float minDelta = candidateDeltas.getUnchecked(0);
-                    int indexOfMinDelta = 0;
-                    
-                    for (int d = 1; d < candidateDeltas.size(); ++d)
-                    {
-                        const float delta = candidateDeltas.getUnchecked(d);
-                        
-                        if (delta < minDelta)
-                        {
-                            minDelta = delta;
-                            indexOfMinDelta = d;
-                        }
-                    }
-                    
-                    finalHandfulIndexs[i] = indexOfMinDelta;
-                    finalHandfulDeltas[i] = minDelta;
-                    candidateDeltas.set (indexOfMinDelta, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
-                }
-                
-                // 3. find the candidate in our final handful with the lowest overall delta value, as well as the max delta value for any candidate
-                int lowestDeltaCandidate = 0; // index in final handful arrays of candidate w/ lowest delta value
-                float lowestDelta  = finalHandfulDeltas[0]; // lowest  delta of any remaining candidate
-                float highestDelta = finalHandfulDeltas[0]; // highest delta of any remaining candidate
-                
-                for (int c = 1; c < finalHandfulSize; ++c)
-                {
-                    const float delta = finalHandfulDeltas[c];
-                    
-                    if (delta > highestDelta)
-                        highestDelta = delta;
-                    
-                    if (delta < lowestDelta)
-                    {
-                        lowestDelta = delta;
-                        lowestDeltaCandidate = c;
-                    }
-                }
-                
-                // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
-    
-                const float deltaRange = std::max<float> (highestDelta - lowestDelta, 0.01f);
-                
-                const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
-                
-                int strongestPeakIndex = peakCandidates.getUnchecked (finalHandfulIndexs[lowestDeltaCandidate]);
-                SampleType strongestPeak = (abs(reading[strongestPeakIndex])) * startingWeight;
-                
-                for (int c = 0; c < finalHandfulSize; ++c)
-                {
-                    if (c == lowestDeltaCandidate)
-                        continue;
-                    
-                    const int testingIndex = peakCandidates.getUnchecked (finalHandfulIndexs[c]);
-                    
-                    const float testingDelta = finalHandfulDeltas[c];
-                    const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
-                    
-                    const SampleType testingPeak = (abs(reading[testingIndex])) * weight;
-                    
-                    if (testingPeak < strongestPeak)
-                        continue;
-                    
-                    strongestPeak = testingPeak;
-                    strongestPeakIndex = testingIndex;
-                }
-                
-                peakIndex = strongestPeakIndex;
-            }
         }
         
         targetArray.add (peakIndex);
@@ -210,6 +118,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
     }
 };
+
 
 
 template<typename SampleType>
@@ -297,6 +206,106 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     candidates.add (std::min (indexOfLocalMax, indexOfLocalMin));
     candidates.add (std::max (indexOfLocalMax, indexOfLocalMin));
 };
+
+
+
+template<typename SampleType>
+int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
+                                                          const int deltaTarget1, const int deltaTarget2)
+{
+    candidateDeltas.clearQuick();
+    
+    // 1. calculate delta values for each peak candidate left
+    // delta represents how far off this peak candidate is from the expected peak location - in a way it's a measure of the jitter that picking a peak candidate as this frame's peak would introduce to the overall alignment of the stream of grains based on the previous grains
+    
+    for (int p = 0; p < candidates.size(); ++p)
+    {
+        // deltaTarget1 = this peak's expected location based on the last peak found (ie, the neighboring OVERLAPPING output OLA grain)
+        // deltatarget2 = this peak's expected location based on the second to last peak found (the neighboring CONSECUTIVE OLA grain)
+        const int   delta1 = abs (candidates.getUnchecked(p) - deltaTarget1);
+        const float delta2 = abs (candidates.getUnchecked(p) - deltaTarget2) * 1.5f; // weight this delta, this value is of more consequence
+        
+        candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
+    }
+    
+    // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
+    
+    const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
+    
+    int   finalHandfulIndexs[finalHandfulSize]; // candidate's index in peakCandidates array
+    float finalHandfulDeltas[finalHandfulSize]; // delta value for candidate
+    
+    for (int i = 0; i < finalHandfulSize; ++i)
+    {
+        float minDelta = candidateDeltas.getUnchecked(0);
+        int indexOfMinDelta = 0;
+        
+        for (int d = 1; d < candidateDeltas.size(); ++d)
+        {
+            const float delta = candidateDeltas.getUnchecked(d);
+            
+            if (delta < minDelta)
+            {
+                minDelta = delta;
+                indexOfMinDelta = d;
+            }
+        }
+        
+        finalHandfulIndexs[i] = indexOfMinDelta;
+        finalHandfulDeltas[i] = minDelta;
+        candidateDeltas.set (indexOfMinDelta, 10000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
+    }
+    
+    // 3. find the candidate in our final handful with the lowest overall delta value, as well as the max delta value for any candidate
+    int lowestDeltaCandidate = 0; // index in final handful arrays of candidate w/ lowest delta value
+    float lowestDelta  = finalHandfulDeltas[0]; // lowest  delta of any remaining candidate
+    float highestDelta = finalHandfulDeltas[0]; // highest delta of any remaining candidate
+    
+    for (int c = 1; c < finalHandfulSize; ++c)
+    {
+        const float delta = finalHandfulDeltas[c];
+        
+        if (delta > highestDelta)
+            highestDelta = delta;
+        
+        if (delta < lowestDelta)
+        {
+            lowestDelta = delta;
+            lowestDeltaCandidate = c;
+        }
+    }
+    
+    // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
+    
+    const float deltaRange = std::max<float> (highestDelta - lowestDelta, 0.01f);
+    
+    const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
+    
+    int strongestPeakIndex = candidates.getUnchecked (finalHandfulIndexs[lowestDeltaCandidate]);
+    SampleType strongestPeak = (abs(reading[strongestPeakIndex])) * startingWeight;
+    
+    for (int c = 0; c < finalHandfulSize; ++c)
+    {
+        if (c == lowestDeltaCandidate)
+            continue;
+        
+        const int testingIndex = candidates.getUnchecked (finalHandfulIndexs[c]);
+        
+        const float testingDelta = finalHandfulDeltas[c];
+        const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
+        
+        const SampleType testingPeak = (abs(reading[testingIndex])) * weight;
+        
+        if (testingPeak < strongestPeak)
+            continue;
+        
+        strongestPeak = testingPeak;
+        strongestPeakIndex = testingIndex;
+    }
+    
+    return strongestPeakIndex;
+};
+
 
 
 template<typename SampleType>

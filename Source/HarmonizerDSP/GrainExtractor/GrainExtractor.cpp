@@ -81,17 +81,28 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     for (int p = 0; p < peakIndices.size(); ++p)
     {
-        // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
-        const int grainStart = peakIndices.getUnchecked(p) - period;
+        const int peakIndex = peakIndices.getUnchecked(p);
         
+        const int grainStart = peakIndex - period; // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
+
         if (grainStart < 0)
-            continue;
-        
+        {
+            if (peakIndices.size() > 1)
+                continue;
+            
+            // edge case for really large periods
+            const int secondaryGrainStart = peakIndex - roundToInt(period / 2.0f);
+            
+            if (secondaryGrainStart < 0)
+                targetArray.add (peakIndex);
+            else
+                targetArray.add (secondaryGrainStart);
+        }
+
         targetArray.add (grainStart);
     }
     
     jassert (! targetArray.isEmpty());
-    
 };
 
 
