@@ -499,7 +499,7 @@ void ImogenEngine<SampleType>::updateNumVoices(const int newNumVoices)
     
     processor.suspendProcessing (true);
     
-    if(newNumVoices > currentVoices)
+    if (newNumVoices > currentVoices)
     {
         for(int i = 0; i < newNumVoices - currentVoices; ++i)
             harmonizer.addVoice(new HarmonizerVoice<SampleType>(&harmonizer));

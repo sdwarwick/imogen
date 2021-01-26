@@ -93,16 +93,15 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 int strongestPeakIndex = peakCandidates.getUnchecked (0);
                 SampleType strongestPeak = abs(reading[strongestPeakIndex]);
                 
-                for (int p = 1; p < peakCandidates.size(); ++p)
+                for (int candidate : peakCandidates)
                 {
-                    const int index = peakCandidates.getUnchecked (p);
-                    const SampleType current = abs(reading[index]);
+                    const SampleType current = abs(reading[candidate]);
                     
-                    if (current >= strongestPeak)
-                    {
-                        strongestPeak = current;
-                        strongestPeakIndex = index;
-                    }
+                    if (current < strongestPeak)
+                        continue;
+                
+                    strongestPeak = current;
+                    strongestPeakIndex = candidate;
                 }
                 
                 peakIndex = strongestPeakIndex;
@@ -218,12 +217,12 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     // 1. calculate delta values for each peak candidate
     // delta represents how far off this peak candidate is from the expected peak location - in a way it's a measure of the jitter that picking a peak candidate as this frame's peak would introduce to the overall alignment of the stream of grains based on the previous grains
     
-    for (int p = 0; p < candidates.size(); ++p)
+    for (int candidate : candidates)
     {
         // deltaTarget1 = this peak's expected location based on the last peak found (ie, the neighboring OVERLAPPING output OLA grain)
         // deltatarget2 = this peak's expected location based on the second to last peak found (the neighboring CONSECUTIVE OLA grain)
-        const int   delta1 = abs (candidates.getUnchecked(p) - deltaTarget1);
-        const float delta2 = abs (candidates.getUnchecked(p) - deltaTarget2) * 1.5f; // weight this delta, this value is of more consequence
+        const int   delta1 = abs (candidate - deltaTarget1);
+        const float delta2 = abs (candidate - deltaTarget2) * 1.5f; // weight this delta, this value is of more consequence
         
         candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
     }
@@ -343,7 +342,6 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
     output.set (0, predictedPeak);
     
     int p = 1, m = -1;
-    bool posLastTime = false;
     
     for (int n = 1;
          n < (endSample - startSample);
@@ -352,12 +350,11 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
         const int pos = predictedPeak + p;
         const int neg = predictedPeak + m;
         
-        if (posLastTime)
+        if (n % 2 == 0) // n is even
         {
             if (neg >= startSample)
             {
                 output.set (n, neg);
-                posLastTime = false;
                 --m;
                 continue;
             }
@@ -365,7 +362,6 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             jassert (pos <= endSample);
             
             output.set (n, pos);
-            posLastTime = true;
             ++p;
         }
         else
@@ -373,15 +369,13 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             if (pos <= endSample)
             {
                 output.set (n, pos);
-                posLastTime = true;
                 ++p;
                 continue;
             }
             
             jassert (neg >= startSample);
             
-            peakSearchingIndexOrder.set (n, neg);
-            posLastTime = false;
+            output.set (n, neg);
             --m;
         }
     }

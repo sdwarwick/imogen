@@ -131,19 +131,18 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     int highestSampleAnalyzed = 0;
     
-    for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
+    for (int grainStart : indicesOfGrainOnsets)
     {
-        const int readingStartSample = indicesOfGrainOnsets.getUnchecked(i);
-        const int readingEndSample = readingStartSample + analysisGrain;
+        const int grainEnd = grainStart + analysisGrain;
         
-        if (readingEndSample > totalNumInputSamples)
+        if (grainEnd > totalNumInputSamples)
             break;
         
-        olaFrame (input, readingStartSample, readingEndSample, window, analysisGrain, newPeriod);
+        olaFrame (input, grainStart, grainEnd, window, analysisGrain, newPeriod);
         
-        highestSampleAnalyzed = readingEndSample;
+        highestSampleAnalyzed = grainEnd;
         
-        if (synthesisIndex >= totalNumInputSamples || readingEndSample == totalNumInputSamples)
+        if (synthesisIndex >= totalNumInputSamples || grainEnd == totalNumInputSamples)
             break;
     }
     

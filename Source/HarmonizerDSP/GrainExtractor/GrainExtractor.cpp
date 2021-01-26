@@ -79,15 +79,13 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
-    for (int p = 0; p < peakIndices.size(); ++p)
+    for (int peakIndex : peakIndices)
     {
-        const int peakIndex = peakIndices.getUnchecked(p);
-        
         const int grainStart = peakIndex - period; // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
-
+        
         if (grainStart < 0)
         {
-            if (p < peakIndices.size() - 2)
+            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 2)
                 continue;
             
             // edge case for really large periods
@@ -98,7 +96,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
             else
                 targetArray.add (secondaryGrainStart);
         }
-
+        
         targetArray.add (grainStart);
     }
     

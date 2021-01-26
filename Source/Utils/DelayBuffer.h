@@ -69,7 +69,7 @@ public:
             writing[index] = inputSamples[s];
         }
         
-        writeIndex += numSamples;
+        writeIndex = index;
     };
     
     

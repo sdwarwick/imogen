@@ -637,9 +637,11 @@ template<typename SampleType>
 void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 {
     int voicesRemoved = 0;
-    while(voicesRemoved < voicesToRemove)
+    
+    while (voicesRemoved < voicesToRemove)
     {
         int indexToRemove = -1;
+        
         for (auto* voice : voices)
         {
             if (! voice->isVoiceActive())
@@ -652,6 +654,7 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
         const int indexRemoving = std::max(indexToRemove, 0);
         
         HarmonizerVoice<SampleType>* removing = voices[indexRemoving];
+        
         if (removing->isVoiceActive())
             panner.panValTurnedOff(removing->getCurrentMidiPan());
         

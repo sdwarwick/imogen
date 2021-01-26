@@ -42,8 +42,6 @@ void PanningManager::setNumberOfVoices(const int newNumVoices)
 {
     jassert(newNumVoices > 0);
     
-    const ScopedLock sl (lock);
-    
     currentNumVoices = newNumVoices;
     
     mapArrayIndexes();
@@ -53,8 +51,6 @@ void PanningManager::setNumberOfVoices(const int newNumVoices)
 
 void PanningManager::updateStereoWidth(const int newWidth)
 {
-    const ScopedLock sl (lock);
-    
     lastRecievedStereoWidth = newWidth;
     
     const auto rangeMultiplier = newWidth/100.0f;
@@ -64,25 +60,27 @@ void PanningManager::updateStereoWidth(const int newWidth)
     
     // first, assign all possible, evenly spaced pan vals within range to an array
     possiblePanVals.clearQuick();
+    
     for (int i = 0; i < currentNumVoices; ++i)
-        possiblePanVals.add(round(minPan + (i * increment) + (increment/2.0f)));
+        possiblePanVals.add (roundToInt (minPan + (i * increment) + (increment/2.0f)));
     
     // then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
     panValsInAssigningOrder.clearQuick();
-    for (int i = 0; i < currentNumVoices; ++i)
-        panValsInAssigningOrder.add(possiblePanVals.getUnchecked(arrayIndexesMapped.getUnchecked(i)));
+    
+    for (int index : arrayIndexesMapped)
+        panValsInAssigningOrder.add (possiblePanVals.getUnchecked(index));
     
     // transfer to I/O array we will be actually reading from
     unsentPanVals.clearQuick();
-    unsentPanVals = panValsInAssigningOrder;
+    
+    for (int pan : panValsInAssigningOrder)
+        unsentPanVals.add (pan);
 };
 
 
 int PanningManager::getNextPanVal() 
 {
-    const ScopedLock sl (lock);
-    
-    if(! unsentPanVals.isEmpty())
+    if (! unsentPanVals.isEmpty())
     {
         const auto nextPan = unsentPanVals.getUnchecked(0);
         unsentPanVals.remove(0);
@@ -96,50 +94,51 @@ int PanningManager::getNextPanVal()
 };
 
 
-void PanningManager::panValTurnedOff(const int panVal)
+void PanningManager::panValTurnedOff (const int panVal)
 {
     // this function is called when a pan value is turned off and is available again for assigning. This function attempts to reinsert the pan value into unsentPanVals with respect to the order the values are in in panValsInAssigningOrder
     
-    const ScopedLock sl (lock);
+    const auto targetindex = panValsInAssigningOrder.indexOf (panVal);
     
-    const auto targetindex = panValsInAssigningOrder.indexOf(panVal);
+    if (targetindex == -1) // targetindex will be -1 if the turned off pan val is not in panValsInAssigningOrder. in this case, do nothing.
+        return;
     
-    if(targetindex > -1) // targetindex will be -1 if the turned off pan val is not in panValsInAssigningOrder. in this case, do nothing.
+    if (unsentPanVals.isEmpty())
     {
-        if(! unsentPanVals.isEmpty())
+        unsentPanVals.add(panVal);
+        return;
+    }
+    
+    int i = 0;
+    bool addedIt = false;
+    
+    while (i < currentNumVoices)
+    {
+        if (i > panValsInAssigningOrder.size())
+            break;
+        
+        if (panValsInAssigningOrder.indexOf (unsentPanVals.getUnchecked(i)) > targetindex)
         {
-            int i = 0;
-            bool addedIt = false;
-            while (i < currentNumVoices)
-            {
-                const int valueComparing = (i < unsentPanVals.size()) ? unsentPanVals.getUnchecked(i) : 64;
-                if(panValsInAssigningOrder.indexOf(valueComparing) > targetindex)
-                {
-                    unsentPanVals.insert(i, panVal);
-                    addedIt = true;
-                    break;
-                }
-                else
-                    ++i;
-            }
-            if(! addedIt)
-                unsentPanVals.add(panVal);
+            unsentPanVals.insert (i, panVal);
+            addedIt = true;
+            break;
         }
         else
-            unsentPanVals.add(panVal);
+            ++i;
     }
+    
+    if (! addedIt)
+        unsentPanVals.add(panVal);
 };
 
 
 int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 {
-    // this function is called when updating the stereo width. This function attempts to return the new available pan value that is the closest to the input old pan value, with the goal of maintaining as much continuity of the stereo field as possible.
+    // find & return the element in unsentPanVals that is the closest to oldPan, then remove that val from unsentPanVals
     
     jassert(isPositiveAndBelow(oldPan, 128));
     
-    const ScopedLock sl (lock);
-    
-    if(unsentPanVals.isEmpty())
+    if (unsentPanVals.isEmpty())
     {
         reset(true);
         return 64;
@@ -147,20 +146,30 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
     
     absDistances.clearQuick();
     
-    // find & return the element in unsentPanVals that is the closest to oldPan, then remove that val from unsentPanVals
+    for (int pan : unsentPanVals)
+    {
+        const int distance = abs(oldPan - pan);
+        absDistances.add (distance);
+        
+        if (distance == 0)
+            break;
+    }
     
-    for(int i = 0; i < unsentPanVals.size(); ++i)
-        absDistances.add(abs(oldPan - unsentPanVals.getUnchecked(i)));
-    
-    // find the minimum val in absDistances *in place* -- if we sort, we lose the index # and can't find the original panValue from unsentPanVals
+    // find the minimum val in absDistances
     int minimum = 128; // higher than highest possible midiPan of 127
-    for(int i = 0; i < unsentPanVals.size(); ++i)
-        if(const int tester = absDistances.getUnchecked(i); tester < minimum)
-            minimum = tester;
     
-    int minIndex = absDistances.indexOf(minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    for (int distance : absDistances)
+    {
+        if (distance < minimum)
+            minimum = distance;
+        
+        if (distance == 0)
+            break;
+    }
     
-    if(! (minIndex >= 0))
+    int minIndex = absDistances.indexOf (minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    
+    if (minIndex < 0)
         minIndex = 0;
     
     const auto newPan = unsentPanVals.getUnchecked(minIndex);
@@ -171,13 +180,12 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
 
 void PanningManager::reset(const bool grabbedFirst64)
 {
-    const ScopedLock sl (lock);
-    
     unsentPanVals.clearQuick();
-    unsentPanVals = panValsInAssigningOrder;
     
-    if(grabbedFirst64)
-        unsentPanVals.remove(0);
+    int starting = grabbedFirst64 ? 1 : 0;
+    
+    for (int i = starting; i < panValsInAssigningOrder.size(); ++i)
+        unsentPanVals.add (panValsInAssigningOrder.getUnchecked(i));
 };
 
 
@@ -194,8 +202,6 @@ void PanningManager::mapArrayIndexes()
      I'm storing this list in another array called arrayIndexesMapped.
      */
     
-    const ScopedLock sl (lock);
-    
     arrayIndexesMapped.clearQuick();
     
     const auto middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2) : 0;
@@ -208,22 +214,25 @@ void PanningManager::mapArrayIndexes()
     
     while (i < currentNumVoices)
     {
-        if(i % 2 == 0) { // i is even
-            if(const int newI = middleIndex + p; newI < currentNumVoices)
-            {
-                arrayIndexesMapped.add(newI);
-                ++p;
-            }
-            else
+        if (i % 2 == 0) // i is even
+        { 
+            const int newI = middleIndex + p;
+            
+            if (newI > currentNumVoices)
                 continue;
-        } else { // i is odd
-            if(const int newI = middleIndex + m; newI >= 0)
-            {
-                arrayIndexesMapped.add(newI);
-                --m;
-            }
-            else
+        
+            arrayIndexesMapped.add(newI);
+            ++p;
+        } 
+        else // i is odd
+        { 
+            const int newI = middleIndex + m;
+            
+            if (newI < 0)
                 continue;
+            
+            arrayIndexesMapped.add(newI);
+            --m;
         }
         ++i;
     }

@@ -203,8 +203,8 @@ void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float
     if (toTurnOn.isEmpty())
         return;
     
-    for (int i = 0; i < toTurnOn.size(); ++i)
-        noteOn (toTurnOn.getUnchecked(i), velocity, false);
+    for (int note : toTurnOn)
+        noteOn (note, velocity, false);
     
     if (! partOfChord)
         pitchCollectionChanged();
@@ -218,8 +218,8 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
     if (toTurnOff.isEmpty())
         return;
     
-    for (int i = 0; i < toTurnOff.size(); ++i)
-        noteOff (toTurnOff.getUnchecked(i), velocity, allowTailOff, false);
+    for (int note : toTurnOff)
+        noteOff (note, velocity, allowTailOff, false);
     
     if (! partOfChord)
         pitchCollectionChanged();
