@@ -94,6 +94,8 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
                 targetArray.add (peakIndex);
             else
                 targetArray.add (secondaryGrainStart);
+            
+            continue;
         }
         
         targetArray.add (grainStart);

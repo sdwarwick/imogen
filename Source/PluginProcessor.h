@@ -288,6 +288,9 @@ public:
 private:
     
     template <typename SampleType>
+    void initialize (ImogenEngine<SampleType>& activeEngine);
+    
+    template <typename SampleType>
     void processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
     
     template <typename SampleType>

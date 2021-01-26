@@ -39,7 +39,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     
     synthesisBuffer.setSize (1, blocksize * 4, true, true, true);
     synthesisBuffer.clear();
-    highestSBindexWritten = 0;
+    nextSBindex = 0;
     synthesisIndex = 0;
     
     windowingBuffer.setSize (1, blocksize * 2);
@@ -104,7 +104,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
                                       panner.getPrevGain(chan), panner.getGainMult(chan));
     
-    moveUpSamples (synthesisBuffer, numSamples, highestSBindexWritten);
+    moveUpSamples (synthesisBuffer, numSamples);
 };
 
 
@@ -122,7 +122,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     if (synthesisIndex >= totalNumInputSamples)
         // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
     {
-        highestSBindexWritten = synthesisIndex;
+        nextSBindex = synthesisIndex;
         synthesisIndex -= totalNumInputSamples;
         return;
     }
@@ -149,7 +149,9 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
             break;
     }
     
-    synthesisIndex -= (highestSampleAnalyzed - indicesOfGrainOnsets.getFirst());
+    const int numSamplesAnalyzed = highestSampleAnalyzed - indicesOfGrainOnsets.getFirst();
+    
+    synthesisIndex -= ((newPeriod / origPeriod) * numSamplesAnalyzed);
     if (synthesisIndex < 0) synthesisIndex = 0;
 };
 
@@ -175,41 +177,37 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
         w[wi] = inputAudio[s] * window[wi];
     }
     
-    int highestIndexWritten = 0;
-    
     // 2. resynthesis / OLA
     while (synthesisIndex < frameEndSample)
     {
         auto* writing = synthesisBuffer.getWritePointer(0);
         const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
         
-        for (int s = synthesisIndex, r = 0;
+        for (int s = nextSBindex, r = 0;
              r < frameSize;
              ++s, ++r)
         {
             writing[s] += reading[r];
         }
         
-        highestIndexWritten = synthesisIndex + frameSize;
         synthesisIndex += newPeriod;
     }
     
-    highestSBindexWritten = highestIndexWritten;
+    nextSBindex += frameSize;
 };
 
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& targetBuffer,
-                                                 const int numSamplesUsed,
-                                                 const int highestIndexWritten)
+                                                 const int numSamplesUsed)
 {
-    const int numSamplesLeft = highestIndexWritten - numSamplesUsed;
+    const int numSamplesLeft = nextSBindex - numSamplesUsed;
     
     if (numSamplesLeft < 1)
     {
         targetBuffer.clear();
-        highestSBindexWritten = 0;
+        nextSBindex = 0;
         return;
     }
     
@@ -217,7 +215,7 @@ void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& target
     targetBuffer.clear();
     targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
     
-    highestSBindexWritten = numSamplesLeft;
+    nextSBindex = numSamplesLeft;
 };
 
 
@@ -252,21 +250,22 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     
     setPan(64);
     
-    if(quickRelease.isActive())
+    if (quickRelease.isActive())
         quickRelease.reset();
+    
     quickRelease.noteOn();
     
-    if(adsr.isActive())
+    if (adsr.isActive())
         adsr.reset();
     
-    if(quickAttack.isActive())
+    if (quickAttack.isActive())
         quickAttack.reset();
     
     clearBuffers();
     synthesisBuffer.clear();
     
     synthesisIndex = 0;
-    highestSBindexWritten = 0;
+    nextSBindex = 0;
 };
 
 

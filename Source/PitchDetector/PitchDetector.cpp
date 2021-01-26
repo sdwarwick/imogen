@@ -187,7 +187,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const int deltaRange = maxDelta - minDelta;
     
-    if (deltaRange < 3) // all deltas are very close, so just return the candidate with the min asdf data value
+    if (deltaRange < 5) // all deltas are very close, so just return the candidate with the min asdf data value
         return foundThePeriod (asdfData, minIndex, asdfDataSize);
 
     // weight the asdf data based on each candidate's delta value
@@ -203,8 +203,8 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     }
 
     // choose the estimated period based on the lowest weighted asdf data value
-    int indexOfPeriod = minDelta;
-    SampleType confidence = weightedCandidateConfidence[minDelta];
+    int indexOfPeriod = 0;
+    SampleType confidence = weightedCandidateConfidence[0];
     
     for (int candidate : periodCandidates)
     {

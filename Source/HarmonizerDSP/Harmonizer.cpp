@@ -156,14 +156,18 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
     
     if (intervalLatchIsOn)
     {
+        if (intervalsLatchedTo.isEmpty())
+            return;
+        
         const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
         
-        currentlyActiveNotes.clearQuick();
+        Array<int> desiredChord;
+        desiredChord.ensureStorageAllocated (intervalsLatchedTo.size());
         
-        for (int i = 0; i < intervalsLatchedTo.size(); ++i)
-            currentlyActiveNotes.add (currentMidiPitch + intervalsLatchedTo.getUnchecked(i));
+        for (int interval : intervalsLatchedTo)
+            desiredChord.add (currentMidiPitch + interval);
         
-        playChord (currentlyActiveNotes, 1.0f, false);
+        playChord (desiredChord, 1.0f, false, true);
     }
 };
 
@@ -318,24 +322,30 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
     if (lowestPannedNote == newPitchThresh)
         return;
     
-    lowestPannedNote = newPitchThresh;
-    
     for (auto* voice : voices)
     {
         if (! voice->isVoiceActive())
             continue;
+        
+        const int note = voice->getCurrentlyPlayingNote();
     
-        if (voice->getCurrentlyPlayingNote() < newPitchThresh)
+        if (note < newPitchThresh)
         {
             if (voice->getCurrentMidiPan() != 64)
                 voice->setPan (64);
+            continue;
         }
-        else
+        
+        // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
+        
+        if (note < lowestPannedNote)
         {
             if (voice->getCurrentMidiPan() == 64)
                 voice->setPan (panner.getNextPanVal());
         }
     }
+    
+    lowestPannedNote = newPitchThresh;
 };
 
 
@@ -672,13 +682,8 @@ template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const
 {
     for (auto* voice : voices)
-    {
-        if (! voice->isVoiceActive())
-            continue;
-        
-        if (voice->getCurrentlyPlayingNote() == midiPitch)
+        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
             return voice;
-    }
     
     return nullptr;
 };
@@ -715,6 +720,7 @@ template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const
 {
     int actives = 0;
+    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             ++actives;

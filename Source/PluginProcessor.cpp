@@ -46,30 +46,32 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     maxDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMaxHz"));              jassert(maxDetectedHz);
     confidenceThresh   = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceThresh"));   jassert(confidenceThresh);
     
-    const double initSamplerate   = std::max<double>(44100.0, getSampleRate());
-    //const int initSamplesPerBlock = std::max(MAX_BUFFERSIZE, getBlockSize());
-    const int initNumVoices = std::max(MAX_POSSIBLE_NUMBER_OF_VOICES, 12);
-    
     if (isUsingDoublePrecision())
-    {
-        doubleEngine.initialize (initSamplerate, getBlockSize(), initNumVoices);
-        updateAllParameters(doubleEngine);
-        latencySamples = doubleEngine.reportLatency();
-    }
+        initialize (doubleEngine);
     else
-    {
-        floatEngine.initialize (initSamplerate, getBlockSize(), initNumVoices);
-        updateAllParameters(floatEngine);
-        latencySamples = floatEngine.reportLatency();
-    }
-    
-    setLatencySamples (latencySamples);
+        initialize (floatEngine);
 };
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 { };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename SampleType>
+void ImogenAudioProcessor::initialize (ImogenEngine<SampleType>& activeEngine)
+{
+    const double initSamplerate = std::max<double>(44100.0, getSampleRate());
+    const int initNumVoices = std::max (MAX_POSSIBLE_NUMBER_OF_VOICES, 12);
+    
+    activeEngine.initialize (initSamplerate, getBlockSize(), initNumVoices);
+    
+    updateAllParameters (activeEngine);
+    
+    latencySamples = activeEngine.reportLatency();
+    
+    setLatencySamples (latencySamples);
+};
+
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {

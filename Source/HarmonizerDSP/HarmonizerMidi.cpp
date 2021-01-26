@@ -26,7 +26,7 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, cons
             && voice->getCurrentlyPlayingNote() != pedalPitchCheck
             && voice->getCurrentlyPlayingNote() != descantCheck)
         {
-            toTurnOff.add(voice);
+            toTurnOff.add (voice);
         }
     
     if (toTurnOff.isEmpty())
@@ -40,6 +40,12 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, cons
                                       ++lastMidiTimeStamp);
         
         stopVoice (voice, velocity, allowTailOff);
+    }
+    
+    if (includePedalPitchAndDescant)
+    {
+        lastPedalPitch = -1;
+        lastDescantPitch = -1;
     }
 };
 
@@ -126,11 +132,51 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     latchIsOn = shouldBeOn;
     
     if (shouldBeOn)
-        intervalLatchIsOn = false; // the interval latch (which locks all voices to a certain interval offset from the input pitch) can't be on at the same time as the MIDI latch, which blocks recieved note offs
+        return;
+    
+    if (! intervalLatchIsOn || intervalsLatchedTo.isEmpty())
+        turnOffAllKeyupNotes (allowTailOff, false);
     else
     {
-        if (! intervalLatchIsOn)
-            turnOffAllKeyupNotes (allowTailOff, false);
+        // turn off all voices whose key is up and who aren't being held by the interval latch function
+        
+        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
+        
+        Array<int> intervalLatchNotes;
+        intervalLatchNotes.ensureStorageAllocated (intervalsLatchedTo.size());
+        
+        for (int interval : intervalsLatchedTo)
+            intervalLatchNotes.add (currentMidiPitch + interval);
+        
+        Array< HarmonizerVoice<SampleType>* > toTurnOff;
+        toTurnOff.ensureStorageAllocated (voices.size());
+        
+        for (auto* voice : voices)
+        {
+            if (voice->isVoiceActive() && ! voice->isKeyDown())
+            {
+                const int note = voice->getCurrentlyPlayingNote();
+                
+                if (note != lastPedalPitch && note != lastDescantPitch
+                    && ! intervalLatchNotes.contains(note))
+                {
+                    toTurnOff.add (voice);
+                }
+            }
+        }
+        
+        if (toTurnOff.isEmpty())
+            return;
+        
+        const float velocity = allowTailOff ? 0.0f : 1.0f;
+        
+        for (auto* voice : toTurnOff)
+        {
+            aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, voice->getCurrentlyPlayingNote(), velocity),
+                                          ++lastMidiTimeStamp);
+            
+            stopVoice (voice, velocity, allowTailOff);
+        }
     }
 };
 
@@ -145,29 +191,32 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
     intervalLatchIsOn = shouldBeOn;
     
     if (shouldBeOn)
-    {
-        latchIsOn = false;
-        
-        intervalsLatchedTo.clearQuick();
-        
-        reportActivesNoReleased (currentlyActiveNoReleased);
-        
-        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
-        
-        for (int i = 0; i < currentlyActiveNoReleased.size(); ++i)
-            intervalsLatchedTo.add (currentMidiPitch - currentlyActiveNoReleased.getUnchecked(i));
-    }
-    else
-    {
-        if (! latchIsOn)
-            turnOffAllKeyupNotes (allowTailOff, false);
-    }
+        updateIntervalsLatchedTo();
+    else if (! latchIsOn)
+        turnOffAllKeyupNotes (allowTailOff, false);
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::updateIntervalsLatchedTo()
+{
+    intervalsLatchedTo.clearQuick();
+    
+    reportActivesNoReleased (currentlyActiveNoReleased);
+    
+    if (currentlyActiveNoReleased.isEmpty())
+        return;
+    
+    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
+    
+    for (int i = 0; i < currentlyActiveNoReleased.size(); ++i)
+        intervalsLatchedTo.add (currentlyActiveNoReleased.getUnchecked(i) - currentMidiPitch);
 };
 
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
 template<typename SampleType>
-void Harmonizer<SampleType>::playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld)
+void Harmonizer<SampleType>::playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch)
 {
     // turn off the pitches that were previously on that are not included in the list of desired pitches
     
@@ -198,9 +247,8 @@ void Harmonizer<SampleType>::playChord (Array<int>& desiredPitches, const float 
     
     turnOnList (toTurnOn, velocity, true);
     
-    
-    // apply pedal pitch & descant
-    pitchCollectionChanged();
+    if (! isIntervalLatch)
+        pitchCollectionChanged();
 };
 
 
@@ -348,6 +396,9 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
     
     if (descantIsOn)
         applyDescant();
+    
+    if (intervalLatchIsOn)
+        updateIntervalsLatchedTo();
 };
 
 
@@ -525,16 +576,7 @@ void Harmonizer<SampleType>::handleSustainPedal (const bool isDown)
     if (isDown || latchIsOn || intervalLatchIsOn)
         return;
     
-    const int pedalTest = pedalPitchIsOn ? lastPedalPitch : -1;
-    const int decantTest = descantIsOn ? lastDescantPitch : -1;
-    
-    for (auto* voice : voices)
-        if (! voice->isKeyDown()
-            && voice->getCurrentlyPlayingNote() != pedalTest
-            && voice->getCurrentlyPlayingNote() != decantTest)
-        {
-            stopVoice (voice, 1.0f, true);
-        }
+    turnOffAllKeyupNotes (false, false);
 };
 
 template<typename SampleType>
@@ -548,16 +590,7 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const bool isDown)
     if (isDown || latchIsOn || intervalLatchIsOn)
         return;
     
-    const int pedalTest = pedalPitchIsOn ? lastPedalPitch : -1;
-    const int decantTest = descantIsOn ? lastDescantPitch : -1;
-    
-    for (auto* voice : voices)
-        if (! voice->isKeyDown()
-            && voice->getCurrentlyPlayingNote() != pedalTest
-            && voice->getCurrentlyPlayingNote() != decantTest)
-        {
-            stopVoice (voice, 1.0f, true);
-        }
+    turnOffAllKeyupNotes (false, false);
 };
 
 template<typename SampleType>

@@ -96,7 +96,7 @@ private:
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
                    const SampleType* window, const int frameSize, const int newPeriod);
     
-    void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed, const int highestIndexWritten);
+    void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed);
     
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
@@ -123,7 +123,7 @@ private:
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     int synthesisIndex = 0; // starting index for each synthesis grain being written
-    int highestSBindexWritten;
+    int nextSBindex; // highest synthesis buffer index written to + 1
     AudioBuffer<SampleType> copyingBuffer;
     AudioBuffer<SampleType> windowingBuffer;
     
@@ -184,7 +184,7 @@ public:
     void allNotesOff(const bool allowTailOff);
     
     // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
-    void playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld);
+    void playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; };
@@ -303,6 +303,8 @@ private:
     
     bool intervalLatchIsOn;
     Array<int> intervalsLatchedTo;
+    
+    void updateIntervalsLatchedTo();
     
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;
