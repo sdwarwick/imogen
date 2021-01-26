@@ -257,7 +257,7 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes(Array<int>& outputArray) const
+void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray) const
 {
     outputArray.clearQuick();
     
@@ -271,7 +271,7 @@ void Harmonizer<SampleType>::reportActiveNotes(Array<int>& outputArray) const
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::reportActivesNoReleased(Array<int>& outputArray) const
+void Harmonizer<SampleType>::reportActivesNoReleased (Array<int>& outputArray) const
 {
     outputArray.clearQuick();
     
@@ -291,7 +291,7 @@ void Harmonizer<SampleType>::reportActivesNoReleased(Array<int>& outputArray) co
 
 // stereo width ---------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
+void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
 {
     jassert (isPositiveAndBelow (newWidth, 101));
     
@@ -302,18 +302,18 @@ void Harmonizer<SampleType>::updateStereoWidth(const int newWidth)
     
     for (auto* voice : voices)
     {
-        if (voice->isVoiceActive())
-        {
-            if (voice->getCurrentlyPlayingNote() >= lowestPannedNote)
-                voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
-            else if (voice->getCurrentMidiPan() != 64)
-                voice->setPan(64);
-        }
+        if (! voice->isVoiceActive())
+            continue;
+        
+        if (voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+            voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
+        else if (voice->getCurrentMidiPan() != 64)
+            voice->setPan (64);
     }
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::updateLowestPannedNote(const int newPitchThresh) noexcept
+void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) noexcept
 {
     if (lowestPannedNote == newPitchThresh)
         return;
@@ -322,18 +322,18 @@ void Harmonizer<SampleType>::updateLowestPannedNote(const int newPitchThresh) no
     
     for (auto* voice : voices)
     {
-        if (voice->isVoiceActive())
+        if (! voice->isVoiceActive())
+            continue;
+    
+        if (voice->getCurrentlyPlayingNote() < newPitchThresh)
         {
-            if (voice->getCurrentlyPlayingNote() < newPitchThresh)
-            {
-                if (voice->getCurrentMidiPan() != 64)
-                    voice->setPan(64);
-            }
-            else
-            {
-                if (voice->getCurrentMidiPan() == 64)
-                    voice->setPan(panner.getNextPanVal());
-            }
+            if (voice->getCurrentMidiPan() != 64)
+                voice->setPan (64);
+        }
+        else
+        {
+            if (voice->getCurrentMidiPan() == 64)
+                voice->setPan (panner.getNextPanVal());
         }
     }
 };
@@ -341,24 +341,24 @@ void Harmonizer<SampleType>::updateLowestPannedNote(const int newPitchThresh) no
 
 // midi velocity sensitivity -------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::updateMidiVelocitySensitivity(const int newSensitivity)
+void Harmonizer<SampleType>::updateMidiVelocitySensitivity (const int newSensitivity)
 {
     const float newSens = newSensitivity/100.0f;
     
     if (velocityConverter.getCurrentSensitivity() == newSens)
         return;
     
-    velocityConverter.setFloatSensitivity(newSens);
+    velocityConverter.setFloatSensitivity (newSens);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->setVelocityMultiplier(velocityConverter.floatVelocity(voice->getLastRecievedVelocity()));
+            voice->setVelocityMultiplier (velocityConverter.floatVelocity (voice->getLastRecievedVelocity()));
 };
 
 
 // pitch bend settings -------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::updatePitchbendSettings(const int rangeUp, const int rangeDown)
+void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const int rangeDown)
 {
     if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
         return;
@@ -376,25 +376,26 @@ void Harmonizer<SampleType>::updatePitchbendSettings(const int rangeUp, const in
 
 // descant settings -----------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::setDescant(const bool isOn)
+void Harmonizer<SampleType>::setDescant (const bool isOn)
 {
     if (descantIsOn == isOn)
         return;
     
     descantIsOn = isOn;
     
-    if (! isOn)
+    if (isOn)
+        applyDescant();
+    else
     {
         if (lastDescantPitch > -1)
             noteOff (lastDescantPitch, 1.0f, false, false);
+        
         lastDescantPitch = -1;
     }
-    else
-        applyDescant();
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setDescantLowerThresh(const int newThresh)
+void Harmonizer<SampleType>::setDescantLowerThresh (const int newThresh)
 {
     if (descantLowerThresh == newThresh)
         return;
@@ -406,7 +407,7 @@ void Harmonizer<SampleType>::setDescantLowerThresh(const int newThresh)
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setDescantInterval(const int newInterval)
+void Harmonizer<SampleType>::setDescantInterval (const int newInterval)
 {
     if (descantInterval == newInterval)
         return;
@@ -420,25 +421,25 @@ void Harmonizer<SampleType>::setDescantInterval(const int newInterval)
 
 // pedal pitch settings -----------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitch(const bool isOn)
+void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
 {
     if (pedalPitchIsOn == isOn)
         return;
     
     pedalPitchIsOn = isOn;
     
-    if (! isOn)
+    if (isOn)
+        applyPedalPitch();
+    else
     {
-        if(lastPedalPitch > -1)
+        if (lastPedalPitch > -1)
             noteOff (lastPedalPitch, 1.0f, false, false);
         lastPedalPitch = -1;
     }
-    else
-        applyPedalPitch();
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitchUpperThresh(const int newThresh)
+void Harmonizer<SampleType>::setPedalPitchUpperThresh (const int newThresh)
 {
     if (pedalPitchUpperThresh == newThresh)
         return;
@@ -450,7 +451,7 @@ void Harmonizer<SampleType>::setPedalPitchUpperThresh(const int newThresh)
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitchInterval(const int newInterval)
+void Harmonizer<SampleType>::setPedalPitchInterval (const int newInterval)
 {
     if (pedalPitchInterval == newInterval)
         return;
@@ -464,7 +465,7 @@ void Harmonizer<SampleType>::setPedalPitchInterval(const int newInterval)
 
 // ADSR settings------------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::updateADSRsettings(const float attack, const float decay, const float sustain, const float release)
+void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float decay, const float sustain, const float release)
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
@@ -478,7 +479,7 @@ void Harmonizer<SampleType>::updateADSRsettings(const float attack, const float 
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::updateQuickReleaseMs(const int newMs)
+void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 {
     jassert(newMs > 0);
     
@@ -493,7 +494,7 @@ void Harmonizer<SampleType>::updateQuickReleaseMs(const int newMs)
     for (auto* voice : voices)
     {
         voice->setQuickReleaseParameters(quickReleaseParams);
-        voice->setQuickAttackParameters(quickAttackParams);
+        voice->setQuickAttackParameters (quickAttackParams);
     }
 };
 
@@ -512,7 +513,7 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
     
     for (auto* voice : voices)
     {
-        voice->setQuickAttackParameters(quickAttackParams);
+        voice->setQuickAttackParameters (quickAttackParams);
         voice->setQuickReleaseParameters(quickReleaseParams);
     }
 };

@@ -62,9 +62,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            // create a list of possible peak candidates within the current analysis window, favoring the predicted peak location
-            
-            sortSampleIndicesForPeakSearching (peakSearchingIndexOrder, windowStart, windowEnd, analysisIndex); // search from middle of analysis window outwards (to favor samples closest to the predicted peak location)
+            sortSampleIndicesForPeakSearching (peakSearchingIndexOrder, windowStart, windowEnd, analysisIndex);
             
             while (peakCandidates.size() < numPeaksToTest) 
                 getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex); // may add 1 or 2 peak candidates per call
@@ -97,7 +95,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 {
                     const SampleType current = abs(reading[candidate]);
                     
-                    if (current < strongestPeak)
+                    if (current <= strongestPeak)
                         continue;
                 
                     strongestPeak = current;
@@ -151,7 +149,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         starting = newStart;
     }
     
-    const SampleType startingWeight = (starting == predictedPeak) ? 1.0 : 1.0 - ( ((abs(starting - predictedPeak)) / numSamples) * 0.5 ); // these weighting functions may need tuning...
+    const SampleType startingWeight = (starting == predictedPeak) ? 1.0 : 1.0 - ( ((abs(starting - predictedPeak)) / numSamples) * 0.5 );
     SampleType localMin = input[starting] * startingWeight;
     SampleType localMax = localMin;
     int indexOfLocalMin = starting;
@@ -227,107 +225,95 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
     }
     
+    // find the highest delta value of any candidate
+    float maxDelta = 0.0f;
+    for (float delta : candidateDeltas)
+        if (delta > maxDelta)
+            maxDelta = delta;
+    
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
     const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
     
-    int   finalHandfulIndexs[finalHandfulSize]; // candidate's index in peakCandidates array
-    float finalHandfulDeltas[finalHandfulSize]; // delta value for candidate
+    Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
+    Array<float> finalHandfulDeltas; // delta values for candidates
+    
+    finalHandful.ensureStorageAllocated (finalHandfulSize);
+    finalHandfulDeltas.ensureStorageAllocated (finalHandfulSize);
     
     for (int i = 0; i < finalHandfulSize; ++i)
     {
-        float minDelta = candidateDeltas.getUnchecked(0);
-        int indexOfMinDelta = 0;
+        float minDelta = maxDelta;
         
-        for (int d = 1; d < candidateDeltas.size(); ++d)
-        {
-            const float delta = candidateDeltas.getUnchecked(d);
-            
+        for (int delta : candidateDeltas)
             if (delta < minDelta)
-            {
                 minDelta = delta;
-                indexOfMinDelta = d;
-            }
-        }
         
-        finalHandfulIndexs[i] = indexOfMinDelta;
-        finalHandfulDeltas[i] = minDelta;
-        candidateDeltas.set (indexOfMinDelta, 10000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
+        const int indexOfMinDelta = candidateDeltas.indexOf (minDelta);
+        
+        finalHandfulDeltas.add (minDelta);
+        finalHandful.add (candidates.getUnchecked (indexOfMinDelta));
+        
+        candidateDeltas.set (indexOfMinDelta, minDelta + maxDelta); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
     }
     
-    // 3. find the candidate in our final handful with the lowest overall delta value, as well as the max delta value for any candidate
-    int lowestDeltaCandidate = 0; // index in final handful arrays of candidate w/ lowest delta value
-    float lowestDelta  = finalHandfulDeltas[0]; // lowest  delta of any remaining candidate
-    float highestDelta = finalHandfulDeltas[0]; // highest delta of any remaining candidate
+    // 3. identify the highest & lowest delta values for the final handful candidates
+
+    float lowestDelta  = finalHandfulDeltas.getUnchecked (0); // lowest  delta of any remaining candidate
+    float highestDelta = lowestDelta;                         // highest delta of any remaining candidate
     
-    for (int c = 1; c < finalHandfulSize; ++c)
+    for (float delta : finalHandfulDeltas)
     {
-        const float delta = finalHandfulDeltas[c];
-        
         if (delta > highestDelta)
             highestDelta = delta;
         
         if (delta < lowestDelta)
-        {
             lowestDelta = delta;
-            lowestDeltaCandidate = c;
-        }
     }
     
     // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
     const float deltaRange = highestDelta - lowestDelta;
+
+    int chosenPeak;
+    SampleType strongestPeak;
     
-    if (deltaRange > 1.0f)
+    if (deltaRange < 1.0f)
     {
-        int strongestPeakIndex = candidates.getUnchecked (finalHandfulIndexs[lowestDeltaCandidate]);
-        
-        const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
-        
-        SampleType strongestPeak = (abs(reading[strongestPeakIndex])) * startingWeight;
-    
-        for (int c = 0; c < finalHandfulSize; ++c)
-        {
-            if (c == lowestDeltaCandidate)
-                continue;
-            
-            const int testingIndex = candidates.getUnchecked (finalHandfulIndexs[c]);
-            
-            const float testingDelta = finalHandfulDeltas[c];
-            const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
-            
-            const SampleType testingPeak = (abs(reading[testingIndex])) * weight;
-            
-            if (testingPeak < strongestPeak)
-                continue;
-            
-            strongestPeak = testingPeak;
-            strongestPeakIndex = testingIndex;
-        }
-    
-        return strongestPeakIndex;
+        chosenPeak = finalHandful.getUnchecked (0);
+        strongestPeak = (abs(reading[chosenPeak]));
     }
     else
     {
-        // there is little or no variation in candidate's delta values, so pick the strongest overall peak
+        chosenPeak = finalHandful.getUnchecked (finalHandfulDeltas.indexOf (lowestDelta));
+        const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
+        strongestPeak = (abs(reading[chosenPeak])) * startingWeight;
+    }
+    
+    for (int candidate : finalHandful)
+    {
+        if (candidate == chosenPeak)
+            continue;
         
-        int strongestPeakIndex = candidates.getUnchecked(finalHandfulIndexs[0]);
-        SampleType strongestPeak = abs(reading[strongestPeakIndex]);
+        SampleType testingPeak;
         
-        for (int c = 1; c < finalHandfulSize; ++c)
+        if (deltaRange < 1.0f)
+            testingPeak = (abs(reading[candidate]));
+        else
         {
-            const int testingIndex = candidates.getUnchecked(finalHandfulIndexs[c]);
-            const SampleType testingPeak = abs(reading[testingIndex]);
-            
-            if (testingPeak < strongestPeak)
-                continue;
-            
-            strongestPeak = testingPeak;
-            strongestPeakIndex = testingIndex;
+            const float testingDelta = finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate));
+            const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
+            testingPeak = (abs(reading[candidate])) * weight;
         }
         
-        return strongestPeakIndex;
+        if (testingPeak < strongestPeak)
+            continue;
+        
+        strongestPeak = testingPeak;
+        chosenPeak = candidate;
     }
+    
+    return chosenPeak;
 };
 
 

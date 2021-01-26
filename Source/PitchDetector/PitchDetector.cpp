@@ -167,16 +167,16 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     // candidate deltas: how far away each period candidate is from the last estimated period
     int candidateDeltas[periodCandidates.size()];
     
-    for (int c = 0; c < periodCandidates.size(); ++c)
-        candidateDeltas[c] = abs(periodCandidates.getUnchecked(c) + minPeriod - lastEstimatedPeriod);
+    for (int candidate : periodCandidates)
+        candidateDeltas[periodCandidates.indexOf(candidate)] = abs(candidate + minPeriod - lastEstimatedPeriod);
     
     // find min & max delta val of any candidate we have
     int minDelta = candidateDeltas[0];
     int maxDelta = candidateDeltas[0];
     
-    for (int c = 1; c < periodCandidates.size(); ++c)
+    for (int d = 1; d < periodCandidates.size(); ++d)
     {
-        const int delta = candidateDeltas[c];
+        const int delta = candidateDeltas[d];
         
         if (delta < minDelta)
             minDelta = delta;
@@ -187,42 +187,42 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const int deltaRange = maxDelta - minDelta;
     
-    if (deltaRange > 2)
-    {
-        // weight the asdf data based on each candidate's delta value
-        // because higher asdf values represent a lower confidence in that period candidate, we want to artificially increase the asdf data a bit for candidates with higher deltas
-        SampleType weightedCandidateConfidence[periodCandidates.size()];
-    
-        for (int c = 0; c < periodCandidates.size(); ++c)
-        {
-            const int delta = candidateDeltas[c];
-            const SampleType weight = (delta == 0) ? 1.0 : (1.0 + ((candidateDeltas[c] / deltaRange) * 0.5));
-            weightedCandidateConfidence[c] = asdfData[periodCandidates.getUnchecked(c)] * weight;
-        }
-    
-        // choose the estimated period based on the lowest weighted asdf data value
-        int indexOfPeriod = 0;
-        SampleType confidence = weightedCandidateConfidence[0];
-    
-        for (int c = 1; c < periodCandidates.size(); ++c)
-        {
-            const SampleType current = weightedCandidateConfidence[c];
-            
-            if (current < confidence)
-            {
-                indexOfPeriod = c;
-                confidence = current;
-            }
-        }
-        
-        return foundThePeriod (asdfData, periodCandidates.getUnchecked(indexOfPeriod), asdfDataSize);
-    }
-    else
-    {
-        // all deltas are very close, so just return the candidate with the min asdf data value, unweighted
-        
+    if (deltaRange < 3) // all deltas are very close, so just return the candidate with the min asdf data value
         return foundThePeriod (asdfData, minIndex, asdfDataSize);
+
+    // weight the asdf data based on each candidate's delta value
+    // because higher asdf values represent a lower confidence in that period candidate, we want to artificially increase the asdf data a bit for candidates with higher deltas
+    SampleType weightedCandidateConfidence[periodCandidates.size()];
+    
+    for (int candidate : periodCandidates)
+    {
+        const int index = periodCandidates.indexOf (candidate);
+        const int delta = candidateDeltas[index];
+        const SampleType weight = (delta == 0) ? 1.0 : (1.0 + ((delta / deltaRange) * 0.5));
+        weightedCandidateConfidence[index] = asdfData[candidate] * weight;
     }
+
+    // choose the estimated period based on the lowest weighted asdf data value
+    int indexOfPeriod = minDelta;
+    SampleType confidence = weightedCandidateConfidence[minDelta];
+    
+    for (int candidate : periodCandidates)
+    {
+        const int index = periodCandidates.indexOf (candidate);
+        
+        if (index == indexOfPeriod)
+            continue;
+        
+        const SampleType current = weightedCandidateConfidence[index];
+        
+        if (current < confidence)
+        {
+            indexOfPeriod = index;
+            confidence = current;
+        }
+    }
+    
+    return foundThePeriod (asdfData, periodCandidates.getUnchecked(indexOfPeriod), asdfDataSize);
 };
 
 

@@ -126,13 +126,11 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     latchIsOn = shouldBeOn;
     
     if (shouldBeOn)
-        intervalLatchIsOn = false;
+        intervalLatchIsOn = false; // the interval latch (which locks all voices to a certain interval offset from the input pitch) can't be on at the same time as the MIDI latch, which blocks recieved note offs
     else
     {
         if (! intervalLatchIsOn)
-            turnOffAllKeyupNotes (allowTailOff, true);
-        
-        pitchCollectionChanged();
+            turnOffAllKeyupNotes (allowTailOff, false);
     }
 };
 
@@ -162,9 +160,7 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
     else
     {
         if (! latchIsOn)
-            turnOffAllKeyupNotes (allowTailOff, true);
-        
-        pitchCollectionChanged();
+            turnOffAllKeyupNotes (allowTailOff, false);
     }
 };
 
@@ -177,18 +173,30 @@ void Harmonizer<SampleType>::playChord (Array<int>& desiredPitches, const float 
     
     reportActivesNoReleased (currentlyActiveNoReleased);
     
-    currentlyActiveNoReleased.removeValuesNotIn (desiredPitches);
+    Array<int> toTurnOff;
+    toTurnOff.ensureStorageAllocated(currentlyActiveNoReleased.size());
     
-    turnOffList (currentlyActiveNoReleased, !allowTailOffOfOld, allowTailOffOfOld, true);
+    for (int note : currentlyActiveNoReleased)
+        if (! desiredPitches.contains (note))
+            toTurnOff.add (note);
+    
+    turnOffList (toTurnOff, !allowTailOffOfOld, allowTailOffOfOld, true);
     
     
     // turn on the desired pitches that aren't already on
     
-    reportActivesNoReleased (currentlyActiveNoReleased);
+    Array<int> toTurnOn;
+    toTurnOn.ensureStorageAllocated(currentlyActiveNoReleased.size());
     
-    desiredPitches.removeValuesIn (currentlyActiveNoReleased);
+    // desiredPitches.removeValuesIn (currentlyActiveNoReleased);
     
-    turnOnList (desiredPitches, velocity, true);
+    for (int note : desiredPitches)
+    {
+        if (! currentlyActiveNoReleased.contains(note))
+            toTurnOn.add (note);
+    }
+    
+    turnOnList (toTurnOn, velocity, true);
     
     
     // apply pedal pitch & descant
@@ -377,11 +385,11 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     if (! voice->isKeyDown()) // if the key wasn't already marked as down...
         voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
     
-    const bool wasStolen = voice->isVoiceActive();
+    const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
     
     if (midiPitch < lowestPannedNote)
         voice->setPan(64);
-    else if (! wasStolen)
+    else if (! wasStolen) // don't change pan if voice was stolen
         voice->setPan(panner.getNextPanVal());
     
     voice->startNote (midiPitch, velocity, wasStolen);
@@ -514,12 +522,19 @@ void Harmonizer<SampleType>::handleSustainPedal (const bool isDown)
     
     sustainPedalDown = isDown;
     
-    if (isDown)
+    if (isDown || latchIsOn || intervalLatchIsOn)
         return;
     
+    const int pedalTest = pedalPitchIsOn ? lastPedalPitch : -1;
+    const int decantTest = descantIsOn ? lastDescantPitch : -1;
+    
     for (auto* voice : voices)
-        if (! voice->isKeyDown())
+        if (! voice->isKeyDown()
+            && voice->getCurrentlyPlayingNote() != pedalTest
+            && voice->getCurrentlyPlayingNote() != decantTest)
+        {
             stopVoice (voice, 1.0f, true);
+        }
 };
 
 template<typename SampleType>
@@ -530,12 +545,19 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const bool isDown)
     
     sostenutoPedalDown = isDown;
     
-    if (isDown)
+    if (isDown || latchIsOn || intervalLatchIsOn)
         return;
     
+    const int pedalTest = pedalPitchIsOn ? lastPedalPitch : -1;
+    const int decantTest = descantIsOn ? lastDescantPitch : -1;
+    
     for (auto* voice : voices)
-        if (! voice->isKeyDown())
+        if (! voice->isKeyDown()
+            && voice->getCurrentlyPlayingNote() != pedalTest
+            && voice->getCurrentlyPlayingNote() != decantTest)
+        {
             stopVoice (voice, 1.0f, true);
+        }
 };
 
 template<typename SampleType>

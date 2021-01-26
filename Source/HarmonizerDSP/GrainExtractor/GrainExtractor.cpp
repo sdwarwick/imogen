@@ -76,7 +76,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     jassert (! peakIndices.isEmpty());
     
-    
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
     for (int peakIndex : peakIndices)
@@ -85,7 +84,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
         
         if (grainStart < 0)
         {
-            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 2)
+            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 1) // we have more peaks coming, so we can disregard this one
                 continue;
             
             // edge case for really large periods

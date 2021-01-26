@@ -93,8 +93,8 @@ private:
                const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
                const SampleType* window);
     
-    void olaFrame (const SampleType* inputAudio, const int readingStartSample, const int readingEndSample,
-                   const SampleType* window, const int windowSize, const int newPeriod);
+    void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
+                   const SampleType* window, const int frameSize, const int newPeriod);
     
     void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed, const int highestIndexWritten);
     

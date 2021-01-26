@@ -37,14 +37,14 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     // blocksize = maximum period
     
-    synthesisBuffer.setSize(1, blocksize * 4, true, true, true);
+    synthesisBuffer.setSize (1, blocksize * 4, true, true, true);
     synthesisBuffer.clear();
     highestSBindexWritten = 0;
     synthesisIndex = 0;
     
-    windowingBuffer.setSize(1, blocksize * 2);
+    windowingBuffer.setSize (1, blocksize * 2);
     
-    copyingBuffer.setSize(1, blocksize * 2, true, true, true);
+    copyingBuffer.setSize (1, blocksize * 2, true, true, true);
     
     prevVelocityMultiplier = currentVelocityMultiplier;
     
@@ -127,18 +127,21 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         return;
     }
     
-    const int analysisGrain = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
+    const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
     int highestSampleAnalyzed = 0;
     
     for (int grainStart : indicesOfGrainOnsets)
     {
-        const int grainEnd = grainStart + analysisGrain;
+        const int grainEnd = grainStart + analysisGrainLength;
         
         if (grainEnd > totalNumInputSamples)
             break;
         
-        olaFrame (input, grainStart, grainEnd, window, analysisGrain, newPeriod);
+        if (synthesisIndex > grainEnd)
+            break;
+        
+        olaFrame (input, grainStart, grainEnd, window, analysisGrainLength, newPeriod);
         
         highestSampleAnalyzed = grainEnd;
         
@@ -152,24 +155,21 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const int readingStartSample, const int readingEndSample,
-                                            const SampleType* window, const int windowSize, // window size = origPeriod * 2
+void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
+                                            const SampleType* window, const int frameSize, // frame size = origPeriod * 2
                                             const int newPeriod)
 {
     // this processes one analysis frame of input samples, from readingStartSample to readingEndSample
     
-    if (synthesisIndex > readingEndSample)
-        return;
-    
-    jassert ((readingEndSample - readingStartSample) == windowSize);
+    jassert ((frameEndSample - frameStartSample) == frameSize);
 
     // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once per analysis grain
     
     auto* w = windowingBuffer.getWritePointer(0);
     
-    for (int s = readingStartSample, // reading index from orignal audio
+    for (int s = frameStartSample, // reading index from orignal audio
          wi = 0;                     // writing index in the windowing multiplication storage buffer
-         s < readingEndSample;
+         s < frameEndSample;
          ++s, ++wi)
     {
         w[wi] = inputAudio[s] * window[wi];
@@ -178,19 +178,19 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
     int highestIndexWritten = 0;
     
     // 2. resynthesis / OLA
-    while (synthesisIndex < readingEndSample)
+    while (synthesisIndex < frameEndSample)
     {
         auto* writing = synthesisBuffer.getWritePointer(0);
         const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
         
         for (int s = synthesisIndex, r = 0;
-             r < windowSize;
+             r < frameSize;
              ++s, ++r)
         {
             writing[s] += reading[r];
         }
         
-        highestIndexWritten = synthesisIndex + windowSize;
+        highestIndexWritten = synthesisIndex + frameSize;
         synthesisIndex += newPeriod;
     }
     
