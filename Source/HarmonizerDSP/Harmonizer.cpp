@@ -75,7 +75,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     
     intervalsLatchedTo.ensureStorageAllocated(voices.size());
     
-    grains.prepare(blocksize);
+    grains.prepare (blocksize);
 };
 
 
@@ -118,12 +118,6 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 template<typename SampleType>
 void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
 {
-    currentlyActiveNotes.ensureStorageAllocated(newMaxNumVoices);
-    currentlyActiveNotes.clearQuick();
-    
-    currentlyActiveNoReleased.ensureStorageAllocated(newMaxNumVoices);
-    currentlyActiveNoReleased.clearQuick();
-    
     panner.prepare(newMaxNumVoices);
     
     intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
@@ -134,14 +128,14 @@ void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
 template<typename SampleType>
 void Harmonizer<SampleType>::releaseResources()
 {
-    currentlyActiveNotes.clear();
-    currentlyActiveNoReleased.clear();
     aggregateMidiBuffer.clear();
     
     for (auto* voice : voices)
         voice->releaseResources();
     
     panner.releaseResources();
+    
+    grains.releaseResources();
 };
 
 

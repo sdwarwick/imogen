@@ -44,10 +44,6 @@ private:
     
     // functions used for finding of PSOLA peaks
     
-    void prepareForPsola (const int maxBlocksize);
-    
-    void releasePsolaResources();
-    
     void findPsolaPeaks (Array<int>& targetArray,
                          const SampleType* reading,
                          const int totalNumSamples,
@@ -56,16 +52,12 @@ private:
     void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
     
     void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
-                                  const int startSample, const int endSample, const int predictedPeak);
+                                  const int startSample, const int endSample, const int predictedPeak,
+                                  Array<int>& searchingOrder);
     
     int chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                   const int deltaTarget1, const int deltaTarget2);
     
-    
-    // arrays used in finding of PSOLA peaks
-    Array<int> peakCandidates;
-    Array<float> candidateDeltas;
-    Array<int> peakSearchingIndexOrder;
     
     static constexpr int numPeaksToTest = 10; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
     static constexpr int defaultFinalHandfulSize = 5; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta

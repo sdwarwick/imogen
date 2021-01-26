@@ -28,7 +28,7 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
-    prepareForPsola (maxBlocksize);
+    lastBlocksize = maxBlocksize;
 };
 
 
@@ -36,8 +36,6 @@ template<typename SampleType>
 void GrainExtractor<SampleType>::releaseResources()
 {
     peakIndices.clear();
-    
-    releasePsolaResources();
 };
 
 

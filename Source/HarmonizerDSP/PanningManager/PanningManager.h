@@ -42,7 +42,7 @@ public:
     
     
     // used when updating stereo width -- voices should grab the new pan val that's closest to their old pan val
-    int getClosestNewPanValFromOld(const int oldPan);
+    int getClosestNewPanValFromOld (const int oldPan);
     
     
     // tells the PanningManager that all voices have been turned off -- ie, all the pan vals are available again
@@ -57,20 +57,19 @@ public:
     
 private:
     
-    Array<int> possiblePanVals; // this array stores all the possible pan values for the desired stereo width, in increasing numerical order from 0 to 127
-    
     Array<int> panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
     
     Array<int> arrayIndexesMapped; // this array is used to facilitate the transfer of values from possiblePanVals to panValsInAssigningOrder
     
     Array<int> unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting.
     
-    Array<int> absDistances; // used for finding which new pan value is the closest to a voice's old pan val
     
     int lastRecievedStereoWidth;
     int currentNumVoices;
     
     void mapArrayIndexes();
+    
+    int getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };

@@ -34,14 +34,10 @@ public:
     
 private:
     
-    Array<int> currentlyActive;
-    Array<int> previouslyActive;
-    
     Image grandStaff;
     ImageComponent staffImage;
     
     Array<int> yCoordsOfActiveNotes;
-    Array<int> prevActivePitches;
     int yCoordLookupTable[127];
     bool useFlats;
     

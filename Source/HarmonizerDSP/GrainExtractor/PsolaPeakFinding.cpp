@@ -10,30 +10,6 @@
 
 #include "GrainExtractor/GrainExtractor.h"
 
-template<typename SampleType>
-void GrainExtractor<SampleType>::prepareForPsola (const int maxBlocksize)
-{
-    // maxBlocksize = max period of input audio
-    
-    peakSearchingIndexOrder.ensureStorageAllocated (maxBlocksize);
-    
-    // the peak candidate finding function may output 2 peaks each time it's called, so have an extra slot available in case it outputs up to index newNumCandidatesToTest + 1
-    peakCandidates .ensureStorageAllocated (numPeaksToTest + 1);
-    candidateDeltas.ensureStorageAllocated (numPeaksToTest + 1);
-    
-    lastBlocksize = maxBlocksize;
-};
-
-
-template<typename SampleType>
-void GrainExtractor<SampleType>::releasePsolaResources()
-{
-    peakCandidates.clear();
-    candidateDeltas.clear();
-    peakSearchingIndexOrder.clear();
-};
-
-
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
@@ -50,7 +26,8 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     
     while ((analysisIndex - halfPeriod) < totalNumSamples)
     {
-        peakCandidates.clearQuick();
+        Array<int> peakCandidates;
+        peakCandidates.ensureStorageAllocated (numPeaksToTest + 1);
         
         // bounds of the current analysis window. analysisIndex = the next predicted peak = the middle of this analysis window
         const int windowStart = std::max (0, analysisIndex - halfPeriod);
@@ -65,10 +42,13 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            sortSampleIndicesForPeakSearching (peakSearchingIndexOrder, windowStart, windowEnd, analysisIndex);
+            Array<int> peakSearchingOrder;
+            peakSearchingOrder.ensureStorageAllocated (windowEnd - windowStart);
+            
+            sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
             
             while (peakCandidates.size() < numPeaksToTest) 
-                getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex); // may add 1 or 2 peak candidates per call
+                getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex, peakSearchingOrder);
         }
         
         // identify the most ideal peak for this analysis window out of our list of candidates
@@ -123,8 +103,11 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
-                                                          const int startSample, const int endSample, const int predictedPeak)
+                                                          const int startSample, const int endSample, const int predictedPeak,
+                                                          Array<int>& searchingOrder)
 {
+    jassert (! searchingOrder.isEmpty());
+    
     const int numSamples = endSample - startSample;
     
     int starting = predictedPeak; // sample to start analysis with, for variable initialization
@@ -135,7 +118,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         
         for (int i = 1; i < numSamples; ++i)
         {
-            const int s = peakSearchingIndexOrder.getUnchecked(i);
+            const int s = searchingOrder.getUnchecked(i);
             
             if (candidates.contains (s))
                 continue;
@@ -160,7 +143,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     
     for (int i = 0; i < numSamples; ++i)
     {
-        const int index = peakSearchingIndexOrder.getUnchecked(i);
+        const int index = searchingOrder.getUnchecked(i);
         
         if (index == starting)
             continue;
@@ -213,7 +196,8 @@ template<typename SampleType>
 int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                                           const int deltaTarget1, const int deltaTarget2)
 {
-    candidateDeltas.clearQuick();
+    Array<int> candidateDeltas;
+    candidateDeltas.ensureStorageAllocated (candidates.size());
     
     // 1. calculate delta values for each peak candidate
     // delta represents how far off this peak candidate is from the expected peak location - in a way it's a measure of the jitter that picking a peak candidate as this frame's peak would introduce to the overall alignment of the stream of grains based on the previous grains

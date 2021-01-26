@@ -16,21 +16,17 @@ PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(
 
 void PanningManager::releaseResources()
 {
-    possiblePanVals.clear();
     panValsInAssigningOrder.clear();
     arrayIndexesMapped.clear();
     unsentPanVals.clear();
-    absDistances.clear();
 };
 
 
 void PanningManager::prepare (const int numVoices)
 {
-    possiblePanVals.ensureStorageAllocated(numVoices);
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
     unsentPanVals.ensureStorageAllocated(numVoices);
-    absDistances.ensureStorageAllocated(numVoices);
     
     setNumberOfVoices(numVoices);
     
@@ -51,6 +47,9 @@ void PanningManager::setNumberOfVoices(const int newNumVoices)
 
 void PanningManager::updateStereoWidth(const int newWidth)
 {
+    if (currentNumVoices == 0)
+        return;
+    
     lastRecievedStereoWidth = newWidth;
     
     const auto rangeMultiplier = newWidth/100.0f;
@@ -58,8 +57,8 @@ void PanningManager::updateStereoWidth(const int newWidth)
     const auto minPan = 63.5f - (63.5f * rangeMultiplier);
     const auto increment = (maxPan - minPan) / currentNumVoices;
     
-    // first, assign all possible, evenly spaced pan vals within range to an array
-    possiblePanVals.clearQuick();
+    Array<int> possiblePanVals;
+    possiblePanVals.ensureStorageAllocated (currentNumVoices);
     
     for (int i = 0; i < currentNumVoices; ++i)
         possiblePanVals.add (roundToInt (minPan + (i * increment) + (increment/2.0f)));
@@ -70,11 +69,35 @@ void PanningManager::updateStereoWidth(const int newWidth)
     for (int index : arrayIndexesMapped)
         panValsInAssigningOrder.add (possiblePanVals.getUnchecked(index));
     
+    jassert (! panValsInAssigningOrder.isEmpty());
+    
+    if (unsentPanVals.isEmpty())
+        return;
+    
+    // the # of values we actually transfer to the I/O array being read from should correspond to the number of unsent pan vals left now -- ie, if some voices are already on, etc. And the values put in the I/O array should also be the values out of the panValsInAssigningOrder array that are closest to the old values from unsentPanVals...
+    
+    // make copy of panValsInAssigningOrder bc items will be removed during the searching process below
+    Array<int> newPanVals;
+    newPanVals.ensureStorageAllocated (panValsInAssigningOrder.size());
+    
+    for (int newPan : panValsInAssigningOrder)
+        newPanVals.add (newPan);
+    
+    Array<int> newUnsentVals;
+    newUnsentVals.ensureStorageAllocated (unsentPanVals.size());
+    
+    for (int oldPan : unsentPanVals)
+        newUnsentVals.add (getClosestNewPanValFromNew (oldPan, newPanVals));
+    
+    newUnsentVals.removeAllInstancesOf (-1);
+    
     // transfer to I/O array we will be actually reading from
     unsentPanVals.clearQuick();
     
-    for (int pan : panValsInAssigningOrder)
-        unsentPanVals.add (pan);
+    for (int newPan : newUnsentVals)
+        unsentPanVals.add (newPan);
+    
+    jassert (! unsentPanVals.isEmpty());
 };
 
 
@@ -132,24 +155,20 @@ void PanningManager::panValTurnedOff (const int panVal)
 };
 
 
-int PanningManager::getClosestNewPanValFromOld(const int oldPan)
+int PanningManager::getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom)
 {
-    // find & return the element in unsentPanVals that is the closest to oldPan, then remove that val from unsentPanVals
+    jassert (isPositiveAndBelow(oldPan, 128));
     
-    jassert(isPositiveAndBelow(oldPan, 128));
+    if (readingFrom.isEmpty())
+        return -1;
     
-    if (unsentPanVals.isEmpty())
+    Array<int> distances;
+    distances.ensureStorageAllocated (readingFrom.size());
+    
+    for (int pan : readingFrom)
     {
-        reset(true);
-        return 64;
-    }
-    
-    absDistances.clearQuick();
-    
-    for (int pan : unsentPanVals)
-    {
-        const int distance = abs(oldPan - pan);
-        absDistances.add (distance);
+        const int distance = abs (oldPan - pan);
+        distances.add (distance);
         
         if (distance == 0)
             break;
@@ -158,7 +177,7 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
     // find the minimum val in absDistances
     int minimum = 128; // higher than highest possible midiPan of 127
     
-    for (int distance : absDistances)
+    for (int distance : distances)
     {
         if (distance < minimum)
             minimum = distance;
@@ -167,13 +186,61 @@ int PanningManager::getClosestNewPanValFromOld(const int oldPan)
             break;
     }
     
-    int minIndex = absDistances.indexOf (minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    int minIndex = distances.indexOf (minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    
+    if (minIndex < 0)
+        minIndex = 0;
+    
+    const auto newPan = readingFrom.getUnchecked(minIndex);
+    readingFrom.remove (minIndex);
+    return newPan;
+};
+
+
+int PanningManager::getClosestNewPanValFromOld (const int oldPan)
+{
+    // find & return the element in readingFrom array that is the closest to oldPan, then remove that val from unsentPanVals
+    // this is normally used with the unsentPanVals array, but the same function can also be used in the updating of the stereo width, to identify which new pan values should be sent to the unsentPanVals array itself, based on which new pan values are closest to the ones that were already in unsentPanVals.
+    
+    jassert (isPositiveAndBelow(oldPan, 128));
+    
+    if (unsentPanVals.isEmpty())
+    {
+        reset(true);
+        return 64;
+    }
+    
+    Array<int> distances;
+    distances.ensureStorageAllocated (unsentPanVals.size());
+    
+    for (int pan : unsentPanVals)
+    {
+        const int distance = abs (oldPan - pan);
+        distances.add (distance);
+        
+        if (distance == 0)
+            break;
+    }
+    
+    // find the minimum val in absDistances
+    int minimum = 128; // higher than highest possible midiPan of 127
+    
+    for (int distance : distances)
+    {
+        if (distance < minimum)
+            minimum = distance;
+        
+        if (distance == 0)
+            break;
+    }
+    
+    int minIndex = distances.indexOf (minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
     
     if (minIndex < 0)
         minIndex = 0;
     
     const auto newPan = unsentPanVals.getUnchecked(minIndex);
-    unsentPanVals.remove(minIndex);
+    unsentPanVals.remove (minIndex);
     return newPan;
 };
 

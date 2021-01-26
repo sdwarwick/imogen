@@ -324,9 +324,6 @@ private:
     int lowestPannedNote;
     int lastPitchWheelValue;
     
-    mutable Array<int> currentlyActiveNotes;
-    mutable Array<int> currentlyActiveNoReleased;
-    
     bool pedalPitchIsOn;
     int lastPedalPitch;
     int pedalPitchUpperThresh;
