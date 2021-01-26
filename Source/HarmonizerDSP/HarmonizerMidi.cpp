@@ -12,22 +12,29 @@
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant)
+void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
+                                                   const bool includePedalPitchAndDescant)
 {
     Array< HarmonizerVoice<SampleType>* > toTurnOff;
     
     toTurnOff.ensureStorageAllocated (voices.size());
     
-    const int pedalPitchCheck = includePedalPitchAndDescant ? lastPedalPitch   : -1;
-    const int descantCheck    = includePedalPitchAndDescant ? lastDescantPitch : -1;
-    
     for (auto* voice : voices)
-        if (voice->isVoiceActive() && ! voice->isKeyDown()
-            && voice->getCurrentlyPlayingNote() != pedalPitchCheck
-            && voice->getCurrentlyPlayingNote() != descantCheck)
+    {
+        if (voice->isVoiceActive() && ! voice->isKeyDown())
         {
-            toTurnOff.add (voice);
+            if (includePedalPitchAndDescant)
+            {
+                toTurnOff.add (voice);
+                continue;
+            }
+            
+            const int note = voice->getCurrentlyPlayingNote();
+            
+            if (note != lastPedalPitch && note != lastDescantPitch)
+                toTurnOff.add (voice);
         }
+    }
     
     if (toTurnOff.isEmpty())
         return;
@@ -57,9 +64,10 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff, cons
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename SampleType>
-void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
+void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages, const bool returnMidiOutput)
 {
-    aggregateMidiBuffer.clear();
+    if (returnMidiOutput)
+        aggregateMidiBuffer.clear();
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
@@ -75,19 +83,20 @@ void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
                    midiMessages.cend(),
                    [&] (const MidiMessageMetadata& meta)
                    {
-                       handleMidiEvent (meta.getMessage(), meta.samplePosition);
+                       handleMidiEvent (meta.getMessage(), meta.samplePosition, returnMidiOutput);
                    } );
     
     pitchCollectionChanged();
     
-    midiMessages.swapWith (aggregateMidiBuffer);
+    if (returnMidiOutput)
+        midiMessages.swapWith (aggregateMidiBuffer);
     
     lastMidiTimeStamp = -1;
 };
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::handleMidiEvent(const MidiMessage& m, const int samplePosition)
+void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int samplePosition, const bool returnMidiOutput)
 {
     // events coming from a midi keyboard, or the plugin's midi input, should be routed to this function.
     
@@ -112,6 +121,9 @@ void Harmonizer<SampleType>::handleMidiEvent(const MidiMessage& m, const int sam
         handleChannelPressure (m.getChannelPressureValue());
     else if (m.isController())
         handleController (m.getControllerNumber(), m.getControllerValue());
+    
+    if (! returnMidiOutput)
+        shouldAddToAggregateMidiBuffer = false;
     
     if (shouldAddToAggregateMidiBuffer)
         aggregateMidiBuffer.addEvent (m, samplePosition);
@@ -202,50 +214,74 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 {
     intervalsLatchedTo.clearQuick();
     
-    reportActivesNoReleased (currentlyActiveNoReleased);
+    Array<int> currentNotes;
+    currentNotes.ensureStorageAllocated (voices.size());
     
-    if (currentlyActiveNoReleased.isEmpty())
+    reportActivesNoReleased (currentNotes);
+    
+    if (currentNotes.isEmpty())
         return;
     
     const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
-    for (int i = 0; i < currentlyActiveNoReleased.size(); ++i)
-        intervalsLatchedTo.add (currentlyActiveNoReleased.getUnchecked(i) - currentMidiPitch);
+    for (int note : currentNotes)
+        intervalsLatchedTo.add (note - currentMidiPitch);
 };
 
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
 template<typename SampleType>
-void Harmonizer<SampleType>::playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch)
+void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
+                                        const float velocity,
+                                        const bool allowTailOffOfOld,
+                                        const bool isIntervalLatch)
 {
-    // turn off the pitches that were previously on that are not included in the list of desired pitches
-    
-    reportActivesNoReleased (currentlyActiveNoReleased);
-    
-    Array<int> toTurnOff;
-    toTurnOff.ensureStorageAllocated(currentlyActiveNoReleased.size());
-    
-    for (int note : currentlyActiveNoReleased)
-        if (! desiredPitches.contains (note))
-            toTurnOff.add (note);
-    
-    turnOffList (toTurnOff, !allowTailOffOfOld, allowTailOffOfOld, true);
-    
-    
-    // turn on the desired pitches that aren't already on
-    
-    Array<int> toTurnOn;
-    toTurnOn.ensureStorageAllocated(currentlyActiveNoReleased.size());
-    
-    // desiredPitches.removeValuesIn (currentlyActiveNoReleased);
-    
-    for (int note : desiredPitches)
+    if (desiredPitches.isEmpty())
     {
-        if (! currentlyActiveNoReleased.contains(note))
-            toTurnOn.add (note);
+        allNotesOff (allowTailOffOfOld);
+        return;
     }
     
-    turnOnList (toTurnOn, velocity, true);
+    // create array containing current pitches
+    
+    Array<int> currentNotes;
+    currentNotes.ensureStorageAllocated (voices.size());
+    
+    reportActivesNoReleased (currentNotes);
+    
+    // 1. turn off the pitches that were previously on that are not included in the list of desired pitches
+    
+    if (! currentNotes.isEmpty())
+    {
+        Array<int> toTurnOff;
+        toTurnOff.ensureStorageAllocated (currentNotes.size());
+    
+        for (int note : currentNotes)
+            if (! desiredPitches.contains (note))
+                toTurnOff.add (note);
+    
+        turnOffList (toTurnOff, !allowTailOffOfOld, allowTailOffOfOld, true);
+    }
+
+    // 2. turn on the desired pitches that aren't already on
+    
+    if (currentNotes.isEmpty())
+    {
+        turnOnList (desiredPitches, velocity, true);
+    }
+    else
+    {
+        Array<int> toTurnOn;
+        toTurnOn.ensureStorageAllocated (currentNotes.size());
+        
+        for (int note : desiredPitches)
+        {
+            if (! currentNotes.contains(note))
+                toTurnOn.add (note);
+        }
+        
+        turnOnList (toTurnOn, velocity, true);
+    }
     
     if (! isIntervalLatch)
         pitchCollectionChanged();
@@ -290,11 +326,12 @@ void Harmonizer<SampleType>::applyPedalPitch()
     
     for (auto* voice : voices)
     {
-        if (voice->isVoiceActive()
-            && (voice->getCurrentlyPlayingNote() < currentLowest)
-            && (voice->isKeyDown()))
+        if (voice->isVoiceActive() && voice->isKeyDown())
         {
-            currentLowest = voice->getCurrentlyPlayingNote();
+            const int note = voice->getCurrentlyPlayingNote();
+            
+            if (note < currentLowest)
+                currentLowest = voice->getCurrentlyPlayingNote();
         }
     }
     
@@ -302,6 +339,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
     {
         if (lastPedalPitch > -1)
             noteOff (lastPedalPitch, 1.0f, false, false);
+        
         lastPedalPitch = -1;
         return;
     }
@@ -314,13 +352,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
     if (lastPedalPitch > -1)
         noteOff (lastPedalPitch, 1.0f, false, false);
     
-    if (newPedalPitch < 0)
-    {
-        lastPedalPitch = -1;
-        return;
-    }
-    
-    if (isPitchActive (newPedalPitch, false))
+    if (newPedalPitch < 0 || isPitchHeldByKeyboardKey (newPedalPitch))
     {
         lastPedalPitch = -1;
         return;
@@ -342,11 +374,12 @@ void Harmonizer<SampleType>::applyDescant()
     int currentHighest = -1;
     for (auto* voice : voices)
     {
-        if (voice->isVoiceActive()
-            && (voice->getCurrentlyPlayingNote() > currentHighest)
-            && (voice->isKeyDown()))
+        if (voice->isVoiceActive() && voice->isKeyDown())
         {
-            currentHighest = voice->getCurrentlyPlayingNote();
+            const int note = voice->getCurrentlyPlayingNote();
+            
+            if (note > currentHighest)
+                currentHighest = voice->getCurrentlyPlayingNote();
         }
     }
     
@@ -366,13 +399,7 @@ void Harmonizer<SampleType>::applyDescant()
     if (lastDescantPitch > -1)
         noteOff (lastDescantPitch, 1.0f, false, false);
     
-    if (newDescantPitch > 127)
-    {
-        lastDescantPitch = -1;
-        return;
-    }
-    
-    if (isPitchActive (newDescantPitch, false))
+    if (newDescantPitch > 127 || isPitchHeldByKeyboardKey (newDescantPitch))
     {
         lastDescantPitch = -1;
         return;
@@ -409,15 +436,8 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
     
-    for (auto* voice : voices)
-    {
-        if ( (voice->getCurrentlyPlayingNote() == midiPitch)
-            && (voice->isVoiceActive())
-            && (! voice->isPlayingButReleased()) )
-        {
-            return;
-        }
-    }
+    if (isPitchActive (midiPitch, false))
+        return;
     
     bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
     

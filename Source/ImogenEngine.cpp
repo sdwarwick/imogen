@@ -324,20 +324,12 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
     
-    const float newPitch = pitchDetector.detectPitch (input); // returns -1 if the current frame is unpitched
-    
-    const bool frameIsPitched = (newPitch != -1.0f);
-    
-    if (frameIsPitched && harmonizer.getCurrentInputFreq() != newPitch)
-        harmonizer.setCurrentInputFreq (newPitch);
-    
-    harmonizer.processMidi (midiMessages);
-    
     // master input gain
     if (input.getReadPointer(0) == inBuffer.getReadPointer(0))
         inBuffer.applyGainRamp (0, internalBlocksize, prevInputGain, inputGain);
     else
         inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
+    
     prevInputGain = inputGain;
 
     // write to dry buffer & apply panning (w/ panning multipliers ramped)
@@ -351,7 +343,11 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
-    harmonizer.renderVoices (inBuffer, wetBuffer, frameIsPitched); // puts the harmonizer's rendered stereo output into wetBuffer
+    const float newPitch = pitchDetector.detectPitch (inBuffer); // returns -1 if the current frame is unpitched
+    
+    harmonizer.renderVoices (inBuffer, wetBuffer,           // puts the harmonizer's rendered stereo output into wetBuffer
+                             newPitch, (newPitch != -1.0f),
+                             midiMessages, true);
 
     // wet gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);

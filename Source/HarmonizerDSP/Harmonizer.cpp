@@ -146,7 +146,7 @@ void Harmonizer<SampleType>::releaseResources()
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
+void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 {
     currentInputFreq = newInputFreq;
     
@@ -171,6 +171,7 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
     }
 };
 
+
 /****************************************************************************************************************************************************
 // audio rendering-----------------------------------------------------------------------------------------------------------------------------------
  ***************************************************************************************************************************************************/
@@ -178,8 +179,14 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const SampleType newInputFreq)
 template<typename SampleType>
 void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                            AudioBuffer<SampleType>& outputBuffer,
-                                           const bool frameIsPitched)
+                                           const float inputFrequency, const bool frameIsPitched,
+                                           MidiBuffer& midiMessages, const bool returnMidiOutput)
 {
+    if (frameIsPitched && currentInputFreq != inputFrequency)
+        setCurrentInputFreq (inputFrequency);
+    
+    processMidi (midiMessages, returnMidiOutput);
+    
     outputBuffer.clear();
     
     if (getNumActiveVoices() == 0)
@@ -253,6 +260,23 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
             
             if (! voice->isPlayingButReleased())
                 return true;
+        }
+    }
+    
+    return false;
+};
+
+
+template<typename SampleType>
+bool Harmonizer<SampleType>::isPitchHeldByKeyboardKey (const int midipitch)
+{
+    for (auto* voice : voices)
+    {
+        if (voice->isVoiceActive()
+            && voice->isKeyDown()
+            && voice->getCurrentlyPlayingNote() == midipitch)
+        {
+            return true;
         }
     }
     

@@ -60,7 +60,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         {
             if (windowEnd == totalNumSamples) // another possible edge case...
                 return;
-            
+                
             peakCandidates.add (windowStart);
         }
         else

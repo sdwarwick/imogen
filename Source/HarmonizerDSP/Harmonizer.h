@@ -143,9 +143,12 @@ public:
     
     ~Harmonizer();
     
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer, const bool frameIsPitched);
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio,
+                       AudioBuffer<SampleType>& outputBuffer,
+                       const float inputFrequency, const bool frameIsPitched,
+                       MidiBuffer& midiMessages, const bool returnMidiOutput = true);
     
-    void processMidi (MidiBuffer& midiMessages);
+    void processMidi (MidiBuffer& midiMessages, const bool returnMidiOutput);
     
     void prepare (const int blocksize);
     
@@ -157,10 +160,10 @@ public:
     
     bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
 
-    SampleType getCurrentInputFreq() const noexcept { return currentInputFreq; };
-    void setCurrentInputFreq (const SampleType newInputFreq);
+    float getCurrentInputFreq() const noexcept { return currentInputFreq; };
+    void setCurrentInputFreq (const float newInputFreq);
     
-    void handleMidiEvent(const MidiMessage& m, const int samplePosition);
+    void handleMidiEvent(const MidiMessage& m, const int samplePosition, const bool returnMidiOutput);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     
     void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; };
@@ -184,7 +187,7 @@ public:
     void allNotesOff(const bool allowTailOff);
     
     // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
-    void playChord (Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
+    void playChord (const Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; };
@@ -251,6 +254,8 @@ public:
     // turns off any pitches whose keys are not being held anymore
     void turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant);
 
+    bool isPitchHeldByKeyboardKey (const int midipitch);
+    
     
 private:
     
@@ -310,7 +315,7 @@ private:
     ADSR::Parameters quickReleaseParams;
     ADSR::Parameters quickAttackParams;
     
-    SampleType currentInputFreq;
+    float currentInputFreq;
     int currentInputPeriod;
     
     double sampleRate;

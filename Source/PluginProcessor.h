@@ -26,7 +26,7 @@ public:
     void changeBlocksize (const int newBlocksize);
     
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                  const bool applyFadeIn, const bool applyFadeOut);
+                  const bool applyFadeIn = false, const bool applyFadeOut = false);
     
     void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     

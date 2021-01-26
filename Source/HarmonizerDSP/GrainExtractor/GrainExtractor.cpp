@@ -42,23 +42,6 @@ void GrainExtractor<SampleType>::releaseResources()
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getGrainOnsetIndicesForUnpitchedAudio (Array<int>& targetArray,
-                                                                        const AudioBuffer<SampleType>& inputAudio,
-                                                                        const int grainRate)
-{
-    targetArray.clearQuick();
-    
-    targetArray.add (0);
-    
-    for (int i = grainRate;
-         i < inputAudio.getNumSamples();
-         i += grainRate)
-        targetArray.add (i);
-};
-
-
-
-template<typename SampleType>
 void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
                                                        const AudioBuffer<SampleType>& inputAudio,
                                                        const int period)

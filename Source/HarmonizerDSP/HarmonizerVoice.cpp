@@ -151,7 +151,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     const int numSamplesAnalyzed = highestSampleAnalyzed - indicesOfGrainOnsets.getFirst();
     
-    synthesisIndex -= ((newPeriod / origPeriod) * numSamplesAnalyzed);
+    synthesisIndex -= ((origPeriod / newPeriod) * numSamplesAnalyzed);
     if (synthesisIndex < 0) synthesisIndex = 0;
 };
 
@@ -331,15 +331,18 @@ void HarmonizerVoice<SampleType>::setPan (const int newPan)
 template<typename SampleType>
 bool HarmonizerVoice<SampleType>::isPlayingButReleased() const noexcept
 {
-    bool isPlayingButReleased = isVoiceActive() && (! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown()));
+    if (! isVoiceActive())
+        return false; // voice is not playing
     
     if (parent->isPedalPitchOn())
-        isPlayingButReleased = isPlayingButReleased && (currentlyPlayingNote != parent->getCurrentPedalPitchNote());
+        if (currentlyPlayingNote == parent->getCurrentPedalPitchNote())
+            return false;
     
     if (parent->isDescantOn())
-        isPlayingButReleased = isPlayingButReleased && (currentlyPlayingNote != parent->getCurrentDescantNote());
-    
-    return isPlayingButReleased;
+        if (currentlyPlayingNote == parent->getCurrentDescantNote())
+            return false;
+
+    return (! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown()));
 };
 
 template<typename SampleType>

@@ -35,11 +35,6 @@ public:
                                const int period);
     
     
-    void getGrainOnsetIndicesForUnpitchedAudio (Array<int>& targetArray,
-                                                const AudioBuffer<SampleType>& inputAudio,
-                                                const int grainRate);
-    
-    
 private:
     
     int lastBlocksize = 0;

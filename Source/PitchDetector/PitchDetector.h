@@ -57,6 +57,8 @@ private:
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
     
+    float chooseIdealPeriodCandidate (const SampleType* asdfData, const int asdfDataSize, const int minIndex);
+    
     unsigned int samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples);
     
     int indexOfMinElement (const SampleType* data, const int dataSize);
@@ -66,7 +68,6 @@ private:
     SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
     
     
-    Array<int> periodCandidates;
     static constexpr int periodCandidatesToTest = 15;
     
     void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
