@@ -98,8 +98,6 @@
       <GROUP id="{26AA67BB-A7FA-559B-4D7A-DB9DCD0AFA02}" name="utils">
         <FILE id="TFnQ2v" name="FancyMidiBuffer.h" compile="0" resource="0"
               file="Source/Utils/FancyMidiBuffer.h"/>
-        <FILE id="q4wp9o" name="GlobalDefinitions.h" compile="0" resource="0"
-              file="Source/Utils/GlobalDefinitions.h"/>
         <FILE id="FeHXOq" name="GeneralUtils.h" compile="0" resource="0" file="Source/Utils/GeneralUtils.h"/>
       </GROUP>
       <FILE id="VesTyu" name="RangeWrappedInt.h" compile="0" resource="0"

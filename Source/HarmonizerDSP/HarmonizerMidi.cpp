@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "Harmonizer.h"
+#include "HarmonizerDSP/Harmonizer.h"
 
 
 template<typename SampleType>
@@ -66,8 +66,7 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
 template<typename SampleType>
 void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages, const bool returnMidiOutput)
 {
-    if (returnMidiOutput)
-        aggregateMidiBuffer.clear();
+    aggregateMidiBuffer.clear();
     
     auto midiIterator = midiMessages.findNextSamplePosition(0);
     
@@ -122,10 +121,7 @@ void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int sa
     else if (m.isController())
         handleController (m.getControllerNumber(), m.getControllerValue());
     
-    if (! returnMidiOutput)
-        shouldAddToAggregateMidiBuffer = false;
-    
-    if (shouldAddToAggregateMidiBuffer)
+    if (returnMidiOutput && shouldAddToAggregateMidiBuffer)
         aggregateMidiBuffer.addEvent (m, samplePosition);
 };
 

@@ -8,7 +8,7 @@
  ==============================================================================
  */
 
-#include "Harmonizer.h"
+#include "HarmonizerDSP/Harmonizer.h"
 
 
 template<typename SampleType>

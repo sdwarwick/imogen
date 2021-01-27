@@ -11,7 +11,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Utils/GlobalDefinitions.h"
 
 
 class PitchConverter

@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "Harmonizer.h"
+#include "HarmonizerDSP/Harmonizer.h"
 
 
 template<typename SampleType>
@@ -40,7 +40,6 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     synthesisBuffer.setSize (1, blocksize * 4, true, true, true);
     synthesisBuffer.clear();
     nextSBindex = 0;
-    synthesisIndex = 0;
     
     windowingBuffer.setSize (1, blocksize * 2);
     
@@ -76,7 +75,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         return;
     }
     
-    const float newPeriod = (float) (parent->getSamplerate() / currentOutputFreq);
+    const float newPeriod = static_cast<float> (parent->getSamplerate() / currentOutputFreq);
     
     sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
@@ -104,7 +103,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
                                       panner.getPrevGain(chan), panner.getGainMult(chan));
     
-    moveUpSamples (synthesisBuffer, numSamples);
+    moveUpSamples (numSamples);
 };
 
 
@@ -119,17 +118,10 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     const auto* input = inputAudio.getReadPointer(0);
     
-    if (synthesisIndex >= totalNumInputSamples)
-        // don't need ANY of the analysis frames from this audio chunk, already written enough samples from previous frames...
-    {
-        nextSBindex = synthesisIndex;
-        synthesisIndex -= totalNumInputSamples;
+    if (nextSBindex >= totalNumInputSamples)
         return;
-    }
     
     const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
-    
-    int highestSampleAnalyzed = 0;
     
     for (int grainStart : indicesOfGrainOnsets)
     {
@@ -138,21 +130,14 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         if (grainEnd > totalNumInputSamples)
             break;
         
-        if (synthesisIndex > grainEnd)
-            break;
+        if (nextSBindex > grainEnd)
+            continue;
         
         olaFrame (input, grainStart, grainEnd, window, analysisGrainLength, newPeriod);
         
-        highestSampleAnalyzed = grainEnd;
-        
-        if (synthesisIndex >= totalNumInputSamples || grainEnd == totalNumInputSamples)
+        if (nextSBindex >= totalNumInputSamples || grainEnd == totalNumInputSamples)
             break;
     }
-    
-    const int numSamplesAnalyzed = highestSampleAnalyzed - indicesOfGrainOnsets.getFirst();
-    
-    synthesisIndex -= ((origPeriod / newPeriod) * numSamplesAnalyzed);
-    if (synthesisIndex < 0) synthesisIndex = 0;
 };
 
 
@@ -177,6 +162,8 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
         w[wi] = inputAudio[s] * window[wi];
     }
     
+    int synthesisIndex = nextSBindex;
+    
     // 2. resynthesis / OLA
     while (synthesisIndex < frameEndSample)
     {
@@ -193,27 +180,26 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
         synthesisIndex += newPeriod;
     }
     
-    nextSBindex += frameSize;
+    nextSBindex = synthesisIndex;
 };
 
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::moveUpSamples (AudioBuffer<SampleType>& targetBuffer,
-                                                 const int numSamplesUsed)
+void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
 {
     const int numSamplesLeft = nextSBindex - numSamplesUsed;
     
     if (numSamplesLeft < 1)
     {
-        targetBuffer.clear();
+        synthesisBuffer.clear();
         nextSBindex = 0;
         return;
     }
     
-    copyingBuffer.copyFrom (0, 0, targetBuffer, 0, numSamplesUsed, numSamplesLeft);
-    targetBuffer.clear();
-    targetBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
+    copyingBuffer.copyFrom (0, 0, synthesisBuffer, 0, numSamplesUsed, numSamplesLeft);
+    synthesisBuffer.clear();
+    synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
     
     nextSBindex = numSamplesLeft;
 };
@@ -264,7 +250,6 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     clearBuffers();
     synthesisBuffer.clear();
     
-    synthesisIndex = 0;
     nextSBindex = 0;
 };
 

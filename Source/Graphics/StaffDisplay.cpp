@@ -9,7 +9,7 @@
  */
 
 #include <JuceHeader.h>
-#include "StaffDisplay.h"
+#include "Graphics/StaffDisplay.h"
 
 //==============================================================================
 StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
@@ -24,7 +24,7 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     addAndMakeVisible(displayFlats);
     displayFlats.onChange = [this] { this->repaint(); };
     
-    yCoordsOfActiveNotes.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    yCoordsOfActiveNotes.ensureStorageAllocated(12);
     yCoordsOfActiveNotes.clearQuick();
     
     const int noteheadHeightPx = 5;
@@ -51,7 +51,7 @@ void StaffDisplay::paint (juce::Graphics& g)
     g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::staffDisplayBackgroundColourId));
     
     Array<int> currentlyActive;
-    currentlyActive.ensureStorageAllocated(MAX_POSSIBLE_NUMBER_OF_VOICES);
+    currentlyActive.ensureStorageAllocated(12);
     audioProcessor.returnActivePitches (currentlyActive);
     
     drawPitches (currentlyActive, g);

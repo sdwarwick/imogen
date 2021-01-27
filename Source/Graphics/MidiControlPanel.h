@@ -12,8 +12,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GlobalDefinitions.h"
-#include "LookAndFeel.h"
+#include "Graphics/LookAndFeel.h"
 
 //==============================================================================
 /*

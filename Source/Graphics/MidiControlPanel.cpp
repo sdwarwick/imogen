@@ -9,7 +9,7 @@
  */
 
 #include <JuceHeader.h>
-#include "MidiControlPanel.h"
+#include "Graphics/MidiControlPanel.h"
 
 //==============================================================================
 MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):

@@ -1,14 +1,13 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Utils/GlobalDefinitions.h"
 #include "PluginProcessor.h"
-#include "StaffDisplay.h"
-#include "MidiControlPanel.h"
-#include "IOControlPanel.h"
-#include "LookAndFeel.h"
-#include "HelpScreen.h"
-#include "EnableSidechainWarning.h"
+#include "Graphics/StaffDisplay.h"
+#include "Graphics/MidiControlPanel.h"
+#include "Graphics/IOControlPanel.h"
+#include "Graphics/LookAndFeel.h"
+#include "Graphics/HelpScreen.h"
+#include "Graphics/EnableSidechainWarning.h"
 
 //==============================================================================
 

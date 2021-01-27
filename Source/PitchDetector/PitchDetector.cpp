@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "PitchDetector.h"
+#include "PitchDetector/PitchDetector.h"
 
 
 template<typename SampleType>
@@ -180,8 +180,8 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
 
 template<typename SampleType>
 float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* asdfData,
-                                                            const int asdfDataSize,
-                                                            const int minIndex) // index of minimum asdf data value
+                                                             const int asdfDataSize,
+                                                             const int minIndex) // index of minimum asdf data value
 {
     const int periodCandidatesSize = std::min(periodCandidatesToTest, asdfDataSize);
     
@@ -199,9 +199,9 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     // find the greatest & least confidences of any candidate (ie, highest & lowest asdf data values)
     
     const SampleType greatestConfidence = asdfData[minIndex];
-    SampleType leastConfidence = asdfData[periodCandidates.getUnchecked(0)];
+    SampleType leastConfidence = greatestConfidence;
     
-    for (int c = 1; c < periodCandidates.size(); ++c)
+    for (int c = 1; c < periodCandidatesSize; ++c)
     {
         const SampleType confidence = asdfData[periodCandidates.getUnchecked(c)];
         
@@ -222,16 +222,16 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     }
     
     // candidate deltas: how far away each period candidate is from the last estimated period
-    int candidateDeltas[periodCandidates.size()];
+    int candidateDeltas[periodCandidatesSize];
     
-    for (int c = 0; c < periodCandidates.size(); ++c)
+    for (int c = 0; c < periodCandidatesSize; ++c)
         candidateDeltas[c] = abs(periodCandidates.getUnchecked(c) + minPeriod - lastEstimatedPeriod);
     
     // find min & max delta val of any candidate we have
     int minDelta = candidateDeltas[0];
     int maxDelta = candidateDeltas[0];
     
-    for (int d = 1; d < periodCandidates.size(); ++d)
+    for (int d = 1; d < periodCandidatesSize; ++d)
     {
         const int delta = candidateDeltas[d];
         
@@ -244,26 +244,32 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     
     const int deltaRange = maxDelta - minDelta;
     
-    if (deltaRange < 4) // all deltas are very close, sos return the candidate with the min asdf data value
+    if (deltaRange < 4) // all deltas are very close, so return the candidate with the min asdf data value
         return foundThePeriod (asdfData, minIndex, asdfDataSize);
     
     // weight the asdf data based on each candidate's delta value
     // because higher asdf values represent a lower confidence in that period candidate, we want to artificially increase the asdf data a bit for candidates with higher deltas
-    SampleType weightedCandidateConfidence[periodCandidates.size()];
+    SampleType weightedCandidateConfidence[periodCandidatesSize];
     
     for (int c = 0; c < periodCandidatesSize; ++c)
     {
         const int candidate = periodCandidates.getUnchecked(c);
         const int delta = candidateDeltas[c];
-        const SampleType weight = (delta == 0) ? 1.0 : (1.0 + ((delta / deltaRange) * 0.5));
-        weightedCandidateConfidence[c] = asdfData[candidate] * weight;
+        
+        if (delta == 0)
+            weightedCandidateConfidence[c] = asdfData[candidate];
+        else
+        {
+            const SampleType weight = 1.0 + ((delta / deltaRange) * 0.5);
+            weightedCandidateConfidence[c] = asdfData[candidate] * weight;
+        }
     }
     
     // choose the estimated period based on the lowest weighted asdf data value
     int indexOfPeriod = 0;
     SampleType confidence = weightedCandidateConfidence[0];
     
-    for (int c = 1; c < periodCandidates.size(); ++c)
+    for (int c = 1; c < periodCandidatesSize; ++c)
     {
         const SampleType current = weightedCandidateConfidence[c];
         

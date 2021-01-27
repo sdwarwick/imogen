@@ -61,9 +61,8 @@ template <typename SampleType>
 void ImogenAudioProcessor::initialize (ImogenEngine<SampleType>& activeEngine)
 {
     const double initSamplerate = std::max<double>(44100.0, getSampleRate());
-    const int initNumVoices = std::max (MAX_POSSIBLE_NUMBER_OF_VOICES, 12);
     
-    activeEngine.initialize (initSamplerate, getBlockSize(), initNumVoices);
+    activeEngine.initialize (initSamplerate, getBlockSize(), 12);
     
     updateAllParameters (activeEngine);
     

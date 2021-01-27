@@ -11,11 +11,11 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Utils/GlobalDefinitions.h"
-#include "HarmonizerUtilities.h"
-#include "PanningManager/PanningManager.h"
+
 #include "Utils/Panner.h"
 #include "Utils/GeneralUtils.h"
+#include "HarmonizerDSP/HarmonizerUtilities.h"
+#include "HarmonizerDSP/PanningManager/PanningManager.h"
 #include "GrainExtractor/GrainExtractor.h"
 
 template<typename SampleType>
@@ -96,7 +96,7 @@ private:
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
                    const SampleType* window, const int frameSize, const int newPeriod);
     
-    void moveUpSamples (AudioBuffer<SampleType>& targetBuffer, const int numSamplesUsed);
+    void moveUpSamples (const int numSamplesUsed);
     
     ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
     ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
@@ -122,7 +122,6 @@ private:
     int currentAftertouch;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
-    int synthesisIndex = 0; // starting index for each synthesis grain being written
     int nextSBindex; // highest synthesis buffer index written to + 1
     AudioBuffer<SampleType> copyingBuffer;
     AudioBuffer<SampleType> windowingBuffer;

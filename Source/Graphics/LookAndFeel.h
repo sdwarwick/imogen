@@ -11,7 +11,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "GlobalDefinitions.h"
 
 class ImogenLookAndFeel : public juce::LookAndFeel_V4
 {

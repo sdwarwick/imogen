@@ -18,7 +18,9 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     helpScreen  .setLookAndFeel(&lookAndFeel);
     sidechainWarning.setLookAndFeel(&lookAndFeel);
     
+#define FRAMERATE 60
     Timer::startTimerHz(FRAMERATE);
+#undef FRAMERATE
     
     selectSkin.addItem("Casual Denim", 1);
     selectSkin.addItem("Playful Boho", 2);

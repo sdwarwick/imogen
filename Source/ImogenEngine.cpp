@@ -9,12 +9,10 @@
 */
 
 #include "PluginProcessor.h"
-#include "Utils/GlobalDefinitions.h"
-
 #include "Utils/DelayBuffer.h"
 #include "Utils/Panner.h"
-#include "PitchDetector/PitchDetector.h"
 #include "Utils/FancyMidiBuffer.h"
+#include "PitchDetector/PitchDetector.h"
 
 
 template<typename SampleType>
@@ -69,7 +67,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     for (int i = 0; i < initNumVoices; ++i)
         harmonizer.addVoice (new HarmonizerVoice<SampleType>(&harmonizer));
     
-    harmonizer.newMaxNumVoices (std::max (initNumVoices, MAX_POSSIBLE_NUMBER_OF_VOICES));
+    harmonizer.newMaxNumVoices (initNumVoices);
     
     harmonizer.setCurrentPlaybackSampleRate (initSamplerate);
     
@@ -82,7 +80,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     
     changeBlocksize (initSamplesPerBlock);
     
-    prepare (initSamplerate, std::max (initSamplesPerBlock, MAX_BUFFERSIZE));
+    prepare (initSamplerate, initSamplesPerBlock);
     
     initialized = true;
 };
@@ -322,7 +320,7 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input,
                                                   MidiBuffer& midiMessages)
 {
-    // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize.
+    // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
     // master input gain
     if (input.getReadPointer(0) == inBuffer.getReadPointer(0))
@@ -346,7 +344,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     const float newPitch = pitchDetector.detectPitch (inBuffer); // returns -1 if the current frame is unpitched
     
     harmonizer.renderVoices (inBuffer, wetBuffer,           // puts the harmonizer's rendered stereo output into wetBuffer
-                             newPitch, (newPitch != -1.0f),
+                             newPitch, (newPitch != -1.0f), // pitch detector outputs -1 if frame is determined to be unpitched 
                              midiMessages, true);
 
     // wet gain

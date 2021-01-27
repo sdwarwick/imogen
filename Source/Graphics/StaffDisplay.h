@@ -11,10 +11,9 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "GlobalDefinitions.h"
-#include "GeneralUtils.h"
 #include "PluginProcessor.h"
-#include "LookAndFeel.h"
+#include "Utils/GeneralUtils.h"
+#include "Graphics/LookAndFeel.h"
 
 //==============================================================================
 /*
