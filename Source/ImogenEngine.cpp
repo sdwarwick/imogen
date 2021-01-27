@@ -219,7 +219,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         
         processWrapped (inBusProxy, outputProxy, midiChoppingBuffer, actuallyFadingIn, actuallyFadingOut);
         
-        // copy the harmonizer's midi output (the beginning chunk of midiChoppingBuffer) back to midiMessages, at the original startSample
+        // copy the harmonizer's midi output (the beginning chunk of midiChoppingBuffer) back to midiMessages (I/O), at the original startSample
         copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
         
         startSample += chunkNumSamples;
@@ -243,7 +243,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     jassert (numNewSamples <= internalBlocksize);
     
-    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
+    AudioBuffer<SampleType> input; // input must be a MONO buffer!
     
     switch (processor.getModulatorSource()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
@@ -330,7 +330,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     prevInputGain = inputGain;
 
-    // write to dry buffer & apply panning (w/ panning multipliers ramped)
+    // write to dry buffer & apply panning
     for (int chan = 0; chan < 2; ++chan)
         dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize,
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
@@ -343,9 +343,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     const float newPitch = pitchDetector.detectPitch (inBuffer); // returns -1 if the current frame is unpitched
     
-    harmonizer.renderVoices (inBuffer, wetBuffer,           // puts the harmonizer's rendered stereo output into wetBuffer
-                             newPitch, (newPitch != -1.0f), // pitch detector outputs -1 if frame is determined to be unpitched 
-                             midiMessages, true);
+    harmonizer.renderVoices (inBuffer, wetBuffer, newPitch, (newPitch != -1.0f), midiMessages); // puts the harmonizer's rendered stereo output into wetBuffer
 
     // wet gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);

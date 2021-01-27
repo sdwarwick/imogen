@@ -65,11 +65,11 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
         
         if (grainStart < 0)
         {
-            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 1) // we have more peaks coming, so we can disregard this one
+            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 2) // we have more peaks coming, so we can disregard this one
                 continue;
             
             // edge case for really large periods
-            const int secondaryGrainStart = peakIndex - roundToInt(period / 2.0f);
+            const int secondaryGrainStart = peakIndex - roundToInt (period / 2.0f);
             
             if (secondaryGrainStart < 0)
                 targetArray.add (peakIndex);

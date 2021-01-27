@@ -13,7 +13,9 @@
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f)
+parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f),
+    isPedalPitchVoice(false), isDescantVoice(false),
+    playingButReleased(false)
 {
     const double initSamplerate = std::max<double>(parent->getSamplerate(), 44100.0);
     
@@ -24,8 +26,6 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     adsr        .setParameters(parent->getCurrentAdsrParams());
     quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters(parent->getCurrentQuickAttackParams());
-    
-    // call fill window buffer in constuctor !
 };
 
 template<typename SampleType>
@@ -37,18 +37,40 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     // blocksize = maximum period
     
-    synthesisBuffer.setSize (1, blocksize * 4, true, true, true);
+    synthesisBuffer.setSize (1, blocksize * 4);
     synthesisBuffer.clear();
     nextSBindex = 0;
     
     windowingBuffer.setSize (1, blocksize * 2);
     
-    copyingBuffer.setSize (1, blocksize * 2, true, true, true);
+    copyingBuffer.setSize (1, blocksize * 2);
     
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
 };
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
+{
+    if (keyIsDown == isNowDown)
+        return;
+    
+    keyIsDown = isNowDown;
+    
+    if (! isNowDown)
+    {
+        if (isPedalPitchVoice || isDescantVoice)
+            playingButReleased = false;
+        else
+            playingButReleased = isVoiceActive();
+    }
+    else
+    {
+        playingButReleased = false;
+    }
+}
 
 
 
@@ -58,10 +80,23 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
                                                    const Array<int>& indicesOfGrainOnsets,
                                                    const AudioBuffer<SampleType>& windowToUse)
 {
-    if ( (! ( parent->isSustainPedalDown() || parent->isSostenutoPedalDown() ) ) && (! keyIsDown) )
-        stopNote(1.0f, false);
+    if (! keyIsDown)
+    {
+        bool shouldStopNote;
+        
+        if (isPedalPitchVoice || isDescantVoice)
+            shouldStopNote = false;
+        else if (parent->isLatched() || parent->isIntervalLatchOn())
+            shouldStopNote = false;
+        else if (parent->isSustainPedalDown() || parent->isSostenutoPedalDown())
+            shouldStopNote = false;
+        else
+            shouldStopNote = true;
+        
+        if (shouldStopNote)
+            stopNote (1.0f, false);
+    }
     
-    // don't want to just use the ADSR to tell if the voice is currently active, bc if the user has turned the ADSR off, the voice would remain active for the release phase of the ADSR...
     bool voiceIsOnRightNow;
     
     if (isQuickFading)
@@ -81,8 +116,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     const int numSamples = inputAudio.getNumSamples();
     
-    // midi velocity gain
-    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier);
+    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier); // midi velocity gain
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     // soft pedal gain
@@ -90,18 +124,17 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
     prevSoftPedalMultiplier = softPedalMult;
     
-    if (parent->isADSRon()) // only apply the envelope if the ADSR on/off user toggle is ON
+    if (parent->isADSRon())
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
     else
         quickAttack.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
     
     if (isQuickFading)
-        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ allowTailOff = false
+        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ allowTailOff = false, to prevent clicks from jumping to 0
     
-    // write to output & apply panning (w/ gain multipliers ramped)
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
-                                      panner.getPrevGain(chan), panner.getGainMult(chan));
+                                      panner.getPrevGain(chan), panner.getGainMult(chan)); // panning is applied while writing to output
     
     moveUpSamples (numSamples);
 };
@@ -133,31 +166,34 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         if (nextSBindex > grainEnd)
             continue;
         
-        olaFrame (input, grainStart, grainEnd, window, analysisGrainLength, newPeriod);
+        olaFrame (input, grainStart, grainEnd, window, newPeriod);
         
-        if (nextSBindex >= totalNumInputSamples || grainEnd == totalNumInputSamples)
+        if (nextSBindex >= totalNumInputSamples)
             break;
     }
 };
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
-                                            const SampleType* window, const int frameSize, // frame size = origPeriod * 2
+void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
+                                            const int frameStartSample, const int frameEndSample,
+                                            const SampleType* window,
                                             const int newPeriod)
 {
     // this processes one analysis frame of input samples, from readingStartSample to readingEndSample
+    // the frame size should be 2 * the original input period
     
-    jassert ((frameEndSample - frameStartSample) == frameSize);
+    const int frameSize = frameEndSample - frameStartSample; // frame size should equal the original period * 2
+    // NB: the length of the pre-computed Hanning window passed to this function MUST equal the frame size!
 
-    // 1. multiply the analysis grain by the window before OLAing, so that window multiplication only has to be done once per analysis grain
+    // 1. apply the window before OLAing, so that windowing only has to be done once per analysis grain
     
     auto* w = windowingBuffer.getWritePointer(0);
     
     for (int s = frameStartSample, // reading index from orignal audio
-         wi = 0;                     // writing index in the windowing multiplication storage buffer
+         wi = 0;                   // writing index in the windowing multiplication storage buffer
          s < frameEndSample;
-         ++s, ++wi)
+         ++s, ++wi)                // frame length must equal window length
     {
         w[wi] = inputAudio[s] * window[wi];
     }
@@ -165,12 +201,13 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
     int synthesisIndex = nextSBindex;
     
     // 2. resynthesis / OLA
+    
     while (synthesisIndex < frameEndSample)
     {
         auto* writing = synthesisBuffer.getWritePointer(0);
-        const auto* reading = windowingBuffer.getReadPointer(0); // pre-windowed analysis grain starts at index 0
+        const auto* reading = windowingBuffer.getReadPointer(0);
         
-        for (int s = nextSBindex, r = 0;
+        for (int s = nextSBindex, r = 0; // pre-windowed analysis grain starts at index 0 of windowingBuffer
              r < frameSize;
              ++s, ++r)
         {
@@ -180,7 +217,7 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio, const 
         synthesisIndex += newPeriod;
     }
     
-    nextSBindex = synthesisIndex;
+    nextSBindex = synthesisIndex + 1;
 };
 
 
@@ -234,7 +271,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     noteTurnedOff = true;
     keyIsDown     = false;
     
-    setPan(64);
+    setPan (64);
     
     if (quickRelease.isActive())
         quickRelease.reset();
@@ -260,8 +297,8 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
 {
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
-    currentVelocityMultiplier = parent->getWeightedVelocity(velocity);
-    currentOutputFreq         = parent->getOutputFrequency(midiPitch);
+    currentVelocityMultiplier = parent->getWeightedVelocity (velocity);
+    currentOutputFreq = parent->getOutputFrequency (midiPitch);
     isQuickFading = false;
     noteTurnedOff = false;
     
@@ -282,7 +319,7 @@ void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allo
     }
     else
     {
-        if(! quickRelease.isActive())
+        if (! quickRelease.isActive())
             quickRelease.noteOn();
         
         isQuickFading = true;
@@ -292,43 +329,30 @@ void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allo
     noteTurnedOff = true;
 };
 
+
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
 };
 
+
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::setPan (const int newPan)
+void HarmonizerVoice<SampleType>::setPan (const int newPan,  const bool reportOldToParent)
 {
     jassert (isPositiveAndBelow (newPan, 128));
     
     if (currentMidipan == newPan)
         return;
     
-    parent->panValTurnedOff(currentMidipan);
+    if (reportOldToParent)
+        parent->panValTurnedOff (currentMidipan);
     
     panner.setMidiPan (newPan);
     
     currentMidipan = newPan;
 };
 
-template<typename SampleType>
-bool HarmonizerVoice<SampleType>::isPlayingButReleased() const noexcept
-{
-    if (! isVoiceActive())
-        return false; // voice is not playing
-    
-    if (parent->isPedalPitchOn())
-        if (currentlyPlayingNote == parent->getCurrentPedalPitchNote())
-            return false;
-    
-    if (parent->isDescantOn())
-        if (currentlyPlayingNote == parent->getCurrentDescantNote())
-            return false;
-
-    return (! (keyIsDown || parent->isSostenutoPedalDown() || parent->isSustainPedalDown()));
-};
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::updateSampleRate(const double newSamplerate)

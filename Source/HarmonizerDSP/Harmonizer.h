@@ -47,16 +47,16 @@ public:
     
     bool isVoiceActive()          const noexcept { return currentlyPlayingNote >= 0; }
     
-    bool isPlayingButReleased()   const noexcept; // returns true if a voice is sounding, but its key has been released
+    bool isPlayingButReleased()   const noexcept { return playingButReleased; }; // returns true if a voice is sounding, but its key has been released
     
     // Returns true if this voice started playing its current note before the other voice did.
     bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
     
     // Returns true if the key that triggered this voice is still held down. Note that the voice may still be playing after the key was released (e.g because the sostenuto pedal is down).
-    bool isKeyDown()          const noexcept { return keyIsDown; }
-    void setKeyDown(bool isNowDown) noexcept { keyIsDown = isNowDown; }
+    bool isKeyDown() const noexcept { return keyIsDown; }
+    void setKeyDown (bool isNowDown) noexcept;
     
-    void setPan(const int newPan);
+    void setPan (const int newPan, const bool reportOldToParent = false);
     int getCurrentMidiPan() const noexcept { return currentMidipan; };
     
     void startNote(const int midiPitch,  const float velocity, const bool wasStolen);
@@ -84,6 +84,8 @@ public:
     void setQuickReleaseParameters(const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); };
     void setQuickAttackParameters (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); };
     
+    void setPedalPitchVoice (const bool isNowPedalPitchVoice) noexcept { isPedalPitchVoice = isNowPedalPitchVoice; };
+    void setDescantVoice (const bool isNowDescantVoice) noexcept { isDescantVoice = isNowDescantVoice; };
     
 private:
     
@@ -94,7 +96,7 @@ private:
                const SampleType* window);
     
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
-                   const SampleType* window, const int frameSize, const int newPeriod);
+                   const SampleType* window, const int newPeriod);
     
     void moveUpSamples (const int numSamplesUsed);
     
@@ -130,6 +132,10 @@ private:
     
     Panner panner;
     
+    bool isPedalPitchVoice, isDescantVoice;
+    
+    bool playingButReleased;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
 
@@ -145,9 +151,9 @@ public:
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
                        AudioBuffer<SampleType>& outputBuffer,
                        const float inputFrequency, const bool frameIsPitched,
-                       MidiBuffer& midiMessages, const bool returnMidiOutput = true);
+                       MidiBuffer& midiMessages);
     
-    void processMidi (MidiBuffer& midiMessages, const bool returnMidiOutput);
+    void processMidi (MidiBuffer& midiMessages);
     
     void prepare (const int blocksize);
     
@@ -162,7 +168,7 @@ public:
     float getCurrentInputFreq() const noexcept { return currentInputFreq; };
     void setCurrentInputFreq (const float newInputFreq);
     
-    void handleMidiEvent(const MidiMessage& m, const int samplePosition, const bool returnMidiOutput);
+    void handleMidiEvent(const MidiMessage& m, const int samplePosition);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     
     void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; };
@@ -272,14 +278,13 @@ private:
     void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
     void handleChannelPressure(const int channelPressureValue);
     void handleController(const int controllerNumber, const int controllerValue);
-    void handleSustainPedal(const bool isDown);
-    void handleSostenutoPedal(const bool isDown);
-    void handleSoftPedal(const bool isDown);
+    void handleSustainPedal (const int value);
+    void handleSostenutoPedal (const int value);
+    void handleSoftPedal (const int value);
     void handleModWheel(const int wheelValue);
     void handleBreathController(const int controlValue);
     void handleFootController(const int controlValue);
     void handlePortamentoTime(const int controlValue);
-    void handleMainVolume(const int controlValue);
     void handleBalance(const int controlValue);
     void handleLegato(const bool isOn);
     
@@ -309,6 +314,8 @@ private:
     Array<int> intervalsLatchedTo;
     
     void updateIntervalsLatchedTo();
+    
+    void playChordFromIntervalSet (const Array<int>& desiredIntervals);
     
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;

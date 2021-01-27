@@ -88,42 +88,51 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const SampleType* reading = inputAudio.getReadPointer(0);
     
-    int minLag = samplesToFirstZeroCrossing (reading, numSamples); // little trick to avoid picking too small a period
+    // the minPeriod & maxPeriod members define the overall global period range; here, the minLag & maxLag local variables are used to define the period range for this specific frame of audio, if it can be constrained more than the global range.
+    
+    int minLag = samplesToFirstZeroCrossing (reading, numSamples);
     int maxLag = maxPeriod;
     
-    if (lastFrameWasPitched) // pitch shouldn't halve or double between consecutive voiced frames...
+    if (lastFrameWasPitched)
     {
+        // pitch shouldn't halve or double between consecutive voiced frames
         minLag = std::max (minLag, roundToInt (lastEstimatedPeriod / 2.0));
         maxLag = std::min (maxLag, roundToInt (lastEstimatedPeriod * 2.0));
     }
     
     minLag = std::max (minLag, minPeriod);
     
+    // truncation of edge cases
     if (maxLag < minLag)
-        maxLag = minLag + 1;
+        return -1.0f;
     else if (minLag == maxLag)
-        ++maxLag;
+    {
+        if (minLag > 1)
+            --minLag; // minLag must be greater than or equal to 1
+        else
+        {
+            ++maxLag;
+            if (maxLag > maxPeriod)
+                return -1.0f;
+        }
+    }
     
     const int middleIndex = floor (numSamples / 2.0f);
     const int halfNumSamples = floor ((numSamples - 1) / 2.0f);
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
-    // in the ASDF buffer, the value stored at index 0 is the ASDF for lag minPeriod.
-    // the value stored at the maximum index is the ASDF for lag maxPeriod.
-    // always write the same datasize to the ASDF buffer (with regard to this member variables), even if the k range is being limited this frame by the minLag & maxLag local variables.
-    
-    // STEP 1 - COMPUTE ASDF
+    // COMPUTE ASDF
     
     for (int k = minPeriod; // always write the same datasize to asdfBuffer, even if k values are being limited this frame
-            k <= maxPeriod; // k = delay = lag = period
+            k <= maxPeriod; // k = lag = period
             ++k)
     {
-        const int index = k - minPeriod; // the actual asdfBuffer index for this k value's data
+        const int index = k - minPeriod; // the actual asdfBuffer index for this k value's data. offset = minPeriod
         
-        if (k < minLag || k > maxLag) // range compression of k is done heres
+        if (k < minLag || k > maxLag) // range compression of k is done here
         {
-            asdfData[index] = 2.0;
+            asdfData[index] = 1000.0f; // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
             continue;
         }
         
@@ -197,11 +206,13 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
         return foundThePeriod (asdfData, minIndex, asdfDataSize);
     
     // find the greatest & least confidences of any candidate (ie, highest & lowest asdf data values)
+    // lower  asdf data --> higher confidence
+    // higher asdf data --> lower  confidence
     
     const SampleType greatestConfidence = asdfData[minIndex];
     SampleType leastConfidence = greatestConfidence;
     
-    for (int c = 1; c < periodCandidatesSize; ++c)
+    for (int c = 1; c < periodCandidatesSize; ++c) // first element of periodCandidates is the index of the minimum element in the asdf
     {
         const SampleType confidence = asdfData[periodCandidates.getUnchecked(c)];
         
@@ -210,7 +221,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     }
     
     // if there is little variation in the confidences of our candidates, return the smallest k value that is a candidate
-    if ((leastConfidence - greatestConfidence) < 2.0)
+    if ((leastConfidence - greatestConfidence) < 0.35)
     {
         int smallestK = periodCandidates.getUnchecked(0);
         
@@ -222,6 +233,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     }
     
     // candidate deltas: how far away each period candidate is from the last estimated period
+    
     int candidateDeltas[periodCandidatesSize];
     
     for (int c = 0; c < periodCandidatesSize; ++c)
@@ -249,6 +261,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     
     // weight the asdf data based on each candidate's delta value
     // because higher asdf values represent a lower confidence in that period candidate, we want to artificially increase the asdf data a bit for candidates with higher deltas
+    
     SampleType weightedCandidateConfidence[periodCandidatesSize];
     
     for (int c = 0; c < periodCandidatesSize; ++c)
@@ -266,6 +279,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     }
     
     // choose the estimated period based on the lowest weighted asdf data value
+    
     int indexOfPeriod = 0;
     SampleType confidence = weightedCandidateConfidence[0];
     

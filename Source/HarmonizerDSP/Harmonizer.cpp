@@ -104,7 +104,7 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
     if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
     
-    pitchConverter.setConcertPitchHz(newConcertPitchhz);
+    pitchConverter.setConcertPitchHz (newConcertPitchhz);
     
     setCurrentInputFreq (currentInputFreq);
     
@@ -149,20 +149,8 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
     fillWindowBuffer (currentInputPeriod * 2);
     
     if (intervalLatchIsOn)
-    {
-        if (intervalsLatchedTo.isEmpty())
-            return;
-        
-        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
-        
-        Array<int> desiredChord;
-        desiredChord.ensureStorageAllocated (intervalsLatchedTo.size());
-        
-        for (int interval : intervalsLatchedTo)
-            desiredChord.add (currentMidiPitch + interval);
-        
-        playChord (desiredChord, 1.0f, false, true);
-    }
+        if (! intervalsLatchedTo.isEmpty())
+            playChordFromIntervalSet (intervalsLatchedTo);
 };
 
 
@@ -174,12 +162,12 @@ template<typename SampleType>
 void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                            AudioBuffer<SampleType>& outputBuffer,
                                            const float inputFrequency, const bool frameIsPitched,
-                                           MidiBuffer& midiMessages, const bool returnMidiOutput)
+                                           MidiBuffer& midiMessages)
 {
     if (frameIsPitched && currentInputFreq != inputFrequency)
         setCurrentInputFreq (inputFrequency);
     
-    processMidi (midiMessages, returnMidiOutput);
+    processMidi (midiMessages);
     
     outputBuffer.clear();
     
@@ -327,12 +315,16 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
         if (! voice->isVoiceActive())
             continue;
         
-        if (voice->getCurrentlyPlayingNote() >= lowestPannedNote)
+        if (voice->getCurrentlyPlayingNote() < lowestPannedNote)
+        {
+            if (voice->getCurrentMidiPan() != 64)
+                voice->setPan (64, true);
+        }
+        else
             voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
-        else if (voice->getCurrentMidiPan() != 64)
-            voice->setPan (64);
     }
 };
+
 
 template<typename SampleType>
 void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) noexcept
@@ -350,7 +342,8 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
         if (note < newPitchThresh)
         {
             if (voice->getCurrentMidiPan() != 64)
-                voice->setPan (64);
+                voice->setPan (64, true);
+            
             continue;
         }
         
@@ -359,7 +352,7 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
         if (note < lowestPannedNote)
         {
             if (voice->getCurrentMidiPan() == 64)
-                voice->setPan (panner.getNextPanVal());
+                voice->setPan (panner.getNextPanVal(), false);
         }
     }
     
@@ -409,17 +402,19 @@ void Harmonizer<SampleType>::setDescant (const bool isOn)
     if (descantIsOn == isOn)
         return;
     
-    descantIsOn = isOn;
-    
     if (isOn)
         applyDescant();
     else
     {
         if (lastDescantPitch > -1)
+        {
             noteOff (lastDescantPitch, 1.0f, false, false);
+        }
         
         lastDescantPitch = -1;
     }
+    
+    descantIsOn = isOn;
 };
 
 template<typename SampleType>
@@ -454,16 +449,19 @@ void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
     if (pedalPitchIsOn == isOn)
         return;
     
-    pedalPitchIsOn = isOn;
-    
     if (isOn)
         applyPedalPitch();
     else
     {
         if (lastPedalPitch > -1)
+        {
             noteOff (lastPedalPitch, 1.0f, false, false);
+        }
+        
         lastPedalPitch = -1;
     }
+    
+    pedalPitchIsOn = isOn;
 };
 
 template<typename SampleType>
@@ -544,109 +542,6 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
         voice->setQuickAttackParameters (quickAttackParams);
         voice->setQuickReleaseParameters(quickReleaseParams);
     }
-};
-
-/****************************************************************************************************************************************************
-// voice allocation----------------------------------------------------------------------------------------------------------------------------------
-****************************************************************************************************************************************************/
-
- template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable) 
-{
-    for (auto* voice : voices)
-        if (! voice->isVoiceActive())
-            return voice;
-    
-    if (stealIfNoneAvailable)
-        return findVoiceToSteal (midiNoteNumber);
-    
-    return nullptr;
-};
-
-
-template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int midiNoteNumber) 
-{
-    // This voice-stealing algorithm applies the following heuristics:
-    // - Re-use the oldest notes first
-    // - Protect the lowest & topmost notes, even if sustained, but not if they've been released.
-    // - Protects the pedal & descant auto voices, if active, and only releases them as a last resort to avoid stealing the lowest & highest notes being played manually
-    
-    jassert (! voices.isEmpty());
-    
-    // These are the voices we want to protect (ie: only steal if unavoidable)
-    HarmonizerVoice<SampleType>* low = nullptr; // Lowest sounding note, might be sustained, but NOT in release phase
-    HarmonizerVoice<SampleType>* top = nullptr; // Highest sounding note, might be sustained, but NOT in release phase
-    
-    // protect these, only use if necessary. These will be nullptrs if pedal / descant is currently off
-    HarmonizerVoice<SampleType>* descantVoice = getCurrentDescantVoice();
-    HarmonizerVoice<SampleType>* pedalVoice = getCurrentPedalPitchVoice();
-    
-    // this is a list of voices we can steal, sorted by how long they've been running
-    Array< HarmonizerVoice<SampleType>* > usableVoices;
-    usableVoices.ensureStorageAllocated (voices.size());
-    
-    for (auto* voice : voices)
-    {
-        if (voice == descantVoice || voice == pedalVoice)
-            continue;
-        
-        usableVoices.add (voice);
-        
-        // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations..
-        struct Sorter
-        {
-            bool operator() (const HarmonizerVoice<SampleType>* a, const HarmonizerVoice<SampleType>* b) const noexcept
-            { return a->wasStartedBefore (*b); }
-        };
-        
-        std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
-        
-        if (voice->isVoiceActive() && ! voice->isPlayingButReleased())
-        {
-            auto note = voice->getCurrentlyPlayingNote();
-            
-            if (low == nullptr || note < low->getCurrentlyPlayingNote())
-                low = voice;
-            
-            if (top == nullptr || note > top->getCurrentlyPlayingNote())
-                top = voice;
-        }
-    }
-    
-    if (top == low)  // Eliminate pathological cases (ie: only 1 note playing): we always give precedence to the lowest note(s)
-        top = nullptr;
-    
-    for (auto* voice : usableVoices)
-        if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
-            return voice;
-    
-    for (auto* voice : usableVoices)
-        if (voice != low && voice != top && ! voice->isKeyDown())
-            return voice;
-    
-    for (auto* voice : usableVoices)
-        if (voice != low && voice != top)
-            return voice;
-    
-    // only protected top & bottom voices are left now - time to use the pedal pitch & descant voices...
-    
-    if (descantVoice != nullptr) // save bass
-    {
-        lastDescantPitch = -1;
-        return descantVoice;
-    }
-
-    if (pedalVoice != nullptr)
-    {
-        lastPedalPitch = -1;
-        return pedalVoice;
-    }
-    
-    if (top != nullptr) // bass note gets priority
-        return top;
-    
-    return low;
 };
 
 /***************************************************************************************************************************************************

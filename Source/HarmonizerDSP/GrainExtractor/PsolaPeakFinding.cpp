@@ -120,10 +120,11 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         {
             const int s = searchingOrder.getUnchecked(i);
             
-            if (candidates.contains (s))
-                continue;
-            
-            newStart = s;
+            if (! candidates.contains (s))
+            {
+                newStart = s;
+                break;
+            }
         }
         
         if (newStart == -1)
@@ -225,7 +226,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
     Array<float> finalHandfulDeltas; // delta values for candidates
     
-    finalHandful.ensureStorageAllocated (finalHandfulSize);
+    finalHandful      .ensureStorageAllocated (finalHandfulSize);
     finalHandfulDeltas.ensureStorageAllocated (finalHandfulSize);
     
     for (int i = 0; i < finalHandfulSize; ++i)
