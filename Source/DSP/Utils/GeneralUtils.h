@@ -26,7 +26,7 @@ public:
             if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
                 return true;
             return false;
-        };
+        }
         
         // are two midi notes the same pitch class?
         template<typename T1, typename T2>
@@ -34,7 +34,7 @@ public:
         {
             jassert(pitch1 >= 0 && pitch2 >= 0);
             return ((roundToInt(pitch1)) % 12) == ((roundToInt(pitch2)) % 12);
-        };
+        }
    };
     
     struct PitchConversion
@@ -45,14 +45,14 @@ public:
         {
             jassert(midiNote >= 0 && midiNote <= 127);
             return 440.0 * std::pow(2.0, ((midiNote - 69.0) / 12.0));
-        };
+        }
         
         template<typename T1, typename T2, typename T3>
         static T1 mtof(const T1 midiNote, const T2 concertPitchHz, const T3 rootNote, const int notesPerOctave)
         {
             jassert(midiNote >= 0 && midiNote <= 127 && concertPitchHz >= 0 && rootNote >= 0 && notesPerOctave > 0);
             return concertPitchHz * std::pow(2.0, ((midiNote - rootNote) / notesPerOctave));
-        };
+        }
         
         // FREQUENCY TO MIDI
         template<typename T>
@@ -60,14 +60,14 @@ public:
         {
             jassert(inputFreq >= 0);
             return 12.0 * log2(inputFreq / 440.0) + 69.0;
-        };
+        }
         
         template<typename T1, typename T2, typename T3>
         static T1 ftom(const T1 inputFreq, const T2 concertPitchHz, const T3 rootNote, const int notesPerOctave)
         {
             jassert(inputFreq >= 0 && concertPitchHz >= 0 && rootNote >= 0 && notesPerOctave > 0);
             return notesPerOctave * log2(inputFreq / concertPitchHz) + rootNote;
-        };
+        }
     };
     
     template<typename T1, typename T2, typename T3, typename T4>
@@ -79,7 +79,7 @@ public:
         if (pitchbend > 64)
             return ((rangeUp * (pitchbend - 65)) / 62) + midiPitch;
         return (((1 - rangeDown) * pitchbend) / 63) + midiPitch - rangeDown;
-    };
+    }
     
     struct velocityHelpers
     {
@@ -87,20 +87,20 @@ public:
         {
             jassert(isPositiveAndBelow(midiVelocity, 128));
             return midiVelocity / 127.0f;
-        };
+        }
         
         static float getGainMultFromVelocityWithSensitivity(const int midiVelocity, const int velocitySensitivity)
         {
             jassert(isPositiveAndBelow(midiVelocity, 128) && isPositiveAndBelow(velocitySensitivity, 101));
             const float velocity = midiVelocity / 127.0f;
             return ((1.0f - velocity) * (1.0f - (velocitySensitivity / 100.0f)) + velocity);
-        };
+        }
         
         static float getGainMultFromFloatVelocityWithSensitivity(const float floatVelocity, const int velocitySensitivity)
         {
             jassert(floatVelocity >= 0.0f && floatVelocity <= 1.0f && isPositiveAndBelow(velocitySensitivity, 101));
             return ((1.0f - floatVelocity) * (1.0f - (velocitySensitivity / 100.0f)) + floatVelocity);
-        };
+        }
     };
     
     
@@ -130,10 +130,10 @@ public:
         if (right > 1.0f) right = 1.0f;
         
         return std::make_pair(left, right); // L, R
-    };
+    }
     
     
-    static void putPanningMultsFromMidiPanInArray(const int midiPan, int (&array)[2])
+    static void putPanningMultsFromMidiPanInArray(const int midiPan, float (&array)[2])
     {
         jassert(isPositiveAndBelow(midiPan, 128));
         
@@ -150,7 +150,7 @@ public:
         
         array[0] = left;
         array[1] = right;
-    };
+    }
     
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DspUtils)

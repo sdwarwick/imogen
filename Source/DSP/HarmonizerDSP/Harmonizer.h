@@ -47,7 +47,7 @@ public:
     
     bool isVoiceActive()          const noexcept { return currentlyPlayingNote >= 0; }
     
-    bool isPlayingButReleased()   const noexcept { return playingButReleased; }; // returns true if a voice is sounding, but its key has been released
+    bool isPlayingButReleased()   const noexcept { return playingButReleased; } // returns true if a voice is sounding, but its key has been released
     
     // Returns true if this voice started playing its current note before the other voice did.
     bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
@@ -57,7 +57,7 @@ public:
     void setKeyDown (bool isNowDown) noexcept;
     
     void setPan (const int newPan, const bool reportOldToParent = false);
-    int getCurrentMidiPan() const noexcept { return currentMidipan; };
+    int getCurrentMidiPan() const noexcept { return currentMidipan; }
     
     void startNote(const int midiPitch,  const float velocity, const bool wasStolen);
     void stopNote (const float velocity, const bool allowTailOff);
@@ -66,26 +66,26 @@ public:
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes(const int newMaxBlocksize);
     
-    uint32 getNoteOnTime() const noexcept { return noteOnTime; };
-    void setNoteOnTime(const uint32 newTime) { noteOnTime = newTime; };
+    uint32 getNoteOnTime() const noexcept { return noteOnTime; }
+    void setNoteOnTime(const uint32 newTime) { noteOnTime = newTime; }
     
     void clearBuffers();
     
-    float getCurrentVelocityMultiplier() const noexcept { return currentVelocityMultiplier; };
-    void setVelocityMultiplier(const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; };
-    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; };
+    float getCurrentVelocityMultiplier() const noexcept { return currentVelocityMultiplier; }
+    void setVelocityMultiplier(const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; }
+    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
     
-    void setCurrentOutputFreq(const float newFreq) noexcept { currentOutputFreq = newFreq; };
-    float getCurrentOutputFreq() const noexcept { return currentOutputFreq; };
+    void setCurrentOutputFreq(const float newFreq) noexcept { currentOutputFreq = newFreq; }
+    float getCurrentOutputFreq() const noexcept { return currentOutputFreq; }
     
     void updateSampleRate(const double newSamplerate);
     
-    void setAdsrParameters(const ADSR::Parameters newParams) { adsr.setParameters(newParams); };
-    void setQuickReleaseParameters(const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); };
-    void setQuickAttackParameters (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); };
+    void setAdsrParameters(const ADSR::Parameters newParams) { adsr.setParameters(newParams); }
+    void setQuickReleaseParameters(const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
+    void setQuickAttackParameters (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
     
-    void setPedalPitchVoice (const bool isNowPedalPitchVoice) noexcept { isPedalPitchVoice = isNowPedalPitchVoice; };
-    void setDescantVoice (const bool isNowDescantVoice) noexcept { isDescantVoice = isNowDescantVoice; };
+    void setPedalPitchVoice (const bool isNowPedalPitchVoice) noexcept { isPedalPitchVoice = isNowPedalPitchVoice; }
+    void setDescantVoice (const bool isNowDescantVoice) noexcept { isDescantVoice = isNowDescantVoice; }
     
 private:
     
@@ -165,25 +165,25 @@ public:
     
     bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
 
-    float getCurrentInputFreq() const noexcept { return currentInputFreq; };
+    float getCurrentInputFreq() const noexcept { return currentInputFreq; }
     void setCurrentInputFreq (const float newInputFreq);
     
     void handleMidiEvent(const MidiMessage& m, const int samplePosition);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     
-    void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; };
+    void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
     
     void setCurrentPlaybackSampleRate(const double newRate);
-    double getSamplerate() const noexcept { return sampleRate; };
+    double getSamplerate() const noexcept { return sampleRate; }
     
     void setConcertPitchHz(const int newConcertPitchhz);
     
     void updateStereoWidth(const int newWidth);
     void updateLowestPannedNote(const int newPitchThresh) noexcept;
-    int  getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; };
+    int  getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; }
     
-    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; };
-    bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; };
+    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
+    bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
     
     void reportActiveNotes(Array<int>& outputArray) const; // returns an array of the currently active pitches
     void reportActivesNoReleased(Array<int>& outputArray) const; // the same, but excludes notes that are still ringing but whose key has been released
@@ -195,19 +195,19 @@ public:
     void playChord (const Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
-    bool isLatched()  const noexcept { return latchIsOn; };
+    bool isLatched()  const noexcept { return latchIsOn; }
     
     void setIntervalLatch (const bool shouldBeOn, const bool allowTailOff);
-    bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; };
+    bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; }
     
     void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
-    void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; };
-    bool isADSRon() const noexcept { return adsrIsOn; };
+    void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; }
+    bool isADSRon() const noexcept { return adsrIsOn; }
     void updateQuickReleaseMs(const int newMs);
     void updateQuickAttackMs(const int newMs);
-    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; };
-    ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; };
-    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; };
+    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
+    ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
+    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     void updatePitchbendSettings(const int rangeUp, const int rangeDown);
     
@@ -217,42 +217,42 @@ public:
     // removes a specified # of voices, attempting to remove inactive voices first
     void removeNumVoices(const int voicesToRemove);
     
-    int getNumVoices() const noexcept { return voices.size(); };
+    int getNumVoices() const noexcept { return voices.size(); }
     
     void setPedalPitch(const bool isOn);
-    bool isPedalPitchOn() const noexcept { return pedalPitchIsOn; };
+    bool isPedalPitchOn() const noexcept { return pedalPitchIsOn; }
     void setPedalPitchUpperThresh(const int newThresh);
-    int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; };
+    int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; }
     void setPedalPitchInterval(const int newInterval);
-    int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; };
-    int getCurrentPedalPitchNote() const noexcept { return lastPedalPitch; };
+    int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; }
+    int getCurrentPedalPitchNote() const noexcept { return lastPedalPitch; }
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
     void setDescant(const bool isOn);
-    bool isDescantOn() const noexcept { return descantIsOn; };
+    bool isDescantOn() const noexcept { return descantIsOn; }
     void setDescantLowerThresh(const int newThresh);
-    int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; };
+    int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; }
     void setDescantInterval(const int newInterval);
-    int getCurrentDescantInterval() const noexcept { return descantInterval; };
-    int getCurrentDescantNote() const noexcept { return lastDescantPitch; };
+    int getCurrentDescantInterval() const noexcept { return descantInterval; }
+    int getCurrentDescantNote() const noexcept { return lastDescantPitch; }
     HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
     
-    void panValTurnedOff (const int midipitch) { panner.panValTurnedOff(midipitch); };
+    void panValTurnedOff (const int midipitch) { panner.panValTurnedOff(midipitch); }
     
     // returns a float velocity weighted according to the current midi velocity sensitivity settings
-    float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); };
+    float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); }
     
     // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
-    float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); };
+    float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); }
     
     // DANGER!!! FOR NON REAL TIME USE ONLY!!!
     void newMaxNumVoices(const int newMaxNumVoices);
     
-    bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   };
-    bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; };
-    bool isSoftPedalDown()      const noexcept { return softPedalDown;      };
-    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; };
-    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; };
+    bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
+    bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
+    bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
+    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; }
+    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; }
     
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
     

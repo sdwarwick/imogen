@@ -10,7 +10,7 @@ add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory cont
  
 
 juce_add_plugin (Imogen
-    COMPANY_NAME "Ben Vining Music Software"
+    COMPANY_NAME "BenViningMusicSoftware"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE

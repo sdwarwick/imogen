@@ -31,11 +31,8 @@ public:
         
         // numbox slider fill
         this->setColour(uiColourIds::numboxSliderFill,                  juce::Colours::grey);
-    };
+    }
     
-    ~ImogenLookAndFeel()
-    {
-    };
     
     enum Skin { CasualDenim, PlayfulBoho, ChicEveningwear, design4 };
     
@@ -71,7 +68,7 @@ public:
         
         g.setColour (this->findColour(Slider::ColourIds::thumbColourId));
         g.fillPath (p);
-    };
+    }
     
     
     void drawLinearSlider (Graphics& g, int x, int y, int width, int height,
@@ -168,11 +165,13 @@ public:
                 }
             }
         }
-    };
+    }
     
     
     void drawToggleButton (Graphics& g, ToggleButton& b, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
     {
+        ignoreUnused (shouldDrawButtonAsDown, shouldDrawButtonAsHighlighted);
+        
         const auto fontSize  = jmin (15.0f, (float) b.getHeight() * 0.75f);
         const auto tickWidth = fontSize * 1.1f;
         
@@ -189,7 +188,7 @@ public:
                           b.getLocalBounds().withTrimmedLeft (roundToInt (tickWidth) + 10)
                           .withTrimmedRight (2),
                           Justification::centredLeft, 10);
-    };
+    }
     
     void drawCheckbox(Graphics& g, float x, float y, float w, float h, bool ticked) // draws tick box for toggleButtons
     {
@@ -204,7 +203,7 @@ public:
             const auto tick = getTickShape (0.75f);
             g.fillPath (tick, tick.getTransformToScaleToFit (tickBounds.reduced (4, 5).toFloat(), false));
         }
-    };
+    }
     
     
     void changeSkin(Skin& newskin)
@@ -227,7 +226,7 @@ public:
                 goDesign4();
                 break;
         }
-    };
+    }
     
     
     void initializeLabel(Label& l, String labelText)
@@ -235,7 +234,7 @@ public:
         l.setFont(juce::Font(14.0f, juce::Font::bold));
         l.setJustificationType(juce::Justification::centred);
         l.setText(labelText, juce::dontSendNotification);
-    };
+    }
     
     
     enum uiColourIds
@@ -272,7 +271,7 @@ private:
         
         // staff display
         this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::oldlace);
-    };
+    }
     
     
     void PlayfulBohoSkin()
@@ -296,7 +295,7 @@ private:
         
         // staff display
         this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::navajowhite);
-    };
+    }
     
     
     void ChicEveningwearSkin()
@@ -320,7 +319,7 @@ private:
         
         // staff display
         this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
-    };
+    }
     
     
     void goDesign4()
@@ -341,7 +340,7 @@ private:
         
         // staff display
         this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
-    };
+    }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImogenLookAndFeel)
 };

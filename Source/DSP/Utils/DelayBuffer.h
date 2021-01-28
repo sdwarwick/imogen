@@ -17,7 +17,7 @@ public:
         base.clear();
         
         writeIndex = 0;
-    };
+    }
     
     DelayBuffer()
     {
@@ -25,10 +25,10 @@ public:
         writeIndex = 0;
         base.setSize (0, 0);
         base.clear();
-    };
+    }
     
     ~DelayBuffer()
-    { };
+    { }
     
     
     void changeSize (const int newNumChannels, const int maxDelay, const int blockLength)
@@ -47,7 +47,7 @@ public:
             writeIndex = lengthInSamples + writeIndex;
         else if (writeIndex >= lengthInSamples)
             writeIndex -= lengthInSamples;
-    };
+    }
     
     
     void writeSamples (const SampleType* inputSamples, const int numSamples, const int destChannel)
@@ -57,7 +57,7 @@ public:
         
         jassert (numSamples <= lengthInSamples);
         
-        SampleType* writing = base.getWritePointer(0);
+        SampleType* writing = base.getWritePointer(destChannel);
         
         int index = writeIndex;
         
@@ -70,7 +70,7 @@ public:
         }
         
         writeIndex = index;
-    };
+    }
     
     
     void writeSamples (const AudioBuffer<SampleType>& inputBuffer, const int inputChannel, const int inputStartSample,
@@ -78,7 +78,7 @@ public:
     {
         writeSamples (inputBuffer.getReadPointer(inputChannel, inputStartSample),
                       numSamples, destChannel);
-    };
+    }
     
     
     void getDelayedSamples (SampleType* outputSamples, const int delay, const int numSamples, const int readingChannel) const
@@ -99,7 +99,7 @@ public:
             if (readIndex >= lengthInSamples) readIndex = 0;
             outputSamples[n] = reading[readIndex];
         }
-    };
+    }
     
     
     void getDelayedSamples (AudioBuffer<SampleType>& destBuffer, const int destChannel, const int destStartSample,
@@ -107,7 +107,7 @@ public:
     {
         getDelayedSamples (destBuffer.getWritePointer(destChannel, destStartSample),
                            delay, numSamples, readingChannel);
-    };
+    }
     
     
     SampleType* pointToDelayedSamples (const int delay, const int readingChannel) const
@@ -116,7 +116,7 @@ public:
         const int readIndex = initRead > 0 ? initRead : lengthInSamples + initRead;
         
         return base.getReadPointer (readingChannel, readIndex);
-    };
+    }
     
     
     int numStoredSamples() const noexcept
@@ -125,7 +125,7 @@ public:
             return 0;
             
         return writeIndex - lengthInSamples;
-    };
+    }
     
     
     

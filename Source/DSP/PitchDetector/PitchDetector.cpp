@@ -63,7 +63,7 @@ void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const
     
     if (lastFrameWasPitched)
     {
-        SampleType lastHz = samplerate / lastEstimatedPeriod;
+        SampleType lastHz = static_cast<SampleType> (samplerate / lastEstimatedPeriod);
         lastEstimatedPeriod = newSamplerate / lastHz;
     }
     
@@ -355,7 +355,7 @@ void PitchDetector<SampleType>::getNextBestPeriodCandidate (Array<int>& candidat
 
 
 template<typename SampleType>
-unsigned int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numInputSamples)
+int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numInputSamples)
 {
     if (inputAudio[0] == 0.0)
         return 0;
@@ -411,7 +411,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
 
 
 template<typename SampleType>
-SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept
+SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept
 {
     if ((pos == 0) || ((pos + 1) >= dataSize)) // edge of data, can't interpolate
         return static_cast<SampleType> (pos);

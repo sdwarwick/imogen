@@ -128,6 +128,8 @@ void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
 {
     g.setColour(juce::Colours::black);
     
+    ignoreUnused (x, y);
+    
     // x & y coords are the center of the notehead
     // use different x offset values for sharps / flats
     if (useFlats)

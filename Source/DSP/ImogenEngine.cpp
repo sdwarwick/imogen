@@ -85,8 +85,8 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 template<typename SampleType>
 void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 {
-    const int aggregateBufferSizes = internalBlocksize * 2;
-    const int midiBufferSizes = std::max (aggregateBufferSizes * 2, samplesPerBlock * 2);
+    const size_t aggregateBufferSizes = static_cast<size_t> (internalBlocksize * 2);
+    const size_t midiBufferSizes = aggregateBufferSizes * 2;
     
     midiChoppingBuffer  .ensureSize (midiBufferSizes * 2);
     midiInputCollection .ensureSize (midiBufferSizes);
@@ -95,7 +95,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     chunkMidiBuffer.ensureSize(aggregateBufferSizes);
     
     harmonizer.resetNoteOnCounter(); // ??
-    harmonizer.prepare (aggregateBufferSizes);
+    harmonizer.prepare (internalBlocksize * 2);
     
     clearBuffers();
     
@@ -109,7 +109,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
         pitchDetector.setSamplerate(sampleRate);
     
     dspSpec.sampleRate = sampleRate;
-    dspSpec.maximumBlockSize = internalBlocksize;
+    dspSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     dspSpec.numChannels = 2;
     
     limiter.prepare (dspSpec);

@@ -37,11 +37,11 @@ public:
     
     void releaseResources();
     
-    int reportLatency() const noexcept { return internalBlocksize; };
+    int reportLatency() const noexcept { return internalBlocksize; }
     
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
-    void returnActivePitches(Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); };
+    void returnActivePitches(Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
     
     void updateSamplerate (const int newSamplerate);
     void updateDryWet     (const float newWetMixProportion);
@@ -69,8 +69,8 @@ public:
     
     void clearBuffers();
     
-    bool hasBeenReleased()    const noexcept { return resourcesReleased; };
-    bool hasBeenInitialized() const noexcept { return initialized; };
+    bool hasBeenReleased()    const noexcept { return resourcesReleased; }
+    bool hasBeenInitialized() const noexcept { return initialized; }
     
     
 private:
@@ -170,14 +170,14 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     juce::AudioProcessorEditor* createEditor() override;
-    bool hasEditor() const override { return true; };
+    bool hasEditor() const override { return true; }
     
-    const juce::String getName() const override { return JucePlugin_Name; };
+    const juce::String getName() const override { return JucePlugin_Name; }
     
-    bool  acceptsMidi()  const override { return true;  };
-    bool  producesMidi() const override { return true;  };
-    bool  supportsMPE()  const override { return false; };
-    bool  isMidiEffect() const override { return false; };
+    bool  acceptsMidi()  const override { return true;  }
+    bool  producesMidi() const override { return true;  }
+    bool  supportsMPE()  const override { return false; }
+    bool  isMidiEffect() const override { return false; }
     
     double getTailLengthSeconds() const override;
     
@@ -226,13 +226,13 @@ public:
     
     enum ModulatorInputSource { left, right, mixToMono }; // determines how the plugin will take input from the stereo buffer fed to it from the host
     
-    void changeModulatorInputSource(ModulatorInputSource newSource) noexcept { modulatorInput = newSource; };
+    void changeModulatorInputSource(ModulatorInputSource newSource) noexcept { modulatorInput = newSource; }
     
     bool canAddBus(bool isInput) const override;
     
     bool shouldWarnUserToEnableSidechain() const;
     
-    bool supportsDoublePrecisionProcessing() const override { return true; };
+    bool supportsDoublePrecisionProcessing() const override { return true; }
     
     void updateTrackProperties (const TrackProperties& properties) override; // informs the plugin about the properties of the DAW mixer track it's loaded on
     
@@ -240,7 +240,7 @@ public:
     
     //==============================================================================
     
-    ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; };
+    ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; }
     
     template<typename SampleType>
     void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
@@ -279,8 +279,8 @@ public:
     AudioParameterFloat* dryGain            = nullptr;
     AudioParameterFloat* wetGain            = nullptr;
     AudioParameterFloat* softPedalGain      = nullptr;
-    AudioParameterFloat* minDetectedHz      = nullptr;
-    AudioParameterFloat* maxDetectedHz      = nullptr;
+    AudioParameterInt*   minDetectedHz      = nullptr;
+    AudioParameterInt*   maxDetectedHz      = nullptr;
     AudioParameterFloat* confidenceThresh   = nullptr;
     
     
@@ -322,8 +322,3 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
-
-
-
-
-

@@ -60,7 +60,7 @@ void Harmonizer<SampleType>::clearBuffers()
 template<typename SampleType>
 void Harmonizer<SampleType>::prepare (const int blocksize)
 {
-    aggregateMidiBuffer.ensureSize(ceil(blocksize * 1.5f));
+    aggregateMidiBuffer.ensureSize(static_cast<size_t>(blocksize * 2));
     
     newMaxNumVoices(voices.size());
     

@@ -197,7 +197,7 @@ template<typename SampleType>
 int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                                           const int deltaTarget1, const int deltaTarget2)
 {
-    Array<int> candidateDeltas;
+    Array<float> candidateDeltas;
     candidateDeltas.ensureStorageAllocated (candidates.size());
     
     // 1. calculate delta values for each peak candidate
@@ -233,7 +233,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     {
         float minDelta = maxDelta;
         
-        for (int delta : candidateDeltas)
+        for (float delta : candidateDeltas)
             if (delta < minDelta)
                 minDelta = delta;
         

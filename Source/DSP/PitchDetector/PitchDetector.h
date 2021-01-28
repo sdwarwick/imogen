@@ -22,19 +22,19 @@ public:
     
     ~PitchDetector();
     
-    int getMinHz() const noexcept { return minHz; };
+    int getMinHz() const noexcept { return minHz; }
     
-    int getMaxHz() const noexcept { return maxHz; };
+    int getMaxHz() const noexcept { return maxHz; }
     
-    int getMaxPeriod() const noexcept { return maxPeriod; };
+    int getMaxPeriod() const noexcept { return maxPeriod; }
     
     void setHzRange (const int newMinHz, const int newMaxHz, const bool allowRecalc = false);
     
-    SampleType getCurrentConfidenceThresh() const noexcept { return confidenceThresh; };
+    SampleType getCurrentConfidenceThresh() const noexcept { return confidenceThresh; }
     
-    void setConfidenceThresh (const SampleType newThresh) { confidenceThresh = newThresh; };
+    void setConfidenceThresh (const SampleType newThresh) { confidenceThresh = newThresh; }
     
-    double getSamplerate() const noexcept { return samplerate; };
+    double getSamplerate() const noexcept { return samplerate; }
     
     void setSamplerate (const double newSamplerate, const bool recalcHzRange = true);
     
@@ -59,13 +59,13 @@ private:
     
     float chooseIdealPeriodCandidate (const SampleType* asdfData, const int asdfDataSize, const int minIndex);
     
-    unsigned int samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples);
+    int samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numSamples);
     
     int indexOfMinElement (const SampleType* data, const int dataSize);
     
     float foundThePeriod (const SampleType* asdfData, const int minIndex, const int asdfDataSize);
     
-    SampleType quadraticPeakPosition (const SampleType* data, unsigned int pos, const int dataSize) noexcept;
+    SampleType quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept;
     
     
     static constexpr int periodCandidatesToTest = 15;

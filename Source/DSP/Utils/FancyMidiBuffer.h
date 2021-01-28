@@ -38,7 +38,7 @@ public:
                            this->addEvent (meta.getMessage(),
                                            meta.samplePosition + writingStartSample);
                        } );
-    };
+    }
     
     
     void deleteEventsAndPushUpRest (const int numSamplesUsed)
@@ -62,7 +62,7 @@ public:
                                            std::max (0,
                                                     (meta.samplePosition - numSamplesUsed)) );
                        } );
-    };
+    }
     
     
     void copyFromRangeOfOtherBuffer (const MidiBuffer& sourceBuffer,
@@ -91,7 +91,7 @@ public:
                                            std::max (0,
                                                      meta.samplePosition + sampleOffset));
                        } );
-    };
+    }
     
     
 private:

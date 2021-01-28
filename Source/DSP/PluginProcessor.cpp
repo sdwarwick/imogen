@@ -42,8 +42,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     dryGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("dryGain"));                          jassert(dryGain);
     wetGain            = dynamic_cast<AudioParameterFloat*>(tree.getParameter("wetGain"));                          jassert(wetGain);
     softPedalGain      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("softPedalGain"));                    jassert(softPedalGain);
-    minDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMinHz"));              jassert(minDetectedHz);
-    maxDetectedHz      = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionMaxHz"));              jassert(maxDetectedHz);
+    minDetectedHz      = dynamic_cast<AudioParameterInt*>  (tree.getParameter("pitchDetectionMinHz"));              jassert(minDetectedHz);
+    maxDetectedHz      = dynamic_cast<AudioParameterInt*>  (tree.getParameter("pitchDetectionMaxHz"));              jassert(maxDetectedHz);
     confidenceThresh   = dynamic_cast<AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceThresh"));   jassert(confidenceThresh);
     
     if (isUsingDoublePrecision())
@@ -658,9 +658,8 @@ AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParame
     
     // NEED GUI -- PITCH DETECTION SETTINGS
     // Note that the minimum possible Hz value will impact the plugin's latency.
-    NormalisableRange<float> hzRange (20.0f, 10000.0f, 0.01f);
-    params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionMinHz", "Min possible Hz", hzRange, 80.0f));
-    params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionMaxHz", "Max possible Hz", hzRange, 2400.0f));
+    params.push_back(std::make_unique<AudioParameterInt>    ("pitchDetectionMinHz", "Min possible Hz", 40, 600, 80));
+    params.push_back(std::make_unique<AudioParameterInt>    ("pitchDetectionMaxHz", "Max possible Hz", 1000, 10000, 2600));
     params.push_back(std::make_unique<AudioParameterFloat>  ("pitchDetectionConfidenceThresh", "Confidence thresh",
                                                              NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
     
@@ -685,14 +684,20 @@ int ImogenAudioProcessor::getCurrentProgram() {
 };
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
-{ };
+{
+    ignoreUnused (index);
+};
 
-const juce::String ImogenAudioProcessor::getProgramName (int index) {
+const juce::String ImogenAudioProcessor::getProgramName (int index)
+{
+    ignoreUnused(index);
     return {};
 };
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
-{ };
+{
+    ignoreUnused (index, newName);
+};
 
 
 AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const

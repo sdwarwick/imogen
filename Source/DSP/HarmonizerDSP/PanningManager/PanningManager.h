@@ -18,7 +18,7 @@ class PanningManager
 public:
     
     PanningManager();
-    ~PanningManager() {};
+    ~PanningManager() {}
     
     void releaseResources();
     

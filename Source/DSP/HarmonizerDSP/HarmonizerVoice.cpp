@@ -295,6 +295,8 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity, const bool wasStolen)
 {
+    ignoreUnused (wasStolen);
+    
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
     currentVelocityMultiplier = parent->getWeightedVelocity (velocity);
@@ -312,6 +314,8 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allowTailOff)
 {
+    ignoreUnused (velocity);
+    
     if (allowTailOff)
     {
         adsr.noteOff();

@@ -17,20 +17,20 @@ class Panner
 {
 public:
     Panner(): lastRecievedMidiPan(64), leftGain(0.5f), rightGain(0.5f), prevLeftGain(0.5f), prevRightGain(0.5f)
-    { };
+    { }
     
     ~Panner()
-    { };
+    { }
     
-    int getLastMidiPan() const noexcept { return lastRecievedMidiPan; };
+    int getLastMidiPan() const noexcept { return lastRecievedMidiPan; }
     
-    float getLeftGain()  const noexcept { return leftGain; };
+    float getLeftGain()  const noexcept { return leftGain; }
     
-    float getRightGain() const noexcept { return rightGain; };
+    float getRightGain() const noexcept { return rightGain; }
     
-    float getPrevLeftGain()  const noexcept { return prevLeftGain; };
+    float getPrevLeftGain()  const noexcept { return prevLeftGain; }
     
-    float getPrevRightGain() const noexcept { return prevRightGain; };
+    float getPrevRightGain() const noexcept { return prevRightGain; }
     
     
     float getGainMult (const int chan) const
@@ -41,7 +41,7 @@ public:
             return leftGain;
         
         return rightGain;
-    };
+    }
     
     float getPrevGain (const int chan) const
     {
@@ -51,7 +51,7 @@ public:
             return prevLeftGain;
         
         return prevRightGain;
-    };
+    }
     
     
     void setMidiPan (const int newMidiPan)
@@ -79,7 +79,7 @@ public:
         if (right > 1.0f) right = 1.0f;
         
         lastRecievedMidiPan = newMidiPan;
-    };
+    }
     
     
 private:
