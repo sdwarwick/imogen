@@ -247,7 +247,7 @@ target_sources (Imogen PRIVATE
     )
 
 
-set (All_Source_Directories
+target_include_directories (Imogen PRIVATE 
     ${dspSourcePath}
     ${HarmonizerSourcePath}
     ${GrainExtractorSourcePath}
@@ -260,12 +260,6 @@ set (All_Source_Directories
     ${MidiControlSourcePath}
     ${StaffDisplaySourcePath}
     )
-
-
-target_include_directories (Imogen PRIVATE ${All_Source_Directories})
-
-
-target_link_directories (Imogen PRIVATE ${All_Source_Directories})
 
 
 target_link_libraries (Imogen

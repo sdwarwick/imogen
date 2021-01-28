@@ -20,7 +20,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     targetArray.clearQuick();
     
     const int outputGrain = 2 * period;
-    const int halfPeriod  = ceil (period / 2.0f);
+    const int halfPeriod  = roundToInt (ceil (period / 2));
     
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
@@ -136,7 +136,8 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         starting = newStart;
     }
     
-    const SampleType startingWeight = (starting == predictedPeak) ? 1.0 : 1.0 - ( ((abs(starting - predictedPeak)) / numSamples) * 0.5 );
+    const SampleType startingWeight = (starting == predictedPeak) ? SampleType(1.0)
+                                                                  : SampleType(1.0) - ( ((abs(starting - predictedPeak)) / numSamples) * SampleType(0.5) );
     SampleType localMin = input[starting] * startingWeight;
     SampleType localMax = localMin;
     int indexOfLocalMin = starting;
@@ -152,7 +153,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         if (candidates.contains (index))
             continue;
         
-        const SampleType weighting = 1.0 - ((abs(index - predictedPeak) / numSamples) * 0.5); // these weighting functions may need tuning...
+        const SampleType weighting = SampleType(1.0) - ((abs(index - predictedPeak) / numSamples) * SampleType(0.5)); // these weighting functions may need tuning...
         
         const SampleType currentSample = input[index] * weighting;
         

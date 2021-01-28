@@ -26,7 +26,7 @@ public:
     T mtof(const T midiNote) const
     {
         jassert(midiNote >= 0 && midiNote <= 127);
-        return concertPitchHz * std::pow(2.0, ((midiNote - rootNote) / notesPerOctave));
+        return concertPitchHz * std::pow(T(2.0), ((midiNote - rootNote) / notesPerOctave));
     }
     
     // converts frequency in Hz to midipitch

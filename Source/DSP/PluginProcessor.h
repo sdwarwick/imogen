@@ -118,7 +118,7 @@ private:
     FancyMidiBuffer chunkMidiBuffer;
     
     
-    void copyRangeOfMidiBuffer (const MidiBuffer& inputBuffer, MidiBuffer& outputBuffer,
+    void copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
                                 const int startSampleOfInput,
                                 const int startSampleOfOutput,
                                 const int numSamples);

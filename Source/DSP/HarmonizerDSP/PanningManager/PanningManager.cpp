@@ -271,7 +271,7 @@ void PanningManager::mapArrayIndexes()
     
     arrayIndexesMapped.clearQuick();
     
-    const int middleIndex = currentNumVoices > 1 ? floor(currentNumVoices / 2.0f) : 0;
+    const int middleIndex = currentNumVoices > 1 ? roundToInt(floor(currentNumVoices / 2)) : 0;
     
     arrayIndexesMapped.add(middleIndex);
     

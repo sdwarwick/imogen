@@ -444,19 +444,19 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
 
 // copies a range of events from one MidiBuffer to another MidiBuffer, applying a timestamp offset. The number of events copied will correspond to the numSamples argument.
 template<typename SampleType>
-void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& inputBuffer, MidiBuffer& outputBuffer,
+void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
                                                       const int startSampleOfInput,
                                                       const int startSampleOfOutput,
                                                       const int numSamples)
 {
-    outputBuffer.clear (startSampleOfOutput, numSamples);
+    destBuffer.clear (startSampleOfOutput, numSamples);
     
-    auto midiIterator = inputBuffer.findNextSamplePosition(startSampleOfInput);
+    auto midiIterator = readingBuffer.findNextSamplePosition(startSampleOfInput);
     
-    if (midiIterator == inputBuffer.cend())
+    if (midiIterator == readingBuffer.cend())
         return;
     
-    const auto midiEnd = inputBuffer.findNextSamplePosition(startSampleOfInput + numSamples);
+    const auto midiEnd = readingBuffer.findNextSamplePosition(startSampleOfInput + numSamples);
     
     if (midiIterator == midiEnd)
         return;
@@ -466,9 +466,9 @@ void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& inputBuf
     std::for_each (midiIterator, midiEnd,
                    [&] (const MidiMessageMetadata& meta)
                        {
-                           outputBuffer.addEvent (meta.getMessage(),
-                                                  std::max (0,
-                                                            meta.samplePosition + sampleOffset));
+                           destBuffer.addEvent (meta.getMessage(),
+                                                std::max (0,
+                                                          meta.samplePosition + sampleOffset));
                        } );
 };
 

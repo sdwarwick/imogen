@@ -12,11 +12,11 @@
 
 
 template<typename SampleType>
-PitchDetector<SampleType>::PitchDetector(const int minHz, const int maxHz, const double samplerate): confidenceThresh(0.25)
+PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int maxDetectableHz, const double initSamplerate): confidenceThresh(0.25)
 {
-    this->minHz = minHz;
-    this->maxHz = maxHz;
-    this->samplerate = samplerate;
+    minHz = minDetectableHz;
+    maxHz = maxDetectableHz;
+    samplerate = initSamplerate;
     
     asdfBuffer.setSize (1, 500);
     
@@ -64,7 +64,7 @@ void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const
     if (lastFrameWasPitched)
     {
         SampleType lastHz = static_cast<SampleType> (samplerate / lastEstimatedPeriod);
-        lastEstimatedPeriod = newSamplerate / lastHz;
+        lastEstimatedPeriod = SampleType(newSamplerate) / lastHz;
     }
     
     samplerate = newSamplerate;
@@ -117,8 +117,8 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         }
     }
     
-    const int middleIndex = floor (numSamples / 2.0f);
-    const int halfNumSamples = floor ((numSamples - 1) / 2.0f);
+    const int middleIndex = roundToInt(floor (numSamples / 2));
+    const int halfNumSamples = roundToInt(floor ((numSamples - 1) / 2));
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
@@ -138,7 +138,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         asdfData[index] = 0.0;
         
-        const int sampleOffset = middleIndex - (floor (k / 2.0f));
+        const int sampleOffset = middleIndex - roundToInt((floor (k / 2)));
         
         for (int s = sampleOffset - halfNumSamples;
                  s < sampleOffset + halfNumSamples;
@@ -237,7 +237,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     int candidateDeltas[periodCandidatesSize];
     
     for (int c = 0; c < periodCandidatesSize; ++c)
-        candidateDeltas[c] = abs(periodCandidates.getUnchecked(c) + minPeriod - lastEstimatedPeriod);
+        candidateDeltas[c] = roundToInt(abs(periodCandidates.getUnchecked(c) + minPeriod - lastEstimatedPeriod));
     
     // find min & max delta val of any candidate we have
     int minDelta = candidateDeltas[0];
@@ -273,7 +273,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
             weightedCandidateConfidence[c] = asdfData[candidate];
         else
         {
-            const SampleType weight = 1.0 + ((delta / deltaRange) * 0.5);
+            const SampleType weight = SampleType(1.0) + ((delta / deltaRange) * SampleType(0.5));
             weightedCandidateConfidence[c] = asdfData[candidate] * weight;
         }
     }
@@ -424,7 +424,7 @@ SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* d
     const auto s0 = data[pos - 1];
     const auto s2 = data[pos + 1];
     
-    return pos + 0.5 * (s2 - s0) / (2.0 * posData - s2 - s0);
+    return pos + SampleType(0.5) * (s2 - s0) / (SampleType(2.0) * posData - s2 - s0);
 };
 
 
