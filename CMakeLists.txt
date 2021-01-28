@@ -25,7 +25,8 @@ juce_add_plugin (Imogen
     DISABLE_AAX_MULTI_MONO TRUE
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
-    AAX_CATEGORY AAX_ePlugInCategory_PitchShift)
+    AAX_CATEGORY AAX_ePlugInCategory_PitchShift
+    )
 
 
 target_compile_features (Imogen PRIVATE cxx_std_17)
@@ -38,7 +39,8 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0)
+    JUCE_VST3_CAN_REPLACE_VST2=0
+    )
 
 
 #####
@@ -55,7 +57,7 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
 
 #####
 
-# DSP source files 
+# DSP SOURCE FILES
 
 set (dspSourcePath ${CMAKE_CURRENT_LIST_DIR}/Source/DSP)
 
@@ -155,8 +157,6 @@ source_group (
 
 set (guiSourcePath ${CMAKE_CURRENT_LIST_DIR}/Source/GUI)
 
-# GUI source files 
-
 set (guiSources
     ${guiSourcePath}/LookAndFeel.h
     ${guiSourcePath}/PluginEditor.cpp
@@ -229,6 +229,8 @@ source_group (
 #####
 
 target_sources (Imogen PRIVATE 
+
+    # DSP files:
     ${GrainExtractorSources}
     ${PanningManagerSources}
     ${UtilSources}
@@ -236,11 +238,13 @@ target_sources (Imogen PRIVATE
     ${PitchDetectorSources}
     ${dspSources}
 
+    # GUI files:
     ${HelpScreenSources}
     ${IOControlSources}
     ${MidiControlSources}
     ${StaffDisplaySources}
-    ${guiSources})
+    ${guiSources}
+    )
 
 
 set (All_Source_Directories
@@ -254,15 +258,14 @@ set (All_Source_Directories
     ${HelpScreenSourcePath}
     ${IOPanelSourcePath}
     ${MidiControlSourcePath}
-    ${StaffDisplaySourcePath})
+    ${StaffDisplaySourcePath}
+    )
 
 
-target_include_directories (Imogen PRIVATE
-    ${All_Source_Directories})
+target_include_directories (Imogen PRIVATE ${All_Source_Directories})
 
 
-target_link_directories (Imogen PRIVATE 
-    ${All_Source_Directories})
+target_link_directories (Imogen PRIVATE ${All_Source_Directories})
 
 
 target_link_libraries (Imogen
