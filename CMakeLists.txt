@@ -9,7 +9,7 @@ set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
  
 
-juce_add_plugin (Imogen
+juce_add_plugin (${CMAKE_PROJECT_NAME}
     COMPANY_NAME "BenViningMusicSoftware"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT TRUE
@@ -18,10 +18,10 @@ juce_add_plugin (Imogen
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     COPY_PLUGIN_AFTER_BUILD TRUE
     PLUGIN_MANUFACTURER_CODE BenV
-    PLUGIN_NAME Imogen
+    PLUGIN_NAME ${CMAKE_PROJECT_NAME}
     PLUGIN_CODE Imgn
     FORMATS AU VST3
-    PRODUCT_NAME "Imogen"
+    PRODUCT_NAME "${CMAKE_PROJECT_NAME}"
     DISABLE_AAX_MULTI_MONO TRUE
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
@@ -29,13 +29,13 @@ juce_add_plugin (Imogen
     )
 
 
-target_compile_features (Imogen PRIVATE cxx_std_17)
+target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE cxx_std_17)
 
 
-juce_generate_juce_header (Imogen)
+juce_generate_juce_header (${CMAKE_PROJECT_NAME})
 
 
-target_compile_definitions (Imogen PUBLIC
+target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
@@ -228,7 +228,7 @@ source_group (
 
 #####
 
-target_sources (Imogen PRIVATE 
+target_sources (${CMAKE_PROJECT_NAME} PRIVATE 
 
     # DSP files:
     ${GrainExtractorSources}
@@ -247,7 +247,7 @@ target_sources (Imogen PRIVATE
     )
 
 
-target_include_directories (Imogen PRIVATE 
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
     ${dspSourcePath}
     ${HarmonizerSourcePath}
     ${GrainExtractorSourcePath}
@@ -262,7 +262,7 @@ target_include_directories (Imogen PRIVATE
     )
 
 
-target_link_libraries (Imogen
+target_link_libraries (${CMAKE_PROJECT_NAME}
     PRIVATE
         ImogenGraphicAssets
         juce::juce_audio_utils
