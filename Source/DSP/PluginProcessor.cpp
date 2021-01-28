@@ -1,5 +1,6 @@
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "../../Source/DSP/PluginProcessor.h"
+#include "../../Source/GUI/PluginEditor.h"
+
 
 //==============================================================================
 ImogenAudioProcessor::ImogenAudioProcessor():

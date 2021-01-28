@@ -9,6 +9,9 @@ set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
  
 
+# set VST, AU & AAX SDK paths!
+
+
 juce_add_plugin (${CMAKE_PROJECT_NAME}
     COMPANY_NAME "BenViningMusicSoftware"
     IS_SYNTH FALSE
@@ -20,7 +23,7 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     PLUGIN_MANUFACTURER_CODE BenV
     PLUGIN_NAME ${CMAKE_PROJECT_NAME}
     PLUGIN_CODE Imgn
-    FORMATS AU VST3
+    FORMATS AU VST3    # add AAX as a target...
     PRODUCT_NAME "${CMAKE_PROJECT_NAME}"
     DISABLE_AAX_MULTI_MONO TRUE
     VST3_CATEGORIES Pitch Shift
@@ -41,18 +44,6 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0
     )
-
-
-#####
-
-# graphic asset binary files 
-
-set (GraphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/Source/GUI/GraphicAssets)
-
-juce_add_binary_data (ImogenGraphicAssets SOURCES 
-    ${GraphicAssetsDir}/1-1_note_semibreve.svg 
-    ${GraphicAssetsDir}/closeIcon.png 
-    ${GraphicAssetsDir}/grandStaff.png)
 
 
 #####
@@ -117,6 +108,10 @@ source_group (
     PREFIX "PanningManager"
     FILES ${PanningManagerSources})
 
+unset (HarmonizerSourcePath)
+unset (GrainExtractorSourcePath)
+unset (PanningManagerSourcePath)
+
 #
 
 # Pitch detector source files 
@@ -131,6 +126,8 @@ source_group (
     TREE ${PitchDetectorSourcePath}
     PREFIX "PitchDetector"
     FILES ${PitchDetectorSources})
+
+unset (PitchDetectorSourcePath)
 
 #
 
@@ -149,6 +146,7 @@ source_group (
     PREFIX "Utils"
     FILES ${UtilSources})
 
+unset (UtilSourcePath)
 
 
 #####
@@ -182,6 +180,7 @@ source_group (
     PREFIX "HelpScreen"
     FILES ${HelpScreenSources})
 
+unset (HelpScreenSourcePath)
 
 # IO control panel
 
@@ -197,6 +196,8 @@ source_group (
     PREFIX "IOControlPanel"
     FILES ${IOControlSources})
 
+unset (IOPanelSourcePath)
+
 
 # Midi control panel
 
@@ -211,6 +212,8 @@ source_group (
     PREFIX "MidiControlPanel"
     FILES ${MidiControlSources})
 
+unset (MidiControlSourcePath)
+
 
 # Staff display
 
@@ -224,6 +227,8 @@ source_group (
     TREE ${StaffDisplaySourcePath}
     PREFIX "StaffDisplay"
     FILES ${StaffDisplaySources})
+
+unset (StaffDisplaySourcePath)
 
 
 #####
@@ -249,20 +254,28 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
     ${dspSourcePath}
-    ${HarmonizerSourcePath}
-    ${GrainExtractorSourcePath}
-    ${PanningManagerSourcePath}
-    ${PitchDetectorSourcePath}
-    ${UtilSourcePath}
-    ${guiSourcePath}
-    ${HelpScreenSourcePath}
-    ${IOPanelSourcePath}
-    ${MidiControlSourcePath}
-    ${StaffDisplaySourcePath}
-    )
+    ${guiSourcePath})
+
+
+#####
+
+# graphic asset binary files 
+
+set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
+
+juce_add_binary_data (ImogenGraphicAssets SOURCES 
+    ${GraphicAssetsDir}/1-1_note_semibreve.svg 
+    ${GraphicAssetsDir}/closeIcon.png 
+    ${GraphicAssetsDir}/grandStaff.png)
+
+unset (GraphicAssetsDir)
+
+#####
 
 
 target_link_libraries (${CMAKE_PROJECT_NAME}
+    INTERFACE
+        ImogenGraphicAssets
     PRIVATE
         ImogenGraphicAssets
         juce::juce_audio_utils

@@ -9,7 +9,7 @@
  */
 
 #include <JuceHeader.h>
-#include "IOControlPanel.h"
+#include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
 
 //==============================================================================
 IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):

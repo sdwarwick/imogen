@@ -9,7 +9,7 @@
  */
 
 #include <JuceHeader.h>
-#include "StaffDisplay.h"
+#include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
 
 //==============================================================================
 StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l):

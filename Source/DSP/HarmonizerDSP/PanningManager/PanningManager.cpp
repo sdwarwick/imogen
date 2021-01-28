@@ -8,7 +8,8 @@
  ==============================================================================
  */
 
-#include "PanningManager.h"
+
+#include "../../Source/DSP/HarmonizerDSP/PanningManager/PanningManager.h"
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
 { };

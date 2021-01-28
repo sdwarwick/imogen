@@ -8,11 +8,7 @@
   ==============================================================================
 */
 
-#include "PluginProcessor.h"
-#include "Utils/DelayBuffer.h"
-#include "Utils/Panner.h"
-#include "Utils/FancyMidiBuffer.h"
-#include "PitchDetector/PitchDetector.h"
+#include "../../Source/DSP/PluginProcessor.h"
 
 
 template<typename SampleType>

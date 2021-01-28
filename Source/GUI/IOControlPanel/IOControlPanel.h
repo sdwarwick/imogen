@@ -11,9 +11,9 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "PluginProcessor.h"
-#include "LimiterControlPanel.h"
-#include "LookAndFeel.h"
+#include "../../Source/DSP/PluginProcessor.h"
+#include "../../Source/GUI/IOControlPanel/LimiterControlPanel.h"
+#include "../../Source/GUI/LookAndFeel.h"
 
 
 //==============================================================================

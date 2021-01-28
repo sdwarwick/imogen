@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "PitchDetector.h"
+#include "../../Source/DSP/PitchDetector/PitchDetector.h"
 
 
 template<typename SampleType>

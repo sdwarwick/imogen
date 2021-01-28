@@ -2,11 +2,12 @@
 
 #include <JuceHeader.h>
 
-#include "DelayBuffer.h"
-#include "FancyMidiBuffer.h"
-#include "Panner.h"
-#include "Harmonizer.h"
-#include "PitchDetector.h"
+#include "../../Source/DSP/Utils/DelayBuffer.h"
+#include "../../Source/DSP/Utils/FancyMidiBuffer.h"
+#include "../../Source/DSP/Utils/Panner.h"
+#include "../../Source/DSP/HarmonizerDSP/Harmonizer.h"
+#include "../../Source/DSP/PitchDetector/PitchDetector.h"
+
 
 class ImogenAudioProcessorEditor; // forward declaration...
 

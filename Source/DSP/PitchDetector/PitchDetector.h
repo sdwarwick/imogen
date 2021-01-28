@@ -18,7 +18,7 @@ class PitchDetector
 {
 public:
     
-    PitchDetector(const int minDetectableHz, const int maxDetectableHz, const double initSamplerate);
+    PitchDetector (const int minDetectableHz, const int maxDetectableHz, const double initSamplerate);
     
     ~PitchDetector();
     

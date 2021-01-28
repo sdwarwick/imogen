@@ -1,4 +1,5 @@
-#include "PluginEditor.h"
+#include "../../Source/GUI/PluginEditor.h"
+
 
 //==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
@@ -18,9 +19,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     helpScreen  .setLookAndFeel(&lookAndFeel);
     sidechainWarning.setLookAndFeel(&lookAndFeel);
     
-#define FRAMERATE 60
-    Timer::startTimerHz(FRAMERATE);
-#undef FRAMERATE
+    Timer::startTimerHz(60); // framerate of graphics
     
     selectSkin.addItem("Casual Denim", 1);
     selectSkin.addItem("Playful Boho", 2);

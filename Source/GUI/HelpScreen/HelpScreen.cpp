@@ -9,7 +9,7 @@
  */
 
 #include <JuceHeader.h>
-#include "HelpScreen.h"
+#include "../../Source/GUI/HelpScreen/HelpScreen.h"
 
 //==============================================================================
 HelpScreen::HelpScreen():

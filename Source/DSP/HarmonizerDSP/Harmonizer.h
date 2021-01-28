@@ -12,11 +12,12 @@
 
 #include <JuceHeader.h>
 
-#include "Panner.h"
-#include "GeneralUtils.h"
-#include "HarmonizerUtilities.h"
-#include "PanningManager.h"
-#include "GrainExtractor.h"
+#include "../../Source/DSP/Utils/Panner.h"
+#include "../../Source/DSP/Utils/GeneralUtils.h"
+#include "../../Source/DSP/HarmonizerDSP/HarmonizerUtilities.h"
+#include "../../Source/DSP/HarmonizerDSP/PanningManager/PanningManager.h"
+#include "../../Source/DSP/HarmonizerDSP/GrainExtractor/GrainExtractor.h"
+
 
 template<typename SampleType>
 class Harmonizer; // forward declaration...
@@ -34,9 +35,9 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock(const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                         const int origPeriod, const Array<int>& indicesOfGrainOnsets,
-                         const AudioBuffer<SampleType>& windowToUse);
+    void renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                          const int origPeriod, const Array<int>& indicesOfGrainOnsets,
+                          const AudioBuffer<SampleType>& windowToUse);
     
     void prepare (const int blocksize);
     

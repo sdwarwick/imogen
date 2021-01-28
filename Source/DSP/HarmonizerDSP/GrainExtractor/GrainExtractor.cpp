@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "GrainExtractor.h"
+#include "../../Source/DSP/HarmonizerDSP/GrainExtractor/GrainExtractor.h"
 
 
 template<typename SampleType>
