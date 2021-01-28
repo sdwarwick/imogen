@@ -4,28 +4,45 @@ cmake_minimum_required (VERSION 3.15)
 
 project (Imogen VERSION 0.0.1)
 
+
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
-add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
- 
 
-# set VST, AU & AAX SDK paths!
+add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
+
+
+set_directory_properties (PROPERTIES JUCE_COMPANY_COPYRIGHT
+    This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.)
+
+set_directory_properties (PROPERTIES JUCE_COMPANY_NAME BenViningMusicSoftware)
+
+set_directory_properties (PROPERTIES JUCE_COMPANY_WEBSITE www.benvining.com)
+
+set_directory_properties (PROPERTIES JUCE_COMPANY_EMAIL ben.the.vining@gmail.com)
+
+set_directory_properties (PROPERTIES JUCE_VST3_COPY_DIR /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins)
+
+set_directory_properties (PROPERTIES JUCE_AU_COPY_DIR /Users/benvining/Library/Audio/Plug-Ins/Components)
+
+set_directory_properties (PROPERTIES JUCE_COPY_PLUGIN_AFTER_BUILD TRUE)
 
 
 juce_add_plugin (${CMAKE_PROJECT_NAME}
-    COMPANY_NAME "BenViningMusicSoftware"
+    PRODUCT_NAME ${CMAKE_PROJECT_NAME}
+    VERSION ${CMAKE_PROJECT_VERSION}
+    BUNDLE_ID com.BenViningMusicSoftware.Imogen
+    
+    PLUGIN_NAME ${CMAKE_PROJECT_NAME}
+    PLUGIN_MANUFACTURER_CODE Benv
+    DESCRIPTION Real-time vocal harmonizer instrument
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    COPY_PLUGIN_AFTER_BUILD TRUE
-    PLUGIN_MANUFACTURER_CODE BenV
-    PLUGIN_NAME ${CMAKE_PROJECT_NAME}
-    PLUGIN_CODE Imgn
-    FORMATS AU VST3    # add AAX as a target...
-    PRODUCT_NAME "${CMAKE_PROJECT_NAME}"
     DISABLE_AAX_MULTI_MONO TRUE
+    PLUGIN_CODE Imgn
+    FORMATS AU VST3    
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
     AAX_CATEGORY AAX_ePlugInCategory_PitchShift
