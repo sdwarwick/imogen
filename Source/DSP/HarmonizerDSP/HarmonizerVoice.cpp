@@ -151,7 +151,7 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
     
     const auto* input = inputAudio.getReadPointer(0);
     
-    if (nextSBindex >= totalNumInputSamples)
+    if (totalNumInputSamples < nextSBindex)
         return;
     
     const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
@@ -168,8 +168,8 @@ void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudi
         
         olaFrame (input, grainStart, grainEnd, window, newPeriod);
         
-        if (nextSBindex >= totalNumInputSamples)
-            break;
+        if (totalNumInputSamples < nextSBindex)
+            return;
     }
 };
 

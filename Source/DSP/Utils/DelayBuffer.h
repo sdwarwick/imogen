@@ -65,7 +65,7 @@ public:
              s < numSamples;
              ++s, ++index)
         {
-            if (index >= lengthInSamples) index = 0;
+            index %= lengthInSamples;
             writing[index] = inputSamples[s];
         }
         
@@ -87,8 +87,7 @@ public:
         jassert (numSamples <= lengthInSamples);
         
         const int initRead = writeIndex - delay;
-        
-        int readIndex = initRead > 0 ? initRead : lengthInSamples + initRead;
+        int readIndex = initRead < 0 ? lengthInSamples + initRead : initRead;
         
         const SampleType* reading = base.getReadPointer(readingChannel);
         
@@ -96,7 +95,7 @@ public:
              n < numSamples;
              ++n, ++readIndex)
         {
-            if (readIndex >= lengthInSamples) readIndex = 0;
+            readIndex %= lengthInSamples;
             outputSamples[n] = reading[readIndex];
         }
     }
@@ -113,7 +112,7 @@ public:
     SampleType* pointToDelayedSamples (const int delay, const int readingChannel) const
     {
         const int initRead = writeIndex - delay;
-        const int readIndex = initRead > 0 ? initRead : lengthInSamples + initRead;
+        const int readIndex = initRead < 0 ? lengthInSamples + initRead : initRead;
         
         return base.getReadPointer (readingChannel, readIndex);
     }
