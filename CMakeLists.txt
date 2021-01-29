@@ -1,8 +1,22 @@
 # IMOGEN 
 
+# This CMake script will generate an IDE project containing all the Imogen source code files, as well as JUCE build targets for VST and AudioUnit plugins.
+# Or maybe that's not what it does, to be honest I'm new to cmake ¯\_(ツ)_/¯
+
+
+# TO DO:
+
+# add executable for plugin build targets -- juce audio plugin host?
+# organize source code groups into layered tree structure
+# move JUCE library code out of being a subdirectory. GIT submodule? 
+
+
+
 cmake_minimum_required (VERSION 3.15) 
 
 project (Imogen VERSION 0.0.1)
+
+# include (CTest)
 
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
@@ -250,8 +264,7 @@ unset (StaffDisplaySourcePath)
 
 #####
 
-target_sources (${CMAKE_PROJECT_NAME} PRIVATE 
-
+set (ImogenSourceCode   # this struct defines the collection of all non-juce or c++::std source code files that are used by Imogen.
     # DSP files:
     ${GrainExtractorSources}
     ${PanningManagerSources}
@@ -267,6 +280,9 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     ${StaffDisplaySources}
     ${guiSources}
     )
+
+
+target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${ImogenSourceCode})
 
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
@@ -304,3 +320,32 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
     )
+
+
+#####
+
+# Test executable
+
+# set (testFilesPath ${CMAKE_CURRENT_LIST_DIR}/Source/Tests)  #  ¯\_(ツ)_/¯
+
+# set (testFiles ${testFilesPath}/tests.cpp ${testFilesPath}/tests.h) 
+
+# source_group (
+#    TREE ${testFilesPath}
+#    PREFIX "Tests"
+#    FILES ${testFiles})
+
+# add_executable (tests ${ImogenSourceCode} ${testFiles})
+
+# target_include_directories (tests PRIVATE ${dspSourcePath} ${guiSourcePath})
+
+# target_link_libraries (tests
+#    PRIVATE
+#       juce::juce_audio_utils
+#        juce::juce_audio_plugin_client
+#        juce::juce_dsp
+#        juce::juce_graphics)
+
+# add_test (NAME tests COMMAND tests)
+
+# enable_testing()
