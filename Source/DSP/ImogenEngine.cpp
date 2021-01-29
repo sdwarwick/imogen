@@ -8,13 +8,13 @@
   ==============================================================================
 */
 
-#include "../../Source/DSP/PluginProcessor.h"
+#include "../../Source/DSP/ImogenEngine.h"
 
 
 template<typename SampleType>
-ImogenEngine<SampleType>::ImogenEngine(ImogenAudioProcessor& p):
+ImogenEngine<SampleType>::ImogenEngine():
+    modulatorInput(ModulatorInputSource::left),
     internalBlocksize(512),
-    processor(p),
     inputBuffer(1, internalBlocksize, internalBlocksize),
     outputBuffer(2, internalBlocksize, internalBlocksize),
     limiterIsOn(false),
@@ -237,22 +237,22 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     AudioBuffer<SampleType> input; // input must be a MONO buffer!
     
-    switch (processor.getModulatorSource()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
+    switch (modulatorInput) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
-        case (ImogenAudioProcessor::ModulatorInputSource::left):
+        case (ModulatorInputSource::left):
         {
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
             break;
         }
             
-        case (ImogenAudioProcessor::ModulatorInputSource::right):
+        case (ModulatorInputSource::right):
         {
             const int channel = (inBus.getNumChannels() > 1);
             input = AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
             break;
         }
             
-        case (ImogenAudioProcessor::ModulatorInputSource::mixToMono):
+        case (ModulatorInputSource::mixToMono):
         {
             const int totalNumChannels = inBus.getNumChannels();
             

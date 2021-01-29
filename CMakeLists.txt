@@ -70,6 +70,7 @@ set (dspSourcePath ${CMAKE_CURRENT_LIST_DIR}/Source/DSP)
 
 set (dspSources
     ${dspSourcePath}/ImogenEngine.cpp
+    ${dspSourcePath}/ImogenEngine.h
     ${dspSourcePath}/PluginProcessor.cpp
     ${dspSourcePath}/PluginProcessor.h)
 

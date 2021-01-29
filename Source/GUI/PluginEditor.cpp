@@ -115,20 +115,20 @@ void ImogenAudioProcessorEditor::timerCallback()
 
 void ImogenAudioProcessorEditor::changeModulatorInputSource()
 {
-    switch (modulatorInputSource.getSelectedId())
-    {
-        case 1:
-            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::left);
-            break;
-        case 2:
-            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::right);
-            break;
-        case 3:
-            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::mixToMono);
-            break;
-        default:
-            return;
-    }
+//    switch (modulatorInputSource.getSelectedId())
+//    {
+//        case 1:
+//            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::left);
+//            break;
+//        case 2:
+//            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::right);
+//            break;
+//        case 3:
+//            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::mixToMono);
+//            break;
+//        default:
+//            return;
+//    }
 };
 
 

@@ -6,8 +6,6 @@
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),
-    floatEngine(*this), doubleEngine(*this),
-    modulatorInput(ModulatorInputSource::left),
     wasBypassedLastCallback(true)
 {
     dryPan             = dynamic_cast<AudioParameterInt*>  (tree.getParameter("dryPan"));                           jassert(dryPan);
