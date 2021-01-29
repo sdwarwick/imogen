@@ -17,7 +17,6 @@ set (juce_directory ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # the subdirectory c
 add_subdirectory (${juce_directory})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
 
-
 set_directory_properties (PROPERTIES 
     JUCE_COMPANY_NAME            BenViningMusicSoftware
     JUCE_COMPANY_WEBSITE         www.benvining.com
@@ -27,7 +26,6 @@ set_directory_properties (PROPERTIES
     JUCE_AU_COPY_DIR             /Users/benvining/Library/Audio/Plug-Ins/Components
     JUCE_COMPANY_COPYRIGHT       This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.
     )
-
 
 
 juce_add_plugin (${CMAKE_PROJECT_NAME} # creates build targets for each plugin format specified, and a "BUILD_ALL" target
@@ -49,12 +47,10 @@ juce_add_plugin (${CMAKE_PROJECT_NAME} # creates build targets for each plugin f
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
     )
 
-
 juce_generate_juce_header (${CMAKE_PROJECT_NAME})
 
 
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE cxx_std_17)
-
 
 target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_WEB_BROWSER=0
