@@ -3,28 +3,19 @@
 # This CMake script will generate an IDE project containing all the Imogen source code files, as well as JUCE build targets for VST and AudioUnit plugins.
 
 
-# TO DO:
-
-# add executable for plugin build targets -- juce audio plugin host?
-# organize source code groups into layered tree structure
-# move JUCE library code out of being a subdirectory. GIT submodule? 
-
-
-
 cmake_minimum_required (VERSION 3.15) 
 
 project (Imogen VERSION 0.0.1)
 
+set_property (GLOBAL PROPERTY USE_FOLDERS ON)
+
 # include (CTest)
 
 
-set (juce_directory ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
+set (juce_directory ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # the subdirectory containing the JUCE library code. 
 
+add_subdirectory (${juce_directory})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
-add_subdirectory (${juce_directory}) 
-
-
-set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
 
 set_directory_properties (PROPERTIES 
@@ -52,19 +43,17 @@ juce_add_plugin (${CMAKE_PROJECT_NAME} # creates build targets for each plugin f
     NEEDS_MIDI_OUTPUT TRUE
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    DISABLE_AAX_MULTI_MONO TRUE
     PLUGIN_CODE Imgn
     FORMATS AU VST3    
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
-    AAX_CATEGORY AAX_ePlugInCategory_PitchShift
     )
 
 
-target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE cxx_std_17)
-
-
 juce_generate_juce_header (${CMAKE_PROJECT_NAME})
+
+
+target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE cxx_std_17)
 
 
 target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
@@ -106,7 +95,7 @@ set (HarmonizerSources
 
 source_group (
     TREE ${HarmonizerSourcePath}
-    PREFIX "Harmonizer"
+    PREFIX "DSP/Harmonizer"
     FILES ${HarmonizerSources})
 
 # grain extractor
@@ -121,7 +110,7 @@ set (GrainExtractorSources
 
 source_group (
     TREE ${GrainExtractorSourcePath}
-    PREFIX "GrainExtractor"
+    PREFIX "DSP/Harmonizer/GrainExtractor"
     FILES ${GrainExtractorSources})
 
 # panning manager 
@@ -134,12 +123,8 @@ set (PanningManagerSources
 
 source_group (
     TREE ${PanningManagerSourcePath}
-    PREFIX "PanningManager"
+    PREFIX "DSP/Harmonizer/PanningManager"
     FILES ${PanningManagerSources})
-
-unset (HarmonizerSourcePath)
-unset (GrainExtractorSourcePath)
-unset (PanningManagerSourcePath)
 
 #
 
@@ -153,10 +138,8 @@ set (PitchDetectorSources
 
 source_group (
     TREE ${PitchDetectorSourcePath}
-    PREFIX "PitchDetector"
+    PREFIX "DSP/PitchDetector"
     FILES ${PitchDetectorSources})
-
-unset (PitchDetectorSourcePath)
 
 #
 
@@ -172,10 +155,8 @@ set (UtilSources
 
 source_group (
     TREE ${UtilSourcePath}
-    PREFIX "Utils"
+    PREFIX "DSP/Utils"
     FILES ${UtilSources})
-
-unset (UtilSourcePath)
 
 
 #####
@@ -206,10 +187,9 @@ set (HelpScreenSources
 
 source_group (
     TREE ${HelpScreenSourcePath}
-    PREFIX "HelpScreen"
+    PREFIX "GUI/HelpScreen"
     FILES ${HelpScreenSources})
 
-unset (HelpScreenSourcePath)
 
 # IO control panel
 
@@ -222,10 +202,9 @@ set (IOControlSources
 
 source_group (
     TREE ${IOPanelSourcePath}
-    PREFIX "IOControlPanel"
+    PREFIX "GUI/IOControlPanel"
     FILES ${IOControlSources})
 
-unset (IOPanelSourcePath)
 
 
 # Midi control panel
@@ -238,10 +217,9 @@ set (MidiControlSources
 
 source_group (
     TREE ${MidiControlSourcePath}
-    PREFIX "MidiControlPanel"
+    PREFIX "GUI/MidiControlPanel"
     FILES ${MidiControlSources})
 
-unset (MidiControlSourcePath)
 
 
 # Staff display
@@ -254,10 +232,9 @@ set (StaffDisplaySources
 
 source_group (
     TREE ${StaffDisplaySourcePath}
-    PREFIX "StaffDisplay"
+    PREFIX "GUI/StaffDisplay"
     FILES ${StaffDisplaySources})
 
-unset (StaffDisplaySourcePath)
 
 
 #####
@@ -284,9 +261,7 @@ set (ImogenSourceCode   # this struct defines the collection of all non-juce or 
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${ImogenSourceCode})
 
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
-    ${dspSourcePath}
-    ${guiSourcePath})
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${dspSourcePath} ${guiSourcePath})
 
 
 #####
@@ -300,7 +275,6 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
     ${GraphicAssetsDir}/closeIcon.png 
     ${GraphicAssetsDir}/grandStaff.png)
 
-unset (GraphicAssetsDir)
 
 #####
 
@@ -319,12 +293,6 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
     )
-
-
-
-# add executable here 
-
-# add_executable (pluginHost IMPORTED ${juce_directory}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app)
 
 
 
