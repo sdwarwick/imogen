@@ -5,7 +5,9 @@
 
 cmake_minimum_required (VERSION 3.15) 
 
-project (Imogen VERSION 0.0.1)
+set (CMAKE_CXX_COMPILER AppleClang)
+
+project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
