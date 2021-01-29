@@ -88,6 +88,8 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     if (sampleRate == newRate)
         return;
     
+    const ScopedLock sl (lock);
+    
     sampleRate = newRate;
     
     setCurrentInputFreq (currentInputFreq);
@@ -234,6 +236,8 @@ void Harmonizer<SampleType>::initializeUnpitchedWindow()
 template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased) const
 {
+    const ScopedLock sl (lock);
+    
     for (auto* voice : voices)
     {
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
@@ -253,6 +257,8 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchHeldByKeyboardKey (const int midipitch)
 {
+    const ScopedLock sl (lock);
+    
     for (auto* voice : voices)
     {
         if (voice->isVoiceActive()
@@ -272,6 +278,8 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray) const
 {
     outputArray.clearQuick();
     
+    const ScopedLock sl (lock);
+    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             outputArray.add (voice->getCurrentlyPlayingNote());
@@ -285,6 +293,8 @@ template<typename SampleType>
 void Harmonizer<SampleType>::reportActivesNoReleased (Array<int>& outputArray) const
 {
     outputArray.clearQuick();
+    
+    const ScopedLock sl (lock);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive() && (! (voice->isPlayingButReleased())))
@@ -309,6 +319,8 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
     
+    const ScopedLock sl (lock);
+    
     panner.updateStereoWidth(newWidth);
     
     for (auto* voice : voices)
@@ -332,6 +344,8 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
 {
     if (lowestPannedNote == newPitchThresh)
         return;
+    
+    const ScopedLock sl (lock);
     
     for (auto* voice : voices)
     {
@@ -370,6 +384,8 @@ void Harmonizer<SampleType>::updateMidiVelocitySensitivity (const int newSensiti
     if (velocityConverter.getCurrentSensitivity() == newSens)
         return;
     
+    const ScopedLock sl (lock);
+    
     velocityConverter.setFloatSensitivity (newSens);
     
     for (auto* voice : voices)
@@ -384,6 +400,8 @@ void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const i
 {
     if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
         return;
+    
+    const ScopedLock sl (lock);
     
     bendTracker.setRange(rangeUp, rangeDown);
     
@@ -408,9 +426,7 @@ void Harmonizer<SampleType>::setDescant (const bool isOn)
     else
     {
         if (lastDescantPitch > -1)
-        {
             noteOff (lastDescantPitch, 1.0f, false, false);
-        }
         
         lastDescantPitch = -1;
     }
@@ -455,9 +471,7 @@ void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
     else
     {
         if (lastPedalPitch > -1)
-        {
             noteOff (lastPedalPitch, 1.0f, false, false);
-        }
         
         lastPedalPitch = -1;
     }
@@ -496,6 +510,8 @@ void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
+    const ScopedLock sl (lock);
+    
     adsrParams.attack  = attack;
     adsrParams.decay   = decay;
     adsrParams.sustain = sustain;
@@ -514,6 +530,8 @@ void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
     
     if (quickReleaseParams.release == desiredR)
         return;
+    
+    const ScopedLock sl (lock);
     
     quickReleaseParams.release = desiredR;
     quickAttackParams .release = desiredR;
@@ -535,6 +553,8 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
     if (quickAttackParams.attack == desiredA)
         return;
     
+    const ScopedLock sl (lock);
+    
     quickAttackParams .attack = desiredA;
     quickReleaseParams.attack = desiredA;
     
@@ -552,6 +572,8 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
 {
+    const ScopedLock sl (lock);
+    
     panner.setNumberOfVoices(voices.size() + 1);
     
     return voices.add(newVoice);
@@ -561,6 +583,11 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<Sa
 template<typename SampleType>
 void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 {
+    if (voicesToRemove == 0)
+        return;
+    
+    const ScopedLock sl (lock);
+    
     int voicesRemoved = 0;
     
     while (voicesRemoved < voicesToRemove)
@@ -595,6 +622,8 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const
 {
+    const ScopedLock sl (lock);
+    
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
             return voice;
@@ -607,6 +636,8 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
 {
     if (! descantIsOn)
         return nullptr;
+    
+    const ScopedLock sl (lock);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive() && (voice->getCurrentlyPlayingNote() == lastDescantPitch))
@@ -622,6 +653,8 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
     if (! pedalPitchIsOn)
         return nullptr;
     
+    const ScopedLock sl (lock);
+    
     for (auto* voice : voices)
         if (voice->isVoiceActive() && (voice->getCurrentlyPlayingNote() == lastPedalPitch))
             return voice;
@@ -633,6 +666,8 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
 template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const
 {
+    const ScopedLock sl (lock);
+    
     int actives = 0;
     
     for (auto* voice : voices)

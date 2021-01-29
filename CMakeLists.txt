@@ -1,7 +1,6 @@
 # IMOGEN 
 
 # This CMake script will generate an IDE project containing all the Imogen source code files, as well as JUCE build targets for VST and AudioUnit plugins.
-# Or maybe that's not what it does, to be honest I'm new to cmake ¯\_(ツ)_/¯
 
 
 # TO DO:
@@ -19,29 +18,28 @@ project (Imogen VERSION 0.0.1)
 # include (CTest)
 
 
-set_property (GLOBAL PROPERTY USE_FOLDERS YES)
+set (juce_directory ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
 
 
-add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Source/JUCE) # the subdirectory containing the JUCE library code 
+add_subdirectory (${juce_directory}) 
 
 
-set_directory_properties (PROPERTIES JUCE_COMPANY_COPYRIGHT
-    This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.)
-
-set_directory_properties (PROPERTIES JUCE_COMPANY_NAME BenViningMusicSoftware)
-
-set_directory_properties (PROPERTIES JUCE_COMPANY_WEBSITE www.benvining.com)
-
-set_directory_properties (PROPERTIES JUCE_COMPANY_EMAIL ben.the.vining@gmail.com)
-
-set_directory_properties (PROPERTIES JUCE_VST3_COPY_DIR /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins)
-
-set_directory_properties (PROPERTIES JUCE_AU_COPY_DIR /Users/benvining/Library/Audio/Plug-Ins/Components)
-
-set_directory_properties (PROPERTIES JUCE_COPY_PLUGIN_AFTER_BUILD TRUE)
+set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
 
-juce_add_plugin (${CMAKE_PROJECT_NAME}
+set_directory_properties (PROPERTIES 
+    JUCE_COMPANY_NAME            BenViningMusicSoftware
+    JUCE_COMPANY_WEBSITE         www.benvining.com
+    JUCE_COMPANY_EMAIL           ben.the.vining@gmail.com
+    JUCE_COPY_PLUGIN_AFTER_BUILD TRUE
+    JUCE_VST3_COPY_DIR           /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
+    JUCE_AU_COPY_DIR             /Users/benvining/Library/Audio/Plug-Ins/Components
+    JUCE_COMPANY_COPYRIGHT       This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.
+    )
+
+
+
+juce_add_plugin (${CMAKE_PROJECT_NAME} # creates build targets for each plugin format specified, and a "BUILD_ALL" target
     PRODUCT_NAME ${CMAKE_PROJECT_NAME}
     VERSION ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID com.BenViningMusicSoftware.Imogen
@@ -265,20 +263,21 @@ unset (StaffDisplaySourcePath)
 #####
 
 set (ImogenSourceCode   # this struct defines the collection of all non-juce or c++::std source code files that are used by Imogen.
+
     # DSP files:
+    ${dspSources}
+    ${PitchDetectorSources}
+    ${HarmonizerSources}
     ${GrainExtractorSources}
     ${PanningManagerSources}
     ${UtilSources}
-    ${HarmonizerSources}
-    ${PitchDetectorSources}
-    ${dspSources}
-
+    
     # GUI files:
+    ${guiSources}
     ${HelpScreenSources}
     ${IOControlSources}
     ${MidiControlSources}
     ${StaffDisplaySources}
-    ${guiSources}
     )
 
 
@@ -322,11 +321,18 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     )
 
 
+
+# add executable here 
+
+# add_executable (pluginHost IMPORTED ${juce_directory}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app)
+
+
+
 #####
 
 # Test executable
 
-# set (testFilesPath ${CMAKE_CURRENT_LIST_DIR}/Source/Tests)  #  ¯\_(ツ)_/¯
+# set (testFilesPath ${CMAKE_CURRENT_LIST_DIR}/Source/Tests) 
 
 # set (testFiles ${testFilesPath}/tests.cpp ${testFilesPath}/tests.h) 
 
@@ -335,16 +341,30 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 #    PREFIX "Tests"
 #    FILES ${testFiles})
 
-# add_executable (tests ${ImogenSourceCode} ${testFiles})
+# add_executable (tests ${testFiles} ${ImogenSourceCode})
 
-# target_include_directories (tests PRIVATE ${dspSourcePath} ${guiSourcePath})
+# target_include_directories (tests PRIVATE ${dspSourcePath} ${guiSourcePath} ${testFilesPath})
+
+# target_compile_features (tests PRIVATE cxx_std_17)
+
+# juce_generate_juce_header (tests)
+
+# target_compile_definitions (tests PUBLIC
+#    JUCE_WEB_BROWSER=0
+#    JUCE_USE_CURL=0
+#    JUCE_STRICT_REFCOUNTEDPTR=1
+#    JUCE_VST3_CAN_REPLACE_VST2=0
+#    )
+
 
 # target_link_libraries (tests
 #    PRIVATE
-#       juce::juce_audio_utils
+#        ImogenGraphicAssets
+#        juce::juce_audio_utils
 #        juce::juce_audio_plugin_client
 #        juce::juce_dsp
 #        juce::juce_graphics)
+
 
 # add_test (NAME tests COMMAND tests)
 

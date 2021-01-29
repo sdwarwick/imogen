@@ -265,6 +265,8 @@ public:
     
 private:
     
+    CriticalSection lock;
+    
     static constexpr int unpitchedGrainRate = 50;
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
