@@ -316,6 +316,15 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 # target_link_libraries (tests
 #    PRIVATE
 #        ${CMAKE_PROJECT_NAME}  # this is the static library that the plugin codebase was compiled to above 
+#        ImogenGraphicAssets
+#        juce::juce_audio_utils
+#        juce::juce_audio_plugin_client
+#        juce::juce_dsp
+#        juce::juce_graphics
+#    PUBLIC
+#        juce::juce_recommended_config_flags
+#        juce::juce_recommended_lto_flags
+#        juce::juce_recommended_warning_flags
 #    )
 
 

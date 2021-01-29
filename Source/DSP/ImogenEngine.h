@@ -89,6 +89,7 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
+    PitchDetector<SampleType> pitchDetector;
     Harmonizer<SampleType> harmonizer;
     
     DelayBuffer<SampleType> inputBuffer;
@@ -130,8 +131,6 @@ private:
                                 const int numSamplesLeft);
     
     Panner dryPanner;
-    
-    PitchDetector<SampleType> pitchDetector;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
