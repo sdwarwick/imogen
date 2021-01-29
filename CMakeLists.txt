@@ -30,7 +30,7 @@ set_directory_properties (PROPERTIES
     )
 
 
-juce_add_plugin (${CMAKE_PROJECT_NAME} # creates build targets for each plugin format specified, and a "BUILD_ALL" target
+juce_add_plugin (${CMAKE_PROJECT_NAME} 
     PRODUCT_NAME ${CMAKE_PROJECT_NAME}
     VERSION ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID com.BenViningMusicSoftware.Imogen
@@ -279,8 +279,6 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
 
 
 target_link_libraries (${CMAKE_PROJECT_NAME}
-    INTERFACE
-        ImogenGraphicAssets
     PRIVATE
         ImogenGraphicAssets
         juce::juce_audio_utils
@@ -308,29 +306,17 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 #    PREFIX "Tests"
 #    FILES ${testFiles})
 
-# add_executable (tests ${testFiles} ${ImogenSourceCode})
+# add_executable (tests ${testFiles})
 
-# target_include_directories (tests PRIVATE ${dspSourcePath} ${guiSourcePath} ${testFilesPath})
+# target_include_directories (tests PRIVATE ${testFilesPath})
 
 # target_compile_features (tests PRIVATE cxx_std_17)
-
-# juce_generate_juce_header (tests)
-
-# target_compile_definitions (tests PUBLIC
-#    JUCE_WEB_BROWSER=0
-#    JUCE_USE_CURL=0
-#    JUCE_STRICT_REFCOUNTEDPTR=1
-#    JUCE_VST3_CAN_REPLACE_VST2=0
-#    )
 
 
 # target_link_libraries (tests
 #    PRIVATE
-#        ImogenGraphicAssets
-#        juce::juce_audio_utils
-#        juce::juce_audio_plugin_client
-#        juce::juce_dsp
-#        juce::juce_graphics)
+#        ${CMAKE_PROJECT_NAME}  # this is the static library that the plugin codebase was compiled to above 
+#    )
 
 
 # add_test (NAME tests COMMAND tests)
