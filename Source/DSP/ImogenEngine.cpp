@@ -14,12 +14,12 @@
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine():
     modulatorInput(ModulatorInputSource::left),
+    pitchDetector(80.0f, 2400.0f, 44100.0),
     internalBlocksize(512),
     inputBuffer(1, internalBlocksize, internalBlocksize),
     outputBuffer(2, internalBlocksize, internalBlocksize),
     limiterIsOn(false),
-    resourcesReleased(true), initialized(false),
-    pitchDetector(80.0f, 2400.0f, 44100.0)
+    resourcesReleased(true), initialized(false)
 {
     inputGain = 1.0f;
     prevInputGain = 1.0f;

@@ -136,9 +136,15 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         starting = newStart;
     }
     
-    const SampleType startingWeight = (starting == predictedPeak) ? SampleType(1.0)
-                                                                  : SampleType(1.0) - ( ((abs(starting - predictedPeak)) / numSamples) * SampleType(0.5) );
-    SampleType localMin = input[starting] * startingWeight;
+    struct weighting
+    {
+        static inline SampleType weight (int index, int predicted, int numSamples)
+        {
+            return SampleType(1.0) - (((abs (index - predicted)) / numSamples) * SampleType(0.5));
+        }
+    };
+    
+    SampleType localMin = input[starting] * weighting::weight (starting, predictedPeak, numSamples);
     SampleType localMax = localMin;
     int indexOfLocalMin = starting;
     int indexOfLocalMax = starting;
@@ -153,9 +159,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         if (candidates.contains (index))
             continue;
         
-        const SampleType weighting = SampleType(1.0) - ((abs(index - predictedPeak) / numSamples) * SampleType(0.5)); // these weighting functions may need tuning...
-        
-        const SampleType currentSample = input[index] * weighting;
+        const SampleType currentSample = input[index] * weighting::weight (index, predictedPeak, numSamples);
         
         if (currentSample < localMin)
         {
@@ -263,6 +267,14 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
     const float deltaRange = highestDelta - lowestDelta;
+    
+    struct weighting
+    {
+        static inline float weight (float delta, float deltaRange)
+        {
+            return 1.0f - ((delta / deltaRange) * 0.75f);
+        }
+    };
 
     int chosenPeak;
     SampleType strongestPeak;
@@ -275,8 +287,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     else
     {
         chosenPeak = finalHandful.getUnchecked (finalHandfulDeltas.indexOf (lowestDelta));
-        const float startingWeight = (lowestDelta == 0.0f) ? 1.0f : (1.0f - ((lowestDelta / deltaRange) * 0.75f));
-        strongestPeak = (abs(reading[chosenPeak])) * startingWeight;
+        strongestPeak = (abs(reading[chosenPeak])) * weighting::weight(lowestDelta, deltaRange);
     }
     
     for (int candidate : finalHandful)
@@ -291,8 +302,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         else
         {
             const float testingDelta = finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate));
-            const float weight = (testingDelta == 0.0f) ? 1.0f : 1.0f - ((testingDelta / deltaRange) * 0.75f); // weighting function decreases peaks with higher deltas
-            testingPeak = (abs(reading[candidate])) * weight;
+            testingPeak = (abs(reading[candidate])) * weighting::weight (testingDelta, deltaRange);
         }
         
         if (testingPeak < strongestPeak)
