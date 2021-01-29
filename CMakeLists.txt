@@ -18,13 +18,13 @@ add_subdirectory (${juce_directory})  # Juce can also be included using find_pac
 
 
 set_directory_properties (PROPERTIES 
-    JUCE_COMPANY_NAME            BenViningMusicSoftware
-    JUCE_COMPANY_WEBSITE         www.benvining.com
-    JUCE_COMPANY_EMAIL           ben.the.vining@gmail.com
-    JUCE_COPY_PLUGIN_AFTER_BUILD TRUE
-    JUCE_VST3_COPY_DIR           /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
-    JUCE_AU_COPY_DIR             /Users/benvining/Library/Audio/Plug-Ins/Components
-    JUCE_COMPANY_COPYRIGHT       This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.
+    JUCE_COMPANY_NAME             BenViningMusicSoftware
+    JUCE_COMPANY_WEBSITE          www.benvining.com
+    JUCE_COMPANY_EMAIL            ben.the.vining@gmail.com
+    JUCE_COPY_PLUGIN_AFTER_BUILD  TRUE
+    JUCE_VST3_COPY_DIR            /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
+    JUCE_AU_COPY_DIR              /Users/benvining/Library/Audio/Plug-Ins/Components
+    JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.
     )
 
 

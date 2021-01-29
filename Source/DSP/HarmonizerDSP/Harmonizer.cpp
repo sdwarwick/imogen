@@ -107,6 +107,8 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
     if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
     
+    const ScopedLock sl (lock);
+    
     pitchConverter.setConcertPitchHz (newConcertPitchhz);
     
     setCurrentInputFreq (currentInputFreq);
