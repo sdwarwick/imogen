@@ -1,14 +1,26 @@
-/*
- ==============================================================================
- 
- DspUtils.h
- Created: 20 Dec 2020 1:13:39pm
- Author:  Ben Vining
- 
- ==============================================================================
- */
+/*******************************************************************************
+ BEGIN_JUCE_MODULE_DECLARATION
+ ID:                 bv_GeneralUtils
+ vendor:             Ben Vining
+ version:            0.0.1
+ name:               General audio and midi utility classes and functions
+ description:
+ website:            http://www.benvining.com
+ license:            GPL
+ dependencies:       juce_core, juce_audio_basics
+ OSXFrameworks:
+ iOSFrameworks:
+ END_JUCE_MODULE_DECLARATION
+ *******************************************************************************/
+
+#include "DelayBuffer.h"
+#include "FancyMidiBuffer.h"
+#include "Panner.h"
 
 #pragma once
+
+#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 
 
 class MidiUtils
@@ -22,7 +34,7 @@ public:
         static bool isMidiNoteBlackKey(const T midipitch)
         {
             jassert(midipitch >= 0);
-            const int modulo = (roundToInt(midipitch)) % 12;
+            const int modulo = (juce::roundToInt(midipitch)) % 12;
             if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
                 return true;
             return false;
@@ -33,7 +45,7 @@ public:
         static bool areSamePitchClass(const T1 pitch1, const T2 pitch2)
         {
             jassert(pitch1 >= 0 && pitch2 >= 0);
-            return ((roundToInt(pitch1)) % 12) == ((roundToInt(pitch2)) % 12);
+            return ((juce::roundToInt(pitch1)) % 12) == ((juce::roundToInt(pitch2)) % 12);
         }
    };
     
@@ -85,20 +97,20 @@ public:
     {
         static float getGainMultFromVelocity(const int midiVelocity)
         {
-            jassert(isPositiveAndBelow(midiVelocity, 128));
+            jassert(juce::isPositiveAndBelow(midiVelocity, 128));
             return midiVelocity / 127.0f;
         }
         
         static float getGainMultFromVelocityWithSensitivity(const int midiVelocity, const int velocitySensitivity)
         {
-            jassert(isPositiveAndBelow(midiVelocity, 128) && isPositiveAndBelow(velocitySensitivity, 101));
+            jassert(juce::isPositiveAndBelow(midiVelocity, 128) && juce::isPositiveAndBelow(velocitySensitivity, 101));
             const float velocity = midiVelocity / 127.0f;
             return ((1.0f - velocity) * (1.0f - (velocitySensitivity / 100.0f)) + velocity);
         }
         
         static float getGainMultFromFloatVelocityWithSensitivity(const float floatVelocity, const int velocitySensitivity)
         {
-            jassert(floatVelocity >= 0.0f && floatVelocity <= 1.0f && isPositiveAndBelow(velocitySensitivity, 101));
+            jassert(floatVelocity >= 0.0f && floatVelocity <= 1.0f && juce::isPositiveAndBelow(velocitySensitivity, 101));
             return ((1.0f - floatVelocity) * (1.0f - (velocitySensitivity / 100.0f)) + floatVelocity);
         }
     };
@@ -116,10 +128,10 @@ public:
     
     static std::pair<float, float> getPanningMultsFromMidiPan(const int midiPan)
     {
-        jassert(isPositiveAndBelow (midiPan, 128));
+        jassert(juce::isPositiveAndBelow (midiPan, 128));
         
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
-        const float panningAngle = 90 * midiPan / 127 * MathConstants<float>::pi / 180;
+        const float panningAngle = 90 * midiPan / 127 * juce::MathConstants<float>::pi / 180;
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);
@@ -135,10 +147,10 @@ public:
     
     static void putPanningMultsFromMidiPanInArray(const int midiPan, float (&array)[2])
     {
-        jassert(isPositiveAndBelow(midiPan, 128));
+        jassert(juce::isPositiveAndBelow(midiPan, 128));
         
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
-        const float panningAngle = 90 * midiPan / 127 * MathConstants<float>::pi / 180;
+        const float panningAngle = 90 * midiPan / 127 * juce::MathConstants<float>::pi / 180;
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);

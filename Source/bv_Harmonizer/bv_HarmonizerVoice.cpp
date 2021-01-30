@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "../../Source/DSP/HarmonizerDSP/Harmonizer.h"
+#include "bv_Harmonizer.h"
 
 
 template<typename SampleType>
@@ -75,10 +75,10 @@ void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<SampleType>& inputAudio, juce::AudioBuffer<SampleType>& outputBuffer,
                                                    const int origPeriod,
-                                                   const Array<int>& indicesOfGrainOnsets,
-                                                   const AudioBuffer<SampleType>& windowToUse)
+                                                   const juce::Array<int>& indicesOfGrainOnsets,
+                                                   const juce::AudioBuffer<SampleType>& windowToUse)
 {
     if (! keyIsDown)
     {
@@ -141,10 +141,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio, 
+void HarmonizerVoice<SampleType>::sola (const juce::AudioBuffer<SampleType>& inputAudio,
                                         const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
-                                        const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
+                                        const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
                                         const SampleType* window) // Hanning window, length origPeriod * 2
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();

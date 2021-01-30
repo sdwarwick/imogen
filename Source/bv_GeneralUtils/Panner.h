@@ -10,7 +10,8 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 
 
 class Panner
@@ -56,7 +57,7 @@ public:
     
     void setMidiPan (const int newMidiPan)
     {
-        jassert (isPositiveAndBelow (newMidiPan, 128));
+        jassert (juce::isPositiveAndBelow (newMidiPan, 128));
         
         if (lastRecievedMidiPan == newMidiPan)
             return;
@@ -66,7 +67,7 @@ public:
         
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
         
-        const float panningAngle = (90.0f * newMidiPan / 127.0f * MathConstants<float>::pi) / 180.0f;
+        const float panningAngle = (90.0f * newMidiPan / 127.0f * juce::MathConstants<float>::pi) / 180.0f;
         
         jassert (panningAngle >= 0.0f && panningAngle <= 90.0f);
         

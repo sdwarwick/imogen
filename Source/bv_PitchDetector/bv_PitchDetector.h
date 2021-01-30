@@ -1,16 +1,26 @@
-/*
-  ==============================================================================
+/*******************************************************************************
+ BEGIN_JUCE_MODULE_DECLARATION
+ ID:                 bv_PitchDetector
+ vendor:             Ben Vining
+ version:            0.0.1
+ name:               Pitch detector
+ description:        ASDF-based pitch detector
+ website:            http://www.benvining.com
+ license:            GPL
+ dependencies:       juce_core, juce_audio_basics
+ OSXFrameworks:
+ iOSFrameworks:
+ linuxLibs:
+ mingwLibs:
+ END_JUCE_MODULE_DECLARATION
+ *******************************************************************************/
 
-    PitchDetector.h
-    Created: 18 Jan 2021 11:31:33am
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
+
 
 
 template<typename SampleType>
@@ -38,7 +48,7 @@ public:
     
     void setSamplerate (const double newSamplerate, const bool recalcHzRange = true);
     
-    float detectPitch (const AudioBuffer<SampleType>& inputAudio);
+    float detectPitch (const juce::AudioBuffer<SampleType>& inputAudio);
     
     
     
@@ -54,7 +64,7 @@ private:
     
     SampleType confidenceThresh;
     
-    AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
+    juce::AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
     
     float chooseIdealPeriodCandidate (const SampleType* asdfData, const int asdfDataSize, const int minIndex);
@@ -70,7 +80,7 @@ private:
     
     static constexpr int periodCandidatesToTest = 15;
     
-    void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
+    void getNextBestPeriodCandidate (juce::Array<int>& candidates, const SampleType* asdfData, const int dataSize);
     
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchDetector)

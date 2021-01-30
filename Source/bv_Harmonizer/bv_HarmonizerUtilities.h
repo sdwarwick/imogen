@@ -98,13 +98,13 @@ public:
     
     float newNoteRecieved(const int newMidiPitch) const
     {
-        jassert(isPositiveAndBelow(newMidiPitch, 128));
+        jassert(juce::isPositiveAndBelow(newMidiPitch, 128));
         return getMidifloat(newMidiPitch, lastRecievedPitchbend);
     }
     
     void newPitchbendRecieved(const int newPitchbend) noexcept
     {
-        jassert(isPositiveAndBelow(newPitchbend, 128));
+        jassert(juce::isPositiveAndBelow(newPitchbend, 128));
         lastRecievedPitchbend = newPitchbend;
     }
     
@@ -117,7 +117,7 @@ private:
     
     float getMidifloat(const int midiPitch, const int pitchbend) const
     {
-        jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
+        jassert(juce::isPositiveAndBelow(midiPitch, 128) && juce::isPositiveAndBelow(pitchbend, 128));
         
         if(pitchbend == 64)
             return midiPitch;
@@ -141,7 +141,7 @@ public:
     
     void setSensitivity(const int newSensitivity) noexcept
     {
-        jassert(isPositiveAndBelow(newSensitivity, 101));
+        jassert(juce::isPositiveAndBelow(newSensitivity, 101));
         sensitivity = newSensitivity / 100.0f;
     }
     
@@ -155,7 +155,7 @@ public:
     
     float intVelocity(const int midiVelocity)
     {
-        jassert(isPositiveAndBelow(midiVelocity, 128));
+        jassert(juce::isPositiveAndBelow(midiVelocity, 128));
         return getGainMult(midiVelocity / 127.0f, sensitivity);
     }
     

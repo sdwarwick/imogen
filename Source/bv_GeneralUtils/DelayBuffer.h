@@ -1,6 +1,7 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 
 
 template<typename SampleType>
@@ -73,7 +74,7 @@ public:
     }
     
     
-    void writeSamples (const AudioBuffer<SampleType>& inputBuffer, const int inputChannel, const int inputStartSample,
+    void writeSamples (const juce::AudioBuffer<SampleType>& inputBuffer, const int inputChannel, const int inputStartSample,
                        const int numSamples, const int destChannel)
     {
         writeSamples (inputBuffer.getReadPointer(inputChannel, inputStartSample),
@@ -101,7 +102,7 @@ public:
     }
     
     
-    void getDelayedSamples (AudioBuffer<SampleType>& destBuffer, const int destChannel, const int destStartSample,
+    void getDelayedSamples (juce::AudioBuffer<SampleType>& destBuffer, const int destChannel, const int destStartSample,
                             const int delay, const int numSamples, const int readingChannel) const
     {
         getDelayedSamples (destBuffer.getWritePointer(destChannel, destStartSample),
@@ -130,7 +131,7 @@ public:
     
 private:
     
-    AudioBuffer<SampleType> base;
+    juce::AudioBuffer<SampleType> base;
     
     int lengthInSamples;
     

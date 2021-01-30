@@ -1,4 +1,4 @@
-#include "../../Source/DSP/PluginProcessor.h"
+#include "../../Source/PluginProcessor.h"
 #include "../../Source/GUI/PluginEditor.h"
 
 

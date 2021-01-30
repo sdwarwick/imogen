@@ -8,11 +8,11 @@
   ==============================================================================
 */
 
-#include "../../Source/DSP/HarmonizerDSP/GrainExtractor/GrainExtractor.h"
+#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::findZeroCrossings (Array<int>& targetArray,
+void GrainExtractor<SampleType>::findZeroCrossings (juce::Array<int>& targetArray,
                                                     const SampleType* reading,
                                                     const int totalNumSamples,
                                                     const int period)
@@ -29,7 +29,7 @@ void GrainExtractor<SampleType>::findZeroCrossings (Array<int>& targetArray,
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getZeroCrossingForPeriod (Array<int>& targetArray,
+void GrainExtractor<SampleType>::getZeroCrossingForPeriod (juce::Array<int>& targetArray,
                                                            const SampleType* reading,
                                                            const int startSample,
                                                            const int endSample)
@@ -63,5 +63,5 @@ void GrainExtractor<SampleType>::getZeroCrossingForPeriod (Array<int>& targetArr
 };
 
 
-template class GrainExtractor<float>;
-template class GrainExtractor<double>;
+// template class GrainExtractor<float>;
+// template class GrainExtractor<double>;

@@ -3,11 +3,9 @@
 #include <JuceHeader.h>
 
 
-#include "../../Source/DSP/Utils/DelayBuffer.h"
-#include "../../Source/DSP/Utils/FancyMidiBuffer.h"
-#include "../../Source/DSP/Utils/Panner.h"
-#include "../../Source/DSP/HarmonizerDSP/Harmonizer.h"
-#include "../../Source/DSP/PitchDetector/PitchDetector.h"
+#include "../../Source/bv_Harmonizer/bv_Harmonizer.h"
+#include "../../Source/bv_GeneralUtils/bv_GeneralUtils.h"
+#include "../../Source/bv_PitchDetector/bv_PitchDetector.h"
 
 
 template<typename SampleType>

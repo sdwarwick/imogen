@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "../../Source/DSP/HarmonizerDSP/GrainExtractor/GrainExtractor.h"
+#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 
 
 template<typename SampleType>
@@ -40,8 +40,8 @@ void GrainExtractor<SampleType>::releaseResources()
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
-                                                       const AudioBuffer<SampleType>& inputAudio,
+void GrainExtractor<SampleType>::getGrainOnsetIndices (juce::Array<int>& targetArray,
+                                                       const juce::AudioBuffer<SampleType>& inputAudio,
                                                        const int period)
 {
     targetArray.clearQuick();

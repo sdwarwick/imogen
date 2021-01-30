@@ -9,7 +9,7 @@
  */
 
 
-#include "../../Source/DSP/HarmonizerDSP/PanningManager/PanningManager.h"
+#include "bv_Harmonizer/bv_Harmonizer.h"
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
 { };
@@ -58,7 +58,7 @@ void PanningManager::updateStereoWidth(const int newWidth)
     const auto minPan = 63.5f - (63.5f * rangeMultiplier);
     const auto increment = (maxPan - minPan) / currentNumVoices;
     
-    Array<int> possiblePanVals;
+    juce::Array<int> possiblePanVals;
     possiblePanVals.ensureStorageAllocated (currentNumVoices);
     
     for (int i = 0; i < currentNumVoices; ++i)
@@ -78,13 +78,13 @@ void PanningManager::updateStereoWidth(const int newWidth)
     // the # of values we actually transfer to the I/O array being read from should correspond to the number of unsent pan vals left now -- ie, if some voices are already on, etc. And the values put in the I/O array should also be the values out of the panValsInAssigningOrder array that are closest to the old values from unsentPanVals...
     
     // make copy of panValsInAssigningOrder bc items will be removed during the searching process below
-    Array<int> newPanVals;
+    juce::Array<int> newPanVals;
     newPanVals.ensureStorageAllocated (panValsInAssigningOrder.size());
     
     for (int newPan : panValsInAssigningOrder)
         newPanVals.add (newPan);
     
-    Array<int> newUnsentVals;
+    juce::Array<int> newUnsentVals;
     newUnsentVals.ensureStorageAllocated (unsentPanVals.size());
     
     for (int oldPan : unsentPanVals)
@@ -156,14 +156,14 @@ void PanningManager::panValTurnedOff (const int panVal)
 };
 
 
-int PanningManager::getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom)
+int PanningManager::getClosestNewPanValFromNew (const int oldPan, juce::Array<int>& readingFrom)
 {
     jassert (isPositiveAndBelow(oldPan, 128));
     
     if (readingFrom.isEmpty())
         return -1;
     
-    Array<int> distances;
+    juce::Array<int> distances;
     distances.ensureStorageAllocated (readingFrom.size());
     
     for (int pan : readingFrom)
@@ -211,7 +211,7 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
         return 64;
     }
     
-    Array<int> distances;
+    juce::Array<int> distances;
     distances.ensureStorageAllocated (unsentPanVals.size());
     
     for (int pan : unsentPanVals)

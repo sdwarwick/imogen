@@ -11,10 +11,15 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON)
+
 # include (CTest)
 
 
-set (juce_directory ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # the subdirectory containing the JUCE library code. 
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
+
+
+set (juce_directory ${sourceDir}/JUCE)  # the subdirectory containing the JUCE library code. 
 
 add_subdirectory (${juce_directory})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
@@ -28,6 +33,19 @@ set_directory_properties (PROPERTIES
     JUCE_AU_COPY_DIR              /Users/benvining/Library/Audio/Plug-Ins/Components
     JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.
     )
+
+
+set (pitchDetectorModulePath ${sourceDir}/bv_PitchDetector)
+
+set (utilsModulePath ${sourceDir}/bv_GeneralUtils)
+
+set (harmonizerModulePath ${sourceDir}/bv_Harmonizer)
+
+
+juce_add_modules (
+    ${pitchDetectorModulePath} 
+    ${harmonizerModulePath}
+    ${utilsModulePath})
 
 
 juce_add_plugin (${CMAKE_PROJECT_NAME} 
@@ -66,96 +84,18 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
 
 # DSP SOURCE FILES
 
-set (dspSourcePath ${CMAKE_CURRENT_LIST_DIR}/Source/DSP)
-
 set (dspSources
-    ${dspSourcePath}/ImogenEngine.cpp
-    ${dspSourcePath}/ImogenEngine.h
-    ${dspSourcePath}/PluginProcessor.cpp
-    ${dspSourcePath}/PluginProcessor.h)
+    ${sourceDir}/ImogenEngine.cpp
+    ${sourceDir}/ImogenEngine.h
+    ${sourceDir}/PluginProcessor.cpp
+    ${sourceDir}/PluginProcessor.h)
 
 source_group (
-    TREE ${dspSourcePath}
+    TREE ${sourceDir}
     PREFIX "DSP"
     FILES ${dspSources})
 
 #
-
-# Harmonizer source files
-
-set (HarmonizerSourcePath ${dspSourcePath}/HarmonizerDSP)
-
-set (HarmonizerSources
-    ${HarmonizerSourcePath}/HarmonizerVoice.cpp
-    ${HarmonizerSourcePath}/Harmonizer.cpp
-    ${HarmonizerSourcePath}/HarmonizerMidi.cpp
-    ${HarmonizerSourcePath}/Harmonizer.h
-    ${HarmonizerSourcePath}/HarmonizerUtilities.h)
-
-source_group (
-    TREE ${HarmonizerSourcePath}
-    PREFIX "DSP/Harmonizer"
-    FILES ${HarmonizerSources})
-
-# grain extractor
-
-set (GrainExtractorSourcePath ${HarmonizerSourcePath}/GrainExtractor)
-
-set (GrainExtractorSources
-    ${GrainExtractorSourcePath}/ZeroCrossingFinding.cpp
-    ${GrainExtractorSourcePath}/PsolaPeakFinding.cpp
-    ${GrainExtractorSourcePath}/GrainExtractor.cpp
-    ${GrainExtractorSourcePath}/GrainExtractor.h)
-
-source_group (
-    TREE ${GrainExtractorSourcePath}
-    PREFIX "DSP/Harmonizer/GrainExtractor"
-    FILES ${GrainExtractorSources})
-
-# panning manager 
-
-set (PanningManagerSourcePath ${HarmonizerSourcePath}/PanningManager)
-
-set (PanningManagerSources
-    ${PanningManagerSourcePath}/PanningManager.cpp
-    ${PanningManagerSourcePath}/PanningManager.h)
-
-source_group (
-    TREE ${PanningManagerSourcePath}
-    PREFIX "DSP/Harmonizer/PanningManager"
-    FILES ${PanningManagerSources})
-
-#
-
-# Pitch detector source files 
-
-set (PitchDetectorSourcePath ${dspSourcePath}/PitchDetector)
-
-set (PitchDetectorSources
-    ${PitchDetectorSourcePath}/PitchDetector.cpp
-    ${PitchDetectorSourcePath}/PitchDetector.h)
-
-source_group (
-    TREE ${PitchDetectorSourcePath}
-    PREFIX "DSP/PitchDetector"
-    FILES ${PitchDetectorSources})
-
-#
-
-# Utility source files 
-
-set (UtilSourcePath ${dspSourcePath}/Utils)
-
-set (UtilSources
-    ${UtilSourcePath}/DelayBuffer.h
-    ${UtilSourcePath}/FancyMidiBuffer.h
-    ${UtilSourcePath}/GeneralUtils.h
-    ${UtilSourcePath}/Panner.h)
-
-source_group (
-    TREE ${UtilSourcePath}
-    PREFIX "DSP/Utils"
-    FILES ${UtilSources})
 
 
 #####
@@ -242,11 +182,6 @@ set (ImogenSourceCode   # this struct defines the collection of all non-juce or 
 
     # DSP files:
     ${dspSources}
-    ${PitchDetectorSources}
-    ${HarmonizerSources}
-    ${GrainExtractorSources}
-    ${PanningManagerSources}
-    ${UtilSources}
     
     # GUI files:
     ${guiSources}
@@ -260,7 +195,12 @@ set (ImogenSourceCode   # this struct defines the collection of all non-juce or 
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${ImogenSourceCode})
 
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${dspSourcePath} ${guiSourcePath})
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
+    ${sourceDir}
+    ${guiSourcePath} 
+    ${pitchDetectorModulePath} 
+    ${utilsModulePath}
+    ${harmonizerModulePath})
 
 
 #####
@@ -281,6 +221,9 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
 target_link_libraries (${CMAKE_PROJECT_NAME}
     PRIVATE
         ImogenGraphicAssets
+        bv_PitchDetector
+	bv_GeneralUtils
+	bv_Harmonizer
         juce::juce_audio_utils
         juce::juce_audio_plugin_client
         juce::juce_dsp

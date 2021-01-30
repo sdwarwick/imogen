@@ -11,9 +11,10 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../../Source/DSP/PluginProcessor.h"
-#include "../../Source/DSP/Utils/GeneralUtils.h"
+#include "../../Source/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
+
+#include "../../Source/bv_GeneralUtils/bv_GeneralUtils.h"
 
 
 //==============================================================================

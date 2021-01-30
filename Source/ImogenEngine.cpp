@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "../../Source/DSP/ImogenEngine.h"
+#include "../../Source/ImogenEngine.h"
 
 
 template<typename SampleType>

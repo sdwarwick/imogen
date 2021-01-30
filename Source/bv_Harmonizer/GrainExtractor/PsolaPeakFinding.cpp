@@ -8,11 +8,11 @@
   ==============================================================================
 */
 
-#include "../../Source/DSP/HarmonizerDSP/GrainExtractor/GrainExtractor.h"
+#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
+void GrainExtractor<SampleType>::findPsolaPeaks (juce::Array<int>& targetArray,
                                                  const SampleType* reading,
                                                  const int totalNumSamples,
                                                  const int period)
@@ -26,7 +26,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     
     while ((analysisIndex - halfPeriod) < totalNumSamples)
     {
-        Array<int> peakCandidates;
+        juce::Array<int> peakCandidates;
         peakCandidates.ensureStorageAllocated (numPeaksToTest + 1);
         
         // bounds of the current analysis window. analysisIndex = the next predicted peak = the middle of this analysis window
@@ -42,7 +42,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            Array<int> peakSearchingOrder;
+            juce::Array<int> peakSearchingOrder;
             peakSearchingOrder.ensureStorageAllocated (windowEnd - windowStart);
             
             sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
@@ -102,9 +102,9 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
+void GrainExtractor<SampleType>::getPeakCandidateInRange (juce::Array<int>& candidates, const SampleType* input,
                                                           const int startSample, const int endSample, const int predictedPeak,
-                                                          Array<int>& searchingOrder)
+                                                          juce::Array<int>& searchingOrder)
 {
     jassert (! searchingOrder.isEmpty());
     
@@ -199,10 +199,10 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
 
 
 template<typename SampleType>
-int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
+int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const juce::Array<int>& candidates, const SampleType* reading,
                                                           const int deltaTarget1, const int deltaTarget2)
 {
-    Array<float> candidateDeltas;
+    juce::Array<float> candidateDeltas;
     candidateDeltas.ensureStorageAllocated (candidates.size());
     
     // 1. calculate delta values for each peak candidate
@@ -228,8 +228,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
     
-    Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
-    Array<float> finalHandfulDeltas; // delta values for candidates
+    juce::Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
+    juce::Array<float> finalHandfulDeltas; // delta values for candidates
     
     finalHandful      .ensureStorageAllocated (finalHandfulSize);
     finalHandfulDeltas.ensureStorageAllocated (finalHandfulSize);
@@ -318,7 +318,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output, // array to write the sorted sample indices to
+void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (juce::Array<int>& output, // array to write the sorted sample indices to
                                                                     const int startSample, const int endSample,
                                                                     const int predictedPeak)
 {
@@ -366,7 +366,3 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
     }
 };
 
-
-
-template class GrainExtractor<float>;
-template class GrainExtractor<double>;
