@@ -8,9 +8,8 @@
  ==============================================================================
  */
 
-#pragma once
-
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 
 class PanningManager

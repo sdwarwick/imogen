@@ -2,6 +2,8 @@
 
 #include <JuceHeader.h>
 
+#include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
+
 #include "ImogenEngine.h"
 
 

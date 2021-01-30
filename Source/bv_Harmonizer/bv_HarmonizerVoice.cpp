@@ -8,8 +8,7 @@
   ==============================================================================
 */
 
-#include "bv_Harmonizer.h"
-
+#include "bv_Harmonizer/bv_Harmonizer.h"
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
@@ -112,7 +111,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
     
     const float newPeriod = static_cast<float> (parent->getSamplerate() / currentOutputFreq);
     
-    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    sola (inputAudio, origPeriod, juce::roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     const int numSamples = inputAudio.getNumSamples();
     
@@ -295,7 +294,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity, const bool wasStolen)
 {
-    ignoreUnused (wasStolen);
+    juce::ignoreUnused (wasStolen);
     
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
@@ -314,7 +313,7 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allowTailOff)
 {
-    ignoreUnused (velocity);
+    juce::ignoreUnused (velocity);
     
     if (allowTailOff)
     {
@@ -344,7 +343,7 @@ void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::setPan (const int newPan,  const bool reportOldToParent)
 {
-    jassert (isPositiveAndBelow (newPan, 128));
+    jassert (juce::isPositiveAndBelow (newPan, 128));
     
     if (currentMidipan == newPan)
         return;

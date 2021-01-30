@@ -7,7 +7,7 @@
  description:        ASDF-based pitch detector
  website:            http://www.benvining.com
  license:            GPL
- dependencies:       juce_core, juce_audio_basics
+ dependencies:       juce_audio_utils
  OSXFrameworks:
  iOSFrameworks:
  linuxLibs:
@@ -18,8 +18,7 @@
 
 #pragma once
 
-#include <juce_core/juce_core.h>
-#include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 
 
 

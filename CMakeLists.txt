@@ -9,9 +9,7 @@ set (CMAKE_CXX_COMPILER AppleClang)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-set_property (GLOBAL PROPERTY USE_FOLDERS ON)
-
-option (JUCE_ENABLE_MODULE_SOURCE_GROUPS ON)
+set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
 # include (CTest)
 
@@ -31,8 +29,10 @@ set_directory_properties (PROPERTIES
     JUCE_COPY_PLUGIN_AFTER_BUILD  TRUE
     JUCE_VST3_COPY_DIR            /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
     JUCE_AU_COPY_DIR              /Users/benvining/Library/Audio/Plug-Ins/Components
-    JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining.
+    JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.
     )
+
+option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 
 set (pitchDetectorModulePath ${sourceDir}/bv_PitchDetector)
@@ -43,9 +43,10 @@ set (harmonizerModulePath ${sourceDir}/bv_Harmonizer)
 
 
 juce_add_modules (
+    ${utilsModulePath}
     ${pitchDetectorModulePath} 
     ${harmonizerModulePath}
-    ${utilsModulePath})
+    )
 
 
 juce_add_plugin (${CMAKE_PROJECT_NAME} 
@@ -180,7 +181,7 @@ source_group (
 
 set (ImogenSourceCode   # this struct defines the collection of all non-juce or c++::std source code files that are used by Imogen.
 
-    ${dspSources}
+    ${dspSources} # these are all custom groups of source files 
     
     ${guiSources}
     ${HelpScreenSources}
@@ -215,10 +216,8 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     PRIVATE
         ImogenGraphicAssets
         bv_PitchDetector
-	bv_GeneralUtils
-	bv_Harmonizer
-        juce::juce_audio_utils
-        juce::juce_audio_plugin_client
+        bv_GeneralUtils
+        bv_Harmonizer
         juce::juce_dsp
         juce::juce_graphics
     PUBLIC

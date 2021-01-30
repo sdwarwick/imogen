@@ -7,20 +7,19 @@
  description:
  website:            http://www.benvining.com
  license:            GPL
- dependencies:       juce_core, juce_audio_basics
+ dependencies:       juce_audio_utils
  OSXFrameworks:
  iOSFrameworks:
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
+#pragma once
+
+#include <juce_audio_utils/juce_audio_utils.h>
+
 #include "DelayBuffer.h"
 #include "FancyMidiBuffer.h"
 #include "Panner.h"
-
-#pragma once
-
-#include <juce_core/juce_core.h>
-#include <juce_audio_basics/juce_audio_basics.h>
 
 
 class MidiUtils

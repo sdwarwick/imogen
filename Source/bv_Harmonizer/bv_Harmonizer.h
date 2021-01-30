@@ -7,7 +7,7 @@
  description:        base class for a polyphonic real-time pitch shifting instrument
  website:            http://www.benvining.com
  license:            GPL
- dependencies:       juce_core, juce_audio_basics, bv_GeneralUtils
+ dependencies:       juce_audio_utils, bv_GeneralUtils
  OSXFrameworks:
  iOSFrameworks:
  linuxLibs:
@@ -17,10 +17,7 @@
 
 #pragma once
 
-#include <JuceHeader.h>
-
-#include <juce_core/juce_core.h>
-#include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 

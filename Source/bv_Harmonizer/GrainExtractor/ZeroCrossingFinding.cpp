@@ -8,8 +8,7 @@
   ==============================================================================
 */
 
-#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
-
+#include "bv_Harmonizer/bv_Harmonizer.h"
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::findZeroCrossings (juce::Array<int>& targetArray,

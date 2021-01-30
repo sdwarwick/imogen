@@ -8,11 +8,12 @@
  ==============================================================================
  */
 
+#pragma once
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
-#include "bv_Harmonizer/bv_HarmonizerMidi.cpp"
 #include "bv_Harmonizer/bv_HarmonizerVoice.cpp"
+#include "bv_Harmonizer/bv_HarmonizerMidi.cpp"
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
 #include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
@@ -96,7 +97,7 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     if (sampleRate == newRate)
         return;
     
-    const ScopedLock sl (lock);
+    const juce::ScopedLock sl (lock);
     
     sampleRate = newRate;
     
@@ -157,7 +158,7 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 {
     currentInputFreq = newInputFreq;
     
-    currentInputPeriod = roundToInt (sampleRate / newInputFreq);
+    currentInputPeriod = juce::roundToInt (sampleRate / newInputFreq);
     
     fillWindowBuffer (currentInputPeriod * 2);
     
@@ -284,7 +285,7 @@ bool Harmonizer<SampleType>::isPitchHeldByKeyboardKey (const int midipitch)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray) const
+void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray) const
 {
     outputArray.clearQuick();
     
@@ -300,7 +301,7 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray) const
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::reportActivesNoReleased (Array<int>& outputArray) const
+void Harmonizer<SampleType>::reportActivesNoReleased (juce::Array<int>& outputArray) const
 {
     outputArray.clearQuick();
     
@@ -324,7 +325,7 @@ void Harmonizer<SampleType>::reportActivesNoReleased (Array<int>& outputArray) c
 template<typename SampleType>
 void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
 {
-    jassert (isPositiveAndBelow (newWidth, 101));
+    jassert (juce::isPositiveAndBelow (newWidth, 101));
     
     if (panner.getCurrentStereoWidth() == newWidth)
         return;

@@ -1,8 +1,5 @@
-#pragma once
 
-#include <juce_core/juce_core.h>
-#include <juce_audio_basics/juce_audio_basics.h>
-
+#include "bv_GeneralUtils/bv_GeneralUtils.h"
 
 template<typename SampleType>
 class DelayBuffer

@@ -8,10 +8,7 @@
  ==============================================================================
  */
 
-#pragma once
-
-#include <JuceHeader.h>
-
+#include "bv_Harmonizer/bv_Harmonizer.h"
 
 class PitchConverter
 {

@@ -8,10 +8,7 @@
   ==============================================================================
 */
 
-#pragma once
-
 #include "bv_Harmonizer/bv_Harmonizer.h"
-
 
 template<typename SampleType>
 class GrainExtractor

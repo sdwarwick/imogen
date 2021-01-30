@@ -8,7 +8,6 @@
  ==============================================================================
  */
 
-
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
@@ -62,7 +61,7 @@ void PanningManager::updateStereoWidth(const int newWidth)
     possiblePanVals.ensureStorageAllocated (currentNumVoices);
     
     for (int i = 0; i < currentNumVoices; ++i)
-        possiblePanVals.add (roundToInt (minPan + (i * increment) + (increment/2.0f)));
+        possiblePanVals.add (juce::roundToInt (minPan + (i * increment) + (increment/2.0f)));
     
     // then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
     panValsInAssigningOrder.clearQuick();
@@ -158,7 +157,7 @@ void PanningManager::panValTurnedOff (const int panVal)
 
 int PanningManager::getClosestNewPanValFromNew (const int oldPan, juce::Array<int>& readingFrom)
 {
-    jassert (isPositiveAndBelow(oldPan, 128));
+    jassert (juce::isPositiveAndBelow(oldPan, 128));
     
     if (readingFrom.isEmpty())
         return -1;
@@ -203,7 +202,7 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
     // find & return the element in readingFrom array that is the closest to oldPan, then remove that val from unsentPanVals
     // this is normally used with the unsentPanVals array, but the same function can also be used in the updating of the stereo width, to identify which new pan values should be sent to the unsentPanVals array itself, based on which new pan values are closest to the ones that were already in unsentPanVals.
     
-    jassert (isPositiveAndBelow(oldPan, 128));
+    jassert (juce::isPositiveAndBelow(oldPan, 128));
     
     if (unsentPanVals.isEmpty())
     {
@@ -272,7 +271,7 @@ void PanningManager::mapArrayIndexes()
     
     arrayIndexesMapped.clearQuick();
     
-    const int middleIndex = currentNumVoices > 1 ? roundToInt(floor(currentNumVoices / 2)) : 0;
+    const int middleIndex = currentNumVoices > 1 ? juce::roundToInt(floor(currentNumVoices / 2)) : 0;
     
     arrayIndexesMapped.add(middleIndex);
     
