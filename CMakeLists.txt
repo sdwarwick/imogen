@@ -11,7 +11,7 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(JUCE_ENABLE_MODULE_SOURCE_GROUPS ON)
+option (JUCE_ENABLE_MODULE_SOURCE_GROUPS ON)
 
 # include (CTest)
 
@@ -180,10 +180,8 @@ source_group (
 
 set (ImogenSourceCode   # this struct defines the collection of all non-juce or c++::std source code files that are used by Imogen.
 
-    # DSP files:
     ${dspSources}
     
-    # GUI files:
     ${guiSources}
     ${HelpScreenSources}
     ${IOControlSources}
@@ -195,12 +193,7 @@ set (ImogenSourceCode   # this struct defines the collection of all non-juce or 
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${ImogenSourceCode})
 
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
-    ${sourceDir}
-    ${guiSourcePath} 
-    ${pitchDetectorModulePath} 
-    ${utilsModulePath}
-    ${harmonizerModulePath})
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${sourceDir} ${guiSourcePath})
 
 
 #####
@@ -258,8 +251,10 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 
 # target_link_libraries (tests
 #    PRIVATE
-#        ${CMAKE_PROJECT_NAME}  # this is the static library that the plugin codebase was compiled to above 
 #        ImogenGraphicAssets
+#        bv_PitchDetector
+# 	 bv_GeneralUtils
+#	 bv_Harmonizer
 #        juce::juce_audio_utils
 #        juce::juce_audio_plugin_client
 #        juce::juce_dsp
