@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../../Source/PluginProcessor.h"
+#include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"

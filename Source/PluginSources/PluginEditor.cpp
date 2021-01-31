@@ -1,4 +1,4 @@
-#include "../../Source/PluginEditor.h"
+#include "../../Source/PluginSources/PluginEditor.h"
 
 
 //==============================================================================

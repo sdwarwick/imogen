@@ -1,5 +1,5 @@
-#include "../../Source/PluginProcessor.h"
-#include "../../Source/PluginEditor.h"
+#include "../../Source/PluginSources/PluginProcessor.h"
+#include "../../Source/PluginSources/PluginEditor.h"
 
 
 //==============================================================================

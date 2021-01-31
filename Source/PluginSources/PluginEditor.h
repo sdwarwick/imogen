@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../../Source/PluginProcessor.h"
+#include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
 #include "../../Source/GUI/MidiControlPanel/MidiControlPanel.h"
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
