@@ -14,12 +14,13 @@
 #include "../../Source/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
-#include "../../Source/bv_GeneralUtils/bv_GeneralUtils.h"
+#include "bv_GeneralUtils/bv_GeneralUtils.h"
 
 
 //==============================================================================
 /*
  */
+
 class StaffDisplay  : public juce::Component
 {
 public:

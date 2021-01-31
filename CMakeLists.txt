@@ -35,11 +35,13 @@ set_directory_properties (PROPERTIES
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 
+set (dspModulesPath ${sourceDir}/DSP_modules)
+
 juce_add_modules (
-    ${sourceDir}/bv_GeneralUtils
-    ${sourceDir}/bv_PitchDetector
-    ${sourceDir}/bv_Harmonizer
-    ${sourceDir}/bv_ImogenEngine
+    ${dspModulesPath}/bv_GeneralUtils
+    ${dspModulesPath}/bv_PitchDetector
+    ${dspModulesPath}/bv_Harmonizer
+    ${dspModulesPath}/bv_ImogenEngine
     )
 
 
@@ -79,16 +81,19 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
 
 #####
 
-# DSP SOURCE FILES
+# PLUGIN SOURCE FILES
 
-set (dspSources
+set (pluginSources
     ${sourceDir}/PluginProcessor.cpp
-    ${sourceDir}/PluginProcessor.h)
+    ${sourceDir}/PluginProcessor.h
+    ${sourceDir}/PluginEditor.cpp
+    ${sourceDir}/PluginEditor.h
+    )
 
 source_group (
     TREE ${sourceDir}
-    PREFIX "DSP"
-    FILES ${dspSources})
+    PREFIX "Plugin Sources"
+    FILES ${pluginSources})
 
 #
 
@@ -97,12 +102,10 @@ source_group (
 
 # GUI SOURCE FILES
 
-set (guiSourcePath ${CMAKE_CURRENT_LIST_DIR}/Source/GUI)
+set (guiSourcePath ${sourceDir}/GUI)
 
 set (guiSources
     ${guiSourcePath}/LookAndFeel.h
-    ${guiSourcePath}/PluginEditor.cpp
-    ${guiSourcePath}/PluginEditor.h
     ${guiSourcePath}/EnableSidechainWarning.h)
 
 source_group (
@@ -174,8 +177,7 @@ source_group (
 #####
 
 set (ImogenSourceCode   
-    ${dspSources} 
-    
+    ${pluginSources} 
     ${guiSources}
     ${HelpScreenSources}
     ${IOControlSources}
