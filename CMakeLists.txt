@@ -1,13 +1,13 @@
 # IMOGEN 
 
-# This CMake script will generate an IDE project containing all the Imogen source code files, as well as JUCE build targets for VST and AudioUnit plugins.
+# This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application.
 
 
 cmake_minimum_required (VERSION 3.15) 
 
 set (CMAKE_CXX_COMPILER AppleClang)
 
-project (Imogen VERSION 0.0.1 LANGUAGES CXX ASM)
+project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
@@ -22,7 +22,7 @@ option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 
-set (juce_directory ${sourceDir}/JUCE)  # the subdirectory containing the JUCE library code. 
+set (juce_directory ${sourceDir}/JUCE)  # the subdirectory containing the JUCE library code
 
 add_subdirectory (${juce_directory})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
@@ -48,6 +48,8 @@ juce_add_modules (
     )
 
 
+# this command adds a static library target with the shared plugin code (that can be linked to for the testing target down below), as well as build targets for VST & AU plugins and a standalone:
+
 juce_add_plugin (${CMAKE_PROJECT_NAME} 
     PRODUCT_NAME ${CMAKE_PROJECT_NAME}
     VERSION ${CMAKE_PROJECT_VERSION}
@@ -65,11 +67,9 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     FORMATS AU VST3 Standalone
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
-    # ICON_SMALL  # icons for the standalone app
-    # ICON_BIG
+    ICON_BIG ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png
     )
 
-# set image icon paths / files ^
 
 juce_generate_juce_header (${CMAKE_PROJECT_NAME})
 
@@ -100,8 +100,6 @@ source_group (
     PREFIX "Plugin Sources"
     FILES ${pluginSources})
 
-#
-
 
 #####
 
@@ -119,8 +117,6 @@ source_group (
     FILES ${guiSources})
 
 
-# help screen
-
 set (HelpScreenSourcePath ${guiSourcePath}/HelpScreen)
 
 set (HelpScreenSources
@@ -132,8 +128,6 @@ source_group (
     PREFIX "GUI/HelpScreen"
     FILES ${HelpScreenSources})
 
-
-# IO control panel
 
 set (IOPanelSourcePath ${guiSourcePath}/IOControlPanel)
 
@@ -149,8 +143,6 @@ source_group (
 
 
 
-# Midi control panel
-
 set (MidiControlSourcePath ${guiSourcePath}/MidiControlPanel)
 
 set (MidiControlSources
@@ -163,8 +155,6 @@ source_group (
     FILES ${MidiControlSources})
 
 
-
-# Staff display
 
 set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
@@ -187,7 +177,8 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     ${HelpScreenSources}
     ${IOControlSources}
     ${MidiControlSources}
-    ${StaffDisplaySources})
+    ${StaffDisplaySources}
+    )
 
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${sourceDir} ${guiSourcePath})
@@ -195,7 +186,8 @@ target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${sourceDir} ${guiSour
 
 #####
 
-# graphic asset binary files 
+
+# this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
 
 set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
 
@@ -225,14 +217,18 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 
 # Test executable
 
-# set (testFilesPath ${CMAKE_CURRENT_LIST_DIR}/Source/Tests) 
 
-# set (testFiles ${testFilesPath}/tests.cpp ${testFilesPath}/tests.h) 
+# set (testFilesPath ${sourceDir}/Tests) 
+
+# set (testFiles 
+#     ${testFilesPath}/tests.cpp 
+#     ${testFilesPath}/tests.h) 
 
 # source_group (
 #    TREE ${testFilesPath}
 #    PREFIX "Tests"
 #    FILES ${testFiles})
+
 
 # add_executable (tests ${testFiles})
 
@@ -243,7 +239,6 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 
 # target_link_libraries (tests
 #    PRIVATE
-#        ImogenGraphicAssets
 #        bv_ImogenEngine
 #    PUBLIC
 #        juce::juce_recommended_config_flags
