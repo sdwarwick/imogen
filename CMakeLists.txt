@@ -1,7 +1,12 @@
+#
+
 # IMOGEN 
+
+# AUTHOR: BEN VINING
 
 # This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application.
 
+#
 
 cmake_minimum_required (VERSION 3.15) 
 
@@ -9,23 +14,37 @@ set (CMAKE_CXX_COMPILER AppleClang)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-# set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
+#
 
-# include (CTest)
+set (compileFeatures cxx_std_17)
 
+set (compileDefinitions 
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    JUCE_STRICT_REFCOUNTEDPTR=1
+    JUCE_VST3_CAN_REPLACE_VST2=0)
+
+#
+
+set (unitTesting FALSE)  #  set this to 'true' to enable a unit testing executable target
+
+if (unitTesting)
+    include (CTest)
+endif()
+
+#
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
+add_subdirectory (${sourceDir}/JUCE)  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
-set (juce_directory ${sourceDir}/JUCE)  # the subdirectory containing the JUCE library code
-
-add_subdirectory (${juce_directory})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
-
+#
 
 set_directory_properties (PROPERTIES 
     JUCE_COMPANY_NAME             BenViningMusicSoftware
@@ -37,6 +56,7 @@ set_directory_properties (PROPERTIES
     JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.
     )
 
+#
 
 set (dspModulesPath ${sourceDir}/DSP_modules)
 
@@ -47,8 +67,9 @@ juce_add_modules (
     ${dspModulesPath}/bv_ImogenEngine
     )
 
+#
 
-# this command adds a static library target with the shared plugin code (that can be linked to for the testing target down below), as well as build targets for VST & AU plugins and a standalone:
+# this command adds a static library target with the shared plugin code that can be linked to for the testing target, as well as build targets for VST & AU plugins and a standalone:
 
 juce_add_plugin (${CMAKE_PROJECT_NAME} 
     PRODUCT_NAME ${CMAKE_PROJECT_NAME}
@@ -73,18 +94,12 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
 
 juce_generate_juce_header (${CMAKE_PROJECT_NAME})
 
+target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 
-target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE cxx_std_17)
-
-target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0
-    )
+target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC ${compileDefinitions})
 
 
-#####
+#######
 
 # PLUGIN SOURCE FILES
 
@@ -101,7 +116,7 @@ source_group (
     FILES ${pluginSources})
 
 
-#####
+#
 
 # GUI SOURCE FILES
 
@@ -116,7 +131,6 @@ source_group (
     PREFIX "GUI"
     FILES ${guiSources})
 
-#
 
 set (HelpScreenSourcePath ${guiSourcePath}/HelpScreen)
 
@@ -129,7 +143,6 @@ source_group (
     PREFIX "GUI/HelpScreen"
     FILES ${HelpScreenSources})
 
-#
 
 set (IOPanelSourcePath ${guiSourcePath}/IOControlPanel)
 
@@ -143,7 +156,6 @@ source_group (
     PREFIX "GUI/IOControlPanel"
     FILES ${IOControlSources})
 
-#
 
 set (MidiControlSourcePath ${guiSourcePath}/MidiControlPanel)
 
@@ -156,7 +168,6 @@ source_group (
     PREFIX "GUI/MidiControlPanel"
     FILES ${MidiControlSources})
 
-#
 
 set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
@@ -197,6 +208,7 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
     ${GraphicAssetsDir}/grandStaff.png
     )
 
+
 #####
 
 target_link_libraries (${CMAKE_PROJECT_NAME}
@@ -210,40 +222,48 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     )
 
 
-#####
+#######
 
-# Test executable
+#
+
+# Test executable for unit testing
+
+if (unitTesting)
+
+    set (testFilesPath ${sourceDir}/Tests) 
+
+    set (testFiles 
+        ${testFilesPath}/tests.cpp 
+        ${testFilesPath}/tests.h) 
+
+    source_group (
+        TREE ${testFilesPath}
+        PREFIX "Tests"
+        FILES ${testFiles})
+
+    add_executable (tests ${testFiles})
+
+    target_include_directories (tests PRIVATE ${testFilesPath})
+
+    target_compile_features (tests PRIVATE ${compileFeatures})
+
+    target_compile_definitions (tests PUBLIC ${compileDefinitions})
+
+    target_link_libraries (tests
+        PRIVATE
+            bv_ImogenEngine
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_lto_flags
+            juce::juce_recommended_warning_flags
+        )
+
+    add_test (NAME tests COMMAND tests)
+
+    enable_testing()
+
+endif()
+
+#
 
 
-# set (testFilesPath ${sourceDir}/Tests) 
-
-# set (testFiles 
-#     ${testFilesPath}/tests.cpp 
-#     ${testFilesPath}/tests.h) 
-
-# source_group (
-#    TREE ${testFilesPath}
-#    PREFIX "Tests"
-#    FILES ${testFiles})
-
-
-# add_executable (tests ${testFiles})
-
-# target_include_directories (tests PRIVATE ${testFilesPath})
-
-# target_compile_features (tests PRIVATE cxx_std_17)
-
-
-# target_link_libraries (tests
-#    PRIVATE
-#        bv_ImogenEngine
-#    PUBLIC
-#        juce::juce_recommended_config_flags
-#        juce::juce_recommended_lto_flags
-#        juce::juce_recommended_warning_flags
-#    )
-
-
-# add_test (NAME tests COMMAND tests)
-
-# enable_testing()
