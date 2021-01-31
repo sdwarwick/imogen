@@ -9,7 +9,7 @@ set (CMAKE_CXX_COMPILER AppleClang)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+# set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
@@ -116,6 +116,7 @@ source_group (
     PREFIX "GUI"
     FILES ${guiSources})
 
+#
 
 set (HelpScreenSourcePath ${guiSourcePath}/HelpScreen)
 
@@ -128,6 +129,7 @@ source_group (
     PREFIX "GUI/HelpScreen"
     FILES ${HelpScreenSources})
 
+#
 
 set (IOPanelSourcePath ${guiSourcePath}/IOControlPanel)
 
@@ -141,7 +143,7 @@ source_group (
     PREFIX "GUI/IOControlPanel"
     FILES ${IOControlSources})
 
-
+#
 
 set (MidiControlSourcePath ${guiSourcePath}/MidiControlPanel)
 
@@ -154,7 +156,7 @@ source_group (
     PREFIX "GUI/MidiControlPanel"
     FILES ${MidiControlSources})
 
-
+#
 
 set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
@@ -166,7 +168,6 @@ source_group (
     TREE ${StaffDisplaySourcePath}
     PREFIX "GUI/StaffDisplay"
     FILES ${StaffDisplaySources})
-
 
 
 #####
@@ -186,7 +187,6 @@ target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${sourceDir} ${guiSour
 
 #####
 
-
 # this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
 
 set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
@@ -197,9 +197,7 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
     ${GraphicAssetsDir}/grandStaff.png
     )
 
-
 #####
-
 
 target_link_libraries (${CMAKE_PROJECT_NAME}
     PRIVATE
@@ -210,7 +208,6 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
     )
-
 
 
 #####
