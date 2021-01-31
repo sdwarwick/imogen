@@ -42,6 +42,7 @@ set (utilsModulePath ${sourceDir}/bv_GeneralUtils)
 set (harmonizerModulePath ${sourceDir}/bv_Harmonizer)
 
 
+# these are custom modules containing portions of the Imogen source code
 juce_add_modules (
     ${utilsModulePath}
     ${pitchDetectorModulePath} 
@@ -179,9 +180,8 @@ source_group (
 
 #####
 
-set (ImogenSourceCode   # this struct defines the collection of all non-juce or c++::std source code files that are used by Imogen.
-
-    ${dspSources} # these are all custom groups of source files 
+set (ImogenSourceCode   
+    ${dspSources} 
     
     ${guiSources}
     ${HelpScreenSources}
@@ -254,10 +254,6 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 #        bv_PitchDetector
 # 	 bv_GeneralUtils
 #	 bv_Harmonizer
-#        juce::juce_audio_utils
-#        juce::juce_audio_plugin_client
-#        juce::juce_dsp
-#        juce::juce_graphics
 #    PUBLIC
 #        juce::juce_recommended_config_flags
 #        juce::juce_recommended_lto_flags
