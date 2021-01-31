@@ -287,14 +287,22 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     synthesisBuffer.clear();
     
     nextSBindex = 0;
+    
+    isPedalPitchVoice = false;
+    isDescantVoice = false;
 };
 
 
 // MIDI -----------------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity, const bool wasStolen)
+void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity,
+                                             const juce::uint32 noteOnTimestamp,
+                                             const bool wasStolen,
+                                             const bool isPedal, const bool isDescant)
 {
     juce::ignoreUnused (wasStolen);
+    
+    noteOnTime = noteOnTimestamp;
     
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
@@ -308,10 +316,13 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
     
     if (! quickRelease.isActive())
         quickRelease.noteOn();
+    
+    isPedalPitchVoice = isPedal;
+    isDescantVoice = isDescant;
 };
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allowTailOff)
+void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool allowTailOff)
 {
     juce::ignoreUnused (velocity);
     
@@ -330,6 +341,9 @@ void HarmonizerVoice<SampleType>::stopNote(const float velocity, const bool allo
     }
     
     noteTurnedOff = true;
+    
+    isPedalPitchVoice = false;
+    isDescantVoice = false;
 };
 
 

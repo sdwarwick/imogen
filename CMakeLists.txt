@@ -16,7 +16,7 @@ set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 
-# include (CTest)s
+# include (CTest)
 
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)

@@ -61,7 +61,11 @@ public:
     void setPan (const int newPan, const bool reportOldToParent = false);
     int getCurrentMidiPan() const noexcept { return currentMidipan; }
     
-    void startNote(const int midiPitch,  const float velocity, const bool wasStolen);
+    void startNote (const int midiPitch,  const float velocity,
+                    const juce::uint32 noteOnTimestamp,
+                    const bool wasStolen = false,
+                    const bool isPedal = false, const bool isDescant = false);
+    
     void stopNote (const float velocity, const bool allowTailOff);
     void aftertouchChanged(const int newAftertouchValue);
     
@@ -69,7 +73,6 @@ public:
     void increaseBufferSizes(const int newMaxBlocksize);
     
     juce::uint32 getNoteOnTime() const noexcept { return noteOnTime; }
-    void setNoteOnTime(const juce::uint32 newTime) { noteOnTime = newTime; }
     
     void clearBuffers();
     
@@ -86,8 +89,9 @@ public:
     void setQuickReleaseParameters(const juce::ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
     void setQuickAttackParameters (const juce::ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
     
-    void setPedalPitchVoice (const bool isNowPedalPitchVoice) noexcept { isPedalPitchVoice = isNowPedalPitchVoice; }
-    void setDescantVoice (const bool isNowDescantVoice) noexcept { isDescantVoice = isNowDescantVoice; }
+    bool isCurrentPedalVoice() const noexcept { return isPedalPitchVoice; }
+    bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
+    
     
 private:
     

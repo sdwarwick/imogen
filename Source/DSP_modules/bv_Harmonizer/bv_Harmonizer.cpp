@@ -8,8 +8,6 @@
  ==============================================================================
  */
 
-#pragma once
-
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 #include "bv_Harmonizer/bv_HarmonizerVoice.cpp"
@@ -642,6 +640,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
     return nullptr;
 };
 
+
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const
 {
@@ -651,7 +650,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
     const juce::ScopedLock sl (lock);
     
     for (auto* voice : voices)
-        if (voice->isVoiceActive() && (voice->getCurrentlyPlayingNote() == lastDescantPitch))
+        if (voice->isVoiceActive() && voice->isCurrentDescantVoice())
             return voice;
     
     return nullptr;
@@ -667,7 +666,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
     const juce::ScopedLock sl (lock);
     
     for (auto* voice : voices)
-        if (voice->isVoiceActive() && (voice->getCurrentlyPlayingNote() == lastPedalPitch))
+        if (voice->isVoiceActive() && voice->isCurrentPedalVoice())
             return voice;
     
     return nullptr;
