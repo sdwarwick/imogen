@@ -14,8 +14,6 @@ set (CMAKE_CXX_COMPILER AppleClang)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
@@ -103,15 +101,17 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC ${compileDefinitions})
 
 # PLUGIN SOURCE FILES
 
+set (pluginSourcesDir ${sourceDir}/pluginSources)
+
 set (pluginSources
-    ${sourceDir}/PluginProcessor.cpp
-    ${sourceDir}/PluginProcessor.h
-    ${sourceDir}/PluginEditor.cpp
-    ${sourceDir}/PluginEditor.h
+    ${pluginSourcesDir}/PluginProcessor.cpp
+    ${pluginSourcesDir}/PluginProcessor.h
+    ${pluginSourcesDir}/PluginEditor.cpp
+    ${pluginSourcesDir}/PluginEditor.h
     )
 
 source_group (
-    TREE ${sourceDir}
+    TREE ${pluginSourcesDir}
     PREFIX "Plugin Sources"
     FILES ${pluginSources})
 
@@ -193,7 +193,7 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     )
 
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${sourceDir} ${guiSourcePath})
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
 
 #####
