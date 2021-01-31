@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "../../Source/ImogenEngine.h"
+#include "bv_ImogenEngine/bv_ImogenEngine.h"
 
 
 template<typename SampleType>
@@ -174,8 +174,8 @@ void ImogenEngine<SampleType>::releaseResources()
  */
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
-                                        MidiBuffer& midiMessages,
+void ImogenEngine<SampleType>::process (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output,
+                                        juce::MidiBuffer& midiMessages,
                                         const bool applyFadeIn, const bool applyFadeOut)
 {
     // at this layer, we check to ensure that the buffer sent to us does not exceed the internal blocksize we want to process. If it does, it is broken into smaller chunks, and processWrapped() called on each of these chunks in sequence.
@@ -201,8 +201,8 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
     {
         const int chunkNumSamples = std::min (internalBlocksize, samplesLeft);
         
-        AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
-        AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
+        juce::AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
+        juce::AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
         
         // put just the midi messages for this time segment into midiChoppingBuffer
         // the harmonizer's midi output will be returned by being copied to this same region of the midiChoppingBuffer.
@@ -224,8 +224,8 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
-                                               MidiBuffer& midiMessages,
+void ImogenEngine<SampleType>::processWrapped (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output,
+                                               juce::MidiBuffer& midiMessages,
                                                const bool applyFadeIn, const bool applyFadeOut)
 {
     // at this level, the buffer block sizes sent to us are garunteed to NEVER exceed the declared internalBlocksize, but they may still be SMALLER than this blocksize -- the individual buffers this function recieves may be as short as 1 sample long.
@@ -235,20 +235,20 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     jassert (numNewSamples <= internalBlocksize);
     
-    AudioBuffer<SampleType> input; // input must be a MONO buffer!
+    juce::AudioBuffer<SampleType> input; // input must be a MONO buffer!
     
     switch (modulatorInput) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
         case (ModulatorInputSource::left):
         {
-            input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
+            input = juce::AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
             break;
         }
             
         case (ModulatorInputSource::right):
         {
             const int channel = (inBus.getNumChannels() > 1);
-            input = AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
+            input = juce::AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
             break;
         }
             
@@ -258,7 +258,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
             
             if (totalNumChannels == 1)
             {
-                input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
+                input = juce::AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
                 break;
             }
             
@@ -269,7 +269,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
             
             inBuffer.applyGain (1.0f / totalNumChannels);
             
-            input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
+            input = juce::AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
             break;
         }
     }
@@ -309,8 +309,8 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input,
-                                                  MidiBuffer& midiMessages)
+void ImogenEngine<SampleType>::renderBlock (const juce::AudioBuffer<SampleType>& input,
+                                                  juce::MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
@@ -331,7 +331,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain, dryGain);
     prevDryGain = dryGain;
 
-    dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
+    dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
     const float newPitch = pitchDetector.detectPitch (inBuffer); // returns -1 if the current frame is unpitched
     
@@ -341,7 +341,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
     prevWetGain = wetGain;
 
-    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
+    dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
 
     // master output gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
@@ -349,8 +349,8 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     if (limiterIsOn)
     {
-        dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
-        limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+        juce::dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
+        limiter.process (juce::dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
     
     for (int chan = 0; chan < 2; ++chan)
@@ -369,7 +369,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
  */
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
+void ImogenEngine<SampleType>::processBypassed (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output)
 {
     const int totalNumSamples = inBus.getNumSamples();
     
@@ -388,8 +388,8 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
     {
         const int chunkNumSamples = std::min (internalBlocksize, samplesLeft);
         
-        AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
-        AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
+        juce::AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
+        juce::AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
         
         processBypassedWrapped (inBusProxy, outputProxy);
         
@@ -400,7 +400,7 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
+void ImogenEngine<SampleType>::processBypassedWrapped (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output)
 {
     // harmonizer.processMidi(midiMessages);
     
@@ -408,12 +408,12 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
     
     jassert (numNewSamples <= internalBlocksize);
     
-    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
+    juce::AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
     
     const int totalNumChannels = inBus.getNumChannels();
     
     if (totalNumChannels == 1)
-        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
+        input = juce::AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
     else
     {
         inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
@@ -423,7 +423,7 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
         
         inBuffer.applyGain (1.0f / totalNumChannels);
         
-        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
+        input = juce::AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
     }
     
     inputBuffer.writeSamples (input, 0, 0, numNewSamples, 0);
@@ -440,7 +440,7 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
 
 // copies a range of events from one MidiBuffer to another MidiBuffer, applying a timestamp offset. The number of events copied will correspond to the numSamples argument.
 template<typename SampleType>
-void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
+void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const juce::MidiBuffer& readingBuffer, juce::MidiBuffer& destBuffer,
                                                       const int startSampleOfInput,
                                                       const int startSampleOfOutput,
                                                       const int numSamples)
@@ -460,7 +460,7 @@ void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& readingB
     const int sampleOffset = startSampleOfOutput - startSampleOfInput;
     
     std::for_each (midiIterator, midiEnd,
-                   [&] (const MidiMessageMetadata& meta)
+                   [&] (const juce::MidiMessageMetadata& meta)
                        {
                            destBuffer.addEvent (meta.getMessage(),
                                                 std::max (0,

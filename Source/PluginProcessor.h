@@ -4,7 +4,7 @@
 
 #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 
-#include "ImogenEngine.h"
+#include "bv_ImogenEngine/bv_ImogenEngine.h"
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
@@ -13,6 +13,7 @@ class ImogenAudioProcessorEditor; // forward declaration...
 //==============================================================================
 /**
  */
+
 class ImogenAudioProcessor    : public juce::AudioProcessor
 
 {

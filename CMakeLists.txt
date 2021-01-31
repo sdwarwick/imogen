@@ -35,18 +35,11 @@ set_directory_properties (PROPERTIES
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 
-set (pitchDetectorModulePath ${sourceDir}/bv_PitchDetector)
-
-set (utilsModulePath ${sourceDir}/bv_GeneralUtils)
-
-set (harmonizerModulePath ${sourceDir}/bv_Harmonizer)
-
-
-# these are custom modules containing portions of the Imogen source code
 juce_add_modules (
-    ${utilsModulePath}
-    ${pitchDetectorModulePath} 
-    ${harmonizerModulePath}
+    ${sourceDir}/bv_GeneralUtils
+    ${sourceDir}/bv_PitchDetector
+    ${sourceDir}/bv_Harmonizer
+    ${sourceDir}/bv_ImogenEngine
     )
 
 
@@ -64,10 +57,12 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_CODE Imgn
-    FORMATS AU VST3    
+    FORMATS AU VST3 Standalone
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
     )
+
+# set image icon paths / files ^
 
 juce_generate_juce_header (${CMAKE_PROJECT_NAME})
 
@@ -87,8 +82,6 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
 # DSP SOURCE FILES
 
 set (dspSources
-    ${sourceDir}/ImogenEngine.cpp
-    ${sourceDir}/ImogenEngine.h
     ${sourceDir}/PluginProcessor.cpp
     ${sourceDir}/PluginProcessor.h)
 
@@ -206,7 +199,8 @@ set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
 juce_add_binary_data (ImogenGraphicAssets SOURCES 
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
-    ${GraphicAssetsDir}/grandStaff.png)
+    ${GraphicAssetsDir}/grandStaff.png
+    )
 
 
 #####
@@ -215,11 +209,7 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
 target_link_libraries (${CMAKE_PROJECT_NAME}
     PRIVATE
         ImogenGraphicAssets
-        bv_PitchDetector
-        bv_GeneralUtils
-        bv_Harmonizer
-        juce::juce_dsp
-        juce::juce_graphics
+        bv_ImogenEngine
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -251,9 +241,7 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 # target_link_libraries (tests
 #    PRIVATE
 #        ImogenGraphicAssets
-#        bv_PitchDetector
-# 	 bv_GeneralUtils
-#	 bv_Harmonizer
+#        bv_ImogenEngine
 #    PUBLIC
 #        juce::juce_recommended_config_flags
 #        juce::juce_recommended_lto_flags
