@@ -181,17 +181,13 @@ source_group (
 
 #####
 
-set (ImogenSourceCode   
+target_sources (${CMAKE_PROJECT_NAME} PRIVATE 
     ${pluginSources} 
     ${guiSources}
     ${HelpScreenSources}
     ${IOControlSources}
     ${MidiControlSources}
-    ${StaffDisplaySources}
-    )
-
-
-target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${ImogenSourceCode})
+    ${StaffDisplaySources})
 
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${sourceDir} ${guiSourcePath})

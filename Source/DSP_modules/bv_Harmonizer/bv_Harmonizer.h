@@ -5,13 +5,7 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- website:            http://www.benvining.com
- license:            GPL
  dependencies:       juce_audio_utils, bv_GeneralUtils
- OSXFrameworks:
- iOSFrameworks:
- linuxLibs:
- mingwLibs:
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 

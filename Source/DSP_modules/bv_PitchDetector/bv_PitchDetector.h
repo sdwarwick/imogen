@@ -5,13 +5,7 @@
  version:            0.0.1
  name:               Pitch detector
  description:        ASDF-based pitch detector
- website:            http://www.benvining.com
- license:            GPL
  dependencies:       juce_audio_utils
- OSXFrameworks:
- iOSFrameworks:
- linuxLibs:
- mingwLibs:
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 

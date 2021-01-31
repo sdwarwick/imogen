@@ -5,13 +5,7 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer & pitch detector classes into one processor
- website:            http://www.benvining.com
- license:            GPL
  dependencies:       bv_Harmonizer, bv_PitchDetector, juce_dsp
- OSXFrameworks:
- iOSFrameworks:
- linuxLibs:
- mingwLibs:
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 

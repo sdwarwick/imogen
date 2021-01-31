@@ -3,13 +3,9 @@
  ID:                 bv_GeneralUtils
  vendor:             Ben Vining
  version:            0.0.1
- name:               General audio and midi utility classes and functions
- description:
- website:            http://www.benvining.com
- license:            GPL
+ name:               GeneralUtils
+ description:        General audio and midi utility classes and functions
  dependencies:       juce_audio_utils
- OSXFrameworks:
- iOSFrameworks:
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
