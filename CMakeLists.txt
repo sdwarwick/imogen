@@ -7,11 +7,16 @@ cmake_minimum_required (VERSION 3.15)
 
 set (CMAKE_CXX_COMPILER AppleClang)
 
-project (Imogen VERSION 0.0.1 LANGUAGES CXX)
+project (Imogen VERSION 0.0.1 LANGUAGES CXX ASM)
+
+set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
-# include (CTest)
+option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
+
+
+# include (CTest)s
 
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
@@ -31,8 +36,6 @@ set_directory_properties (PROPERTIES
     JUCE_AU_COPY_DIR              /Users/benvining/Library/Audio/Plug-Ins/Components
     JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.
     )
-
-option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 
 set (dspModulesPath ${sourceDir}/DSP_modules)
@@ -62,6 +65,8 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     FORMATS AU VST3 Standalone
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
+    # ICON_SMALL  # icons for the standalone app
+    # ICON_BIG
     )
 
 # set image icon paths / files ^
