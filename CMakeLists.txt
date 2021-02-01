@@ -8,6 +8,7 @@
 
 #
 
+
 cmake_minimum_required (VERSION 3.15) 
 
 set (CMAKE_CXX_COMPILER AppleClang)
@@ -74,7 +75,6 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     PRODUCT_NAME ${CMAKE_PROJECT_NAME}
     VERSION ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID com.BenViningMusicSoftware.Imogen
-    
     PLUGIN_NAME ${CMAKE_PROJECT_NAME}
     PLUGIN_MANUFACTURER_CODE Benv
     DESCRIPTION Real-time vocal harmonizer instrument
@@ -93,7 +93,6 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 
 target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC ${compileDefinitions})
-
 
 #######
 

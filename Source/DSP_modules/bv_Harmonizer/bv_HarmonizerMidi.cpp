@@ -471,10 +471,14 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     if (! voice->isKeyDown()) // if the key wasn't already marked as down...
         voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
     
+    if (wasStolen)
+        panner.panValTurnedOff(voice->getCurrentMidiPan());
+    
     if (midiPitch < lowestPannedNote)
-        voice->setPan (64, wasStolen);
+        voice->setPan (64);
     else if (! wasStolen) // don't change pan if voice was stolen
-        voice->setPan (panner.getNextPanVal(), false);
+        voice->setPan (panner.getNextPanVal());
+    
     
     const bool isPedal = pedalPitchIsOn ? (midiPitch == lastPedalPitch) : false;
     const bool isDescant = descantIsOn ? (midiPitch == lastDescantPitch) : false;

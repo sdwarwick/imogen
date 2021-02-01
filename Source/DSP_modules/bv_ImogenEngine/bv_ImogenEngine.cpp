@@ -14,8 +14,8 @@
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine():
     modulatorInput(ModulatorInputSource::left),
-    pitchDetector(80.0f, 2400.0f, 44100.0),
     internalBlocksize(512),
+    pitchDetector(80.0f, 2400.0f, 44100.0),
     inputBuffer(1, internalBlocksize, internalBlocksize),
     outputBuffer(2, internalBlocksize, internalBlocksize),
     limiterIsOn(false),
@@ -90,7 +90,6 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     
     chunkMidiBuffer.ensureSize(aggregateBufferSizes);
     
-    harmonizer.resetNoteOnCounter(); // ??
     harmonizer.prepare (internalBlocksize * 2);
     
     clearBuffers();
@@ -147,7 +146,6 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::releaseResources()
 {
     harmonizer.releaseResources();
-    harmonizer.resetNoteOnCounter();
     // harmonizer.removeallvoices ?
     
     wetBuffer.setSize(0, 0, false, false, false);

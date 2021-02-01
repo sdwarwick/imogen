@@ -355,15 +355,12 @@ void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::setPan (const int newPan,  const bool reportOldToParent)
+void HarmonizerVoice<SampleType>::setPan (const int newPan)
 {
     jassert (juce::isPositiveAndBelow (newPan, 128));
     
     if (currentMidipan == newPan)
         return;
-    
-    if (reportOldToParent)
-        parent->panValTurnedOff (currentMidipan);
     
     panner.setMidiPan (newPan);
     

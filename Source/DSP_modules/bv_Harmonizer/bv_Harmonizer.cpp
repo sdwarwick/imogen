@@ -84,6 +84,8 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     intervalsLatchedTo.ensureStorageAllocated(voices.size());
     
     grains.prepare (blocksize);
+    
+    lastNoteOnCounter = 0;
 };
 
 
@@ -148,6 +150,8 @@ void Harmonizer<SampleType>::releaseResources()
     panner.releaseResources();
     
     grains.releaseResources();
+    
+    lastNoteOnCounter = 0;
 };
 
 
@@ -264,7 +268,7 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 
 
 template<typename SampleType>
-bool Harmonizer<SampleType>::isPitchHeldByKeyboardKey (const int midipitch)
+bool Harmonizer<SampleType>::isPitchHeldByKeyboardKey (const int midipitch) const
 {
     const juce::ScopedLock sl (lock);
     
@@ -340,7 +344,10 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
         if (voice->getCurrentlyPlayingNote() < lowestPannedNote)
         {
             if (voice->getCurrentMidiPan() != 64)
-                voice->setPan (64, true);
+            {
+                panner.panValTurnedOff (voice->getCurrentMidiPan());
+                voice->setPan (64);
+            }
         }
         else
             voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
@@ -366,7 +373,10 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
         if (note < newPitchThresh)
         {
             if (voice->getCurrentMidiPan() != 64)
-                voice->setPan (64, true);
+            {
+                panner.panValTurnedOff (voice->getCurrentMidiPan());
+                voice->setPan (64);
+            }
             
             continue;
         }
@@ -376,7 +386,7 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
         if (note < lowestPannedNote)
         {
             if (voice->getCurrentMidiPan() == 64)
-                voice->setPan (panner.getNextPanVal(), false);
+                voice->setPan (panner.getNextPanVal());
         }
     }
     

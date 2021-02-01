@@ -58,7 +58,7 @@ public:
     bool isKeyDown() const noexcept { return keyIsDown; }
     void setKeyDown (bool isNowDown) noexcept;
     
-    void setPan (const int newPan, const bool reportOldToParent = false);
+    void setPan (const int newPan);
     int getCurrentMidiPan() const noexcept { return currentMidipan; }
     
     void startNote (const int midiPitch,  const float velocity,
@@ -67,6 +67,7 @@ public:
                     const bool isPedal = false, const bool isDescant = false);
     
     void stopNote (const float velocity, const bool allowTailOff);
+    
     void aftertouchChanged(const int newAftertouchValue);
     
     // DANGER!!! FOR NON REALTIME USE ONLY!
@@ -76,12 +77,10 @@ public:
     
     void clearBuffers();
     
-    float getCurrentVelocityMultiplier() const noexcept { return currentVelocityMultiplier; }
     void setVelocityMultiplier(const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; }
     float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
     
     void setCurrentOutputFreq(const float newFreq) noexcept { currentOutputFreq = newFreq; }
-    float getCurrentOutputFreq() const noexcept { return currentOutputFreq; }
     
     void updateSampleRate(const double newSamplerate);
     
@@ -146,6 +145,10 @@ private:
 };
 
 
+/****************************************************************************************************************************************************
+****************************************************************************************************************************************************/
+
+
 template<typename SampleType>
 class Harmonizer
 {
@@ -159,8 +162,6 @@ public:
                        const float inputFrequency, const bool frameIsPitched,
                        juce::MidiBuffer& midiMessages);
     
-    void processMidi (juce::MidiBuffer& midiMessages);
-    
     void prepare (const int blocksize);
     
     void releaseResources();
@@ -170,14 +171,9 @@ public:
     int getNumActiveVoices() const;
     
     bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
-
-    float getCurrentInputFreq() const noexcept { return currentInputFreq; }
-    void setCurrentInputFreq (const float newInputFreq);
+    bool isPitchHeldByKeyboardKey (const int midipitch) const;
     
-    void handleMidiEvent(const juce::MidiMessage& m, const int samplePosition);
     void updateMidiVelocitySensitivity(const int newSensitivity);
-    
-    void resetNoteOnCounter() noexcept { lastNoteOnCounter = 0; }
     
     void setCurrentPlaybackSampleRate(const double newRate);
     double getSamplerate() const noexcept { return sampleRate; }
@@ -186,10 +182,8 @@ public:
     
     void updateStereoWidth(const int newWidth);
     void updateLowestPannedNote(const int newPitchThresh) noexcept;
-    int  getCurrentLowestPannedNote() const noexcept { return lowestPannedNote; }
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
-    bool isNoteStealingEnabled() const noexcept { return shouldStealNotes; }
     
     void reportActiveNotes(juce::Array<int>& outputArray) const; // returns an array of the currently active pitches
     void reportActivesNoReleased(juce::Array<int>& outputArray) const; // the same, but excludes notes that are still ringing but whose key has been released
@@ -226,24 +220,14 @@ public:
     int getNumVoices() const noexcept { return voices.size(); }
     
     void setPedalPitch(const bool isOn);
-    bool isPedalPitchOn() const noexcept { return pedalPitchIsOn; }
     void setPedalPitchUpperThresh(const int newThresh);
-    int getCurrentPedalPitchUpperThresh() const noexcept { return pedalPitchUpperThresh; }
     void setPedalPitchInterval(const int newInterval);
-    int getCurrentPedalPitchInterval() const noexcept { return pedalPitchInterval; }
-    int getCurrentPedalPitchNote() const noexcept { return lastPedalPitch; }
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
     void setDescant(const bool isOn);
-    bool isDescantOn() const noexcept { return descantIsOn; }
     void setDescantLowerThresh(const int newThresh);
-    int getCurrentDescantLowerThresh() const noexcept { return descantLowerThresh; }
     void setDescantInterval(const int newInterval);
-    int getCurrentDescantInterval() const noexcept { return descantInterval; }
-    int getCurrentDescantNote() const noexcept { return lastDescantPitch; }
     HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
-    
-    void panValTurnedOff (const int midipitch) { panner.panValTurnedOff(midipitch); }
     
     // returns a float velocity weighted according to the current midi velocity sensitivity settings
     float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); }
@@ -264,8 +248,6 @@ public:
     
     // turns off any pitches whose keys are not being held anymore
     void turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant);
-
-    bool isPitchHeldByKeyboardKey (const int midipitch);
     
     
 private:
@@ -279,7 +261,11 @@ private:
     GrainExtractor<SampleType> grains;
     juce::Array<int> indicesOfGrainOnsets;
     
+    void setCurrentInputFreq (const float newInputFreq);
+    
     // MIDI
+    void processMidi (juce::MidiBuffer& midiMessages);
+    void handleMidiEvent(const juce::MidiMessage& m, const int samplePosition);
     void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
     void handlePitchWheel(const int wheelValue);
