@@ -9,6 +9,10 @@
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
+
+// class templates defined in this file: Harmonizer<SampleType>, HarmonizerVoice<SampleType>
+
+
 #pragma once
 
 #include <juce_audio_utils/juce_audio_utils.h>

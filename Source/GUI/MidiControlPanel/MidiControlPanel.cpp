@@ -1,18 +1,13 @@
 /*
- ==============================================================================
- 
- MidiControlPanel.cpp
- Created: 29 Nov 2020 5:31:17pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a user interface control panel containing controls linked to the harmonizer's various MIDI settings, controls, and functions.
+    Parent file: MidiControlPanel.h.
  */
 
 
 #include <JuceHeader.h>
 #include "../../Source/GUI/MidiControlPanel/MidiControlPanel.h"
 
-//==============================================================================
+
 MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
     attackLink (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),

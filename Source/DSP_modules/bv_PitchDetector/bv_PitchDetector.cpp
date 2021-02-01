@@ -1,12 +1,8 @@
 /*
-  ==============================================================================
+    Part of module: bv_PitchDetector
+    Parent file: bv_PitchDetector.h
+ */
 
-    PitchDetector.cpp
-    Created: 18 Jan 2021 11:31:33am
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_PitchDetector.h"
 

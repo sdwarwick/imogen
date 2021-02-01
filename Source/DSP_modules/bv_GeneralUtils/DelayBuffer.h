@@ -1,5 +1,11 @@
+/*
+    Part of module: bv_GeneralUtils
+    Parent file: bv_GeneralUtils.h
+*/
+
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
+
 
 template<typename SampleType>
 class DelayBuffer

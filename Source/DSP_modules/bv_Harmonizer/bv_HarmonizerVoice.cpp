@@ -1,14 +1,12 @@
 /*
-  ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: bv_Harmonizer.h
+    Classes: HarmonizerVoice
+ */
 
-    HarmonizerVoice.cpp
-    Created: 11 Jan 2021 7:06:49pm
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):

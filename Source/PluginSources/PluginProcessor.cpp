@@ -1,8 +1,13 @@
+/*
+    This file defines Imogen's internal audio processor as a whole, when Imogen is built as a plugin target
+    Parent file: PluginProcessor.h
+ */
+
+
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/PluginSources/PluginEditor.h"
 
 
-//==============================================================================
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "PARAMETERS", createParameters()),

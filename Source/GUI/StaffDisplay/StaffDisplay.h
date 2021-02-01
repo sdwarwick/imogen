@@ -1,12 +1,8 @@
 /*
- ==============================================================================
- 
- StaffDisplay.h
- Created: 26 Nov 2020 11:27:15pm
- Author:  Ben Vining
- 
- ==============================================================================
- */
+    This file defines a visual staff display component, which displays noteheads corresponding to the harmonizer's currently playing notes, updating in real-time.
+    When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
+*/
+
 
 #pragma once
 
@@ -19,10 +15,6 @@
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
-
-//==============================================================================
-/*
- */
 
 class StaffDisplay  : public juce::Component
 {

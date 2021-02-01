@@ -1,17 +1,13 @@
 /*
- ==============================================================================
- 
- IOControlPanel.cpp
- Created: 7 Dec 2020 11:18:06pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a user interface control panel containing controls linked to the audio processor's various I/O controls, options, and functions.
+    Parent file: IOControlPanel.h.
  */
+
 
 #include <JuceHeader.h>
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
 
-//==============================================================================
+
 IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
     dryPanLink      (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),

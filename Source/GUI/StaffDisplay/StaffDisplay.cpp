@@ -1,17 +1,13 @@
 /*
- ==============================================================================
- 
- StaffDisplay.cpp
- Created: 26 Nov 2020 11:27:15pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a visual staff display component, which displays noteheads corresponding to the harmonizer's currently playing notes, updating in real-time.
+    Parent file: StaffDisplay.h.
  */
+
 
 #include <JuceHeader.h>
 #include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
 
-//==============================================================================
+
 StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),  grandStaff(ImageCache::getFromMemory(BinaryData::grandStaff_png, BinaryData::grandStaff_pngSize)),
     useFlats(false), halfTheStafflineHeight(10.0f),

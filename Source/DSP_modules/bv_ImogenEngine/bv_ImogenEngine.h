@@ -9,6 +9,7 @@
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
+
 #pragma once
 
 #include "juce_dsp/juce_dsp.h"

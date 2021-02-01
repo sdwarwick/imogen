@@ -1,14 +1,12 @@
 /*
-  ==============================================================================
+ Part of module: bv_Harmonizer
+ Direct parent file: GrainExtractor.h
+ Classes: GrainExtractor
+ */
 
-    ZeroCrossingFinding.cpp
-    Created: 24 Jan 2021 1:27:14pm
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::findZeroCrossings (juce::Array<int>& targetArray,

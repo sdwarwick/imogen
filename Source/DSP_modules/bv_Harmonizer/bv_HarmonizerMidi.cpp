@@ -1,14 +1,12 @@
 /*
-  ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: bv_Harmonizer.h
+    Classes: Harmonizer
+ */
 
-    HarmonizerMidi.cpp
-    Created: 22 Jan 2021 1:50:21am
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,

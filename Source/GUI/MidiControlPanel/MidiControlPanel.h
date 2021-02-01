@@ -1,12 +1,8 @@
 /*
- ==============================================================================
- 
- MidiControlPanel.h
- Created: 29 Nov 2020 5:31:17pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a user interface control panel containing controls linked to the harmonizer's various MIDI settings, controls, and functions.
+    When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
  */
+
 
 #pragma once
 
@@ -16,9 +12,6 @@
 #include "../../Source/GUI/LookAndFeel.h"
 
 
-//==============================================================================
-/*
- */
 class MidiControlPanel  : public juce::Component
 {
 public:

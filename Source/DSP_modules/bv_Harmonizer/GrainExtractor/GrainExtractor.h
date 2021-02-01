@@ -1,14 +1,12 @@
 /*
-  ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: bv_Harmonizer.h
+    Classes: GrainExtractor
+ */
 
-    GrainExtractor.h
-    Created: 23 Jan 2021 2:38:27pm
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 template<typename SampleType>
 class GrainExtractor

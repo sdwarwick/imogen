@@ -1,12 +1,8 @@
 /*
-  ==============================================================================
-
-    ImogenEngine.cpp
-    Created: 6 Jan 2021 12:30:40am
-    Author:  Ben Vining
-
-  ==============================================================================
+    Part of module: bv_ImogenEngine
+    Direct parent file: bv_ImogenEngine.h
 */
+
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 

@@ -1,17 +1,12 @@
 /*
- ==============================================================================
- 
- HelpScreen.cpp
- Created: 10 Dec 2020 2:08:25pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a pop-up screen that provides onboard documentation and help for users of Imogen
+    Parent file: HelpScreen.h.
  */
 
 #include <JuceHeader.h>
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
 
-//==============================================================================
+
 HelpScreen::HelpScreen():
     closeIcon(ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {

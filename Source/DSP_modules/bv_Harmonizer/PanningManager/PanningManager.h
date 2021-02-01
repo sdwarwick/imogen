@@ -1,15 +1,11 @@
 /*
- ==============================================================================
- 
- PanningManager.h
- Created: 14 Dec 2020 3:20:30pm
- Author:  Ben Vining
- 
- ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: bv_Harmonizer.h
+    Classes: PanningManager
  */
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
 
+#include "bv_Harmonizer/bv_Harmonizer.h"
 
 
 class PanningManager

@@ -1,14 +1,11 @@
 /*
-  ==============================================================================
+    Part of module: bv_GeneralUtils
+    Parent file: bv_GeneralUtils.h
+ */
 
-    Panner.h
-    Created: 17 Jan 2021 1:02:07pm
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
+
 
 class Panner
 {

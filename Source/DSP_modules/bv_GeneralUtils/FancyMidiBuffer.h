@@ -1,14 +1,11 @@
 /*
-  ==============================================================================
+    Part of module: bv_GeneralUtils
+    Parent file: bv_GeneralUtils.h
+ */
 
-    FancyMidiBuffer.h
-    Created: 21 Jan 2021 1:47:16am
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
+
 
 class FancyMidiBuffer  :    public juce::MidiBuffer
 {

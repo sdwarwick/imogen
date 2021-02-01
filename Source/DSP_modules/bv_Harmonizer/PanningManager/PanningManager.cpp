@@ -1,14 +1,12 @@
 /*
- ==============================================================================
- 
- PanningManager.cpp
- Created: 14 Dec 2020 3:26:58pm
- Author:  Ben Vining
- 
- ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: PanningManager.h
+    Classes: PanningManager
  */
 
+
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
 { };

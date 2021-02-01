@@ -1,21 +1,12 @@
 /*
- ==============================================================================
- 
- HelpScreen.h
- Created: 10 Dec 2020 2:08:25pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a pop-up screen that provides onboard documentation and help for users of Imogen
+    When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
  */
 
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-
-//==============================================================================
-/*
- */
 
 
 class HelpScreen  : public juce::Component

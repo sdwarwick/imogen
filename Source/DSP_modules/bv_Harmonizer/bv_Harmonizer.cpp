@@ -1,12 +1,9 @@
 /*
- ==============================================================================
- 
- Harmonizer.cpp
- Created: 13 Dec 2020 7:53:39pm
- Author:  Ben Vining
- 
- ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: bv_Harmonizer.h
+    Classes: Harmonizer
  */
+
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
 

@@ -1,3 +1,8 @@
+/*
+    This file defines the interactive GUI widow generated & linked to the audio processor when Imogen is built as a plugin
+*/
+
+
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
@@ -11,7 +16,6 @@
 #include "../../Source/GUI/EnableSidechainWarning.h"
 
 
-//==============================================================================
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public juce::Timer
@@ -27,7 +31,6 @@ public:
     
     void updateNumVoicesCombobox(const int newNumVoices);
     
-    //==============================================================================
     
 private:
     

@@ -1,14 +1,12 @@
 /*
- ==============================================================================
- 
- HarmonizerUtilities.h
- Created: 28 Dec 2020 9:15:11pm
- Author:  Ben Vining
- 
- ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: bv_Harmonizer.h
+    Classes: PitchConverter, PitchBendHelper, VelocityHelper
  */
 
+
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 class PitchConverter
 {

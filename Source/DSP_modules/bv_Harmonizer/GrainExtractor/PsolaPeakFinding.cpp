@@ -1,14 +1,12 @@
 /*
-  ==============================================================================
+    Part of module: bv_Harmonizer
+    Direct parent file: GrainExtractor.h
+    Classes: GrainExtractor
+ */
 
-    PsolaPeakFinding.cpp
-    Created: 23 Jan 2021 2:56:54pm
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::findPsolaPeaks (juce::Array<int>& targetArray,

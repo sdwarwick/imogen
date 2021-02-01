@@ -1,27 +1,20 @@
 /*
-  ==============================================================================
+    This file defines a pop-up screen that warns the user that, if they're using Logic or Garageband, sidechain audio input must be enabled for the plugin to function correctly.
+    This file is only needed when Imogen is built as a plugin.
+    This file's direct parent is PluginEditor.h.
+ */
 
-    EnableSidechainWarning.h
-    Created: 5 Jan 2021 2:00:51am
-    Author:  Ben Vining
-
-  ==============================================================================
-*/
 
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-//==============================================================================
-/*
-*/
+
 class EnableSidechainWarning  : public juce::Component
 {
 public:
     EnableSidechainWarning()
     {
-        // In your constructor, you should add any child components, and
-        // initialise any special settings that your component needs.
 
     }
 
@@ -32,13 +25,6 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        /* This demo code just fills the component's background and
-           draws some placeholder text to get you started.
-
-           You should replace everything in this method with your own
-           drawing code..
-        */
-
         g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
 
         g.setColour (juce::Colours::grey);
@@ -52,8 +38,6 @@ public:
 
     void resized() override
     {
-        // This method is where you should set the bounds of any child
-        // components that your component contains..
 
     }
 

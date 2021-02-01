@@ -1,12 +1,8 @@
 /*
- ==============================================================================
- 
- IOControlPanel.h
- Created: 7 Dec 2020 11:18:06pm
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a user interface control panel containing controls linked to the audio processor's various I/O controls, options, and functions.
+    When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
  */
+
 
 #pragma once
 
@@ -17,9 +13,6 @@
 #include "../../Source/GUI/LookAndFeel.h"
 
 
-//==============================================================================
-/*
- */
 class IOControlPanel  : public juce::Component
 {
 public:

@@ -1,12 +1,8 @@
 /*
- ==============================================================================
- 
- LimiterControlPanel.h
- Created: 8 Dec 2020 12:42:36am
- Author:  Ben Vining
- 
- ==============================================================================
+    This file defines a user interface control panel containing controls linked to the audio processor's built-in limiter.
+    Parent file: IOControlPanel.h.
  */
+
 
 #pragma once
 
@@ -15,9 +11,7 @@
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
-//==============================================================================
-/*
- */
+
 class LimiterControlPanel  : public juce::Component
 {
 public:

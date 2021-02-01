@@ -1,7 +1,12 @@
+/*
+    This file defines the interactive GUI widow generated & linked to the audio processor when Imogen is built as a plugin
+    Parent file: PluginEditor.h
+*/
+
+
 #include "../../Source/PluginSources/PluginEditor.h"
 
 
-//==============================================================================
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim),
     midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false), sidechainWarningShowing(false)
@@ -60,7 +65,7 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
     Timer::stopTimer();
 };
 
-//==============================================================================
+
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
