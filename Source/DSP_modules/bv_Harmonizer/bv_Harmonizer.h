@@ -15,10 +15,11 @@
 
 #pragma once
 
+// dependencies
 #include <juce_audio_utils/juce_audio_utils.h>
-
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
+// the rest of the harmonizer module
 #include "bv_Harmonizer/bv_HarmonizerUtilities.h"
 #include "bv_Harmonizer/PanningManager/PanningManager.h"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
@@ -127,8 +128,6 @@ private:
     bool noteTurnedOff;
     
     bool keyIsDown;
-    float panningMults[2];
-    float prevPanningMults[2];
     
     int currentAftertouch;
     
@@ -152,6 +151,9 @@ private:
 /****************************************************************************************************************************************************
 ****************************************************************************************************************************************************/
 
+/*
+    Harmonizer: base class for the polyphonic instrument owning & managing a collection of HarmonizerVoices
+*/
 
 template<typename SampleType>
 class Harmonizer
@@ -328,15 +330,30 @@ private:
     int lowestPannedNote;
     int lastPitchWheelValue;
     
-    bool pedalPitchIsOn;
-    int lastPedalPitch;
-    int pedalPitchUpperThresh;
-    int pedalPitchInterval;
+    // *********************************
     
-    bool descantIsOn;
-    int lastDescantPitch;
-    int descantLowerThresh;
-    int descantInterval;
+    // for clarity & cleanliness, the individual descant & pedal preferences are each encapsulated into their own struct:
+    
+    struct pedalPitchPrefs
+    {
+        bool isOn;
+        int lastPitch;
+        int upperThresh;
+        int interval;
+    };
+    
+    struct descantPrefs
+    {
+        bool isOn;
+        int lastPitch;
+        int lowerThresh;
+        int interval;
+    };
+    
+    pedalPitchPrefs pedal;
+    descantPrefs descant;
+    
+    // *********************************
     
     PanningManager  panner;
     VelocityHelper  velocityConverter;

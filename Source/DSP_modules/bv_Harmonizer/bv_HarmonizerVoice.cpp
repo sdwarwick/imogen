@@ -243,9 +243,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::releaseResources()
 {
     synthesisBuffer.setSize(0, 0, false, false, false);
-    
-    prevPanningMults[0] = panningMults[0];
-    prevPanningMults[1] = panningMults[1];
 };
 
 

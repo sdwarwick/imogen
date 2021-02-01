@@ -129,10 +129,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
         {
             if (voice->isVoiceActive() && ! voice->isKeyDown())
             {
-                const int note = voice->getCurrentlyPlayingNote();
-                
-                if (note != lastPedalPitch && note != lastDescantPitch
-                    && ! intervalLatchNotes.contains (note))
+                if (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice())
                 {
                     toTurnOff.add (voice);
                 }
@@ -329,29 +326,29 @@ void Harmonizer<SampleType>::applyPedalPitch()
         }
     }
     
-    if ((currentLowest == 128) || (currentLowest > pedalPitchUpperThresh))
+    if ((currentLowest == 128) || (currentLowest > pedal.upperThresh))
     {
-        if (lastPedalPitch > -1)
-            noteOff (lastPedalPitch, 1.0f, false, false);
+        if (pedal.lastPitch > -1)
+            noteOff (pedal.lastPitch, 1.0f, false, false);
         
         return;
     }
     
-    const int newPedalPitch = currentLowest - pedalPitchInterval;
+    const int newPedalPitch = currentLowest - pedal.interval;
     
-    if (newPedalPitch == lastPedalPitch)
+    if (newPedalPitch == pedal.lastPitch)
         return;
     
-    if (lastPedalPitch > -1)
-        noteOff (lastPedalPitch, 1.0f, false, false);
+    if (pedal.lastPitch > -1)
+        noteOff (pedal.lastPitch, 1.0f, false, false);
     
     if (newPedalPitch < 0)
     {
-        lastPedalPitch = -1;
+        pedal.lastPitch = -1;
         return;
     }
     
-    lastPedalPitch = newPedalPitch;
+    pedal.lastPitch = newPedalPitch;
     
     float velocity;
     
@@ -382,29 +379,29 @@ void Harmonizer<SampleType>::applyDescant()
         }
     }
     
-    if ((currentHighest == -1) || (currentHighest < descantLowerThresh))
+    if ((currentHighest == -1) || (currentHighest < descant.lowerThresh))
     {
-        if (lastDescantPitch > -1)
-            noteOff (lastDescantPitch, 1.0f, false, false);
+        if (descant.lastPitch > -1)
+            noteOff (descant.lastPitch, 1.0f, false, false);
         
         return;
     }
     
-    const int newDescantPitch = currentHighest + descantInterval;
+    const int newDescantPitch = currentHighest + descant.interval;
     
-    if (newDescantPitch == lastDescantPitch)
+    if (newDescantPitch == descant.lastPitch)
         return;
     
-    if (lastDescantPitch > -1)
-        noteOff (lastDescantPitch, 1.0f, false, false);
+    if (descant.lastPitch > -1)
+        noteOff (descant.lastPitch, 1.0f, false, false);
     
     if (newDescantPitch > 127)
     {
-        lastDescantPitch = -1;
+        descant.lastPitch = -1;
         return;
     }
     
-    lastDescantPitch = newDescantPitch;
+    descant.lastPitch = newDescantPitch;
     
     float velocity;
     
@@ -423,10 +420,10 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
 {
     const juce::ScopedLock sl (lock);
     
-    if (pedalPitchIsOn)
+    if (pedal.isOn)
         applyPedalPitch();
     
-    if (descantIsOn)
+    if (descant.isOn)
         applyDescant();
     
     if (intervalLatchIsOn)
@@ -478,8 +475,8 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         voice->setPan (panner.getNextPanVal());
     
     
-    const bool isPedal = pedalPitchIsOn ? (midiPitch == lastPedalPitch) : false;
-    const bool isDescant = descantIsOn ? (midiPitch == lastDescantPitch) : false;
+    const bool isPedal = pedal.isOn ? (midiPitch == pedal.lastPitch) : false;
+    const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
     
     voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, wasStolen, isPedal, isDescant);
 };
@@ -527,13 +524,13 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
     aggregateMidiBuffer.addEvent (juce::MidiMessage::noteOff (lastMidiChannel, note, velocity),
                                   ++lastMidiTimeStamp);
     
-    if (pedalPitchIsOn)
+    if (pedal.isOn)
         if (voice->isCurrentPedalVoice())
-            lastPedalPitch = -1;
+            pedal.lastPitch = -1;
     
-    if (descantIsOn)
+    if (descant.isOn)
         if (voice->isCurrentDescantVoice())
-            lastDescantPitch = -1;
+            descant.lastPitch = -1;
     
     voice->stopNote (velocity, allowTailOff);
 };

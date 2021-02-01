@@ -18,7 +18,6 @@
 #include "bv_PitchDetector/bv_PitchDetector.h"
 
 
-
 template<typename SampleType>
 class ImogenEngine
 {

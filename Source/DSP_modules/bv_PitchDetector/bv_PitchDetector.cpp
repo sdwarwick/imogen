@@ -1,7 +1,7 @@
 /*
     Part of module: bv_PitchDetector
     Parent file: bv_PitchDetector.h
- */
+*/
 
 
 #include "bv_PitchDetector.h"

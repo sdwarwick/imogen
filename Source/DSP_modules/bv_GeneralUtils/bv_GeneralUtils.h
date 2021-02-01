@@ -12,8 +12,10 @@
 
 #pragma once
 
+// dependency
 #include <juce_audio_utils/juce_audio_utils.h>
 
+// the rest of this module
 #include "DelayBuffer.h"
 #include "FancyMidiBuffer.h"
 #include "Panner.h"

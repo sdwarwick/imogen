@@ -18,7 +18,7 @@
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64), pedalPitchIsOn(false), lastPedalPitch(-1), pedalPitchUpperThresh(0), pedalPitchInterval(12), descantIsOn(false), lastDescantPitch(-1), descantLowerThresh(127), descantInterval(12),
+    latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
     adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false)
 {
@@ -44,6 +44,16 @@ Harmonizer<SampleType>::Harmonizer():
     windowSize = 0;
     
     intervalLatchIsOn = false;
+    
+    pedal.isOn = false;
+    pedal.lastPitch = -1;
+    pedal.upperThresh = 0;
+    pedal.interval = 12;
+    
+    descant.isOn = false;
+    descant.lastPitch = -1;
+    descant.lowerThresh = 127;
+    descant.interval = 12;
 };
 
 
@@ -434,43 +444,43 @@ void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const i
 template<typename SampleType>
 void Harmonizer<SampleType>::setDescant (const bool isOn)
 {
-    if (descantIsOn == isOn)
+    if (descant.isOn == isOn)
         return;
     
     if (isOn)
         applyDescant();
     else
     {
-        if (lastDescantPitch > -1)
-            noteOff (lastDescantPitch, 1.0f, false, false);
+        if (descant.lastPitch > -1)
+            noteOff (descant.lastPitch, 1.0f, false, false);
         
-        lastDescantPitch = -1;
+        descant.lastPitch = -1;
     }
     
-    descantIsOn = isOn;
+   descant.isOn = isOn;
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::setDescantLowerThresh (const int newThresh)
 {
-    if (descantLowerThresh == newThresh)
+    if (descant.lowerThresh == newThresh)
         return;
     
-    descantLowerThresh = newThresh;
+    descant.lowerThresh = newThresh;
     
-    if (descantIsOn)
+    if (descant.isOn)
         applyDescant();
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::setDescantInterval (const int newInterval)
 {
-    if (descantInterval == newInterval)
+    if (descant.interval == newInterval)
         return;
     
-    descantInterval = newInterval;
+    descant.interval = newInterval;
     
-    if (descantIsOn)
+    if (descant.isOn)
         applyDescant();
 };
 
@@ -479,43 +489,43 @@ void Harmonizer<SampleType>::setDescantInterval (const int newInterval)
 template<typename SampleType>
 void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
 {
-    if (pedalPitchIsOn == isOn)
+    if (pedal.isOn == isOn)
         return;
     
     if (isOn)
         applyPedalPitch();
     else
     {
-        if (lastPedalPitch > -1)
-            noteOff (lastPedalPitch, 1.0f, false, false);
+        if (pedal.lastPitch > -1)
+            noteOff (pedal.lastPitch, 1.0f, false, false);
         
-        lastPedalPitch = -1;
+        pedal.lastPitch = -1;
     }
     
-    pedalPitchIsOn = isOn;
+    pedal.isOn = isOn;
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::setPedalPitchUpperThresh (const int newThresh)
 {
-    if (pedalPitchUpperThresh == newThresh)
+    if (pedal.upperThresh == newThresh)
         return;
     
-    pedalPitchUpperThresh = newThresh;
+    pedal.upperThresh = newThresh;
     
-    if (pedalPitchIsOn)
+    if (pedal.isOn)
         applyPedalPitch();
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::setPedalPitchInterval (const int newInterval)
 {
-    if (pedalPitchInterval == newInterval)
+    if (pedal.interval == newInterval)
         return;
     
-    pedalPitchInterval = newInterval;
+    pedal.interval = newInterval;
     
-    if (pedalPitchIsOn)
+    if (pedal.isOn)
         applyPedalPitch();
 };
 
@@ -651,7 +661,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const
 {
-    if (! descantIsOn)
+    if (! descant.isOn)
         return nullptr;
     
     const juce::ScopedLock sl (lock);
@@ -667,7 +677,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice() const
 {
-    if (! pedalPitchIsOn)
+    if (! pedal.isOn)
         return nullptr;
     
     const juce::ScopedLock sl (lock);

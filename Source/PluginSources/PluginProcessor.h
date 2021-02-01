@@ -1,11 +1,10 @@
 /*
     This file defines Imogen's internal audio processor as a whole, when Imogen is built as a plugin target
- */
+*/
 
 #pragma once
 
 #include <juce_audio_utils/juce_audio_utils.h>
-
 #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
