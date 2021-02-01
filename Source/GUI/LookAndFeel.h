@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 
 class ImogenLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -20,10 +20,10 @@ public:
         // so far these colors are consistent across all the themes:
         
         // rotary sliders
-        this->setColour(Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
+        this->setColour(juce::Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
         
         // labels
-        this->setColour(Label::ColourIds::textColourId, 				juce::Colours::black);
+        this->setColour(juce::Label::ColourIds::textColourId, 				juce::Colours::black);
         
         // buttons
         this->setColour(uiColourIds::toggleButtonColourId, 				juce::Colours::black);
@@ -41,7 +41,7 @@ public:
                            float sliderPos,
                            const float rotaryStartAngle,
                            const float rotaryEndAngle,
-                           Slider&) override
+                           juce::Slider&) override
     {
         const auto radius  = (float) juce::jmin (width / 2, height / 2) - 5.0f;
         const auto centreX = (float) x + (float) width  * 0.5f;
@@ -52,11 +52,11 @@ public:
         const auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
         
         // fill
-        g.setColour (this->findColour(Slider::ColourIds::rotarySliderFillColourId));
+        g.setColour (this->findColour(juce::Slider::ColourIds::rotarySliderFillColourId));
         g.fillEllipse (rx, ry, rw, rw);
         
         // outline
-        g.setColour (this->findColour(Slider::ColourIds::rotarySliderOutlineColourId));
+        g.setColour (this->findColour(juce::Slider::ColourIds::rotarySliderOutlineColourId));
         g.drawEllipse (rx, ry, rw, rw, 1.0f);
         
         // pointer
@@ -66,44 +66,44 @@ public:
         p.addRectangle (-pointerThickness * 0.5f, -radius, pointerThickness, pointerLength);
         p.applyTransform (juce::AffineTransform::rotation (angle).translated (centreX, centreY));
         
-        g.setColour (this->findColour(Slider::ColourIds::thumbColourId));
+        g.setColour (this->findColour(juce::Slider::ColourIds::thumbColourId));
         g.fillPath (p);
     }
     
     
-    void drawLinearSlider (Graphics& g, int x, int y, int width, int height,
+    void drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,
                            float sliderPos,
                            float minSliderPos,
                            float maxSliderPos,
-                           const Slider::SliderStyle style, Slider& slider) override
+                           const juce::Slider::SliderStyle style, juce::Slider& slider) override
     {
         if (slider.isBar())
         {
             g.setColour (this->findColour(uiColourIds::numboxSliderFill));
-            g.fillRect (slider.isHorizontal() ? Rectangle<float> (static_cast<float> (x), (float) y + 0.5f, sliderPos - (float) x, (float) height - 1.0f)
-                        : Rectangle<float> ((float) x + 0.5f, sliderPos, (float) width - 1.0f, (float) y + ((float) height - sliderPos)));
+            g.fillRect (slider.isHorizontal() ? juce::Rectangle<float> (static_cast<float> (x), (float) y + 0.5f, sliderPos - (float) x, (float) height - 1.0f)
+                        : juce::Rectangle<float> ((float) x + 0.5f, sliderPos, (float) width - 1.0f, (float) y + ((float) height - sliderPos)));
         }
         else
         {
-            auto isTwoVal   = (style == Slider::SliderStyle::TwoValueVertical   || style == Slider::SliderStyle::TwoValueHorizontal);
-            auto isThreeVal = (style == Slider::SliderStyle::ThreeValueVertical || style == Slider::SliderStyle::ThreeValueHorizontal);
+            auto isTwoVal   = (style == juce::Slider::SliderStyle::TwoValueVertical   || style == juce::Slider::SliderStyle::TwoValueHorizontal);
+            auto isThreeVal = (style == juce::Slider::SliderStyle::ThreeValueVertical || style == juce::Slider::SliderStyle::ThreeValueHorizontal);
             
-            auto trackWidth = jmin (6.0f, slider.isHorizontal() ? (float) height * 0.25f : (float) width * 0.25f);
+            auto trackWidth = juce::jmin (6.0f, slider.isHorizontal() ? (float) height * 0.25f : (float) width * 0.25f);
             
-            Point<float> startPoint (slider.isHorizontal() ? (float) x : (float) x + (float) width * 0.5f,
+            juce::Point<float> startPoint (slider.isHorizontal() ? (float) x : (float) x + (float) width * 0.5f,
                                      slider.isHorizontal() ? (float) y + (float) height * 0.5f : (float) (height + y));
             
-            Point<float> endPoint (slider.isHorizontal() ? (float) (width + x) : startPoint.x,
+            juce::Point<float> endPoint (slider.isHorizontal() ? (float) (width + x) : startPoint.x,
                                    slider.isHorizontal() ? startPoint.y : (float) y);
             
-            Path backgroundTrack;
+            juce::Path backgroundTrack;
             backgroundTrack.startNewSubPath (startPoint);
             backgroundTrack.lineTo (endPoint);
-            g.setColour (slider.findColour (Slider::backgroundColourId));
-            g.strokePath (backgroundTrack, { trackWidth, PathStrokeType::curved, PathStrokeType::rounded });
+            g.setColour (slider.findColour (juce::Slider::backgroundColourId));
+            g.strokePath (backgroundTrack, { trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded });
             
-            Path valueTrack;
-            Point<float> minPoint, maxPoint, thumbPoint;
+            juce::Path valueTrack;
+            juce::Point<float> minPoint, maxPoint, thumbPoint;
             
             if (isTwoVal || isThreeVal)
             {
@@ -130,37 +130,37 @@ public:
             
             valueTrack.startNewSubPath (minPoint);
             valueTrack.lineTo (isThreeVal ? thumbPoint : maxPoint);
-            g.setColour (this->findColour (Slider::trackColourId));
-            g.strokePath (valueTrack, { trackWidth, PathStrokeType::curved, PathStrokeType::rounded });
+            g.setColour (this->findColour (juce::Slider::trackColourId));
+            g.strokePath (valueTrack, { trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded });
             
             if (! isTwoVal)
             {
-                g.setColour (this->findColour(Slider::ColourIds::thumbColourId));
-                g.fillEllipse (Rectangle<float> (static_cast<float> (thumbWidth), static_cast<float> (thumbWidth)).withCentre (isThreeVal ? thumbPoint : maxPoint));
+                g.setColour (this->findColour(juce::Slider::ColourIds::thumbColourId));
+                g.fillEllipse (juce::Rectangle<float> (static_cast<float> (thumbWidth), static_cast<float> (thumbWidth)).withCentre (isThreeVal ? thumbPoint : maxPoint));
             }
             
             if (isTwoVal || isThreeVal)
             {
-                auto sr = jmin (trackWidth, (slider.isHorizontal() ? (float) height : (float) width) * 0.4f);
-                auto pointerColour = this->findColour(Slider::ColourIds::thumbColourId);
+                auto sr = juce::jmin (trackWidth, (slider.isHorizontal() ? (float) height : (float) width) * 0.4f);
+                auto pointerColour = this->findColour(juce::Slider::ColourIds::thumbColourId);
                 
                 if (slider.isHorizontal())
                 {
                     drawPointer (g, minSliderPos - sr,
-                                 jmax (0.0f, (float) y + (float) height * 0.5f - trackWidth * 2.0f),
+                                 juce::jmax (0.0f, (float) y + (float) height * 0.5f - trackWidth * 2.0f),
                                  trackWidth * 2.0f, pointerColour, 2);
                     
                     drawPointer (g, maxSliderPos - trackWidth,
-                                 jmin ((float) (y + height) - trackWidth * 2.0f, (float) y + (float) height * 0.5f),
+                                 juce::jmin ((float) (y + height) - trackWidth * 2.0f, (float) y + (float) height * 0.5f),
                                  trackWidth * 2.0f, pointerColour, 4);
                 }
                 else
                 {
-                    drawPointer (g, jmax (0.0f, (float) x + (float) width * 0.5f - trackWidth * 2.0f),
+                    drawPointer (g, juce::jmax (0.0f, (float) x + (float) width * 0.5f - trackWidth * 2.0f),
                                  minSliderPos - trackWidth,
                                  trackWidth * 2.0f, pointerColour, 1);
                     
-                    drawPointer (g, jmin ((float) (x + width) - trackWidth * 2.0f, (float) x + (float) width * 0.5f), maxSliderPos - sr,
+                    drawPointer (g, juce::jmin ((float) (x + width) - trackWidth * 2.0f, (float) x + (float) width * 0.5f), maxSliderPos - sr,
                                  trackWidth * 2.0f, pointerColour, 3);
                 }
             }
@@ -168,11 +168,11 @@ public:
     }
     
     
-    void drawToggleButton (Graphics& g, ToggleButton& b, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    void drawToggleButton (juce::Graphics& g, juce::ToggleButton& b, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
     {
-        ignoreUnused (shouldDrawButtonAsDown, shouldDrawButtonAsHighlighted);
+        juce::ignoreUnused (shouldDrawButtonAsDown, shouldDrawButtonAsHighlighted);
         
-        const auto fontSize  = jmin (15.0f, (float) b.getHeight() * 0.75f);
+        const auto fontSize  = juce::jmin (15.0f, (float) b.getHeight() * 0.75f);
         const auto tickWidth = fontSize * 1.1f;
         
         drawCheckbox(g, 4.0f, ((float) b.getHeight() - tickWidth) * 0.5f,
@@ -185,14 +185,14 @@ public:
             g.setOpacity (0.5f);
         
         g.drawFittedText (b.getButtonText(),
-                          b.getLocalBounds().withTrimmedLeft (roundToInt (tickWidth) + 10)
+                          b.getLocalBounds().withTrimmedLeft (juce::roundToInt (tickWidth) + 10)
                           .withTrimmedRight (2),
-                          Justification::centredLeft, 10);
+                          juce::Justification::centredLeft, 10);
     }
     
-    void drawCheckbox(Graphics& g, float x, float y, float w, float h, bool ticked) // draws tick box for toggleButtons
+    void drawCheckbox(juce::Graphics& g, float x, float y, float w, float h, bool ticked) // draws tick box for toggleButtons
     {
-        Rectangle<float> tickBounds (x, y, w, h);
+        juce::Rectangle<float> tickBounds (x, y, w, h);
         
         g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
         g.drawRoundedRectangle (tickBounds, 4.0f, 1.0f);
@@ -229,7 +229,7 @@ public:
     }
     
     
-    void initializeLabel(Label& l, String labelText)
+    void initializeLabel(juce::Label& l, juce::String labelText)
     {
         l.setFont(juce::Font(14.0f, juce::Font::bold));
         l.setJustificationType(juce::Justification::centred);
@@ -256,14 +256,14 @@ private:
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
         
         // rotary sliders
-        this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::royalblue);
-        this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::royalblue);
+        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
         
         // buttons
-        this->setColour(TextButton::buttonColourId,						juce::Colours::cadetblue);
+        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::cadetblue);
         
         // comboboxes
-        this->setColour(ComboBox::ColourIds::backgroundColourId,		juce::Colours::cadetblue);
+        this->setColour(juce::ComboBox::ColourIds::backgroundColourId,		juce::Colours::cadetblue);
         
         // gui panels
         this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::burlywood);
@@ -280,14 +280,14 @@ private:
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::tomato);
         
         // rotary sliders
-        this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::indianred);
-        this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::indianred);
+        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
         
         // buttons
-        this->setColour(TextButton::buttonColourId,						juce::Colours::slategrey);
+        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::slategrey);
         
         // comboboxes
-        this->setColour(ComboBox::ColourIds::backgroundColourId,		juce::Colours::slategrey);
+        this->setColour(juce::ComboBox::ColourIds::backgroundColourId,		juce::Colours::slategrey);
         
         // gui panels
         this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::rosybrown);
@@ -304,14 +304,14 @@ private:
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::black);
         
         // rotary sliders
-        this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
-        this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
+        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
         
         // buttons
-        this->setColour(TextButton::buttonColourId,						juce::Colours::black);
+        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::black);
         
         // comboboxes
-        this->setColour(ComboBox::ColourIds::backgroundColourId,		juce::Colours::black);
+        this->setColour(juce::ComboBox::ColourIds::backgroundColourId,		juce::Colours::black);
         
         // gui panels
         this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::blueviolet);
@@ -328,11 +328,11 @@ private:
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
         
         // rotary sliders
-        this->setColour(Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
-        this->setColour(Slider::ColourIds::thumbColourId, 				juce::Colours::black);
+        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
+        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
         
         // buttons
-        this->setColour(TextButton::buttonColourId,						juce::Colours::black);
+        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::black);
         
         // gui panels
         this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::lightcyan);

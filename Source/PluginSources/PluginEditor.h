@@ -1,6 +1,6 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
@@ -14,7 +14,7 @@
 //==============================================================================
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                    public Timer
+                                    public juce::Timer
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor&);
@@ -39,29 +39,29 @@ private:
     
     void newPresetSelected();
     
-    void makePresetMenu(ComboBox& box);
+    void makePresetMenu(juce::ComboBox& box);
     
     ImogenLookAndFeel lookAndFeel;
     ImogenLookAndFeel::Skin currentSkin;
     ImogenLookAndFeel::Skin prevSkin;
     
-    ComboBox selectSkin;
-    Label skinLabel;
+    juce::ComboBox selectSkin;
+    juce::Label skinLabel;
     
     MidiControlPanel midiPanel;
     IOControlPanel ioPanel;
     StaffDisplay staffDisplay;
     
     HelpScreen helpScreen;
-    TextButton helpButton;
+    juce::TextButton helpButton;
     
     bool viewHelp;  // bool to control visibility of help/documentation screen
     
-    ComboBox selectPreset;
+    juce::ComboBox selectPreset;
     
-    ComboBox modulatorInputSource;
+    juce::ComboBox modulatorInputSource;
     
-    PluginHostType host;
+    juce::PluginHostType host;
     
     bool sidechainWarningShowing;
     

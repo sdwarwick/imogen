@@ -26,7 +26,8 @@ set (compileDefinitions
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0)
+    JUCE_VST3_CAN_REPLACE_VST2=0
+    )
 
 #
 
@@ -89,9 +90,6 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     ICON_BIG ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png
     )
 
-
-juce_generate_juce_header (${CMAKE_PROJECT_NAME})
-
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 
 target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC ${compileDefinitions})
@@ -114,7 +112,6 @@ source_group (
     TREE ${pluginSourcesDir}
     PREFIX "Plugin Sources"
     FILES ${pluginSources})
-
 
 #
 
@@ -180,7 +177,6 @@ source_group (
     PREFIX "GUI/StaffDisplay"
     FILES ${StaffDisplaySources})
 
-
 #####
 
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE 
@@ -192,9 +188,7 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     ${StaffDisplaySources}
     )
 
-
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
-
 
 #####
 
@@ -208,7 +202,6 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
     ${GraphicAssetsDir}/grandStaff.png
     )
 
-
 #####
 
 target_link_libraries (${CMAKE_PROJECT_NAME}
@@ -220,7 +213,6 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
     )
-
 
 #######
 
@@ -265,4 +257,3 @@ if (unitTesting)
 endif()
 
 #
-

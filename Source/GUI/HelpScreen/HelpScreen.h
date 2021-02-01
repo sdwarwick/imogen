@@ -10,12 +10,14 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 
 
 //==============================================================================
 /*
  */
+
+
 class HelpScreen  : public juce::Component
 {
 public:
@@ -26,8 +28,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     
-    Image closeIcon;
-    ImageButton closeButton;
+    juce::Image closeIcon;
+    juce::ImageButton closeButton;
     
 private:
     

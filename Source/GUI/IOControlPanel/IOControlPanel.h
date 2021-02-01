@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/IOControlPanel/LimiterControlPanel.h"
@@ -32,29 +32,29 @@ public:
     void resized() override;
     
     // dry vox (modulator) pan (in midiPan)
-    Slider dryPan;
-    Label drypanLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
+    juce::Slider dryPan;
+    juce::Label drypanLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
     
     // master dry/wet
-    Slider masterDryWet;
-    Label drywetLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
+    juce::Slider masterDryWet;
+    juce::Label drywetLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
     
     // modulator input gain (gain applied before mod signal is sent into harmony algorithm)
-    Slider inputGain;
-    Label inputGainLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
+    juce::Slider inputGain;
+    juce::Label inputGainLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
     
     // master output gain
-    Slider outputGain;
-    Label outputgainLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
+    juce::Slider outputGain;
+    juce::Label outputgainLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
     
     // set input channel [plugin only accepts a single mono input source]
-    Slider inputChannel;
-    Label inputChannelLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
+    juce::Slider inputChannel;
+    juce::Label inputChannelLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
     
     LimiterControlPanel limiterPanel;
     

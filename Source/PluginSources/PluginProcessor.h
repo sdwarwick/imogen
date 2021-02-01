@@ -1,6 +1,6 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 
 #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 
@@ -31,13 +31,13 @@ public:
     void reset() override;
     
     
-    void processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) override;
+    void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
     
-    void processBlock (AudioBuffer<double>& buffer, MidiBuffer& midiMessages) override;
+    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
     
-    void processBlockBypassed (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) override;
+    void processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
     
-    void processBlockBypassed (AudioBuffer<double>& buffer, MidiBuffer& midiMessages) override;
+    void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
     
     
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
@@ -91,11 +91,11 @@ public:
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
-    void returnActivePitches(Array<int>& outputArray) const;
+    void returnActivePitches(juce::Array<int>& outputArray) const;
     
     void killAllMidi();
     
-    AudioProcessorValueTreeState tree;
+    juce::AudioProcessorValueTreeState tree;
     
     bool canAddBus(bool isInput) const override;
     
@@ -114,42 +114,42 @@ public:
     void updateAllParameters (ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
-    AudioParameterInt*   dryPan             = nullptr;
-    AudioParameterInt*   dryWet             = nullptr;
-    AudioParameterInt*   inputChan          = nullptr;
-    AudioParameterFloat* adsrAttack         = nullptr;
-    AudioParameterFloat* adsrDecay          = nullptr;
-    AudioParameterFloat* adsrSustain        = nullptr;
-    AudioParameterFloat* adsrRelease        = nullptr;
-    AudioParameterBool*  adsrToggle         = nullptr;
-    AudioParameterInt*   quickKillMs        = nullptr;
-    AudioParameterInt*   quickAttackMs      = nullptr;
-    AudioParameterInt*   stereoWidth        = nullptr;
-    AudioParameterInt*   lowestPanned       = nullptr;
-    AudioParameterInt*   velocitySens       = nullptr;
-    AudioParameterInt*   pitchBendUp        = nullptr;
-    AudioParameterInt*   pitchBendDown      = nullptr;
-    AudioParameterBool*  pedalPitchIsOn     = nullptr;
-    AudioParameterInt*   pedalPitchThresh   = nullptr;
-    AudioParameterInt*   pedalPitchInterval = nullptr;
-    AudioParameterBool*  descantIsOn        = nullptr;
-    AudioParameterInt*   descantThresh      = nullptr;
-    AudioParameterInt*   descantInterval    = nullptr;
-    AudioParameterInt*   concertPitchHz     = nullptr;
-    AudioParameterBool*  voiceStealing      = nullptr;
-    AudioParameterBool*  latchIsOn          = nullptr;
-    AudioParameterBool*  intervalLockIsOn   = nullptr;
-    AudioParameterFloat* inputGain          = nullptr;
-    AudioParameterFloat* outputGain         = nullptr;
-    AudioParameterBool*  limiterToggle      = nullptr;
-    AudioParameterFloat* limiterThresh      = nullptr;
-    AudioParameterInt*   limiterRelease     = nullptr;
-    AudioParameterFloat* dryGain            = nullptr;
-    AudioParameterFloat* wetGain            = nullptr;
-    AudioParameterFloat* softPedalGain      = nullptr;
-    AudioParameterInt*   minDetectedHz      = nullptr;
-    AudioParameterInt*   maxDetectedHz      = nullptr;
-    AudioParameterFloat* confidenceThresh   = nullptr;
+    juce::AudioParameterInt*   dryPan             = nullptr;
+    juce::AudioParameterInt*   dryWet             = nullptr;
+    juce::AudioParameterInt*   inputChan          = nullptr;
+    juce::AudioParameterFloat* adsrAttack         = nullptr;
+    juce::AudioParameterFloat* adsrDecay          = nullptr;
+    juce::AudioParameterFloat* adsrSustain        = nullptr;
+    juce::AudioParameterFloat* adsrRelease        = nullptr;
+    juce::AudioParameterBool*  adsrToggle         = nullptr;
+    juce::AudioParameterInt*   quickKillMs        = nullptr;
+    juce::AudioParameterInt*   quickAttackMs      = nullptr;
+    juce::AudioParameterInt*   stereoWidth        = nullptr;
+    juce::AudioParameterInt*   lowestPanned       = nullptr;
+    juce::AudioParameterInt*   velocitySens       = nullptr;
+    juce::AudioParameterInt*   pitchBendUp        = nullptr;
+    juce::AudioParameterInt*   pitchBendDown      = nullptr;
+    juce::AudioParameterBool*  pedalPitchIsOn     = nullptr;
+    juce::AudioParameterInt*   pedalPitchThresh   = nullptr;
+    juce::AudioParameterInt*   pedalPitchInterval = nullptr;
+    juce::AudioParameterBool*  descantIsOn        = nullptr;
+    juce::AudioParameterInt*   descantThresh      = nullptr;
+    juce::AudioParameterInt*   descantInterval    = nullptr;
+    juce::AudioParameterInt*   concertPitchHz     = nullptr;
+    juce::AudioParameterBool*  voiceStealing      = nullptr;
+    juce::AudioParameterBool*  latchIsOn          = nullptr;
+    juce::AudioParameterBool*  intervalLockIsOn   = nullptr;
+    juce::AudioParameterFloat* inputGain          = nullptr;
+    juce::AudioParameterFloat* outputGain         = nullptr;
+    juce::AudioParameterBool*  limiterToggle      = nullptr;
+    juce::AudioParameterFloat* limiterThresh      = nullptr;
+    juce::AudioParameterInt*   limiterRelease     = nullptr;
+    juce::AudioParameterFloat* dryGain            = nullptr;
+    juce::AudioParameterFloat* wetGain            = nullptr;
+    juce::AudioParameterFloat* softPedalGain      = nullptr;
+    juce::AudioParameterInt*   minDetectedHz      = nullptr;
+    juce::AudioParameterInt*   maxDetectedHz      = nullptr;
+    juce::AudioParameterFloat* confidenceThresh   = nullptr;
     
     
 private:
@@ -158,10 +158,10 @@ private:
     void initialize (ImogenEngine<SampleType>& activeEngine);
     
     template <typename SampleType>
-    void processBlockWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
     
     template <typename SampleType>
-    void processBlockBypassedWrapped (AudioBuffer<SampleType>& buffer, MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    void processBlockBypassedWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
     
     template <typename SampleType1, typename SampleType2>
     void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
@@ -174,11 +174,11 @@ private:
     
     int latencySamples;
     
-    PluginHostType host;
+    juce::PluginHostType host;
     
-    AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
     
-    AudioProcessor::BusesProperties makeBusProperties() const;
+    juce::AudioProcessor::BusesProperties makeBusProperties() const;
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     

@@ -185,10 +185,10 @@ void ImogenAudioProcessorEditor::newPresetSelected()
 };
 
 
-void ImogenAudioProcessorEditor::makePresetMenu(ComboBox& box)
+void ImogenAudioProcessorEditor::makePresetMenu(juce::ComboBox& box)
 {
     int id = 1;
-    for(DirectoryEntry entry : RangedDirectoryIterator(audioProcessor.getPresetsFolder(), false))
+    for (juce::DirectoryEntry entry : juce::RangedDirectoryIterator(audioProcessor.getPresetsFolder(), false))
     {
         box.addItem(entry.getFile().getFileName(), id);
         ++id;

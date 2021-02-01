@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
@@ -25,14 +25,14 @@ public:
     ImogenLookAndFeel& lookAndFeel;
     LimiterControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         audioProcessor(p), lookAndFeel(l),
-        limiterThreshLink (std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
-        limiterReleaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
-        limiterToggleLink (std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
+        limiterThreshLink (std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
+        limiterReleaseLink(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
+        limiterToggleLink (std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
         // threshold
         {
-            limiterThresh.setSliderStyle(Slider::SliderStyle::LinearVertical);
-            limiterThresh.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
+            limiterThresh.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+            limiterThresh.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 15);
             addAndMakeVisible(limiterThresh);
             limiterThresh.setValue(audioProcessor.limiterThresh->get());
             limiterThresh.onValueChange = [this] { audioProcessor.updateLimiter(); };
@@ -42,8 +42,8 @@ public:
         
         // release
         {
-            limiterRelease.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-            limiterRelease.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
+            limiterRelease.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
+            limiterRelease.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 40, 20);
             addAndMakeVisible(limiterRelease);
             limiterRelease.setValue(audioProcessor.limiterRelease->get());
             limiterRelease.onValueChange = [this] { audioProcessor.updateLimiter(); };
@@ -57,8 +57,8 @@ public:
             addAndMakeVisible(limiterToggle);
             limiterToggle.onClick = [this] { audioProcessor.updateLimiter(); };
             
-            Button::ButtonState initState = (audioProcessor.limiterToggle->get()) ?
-                                            Button::ButtonState::buttonDown : Button::ButtonState::buttonNormal;
+            juce::Button::ButtonState initState = (audioProcessor.limiterToggle->get()) ?
+                                            juce::Button::ButtonState::buttonDown : juce::Button::ButtonState::buttonNormal;
             limiterToggle.setState (initState);
         }
     }
@@ -69,18 +69,18 @@ public:
     }
     
     // threshold, in dBFS
-    Slider limiterThresh;
-    Label threshLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
+    juce::Slider limiterThresh;
+    juce::Label threshLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
     
     // release time, in ms
-    Slider limiterRelease;
-    Label releaseLabel;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
+    juce::Slider limiterRelease;
+    juce::Label releaseLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
     
     // toggle limiter on/off
-    ToggleButton limiterToggle;
-    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
+    juce::ToggleButton limiterToggle;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
     
     void paint (juce::Graphics& g) override
     {

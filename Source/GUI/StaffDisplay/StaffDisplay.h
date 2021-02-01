@@ -10,7 +10,10 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include "BinaryData.h"
+
+#include <juce_gui_extra/juce_gui_extra.h>
+
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
@@ -32,25 +35,25 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     
-    ComboBox displayFlats;
+    juce::ComboBox displayFlats;
     
 private:
     
-    Image grandStaff;
-    ImageComponent staffImage;
+    juce::Image grandStaff;
+    juce::ImageComponent staffImage;
     
-    Array<int> yCoordsOfActiveNotes;
+    juce::Array<int> yCoordsOfActiveNotes;
     int yCoordLookupTable[127];
     bool useFlats;
     
-    void drawPitches(const Array<int>& activePitches, Graphics& g);
-    void drawNotehead(const int x, const int y, Graphics& g);
-    void drawAccidental(const int x, const int y, Graphics& g);
+    void drawPitches(const juce::Array<int>& activePitches, juce::Graphics& g);
+    void drawNotehead(const int x, const int y, juce::Graphics& g);
+    void drawAccidental(const int x, const int y, juce::Graphics& g);
     
     const float halfTheStafflineHeight;
     
-    String noteheadSvg;
-    Path noteheadPath;
+    juce::String noteheadSvg;
+    juce::Path noteheadPath;
     
     //String flatSvg;
     //Path flatPath;
