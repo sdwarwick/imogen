@@ -267,11 +267,7 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
 {
     updatePitchDetectionWrapped (activeEngine);
     
-    activeEngine.updateInputGain    (Decibels::decibelsToGain (inputGain->get()));
-    activeEngine.updateOutputGain   (Decibels::decibelsToGain (outputGain->get()));
-    activeEngine.updateDryGain      (Decibels::decibelsToGain (dryGain->get()));
-    activeEngine.updateWetGain      (Decibels::decibelsToGain (wetGain->get()));
-    activeEngine.updateSoftPedalGain(Decibels::decibelsToGain (softPedalGain->get()));
+    updateGainsPrivate (activeEngine);
     
     activeEngine.updateLimiter     (limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
     activeEngine.updateDryWet      (dryWet->get());
@@ -296,6 +292,27 @@ void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& active
     // update num voices
     
 };
+
+
+void ImogenAudioProcessor::updateGains()
+{
+    if (isUsingDoublePrecision())
+        updateGainsPrivate (doubleEngine);
+    else
+        updateGainsPrivate (floatEngine);
+};
+
+
+template <typename SampleType>
+void ImogenAudioProcessor::updateGainsPrivate (ImogenEngine<SampleType>& activeEngine)
+{
+    activeEngine.updateInputGain    (Decibels::decibelsToGain (inputGain->get()));
+    activeEngine.updateOutputGain   (Decibels::decibelsToGain (outputGain->get()));
+    activeEngine.updateDryGain      (Decibels::decibelsToGain (dryGain->get()));
+    activeEngine.updateWetGain      (Decibels::decibelsToGain (wetGain->get()));
+    activeEngine.updateSoftPedalGain(Decibels::decibelsToGain (softPedalGain->get()));
+};
+
 
 void ImogenAudioProcessor::updateDryVoxPan()
 {
@@ -407,36 +424,6 @@ void ImogenAudioProcessor::updateIntervalLock()
         doubleEngine.updateIntervalLock(intervalLockIsOn->get());
     else
         floatEngine.updateIntervalLock(intervalLockIsOn->get());
-};
-
-void ImogenAudioProcessor::updateDryWetGains()
-{
-    const float newDryGain = Decibels::decibelsToGain (dryGain->get());
-    if (isUsingDoublePrecision())
-        doubleEngine.updateDryGain (newDryGain);
-    else
-        floatEngine.updateDryGain (newDryGain);
-    
-    const float newWetGain = Decibels::decibelsToGain (wetGain->get());
-    if (isUsingDoublePrecision())
-        doubleEngine.updateWetGain (newWetGain);
-    else
-        floatEngine.updateWetGain (newWetGain);
-};
-
-void ImogenAudioProcessor::updateIOgains()
-{
-    const float newInGain = Decibels::decibelsToGain (inputGain->get());
-    if (isUsingDoublePrecision())
-        doubleEngine.updateInputGain(newInGain);
-    else
-        floatEngine.updateInputGain(newInGain);
-    
-    const float newOutGain = Decibels::decibelsToGain (outputGain->get());
-    if (isUsingDoublePrecision())
-        doubleEngine.updateOutputGain(newOutGain);
-    else
-        floatEngine.updateOutputGain(newOutGain);
 };
 
 void ImogenAudioProcessor::updateLimiter()

@@ -49,7 +49,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         inputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
         addAndMakeVisible(inputGain);
         inputGain.setValue(audioProcessor.inputGain->get());
-        inputGain.onValueChange = [this] { audioProcessor.updateIOgains(); };
+        inputGain.onValueChange = [this] { audioProcessor.updateGains(); };
         lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
         addAndMakeVisible(inputGainLabel);
     }
@@ -60,7 +60,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         outputGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
         addAndMakeVisible(outputGain);
         outputGain.setValue(audioProcessor.outputGain->get());
-        outputGain.onValueChange = [this] { audioProcessor.updateIOgains(); };
+        outputGain.onValueChange = [this] { audioProcessor.updateGains(); };
         lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
         addAndMakeVisible(outputgainLabel);
     }

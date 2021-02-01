@@ -71,8 +71,6 @@ public:
     
     // functions to update parameters ---------------------------------------------------------------------------------------------------------------
     void updateAdsr();
-    void updateIOgains();
-    void updateDryWetGains();
     void updateLimiter();
     void updateStereoWidth();
     void updateQuickKillMs();
@@ -88,6 +86,8 @@ public:
     void updatePedalPitch();
     void updateDescant();
     void updatePitchDetectionSettings();
+    
+    void updateGains();
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
@@ -111,7 +111,7 @@ public:
     
     
     template<typename SampleType>
-    void updateAllParameters(ImogenEngine<SampleType>& activeEngine);
+    void updateAllParameters (ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     AudioParameterInt*   dryPan             = nullptr;
@@ -182,8 +182,12 @@ private:
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
+    
     template <typename SampleType>
     void updatePitchDetectionWrapped (ImogenEngine<SampleType>& activeEngine);
+    
+    template <typename SampleType>
+    void updateGainsPrivate (ImogenEngine<SampleType>& activeEngine);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
