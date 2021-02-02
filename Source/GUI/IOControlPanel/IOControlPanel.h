@@ -29,15 +29,25 @@ public:
     juce::Label drypanLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
     
+    // modulator input gain (gain applied before mod signal is sent into harmony algorithm)
+    juce::Slider inputGain;
+    juce::Label inputGainLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
+    
     // master dry/wet
     juce::Slider masterDryWet;
     juce::Label drywetLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
     
-    // modulator input gain (gain applied before mod signal is sent into harmony algorithm)
-    juce::Slider inputGain;
-    juce::Label inputGainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
+    // dry gain
+    juce::Slider dryGain;
+    juce::Label dryGainLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryGainLink;
+    
+    // wet gain
+    juce::Slider wetGain;
+    juce::Label wetGainLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> wetGainLink;
     
     // master output gain
     juce::Slider outputGain;

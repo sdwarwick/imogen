@@ -13,6 +13,8 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     dryPanLink      (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
     masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "masterDryWet", masterDryWet)),
     inputGainLink   (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
+    dryGainLink     (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryGain", dryGain)),
+    wetGainLink     (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "wetGain", wetGain)),
     outputGainLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
     limiterPanel(p, l)
 {
@@ -47,6 +49,28 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         inputGain.onValueChange = [this] { audioProcessor.updateGains(); };
         lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
         addAndMakeVisible(inputGainLabel);
+    }
+    
+    // dry gain
+    {
+        dryGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
+        dryGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+        //addAndMakeVisible(dryGain);
+        dryGain.setValue(audioProcessor.dryGain->get());
+        dryGain.onValueChange = [this] { audioProcessor.updateGains(); };
+        lookAndFeel.initializeLabel(dryGainLabel, "Dry gain");
+        //addAndMakeVisible(dryGainLabel);
+    }
+    
+    // wet gain
+    {
+        wetGain.setSliderStyle(Slider::SliderStyle::LinearVertical);
+        wetGain.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+        //addAndMakeVisible(wetGain);
+        wetGain.setValue(audioProcessor.wetGain->get());
+        wetGain.onValueChange = [this] { audioProcessor.updateGains(); };
+        lookAndFeel.initializeLabel(wetGainLabel, "Wet gain");
+        //addAndMakeVisible(wetGainLabel);
     }
     
     // output gain
@@ -99,6 +123,18 @@ void IOControlPanel::resized()
     {
         drywetLabel.setBounds (50, 138, 75, 35);
         masterDryWet.setBounds(50, 163, 75, 75);
+    }
+    
+    // dry gain
+    {
+        //dryGain.setBounds(x, y, w, h);
+        //dryGainLabel.setBounds(x, y, w, h);
+    }
+    
+    // wet gain
+    {
+        //wetGain.setBounds(x, y, w, h);
+        //wetGainLabel.setBounds(x, y, w, h);
     }
     
     // output gain

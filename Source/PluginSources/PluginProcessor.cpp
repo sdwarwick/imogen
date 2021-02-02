@@ -634,16 +634,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterFloat>("inputGain", "Input gain",   gainRange, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("outputGain", "Output gain", gainRange, -4.0f));
     
+    // dry & wet gain
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("dryGain", "Dry gain", gainRange, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("wetGain", "Wet gain", gainRange, 0.0f));
+    
     // output limiter
     params.push_back(std::make_unique<juce::AudioParameterBool>	("limiterIsOn", "Limiter on/off", true));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("limiterThresh", "Limiter threshold",
                                                                  juce::NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
-    
-    
-    // dry & wet gain -- NEED TO MAKE GUI SLIDERS FOR THESE!!
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("dryGain", "Dry gain", gainRange, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("wetGain", "Wet gain", gainRange, 0.0f));
     
     // NEED GUI FOR THIS -- soft pedal gain multiplier
     params.push_back(std::make_unique<juce::AudioParameterFloat>("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
