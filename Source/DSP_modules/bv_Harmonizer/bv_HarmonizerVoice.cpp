@@ -1,6 +1,6 @@
 /*
     Part of module: bv_Harmonizer
-    Direct parent file: bv_Harmonizer.h
+    Parent file: bv_Harmonizer.h
     Classes: HarmonizerVoice
  */
 
@@ -79,19 +79,12 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
 {
     if (! keyIsDown)
     {
-        bool shouldStopNote;
-        
-        if (isPedalPitchVoice || isDescantVoice)
-            shouldStopNote = false;
-        else if (parent->isLatched() || parent->isIntervalLatchOn())
-            shouldStopNote = false;
-        else if (parent->isSustainPedalDown() || parent->isSostenutoPedalDown())
-            shouldStopNote = false;
-        else
-            shouldStopNote = true;
-        
-        if (shouldStopNote)
+        if ((! (isPedalPitchVoice || isDescantVoice))
+            && (! (parent->isLatched() || parent->isIntervalLatchOn()))
+            && (! (parent->isSustainPedalDown()) || parent->isSostenutoPedalDown()))
+        {
             stopNote (1.0f, false);
+        }
     }
     
     bool voiceIsOnRightNow;
@@ -116,8 +109,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier); // midi velocity gain
     prevVelocityMultiplier = currentVelocityMultiplier;
     
-    // soft pedal gain
-    const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f;
+    const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f; // soft pedal gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
     prevSoftPedalMultiplier = softPedalMult;
     
