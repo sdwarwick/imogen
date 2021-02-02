@@ -1,12 +1,8 @@
-#
-
 #  IMOGEN 
 
 #  AUTHOR: BEN VINING
 
 #  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application.
-
-#
 
 
 cmake_minimum_required (VERSION 3.15) 
