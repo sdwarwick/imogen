@@ -1,7 +1,7 @@
 /*
     This file defines a pop-up screen that provides onboard documentation and help for users of Imogen
     When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
- */
+*/
 
 #pragma once
 

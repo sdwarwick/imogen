@@ -1,7 +1,7 @@
 /*
     This file defines a user interface control panel containing controls linked to the audio processor's built-in limiter.
     Parent file: IOControlPanel.h.
- */
+*/
 
 
 #pragma once

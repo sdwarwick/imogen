@@ -49,10 +49,10 @@ public:
     
     const juce::String getName() const override { return JucePlugin_Name; }
     
-    bool  acceptsMidi()  const override { return true;  }
-    bool  producesMidi() const override { return true;  }
-    bool  supportsMPE()  const override { return false; }
-    bool  isMidiEffect() const override { return false; }
+    bool acceptsMidi()  const override { return true;  }
+    bool producesMidi() const override { return true;  }
+    bool supportsMPE()  const override { return false; }
+    bool isMidiEffect() const override { return false; }
     
     double getTailLengthSeconds() const override;
     
@@ -105,8 +105,6 @@ public:
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
-    void updateTrackProperties (const TrackProperties& properties) override; // informs the plugin about the properties of the DAW mixer track it's loaded on
-    
     void updateNumVoices(const int newNumVoices);
     
     //==============================================================================
@@ -116,42 +114,41 @@ public:
     void updateAllParameters (ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
-    juce::AudioParameterInt*   dryPan             = nullptr;
-    juce::AudioParameterInt*   dryWet             = nullptr;
-    juce::AudioParameterInt*   inputChan          = nullptr;
-    juce::AudioParameterFloat* adsrAttack         = nullptr;
-    juce::AudioParameterFloat* adsrDecay          = nullptr;
-    juce::AudioParameterFloat* adsrSustain        = nullptr;
-    juce::AudioParameterFloat* adsrRelease        = nullptr;
-    juce::AudioParameterBool*  adsrToggle         = nullptr;
-    juce::AudioParameterInt*   quickKillMs        = nullptr;
-    juce::AudioParameterInt*   quickAttackMs      = nullptr;
-    juce::AudioParameterInt*   stereoWidth        = nullptr;
-    juce::AudioParameterInt*   lowestPanned       = nullptr;
-    juce::AudioParameterInt*   velocitySens       = nullptr;
-    juce::AudioParameterInt*   pitchBendUp        = nullptr;
-    juce::AudioParameterInt*   pitchBendDown      = nullptr;
-    juce::AudioParameterBool*  pedalPitchIsOn     = nullptr;
-    juce::AudioParameterInt*   pedalPitchThresh   = nullptr;
-    juce::AudioParameterInt*   pedalPitchInterval = nullptr;
-    juce::AudioParameterBool*  descantIsOn        = nullptr;
-    juce::AudioParameterInt*   descantThresh      = nullptr;
-    juce::AudioParameterInt*   descantInterval    = nullptr;
-    juce::AudioParameterInt*   concertPitchHz     = nullptr;
-    juce::AudioParameterBool*  voiceStealing      = nullptr;
-    juce::AudioParameterBool*  latchIsOn          = nullptr;
-    juce::AudioParameterBool*  intervalLockIsOn   = nullptr;
-    juce::AudioParameterFloat* inputGain          = nullptr;
-    juce::AudioParameterFloat* outputGain         = nullptr;
-    juce::AudioParameterBool*  limiterToggle      = nullptr;
-    juce::AudioParameterFloat* limiterThresh      = nullptr;
-    juce::AudioParameterInt*   limiterRelease     = nullptr;
-    juce::AudioParameterFloat* dryGain            = nullptr;
-    juce::AudioParameterFloat* wetGain            = nullptr;
-    juce::AudioParameterFloat* softPedalGain      = nullptr;
-    juce::AudioParameterInt*   minDetectedHz      = nullptr;
-    juce::AudioParameterInt*   maxDetectedHz      = nullptr;
-    juce::AudioParameterFloat* confidenceThresh   = nullptr;
+    juce::AudioParameterInt*   dryPan;
+    juce::AudioParameterInt*   dryWet;
+    juce::AudioParameterFloat* adsrAttack;
+    juce::AudioParameterFloat* adsrDecay;
+    juce::AudioParameterFloat* adsrSustain;
+    juce::AudioParameterFloat* adsrRelease;
+    juce::AudioParameterBool*  adsrToggle;
+    juce::AudioParameterInt*   quickKillMs;
+    juce::AudioParameterInt*   quickAttackMs;
+    juce::AudioParameterInt*   stereoWidth;
+    juce::AudioParameterInt*   lowestPanned;
+    juce::AudioParameterInt*   velocitySens;
+    juce::AudioParameterInt*   pitchBendUp;
+    juce::AudioParameterInt*   pitchBendDown;
+    juce::AudioParameterBool*  pedalPitchIsOn;
+    juce::AudioParameterInt*   pedalPitchThresh;
+    juce::AudioParameterInt*   pedalPitchInterval;
+    juce::AudioParameterBool*  descantIsOn;
+    juce::AudioParameterInt*   descantThresh;
+    juce::AudioParameterInt*   descantInterval;
+    juce::AudioParameterInt*   concertPitchHz;
+    juce::AudioParameterBool*  voiceStealing;
+    juce::AudioParameterBool*  latchIsOn;
+    juce::AudioParameterBool*  intervalLockIsOn;
+    juce::AudioParameterFloat* inputGain;
+    juce::AudioParameterFloat* outputGain;
+    juce::AudioParameterBool*  limiterToggle;
+    juce::AudioParameterFloat* limiterThresh;
+    juce::AudioParameterInt*   limiterRelease;
+    juce::AudioParameterFloat* dryGain;
+    juce::AudioParameterFloat* wetGain;
+    juce::AudioParameterFloat* softPedalGain;
+    juce::AudioParameterInt*   minDetectedHz;
+    juce::AudioParameterInt*   maxDetectedHz;
+    juce::AudioParameterFloat* confidenceThresh;
     
     
 private:

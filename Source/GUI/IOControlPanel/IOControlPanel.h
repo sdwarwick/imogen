@@ -1,7 +1,7 @@
 /*
     This file defines a user interface control panel containing controls linked to the audio processor's various I/O controls, options, and functions.
     When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
- */
+*/
 
 
 #pragma once
@@ -43,11 +43,6 @@ public:
     juce::Slider outputGain;
     juce::Label outputgainLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
-    
-    // set input channel [plugin only accepts a single mono input source]
-    juce::Slider inputChannel;
-    juce::Label inputChannelLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputChannelLink;
     
     LimiterControlPanel limiterPanel;
     

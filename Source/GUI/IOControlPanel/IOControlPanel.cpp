@@ -1,7 +1,7 @@
 /*
     This file defines a user interface control panel containing controls linked to the audio processor's various I/O controls, options, and functions.
     Parent file: IOControlPanel.h.
- */
+*/
 
 
 #include <JuceHeader.h>
@@ -14,7 +14,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "masterDryWet", masterDryWet)),
     inputGainLink   (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
     outputGainLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
-    inputChannelLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputChan", inputChannel)),
     limiterPanel(p, l)
 {
     // dry pan
@@ -61,16 +60,6 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         addAndMakeVisible(outputgainLabel);
     }
     
-    // set input channel
-    {
-        inputChannel.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
-        inputChannel.setTextBoxStyle(Slider::TextBoxBelow, false, 40, 20);
-        addAndMakeVisible(inputChannel);
-        inputChannel.setValue(audioProcessor.inputChan->get());
-        lookAndFeel.initializeLabel(inputChannelLabel, "Input channel");
-        addAndMakeVisible(inputChannelLabel);
-    }
-    
     addAndMakeVisible(limiterPanel);
 };
 
@@ -98,12 +87,6 @@ void IOControlPanel::resized()
     {
         inputGainLabel.setBounds(10, 0, 75, 35);
         inputGain.setBounds		(22, 25, 50, 100);
-    }
-    
-    // input channel
-    {
-        inputChannelLabel.setBounds	(95, 0, 90, 35);
-        inputChannel.setBounds		(122, 40, 35, 35);
     }
     
     // dry pan

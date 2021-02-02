@@ -1,7 +1,7 @@
 /*
     This file defines a visual staff display component, which displays noteheads corresponding to the harmonizer's currently playing notes, updating in real-time.
     Parent file: StaffDisplay.h.
- */
+*/
 
 
 #include <JuceHeader.h>

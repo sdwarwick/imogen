@@ -2,7 +2,7 @@
     This file defines a pop-up screen that warns the user that, if they're using Logic or Garageband, sidechain audio input must be enabled for the plugin to function correctly.
     This file is only needed when Imogen is built as a plugin.
     This file's direct parent is PluginEditor.h.
- */
+*/
 
 
 #pragma once

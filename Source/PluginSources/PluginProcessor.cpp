@@ -1,7 +1,7 @@
 /*
     This file defines Imogen's internal audio processor as a whole, when Imogen is built as a plugin target
     Parent file: PluginProcessor.h
- */
+*/
 
 
 #include "../../Source/PluginSources/PluginProcessor.h"
@@ -13,42 +13,41 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     tree(*this, nullptr, "PARAMETERS", createParameters()),
     wasBypassedLastCallback(true)
 {
-    dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                           jassert(dryPan);
-    dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));                     jassert(dryWet);
-    inputChan          = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("inputChan"));                        jassert(inputChan);
-    adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                       jassert(adsrAttack);
-    adsrDecay          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrDecay"));                        jassert(adsrDecay);
-    adsrSustain        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrSustain"));                      jassert(adsrSustain);
-    adsrRelease        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrRelease"));                      jassert(adsrRelease);
-    adsrToggle         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("adsrOnOff"));                        jassert(adsrToggle);
-    quickKillMs        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("quickKillMs"));                      jassert(quickKillMs);
-    quickAttackMs      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("quickAttackMs"));                    jassert(quickAttackMs);
-    stereoWidth        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("stereoWidth"));                      jassert(stereoWidth);
-    lowestPanned       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("lowestPan"));                        jassert(lowestPanned);
-    velocitySens       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity"));          jassert(velocitySens);
-    pitchBendUp        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendUpRange"));                 jassert(pitchBendUp);
-    pitchBendDown      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendDownRange"));               jassert(pitchBendDown);
-    pedalPitchIsOn     = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("pedalPitchToggle"));                 jassert(pedalPitchIsOn);
-    pedalPitchThresh   = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchThresh"));                 jassert(pedalPitchThresh);
-    pedalPitchInterval = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchInterval"));               jassert(pedalPitchInterval);
-    descantIsOn        = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("descantToggle"));                    jassert(descantIsOn);
-    descantThresh      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantThresh"));                    jassert(descantThresh);
-    descantInterval    = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantInterval"));                  jassert(descantInterval);
-    concertPitchHz     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("concertPitch"));                     jassert(concertPitchHz);
-    voiceStealing      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("voiceStealing"));                    jassert(voiceStealing);
-    latchIsOn          = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("latchIsOn"));                        jassert(latchIsOn);
-    intervalLockIsOn   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("intervalLock"));                     jassert(intervalLockIsOn);
-    inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                        jassert(inputGain);
-    outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                       jassert(outputGain);
-    limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                      jassert(limiterToggle);
-    limiterThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("limiterThresh"));                    jassert(limiterThresh);
-    limiterRelease     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("limiterRelease"));                   jassert(limiterRelease);
-    dryGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("dryGain"));                          jassert(dryGain);
-    wetGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("wetGain"));                          jassert(wetGain);
-    softPedalGain      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("softPedalGain"));                    jassert(softPedalGain);
-    minDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMinHz"));              jassert(minDetectedHz);
-    maxDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMaxHz"));              jassert(maxDetectedHz);
-    confidenceThresh   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceThresh"));   jassert(confidenceThresh);
+    dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                         jassert(dryPan);
+    dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));                   jassert(dryWet);
+    adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                     jassert(adsrAttack);
+    adsrDecay          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrDecay"));                      jassert(adsrDecay);
+    adsrSustain        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrSustain"));                    jassert(adsrSustain);
+    adsrRelease        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrRelease"));                    jassert(adsrRelease);
+    adsrToggle         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("adsrOnOff"));                      jassert(adsrToggle);
+    quickKillMs        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("quickKillMs"));                    jassert(quickKillMs);
+    quickAttackMs      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("quickAttackMs"));                  jassert(quickAttackMs);
+    stereoWidth        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("stereoWidth"));                    jassert(stereoWidth);
+    lowestPanned       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("lowestPan"));                      jassert(lowestPanned);
+    velocitySens       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity"));        jassert(velocitySens);
+    pitchBendUp        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendUpRange"));               jassert(pitchBendUp);
+    pitchBendDown      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendDownRange"));             jassert(pitchBendDown);
+    pedalPitchIsOn     = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("pedalPitchToggle"));               jassert(pedalPitchIsOn);
+    pedalPitchThresh   = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchThresh"));               jassert(pedalPitchThresh);
+    pedalPitchInterval = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchInterval"));             jassert(pedalPitchInterval);
+    descantIsOn        = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("descantToggle"));                  jassert(descantIsOn);
+    descantThresh      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantThresh"));                  jassert(descantThresh);
+    descantInterval    = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantInterval"));                jassert(descantInterval);
+    concertPitchHz     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("concertPitch"));                   jassert(concertPitchHz);
+    voiceStealing      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("voiceStealing"));                  jassert(voiceStealing);
+    latchIsOn          = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("latchIsOn"));                      jassert(latchIsOn);
+    intervalLockIsOn   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("intervalLock"));                   jassert(intervalLockIsOn);
+    inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                      jassert(inputGain);
+    outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                     jassert(outputGain);
+    limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                    jassert(limiterToggle);
+    limiterThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("limiterThresh"));                  jassert(limiterThresh);
+    limiterRelease     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("limiterRelease"));                 jassert(limiterRelease);
+    dryGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("dryGain"));                        jassert(dryGain);
+    wetGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("wetGain"));                        jassert(wetGain);
+    softPedalGain      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("softPedalGain"));                  jassert(softPedalGain);
+    minDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMinHz"));            jassert(minDetectedHz);
+    maxDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMaxHz"));            jassert(maxDetectedHz);
+    confidenceThresh   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceThresh")); jassert(confidenceThresh);
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -260,8 +259,8 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
  ============================================================================================================================*/
 
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
-{
-    return getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled(); // only for Logic & Garageband
+{   //  only for Logic & Garageband
+    return (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
 };
 
 
@@ -464,7 +463,7 @@ void ImogenAudioProcessor::updatePitchDetectionWrapped (ImogenEngine<SampleType>
 
 
 
-void ImogenAudioProcessor::returnActivePitches(juce::Array<int>& outputArray) const
+void ImogenAudioProcessor::returnActivePitches (juce::Array<int>& outputArray) const
 {
     if (isUsingDoublePrecision())
         doubleEngine.returnActivePitches(outputArray);
@@ -473,7 +472,7 @@ void ImogenAudioProcessor::returnActivePitches(juce::Array<int>& outputArray) co
 };
 
 
-void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
+void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 {
     if (isUsingDoublePrecision())
         doubleEngine.updateNumVoices(newNumVoices);
@@ -487,7 +486,7 @@ void ImogenAudioProcessor::updateNumVoices(const int newNumVoices)
 
 // functions for custom preset management system ----------------------------------------------------------------------------------------------------
 
-void ImogenAudioProcessor::savePreset(juce::String presetName) 
+void ImogenAudioProcessor::savePreset (juce::String presetName)
 {
     // this function can be used both to save new preset files or to update existing ones
     
@@ -500,7 +499,7 @@ void ImogenAudioProcessor::savePreset(juce::String presetName)
 };
 
 
-void ImogenAudioProcessor::loadPreset(juce::String presetName)
+void ImogenAudioProcessor::loadPreset (juce::String presetName)
 {
     juce::File presetToLoad = getPresetsFolder().getChildFile(presetName);
     
@@ -522,7 +521,7 @@ void ImogenAudioProcessor::loadPreset(juce::String presetName)
 };
 
 
-void ImogenAudioProcessor::deletePreset(juce::String presetName) 
+void ImogenAudioProcessor::deletePreset (juce::String presetName)
 {
     juce::File presetToDelete = getPresetsFolder().getChildFile(presetName);
     
@@ -537,19 +536,23 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 {
     juce::File rootFolder;
     
-#ifdef JUCE_MAC
-    rootFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
-    rootFolder = rootFolder.getChildFile("Audio").getChildFile("Presets").getChildFile("Ben Vining Music Software").getChildFile("Imogen");
-#endif
+#if defined JUCE_MAC
+    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
+    rootFolder = rootFolder.getChildFile ("Audio")
+                           .getChildFile ("Presets")
+                           .getChildFile ("Ben Vining Music Software")
+                           .getChildFile ("Imogen");
     
-#ifdef JUCE_WINDOWS
-    rootFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::UserDocumentsDirectory);
-    rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
-#endif
+#elif defined JUCE_LINUX
+    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
+    rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
+                           .getChildFile ("Imogen");
+
+#else
+    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory);
+    rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
+                           .getChildFile ("Imogen");
     
-#ifdef JUCE_LINUX
-    rootFolder = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userApplicationDataDirectory);
-    rootFolder = rootFolder.getChildFile("Ben Vining Music Software").getChildFile("Imogen");
 #endif
     
     if (! rootFolder.isDirectory() && ! rootFolder.existsAsFile())
@@ -591,16 +594,17 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     // general
     params.push_back(std::make_unique<juce::AudioParameterInt>	("dryPan", "Dry vox pan", 0, 127, 64));
-    
     params.push_back(std::make_unique<juce::AudioParameterInt>	("masterDryWet", "% wet", 0, 100, 100));
     
-    params.push_back(std::make_unique<juce::AudioParameterInt>	("inputChan", "Input channel", 0, 16, 0));
-    
     // ADSR
-    params.push_back(std::make_unique<juce::AudioParameterFloat> 	("adsrAttack", "ADSR Attack", juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.035f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat> 	("adsrDecay", "ADSR Decay", juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.06f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat> 	("adsrSustain", "ADSR Sustain", juce::NormalisableRange<float> (0.01f, 1.0f, 0.01f), 0.8f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat> 	("adsrRelease", "ADSR Release", juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack",
+                                                                 juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.035f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrDecay", "ADSR Decay",
+                                                                 juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.06f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrSustain", "ADSR Sustain",
+                                                                 juce::NormalisableRange<float> (0.01f, 1.0f, 0.01f), 0.8f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrRelease", "ADSR Release",
+                                                                 juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.1f));
     params.push_back(std::make_unique<juce::AudioParameterBool>	("adsrOnOff", "ADSR on/off", true));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("quickKillMs", "Quick kill ms", 1, 250, 15));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("quickAttackMs", "Quick attack ms", 1, 250, 15));
@@ -613,6 +617,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterInt> 	("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
     params.push_back(std::make_unique<juce::AudioParameterInt> 	("PitchBendUpRange", "Pitch bend range (up)", 0, 12, 2));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));
+    params.push_back(std::make_unique<juce::AudioParameterInt>  ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("voiceStealing", "Voice stealing", false));
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("latchIsOn", "MIDI latch on/off", false));
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("intervalLock", "MIDI interval lock", false));
     // pedal pitch
     params.push_back(std::make_unique<juce::AudioParameterBool>	("pedalPitchToggle", "Pedal pitch on/off", false));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
@@ -621,38 +629,33 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterBool>	("descantToggle", "Descant on/off", false));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("descantThresh", "Descant lower threshold", 0, 127, 127));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("descantInterval", "Descant interval", 1, 12, 12));
-    // concert pitch Hz
-    params.push_back(std::make_unique<juce::AudioParameterInt>	("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
-    // voice stealing
-    params.push_back(std::make_unique<juce::AudioParameterBool>	("voiceStealing", "Voice stealing", false));
-    // midi latch
-    params.push_back(std::make_unique<juce::AudioParameterBool>	("latchIsOn", "MIDI latch on/off", false));
-    // interval lock
-    params.push_back(std::make_unique<juce::AudioParameterBool>   ("intervalLock", "MIDI interval lock", false));
     
     // input & output gain
-    params.push_back(std::make_unique<juce::AudioParameterFloat>	("inputGain", "Input gain",   gainRange, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>	("outputGain", "Output gain", gainRange, -4.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("inputGain", "Input gain",   gainRange, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("outputGain", "Output gain", gainRange, -4.0f));
     
     // output limiter
     params.push_back(std::make_unique<juce::AudioParameterBool>	("limiterIsOn", "Limiter on/off", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>	("limiterThresh", "Limiter threshold", juce::NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("limiterThresh", "Limiter threshold",
+                                                                 juce::NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
     
     
     // dry & wet gain -- NEED TO MAKE GUI SLIDERS FOR THESE!!
-    params.push_back(std::make_unique<juce::AudioParameterFloat>  ("dryGain", "Dry gain", gainRange, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>  ("wetGain", "Wet gain", gainRange, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("dryGain", "Dry gain", gainRange, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("wetGain", "Wet gain", gainRange, 0.0f));
     
     // NEED GUI FOR THIS -- soft pedal gain multiplier
-    params.push_back(std::make_unique<juce::AudioParameterFloat>  ("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
     
     // NEED GUI -- PITCH DETECTION SETTINGS
     // Note that the minimum possible Hz value will impact the plugin's latency.
-    params.push_back(std::make_unique<juce::AudioParameterInt>    ("pitchDetectionMinHz", "Min possible Hz", 40, 600, 80));
-    params.push_back(std::make_unique<juce::AudioParameterInt>    ("pitchDetectionMaxHz", "Max possible Hz", 1000, 10000, 2600));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>  ("pitchDetectionConfidenceThresh", "Confidence thresh",
-                                                                   juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
+    params.push_back(std::make_unique<juce::AudioParameterInt>  ("pitchDetectionMinHz", "Min possible Hz", 40, 600, 80));
+    params.push_back(std::make_unique<juce::AudioParameterInt>  ("pitchDetectionMaxHz", "Max possible Hz", 1000, 10000, 2600));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceThresh", "Confidence thresh",
+                                                                juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
+    
+    // MAKE PARAM FOR INPUT MODE !!
     
     return { params.begin(), params.end() };
 };
@@ -661,9 +664,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
     if (adsrToggle->get())
-        return double (adsrRelease->get()); // ADSR release time in seconds
+        return static_cast<double> (adsrRelease->get()); // ADSR release time in seconds
     
-    return double (quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
+    return static_cast<double> (quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
 };
 
 int ImogenAudioProcessor::getNumPrograms() {
@@ -718,29 +721,12 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 };
 
 
-bool ImogenAudioProcessor::canAddBus(bool isInput) const
+bool ImogenAudioProcessor::canAddBus (bool isInput) const
 {
     if (! host.isLogic() || host.isGarageBand())
         return false;
     
     return isInput;
-};
-
-
-void ImogenAudioProcessor::updateTrackProperties (const TrackProperties& properties)
-{
-    juce::String trackName   = properties.name;   // The name   of the track - this will be empty if the track name is not known
-    juce::Colour trackColour = properties.colour; // The colour of the track - this will be transparentBlack if the colour is not known
-    
-    if (trackName != "")
-    {
-        // do something cool with the name of the mixer track the plugin is loaded on
-    }
-    
-    if (trackColour != juce::Colours::transparentBlack)
-    {
-        // do something cool with the colour of the mixer track the plugin is loaded on
-    }
 };
 
 

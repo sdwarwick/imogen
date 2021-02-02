@@ -1,7 +1,7 @@
 /*
     This file defines a global set of "look and feel" characteristics for Imogen's GUI, including colors and drawing methods for individual components
     When Imogen is built as a plugin, this file's direct parent is PluginEditor.h.
- */
+*/
 
 
 #pragma once

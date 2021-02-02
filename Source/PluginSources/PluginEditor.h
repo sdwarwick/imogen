@@ -1,5 +1,6 @@
 /*
     This file defines the interactive GUI widow generated & linked to the audio processor when Imogen is built as a plugin
+    Parent file: PluginProcessor.h
 */
 
 

@@ -1,7 +1,7 @@
 /*
     This file defines a pop-up screen that provides onboard documentation and help for users of Imogen
     Parent file: HelpScreen.h.
- */
+*/
 
 #include <JuceHeader.h>
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"

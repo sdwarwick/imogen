@@ -102,17 +102,20 @@ void ImogenAudioProcessorEditor::timerCallback()
     {
         const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
         
-        if(sidechainWarningShowing != shouldBeShowing)
+        if (sidechainWarningShowing != shouldBeShowing)
         {
             sidechainWarningShowing = shouldBeShowing;
             
             if(shouldBeShowing)
             {
-                sidechainWarning.setVisible(true);
+                sidechainWarning.setVisible (true);
                 sidechainWarning.repaint();
             }
             else
-                sidechainWarning.setVisible(false);
+            {
+                sidechainWarning.setVisible (false);
+                this->repaint();
+            }
         }
     }
 };
@@ -178,7 +181,7 @@ void ImogenAudioProcessorEditor::helpButtonClicked()
 };
 
 
-void ImogenAudioProcessorEditor::updateNumVoicesCombobox(const int newNumVoices)
+void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices)
 {
     midiPanel.updateNumVoicesCombobox(newNumVoices);
 };
@@ -190,9 +193,10 @@ void ImogenAudioProcessorEditor::newPresetSelected()
 };
 
 
-void ImogenAudioProcessorEditor::makePresetMenu(juce::ComboBox& box)
+void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
 {
     int id = 1;
+    
     for (juce::DirectoryEntry entry : juce::RangedDirectoryIterator(audioProcessor.getPresetsFolder(), false))
     {
         box.addItem(entry.getFile().getFileName(), id);
