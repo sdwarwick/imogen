@@ -56,19 +56,16 @@ void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
     
     keyIsDown = isNowDown;
     
-    if (! isNowDown)
+    if (isNowDown)
+        playingButReleased = false;
+    else
     {
         if (isPedalPitchVoice || isDescantVoice)
             playingButReleased = false;
         else
             playingButReleased = isVoiceActive();
     }
-    else
-    {
-        playingButReleased = false;
-    }
-}
-
+};
 
 
 template<typename SampleType>
@@ -114,12 +111,12 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
     prevSoftPedalMultiplier = softPedalMult;
     
     if (parent->isADSRon())
-        adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
+        adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // midi-triggered adsr envelope
     else
-        quickAttack.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // to prevent pops at start of notes
+        quickAttack.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // to prevent pops at start of notes if adsr is off
     
     if (isQuickFading)
-        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ allowTailOff = false, to prevent clicks from jumping to 0
+        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ no tail off, to prevent clicks from jumping to 0
     
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
@@ -170,11 +167,11 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
                                             const int newPeriod)
 {
     // this processes one analysis frame of input samples, from readingStartSample to readingEndSample
-    // the frame size should be 2 * the original input period
+    // the frame size should be 2 * the original input period, and the length of the window passed to this function MUST equal this value!
     
-    const int frameSize = frameEndSample - frameStartSample; // frame size should equal the original period * 2
-    // NB: the length of the pre-computed Hanning window passed to this function MUST equal the frame size!
-
+    const int frameSize = frameEndSample - frameStartSample;  // frame size should equal the original period * 2
+    
+    
     // 1. apply the window before OLAing, so that windowing only has to be done once per analysis grain
     
     auto* w = windowingBuffer.getWritePointer(0);
@@ -187,9 +184,10 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
         w[wi] = inputAudio[s] * window[wi];
     }
     
-    int synthesisIndex = nextSBindex;
     
     // 2. resynthesis / OLA
+    
+    int synthesisIndex = nextSBindex;
     
     while (synthesisIndex < frameEndSample)
     {
@@ -307,6 +305,7 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
     isPedalPitchVoice = isPedal;
     isDescantVoice = isDescant;
 };
+
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool allowTailOff)

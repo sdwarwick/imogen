@@ -329,7 +329,10 @@ void Harmonizer<SampleType>::applyPedalPitch()
     if ((currentLowest == 128) || (currentLowest > pedal.upperThresh))
     {
         if (pedal.lastPitch > -1)
+        {
             noteOff (pedal.lastPitch, 1.0f, false, false);
+            pedal.lastPitch = -1;
+        }
         
         return;
     }
@@ -382,7 +385,10 @@ void Harmonizer<SampleType>::applyDescant()
     if ((currentHighest == -1) || (currentHighest < descant.lowerThresh))
     {
         if (descant.lastPitch > -1)
+        {
             noteOff (descant.lastPitch, 1.0f, false, false);
+            descant.lastPitch = -1;
+        }
         
         return;
     }
@@ -443,8 +449,17 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
     
     const juce::ScopedLock sl (lock);
     
+    //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered:
     if (isPitchActive (midiPitch, false))
+    {
+        if (pedal.isOn && midiPitch == pedal.lastPitch)
+            pedal.lastPitch = -1;
+        
+        if (descant.isOn && midiPitch == descant.lastPitch)
+            descant.lastPitch = -1;
+        
         return;
+    }
     
     bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
     
@@ -456,26 +471,39 @@ template<typename SampleType>
 void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
     if (voice == nullptr)
+    {
+        // this function will be called with a null voice ptr if a note on event was requested, but a voice was not available (ie, could not be stolen)
+        
+        if (pedal.isOn && midiPitch == pedal.lastPitch)
+            pedal.lastPitch = -1;
+            
+        if (descant.isOn && midiPitch == descant.lastPitch)
+            descant.lastPitch = -1;
+        
         return;
+    }
     
     aggregateMidiBuffer.addEvent (juce::MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
                                   ++lastMidiTimeStamp);
     
     const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
     
-    if (! voice->isKeyDown()) // if the key wasn't already marked as down...
+    if (! voice->isKeyDown())           // if the key wasn't already marked as down...
         voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
     
-    if (wasStolen)
-        panner.panValTurnedOff(voice->getCurrentMidiPan());
     
     if (midiPitch < lowestPannedNote)
+    {
+        if (wasStolen)
+            panner.panValTurnedOff (voice->getCurrentMidiPan());
+        
         voice->setPan (64);
+    }
     else if (! wasStolen) // don't change pan if voice was stolen
         voice->setPan (panner.getNextPanVal());
     
     
-    const bool isPedal = pedal.isOn ? (midiPitch == pedal.lastPitch) : false;
+    const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
     const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
     
     voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, wasStolen, isPedal, isDescant);
@@ -506,7 +534,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         if (! (sustainPedalDown || sostenutoPedalDown) )
             stopVoice (voice, velocity, allowTailOff);
     }
-    else if (! voice->isKeyDown())
+    else if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
     {
         stopVoice (voice, velocity, allowTailOff);
     }
@@ -524,13 +552,11 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
     aggregateMidiBuffer.addEvent (juce::MidiMessage::noteOff (lastMidiChannel, note, velocity),
                                   ++lastMidiTimeStamp);
     
-    if (pedal.isOn)
-        if (voice->isCurrentPedalVoice())
-            pedal.lastPitch = -1;
+    if (pedal.isOn && voice->isCurrentPedalVoice())
+        pedal.lastPitch = -1;
     
-    if (descant.isOn)
-        if (voice->isCurrentDescantVoice())
-            descant.lastPitch = -1;
+    if (descant.isOn && voice->isCurrentDescantVoice())
+        descant.lastPitch = -1;
     
     voice->stopNote (velocity, allowTailOff);
 };
@@ -544,8 +570,12 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
     const float velocity = allowTailOff ? 0.0f : 1.0f;
     
     for (auto* voice : voices)
+    {
+        voice->setKeyDown (false);
+        
         if (voice->isVoiceActive())
             stopVoice (voice, velocity, allowTailOff);
+    }
     
     panner.reset (false);
 };

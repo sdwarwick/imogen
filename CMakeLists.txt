@@ -4,6 +4,8 @@
 
 #  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application.
 
+#  The Imogen source code consists of dependencies on a few JUCE modules; a couple of custom JUCE-style modules I created; and the PluginProcessor & PluginEditor source files specific to the plugin build. The bv_ImogenEngine module is a completely contained and self-sufficient audio processor with all of Imogen's features; other source files could replace the PluginProcessor/PluginEditor to adapt Imogen for other build targets.
+
 
 cmake_minimum_required (VERSION 3.15) 
 
