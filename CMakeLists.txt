@@ -27,6 +27,10 @@ set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 set (juceDir ${sourceDir}/JUCE)
 
+# set catch2 dir 
+
+# param for permission to install juce/catch if needed?
+
 #
 
 set (CMAKE_XCODE_GENERATE_SCHEME OFF) # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
@@ -202,7 +206,7 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static librar
 
 # This cleans up folder organization, putting each individual plugin format build target into its own folder 
 
-set (targetList "ImogenGraphicAssets")
+set (targetList "ImogenGraphicAssets") 
 
 foreach (format ${formats})
     string (CONCAT newTargetName "${CMAKE_PROJECT_NAME}_" "${format}")
@@ -212,17 +216,15 @@ endforeach()
 list (APPEND targetList "${CMAKE_PROJECT_NAME}_All")
 
 foreach (target ${targetList})
-    if (NOT TARGET ${target})
-        continue()
-    endif()
+    if (TARGET ${target})
+        set_target_properties (${target} PROPERTIES
+            FOLDER "Targets" 
+            XCODE_GENERATE_SCHEME ON)
 
-    set_target_properties (${target} PROPERTIES
-        FOLDER "Targets" 
-        XCODE_GENERATE_SCHEME ON)
-
-    if (lauchAudioPluginHostOnBuild)
-        set_target_properties(${target} PROPERTIES
-            XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")
+        if (lauchAudioPluginHostOnBuild)
+            set_target_properties (${target} PROPERTIES
+                XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # change this path to use the widows or linux AudioPluginHost executable...
+        endif()
     endif()
 endforeach()
 
@@ -238,8 +240,6 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
         juce::juce_recommended_warning_flags)
 
 #######
-
-#
 
 if (NOT unitTesting)
     return()
