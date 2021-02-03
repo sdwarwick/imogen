@@ -21,15 +21,9 @@ set (compileFeatures cxx_std_17)
 
 set (unitTesting FALSE)  # set this to 'true' to enable a unit testing executable target
 
-set (lauchAudioPluginHostOnBuild FALSE)  # set this to 'true' to automatically lauch JUCE's AudioPluginHost when the project builds. The AudioPluginHost must be built before building Imogen if this is enabled!
-
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 set (juceDir ${sourceDir}/JUCE)
-
-# set catch2 dir 
-
-# param for permission to install juce/catch if needed?
 
 #
 
@@ -98,100 +92,47 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0)
 
+foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target into a "Targets" folder
+    if (TARGET ${CMAKE_PROJECT_NAME}_${target})
+        set_target_properties (${CMAKE_PROJECT_NAME}_${target} PROPERTIES
+            FOLDER "Targets" 
+            XCODE_GENERATE_SCHEME ON)
+    endif()
+endforeach()
+
 #######
 
-# PLUGIN SOURCE FILES
+set (pluginSourcesDir ${sourceDir}/PluginSources)
+set (guiSourcePath ${sourceDir}/GUI)
+set (HelpScreenSourcePath ${guiSourcePath}/HelpScreen)
+set (IOPanelSourcePath ${guiSourcePath}/IOControlPanel)
+set (MidiControlSourcePath ${guiSourcePath}/MidiControlPanel)
+set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
-set (pluginSourcesDir ${sourceDir}/pluginSources)
-
-set (pluginSources
+set (sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
-    ${pluginSourcesDir}/PluginEditor.h)
-
-source_group (
-    TREE ${pluginSourcesDir}
-    PREFIX "Plugin Sources"
-    FILES ${pluginSources})
-
-#
-
-# GUI SOURCE FILES
-
-set (guiSourcePath ${sourceDir}/GUI)
-
-set (guiSources
+    ${pluginSourcesDir}/PluginEditor.h
     ${guiSourcePath}/LookAndFeel.h
-    ${guiSourcePath}/EnableSidechainWarning.h)
-
-source_group (
-    TREE ${guiSourcePath}
-    PREFIX "GUI"
-    FILES ${guiSources})
-
-
-set (HelpScreenSourcePath ${guiSourcePath}/HelpScreen)
-
-set (HelpScreenSources
+    ${guiSourcePath}/EnableSidechainWarning.h
     ${HelpScreenSourcePath}/HelpScreen.cpp
-    ${HelpScreenSourcePath}/HelpScreen.h)
-
-source_group (
-    TREE ${HelpScreenSourcePath}
-    PREFIX "GUI/HelpScreen"
-    FILES ${HelpScreenSources})
-
-
-set (IOPanelSourcePath ${guiSourcePath}/IOControlPanel)
-
-set (IOControlSources
-    ${IOPanelSourcePath}/IOControlPanel.cpp
+    ${HelpScreenSourcePath}/HelpScreen.h
+    ${IOPanelSourcePath}/IOControlPanel.cpp  
     ${IOPanelSourcePath}/IOControlPanel.h
-    ${IOPanelSourcePath}/LimiterControlPanel.h)
-
-source_group (
-    TREE ${IOPanelSourcePath}
-    PREFIX "GUI/IOControlPanel"
-    FILES ${IOControlSources})
-
-
-set (MidiControlSourcePath ${guiSourcePath}/MidiControlPanel)
-
-set (MidiControlSources
+    ${IOPanelSourcePath}/LimiterControlPanel.h
     ${MidiControlSourcePath}/MidiControlPanel.cpp
-    ${MidiControlSourcePath}/MidiControlPanel.h)
-
-source_group (
-    TREE ${MidiControlSourcePath}
-    PREFIX "GUI/MidiControlPanel"
-    FILES ${MidiControlSources})
-
-
-set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
-
-set (StaffDisplaySources
+    ${MidiControlSourcePath}/MidiControlPanel.h
     ${StaffDisplaySourcePath}/StaffDisplay.cpp
     ${StaffDisplaySourcePath}/StaffDisplay.h)
 
-source_group (
-    TREE ${StaffDisplaySourcePath}
-    PREFIX "GUI/StaffDisplay"
-    FILES ${StaffDisplaySources})
-
-#####
-
-target_sources (${CMAKE_PROJECT_NAME} PRIVATE 
-    ${pluginSources} 
-    ${guiSources}
-    ${HelpScreenSources}
-    ${IOControlSources}
-    ${MidiControlSources}
-    ${StaffDisplaySources})
+target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${sourceFiles})
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
 set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
+
+source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
 
 #####
 
@@ -201,32 +142,6 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static librar
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
     ${GraphicAssetsDir}/grandStaff.png)
-
-#####
-
-# This cleans up folder organization, putting each individual plugin format build target into its own folder 
-
-set (targetList "ImogenGraphicAssets") 
-
-foreach (format ${formats})
-    string (CONCAT newTargetName "${CMAKE_PROJECT_NAME}_" "${format}")
-    list (APPEND targetList ${newTargetName})
-endforeach()
-
-list (APPEND targetList "${CMAKE_PROJECT_NAME}_All")
-
-foreach (target ${targetList})
-    if (TARGET ${target})
-        set_target_properties (${target} PROPERTIES
-            FOLDER "Targets" 
-            XCODE_GENERATE_SCHEME ON)
-
-        if (lauchAudioPluginHostOnBuild)
-            set_target_properties (${target} PROPERTIES
-                XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # change this path to use the widows or linux AudioPluginHost executable...
-        endif()
-    endif()
-endforeach()
 
 #####
 
@@ -257,10 +172,17 @@ set (testFiles
     ${testFilesPath}/tests.cpp 
     ${testFilesPath}/tests.h) 
 
-source_group (
-    TREE ${testFilesPath}
-    PREFIX "Tests"
-    FILES ${testFiles})
+# Download the tagged version of Catch2
+
+include (FetchContent)
+
+FetchContent_Declare (Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v2.13.3)
+
+FetchContent_MakeAvailable (Catch2)
+
+#
 
 add_executable (tests ${testFiles})
 
@@ -270,14 +192,19 @@ target_compile_features (tests PRIVATE ${compileFeatures})
 
 target_link_libraries (tests
     PRIVATE
+        Catch2::Catch2
         bv_ImogenEngine
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-add_test (NAME tests COMMAND tests)
+set_target_properties (tests PROPERTIES XCODE_GENERATE_SCHEME ON)
 
-enable_testing()
+source_group(TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
+
+include (${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
+
+catch_discover_tests (tests)
 
 #
