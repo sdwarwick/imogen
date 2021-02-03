@@ -17,9 +17,17 @@ set (formats "AU" "VST3" "Standalone")  # valid formats are:
 
 set (CMAKE_OSX_ARCHITECTURES arm64 x86_64)
 
+# Minimum MacOS target
+set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)
+
+# static linking on Windows
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 set (compileFeatures cxx_std_17)
 
 set (unitTesting FALSE)  # set this to 'true' to enable a unit testing executable target
+
+set (launchPluginHostOnBuild TRUE)
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
@@ -29,13 +37,18 @@ set (juceDir ${sourceDir}/JUCE)
 
 set (CMAKE_XCODE_GENERATE_SCHEME OFF) # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
 
-set (CMAKE_SUPPRESS_REGENERATION true) # no "zero-check" target
+set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
+set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
+
+set (CMAKE_SUPPRESS_REGENERATION TRUE) # no "zero-check" target
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Targets")
 
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
+
+set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #
 
@@ -97,6 +110,11 @@ foreach (target ${formats} "All")  # This cleans up folder organization, putting
         set_target_properties (${CMAKE_PROJECT_NAME}_${target} PROPERTIES
             FOLDER "Targets" 
             XCODE_GENERATE_SCHEME ON)
+
+        if (launchPluginHostOnBuild)
+            set_target_properties (${CMAKE_PROJECT_NAME}_${target} PROPERTIES
+                XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code, and if you are not on MacOSX, this path must be changed to the correct executable for your OS
+        endif()
     endif()
 endforeach()
 
