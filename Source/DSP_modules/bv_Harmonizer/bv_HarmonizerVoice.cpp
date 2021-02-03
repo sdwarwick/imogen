@@ -14,7 +14,7 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     isPedalPitchVoice(false), isDescantVoice(false),
     playingButReleased(false)
 {
-    const double initSamplerate = std::max<double>(parent->getSamplerate(), 44100.0);
+    const double initSamplerate = 44100.0;
     
     adsr        .setSampleRate(initSamplerate);
     quickRelease.setSampleRate(initSamplerate);
@@ -74,6 +74,8 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
                                                    const juce::Array<int>& indicesOfGrainOnsets,
                                                    const juce::AudioBuffer<SampleType>& windowToUse)
 {
+    jassert (samplerate > 0.0);
+    
     if (! keyIsDown)
     {
         if ((! (isPedalPitchVoice || isDescantVoice))
@@ -97,7 +99,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
         return;
     }
     
-    const float newPeriod = static_cast<float> (parent->getSamplerate() / currentOutputFreq);
+    const float newPeriod = static_cast<float> (samplerate / currentOutputFreq);
     
     sola (inputAudio, origPeriod, juce::roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
@@ -355,8 +357,13 @@ void HarmonizerVoice<SampleType>::setPan (const int newPan)
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::updateSampleRate(const double newSamplerate)
+void HarmonizerVoice<SampleType>::updateSampleRate (const double newSamplerate)
 {
+    if (samplerate == newSamplerate)
+        return;
+    
+    samplerate = newSamplerate;
+    
     adsr        .setSampleRate(newSamplerate);
     quickRelease.setSampleRate(newSamplerate);
     quickAttack .setSampleRate(newSamplerate);

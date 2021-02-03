@@ -52,7 +52,7 @@ public:
     
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
-    bool isVoiceActive()          const noexcept { return currentlyPlayingNote >= 0; }
+    bool isVoiceActive() const noexcept { return (currentlyPlayingNote >= 0); }
     
     bool isPlayingButReleased()   const noexcept { return playingButReleased; } // returns true if a voice is sounding, but its key has been released
     
@@ -73,27 +73,25 @@ public:
     
     void stopNote (const float velocity, const bool allowTailOff);
     
-    void aftertouchChanged(const int newAftertouchValue);
+    void aftertouchChanged (const int newAftertouchValue);
     
     // DANGER!!! FOR NON REALTIME USE ONLY!
-    void increaseBufferSizes(const int newMaxBlocksize);
-    
-    juce::uint32 getNoteOnTime() const noexcept { return noteOnTime; }
+    void increaseBufferSizes (const int newMaxBlocksize);
     
     void clearBuffers();
     
-    void setVelocityMultiplier(const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; }
+    void setVelocityMultiplier (const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; }
     float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
     
-    void setCurrentOutputFreq(const float newFreq) noexcept { currentOutputFreq = newFreq; }
+    void setCurrentOutputFreq (const float newFreq) noexcept { currentOutputFreq = newFreq; }
     
-    void updateSampleRate(const double newSamplerate);
+    void updateSampleRate (const double newSamplerate);
     
-    void setAdsrParameters(const juce::ADSR::Parameters newParams) { adsr.setParameters(newParams); }
-    void setQuickReleaseParameters(const juce::ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
-    void setQuickAttackParameters (const juce::ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
+    void setAdsrParameters (const juce::ADSR::Parameters newParams) { adsr.setParameters(newParams); }
+    void setQuickReleaseParameters (const juce::ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
+    void setQuickAttackParameters  (const juce::ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
     
-    bool isCurrentPedalVoice() const noexcept { return isPedalPitchVoice; }
+    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice; }
     bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
     
     
@@ -144,6 +142,8 @@ private:
     
     bool playingButReleased;
     
+    double samplerate = 0.0;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
 
@@ -176,26 +176,23 @@ public:
     
     int getNumActiveVoices() const;
     
-    bool isPitchActive(const int midiPitch, const bool countRingingButReleased) const;
-    bool isPitchHeldByKeyboardKey (const int midipitch) const;
+    bool isPitchActive (const int midiPitch, const bool countRingingButReleased) const;
     
-    void updateMidiVelocitySensitivity(const int newSensitivity);
+    void updateMidiVelocitySensitivity (const int newSensitivity);
     
-    void setCurrentPlaybackSampleRate(const double newRate);
-    double getSamplerate() const noexcept { return sampleRate; }
+    void setCurrentPlaybackSampleRate (const double newRate);
     
-    void setConcertPitchHz(const int newConcertPitchhz);
+    void setConcertPitchHz (const int newConcertPitchhz);
     
-    void updateStereoWidth(const int newWidth);
-    void updateLowestPannedNote(const int newPitchThresh) noexcept;
+    void updateStereoWidth (const int newWidth);
+    void updateLowestPannedNote (const int newPitchThresh);
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
     
-    void reportActiveNotes(juce::Array<int>& outputArray) const; // returns an array of the currently active pitches
-    void reportActivesNoReleased(juce::Array<int>& outputArray) const; // the same, but excludes notes that are still ringing but whose key has been released
+    void reportActiveNotes (juce::Array<int>& outputArray, const bool includePlayingButReleased = true) const; // returns an array of the currently active pitches
     
     // turn off all notes
-    void allNotesOff(const bool allowTailOff);
+    void allNotesOff (const bool allowTailOff);
     
     // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
     void playChord (const juce::Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
@@ -206,33 +203,33 @@ public:
     void setIntervalLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; }
     
-    void updateADSRsettings(const float attack, const float decay, const float sustain, const float release);
-    void setADSRonOff(const bool shouldBeOn) noexcept{ adsrIsOn = shouldBeOn; }
+    void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
+    void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
     bool isADSRon() const noexcept { return adsrIsOn; }
-    void updateQuickReleaseMs(const int newMs);
-    void updateQuickAttackMs(const int newMs);
+    void updateQuickReleaseMs (const int newMs);
+    void updateQuickAttackMs  (const int newMs);
     juce::ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
     juce::ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
     juce::ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
-    void updatePitchbendSettings(const int rangeUp, const int rangeDown);
+    void updatePitchbendSettings (const int rangeUp, const int rangeDown);
     
     // Adds a new voice to the harmonizer. The object passed in will be managed by the synthesiser, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
-    HarmonizerVoice<SampleType>* addVoice(HarmonizerVoice<SampleType>* newVoice);
+    void addVoice (HarmonizerVoice<SampleType>* newVoice);
     
     // removes a specified # of voices, attempting to remove inactive voices first
-    void removeNumVoices(const int voicesToRemove);
+    void removeNumVoices (const int voicesToRemove);
     
     int getNumVoices() const noexcept { return voices.size(); }
     
-    void setPedalPitch(const bool isOn);
-    void setPedalPitchUpperThresh(const int newThresh);
-    void setPedalPitchInterval(const int newInterval);
+    void setPedalPitch (const bool isOn);
+    void setPedalPitchUpperThresh (const int newThresh);
+    void setPedalPitchInterval (const int newInterval);
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
-    void setDescant(const bool isOn);
-    void setDescantLowerThresh(const int newThresh);
-    void setDescantInterval(const int newInterval);
+    void setDescant (const bool isOn);
+    void setDescantLowerThresh (const int newThresh);
+    void setDescantInterval (const int newInterval);
     HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
     
     // returns a float velocity weighted according to the current midi velocity sensitivity settings
@@ -241,8 +238,7 @@ public:
     // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
     float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); }
     
-    // DANGER!!! FOR NON REAL TIME USE ONLY!!!
-    void newMaxNumVoices(const int newMaxNumVoices);
+    void newMaxNumVoices (const int newMaxNumVoices);
     
     bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
@@ -271,22 +267,22 @@ private:
     
     // MIDI
     void processMidi (juce::MidiBuffer& midiMessages);
-    void handleMidiEvent(const juce::MidiMessage& m, const int samplePosition);
-    void noteOn(const int midiPitch, const float velocity, const bool isKeyboard);
+    void handleMidiEvent (const juce::MidiMessage& m, const int samplePosition);
+    void noteOn (const int midiPitch, const float velocity, const bool isKeyboard);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
-    void handlePitchWheel(const int wheelValue);
-    void handleAftertouch(const int midiNoteNumber, const int aftertouchValue);
-    void handleChannelPressure(const int channelPressureValue);
-    void handleController(const int controllerNumber, const int controllerValue);
+    void handlePitchWheel (const int wheelValue);
+    void handleAftertouch (const int midiNoteNumber, const int aftertouchValue);
+    void handleChannelPressure (const int channelPressureValue);
+    void handleController (const int controllerNumber, const int controllerValue);
     void handleSustainPedal (const int value);
     void handleSostenutoPedal (const int value);
     void handleSoftPedal (const int value);
-    void handleModWheel(const int wheelValue);
-    void handleBreathController(const int controlValue);
-    void handleFootController(const int controlValue);
-    void handlePortamentoTime(const int controlValue);
-    void handleBalance(const int controlValue);
-    void handleLegato(const bool isOn);
+    void handleModWheel (const int wheelValue);
+    void handleBreathController (const int controlValue);
+    void handleFootController (const int controlValue);
+    void handlePortamentoTime (const int controlValue);
+    void handleBalance (const int controlValue);
+    void handleLegato (const bool isOn);
     
     // voice allocation
     HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable);
@@ -305,14 +301,12 @@ private:
     void pitchCollectionChanged();
     
     void applyPedalPitch();
-    
     void applyDescant();
     
     bool latchIsOn;
     
     bool intervalLatchIsOn;
     juce::Array<int> intervalsLatchedTo;
-    
     void updateIntervalsLatchedTo();
     
     void playChordFromIntervalSet (const juce::Array<int>& desiredIntervals);
@@ -338,7 +332,7 @@ private:
     {
         bool isOn;
         int lastPitch;
-        int upperThresh;
+        int upperThresh; // pedal pitch has an UPPER thresh - the auto harmony voice is only activated if the lowest keyboard note is BELOW a certain thresh
         int interval;
     };
     
@@ -346,7 +340,7 @@ private:
     {
         bool isOn;
         int lastPitch;
-        int lowerThresh;
+        int lowerThresh; // descant has a LOWER thresh - the auto harmony voice is only activated if the highest keyboard note is ABOVE a certain thresh
         int interval;
     };
     
@@ -375,7 +369,8 @@ private:
     int windowSize;
     
     juce::AudioBuffer<SampleType> unpitchedWindow;
-    void initializeUnpitchedWindow();
+    
+    void calculateHanningWindow (juce::AudioBuffer<SampleType>& windowToFill, const int numSamples);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

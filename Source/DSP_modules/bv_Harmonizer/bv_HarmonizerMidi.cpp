@@ -176,7 +176,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
     juce::Array<int> currentNotes;
     currentNotes.ensureStorageAllocated (voices.size());
     
-    reportActivesNoReleased (currentNotes);
+    reportActiveNotes (currentNotes, false);
     
     if (currentNotes.isEmpty())
         return;
@@ -232,7 +232,7 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
     juce::Array<int> currentNotes;
     currentNotes.ensureStorageAllocated (voices.size());
     
-    reportActivesNoReleased (currentNotes);
+    reportActiveNotes (currentNotes, false);
     
     // 1. turn off the pitches that were previously on that are not included in the list of desired pitches
     

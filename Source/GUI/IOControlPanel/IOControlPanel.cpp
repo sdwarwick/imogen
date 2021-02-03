@@ -11,8 +11,8 @@
 IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
     dryPanLink      (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
-    masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "masterDryWet", masterDryWet)),
     inputGainLink   (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
+    masterDryWetLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "masterDryWet", masterDryWet)),
     dryGainLink     (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryGain", dryGain)),
     wetGainLink     (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "wetGain", wetGain)),
     outputGainLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),

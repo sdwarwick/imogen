@@ -84,7 +84,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     
     windowBuffer.setSize (1, blocksize * 2, true, true, true);
     unpitchedWindow.setSize (1, unpitchedGrainRate * 2, true, true, true);
-    initializeUnpitchedWindow();
+    calculateHanningWindow (unpitchedWindow, unpitchedGrainRate * 2);
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
     
@@ -111,7 +111,7 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
-        voice->updateSampleRate(newRate);
+        voice->updateSampleRate (newRate);
 };
 
 
@@ -211,6 +211,7 @@ void Harmonizer<SampleType>::renderVoices (const juce::AudioBuffer<SampleType>& 
 
 
 // calculate Hanning window ------------------------------------------------------
+
 template<typename SampleType>
 void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 {
@@ -219,32 +220,25 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     
     jassert (numSamples <= windowBuffer.getNumSamples());
     
-    windowBuffer.clear();
-    
-    auto* writing = windowBuffer.getWritePointer(0);
-    
-    const auto samplemultiplier = juce::MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
-
-    for (int i = 0; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2.0 * i) * samplemultiplier)) );
+    calculateHanningWindow (windowBuffer, numSamples);
     
     windowSize = numSamples;
 };
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::initializeUnpitchedWindow()
+void Harmonizer<SampleType>::calculateHanningWindow (juce::AudioBuffer<SampleType>& windowToFill, const int numSamples)
 {
-    unpitchedWindow.clear();
+    windowToFill.clear();
     
-    const int numSamples = unpitchedGrainRate * 2;
+    jassert (numSamples > 1);
     
-    auto* writing = unpitchedWindow.getWritePointer(0);
+    auto* writing = windowToFill.getWritePointer(0);
     
     const auto samplemultiplier = juce::MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
     
     for (int i = 0; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType> (0.5 - 0.5 * (std::cos(static_cast<SampleType> (2.0 * i) * samplemultiplier)) );
+        writing[i] = static_cast<SampleType> (0.5 - 0.5 * ( std::cos (static_cast<SampleType> (2.0 * i) * samplemultiplier) ) );
 };
 
 
@@ -275,26 +269,7 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 
 
 template<typename SampleType>
-bool Harmonizer<SampleType>::isPitchHeldByKeyboardKey (const int midipitch) const
-{
-    const juce::ScopedLock sl (lock);
-    
-    for (auto* voice : voices)
-    {
-        if (voice->isVoiceActive()
-            && voice->isKeyDown()
-            && voice->getCurrentlyPlayingNote() == midipitch)
-        {
-            return true;
-        }
-    }
-    
-    return false;
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray) const
+void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray, const bool includePlayingButReleased) const
 {
     outputArray.clearQuick();
     
@@ -302,28 +277,16 @@ void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray) c
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            outputArray.add (voice->getCurrentlyPlayingNote());
+        {
+            if (includePlayingButReleased)
+                outputArray.add (voice->getCurrentlyPlayingNote());
+            else if (! voice->isPlayingButReleased())
+                outputArray.add (voice->getCurrentlyPlayingNote());
+        }
     
     if (! outputArray.isEmpty())
         outputArray.sort();
 };
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::reportActivesNoReleased (juce::Array<int>& outputArray) const
-{
-    outputArray.clearQuick();
-    
-    const juce::ScopedLock sl (lock);
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive() && (! (voice->isPlayingButReleased())))
-            outputArray.add(voice->getCurrentlyPlayingNote());
-    
-    if (! outputArray.isEmpty())
-        outputArray.sort();
-};
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +326,7 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) noexcept
+void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) 
 {
     if (lowestPannedNote == newPitchThresh)
         return;
@@ -384,17 +347,10 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) n
                 panner.panValTurnedOff (voice->getCurrentMidiPan());
                 voice->setPan (64);
             }
-            
-            continue;
         }
-        
-        // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
-        
-        if (note < lowestPannedNote)
-        {
+        else if (note < lowestPannedNote) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
             if (voice->getCurrentMidiPan() == 64)
                 voice->setPan (panner.getNextPanVal());
-        }
     }
     
     lowestPannedNote = newPitchThresh;
@@ -596,13 +552,13 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 ****************************************************************************************************************************************************/
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
+void Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
 {
     const juce::ScopedLock sl (lock);
     
     panner.setNumberOfVoices(voices.size() + 1);
     
-    return voices.add(newVoice);
+    voices.add(newVoice);
 };
 
 

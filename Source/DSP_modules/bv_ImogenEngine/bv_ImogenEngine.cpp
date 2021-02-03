@@ -84,7 +84,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     midiInputCollection .ensureSize (midiBufferSizes);
     midiOutputCollection.ensureSize (midiBufferSizes);
     
-    chunkMidiBuffer.ensureSize(aggregateBufferSizes);
+    chunkMidiBuffer.ensureSize (aggregateBufferSizes);
     
     harmonizer.prepare (internalBlocksize * 2);
     
@@ -93,8 +93,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     if (sampleRate == 0)
         return;
     
-    if (harmonizer.getSamplerate() != sampleRate)
-        harmonizer.setCurrentPlaybackSampleRate(sampleRate);
+    harmonizer.setCurrentPlaybackSampleRate (sampleRate);
     
     if (pitchDetector.getSamplerate() != sampleRate)
         pitchDetector.setSamplerate(sampleRate);
