@@ -25,8 +25,7 @@ set (compileDefinitions
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0
-    )
+    JUCE_VST3_CAN_REPLACE_VST2=0)
 
 #
 
@@ -62,8 +61,7 @@ juce_add_modules (
     ${dspModulesPath}/bv_GeneralUtils
     ${dspModulesPath}/bv_PitchDetector
     ${dspModulesPath}/bv_Harmonizer
-    ${dspModulesPath}/bv_ImogenEngine
-    )
+    ${dspModulesPath}/bv_ImogenEngine)
 
 #
 
@@ -102,8 +100,7 @@ set (pluginSources
     ${pluginSourcesDir}/PluginProcessor.cpp
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
-    ${pluginSourcesDir}/PluginEditor.h
-    )
+    ${pluginSourcesDir}/PluginEditor.h)
 
 source_group (
     TREE ${pluginSourcesDir}
@@ -182,8 +179,7 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     ${HelpScreenSources}
     ${IOControlSources}
     ${MidiControlSources}
-    ${StaffDisplaySources}
-    )
+    ${StaffDisplaySources})
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
     ${pluginSourcesDir} 
@@ -198,8 +194,7 @@ set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
 juce_add_binary_data (ImogenGraphicAssets SOURCES 
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
-    ${GraphicAssetsDir}/grandStaff.png
-    )
+    ${GraphicAssetsDir}/grandStaff.png)
 
 #####
 
@@ -210,8 +205,7 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags
-    )
+        juce::juce_recommended_warning_flags)
 
 #######
 
@@ -246,8 +240,7 @@ if (unitTesting)
         PUBLIC
             juce::juce_recommended_config_flags
             juce::juce_recommended_lto_flags
-            juce::juce_recommended_warning_flags
-        )
+            juce::juce_recommended_warning_flags)
 
     add_test (NAME tests COMMAND tests)
 

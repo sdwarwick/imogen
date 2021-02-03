@@ -104,8 +104,6 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     if (sampleRate == newRate)
         return;
     
-    const juce::ScopedLock sl (lock);
-    
     sampleRate = newRate;
     
     setCurrentInputFreq (currentInputFreq);
@@ -122,8 +120,6 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
     
     if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
-    
-    const juce::ScopedLock sl (lock);
     
     pitchConverter.setConcertPitchHz (newConcertPitchhz);
     
@@ -250,8 +246,6 @@ void Harmonizer<SampleType>::calculateHanningWindow (juce::AudioBuffer<SampleTyp
 template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased) const
 {
-    const juce::ScopedLock sl (lock);
-    
     for (auto* voice : voices)
     {
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
@@ -272,8 +266,6 @@ template<typename SampleType>
 void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray, const bool includePlayingButReleased) const
 {
     outputArray.clearQuick();
-    
-    const juce::ScopedLock sl (lock);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
@@ -302,8 +294,6 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
     
-    const juce::ScopedLock sl (lock);
-    
     panner.updateStereoWidth(newWidth);
     
     for (auto* voice : voices)
@@ -330,8 +320,6 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh)
 {
     if (lowestPannedNote == newPitchThresh)
         return;
-    
-    const juce::ScopedLock sl (lock);
     
     for (auto* voice : voices)
     {
@@ -366,8 +354,6 @@ void Harmonizer<SampleType>::updateMidiVelocitySensitivity (const int newSensiti
     if (velocityConverter.getCurrentSensitivity() == newSens)
         return;
     
-    const juce::ScopedLock sl (lock);
-    
     velocityConverter.setFloatSensitivity (newSens);
     
     for (auto* voice : voices)
@@ -382,8 +368,6 @@ void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const i
 {
     if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
         return;
-    
-    const juce::ScopedLock sl (lock);
     
     bendTracker.setRange(rangeUp, rangeDown);
     
@@ -492,8 +476,6 @@ void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
-    const juce::ScopedLock sl (lock);
-    
     adsrParams.attack  = attack;
     adsrParams.decay   = decay;
     adsrParams.sustain = sustain;
@@ -512,8 +494,6 @@ void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
     
     if (quickReleaseParams.release == desiredR)
         return;
-    
-    const juce::ScopedLock sl (lock);
     
     quickReleaseParams.release = desiredR;
     quickAttackParams .release = desiredR;
@@ -535,8 +515,6 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
     if (quickAttackParams.attack == desiredA)
         return;
     
-    const juce::ScopedLock sl (lock);
-    
     quickAttackParams .attack = desiredA;
     quickReleaseParams.attack = desiredA;
     
@@ -554,11 +532,9 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 template<typename SampleType>
 void Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
 {
-    const juce::ScopedLock sl (lock);
+    voices.add (newVoice);
     
-    panner.setNumberOfVoices(voices.size() + 1);
-    
-    voices.add(newVoice);
+    panner.setNumberOfVoices (voices.size());
 };
 
 
@@ -567,8 +543,6 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 {
     if (voicesToRemove == 0)
         return;
-    
-    const juce::ScopedLock sl (lock);
     
     int voicesRemoved = 0;
     
@@ -604,8 +578,6 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const
 {
-    const juce::ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
             return voice;
@@ -619,8 +591,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
 {
     if (! descant.isOn)
         return nullptr;
-    
-    const juce::ScopedLock sl (lock);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->isCurrentDescantVoice())
@@ -636,8 +606,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
     if (! pedal.isOn)
         return nullptr;
     
-    const juce::ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->isCurrentPedalVoice())
             return voice;
@@ -649,8 +617,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
 template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const
 {
-    const juce::ScopedLock sl (lock);
-    
     int actives = 0;
     
     for (auto* voice : voices)

@@ -254,8 +254,6 @@ public:
     
 private:
     
-    juce::CriticalSection lock;
-    
     static constexpr int unpitchedGrainRate = 50;
     
     juce::OwnedArray< HarmonizerVoice<SampleType> > voices;

@@ -12,8 +12,6 @@ template<typename SampleType>
 void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
                                                    const bool includePedalPitchAndDescant)
 {
-    const juce::ScopedLock sl (lock);
-    
     const float velocity = allowTailOff ? 0.0f : 1.0f;
     
     for (auto* voice : voices)
@@ -111,9 +109,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     else
     {
         // turn off all voices whose key is up and who aren't being held by the interval latch function
-        
-        const juce::ScopedLock sl (lock);
-        
+    
         const int currentMidiPitch = juce::roundToInt (pitchConverter.ftom (currentInputFreq));
         
         juce::Array<int> intervalLatchNotes;
@@ -169,8 +165,6 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
 template<typename SampleType>
 void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 {
-    const juce::ScopedLock sl (lock);
-    
     intervalsLatchedTo.clearQuick();
     
     juce::Array<int> currentNotes;
@@ -198,8 +192,6 @@ void Harmonizer<SampleType>::playChordFromIntervalSet (const juce::Array<int>& d
         return;
     }
     
-    const juce::ScopedLock sl (lock);
-    
     const float currentInputPitch = pitchConverter.ftom (currentInputFreq);
     
     juce::Array<int> desiredNotes;
@@ -219,8 +211,6 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
                                         const bool allowTailOffOfOld,
                                         const bool isIntervalLatch)
 {
-    const juce::ScopedLock sl (lock);
-    
     if (desiredPitches.isEmpty())
     {
         allNotesOff (allowTailOffOfOld);
@@ -277,8 +267,6 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOnList (const juce::Array<int>& toTurnOn, const float velocity, const bool partOfChord)
 {
-    const juce::ScopedLock sl (lock);
-    
     if (toTurnOn.isEmpty())
         return;
     
@@ -294,8 +282,6 @@ void Harmonizer<SampleType>::turnOnList (const juce::Array<int>& toTurnOn, const
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOffList (const juce::Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
 {
-    const juce::ScopedLock sl (lock);
-    
     if (toTurnOff.isEmpty())
         return;
     
@@ -311,8 +297,6 @@ void Harmonizer<SampleType>::turnOffList (const juce::Array<int>& toTurnOff, con
 template<typename SampleType>
 void Harmonizer<SampleType>::applyPedalPitch()
 {
-    const juce::ScopedLock sl (lock);
-    
     int currentLowest = 128; // find the current lowest note being played by a keyboard key
     
     for (auto* voice : voices)
@@ -368,8 +352,6 @@ void Harmonizer<SampleType>::applyPedalPitch()
 template<typename SampleType>
 void Harmonizer<SampleType>::applyDescant()
 {
-    const juce::ScopedLock sl (lock);
-    
     int currentHighest = -1;
     for (auto* voice : voices)
     {
@@ -424,8 +406,6 @@ void Harmonizer<SampleType>::applyDescant()
 template<typename SampleType>
 void Harmonizer<SampleType>::pitchCollectionChanged()
 {
-    const juce::ScopedLock sl (lock);
-    
     if (pedal.isOn)
         applyPedalPitch();
     
@@ -446,8 +426,6 @@ template<typename SampleType>
 void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
-    
-    const juce::ScopedLock sl (lock);
     
     //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered:
     if (isPitchActive (midiPitch, false))
@@ -522,8 +500,6 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     if (voice == nullptr)
         return;
     
-    const juce::ScopedLock sl (lock);
-    
     if (isKeyboard)
     {
         voice->setKeyDown (false);
@@ -565,8 +541,6 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
 template<typename SampleType>
 void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
 {
-    const juce::ScopedLock sl (lock);
-    
     const float velocity = allowTailOff ? 0.0f : 1.0f;
     
     for (auto* voice : voices)
@@ -586,8 +560,6 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
 template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable)
 {
-    const juce::ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (! voice->isVoiceActive())
             return voice;
@@ -688,8 +660,6 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
     if (lastPitchWheelValue == wheelValue)
         return;
     
-    const juce::ScopedLock sl (lock);
-    
     aggregateMidiBuffer.addEvent (juce::MidiMessage::pitchWheel (lastMidiChannel, wheelValue),
                                   ++lastMidiTimeStamp);
     
@@ -705,8 +675,6 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
 template<typename SampleType>
 void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const int aftertouchValue)
 {
-    const juce::ScopedLock sl (lock);
-    
     aggregateMidiBuffer.addEvent (juce::MidiMessage::aftertouchChange (lastMidiChannel, midiNoteNumber, aftertouchValue),
                                   ++lastMidiTimeStamp);
     
@@ -719,8 +687,6 @@ void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const i
 template<typename SampleType>
 void Harmonizer<SampleType>::handleChannelPressure (const int channelPressureValue)
 {
-    const juce::ScopedLock sl (lock);
-    
     aggregateMidiBuffer.addEvent (juce::MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
                                   ++lastMidiTimeStamp);
     
