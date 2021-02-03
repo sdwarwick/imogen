@@ -65,18 +65,6 @@ private:
     static constexpr int numPeaksToTest = 10; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
     static constexpr int defaultFinalHandfulSize = 5; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
     
-    
-    // functions used for simple zero-crossing mode
-    
-    void findZeroCrossings (Array<int>& targetArray,
-                            const SampleType* reading,
-                            const int totalNumSamples,
-                            const int period);
-    
-    void getZeroCrossingForPeriod (Array<int>& targetArray,
-                                   const SampleType* reading,
-                                   const int startSample,
-                                   const int endSample);
 };
 
 
