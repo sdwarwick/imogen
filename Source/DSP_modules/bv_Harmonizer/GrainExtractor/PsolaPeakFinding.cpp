@@ -8,8 +8,13 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+
+    
 template<typename SampleType>
-void GrainExtractor<SampleType>::findPsolaPeaks (juce::Array<int>& targetArray,
+void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                                                  const SampleType* reading,
                                                  const int totalNumSamples,
                                                  const int period)
@@ -17,13 +22,13 @@ void GrainExtractor<SampleType>::findPsolaPeaks (juce::Array<int>& targetArray,
     targetArray.clearQuick();
     
     const int outputGrain = 2 * period;
-    const int halfPeriod  = juce::roundToInt (ceil (period / 2));
+    const int halfPeriod  = roundToInt (ceil (period / 2));
     
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
     while ((analysisIndex - halfPeriod) < totalNumSamples)
     {
-        juce::Array<int> peakCandidates;
+        Array<int> peakCandidates;
         peakCandidates.ensureStorageAllocated (numPeaksToTest + 1);
         
         // bounds of the current analysis window. analysisIndex = the next predicted peak = the middle of this analysis window
@@ -39,7 +44,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (juce::Array<int>& targetArray,
         }
         else
         {
-            juce::Array<int> peakSearchingOrder;
+            Array<int> peakSearchingOrder;
             peakSearchingOrder.ensureStorageAllocated (windowEnd - windowStart);
             
             sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
@@ -99,9 +104,9 @@ void GrainExtractor<SampleType>::findPsolaPeaks (juce::Array<int>& targetArray,
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getPeakCandidateInRange (juce::Array<int>& candidates, const SampleType* input,
+void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                                           const int startSample, const int endSample, const int predictedPeak,
-                                                          juce::Array<int>& searchingOrder)
+                                                          Array<int>& searchingOrder)
 {
     jassert (! searchingOrder.isEmpty());
     
@@ -133,6 +138,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (juce::Array<int>& cand
         starting = newStart;
     }
     
+    
     struct weighting
     {
         static inline SampleType weight (int index, int predicted, int numSamples)
@@ -140,6 +146,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (juce::Array<int>& cand
             return SampleType(1.0) - (((abs (index - predicted)) / numSamples) * SampleType(0.5));
         }
     };
+    
     
     SampleType localMin = input[starting] * weighting::weight (starting, predictedPeak, numSamples);
     SampleType localMax = localMin;
@@ -196,10 +203,10 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (juce::Array<int>& cand
 
 
 template<typename SampleType>
-int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const juce::Array<int>& candidates, const SampleType* reading,
+int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                                           const int deltaTarget1, const int deltaTarget2)
 {
-    juce::Array<float> candidateDeltas;
+    Array<float> candidateDeltas;
     candidateDeltas.ensureStorageAllocated (candidates.size());
     
     // 1. calculate delta values for each peak candidate
@@ -225,8 +232,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const juce::Array<int>
     
     const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
     
-    juce::Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
-    juce::Array<float> finalHandfulDeltas; // delta values for candidates
+    Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
+    Array<float> finalHandfulDeltas; // delta values for candidates
     
     finalHandful      .ensureStorageAllocated (finalHandfulSize);
     finalHandfulDeltas.ensureStorageAllocated (finalHandfulSize);
@@ -265,6 +272,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const juce::Array<int>
     
     const float deltaRange = highestDelta - lowestDelta;
     
+    
     struct weighting
     {
         static inline float weight (float delta, float deltaRange)
@@ -273,6 +281,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const juce::Array<int>
         }
     };
 
+    
     int chosenPeak;
     SampleType strongestPeak;
     
@@ -315,7 +324,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const juce::Array<int>
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (juce::Array<int>& output, // array to write the sorted sample indices to
+void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output, // array to write the sorted sample indices to
                                                                     const int startSample, const int endSample,
                                                                     const int predictedPeak)
 {
@@ -363,3 +372,5 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (juce::Array<
     }
 };
 
+
+}; // namespace

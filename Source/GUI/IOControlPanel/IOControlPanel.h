@@ -13,6 +13,11 @@
 #include "../../Source/GUI/LookAndFeel.h"
 
 
+namespace bav
+
+{
+    
+
 class IOControlPanel  : public juce::Component
 {
 public:
@@ -60,3 +65,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IOControlPanel)
 };
+
+
+};  // namespace

@@ -8,6 +8,11 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
                                                    const bool includePedalPitchAndDescant)
@@ -34,7 +39,7 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename SampleType>
-void Harmonizer<SampleType>::processMidi (juce::MidiBuffer& midiMessages)
+void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
 {
     aggregateMidiBuffer.clear();
     
@@ -50,7 +55,7 @@ void Harmonizer<SampleType>::processMidi (juce::MidiBuffer& midiMessages)
     
     std::for_each (midiIterator,
                    midiMessages.cend(),
-                   [&] (const juce::MidiMessageMetadata& meta)
+                   [&] (const MidiMessageMetadata& meta)
                    {
                        handleMidiEvent (meta.getMessage(), meta.samplePosition);
                    } );
@@ -64,7 +69,7 @@ void Harmonizer<SampleType>::processMidi (juce::MidiBuffer& midiMessages)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::handleMidiEvent (const juce::MidiMessage& m, const int samplePosition)
+void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int samplePosition)
 {
     // events coming from a midi keyboard, or the plugin's midi input, should be routed to this function.
 
@@ -112,33 +117,18 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     
         const int currentMidiPitch = juce::roundToInt (pitchConverter.ftom (currentInputFreq));
         
-        juce::Array<int> intervalLatchNotes;
+        Array<int> intervalLatchNotes;
         intervalLatchNotes.ensureStorageAllocated (intervalsLatchedTo.size());
         
         for (int interval : intervalsLatchedTo)
             intervalLatchNotes.add (currentMidiPitch + interval);
         
-        juce::Array< HarmonizerVoice<SampleType>* > toTurnOff;
-        toTurnOff.ensureStorageAllocated (voices.size());
-        
-        for (auto* voice : voices)
-        {
-            if (voice->isVoiceActive() && ! voice->isKeyDown())
-            {
-                if (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice())
-                {
-                    toTurnOff.add (voice);
-                }
-            }
-        }
-        
-        if (toTurnOff.isEmpty())
-            return;
-        
         const float velocity = allowTailOff ? 0.0f : 1.0f;
         
-        for (auto* voice : toTurnOff)
-            stopVoice (voice, velocity, allowTailOff);
+        for (auto* voice : voices)
+            if (voice->isVoiceActive() && ! voice->isKeyDown())
+                if (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice())
+                    stopVoice (voice, velocity, allowTailOff);
     }
     
     pitchCollectionChanged();
@@ -167,7 +157,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 {
     intervalsLatchedTo.clearQuick();
     
-    juce::Array<int> currentNotes;
+    Array<int> currentNotes;
     currentNotes.ensureStorageAllocated (voices.size());
     
     reportActiveNotes (currentNotes, false);
@@ -175,7 +165,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
     if (currentNotes.isEmpty())
         return;
     
-    const int currentMidiPitch = juce::roundToInt (pitchConverter.ftom (currentInputFreq));
+    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
     for (int note : currentNotes)
         intervalsLatchedTo.add (note - currentMidiPitch);
@@ -184,7 +174,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 
 // plays a chord based on a given set of desired interval offsets from the current input pitch.
 template<typename SampleType>
-void Harmonizer<SampleType>::playChordFromIntervalSet (const juce::Array<int>& desiredIntervals)
+void Harmonizer<SampleType>::playChordFromIntervalSet (const Array<int>& desiredIntervals)
 {
     if (desiredIntervals.isEmpty())
     {
@@ -194,11 +184,11 @@ void Harmonizer<SampleType>::playChordFromIntervalSet (const juce::Array<int>& d
     
     const float currentInputPitch = pitchConverter.ftom (currentInputFreq);
     
-    juce::Array<int> desiredNotes;
+    Array<int> desiredNotes;
     desiredNotes.ensureStorageAllocated (desiredIntervals.size());
     
     for (int interval : desiredIntervals)
-        desiredNotes.add (juce::roundToInt (currentInputPitch + interval));
+        desiredNotes.add (roundToInt (currentInputPitch + interval));
     
     playChord (desiredNotes, 1.0f, false);
 };
@@ -206,7 +196,7 @@ void Harmonizer<SampleType>::playChordFromIntervalSet (const juce::Array<int>& d
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
 template<typename SampleType>
-void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
+void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
                                         const float velocity,
                                         const bool allowTailOffOfOld,
                                         const bool isIntervalLatch)
@@ -219,7 +209,7 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
     
     // create array containing current pitches
     
-    juce::Array<int> currentNotes;
+    Array<int> currentNotes;
     currentNotes.ensureStorageAllocated (voices.size());
     
     reportActiveNotes (currentNotes, false);
@@ -228,7 +218,7 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
     
     if (! currentNotes.isEmpty())
     {
-        juce::Array<int> toTurnOff;
+        Array<int> toTurnOff;
         toTurnOff.ensureStorageAllocated (currentNotes.size());
     
         for (int note : currentNotes)
@@ -246,7 +236,7 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
     }
     else
     {
-        juce::Array<int> toTurnOn;
+        Array<int> toTurnOn;
         toTurnOn.ensureStorageAllocated (currentNotes.size());
         
         for (int note : desiredPitches)
@@ -265,7 +255,7 @@ void Harmonizer<SampleType>::playChord (const juce::Array<int>& desiredPitches,
 
 // turn on list: turns on a list of specified notes in quick sequence.
 template<typename SampleType>
-void Harmonizer<SampleType>::turnOnList (const juce::Array<int>& toTurnOn, const float velocity, const bool partOfChord)
+void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord)
 {
     if (toTurnOn.isEmpty())
         return;
@@ -280,7 +270,7 @@ void Harmonizer<SampleType>::turnOnList (const juce::Array<int>& toTurnOn, const
 
 // turn off list: turns off a list of specified notes in quick sequence.
 template<typename SampleType>
-void Harmonizer<SampleType>::turnOffList (const juce::Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
+void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
 {
     if (toTurnOff.isEmpty())
         return;
@@ -461,7 +451,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         return;
     }
     
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
+    aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
                                   ++lastMidiTimeStamp);
     
     const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
@@ -525,7 +515,7 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
     
     const int note = voice->getCurrentlyPlayingNote();
     
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::noteOff (lastMidiChannel, note, velocity),
+    aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, note, velocity),
                                   ++lastMidiTimeStamp);
     
     if (pedal.isOn && voice->isCurrentPedalVoice())
@@ -590,7 +580,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     HarmonizerVoice<SampleType>* pedalVoice = getCurrentPedalPitchVoice();
     
     // this is a list of voices we can steal, sorted by how long they've been running
-    juce::Array< HarmonizerVoice<SampleType>* > usableVoices;
+    Array< HarmonizerVoice<SampleType>* > usableVoices;
     usableVoices.ensureStorageAllocated (voices.size());
     
     for (auto* voice : voices)
@@ -660,7 +650,7 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
     if (lastPitchWheelValue == wheelValue)
         return;
     
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::pitchWheel (lastMidiChannel, wheelValue),
+    aggregateMidiBuffer.addEvent (MidiMessage::pitchWheel (lastMidiChannel, wheelValue),
                                   ++lastMidiTimeStamp);
     
     lastPitchWheelValue = wheelValue;
@@ -675,7 +665,7 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
 template<typename SampleType>
 void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const int aftertouchValue)
 {
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::aftertouchChange (lastMidiChannel, midiNoteNumber, aftertouchValue),
+    aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiNoteNumber, aftertouchValue),
                                   ++lastMidiTimeStamp);
     
     for (auto* voice : voices)
@@ -687,7 +677,7 @@ void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const i
 template<typename SampleType>
 void Harmonizer<SampleType>::handleChannelPressure (const int channelPressureValue)
 {
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
+    aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
                                   ++lastMidiTimeStamp);
     
     for (auto* voice : voices)
@@ -729,7 +719,7 @@ void Harmonizer<SampleType>::handleSustainPedal (const int value)
     
     turnOffAllKeyupNotes (false, false);
     
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::controllerEvent (lastMidiChannel, 0x40, value),
+    aggregateMidiBuffer.addEvent (MidiMessage::controllerEvent (lastMidiChannel, 0x40, value),
                                   ++lastMidiTimeStamp);
 };
 
@@ -749,7 +739,7 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const int value)
     
     turnOffAllKeyupNotes (false, false);
     
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::controllerEvent (lastMidiChannel, 0x42, value),
+    aggregateMidiBuffer.addEvent (MidiMessage::controllerEvent (lastMidiChannel, 0x42, value),
                                   ++lastMidiTimeStamp);
 };
 
@@ -764,7 +754,7 @@ void Harmonizer<SampleType>::handleSoftPedal (const int value)
     
     softPedalDown = isDown;
     
-    aggregateMidiBuffer.addEvent (juce::MidiMessage::controllerEvent (lastMidiChannel, 0x43, value),
+    aggregateMidiBuffer.addEvent (MidiMessage::controllerEvent (lastMidiChannel, 0x43, value),
                                   ++lastMidiTimeStamp);
 };
 
@@ -804,3 +794,6 @@ void Harmonizer<SampleType>::handleLegato (const bool isOn)
 {
     juce::ignoreUnused(isOn);
 };
+
+
+}; // namespace

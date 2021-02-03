@@ -7,6 +7,11 @@
 #include "bv_PitchDetector.h"
 
 
+namespace bav
+
+{
+    
+    
 template<typename SampleType>
 PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int maxDetectableHz, const double initSamplerate): confidenceThresh(0.25)
 {
@@ -38,8 +43,8 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
         && ((minHz == newMinHz) && (maxHz == newMaxHz)))
         return;
     
-    maxPeriod = juce::roundToInt (samplerate / minHz);
-    minPeriod = juce::roundToInt (samplerate / maxHz);
+    maxPeriod = roundToInt (samplerate / minHz);
+    minPeriod = roundToInt (samplerate / maxHz);
     
     if (! (maxPeriod > minPeriod))
         ++maxPeriod;
@@ -71,7 +76,7 @@ void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const
 
 
 template<typename SampleType>
-float PitchDetector<SampleType>::detectPitch (const juce::AudioBuffer<SampleType>& inputAudio)
+float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inputAudio)
 {
     // this function should return the pitch in Hz, or -1 if the frame of audio is determined to be unpitched
     
@@ -92,8 +97,8 @@ float PitchDetector<SampleType>::detectPitch (const juce::AudioBuffer<SampleType
     if (lastFrameWasPitched)
     {
         // pitch shouldn't halve or double between consecutive voiced frames
-        minLag = std::max (minLag, juce::roundToInt (lastEstimatedPeriod / 2.0));
-        maxLag = std::min (maxLag, juce::roundToInt (lastEstimatedPeriod * 2.0));
+        minLag = std::max (minLag, roundToInt (lastEstimatedPeriod / 2.0));
+        maxLag = std::min (maxLag, roundToInt (lastEstimatedPeriod * 2.0));
     }
     
     minLag = std::max (minLag, minPeriod);
@@ -113,8 +118,8 @@ float PitchDetector<SampleType>::detectPitch (const juce::AudioBuffer<SampleType
         }
     }
     
-    const int middleIndex = juce::roundToInt(floor (numSamples / 2));
-    const int halfNumSamples = juce::roundToInt(floor ((numSamples - 1) / 2));
+    const int middleIndex = roundToInt(floor (numSamples / 2));
+    const int halfNumSamples = roundToInt(floor ((numSamples - 1) / 2));
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
@@ -134,7 +139,7 @@ float PitchDetector<SampleType>::detectPitch (const juce::AudioBuffer<SampleType
         
         asdfData[index] = 0.0;
         
-        const int sampleOffset = middleIndex - juce::roundToInt((floor (k / 2)));
+        const int sampleOffset = middleIndex - roundToInt((floor (k / 2)));
         
         for (int s = sampleOffset - halfNumSamples;
                  s < sampleOffset + halfNumSamples;
@@ -190,7 +195,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
 {
     const int periodCandidatesSize = std::min(periodCandidatesToTest, asdfDataSize);
     
-    juce::Array<int> periodCandidates;
+    Array<int> periodCandidates;
     periodCandidates.ensureStorageAllocated (periodCandidatesSize);
     
     periodCandidates.add (minIndex);
@@ -230,11 +235,11 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     
     // candidate deltas: how far away each period candidate is from the last estimated period
     
-    juce::Array<int> candidateDeltas;
+    Array<int> candidateDeltas;
     candidateDeltas.ensureStorageAllocated (periodCandidatesSize);
     
     for (int candidate : periodCandidates)
-        candidateDeltas.add (juce::roundToInt(abs(candidate + minPeriod - lastEstimatedPeriod)));
+        candidateDeltas.add (roundToInt(abs(candidate + minPeriod - lastEstimatedPeriod)));
     
     // find min & max delta val of any candidate we have
     int minDelta = candidateDeltas.getUnchecked(0);
@@ -257,7 +262,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     // weight the asdf data based on each candidate's delta value
     // because higher asdf values represent a lower confidence in that period candidate, we want to artificially increase the asdf data a bit for candidates with higher deltas
     
-    juce::Array<SampleType> weightedCandidateConfidence;
+    Array<SampleType> weightedCandidateConfidence;
     weightedCandidateConfidence.ensureStorageAllocated(periodCandidatesSize);
     
     // SampleType weightedCandidateConfidence[periodCandidatesSize];
@@ -297,7 +302,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
 
 
 template<typename SampleType>
-void PitchDetector<SampleType>::getNextBestPeriodCandidate (juce::Array<int>& candidates,
+void PitchDetector<SampleType>::getNextBestPeriodCandidate (Array<int>& candidates,
                                                             const SampleType* asdfData,
                                                             const int dataSize)
 {
@@ -428,3 +433,6 @@ SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* d
 
 template class PitchDetector<float>;
 template class PitchDetector<double>;
+
+
+}; // namespace

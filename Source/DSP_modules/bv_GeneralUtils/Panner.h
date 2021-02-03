@@ -7,6 +7,11 @@
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
 
+namespace bav
+
+{
+    
+
 class Panner
 {
 public:
@@ -85,3 +90,5 @@ private:
     
     float prevLeftGain, prevRightGain;
 };
+
+}; // namespace

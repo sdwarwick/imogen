@@ -7,6 +7,11 @@
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
 
+namespace bav
+
+{
+    
+
 template<typename SampleType>
 class DelayBuffer
 {
@@ -142,3 +147,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayBuffer)
 };
+
+
+}; // namespace

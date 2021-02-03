@@ -8,6 +8,11 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
 parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f),
@@ -69,10 +74,10 @@ void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<SampleType>& inputAudio, juce::AudioBuffer<SampleType>& outputBuffer,
+void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                                                    const int origPeriod,
-                                                   const juce::Array<int>& indicesOfGrainOnsets,
-                                                   const juce::AudioBuffer<SampleType>& windowToUse)
+                                                   const Array<int>& indicesOfGrainOnsets,
+                                                   const AudioBuffer<SampleType>& windowToUse)
 {
     jassert (samplerate > 0.0);
     
@@ -101,7 +106,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
     
     const float newPeriod = static_cast<float> (samplerate / currentOutputFreq);
     
-    sola (inputAudio, origPeriod, juce::roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     const int numSamples = inputAudio.getNumSamples();
     
@@ -129,10 +134,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const juce::AudioBuffer<Sampl
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::sola (const juce::AudioBuffer<SampleType>& inputAudio,
+void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio,
                                         const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
-                                        const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
+                                        const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
                                         const SampleType* window) // Hanning window, length origPeriod * 2
 {
     const int totalNumInputSamples = inputAudio.getNumSamples();
@@ -283,11 +288,11 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 // MIDI -----------------------------------------------------------------------------------------------------------
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity,
-                                             const juce::uint32 noteOnTimestamp,
+                                             const uint32 noteOnTimestamp,
                                              const bool wasStolen,
                                              const bool isPedal, const bool isDescant)
 {
-    juce::ignoreUnused (wasStolen);
+    ignoreUnused (wasStolen);
     
     noteOnTime = noteOnTimestamp;
     
@@ -312,7 +317,7 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool allowTailOff)
 {
-    juce::ignoreUnused (velocity);
+    ignoreUnused (velocity);
     
     if (allowTailOff)
     {
@@ -345,7 +350,7 @@ void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::setPan (const int newPan)
 {
-    jassert (juce::isPositiveAndBelow (newPan, 128));
+    jassert (isPositiveAndBelow (newPan, 128));
     
     if (currentMidipan == newPan)
         return;
@@ -387,3 +392,6 @@ void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 
 template class HarmonizerVoice<float>;
 template class HarmonizerVoice<double>;
+
+
+}; // namespace

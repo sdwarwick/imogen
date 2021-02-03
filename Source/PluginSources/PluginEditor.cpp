@@ -8,7 +8,9 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), audioProcessor (p), currentSkin(ImogenLookAndFeel::Skin::CasualDenim), prevSkin(ImogenLookAndFeel::Skin::CasualDenim),
+    AudioProcessorEditor (&p), audioProcessor (p),
+    currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
+    prevSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
     midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false), sidechainWarningShowing(false)
 {
     setSize (940, 435);
@@ -68,7 +70,7 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
 
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
+    g.fillAll (lookAndFeel.findColour(bav::ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
     
 };
 
@@ -142,25 +144,25 @@ void ImogenAudioProcessorEditor::changeModulatorInputSource()
 
 void ImogenAudioProcessorEditor::skinSelectorChanged()
 {
-    switch(selectSkin.getSelectedId())
+    switch (selectSkin.getSelectedId())
     {
         case(1):
-            currentSkin = ImogenLookAndFeel::Skin::CasualDenim;
+            currentSkin = bav::ImogenLookAndFeel::Skin::CasualDenim;
             break;
         case(2):
-            currentSkin = ImogenLookAndFeel::Skin::PlayfulBoho;
+            currentSkin = bav::ImogenLookAndFeel::Skin::PlayfulBoho;
             break;
         case(3):
-            currentSkin = ImogenLookAndFeel::Skin::ChicEveningwear;
+            currentSkin = bav::ImogenLookAndFeel::Skin::ChicEveningwear;
             break;
         case(4):
-            currentSkin = ImogenLookAndFeel::Skin::design4;
+            currentSkin = bav::ImogenLookAndFeel::Skin::design4;
             break;
         default:
             return;
     }
     
-    if(currentSkin != prevSkin)
+    if (currentSkin != prevSkin)
     {
         lookAndFeel.changeSkin(currentSkin);
         prevSkin = currentSkin;
@@ -171,7 +173,7 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 
 void ImogenAudioProcessorEditor::helpButtonClicked()
 {
-    if(! helpScreen.isVisible() )
+    if (! helpScreen.isVisible() )
     {
         helpScreen.setVisible(true);
         helpScreen.repaint();

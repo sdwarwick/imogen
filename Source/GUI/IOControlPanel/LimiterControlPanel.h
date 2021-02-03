@@ -12,6 +12,11 @@
 #include "../../Source/GUI/LookAndFeel.h"
 
 
+namespace bav
+
+{
+    
+
 class LimiterControlPanel  : public juce::Component
 {
 public:
@@ -96,3 +101,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LimiterControlPanel)
 };
+
+
+};  // namespace

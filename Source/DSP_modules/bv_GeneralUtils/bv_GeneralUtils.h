@@ -21,6 +21,11 @@
 #include "Panner.h"
 
 
+namespace bav
+
+{
+
+
 class MidiUtils
 {
 public:
@@ -165,3 +170,6 @@ public:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DspUtils)
 };
+
+
+}; // namespace

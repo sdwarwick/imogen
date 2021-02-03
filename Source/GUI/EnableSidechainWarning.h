@@ -10,6 +10,11 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 
 
+namespace bav
+
+{
+    
+
 class EnableSidechainWarning  : public juce::Component
 {
 public:
@@ -44,3 +49,6 @@ public:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EnableSidechainWarning)
 };
+
+
+};  // namespace

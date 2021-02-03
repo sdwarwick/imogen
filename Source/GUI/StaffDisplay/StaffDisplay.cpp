@@ -8,6 +8,11 @@
 #include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
 
 
+namespace bav
+
+{
+    
+    
 StaffDisplay::StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),  grandStaff(ImageCache::getFromMemory(BinaryData::grandStaff_png, BinaryData::grandStaff_pngSize)),
     useFlats(false), halfTheStafflineHeight(10.0f),
@@ -27,7 +32,7 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     yCoordLookupTable[0] = 0;
     for(int n = 1; n < 127; ++n)
     {
-        if(MidiUtils::NoteHelpers::isMidiNoteBlackKey(n))
+        if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(n))
             yCoordLookupTable[n] = yCoordLookupTable[n - 1];
         else
             yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
@@ -99,7 +104,7 @@ void StaffDisplay::drawPitches(const Array<int>& activePitches, Graphics& g)
                 
                 drawNotehead(xCoord, yCoord, g);
                 
-                if(MidiUtils::NoteHelpers::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
+                if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
                     drawAccidental(xCoord, yCoord, g);
                 
                 xOffset ^= 1;
@@ -138,3 +143,5 @@ void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
     }
     
 };
+    
+};  // namespace

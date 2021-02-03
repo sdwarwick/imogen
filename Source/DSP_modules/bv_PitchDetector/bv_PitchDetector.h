@@ -15,6 +15,13 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 
 
+namespace bav
+
+{
+    
+    
+using namespace juce;
+
 
 template<typename SampleType>
 class PitchDetector
@@ -41,7 +48,7 @@ public:
     
     void setSamplerate (const double newSamplerate, const bool recalcHzRange = true);
     
-    float detectPitch (const juce::AudioBuffer<SampleType>& inputAudio);
+    float detectPitch (const AudioBuffer<SampleType>& inputAudio);
     
     
     
@@ -57,7 +64,7 @@ private:
     
     SampleType confidenceThresh;
     
-    juce::AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
+    AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
     
     float chooseIdealPeriodCandidate (const SampleType* asdfData, const int asdfDataSize, const int minIndex);
@@ -73,8 +80,11 @@ private:
     
     static constexpr int periodCandidatesToTest = 15;
     
-    void getNextBestPeriodCandidate (juce::Array<int>& candidates, const SampleType* asdfData, const int dataSize);
+    void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
     
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchDetector)
 };
+
+
+}; // namespace

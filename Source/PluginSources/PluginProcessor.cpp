@@ -61,7 +61,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename SampleType>
-void ImogenAudioProcessor::initialize (ImogenEngine<SampleType>& activeEngine)
+void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
 {
     const double initSamplerate = std::max<double>(44100.0, getSampleRate());
     
@@ -86,8 +86,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 
 template <typename SampleType1, typename SampleType2>
 void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
-                                                 ImogenEngine<SampleType1>& activeEngine,
-                                                 ImogenEngine<SampleType2>& idleEngine)
+                                                 bav::ImogenEngine<SampleType1>& activeEngine,
+                                                 bav::ImogenEngine<SampleType2>& idleEngine)
 {
     if (! activeEngine.hasBeenInitialized())
         activeEngine.initialize (sampleRate, samplesPerBlock, 12);
@@ -162,7 +162,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
 template <typename SampleType>
 void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                 juce::MidiBuffer& midiMessages,
-                                                ImogenEngine<SampleType>& engine)
+                                                bav::ImogenEngine<SampleType>& engine)
 {
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
@@ -221,7 +221,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
 template <typename SampleType>
 void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                         juce::MidiBuffer& midiMessages,
-                                                        ImogenEngine<SampleType>& engine)
+                                                        bav::ImogenEngine<SampleType>& engine)
 {
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
@@ -267,7 +267,7 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
 
 template<typename SampleType>
-void ImogenAudioProcessor::updateAllParameters (ImogenEngine<SampleType>& activeEngine)
+void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
 {
     updatePitchDetectionWrapped (activeEngine);
     
@@ -308,7 +308,7 @@ void ImogenAudioProcessor::updateGains()
 
 
 template <typename SampleType>
-void ImogenAudioProcessor::updateGainsPrivate (ImogenEngine<SampleType>& activeEngine)
+void ImogenAudioProcessor::updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine)
 {
     activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
@@ -449,7 +449,7 @@ void ImogenAudioProcessor::updatePitchDetectionSettings()
 
 
 template <typename SampleType>
-void ImogenAudioProcessor::updatePitchDetectionWrapped (ImogenEngine<SampleType>& activeEngine)
+void ImogenAudioProcessor::updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine)
 {
     activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
     activeEngine.updatePitchDetectionConfidenceThresh(confidenceThresh->get());

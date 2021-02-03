@@ -8,6 +8,14 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+
+    
+using namespace juce;
+    
+    
 template<typename SampleType>
 class GrainExtractor
 
@@ -25,8 +33,8 @@ public:
     void releaseResources();
     
     
-    void getGrainOnsetIndices (juce::Array<int>& targetArray,
-                               const juce::AudioBuffer<SampleType>& inputAudio,
+    void getGrainOnsetIndices (Array<int>& targetArray,
+                               const AudioBuffer<SampleType>& inputAudio,
                                const int period);
     
     
@@ -34,23 +42,23 @@ private:
     
     int lastBlocksize = 0;
     
-    juce::Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
+    Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
     
     // functions used for finding of PSOLA peaks
     
-    void findPsolaPeaks (juce::Array<int>& targetArray,
+    void findPsolaPeaks (Array<int>& targetArray,
                          const SampleType* reading,
                          const int totalNumSamples,
                          const int period);
     
-    void sortSampleIndicesForPeakSearching (juce::Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
+    void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
     
-    void getPeakCandidateInRange (juce::Array<int>& candidates, const SampleType* input,
+    void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                   const int startSample, const int endSample, const int predictedPeak,
-                                  juce::Array<int>& searchingOrder);
+                                  Array<int>& searchingOrder);
     
-    int chooseIdealPeakCandidate (const juce::Array<int>& candidates, const SampleType* reading,
+    int chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                   const int deltaTarget1, const int deltaTarget2);
     
     
@@ -60,13 +68,16 @@ private:
     
     // functions used for simple zero-crossing mode
     
-    void findZeroCrossings (juce::Array<int>& targetArray,
+    void findZeroCrossings (Array<int>& targetArray,
                             const SampleType* reading,
                             const int totalNumSamples,
                             const int period);
     
-    void getZeroCrossingForPeriod (juce::Array<int>& targetArray,
+    void getZeroCrossingForPeriod (Array<int>& targetArray,
                                    const SampleType* reading,
                                    const int startSample,
                                    const int endSample);
 };
+
+
+}; // namespace

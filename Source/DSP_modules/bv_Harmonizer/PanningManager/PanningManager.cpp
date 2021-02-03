@@ -8,6 +8,12 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+    
+
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
 { };
 
@@ -55,7 +61,7 @@ void PanningManager::updateStereoWidth(const int newWidth)
     const auto minPan = 63.5f - (63.5f * rangeMultiplier);
     const auto increment = (maxPan - minPan) / currentNumVoices;
     
-    juce::Array<int> possiblePanVals;
+    Array<int> possiblePanVals;
     possiblePanVals.ensureStorageAllocated (currentNumVoices);
     
     for (int i = 0; i < currentNumVoices; ++i)
@@ -75,13 +81,13 @@ void PanningManager::updateStereoWidth(const int newWidth)
     // the # of values we actually transfer to the I/O array being read from should correspond to the number of unsent pan vals left now -- ie, if some voices are already on, etc. And the values put in the I/O array should also be the values out of the panValsInAssigningOrder array that are closest to the old values from unsentPanVals...
     
     // make copy of panValsInAssigningOrder bc items will be removed during the searching process below
-    juce::Array<int> newPanVals;
+    Array<int> newPanVals;
     newPanVals.ensureStorageAllocated (panValsInAssigningOrder.size());
     
     for (int newPan : panValsInAssigningOrder)
         newPanVals.add (newPan);
     
-    juce::Array<int> newUnsentVals;
+    Array<int> newUnsentVals;
     newUnsentVals.ensureStorageAllocated (unsentPanVals.size());
     
     for (int oldPan : unsentPanVals)
@@ -153,14 +159,14 @@ void PanningManager::panValTurnedOff (const int panVal)
 };
 
 
-int PanningManager::getClosestNewPanValFromNew (const int oldPan, juce::Array<int>& readingFrom)
+int PanningManager::getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom)
 {
-    jassert (juce::isPositiveAndBelow(oldPan, 128));
+    jassert (isPositiveAndBelow(oldPan, 128));
     
     if (readingFrom.isEmpty())
         return -1;
     
-    juce::Array<int> distances;
+    Array<int> distances;
     distances.ensureStorageAllocated (readingFrom.size());
     
     for (int pan : readingFrom)
@@ -200,7 +206,7 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
     // find & return the element in readingFrom array that is the closest to oldPan, then remove that val from unsentPanVals
     // this is normally used with the unsentPanVals array, but the same function can also be used in the updating of the stereo width, to identify which new pan values should be sent to the unsentPanVals array itself, based on which new pan values are closest to the ones that were already in unsentPanVals.
     
-    jassert (juce::isPositiveAndBelow(oldPan, 128));
+    jassert (isPositiveAndBelow(oldPan, 128));
     
     if (unsentPanVals.isEmpty())
     {
@@ -208,7 +214,7 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
         return 64;
     }
     
-    juce::Array<int> distances;
+    Array<int> distances;
     distances.ensureStorageAllocated (unsentPanVals.size());
     
     for (int pan : unsentPanVals)
@@ -269,9 +275,9 @@ void PanningManager::mapArrayIndexes()
     
     arrayIndexesMapped.clearQuick();
     
-    const int middleIndex = currentNumVoices > 1 ? juce::roundToInt(floor(currentNumVoices / 2)) : 0;
+    const int middleIndex = currentNumVoices > 1 ? roundToInt (floor (currentNumVoices / 2)) : 0;
     
-    arrayIndexesMapped.add(middleIndex);
+    arrayIndexesMapped.add (middleIndex);
     
     int i = 1;
     int p = 1;
@@ -302,3 +308,6 @@ void PanningManager::mapArrayIndexes()
         ++i;
     }
 };
+
+
+}; // namespace

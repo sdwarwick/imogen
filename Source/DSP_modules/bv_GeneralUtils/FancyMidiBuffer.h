@@ -7,6 +7,11 @@
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
 
+namespace bav
+
+{
+    
+
 class FancyMidiBuffer  :    public juce::MidiBuffer
 {
     
@@ -91,3 +96,6 @@ public:
 private:
     
 };
+
+
+}; // namespace

@@ -8,6 +8,11 @@
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
 
 
+namespace bav
+
+{
+    
+    
 IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
     dryPanLink      (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
@@ -145,3 +150,6 @@ void IOControlPanel::resized()
     
     limiterPanel.setBounds(5, 265, 290, 145);
 };
+
+
+};  // namespace

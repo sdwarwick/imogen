@@ -8,6 +8,14 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+
+using namespace juce;
+    
+    
 class PanningManager
 {
 public:
@@ -51,11 +59,11 @@ public:
     
 private:
     
-    juce::Array<int> panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
+    Array<int> panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
     
-    juce::Array<int> arrayIndexesMapped; // this array is used to facilitate the transfer of values from possiblePanVals to panValsInAssigningOrder
+    Array<int> arrayIndexesMapped; // this array is used to facilitate the transfer of values from possiblePanVals to panValsInAssigningOrder
     
-    juce::Array<int> unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting.
+    Array<int> unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting.
     
     
     int lastRecievedStereoWidth;
@@ -63,7 +71,10 @@ private:
     
     void mapArrayIndexes();
     
-    int getClosestNewPanValFromNew (const int oldPan, juce::Array<int>& readingFrom);
+    int getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };
+
+
+}; // namespace

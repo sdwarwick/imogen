@@ -15,6 +15,10 @@
 #include "bv_Harmonizer/GrainExtractor/ZeroCrossingFinding.cpp"
 
 
+namespace bav
+
+{
+
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
@@ -178,10 +182,10 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
  ***************************************************************************************************************************************************/
 
 template<typename SampleType>
-void Harmonizer<SampleType>::renderVoices (const juce::AudioBuffer<SampleType>& inputAudio,
-                                           juce::AudioBuffer<SampleType>& outputBuffer,
+void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
+                                           AudioBuffer<SampleType>& outputBuffer,
                                            const float inputFrequency, const bool frameIsPitched,
-                                           juce::MidiBuffer& midiMessages)
+                                           MidiBuffer& midiMessages)
 {
     if (frameIsPitched && currentInputFreq != inputFrequency)
         setCurrentInputFreq (inputFrequency);
@@ -197,7 +201,7 @@ void Harmonizer<SampleType>::renderVoices (const juce::AudioBuffer<SampleType>& 
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, periodThisFrame);
     
-    juce::AudioBuffer<SampleType>& windowToUse = frameIsPitched ? windowBuffer : unpitchedWindow;
+    AudioBuffer<SampleType>& windowToUse = frameIsPitched ? windowBuffer : unpitchedWindow;
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
@@ -223,7 +227,7 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::calculateHanningWindow (juce::AudioBuffer<SampleType>& windowToFill, const int numSamples)
+void Harmonizer<SampleType>::calculateHanningWindow (AudioBuffer<SampleType>& windowToFill, const int numSamples)
 {
     windowToFill.clear();
     
@@ -231,7 +235,7 @@ void Harmonizer<SampleType>::calculateHanningWindow (juce::AudioBuffer<SampleTyp
     
     auto* writing = windowToFill.getWritePointer(0);
     
-    const auto samplemultiplier = juce::MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
+    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
     
     for (int i = 0; i < numSamples; ++i)
         writing[i] = static_cast<SampleType> (0.5 - 0.5 * ( std::cos (static_cast<SampleType> (2.0 * i) * samplemultiplier) ) );
@@ -263,11 +267,12 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray, const bool includePlayingButReleased) const
+void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased) const
 {
     outputArray.clearQuick();
     
     for (auto* voice : voices)
+    {
         if (voice->isVoiceActive())
         {
             if (includePlayingButReleased)
@@ -275,6 +280,7 @@ void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray, c
             else if (! voice->isPlayingButReleased())
                 outputArray.add (voice->getCurrentlyPlayingNote());
         }
+    }
     
     if (! outputArray.isEmpty())
         outputArray.sort();
@@ -289,7 +295,7 @@ void Harmonizer<SampleType>::reportActiveNotes (juce::Array<int>& outputArray, c
 template<typename SampleType>
 void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
 {
-    jassert (juce::isPositiveAndBelow (newWidth, 101));
+    jassert (isPositiveAndBelow (newWidth, 101));
     
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
@@ -488,7 +494,7 @@ void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float
 template<typename SampleType>
 void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 {
-    jassert(newMs > 0);
+    jassert (newMs > 0);
     
     const float desiredR = newMs / 1000.0f;
     
@@ -508,7 +514,7 @@ void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 template<typename SampleType>
 void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 {
-    jassert(newMs > 0);
+    jassert (newMs > 0);
     
     const float desiredA = newMs / 1000.0f;
     
@@ -530,7 +536,7 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 ****************************************************************************************************************************************************/
 
 template<typename SampleType>
-void Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
+void Harmonizer<SampleType>::addVoice (HarmonizerVoice<SampleType>* newVoice)
 {
     voices.add (newVoice);
     
@@ -539,7 +545,7 @@ void Harmonizer<SampleType>::addVoice(HarmonizerVoice<SampleType>* newVoice)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
+void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
 {
     if (voicesToRemove == 0)
         return;
@@ -548,25 +554,30 @@ void Harmonizer<SampleType>::removeNumVoices(const int voicesToRemove)
     
     while (voicesRemoved < voicesToRemove)
     {
-        int indexToRemove = -1;
+        if (voices.isEmpty())
+            break;
+        
+        HarmonizerVoice<SampleType>* removing = nullptr;
         
         for (auto* voice : voices)
         {
             if (! voice->isVoiceActive())
             {
-                indexToRemove = voices.indexOf(voice);
+                removing = voice;
                 break;
             }
         }
         
-        const int indexRemoving = std::max(indexToRemove, 0);
+        if (removing == nullptr)
+            removing = findVoiceToSteal (0);
         
-        HarmonizerVoice<SampleType>* removing = voices[indexRemoving];
+        if (removing == nullptr)
+            removing = voices[0];
         
         if (removing->isVoiceActive())
-            panner.panValTurnedOff(removing->getCurrentMidiPan());
+            panner.panValTurnedOff (removing->getCurrentMidiPan());
         
-        voices.remove(indexRemoving);
+        voices.removeObject (removing, true);
         
         ++voicesRemoved;
     }
@@ -630,3 +641,5 @@ int Harmonizer<SampleType>::getNumActiveVoices() const
 template class Harmonizer<float>;
 template class Harmonizer<double>;
 
+
+}; // namespace

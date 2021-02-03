@@ -18,9 +18,17 @@
 #include "bv_PitchDetector/bv_PitchDetector.h"
 
 
+namespace bav
+
+{
+    
+    using namespace juce;
+
+
 template<typename SampleType>
 class ImogenEngine
 {
+    
 public:
     ImogenEngine();
     
@@ -28,10 +36,10 @@ public:
     
     void changeBlocksize (const int newBlocksize);
     
-    void process (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output, juce::MidiBuffer& midiMessages,
+    void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
                   const bool applyFadeIn = false, const bool applyFadeOut = false);
     
-    void processBypassed (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output);
+    void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
     void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
     
@@ -45,7 +53,7 @@ public:
     
     void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
-    void returnActivePitches(juce::Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
+    void returnActivePitches (Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
     
     void updateSamplerate (const int newSamplerate);
     void updateDryWet     (const float newWetMixProportion);
@@ -88,14 +96,14 @@ private:
     
     int internalBlocksize; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This corresponds to the latency of the pitch detector, and, thus, the minimum possible Hz it can detect.
     
-    void processWrapped (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output,
-                         juce::MidiBuffer& midiMessages,
+    void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+                         MidiBuffer& midiMessages,
                          const bool applyFadeIn, const bool applyFadeOut);
     
-    void processBypassedWrapped (juce::AudioBuffer<SampleType>& inBus, juce::AudioBuffer<SampleType>& output);
+    void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
     
     
-    void renderBlock (const juce::AudioBuffer<SampleType>& input, juce::MidiBuffer& midiMessages);
+    void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
     PitchDetector<SampleType> pitchDetector;
     Harmonizer<SampleType> harmonizer;
@@ -103,13 +111,13 @@ private:
     DelayBuffer<SampleType> inputBuffer;
     DelayBuffer<SampleType> outputBuffer;
     
-    juce::AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
-    juce::AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-    juce::AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
+    AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
+    AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+    AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
     
-    juce::dsp::ProcessSpec dspSpec;
-    juce::dsp::Limiter <SampleType> limiter;
-    juce::dsp::DryWetMixer<SampleType> dryWetMixer;
+    dsp::ProcessSpec dspSpec;
+    dsp::Limiter <SampleType> limiter;
+    dsp::DryWetMixer<SampleType> dryWetMixer;
     bool limiterIsOn;
     
     bool resourcesReleased;
@@ -121,20 +129,20 @@ private:
     float inputGain, prevInputGain;
     float outputGain, prevOutputGain;
     
-    juce::MidiBuffer midiChoppingBuffer;
+    MidiBuffer midiChoppingBuffer;
     
     FancyMidiBuffer midiInputCollection;
     FancyMidiBuffer midiOutputCollection;
     FancyMidiBuffer chunkMidiBuffer;
     
     
-    void copyRangeOfMidiBuffer (const juce::MidiBuffer& readingBuffer, juce::MidiBuffer& destBuffer,
+    void copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
                                 const int startSampleOfInput,
                                 const int startSampleOfOutput,
                                 const int numSamples);
     
     
-    void pushUpLeftoverSamples (juce::AudioBuffer<SampleType>& targetBuffer,
+    void pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
                                 const int numSamplesUsed,
                                 const int numSamplesLeft);
     
@@ -142,3 +150,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
+
+
+}; // namespace

@@ -46,16 +46,16 @@ private:
     
     void makePresetMenu(juce::ComboBox& box);
     
-    ImogenLookAndFeel lookAndFeel;
-    ImogenLookAndFeel::Skin currentSkin;
-    ImogenLookAndFeel::Skin prevSkin;
+    bav::ImogenLookAndFeel lookAndFeel;
+    bav::ImogenLookAndFeel::Skin currentSkin;
+    bav::ImogenLookAndFeel::Skin prevSkin;
     
     juce::ComboBox selectSkin;
     juce::Label skinLabel;
     
-    MidiControlPanel midiPanel;
-    IOControlPanel ioPanel;
-    StaffDisplay staffDisplay;
+    bav::MidiControlPanel midiPanel;
+    bav::IOControlPanel ioPanel;
+    bav::StaffDisplay staffDisplay;
     
     HelpScreen helpScreen;
     juce::TextButton helpButton;
@@ -72,7 +72,7 @@ private:
     
     void changeModulatorInputSource();
     
-    EnableSidechainWarning sidechainWarning;
+    bav::EnableSidechainWarning sidechainWarning;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

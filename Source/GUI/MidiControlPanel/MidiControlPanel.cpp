@@ -8,6 +8,11 @@
 #include "../../Source/GUI/MidiControlPanel/MidiControlPanel.h"
 
 
+namespace bav
+
+{
+    
+    
 MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
     attackLink (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),
@@ -437,3 +442,6 @@ Button::ButtonState MidiControlPanel::buttonStateFromBool (const bool isOn)
     
     return Button::ButtonState::buttonNormal;
 }
+
+
+};  // namespace

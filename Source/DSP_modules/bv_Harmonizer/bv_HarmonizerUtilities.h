@@ -8,6 +8,13 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+using namespace juce;
+    
+
 class PitchConverter
 {
 public:
@@ -73,6 +80,7 @@ private:
 
 class PitchBendHelper
 {
+    
 public:
     PitchBendHelper(const int initialStUp, const int initialStDwn):
         rangeUp(initialStUp), rangeDown(initialStDwn), lastRecievedPitchbend(64)
@@ -93,13 +101,13 @@ public:
     
     float newNoteRecieved(const int newMidiPitch) const
     {
-        jassert(juce::isPositiveAndBelow(newMidiPitch, 128));
+        jassert(isPositiveAndBelow(newMidiPitch, 128));
         return getMidifloat(newMidiPitch, lastRecievedPitchbend);
     }
     
     void newPitchbendRecieved(const int newPitchbend) noexcept
     {
-        jassert(juce::isPositiveAndBelow(newPitchbend, 128));
+        jassert(isPositiveAndBelow(newPitchbend, 128));
         lastRecievedPitchbend = newPitchbend;
     }
     
@@ -112,7 +120,7 @@ private:
     
     float getMidifloat(const int midiPitch, const int pitchbend) const
     {
-        jassert(juce::isPositiveAndBelow(midiPitch, 128) && juce::isPositiveAndBelow(pitchbend, 128));
+        jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
         
         if(pitchbend == 64)
             return midiPitch;
@@ -136,7 +144,7 @@ public:
     
     void setSensitivity(const int newSensitivity) noexcept
     {
-        jassert(juce::isPositiveAndBelow(newSensitivity, 101));
+        jassert(isPositiveAndBelow(newSensitivity, 101));
         sensitivity = newSensitivity / 100.0f;
     }
     
@@ -150,7 +158,7 @@ public:
     
     float intVelocity(const int midiVelocity)
     {
-        jassert(juce::isPositiveAndBelow(midiVelocity, 128));
+        jassert(isPositiveAndBelow(midiVelocity, 128));
         return getGainMult(midiVelocity / 127.0f, sensitivity);
     }
     
@@ -172,3 +180,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VelocityHelper)
 };
+
+
+}; // namespace

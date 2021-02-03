@@ -8,8 +8,13 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+    
 template<typename SampleType>
-void GrainExtractor<SampleType>::findZeroCrossings (juce::Array<int>& targetArray,
+void GrainExtractor<SampleType>::findZeroCrossings (Array<int>& targetArray,
                                                     const SampleType* reading,
                                                     const int totalNumSamples,
                                                     const int period)
@@ -26,7 +31,7 @@ void GrainExtractor<SampleType>::findZeroCrossings (juce::Array<int>& targetArra
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getZeroCrossingForPeriod (juce::Array<int>& targetArray,
+void GrainExtractor<SampleType>::getZeroCrossingForPeriod (Array<int>& targetArray,
                                                            const SampleType* reading,
                                                            const int startSample,
                                                            const int endSample)
@@ -60,5 +65,4 @@ void GrainExtractor<SampleType>::getZeroCrossingForPeriod (juce::Array<int>& tar
 };
 
 
-// template class GrainExtractor<float>;
-// template class GrainExtractor<double>;
+}; // namespace

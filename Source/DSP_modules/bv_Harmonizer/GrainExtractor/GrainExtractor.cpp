@@ -8,6 +8,11 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+namespace bav
+
+{
+    
+    
 template<typename SampleType>
 GrainExtractor<SampleType>::GrainExtractor()
 { };
@@ -37,8 +42,8 @@ void GrainExtractor<SampleType>::releaseResources()
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getGrainOnsetIndices (juce::Array<int>& targetArray,
-                                                       const juce::AudioBuffer<SampleType>& inputAudio,
+void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
+                                                       const AudioBuffer<SampleType>& inputAudio,
                                                        const int period)
 {
     targetArray.clearQuick();
@@ -66,7 +71,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (juce::Array<int>& targetA
                 continue;
             
             // edge case for really large periods
-            const int secondaryGrainStart = peakIndex - juce::roundToInt (period / 2.0f);
+            const int secondaryGrainStart = peakIndex - roundToInt (period / 2.0f);
             
             if (secondaryGrainStart < 0)
                 targetArray.add (peakIndex);
@@ -86,3 +91,6 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (juce::Array<int>& targetA
 
 template class GrainExtractor<float>;
 template class GrainExtractor<double>;
+
+
+}; // namespace

@@ -16,6 +16,11 @@
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
 
+namespace bav
+
+{
+    
+
 class StaffDisplay  : public juce::Component
 {
 public:
@@ -54,3 +59,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StaffDisplay)
 };
+
+
+};  // namespace

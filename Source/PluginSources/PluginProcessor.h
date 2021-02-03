@@ -111,7 +111,7 @@ public:
     
     
     template<typename SampleType>
-    void updateAllParameters (ImogenEngine<SampleType>& activeEngine);
+    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterInt*   dryPan;
@@ -154,22 +154,22 @@ public:
 private:
     
     template <typename SampleType>
-    void initialize (ImogenEngine<SampleType>& activeEngine);
+    void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
     template <typename SampleType>
-    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, bav::ImogenEngine<SampleType>& engine);
     
     template <typename SampleType>
-    void processBlockBypassedWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, ImogenEngine<SampleType>& engine);
+    void processBlockBypassedWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, bav::ImogenEngine<SampleType>& engine);
     
     template <typename SampleType1, typename SampleType2>
     void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
-                               ImogenEngine<SampleType1>& activeEngine,
-                               ImogenEngine<SampleType2>& idleEngine);
+                               bav::ImogenEngine<SampleType1>& activeEngine,
+                               bav::ImogenEngine<SampleType2>& idleEngine);
     
     
-    ImogenEngine<float>  floatEngine;
-    ImogenEngine<double> doubleEngine;
+    bav::ImogenEngine<float>  floatEngine;
+    bav::ImogenEngine<double> doubleEngine;
     
     int latencySamples;
     
@@ -183,10 +183,10 @@ private:
     
     
     template <typename SampleType>
-    void updatePitchDetectionWrapped (ImogenEngine<SampleType>& activeEngine);
+    void updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine);
     
     template <typename SampleType>
-    void updateGainsPrivate (ImogenEngine<SampleType>& activeEngine);
+    void updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

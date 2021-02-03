@@ -25,6 +25,14 @@
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 
 
+namespace bav
+
+{
+    
+    using namespace juce;
+    
+    
+
 template<typename SampleType>
 class Harmonizer; // forward declaration...
 
@@ -37,13 +45,13 @@ template<typename SampleType>
 class HarmonizerVoice
 {
 public:
-    HarmonizerVoice(Harmonizer<SampleType>* h);
+    HarmonizerVoice (Harmonizer<SampleType>* h);
     
     ~HarmonizerVoice();
     
-    void renderNextBlock (const juce::AudioBuffer<SampleType>& inputAudio, juce::AudioBuffer<SampleType>& outputBuffer,
-                          const int origPeriod, const juce::Array<int>& indicesOfGrainOnsets,
-                          const juce::AudioBuffer<SampleType>& windowToUse);
+    void renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+                          const int origPeriod, const Array<int>& indicesOfGrainOnsets,
+                          const AudioBuffer<SampleType>& windowToUse);
     
     void prepare (const int blocksize);
     
@@ -67,7 +75,7 @@ public:
     int getCurrentMidiPan() const noexcept { return currentMidipan; }
     
     void startNote (const int midiPitch,  const float velocity,
-                    const juce::uint32 noteOnTimestamp,
+                    const uint32 noteOnTimestamp,
                     const bool wasStolen = false,
                     const bool isPedal = false, const bool isDescant = false);
     
@@ -87,9 +95,9 @@ public:
     
     void updateSampleRate (const double newSamplerate);
     
-    void setAdsrParameters (const juce::ADSR::Parameters newParams) { adsr.setParameters(newParams); }
-    void setQuickReleaseParameters (const juce::ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
-    void setQuickAttackParameters  (const juce::ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
+    void setAdsrParameters (const ADSR::Parameters newParams) { adsr.setParameters(newParams); }
+    void setQuickReleaseParameters (const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
+    void setQuickAttackParameters  (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
     
     bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice; }
     bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
@@ -99,8 +107,8 @@ private:
     
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
-    void sola (const juce::AudioBuffer<SampleType>& inputAudio,
-               const int origPeriod, const int newPeriod, const juce::Array<int>& indicesOfGrainOnsets,
+    void sola (const AudioBuffer<SampleType>& inputAudio,
+               const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
                const SampleType* window);
     
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
@@ -108,15 +116,15 @@ private:
     
     void moveUpSamples (const int numSamplesUsed);
     
-    juce::ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
-    juce::ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
-    juce::ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
+    ADSR adsr;         // the main/primary ADSR driven by MIDI input to shape the voice's amplitude envelope. May be turned off by the user.
+    ADSR quickRelease; // used to quickly fade out signal when stopNote() is called with the allowTailOff argument set to false, instead of jumping signal to 0
+    ADSR quickAttack;  // used for if normal ADSR user toggle is OFF, to prevent jumps/pops at starts of notes.
     
     Harmonizer<SampleType>* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
     int currentlyPlayingNote;
     float currentOutputFreq;
-    juce::uint32 noteOnTime;
+    uint32 noteOnTime;
     int currentMidipan;
     
     float currentVelocityMultiplier, prevVelocityMultiplier;
@@ -129,10 +137,10 @@ private:
     
     int currentAftertouch;
     
-    juce::AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
+    AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     int nextSBindex; // highest synthesis buffer index written to + 1
-    juce::AudioBuffer<SampleType> copyingBuffer;
-    juce::AudioBuffer<SampleType> windowingBuffer;
+    AudioBuffer<SampleType> copyingBuffer;
+    AudioBuffer<SampleType> windowingBuffer;
     
     float prevSoftPedalMultiplier;
     
@@ -163,10 +171,10 @@ public:
     
     ~Harmonizer();
     
-    void renderVoices (const juce::AudioBuffer<SampleType>& inputAudio,
-                       juce::AudioBuffer<SampleType>& outputBuffer,
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio,
+                       AudioBuffer<SampleType>& outputBuffer,
                        const float inputFrequency, const bool frameIsPitched,
-                       juce::MidiBuffer& midiMessages);
+                       MidiBuffer& midiMessages);
     
     void prepare (const int blocksize);
     
@@ -189,13 +197,13 @@ public:
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
     
-    void reportActiveNotes (juce::Array<int>& outputArray, const bool includePlayingButReleased = true) const; // returns an array of the currently active pitches
+    void reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased = true) const; // returns an array of the currently active pitches
     
     // turn off all notes
     void allNotesOff (const bool allowTailOff);
     
     // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
-    void playChord (const juce::Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
+    void playChord (const Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; }
@@ -256,16 +264,16 @@ private:
     
     static constexpr int unpitchedGrainRate = 50;
     
-    juce::OwnedArray< HarmonizerVoice<SampleType> > voices;
+    OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     GrainExtractor<SampleType> grains;
-    juce::Array<int> indicesOfGrainOnsets;
+    Array<int> indicesOfGrainOnsets;
     
     void setCurrentInputFreq (const float newInputFreq);
     
     // MIDI
-    void processMidi (juce::MidiBuffer& midiMessages);
-    void handleMidiEvent (const juce::MidiMessage& m, const int samplePosition);
+    void processMidi (MidiBuffer& midiMessages);
+    void handleMidiEvent (const MidiMessage& m, const int samplePosition);
     void noteOn (const int midiPitch, const float velocity, const bool isKeyboard);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
     void handlePitchWheel (const int wheelValue);
@@ -290,10 +298,10 @@ private:
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
     
     // turns on a list of given pitches at once
-    void turnOnList (const juce::Array<int>& toTurnOn, const float velocity, const bool partOfChord);
+    void turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord);
     
     // turns off a list of given pitches at once. Used for turning off midi latch
-    void turnOffList (const juce::Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord);
+    void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord);
     
     // this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, descant, etc
     void pitchCollectionChanged();
@@ -304,21 +312,21 @@ private:
     bool latchIsOn;
     
     bool intervalLatchIsOn;
-    juce::Array<int> intervalsLatchedTo;
+    Array<int> intervalsLatchedTo;
     void updateIntervalsLatchedTo();
     
-    void playChordFromIntervalSet (const juce::Array<int>& desiredIntervals);
+    void playChordFromIntervalSet (const Array<int>& desiredIntervals);
     
-    juce::ADSR::Parameters adsrParams;
-    juce::ADSR::Parameters quickReleaseParams;
-    juce::ADSR::Parameters quickAttackParams;
+    ADSR::Parameters adsrParams;
+    ADSR::Parameters quickReleaseParams;
+    ADSR::Parameters quickAttackParams;
     
     float currentInputFreq;
     int currentInputPeriod;
     
     double sampleRate;
     bool shouldStealNotes;
-    juce::uint32 lastNoteOnCounter;
+    uint32 lastNoteOnCounter;
     int lowestPannedNote;
     int lastPitchWheelValue;
     
@@ -354,7 +362,7 @@ private:
     
     bool adsrIsOn;
     
-    juce::MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
+    MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;
     int lastMidiChannel;
     
@@ -362,16 +370,16 @@ private:
     
     float softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
     
-    juce::AudioBuffer<SampleType> windowBuffer;
+    AudioBuffer<SampleType> windowBuffer;
     void fillWindowBuffer (const int numSamples);
     int windowSize;
     
-    juce::AudioBuffer<SampleType> unpitchedWindow;
+    AudioBuffer<SampleType> unpitchedWindow;
     
-    void calculateHanningWindow (juce::AudioBuffer<SampleType>& windowToFill, const int numSamples);
+    void calculateHanningWindow (AudioBuffer<SampleType>& windowToFill, const int numSamples);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
 
 
-
+}; // namespace
