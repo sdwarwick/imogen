@@ -9,13 +9,21 @@
 
 cmake_minimum_required (VERSION 3.15) 
 
-set (CMAKE_CXX_COMPILER AppleClang)
-
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-set_property (GLOBAL PROPERTY USE_FOLDERS YES)
+#
 
-option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
+set (formats "AU" "VST3" "Standalone")
+
+set (CMAKE_OSX_ARCHITECTURES arm64 x86_64)
+
+set (unitTesting FALSE)  # set this to 'true' to enable a unit testing executable target
+
+set (lauchAudioPluginHostOnBuild FALSE)  # set this to 'true' to automatically lauch JUCE's AudioPluginHost when the project builds
+
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
+
+set (juceDir ${sourceDir}/JUCE)
 
 #
 
@@ -29,19 +37,19 @@ set (compileDefinitions
 
 #
 
-set (unitTesting FALSE)  #  set this to 'true' to enable a unit testing executable target
+set (CMAKE_XCODE_GENERATE_SCHEME OFF)
 
-if (unitTesting)
-    include (CTest)
-endif()
+set (CMAKE_SUPPRESS_REGENERATION true) 
 
-#
+set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
+set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Targets")
 
-add_subdirectory (${sourceDir}/JUCE)  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
+option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 #
+
+add_subdirectory (${juceDir})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
 set_directory_properties (PROPERTIES 
     JUCE_COMPANY_NAME             BenViningMusicSoftware
@@ -80,7 +88,7 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_CODE Imgn
-    FORMATS AU VST3 Standalone
+    FORMATS ${formats}
     VST3_CATEGORIES Pitch Shift
     AU_MAIN_TYPE kAudioUnitType_MusicEffect
     ICON_BIG ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png
@@ -181,9 +189,9 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     ${MidiControlSources}
     ${StaffDisplaySources})
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
-    ${pluginSourcesDir} 
-    ${guiSourcePath})
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
+
+set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "") # prevets IDE from generating an extra nested folder
 
 #####
 
@@ -195,6 +203,32 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
     ${GraphicAssetsDir}/grandStaff.png)
+
+#####
+
+# This cleans up folder organization, putting each individual plugin format build target in its own folder 
+
+set (targetList "ImogenGraphicAssets")
+
+foreach (format ${formats})
+    string (CONCAT newTargetName "${CMAKE_PROJECT_NAME}_" "${format}")
+    list (APPEND targetList ${newTargetName})
+endforeach()
+
+list (APPEND targetList "${CMAKE_PROJECT_NAME}_All")
+
+foreach (target ${targetList})
+    if (TARGET ${target})
+        set_target_properties (${target} PROPERTIES
+            FOLDER "Targets" 
+            XCODE_GENERATE_SCHEME ON)
+
+        if (lauchAudioPluginHostOnBuild)
+            set_target_properties(${target} PROPERTIES
+                XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")
+        endif()
+    endif()
+endforeach()
 
 #####
 
@@ -214,6 +248,8 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 # Test executable for unit testing
 
 if (unitTesting)
+
+    enable_testing()
 
     set (testFilesPath ${sourceDir}/Tests) 
 
