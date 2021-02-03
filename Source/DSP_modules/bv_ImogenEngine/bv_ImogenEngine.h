@@ -5,7 +5,7 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer & pitch detector classes into one processor
- dependencies:       bv_Harmonizer, bv_PitchDetector, juce_dsp
+ dependencies:       bv_Harmonizer, juce_dsp
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -15,7 +15,6 @@
 #include "juce_dsp/juce_dsp.h"
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
-#include "bv_PitchDetector/bv_PitchDetector.h"
 
 
 namespace bav
@@ -105,7 +104,6 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
-    PitchDetector<SampleType> pitchDetector;
     Harmonizer<SampleType> harmonizer;
     
     DelayBuffer<SampleType> inputBuffer;

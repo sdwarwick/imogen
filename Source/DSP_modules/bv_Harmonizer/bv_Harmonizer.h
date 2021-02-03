@@ -5,7 +5,7 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       juce_audio_utils, bv_GeneralUtils
+ dependencies:       juce_audio_utils, bv_PitchDetector, bv_GeneralUtils
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -18,6 +18,7 @@
 // dependencies
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
+#include "bv_PitchDetector/bv_PitchDetector.h"
 
 // the rest of the harmonizer module
 #include "bv_Harmonizer/bv_HarmonizerUtilities.h"
@@ -172,7 +173,6 @@ public:
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
                        AudioBuffer<SampleType>& outputBuffer,
-                       const float inputFrequency, const bool frameIsPitched,
                        MidiBuffer& midiMessages);
     
     void prepare (const int blocksize);
@@ -258,12 +258,18 @@ public:
     // turns off any pitches whose keys are not being held anymore
     void turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant);
     
+    void updatePitchDetectionHzRange (const int minHz, const int maxHz) { pitchDetector.setHzRange (minHz, maxHz); }
+    
+    void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
+        { pitchDetector.setConfidenceThresh (static_cast<SampleType>(newUpperThresh), static_cast<SampleType>(newLowerThresh)); }
     
 private:
     
     static constexpr int unpitchedGrainRate = 50;
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
+    
+    PitchDetector<SampleType> pitchDetector;
     
     GrainExtractor<SampleType> grains;
     Array<int> indicesOfGrainOnsets;

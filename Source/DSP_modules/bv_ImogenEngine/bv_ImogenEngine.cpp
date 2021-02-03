@@ -16,7 +16,6 @@ template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine():
     modulatorInput(ModulatorInputSource::left),
     internalBlocksize(512),
-    pitchDetector(80.0f, 2400.0f, 44100.0),
     inputBuffer(1, internalBlocksize, internalBlocksize),
     outputBuffer(2, internalBlocksize, internalBlocksize),
     limiterIsOn(false),
@@ -69,8 +68,6 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     prevOutputGain = outputGain;
     prevInputGain  = inputGain;
     
-    pitchDetector.setSamplerate (initSamplerate);
-    
     changeBlocksize (initSamplesPerBlock);
     
     prepare (initSamplerate, initSamplesPerBlock);
@@ -99,9 +96,6 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
         return;
     
     harmonizer.setCurrentPlaybackSampleRate (sampleRate);
-    
-    if (pitchDetector.getSamplerate() != sampleRate)
-        pitchDetector.setSamplerate(sampleRate);
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = static_cast<uint32>(samplesPerBlock);
@@ -331,9 +325,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
-    const float newPitch = pitchDetector.detectPitch (inBuffer); // returns -1 if the current frame is unpitched
-    
-    harmonizer.renderVoices (inBuffer, wetBuffer, newPitch, (newPitch != -1.0f), midiMessages); // puts the harmonizer's rendered stereo output into wetBuffer
+    harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);  // puts the harmonizer's rendered stereo output into wetBuffer
 
     // wet gain
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
@@ -639,19 +631,19 @@ void ImogenEngine<SampleType>::updateSoftPedalGain (const float newGain)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
-    pitchDetector.setHzRange (minHz, maxHz);
+    harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
-    const int newMaxPeriod = pitchDetector.getMaxPeriod();
-    
-    if (internalBlocksize != newMaxPeriod)
-        changeBlocksize (newMaxPeriod);
+//    const int newMaxPeriod = pitchDetector.getMaxPeriod();
+//
+//    if (internalBlocksize != newMaxPeriod)
+//        changeBlocksize (newMaxPeriod);
 };
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
 {
-    pitchDetector.setConfidenceThresh (static_cast<SampleType>(newUpperThresh), static_cast<SampleType>(newLowerThresh));
+    harmonizer.updatePitchDetectionConfidenceThresh (newUpperThresh, newLowerThresh);
 };
 
 

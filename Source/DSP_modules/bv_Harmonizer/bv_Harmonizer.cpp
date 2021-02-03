@@ -21,6 +21,7 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
+    pitchDetector(80.0f, 2400.0f, 44100.0),
     latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
     adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false)
@@ -109,6 +110,8 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     
     sampleRate = newRate;
     
+    pitchDetector.setSamplerate (newRate);
+    
     setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
@@ -182,9 +185,12 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 template<typename SampleType>
 void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                            AudioBuffer<SampleType>& outputBuffer,
-                                           const float inputFrequency, const bool frameIsPitched,
                                            MidiBuffer& midiMessages)
 {
+    const float inputFrequency = pitchDetector.detectPitch (inputAudio);
+    
+    const bool frameIsPitched = (inputFrequency != -1.0f);
+    
     if (frameIsPitched && currentInputFreq != inputFrequency)
         setCurrentInputFreq (inputFrequency);
     
