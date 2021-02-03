@@ -16,17 +16,17 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
-set (formats "AU" "VST3" "Standalone")  # valid formats are: 
+set (formats "AU" "VST3" "Standalone")  
 
-set (compileFeatures cxx_std_17)
+set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable target
 
-set (unitTesting FALSE)  # set this to 'true' to enable a unit testing executable target
-
-set (launchPluginHostOnBuild FALSE)
+set (launchPluginHostOnBuild FALSE)  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code
+set (pluginHostPath "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # if you are not on MacOSX, this path must be changed to the correct executable for your OS
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
-
 set (juceDir ${sourceDir}/JUCE)
+
+set (compileFeatures cxx_std_17)
 
 #
 
@@ -43,7 +43,7 @@ set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
 set (CMAKE_SUPPRESS_REGENERATION TRUE) # no "zero-check" target
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
-set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Targets")
+set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
 
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
@@ -54,13 +54,13 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 add_subdirectory (${juceDir})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
 set_directory_properties (PROPERTIES 
-    JUCE_COMPANY_NAME             BenViningMusicSoftware
-    JUCE_COMPANY_WEBSITE          www.benvining.com
-    JUCE_COMPANY_EMAIL            ben.the.vining@gmail.com
+    JUCE_COMPANY_NAME             "BenViningMusicSoftware"
+    JUCE_COMPANY_WEBSITE          "www.benvining.com"
+    JUCE_COMPANY_EMAIL            "ben.the.vining@gmail.com"
     JUCE_COPY_PLUGIN_AFTER_BUILD  TRUE
-    JUCE_VST3_COPY_DIR            /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
-    JUCE_AU_COPY_DIR              /Users/benvining/Library/Audio/Plug-Ins/Components
-    JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
+    JUCE_VST3_COPY_DIR            "/Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins"
+    JUCE_AU_COPY_DIR              "/Users/benvining/Library/Audio/Plug-Ins/Components"
+    JUCE_COMPANY_COPYRIGHT        "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
 
 #
 
@@ -79,19 +79,19 @@ juce_add_modules (
 juce_add_plugin (${CMAKE_PROJECT_NAME} 
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
     VERSION                     ${CMAKE_PROJECT_VERSION}
-    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
+    BUNDLE_ID                   "com.BenViningMusicSoftware.Imogen"
     PLUGIN_NAME                 ${CMAKE_PROJECT_NAME}
-    PLUGIN_MANUFACTURER_CODE    Benv
-    DESCRIPTION                 Real-time vocal harmonizer instrument
+    PLUGIN_MANUFACTURER_CODE    "Benv"
+    DESCRIPTION                 "Real-time vocal harmonizer instrument"
     IS_SYNTH                    FALSE
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    PLUGIN_CODE                 Imgn
+    PLUGIN_CODE                 "Imgn"
     FORMATS                     ${formats}
-    VST3_CATEGORIES             Pitch Shift
-    AU_MAIN_TYPE                kAudioUnitType_MusicEffect
+    VST3_CATEGORIES             "Pitch Shift"
+    AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
     ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
 
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
@@ -107,12 +107,12 @@ foreach (target ${formats} "All")  # This cleans up folder organization, putting
     
     if (TARGET ${thisTargetName})
         set_target_properties (${thisTargetName} PROPERTIES
-            FOLDER "Targets" 
+            FOLDER "Build Targets" 
             XCODE_GENERATE_SCHEME ON)
 
         if (launchPluginHostOnBuild)
             set_target_properties (${thisTargetName} PROPERTIES
-                XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code, and if you are not on MacOSX, this path must be changed to the correct executable for your OS
+                XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
         endif()
     endif()
 endforeach()
@@ -179,7 +179,16 @@ if (NOT unitTesting)
     return()
 endif()
 
-#
+# Download the tagged version of Catch2
+
+include (FetchContent)
+
+FetchContent_Declare (Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v2.13.3)
+
+FetchContent_MakeAvailable (Catch2)
+
 
 # Test executable for unit testing
 
@@ -191,25 +200,13 @@ set (testFiles
     ${testFilesPath}/tests.cpp 
     ${testFilesPath}/tests.h) 
 
-# Download the tagged version of Catch2
+add_executable (Tests ${testFiles})
 
-include (FetchContent)
+target_include_directories (Tests PRIVATE ${testFilesPath})
 
-FetchContent_Declare (Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v2.13.3)
+target_compile_features (Tests PRIVATE ${compileFeatures})
 
-FetchContent_MakeAvailable (Catch2)
-
-#
-
-add_executable (tests ${testFiles})
-
-target_include_directories (tests PRIVATE ${testFilesPath})
-
-target_compile_features (tests PRIVATE ${compileFeatures})
-
-target_link_libraries (tests
+target_link_libraries (Tests
     PRIVATE
         Catch2::Catch2
         bv_ImogenEngine
@@ -218,12 +215,12 @@ target_link_libraries (tests
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-set_target_properties (tests PROPERTIES XCODE_GENERATE_SCHEME ON)
+set_target_properties (Tests PROPERTIES XCODE_GENERATE_SCHEME ON)
 
 source_group(TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
 include (${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
 
-catch_discover_tests (tests)
+catch_discover_tests (Tests)
 
 #
