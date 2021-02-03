@@ -185,7 +185,9 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
     ${StaffDisplaySources}
     )
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE 
+    ${pluginSourcesDir} 
+    ${guiSourcePath})
 
 #####
 
