@@ -1,3 +1,5 @@
+#
+
 #  IMOGEN 
 
 #  AUTHOR: BEN VINING
@@ -6,6 +8,7 @@
 
 #  The Imogen source code consists of dependencies on a few JUCE modules; a couple of custom JUCE-style modules I created; and the PluginProcessor & PluginEditor source files specific to the plugin build. The bv_ImogenEngine module is a completely contained and self-sufficient audio processor with all of Imogen's features; other source files could replace the PluginProcessor/PluginEditor to adapt Imogen for other build targets.
 
+#
 
 cmake_minimum_required (VERSION 3.15) 
 
@@ -14,14 +17,6 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 #
 
 set (formats "AU" "VST3" "Standalone")  # valid formats are: 
-
-set (CMAKE_OSX_ARCHITECTURES arm64 x86_64)
-
-# Minimum MacOS target
-set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)
-
-# static linking on Windows
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 set (compileFeatures cxx_std_17)
 
@@ -35,6 +30,11 @@ set (juceDir ${sourceDir}/JUCE)
 
 #
 
+set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64") # universal macOS binaries 
+set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE) # Minimum MacOS version to build for
+
+set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # static linking on Windows
+
 set (CMAKE_XCODE_GENERATE_SCHEME OFF) # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
 
 set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
@@ -43,7 +43,6 @@ set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
 set (CMAKE_SUPPRESS_REGENERATION TRUE) # no "zero-check" target
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
-
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Targets")
 
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
@@ -61,8 +60,7 @@ set_directory_properties (PROPERTIES
     JUCE_COPY_PLUGIN_AFTER_BUILD  TRUE
     JUCE_VST3_COPY_DIR            /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
     JUCE_AU_COPY_DIR              /Users/benvining/Library/Audio/Plug-Ins/Components
-    JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.
-    )
+    JUCE_COMPANY_COPYRIGHT        This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
 
 #
 
@@ -79,23 +77,22 @@ juce_add_modules (
 # this command adds a static library target with the shared plugin code that can be linked to for the testing target, as well as build targets for VST & AU plugins and a standalone:
 
 juce_add_plugin (${CMAKE_PROJECT_NAME} 
-    PRODUCT_NAME ${CMAKE_PROJECT_NAME}
-    VERSION ${CMAKE_PROJECT_VERSION}
-    BUNDLE_ID com.BenViningMusicSoftware.Imogen
-    PLUGIN_NAME ${CMAKE_PROJECT_NAME}
-    PLUGIN_MANUFACTURER_CODE Benv
-    DESCRIPTION Real-time vocal harmonizer instrument
-    IS_SYNTH FALSE
-    NEEDS_MIDI_INPUT TRUE
-    NEEDS_MIDI_OUTPUT TRUE
-    IS_MIDI_EFFECT FALSE
+    PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
+    VERSION                     ${CMAKE_PROJECT_VERSION}
+    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
+    PLUGIN_NAME                 ${CMAKE_PROJECT_NAME}
+    PLUGIN_MANUFACTURER_CODE    Benv
+    DESCRIPTION                 Real-time vocal harmonizer instrument
+    IS_SYNTH                    FALSE
+    NEEDS_MIDI_INPUT            TRUE
+    NEEDS_MIDI_OUTPUT           TRUE
+    IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    PLUGIN_CODE Imgn
-    FORMATS ${formats}
-    VST3_CATEGORIES Pitch Shift
-    AU_MAIN_TYPE kAudioUnitType_MusicEffect
-    ICON_BIG ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png
-    )
+    PLUGIN_CODE                 Imgn
+    FORMATS                     ${formats}
+    VST3_CATEGORIES             Pitch Shift
+    AU_MAIN_TYPE                kAudioUnitType_MusicEffect
+    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
 
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 
@@ -104,15 +101,16 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0)
-
+ 
 foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target into a "Targets" folder
-    if (TARGET ${CMAKE_PROJECT_NAME}_${target})
-        set_target_properties (${CMAKE_PROJECT_NAME}_${target} PROPERTIES
+    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")
+    if (TARGET ${thisTargetName})
+        set_target_properties (${thisTargetName} PROPERTIES
             FOLDER "Targets" 
             XCODE_GENERATE_SCHEME ON)
 
         if (launchPluginHostOnBuild)
-            set_target_properties (${CMAKE_PROJECT_NAME}_${target} PROPERTIES
+            set_target_properties (${thisTargetName} PROPERTIES
                 XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code, and if you are not on MacOSX, this path must be changed to the correct executable for your OS
         endif()
     endif()
@@ -121,10 +119,10 @@ endforeach()
 #######
 
 set (pluginSourcesDir ${sourceDir}/PluginSources)
-set (guiSourcePath ${sourceDir}/GUI)
-set (HelpScreenSourcePath ${guiSourcePath}/HelpScreen)
-set (IOPanelSourcePath ${guiSourcePath}/IOControlPanel)
-set (MidiControlSourcePath ${guiSourcePath}/MidiControlPanel)
+set (guiSourcePath    ${sourceDir}/GUI)
+set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
+set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
+set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
 set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
 set (sourceFiles
@@ -160,6 +158,8 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static librar
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
     ${GraphicAssetsDir}/grandStaff.png)
+
+set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 
 #####
 
