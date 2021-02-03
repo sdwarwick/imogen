@@ -212,12 +212,8 @@ public:
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
     void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
-    bool isADSRon() const noexcept { return adsrIsOn; }
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);
-    juce::ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
-    juce::ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
-    juce::ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
     
@@ -239,18 +235,8 @@ public:
     void setDescantInterval (const int newInterval);
     HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
     
-    // returns a float velocity weighted according to the current midi velocity sensitivity settings
-    float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); }
-    
-    // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
-    float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); }
-    
     void newMaxNumVoices (const int newMaxNumVoices);
     
-    bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
-    bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
-    bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
-    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; }
     void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; }
     
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
@@ -265,6 +251,8 @@ public:
     
 private:
     
+    friend class HarmonizerVoice<SampleType>;
+    
     static constexpr int unpitchedGrainRate = 50;
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
@@ -275,6 +263,17 @@ private:
     Array<int> indicesOfGrainOnsets;
     
     void setCurrentInputFreq (const float newInputFreq);
+    
+    // returns a float velocity weighted according to the current midi velocity sensitivity settings
+    float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); }
+    
+    // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
+    float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); }
+    
+    bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
+    bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
+    bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
+    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; }
     
     // MIDI
     void processMidi (MidiBuffer& midiMessages);
@@ -294,6 +293,11 @@ private:
     void handlePortamentoTime (const int controlValue);
     void handleBalance (const int controlValue);
     void handleLegato (const bool isOn);
+    
+    bool isADSRon() const noexcept { return adsrIsOn; }
+    juce::ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
+    juce::ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
+    juce::ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     // voice allocation
     HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable);

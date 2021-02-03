@@ -621,9 +621,6 @@ void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float rel
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateSoftPedalGain (const float newGain)
 {
-    if (harmonizer.getSoftPedalMultiplier() == newGain)
-        return;
-    
     harmonizer.setSoftPedalGainMultiplier (newGain);
 };
 

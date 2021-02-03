@@ -32,20 +32,12 @@ public:
     
     ~PitchDetector();
     
-    int getMinHz() const noexcept { return minHz; }
-    
-    int getMaxHz() const noexcept { return maxHz; }
-    
-    int getMaxPeriod() const noexcept { return maxPeriod; }
-    
     void setHzRange (const int newMinHz, const int newMaxHz, const bool allowRecalc = false);
     
     void setConfidenceThresh (const SampleType newUpperThresh,
                               const SampleType newLowerThresh)
             { upperConfidenceThresh = newUpperThresh;
               lowerConfidenceThresh = newLowerThresh; }
-    
-    double getSamplerate() const noexcept { return samplerate; }
     
     void setSamplerate (const double newSamplerate, const bool recalcHzRange = true);
     
