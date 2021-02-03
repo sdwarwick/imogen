@@ -13,13 +13,15 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
-set (formats "AU" "VST3" "Standalone")
+set (formats "AU" "VST3" "Standalone")  # valid formats are: 
 
 set (CMAKE_OSX_ARCHITECTURES arm64 x86_64)
 
+set (compileFeatures cxx_std_17)
+
 set (unitTesting FALSE)  # set this to 'true' to enable a unit testing executable target
 
-set (lauchAudioPluginHostOnBuild FALSE)  # set this to 'true' to automatically lauch JUCE's AudioPluginHost when the project builds
+set (lauchAudioPluginHostOnBuild FALSE)  # set this to 'true' to automatically lauch JUCE's AudioPluginHost when the project builds. The AudioPluginHost must be built before building Imogen if this is enabled!
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
@@ -27,19 +29,9 @@ set (juceDir ${sourceDir}/JUCE)
 
 #
 
-set (compileFeatures cxx_std_17)
+set (CMAKE_XCODE_GENERATE_SCHEME OFF) # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
 
-set (compileDefinitions 
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0)
-
-#
-
-set (CMAKE_XCODE_GENERATE_SCHEME OFF)
-
-set (CMAKE_SUPPRESS_REGENERATION true) 
+set (CMAKE_SUPPRESS_REGENERATION true) # no "zero-check" target
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 
@@ -96,7 +88,11 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
 
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 
-target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC ${compileDefinitions})
+target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    JUCE_STRICT_REFCOUNTEDPTR=1
+    JUCE_VST3_CAN_REPLACE_VST2=0)
 
 #######
 
@@ -191,22 +187,20 @@ target_sources (${CMAKE_PROJECT_NAME} PRIVATE
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
-set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "") # prevets IDE from generating an extra nested folder
+set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
 
 #####
 
-# this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
-
 set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
 
-juce_add_binary_data (ImogenGraphicAssets SOURCES 
+juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
     ${GraphicAssetsDir}/grandStaff.png)
 
 #####
 
-# This cleans up folder organization, putting each individual plugin format build target in its own folder 
+# This cleans up folder organization, putting each individual plugin format build target into its own folder 
 
 set (targetList "ImogenGraphicAssets")
 
@@ -218,15 +212,17 @@ endforeach()
 list (APPEND targetList "${CMAKE_PROJECT_NAME}_All")
 
 foreach (target ${targetList})
-    if (TARGET ${target})
-        set_target_properties (${target} PROPERTIES
-            FOLDER "Targets" 
-            XCODE_GENERATE_SCHEME ON)
+    if (NOT TARGET ${target})
+        continue()
+    endif()
 
-        if (lauchAudioPluginHostOnBuild)
-            set_target_properties(${target} PROPERTIES
-                XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")
-        endif()
+    set_target_properties (${target} PROPERTIES
+        FOLDER "Targets" 
+        XCODE_GENERATE_SCHEME ON)
+
+    if (lauchAudioPluginHostOnBuild)
+        set_target_properties(${target} PROPERTIES
+            XCODE_SCHEME_EXECUTABLE "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")
     endif()
 endforeach()
 
@@ -245,43 +241,43 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 
 #
 
+if (NOT unitTesting)
+    return()
+endif()
+
+#
+
 # Test executable for unit testing
 
-if (unitTesting)
+enable_testing()
 
-    enable_testing()
+set (testFilesPath ${sourceDir}/Tests) 
 
-    set (testFilesPath ${sourceDir}/Tests) 
+set (testFiles 
+    ${testFilesPath}/tests.cpp 
+    ${testFilesPath}/tests.h) 
 
-    set (testFiles 
-        ${testFilesPath}/tests.cpp 
-        ${testFilesPath}/tests.h) 
+source_group (
+    TREE ${testFilesPath}
+    PREFIX "Tests"
+    FILES ${testFiles})
 
-    source_group (
-        TREE ${testFilesPath}
-        PREFIX "Tests"
-        FILES ${testFiles})
+add_executable (tests ${testFiles})
 
-    add_executable (tests ${testFiles})
+target_include_directories (tests PRIVATE ${testFilesPath})
 
-    target_include_directories (tests PRIVATE ${testFilesPath})
+target_compile_features (tests PRIVATE ${compileFeatures})
 
-    target_compile_features (tests PRIVATE ${compileFeatures})
+target_link_libraries (tests
+    PRIVATE
+        bv_ImogenEngine
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags)
 
-    target_compile_definitions (tests PUBLIC ${compileDefinitions})
+add_test (NAME tests COMMAND tests)
 
-    target_link_libraries (tests
-        PRIVATE
-            bv_ImogenEngine
-        PUBLIC
-            juce::juce_recommended_config_flags
-            juce::juce_recommended_lto_flags
-            juce::juce_recommended_warning_flags)
-
-    add_test (NAME tests COMMAND tests)
-
-    enable_testing()
-
-endif()
+enable_testing()
 
 #
