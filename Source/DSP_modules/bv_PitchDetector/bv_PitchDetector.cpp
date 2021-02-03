@@ -13,7 +13,7 @@ namespace bav
     
     
 template<typename SampleType>
-PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int maxDetectableHz, const double initSamplerate): confidenceThresh(0.25)
+PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int maxDetectableHz, const double initSamplerate): upperConfidenceThresh(SampleType(1.0)), lowerConfidenceThresh(SampleType(0.01))
 {
     minHz = minDetectableHz;
     maxHz = maxDetectableHz;
@@ -150,6 +150,15 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         }
         
         asdfData[index] /= numSamples; // normalize
+        
+        if (index > 2) // we're going to test the data at index - 1 to see if we can return early
+        {
+            const SampleType testing = asdfData[index - 1];
+            
+            if (testing < lowerConfidenceThresh)
+                if (testing < asdfData[index] && testing < asdfData[index - 2])
+                    return foundThePeriod (asdfData, index - 1, index + 1);
+        }
     }
     
     const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
@@ -158,13 +167,13 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     const SampleType greatestConfidence = asdfData[minIndex];
     
-    if (greatestConfidence > confidenceThresh) // determine if frame is unpitched - return early
+    if (greatestConfidence > upperConfidenceThresh) // determine if frame is unpitched - return early
     {
         lastFrameWasPitched = false;
         return -1.0f;
     }
     
-    if ((! lastFrameWasPitched) || (greatestConfidence < 0.05)) // separate confidence threshold value for this??
+    if ((! lastFrameWasPitched) || (greatestConfidence < lowerConfidenceThresh))
         return foundThePeriod (asdfData, minIndex, asdfDataSize);
     
     return chooseIdealPeriodCandidate (asdfData, asdfDataSize, minIndex);
@@ -178,7 +187,7 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
                                                  const int asdfDataSize)
 {
     SampleType realPeriod = quadraticPeakPosition (asdfData, minIndex, asdfDataSize);
-    realPeriod += minPeriod;
+    realPeriod += minPeriod; // account for offset in asdf data
     
     jassert (realPeriod <= maxPeriod);
     
@@ -222,7 +231,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     }
     
     // if there is little variation in the confidences of our candidates, return the smallest k value that is a candidate
-    if ((leastConfidence - greatestConfidence) < 0.35)
+    if ((leastConfidence - greatestConfidence) <= lowerConfidenceThresh)
     {
         int smallestK = periodCandidates.getUnchecked(0);
         
@@ -264,8 +273,6 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     
     Array<SampleType> weightedCandidateConfidence;
     weightedCandidateConfidence.ensureStorageAllocated(periodCandidatesSize);
-    
-    // SampleType weightedCandidateConfidence[periodCandidatesSize];
     
     for (int c = 0; c < periodCandidatesSize; ++c)
     {

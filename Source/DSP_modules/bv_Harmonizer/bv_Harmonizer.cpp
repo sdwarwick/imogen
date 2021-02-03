@@ -167,13 +167,12 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 {
     currentInputFreq = newInputFreq;
     
-    currentInputPeriod = juce::roundToInt (sampleRate / newInputFreq);
+    currentInputPeriod = roundToInt (sampleRate / newInputFreq);
     
     fillWindowBuffer (currentInputPeriod * 2);
     
-    if (intervalLatchIsOn)
-        if (! intervalsLatchedTo.isEmpty())
-            playChordFromIntervalSet (intervalsLatchedTo);
+    if (intervalLatchIsOn && ! intervalsLatchedTo.isEmpty())
+        playChordFromIntervalSet (intervalsLatchedTo);
 };
 
 

@@ -15,7 +15,7 @@ namespace bav
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentMidipan(64), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f),
+parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f),
     isPedalPitchVoice(false), isDescantVoice(false),
     playingButReleased(false)
 {
@@ -261,6 +261,9 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     isQuickFading = false;
     noteTurnedOff = true;
     keyIsDown     = false;
+    nextSBindex = 0;
+    isPedalPitchVoice = false;
+    isDescantVoice = false;
     
     setPan (64);
     
@@ -277,11 +280,6 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     
     clearBuffers();
     synthesisBuffer.clear();
-    
-    nextSBindex = 0;
-    
-    isPedalPitchVoice = false;
-    isDescantVoice = false;
 };
 
 
@@ -334,7 +332,6 @@ void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool all
     }
     
     noteTurnedOff = true;
-    
     isPedalPitchVoice = false;
     isDescantVoice = false;
 };
@@ -352,12 +349,10 @@ void HarmonizerVoice<SampleType>::setPan (const int newPan)
 {
     jassert (isPositiveAndBelow (newPan, 128));
     
-    if (currentMidipan == newPan)
+    if (panner.getLastMidiPan() == newPan)
         return;
     
     panner.setMidiPan (newPan);
-    
-    currentMidipan = newPan;
 };
 
 

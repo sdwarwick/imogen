@@ -22,7 +22,7 @@ set (compileFeatures cxx_std_17)
 
 set (unitTesting FALSE)  # set this to 'true' to enable a unit testing executable target
 
-set (launchPluginHostOnBuild TRUE)
+set (launchPluginHostOnBuild FALSE)
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
@@ -104,6 +104,7 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
  
 foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target into a "Targets" folder
     set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")
+    
     if (TARGET ${thisTargetName})
         set_target_properties (${thisTargetName} PROPERTIES
             FOLDER "Targets" 

@@ -47,7 +47,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     softPedalGain      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("softPedalGain"));                  jassert(softPedalGain);
     minDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMinHz"));            jassert(minDetectedHz);
     maxDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMaxHz"));            jassert(maxDetectedHz);
-    confidenceThresh   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceThresh")); jassert(confidenceThresh);
+    pitchDetectionConfidenceUpperThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceUpperThresh")); jassert(pitchDetectionConfidenceUpperThresh);
+    pitchDetectionConfidenceLowerThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceLowerThresh")); jassert(pitchDetectionConfidenceLowerThresh);
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -452,7 +453,9 @@ template <typename SampleType>
 void ImogenAudioProcessor::updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine)
 {
     activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
-    activeEngine.updatePitchDetectionConfidenceThresh(confidenceThresh->get());
+    
+    activeEngine.updatePitchDetectionConfidenceThresh (pitchDetectionConfidenceUpperThresh->get(),
+                                                       pitchDetectionConfidenceLowerThresh->get());
     
     if (latencySamples != activeEngine.reportLatency())
     {
@@ -649,10 +652,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     // NEED GUI -- PITCH DETECTION SETTINGS
     // Note that the minimum possible Hz value will impact the plugin's latency.
+    juce::NormalisableRange<float> confidenceRange (0.0f, 1.0f, 0.01f);
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("pitchDetectionMinHz", "Min possible Hz", 40, 600, 80));
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("pitchDetectionMaxHz", "Max possible Hz", 1000, 10000, 2600));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceThresh", "Confidence thresh",
-                                                                juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.15f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceUpperThresh", "Confidence upper thresh",
+                                                                confidenceRange, 0.15f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceLowerThresh", "Confidence lower thresh",
+                                                                 confidenceRange, 0.05f));
     
     // MAKE PARAM FOR INPUT MODE !!
     

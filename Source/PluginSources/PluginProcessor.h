@@ -148,7 +148,8 @@ public:
     juce::AudioParameterFloat* softPedalGain;
     juce::AudioParameterInt*   minDetectedHz;
     juce::AudioParameterInt*   maxDetectedHz;
-    juce::AudioParameterFloat* confidenceThresh;
+    juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
+    juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
     
     
 private:

@@ -40,9 +40,10 @@ public:
     
     void setHzRange (const int newMinHz, const int newMaxHz, const bool allowRecalc = false);
     
-    SampleType getCurrentConfidenceThresh() const noexcept { return confidenceThresh; }
-    
-    void setConfidenceThresh (const SampleType newThresh) { confidenceThresh = newThresh; }
+    void setConfidenceThresh (const SampleType newUpperThresh,
+                              const SampleType newLowerThresh)
+            { upperConfidenceThresh = newUpperThresh;
+              lowerConfidenceThresh = newLowerThresh; }
     
     double getSamplerate() const noexcept { return samplerate; }
     
@@ -62,7 +63,8 @@ private:
     
     double samplerate;
     
-    SampleType confidenceThresh;
+    SampleType upperConfidenceThresh;  // if the lowest asdf data value is above this thresh, the frame of audio is determined to be unpitched
+    SampleType lowerConfidenceThresh;  // if the lowest asdf data value is below this thresh, that k is returned as the period, without the more sophisticated period candidate selection process
     
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     

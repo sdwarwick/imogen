@@ -303,10 +303,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
     if ((currentLowest == 128) || (currentLowest > pedal.upperThresh))
     {
         if (pedal.lastPitch > -1)
-        {
             noteOff (pedal.lastPitch, 1.0f, false, false);
-            pedal.lastPitch = -1;
-        }
         
         return;
     }
@@ -320,16 +317,13 @@ void Harmonizer<SampleType>::applyPedalPitch()
         noteOff (pedal.lastPitch, 1.0f, false, false);
     
     if (newPedalPitch < 0)
-    {
-        pedal.lastPitch = -1;
         return;
-    }
     
     pedal.lastPitch = newPedalPitch;
     
     float velocity;
     
-    if (auto* voiceCopying = getVoicePlayingNote(currentLowest))
+    if (auto* voiceCopying = getVoicePlayingNote (currentLowest))
         velocity = voiceCopying->getLastRecievedVelocity();
     else
         velocity = 1.0f;
@@ -357,10 +351,7 @@ void Harmonizer<SampleType>::applyDescant()
     if ((currentHighest == -1) || (currentHighest < descant.lowerThresh))
     {
         if (descant.lastPitch > -1)
-        {
             noteOff (descant.lastPitch, 1.0f, false, false);
-            descant.lastPitch = -1;
-        }
         
         return;
     }
@@ -374,16 +365,13 @@ void Harmonizer<SampleType>::applyDescant()
         noteOff (descant.lastPitch, 1.0f, false, false);
     
     if (newDescantPitch > 127)
-    {
-        descant.lastPitch = -1;
         return;
-    }
     
     descant.lastPitch = newDescantPitch;
     
     float velocity;
     
-    if (auto* voiceCopying = getVoicePlayingNote(currentHighest))
+    if (auto* voiceCopying = getVoicePlayingNote (currentHighest))
         velocity = voiceCopying->getLastRecievedVelocity();
     else
         velocity = 1.0f;
@@ -488,7 +476,15 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     auto* voice = getVoicePlayingNote (midiNoteNumber);
     
     if (voice == nullptr)
+    {
+        if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
+            pedal.lastPitch = -1;
+        
+        if (descant.isOn && midiNoteNumber == descant.lastPitch)
+            descant.lastPitch = -1;
+        
         return;
+    }
     
     if (isKeyboard)
     {
@@ -497,7 +493,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         if (latchIsOn)
             return;
         
-        if (! (sustainPedalDown || sostenutoPedalDown) )
+        if (! (sustainPedalDown || sostenutoPedalDown))
             stopVoice (voice, velocity, allowTailOff);
     }
     else if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down

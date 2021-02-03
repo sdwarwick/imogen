@@ -649,9 +649,9 @@ void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, con
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float newThresh)
+void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
 {
-    pitchDetector.setConfidenceThresh (static_cast<SampleType>(newThresh));
+    pitchDetector.setConfidenceThresh (static_cast<SampleType>(newUpperThresh), static_cast<SampleType>(newLowerThresh));
 };
 
 

@@ -29,7 +29,7 @@ namespace bav
 
 {
     
-    using namespace juce;
+using namespace juce;
     
     
 
@@ -72,7 +72,7 @@ public:
     void setKeyDown (bool isNowDown) noexcept;
     
     void setPan (const int newPan);
-    int getCurrentMidiPan() const noexcept { return currentMidipan; }
+    int getCurrentMidiPan() const noexcept { return panner.getLastMidiPan(); }
     
     void startNote (const int midiPitch,  const float velocity,
                     const uint32 noteOnTimestamp,
@@ -125,7 +125,6 @@ private:
     int currentlyPlayingNote;
     float currentOutputFreq;
     uint32 noteOnTime;
-    int currentMidipan;
     
     float currentVelocityMultiplier, prevVelocityMultiplier;
     float lastRecievedVelocity;

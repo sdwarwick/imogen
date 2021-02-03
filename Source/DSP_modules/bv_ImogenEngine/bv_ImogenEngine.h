@@ -22,7 +22,7 @@ namespace bav
 
 {
     
-    using namespace juce;
+using namespace juce;
 
 
 template<typename SampleType>
@@ -77,7 +77,7 @@ public:
     void updateWetGain (const float newWetGain);
     void updateSoftPedalGain (const float newGain);
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
-    void updatePitchDetectionConfidenceThresh (const float newThresh);
+    void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh);
     
     void clearBuffers();
     
