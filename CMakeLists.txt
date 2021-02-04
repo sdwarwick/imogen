@@ -21,17 +21,23 @@ set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable
 set (launchPluginHostOnBuild FALSE)  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code
 set (pluginHostPath "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # if you are not on MacOSX, this path must be changed to the correct executable for your OS
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
-set (juceDir ${sourceDir}/JUCE)  # if this subdirectory isn't found, this script will automatically download the juce library code from GitHub
+set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn't found, this script will automatically download the juce library code from GitHub
 
 set (compileFeatures cxx_std_17)
 
 #
 
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
+
+if (NOT EXISTS ${sourceDir})
+    message (FATAL_ERROR "Source code folder not found in current directory.")
+endif()
+
 set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64") # universal macOS binaries 
 set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE) # Minimum MacOS version to build for
 
 set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # static linking on Windows
+set (CMAKE_WIN32_EXECUTABLE TRUE)
 
 set (CMAKE_XCODE_GENERATE_SCHEME OFF) # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
 
@@ -39,6 +45,8 @@ set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
 set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
 
 set (CMAKE_SUPPRESS_REGENERATION TRUE) # no "zero-check" target
+
+set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
