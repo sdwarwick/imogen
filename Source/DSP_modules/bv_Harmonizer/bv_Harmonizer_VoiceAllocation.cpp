@@ -33,22 +33,19 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool s
         if (! voice->isVoiceActive())
             return voice;
     
-    if (stealIfNoneAvailable)
-    {
-        auto* stolenVoice = findVoiceToSteal();
-        
-        if (stolenVoice == nullptr)
-            return nullptr;
-        
-        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel,
-                                                            stolenVoice->getCurrentlyPlayingNote(),
-                                                            1.0f),
-                                      ++lastMidiTimeStamp);
-        
-        return stolenVoice;
-    }
+    if (! stealIfNoneAvailable)
+        return nullptr;
+
+    auto* stolenVoice = findVoiceToSteal();
     
-    return nullptr;
+    if (stolenVoice == nullptr)
+        return nullptr;
+    
+    if (stolenVoice->isVoiceActive())
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, stolenVoice->getCurrentlyPlayingNote(), 1.0f),
+                                      ++lastMidiTimeStamp);
+    
+    return stolenVoice;
 };
     
     

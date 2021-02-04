@@ -27,7 +27,7 @@ set (compileFeatures cxx_std_17)
 
 #
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact
 
 if (NOT EXISTS ${sourceDir})
     message (FATAL_ERROR "Source code folder not found in current directory.")
@@ -208,6 +208,8 @@ FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not fo
 FetchContent_MakeAvailable (Catch2)
 
 enable_testing()
+
+#
 
 set (testFilesPath ${sourceDir}/Tests)
 
