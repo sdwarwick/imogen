@@ -8,6 +8,7 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 #include "bv_Harmonizer/bv_HarmonizerVoice.cpp"
+#include "bv_Harmonizer/bv_Harmonizer_VoiceAllocation.cpp"
 #include "bv_Harmonizer/bv_HarmonizerMidi.cpp"
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
@@ -587,45 +588,6 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     }
     
     panner.setNumberOfVoices (std::max (voices.size(), 1));
-};
-
-
-template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const
-{
-    for (auto* voice : voices)
-        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
-            return voice;
-    
-    return nullptr;
-};
-
-
-template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const
-{
-    if (! descant.isOn)
-        return nullptr;
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive() && voice->isCurrentDescantVoice())
-            return voice;
-    
-    return nullptr;
-};
-
-
-template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice() const
-{
-    if (! pedal.isOn)
-        return nullptr;
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive() && voice->isCurrentPedalVoice())
-            return voice;
-    
-    return nullptr;
 };
 
 

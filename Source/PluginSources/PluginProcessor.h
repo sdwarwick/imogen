@@ -12,9 +12,7 @@
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
-
-/////
-
+///////////
 
 class ImogenAudioProcessor    : public juce::AudioProcessor
 
@@ -41,11 +39,12 @@ public:
     
     void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
     
-    
+    bool canAddBus (bool isInput) const override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+    bool shouldWarnUserToEnableSidechain() const;
     
-    juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
+    juce::AudioProcessorEditor* createEditor() override;
     
     const juce::String getName() const override { return JucePlugin_Name; }
     
@@ -88,7 +87,6 @@ public:
     void updatePedalPitch();
     void updateDescant();
     void updatePitchDetectionSettings();
-    
     void updateGains();
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
@@ -99,19 +97,9 @@ public:
     
     juce::AudioProcessorValueTreeState tree;
     
-    bool canAddBus(bool isInput) const override;
-    
-    bool shouldWarnUserToEnableSidechain() const;
-    
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
-    void updateNumVoices(const int newNumVoices);
-    
-    //==============================================================================
-    
-    
-    template<typename SampleType>
-    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
+    void updateNumVoices (const int newNumVoices);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterInt*   dryPan;
@@ -153,6 +141,9 @@ public:
     
     
 private:
+    
+    template<typename SampleType>
+    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
     
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);

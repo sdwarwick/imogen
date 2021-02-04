@@ -70,9 +70,7 @@ public:
     
     // Returns true if the key that triggered this voice is still held down. Note that the voice may still be playing after the key was released (e.g because the sostenuto pedal is down).
     bool isKeyDown() const noexcept { return keyIsDown; }
-    void setKeyDown (bool isNowDown) noexcept;
     
-    void setPan (const int newPan);
     int getCurrentMidiPan() const noexcept { return panner.getLastMidiPan(); }
     
     void startNote (const int midiPitch,  const float velocity,
@@ -105,6 +103,12 @@ public:
     
     
 private:
+    
+    friend class Harmonizer<SampleType>;
+    
+    void setKeyDown (bool isNowDown) noexcept;
+    
+    void setPan (const int newPan);
     
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     

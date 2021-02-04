@@ -50,7 +50,7 @@ public:
     
     int reportLatency() const noexcept { return internalBlocksize; }
     
-    void updateNumVoices(const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
+    void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     
     void returnActivePitches (Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
     
@@ -83,7 +83,8 @@ public:
     bool hasBeenReleased()    const noexcept { return resourcesReleased; }
     bool hasBeenInitialized() const noexcept { return initialized; }
     
-    enum ModulatorInputSource { left, right, mixToMono }; // determines how the plugin will take input from the stereo buffer fed to it from the host
+    // determines how the plugin will select its mono input from the stereo buffer fed to it from the host
+    enum ModulatorInputSource { left, right, mixToMono };
     
     ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; }
     
