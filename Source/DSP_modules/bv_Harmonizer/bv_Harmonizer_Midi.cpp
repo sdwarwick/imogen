@@ -37,12 +37,23 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
 ***********************************************************************************************************************************************/
 
 template<typename SampleType>
-bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased) const
+bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased, const bool countKeyUpNotes) const
 {
     for (auto* voice : voices)
+    {
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
-            if (countRingingButReleased || ! voice->isPlayingButReleased())
+        {
+            if (countRingingButReleased)
+                if (countKeyUpNotes || voice->isKeyDown())
+                    return true;
+            
+            if (! voice->isPlayingButReleased() || countKeyUpNotes)
                 return true;
+            
+            if (voice->isKeyDown())
+                return true;
+        }
+    }
     
     return false;
 };
@@ -493,48 +504,74 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
 template<typename SampleType>
 void Harmonizer<SampleType>::applyPedalPitch()
 {
-    int currentLowest = 128; // find the current lowest note being played by a keyboard key
+    int currentLowest = 128;
+    HarmonizerVoice<SampleType>* lowestVoice = nullptr;
     
-    for (auto* voice : voices)
+    for (auto* voice : voices) // find the current lowest note being played by a keyboard key
     {
         if (voice->isVoiceActive() && voice->isKeyDown())
         {
             const int note = voice->getCurrentlyPlayingNote();
             
             if (note < currentLowest)
+            {
                 currentLowest = note;
+                lowestVoice = voice;
+            }
         }
     }
     
     if (currentLowest > pedal.upperThresh) // only create a pedal voice if the current lowest keyboard key is below a specified threshold
     {
         if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false); // turn off the old pedal note
+            noteOff (pedal.lastPitch, 1.0f, false, false);
         
         return;
     }
     
     const int newPedalPitch = currentLowest - pedal.interval;
     
-    if (newPedalPitch == pedal.lastPitch && pedal.lastPitch > -1)
-        noteOff (pedal.lastPitch, 1.0f, false, false); // turn off the old pedal note
+    if (newPedalPitch == pedal.lastPitch)  // pedal output note hasn't changed - do nothing
+        return;
     
-    if (newPedalPitch < 0)
+    if (newPedalPitch < 0 || isPitchActive (newPedalPitch, false, false))
     {
-        pedal.lastPitch = -1;
+        if (pedal.lastPitch > -1)
+            noteOff (pedal.lastPitch, 1.0f, false, false);
+        
         return;
     }
     
-    pedal.lastPitch = newPedalPitch;
+    HarmonizerVoice<SampleType>* prevPedalVoice = getCurrentPedalPitchVoice();
     
-    float velocity;
+    if (prevPedalVoice != nullptr)
+        if (prevPedalVoice->isKeyDown())
+            prevPedalVoice = nullptr;
     
-    if (auto* voiceCopying = getVoicePlayingNote (currentLowest))
-        velocity = voiceCopying->getLastRecievedVelocity();
+    if (prevPedalVoice != nullptr)
+    {
+        //  there was a previously active pedal voice, so steal it directly without calling noteOn:
+        
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevPedalVoice->getCurrentlyPlayingNote(), 1.0f),
+                                      ++lastMidiTimeStamp);
+        
+        const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : prevPedalVoice->getLastRecievedVelocity();
+        
+        pedal.lastPitch = newPedalPitch;
+        
+        startVoice (prevPedalVoice, pedal.lastPitch, velocity, false);
+    }
     else
-        velocity = 1.0f;
-    
-    noteOn (newPedalPitch, velocity, false);
+    {
+        if (pedal.lastPitch > -1)
+            noteOff (pedal.lastPitch, 1.0f, false, false);
+        
+        const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : 1.0f;
+        
+        pedal.lastPitch = newPedalPitch;
+        
+        noteOn (pedal.lastPitch, velocity, false);
+    }
 };
 
 
@@ -542,48 +579,74 @@ void Harmonizer<SampleType>::applyPedalPitch()
 template<typename SampleType>
 void Harmonizer<SampleType>::applyDescant()
 {
-    int currentHighest = -1; // find the current highest note being played by a keyboard key
+    int currentHighest = -1;
+    HarmonizerVoice<SampleType>* highestVoice = nullptr;
     
-    for (auto* voice : voices)
+    for (auto* voice : voices)  // find the current highest note being played by a keyboard key
     {
         if (voice->isVoiceActive() && voice->isKeyDown())
         {
             const int note = voice->getCurrentlyPlayingNote();
             
             if (note > currentHighest)
+            {
                 currentHighest = note;
+                highestVoice = voice;
+            }
         }
     }
     
-    if (currentHighest < descant.lowerThresh) // only create a descant voice if the current highest keyboard key is above a specified threshold
+    if (currentHighest < descant.lowerThresh)
     {
         if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false); // turn off the old descant note
+            noteOff (descant.lastPitch, 1.0f, false, false);
         
         return;
     }
     
     const int newDescantPitch = currentHighest + descant.interval;
     
-    if (newDescantPitch == descant.lastPitch && descant.lastPitch > -1)
-        noteOff (descant.lastPitch, 1.0f, false, false); // turn off the old descant note
+    if (newDescantPitch == descant.lastPitch)  // descant output note hasn't changed - do nothing
+        return;
     
-    if (newDescantPitch > 127)
+    if (newDescantPitch > 127 || isPitchActive (newDescantPitch, false, false))
     {
-        descant.lastPitch = -1;
+        if (descant.lastPitch > -1)
+            noteOff (descant.lastPitch, 1.0f, false, false);
+        
         return;
     }
     
-    descant.lastPitch = newDescantPitch;
+    HarmonizerVoice<SampleType>* prevDescantVoice = getCurrentDescantVoice();
     
-    float velocity;
+    if (prevDescantVoice != nullptr)
+        if (prevDescantVoice->isKeyDown())
+            prevDescantVoice = nullptr;
     
-    if (auto* voiceCopying = getVoicePlayingNote (currentHighest))
-        velocity = voiceCopying->getLastRecievedVelocity();
+    if (prevDescantVoice != nullptr)
+    {
+        //  there was a previously active descant voice, so steal it directly without calling noteOn:
+        
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevDescantVoice->getCurrentlyPlayingNote(), 1.0f),
+                                      ++lastMidiTimeStamp);
+        
+        const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : prevDescantVoice->getLastRecievedVelocity();
+        
+        descant.lastPitch = newDescantPitch;
+        
+        startVoice (prevDescantVoice, descant.lastPitch, velocity, false);
+    }
     else
-        velocity = 1.0f;
-    
-    noteOn (newDescantPitch, velocity, false);
+    {
+        if (descant.lastPitch > -1)
+            noteOff (descant.lastPitch, 1.0f, false, false);
+        
+        const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : 1.0f;
+        
+        descant.lastPitch = newDescantPitch;
+        
+        noteOn (descant.lastPitch, velocity, false);
+    }
 };
 
     

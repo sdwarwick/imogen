@@ -193,7 +193,7 @@ public:
     
     int getNumActiveVoices() const noexcept;
     
-    bool isPitchActive (const int midiPitch, const bool countRingingButReleased) const;
+    bool isPitchActive (const int midiPitch, const bool countRingingButReleased = false, const bool countKeyUpNotes = false) const;
     
     void updateMidiVelocitySensitivity (const int newSensitivity);
     
@@ -309,7 +309,7 @@ private:
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
+    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable);
     HarmonizerVoice<SampleType>* findVoiceToSteal() const;
     
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);

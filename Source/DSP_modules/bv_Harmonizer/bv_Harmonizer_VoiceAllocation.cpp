@@ -27,14 +27,26 @@ int Harmonizer<SampleType>::getNumActiveVoices() const noexcept
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable) const
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable)
 {
     for (auto* voice : voices)
         if (! voice->isVoiceActive())
             return voice;
     
     if (stealIfNoneAvailable)
-        return findVoiceToSteal();
+    {
+        auto* stolenVoice = findVoiceToSteal();
+        
+        if (stolenVoice == nullptr)
+            return nullptr;
+        
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel,
+                                                            stolenVoice->getCurrentlyPlayingNote(),
+                                                            1.0f),
+                                      ++lastMidiTimeStamp);
+        
+        return stolenVoice;
+    }
     
     return nullptr;
 };
@@ -199,7 +211,11 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
             removing = voices[0];
         
         if (removing->isVoiceActive())
+        {
             panner.panValTurnedOff (removing->getCurrentMidiPan());
+            aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, removing->getCurrentlyPlayingNote(), 1.0f),
+                                          ++lastMidiTimeStamp);
+        }
         
         voices.removeObject (removing, true);
         
