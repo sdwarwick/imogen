@@ -185,7 +185,7 @@ public:
     
     void clearBuffers();
     
-    int getNumActiveVoices() const;
+    int getNumActiveVoices() const noexcept;
     
     bool isPitchActive (const int midiPitch, const bool countRingingButReleased) const;
     
@@ -232,18 +232,18 @@ public:
     void setPedalPitch (const bool isOn);
     void setPedalPitchUpperThresh (const int newThresh);
     void setPedalPitchInterval (const int newInterval);
-    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
+    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const noexcept;
     
     void setDescant (const bool isOn);
     void setDescantLowerThresh (const int newThresh);
     void setDescantInterval (const int newInterval);
-    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
+    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const noexcept;
     
     void newMaxNumVoices (const int newMaxNumVoices);
     
     void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; }
     
-    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
+    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const noexcept;
     
     // turns off any pitches whose keys are not being held anymore
     void turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant);

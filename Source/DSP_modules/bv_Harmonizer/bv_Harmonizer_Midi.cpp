@@ -2,7 +2,7 @@
     Part of module: bv_Harmonizer
     Direct parent file: bv_Harmonizer.h
     Classes: Harmonizer
- */
+*/
 
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
@@ -30,13 +30,54 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
         }
     }
 };
+    
+    
+/***********************************************************************************************************************************************
+ // functions for meta midi & note management --------------------------------------------------------------------------------------------------
+***********************************************************************************************************************************************/
+
+template<typename SampleType>
+bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased) const
+{
+    for (auto* voice : voices)
+    {
+        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
+        {
+            if (countRingingButReleased)
+                return true;
+            
+            if (! voice->isPlayingButReleased())
+                return true;
+        }
+    }
+    
+    return false;
+};
 
 
-// MIDI events --------------------------------------------------------------------------------------------------------------------------------------
+template<typename SampleType>
+void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased) const
+{
+    outputArray.clearQuick();
+    
+    for (auto* voice : voices)
+    {
+        if (voice->isVoiceActive())
+        {
+            if (includePlayingButReleased)
+                outputArray.add (voice->getCurrentlyPlayingNote());
+            else if (! voice->isPlayingButReleased())
+                outputArray.add (voice->getCurrentlyPlayingNote());
+        }
+    }
+    
+    if (! outputArray.isEmpty())
+        outputArray.sort();
+};
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// KEYBOARD / PLUGIN MIDI INPUT --------------------------------------------------------------------------------------------------------------------
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/***********************************************************************************************************************************************
+ // midi events from plugin's midi input -------------------------------------------------------------------------------------------------------
+***********************************************************************************************************************************************/
 
 template<typename SampleType>
 void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
@@ -92,10 +133,173 @@ void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int sa
         handleController (m.getControllerNumber(), m.getControllerValue());
 };
 
+    
+// this function should be called once after each time the harmonizer's overall pitch collection has changed - so, after a midi buffer of keyboard inout events has been processed, or after a chord has been triggered, etc.
+template<typename SampleType>
+void Harmonizer<SampleType>::pitchCollectionChanged()
+{
+    if (pedal.isOn)
+        applyPedalPitch();
+    
+    if (descant.isOn)
+        applyDescant();
+    
+    if (intervalLatchIsOn)
+    {
+        updateIntervalsLatchedTo();
+        playChordFromIntervalSet (intervalsLatchedTo);
+    }
+};
+    
+    
+/***********************************************************************************************************************************************
+ // midi note events ---------------------------------------------------------------------------------------------------------------------------
+***********************************************************************************************************************************************/
+    
+template<typename SampleType>
+void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
+{
+    // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
+    
+    //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered:
+    if (isPitchActive (midiPitch, false))
+    {
+        if (pedal.isOn && midiPitch == pedal.lastPitch)
+            pedal.lastPitch = -1;
+        
+        if (descant.isOn && midiPitch == descant.lastPitch)
+            descant.lastPitch = -1;
+        
+        return;
+    }
+    
+    bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
+    
+    startVoice (findFreeVoice (midiPitch, isStealing), midiPitch, velocity, isKeyboard);
+};
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// AUTOMATED MIDI EVENTS ----------------------------------------------------------------------------------------------------------------------------
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename SampleType>
+void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
+{
+    if (voice == nullptr)
+    {
+        // this function will be called with a null voice ptr if a note on event was requested, but a voice was not available (ie, could not be stolen)
+        
+        if (pedal.isOn && midiPitch == pedal.lastPitch)
+            pedal.lastPitch = -1;
+        
+        if (descant.isOn && midiPitch == descant.lastPitch)
+            descant.lastPitch = -1;
+        
+        return;
+    }
+    
+    aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
+                                  ++lastMidiTimeStamp);
+    
+    const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
+    
+    if (! voice->isKeyDown())           // if the key wasn't already marked as down...
+        voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
+    
+    
+    if (midiPitch < lowestPannedNote)
+    {
+        if (wasStolen)
+            panner.panValTurnedOff (voice->getCurrentMidiPan());
+        
+        voice->setPan (64);
+    }
+    else if (! wasStolen) // don't change pan if voice was stolen
+        voice->setPan (panner.getNextPanVal());
+    
+    
+    const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
+    const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
+    
+    voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, wasStolen, isPedal, isDescant);
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velocity,
+                                      const bool allowTailOff,
+                                      const bool isKeyboard)
+{
+    // N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch, descant, latch, etc
+    
+    auto* voice = getVoicePlayingNote (midiNoteNumber);
+    
+    if (voice == nullptr)
+    {
+        if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
+            pedal.lastPitch = -1;
+        
+        if (descant.isOn && midiNoteNumber == descant.lastPitch)
+            descant.lastPitch = -1;
+        
+        return;
+    }
+    
+    if (isKeyboard)
+    {
+        voice->setKeyDown (false);
+        
+        if (latchIsOn)
+            return;
+        
+        if (! (sustainPedalDown || sostenutoPedalDown))
+            stopVoice (voice, velocity, allowTailOff);
+    }
+    else if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
+    {
+        stopVoice (voice, velocity, allowTailOff);
+    }
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
+{
+    if (voice == nullptr)
+        return;
+    
+    const int note = voice->getCurrentlyPlayingNote();
+    
+    aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, note, velocity),
+                                  ++lastMidiTimeStamp);
+    
+    if (pedal.isOn && voice->isCurrentPedalVoice())
+        pedal.lastPitch = -1;
+    
+    if (descant.isOn && voice->isCurrentDescantVoice())
+        descant.lastPitch = -1;
+    
+    voice->stopNote (velocity, allowTailOff);
+};
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
+{
+    const float velocity = allowTailOff ? 0.0f : 1.0f;
+    
+    for (auto* voice : voices)
+    {
+        voice->setKeyDown (false);
+        
+        if (voice->isVoiceActive())
+            stopVoice (voice, velocity, allowTailOff);
+    }
+    
+    panner.reset (false);
+};
+
+    
+/***********************************************************************************************************************************************
+ // automated midi events ----------------------------------------------------------------------------------------------------------------------
+***********************************************************************************************************************************************/
 
 // midi latch: when active, holds note offs recieved from the keyboard instead of sending them immediately; held note offs are sent once latch is deactivated.
 template<typename SampleType>
@@ -379,169 +583,10 @@ void Harmonizer<SampleType>::applyDescant()
     noteOn (newDescantPitch, velocity, false);
 };
 
-
-// this function should be called once after each time the harmonizer's overall pitch collection has changed - so, after a midi buffer of keyboard inout events has been processed, or after a chord has been triggered, etc.
-template<typename SampleType>
-void Harmonizer<SampleType>::pitchCollectionChanged()
-{
-    if (pedal.isOn)
-        applyPedalPitch();
     
-    if (descant.isOn)
-        applyDescant();
-    
-    if (intervalLatchIsOn)
-    {
-        updateIntervalsLatchedTo();
-        playChordFromIntervalSet (intervalsLatchedTo);
-    }
-};
-
-
-// NOTE EVENTS --------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename SampleType>
-void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
-{
-    // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
-    
-    //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered:
-    if (isPitchActive (midiPitch, false))
-    {
-        if (pedal.isOn && midiPitch == pedal.lastPitch)
-            pedal.lastPitch = -1;
-        
-        if (descant.isOn && midiPitch == descant.lastPitch)
-            descant.lastPitch = -1;
-        
-        return;
-    }
-    
-    bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
-    
-    startVoice (findFreeVoice (midiPitch, isStealing), midiPitch, velocity, isKeyboard);
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
-{
-    if (voice == nullptr)
-    {
-        // this function will be called with a null voice ptr if a note on event was requested, but a voice was not available (ie, could not be stolen)
-        
-        if (pedal.isOn && midiPitch == pedal.lastPitch)
-            pedal.lastPitch = -1;
-            
-        if (descant.isOn && midiPitch == descant.lastPitch)
-            descant.lastPitch = -1;
-        
-        return;
-    }
-    
-    aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
-                                  ++lastMidiTimeStamp);
-    
-    const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
-    
-    if (! voice->isKeyDown())           // if the key wasn't already marked as down...
-        voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
-    
-    
-    if (midiPitch < lowestPannedNote)
-    {
-        if (wasStolen)
-            panner.panValTurnedOff (voice->getCurrentMidiPan());
-        
-        voice->setPan (64);
-    }
-    else if (! wasStolen) // don't change pan if voice was stolen
-        voice->setPan (panner.getNextPanVal());
-    
-    
-    const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
-    const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
-    
-    voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, wasStolen, isPedal, isDescant);
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velocity,
-                                      const bool allowTailOff,
-                                      const bool isKeyboard)
-{
-    // N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch, descant, latch, etc
-    
-    auto* voice = getVoicePlayingNote (midiNoteNumber);
-    
-    if (voice == nullptr)
-    {
-        if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
-            pedal.lastPitch = -1;
-        
-        if (descant.isOn && midiNoteNumber == descant.lastPitch)
-            descant.lastPitch = -1;
-        
-        return;
-    }
-    
-    if (isKeyboard)
-    {
-        voice->setKeyDown (false);
-        
-        if (latchIsOn)
-            return;
-        
-        if (! (sustainPedalDown || sostenutoPedalDown))
-            stopVoice (voice, velocity, allowTailOff);
-    }
-    else if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
-    {
-        stopVoice (voice, velocity, allowTailOff);
-    }
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
-{
-    if (voice == nullptr)
-        return;
-    
-    const int note = voice->getCurrentlyPlayingNote();
-    
-    aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, note, velocity),
-                                  ++lastMidiTimeStamp);
-    
-    if (pedal.isOn && voice->isCurrentPedalVoice())
-        pedal.lastPitch = -1;
-    
-    if (descant.isOn && voice->isCurrentDescantVoice())
-        descant.lastPitch = -1;
-    
-    voice->stopNote (velocity, allowTailOff);
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
-{
-    const float velocity = allowTailOff ? 0.0f : 1.0f;
-    
-    for (auto* voice : voices)
-    {
-        voice->setKeyDown (false);
-        
-        if (voice->isVoiceActive())
-            stopVoice (voice, velocity, allowTailOff);
-    }
-    
-    panner.reset (false);
-};
-
-
-// OTHER MIDI ---------------------------------------------------------------------------------------------------------------------------------------
+/***********************************************************************************************************************************************
+ // other midi events --------------------------------------------------------------------------------------------------------------------------
+***********************************************************************************************************************************************/
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)

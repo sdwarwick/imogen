@@ -14,6 +14,19 @@ namespace bav
     
     
 template<typename SampleType>
+int Harmonizer<SampleType>::getNumActiveVoices() const noexcept
+{
+    int actives = 0;
+    
+    for (auto* voice : voices)
+        if (voice->isVoiceActive())
+            ++actives;
+    
+    return actives;
+};
+    
+    
+template<typename SampleType>
 HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable)
 {
     for (auto* voice : voices)
@@ -110,7 +123,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const noexcept
 {
     if (! descant.isOn)
         return nullptr;
@@ -124,7 +137,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
 
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice() const
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice() const noexcept
 {
     if (! pedal.isOn)
         return nullptr;
@@ -138,13 +151,64 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const noexcept
 {
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
             return voice;
     
     return nullptr;
+};
+    
+    
+template<typename SampleType>
+void Harmonizer<SampleType>::addVoice (HarmonizerVoice<SampleType>* newVoice)
+{
+    voices.add (newVoice);
+    
+    panner.setNumberOfVoices (voices.size());
+};
+    
+    
+template<typename SampleType>
+void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
+{
+    if (voicesToRemove == 0)
+        return;
+    
+    int voicesRemoved = 0;
+    
+    while (voicesRemoved < voicesToRemove)
+    {
+        if (voices.isEmpty())
+            break;
+        
+        HarmonizerVoice<SampleType>* removing = nullptr;
+        
+        for (auto* voice : voices)
+        {
+            if (! voice->isVoiceActive())
+            {
+                removing = voice;
+                break;
+            }
+        }
+        
+        if (removing == nullptr)
+            removing = findVoiceToSteal (0);
+        
+        if (removing == nullptr)
+            removing = voices[0];
+        
+        if (removing->isVoiceActive())
+            panner.panValTurnedOff (removing->getCurrentMidiPan());
+        
+        voices.removeObject (removing, true);
+        
+        ++voicesRemoved;
+    }
+    
+    panner.setNumberOfVoices (std::max (voices.size(), 1));
 };
     
     

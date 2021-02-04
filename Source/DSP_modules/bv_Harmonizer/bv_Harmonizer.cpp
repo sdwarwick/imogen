@@ -2,7 +2,7 @@
     Part of module: bv_Harmonizer
     Direct parent file: bv_Harmonizer.h
     Classes: Harmonizer
- */
+*/
 
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
@@ -23,9 +23,9 @@ namespace bav
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
     pitchDetector(80.0f, 2400.0f, 44100.0),
-    latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64),
+    latchIsOn(false), intervalLatchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), shouldStealNotes(true), lastNoteOnCounter(0), lowestPannedNote(0), lastPitchWheelValue(64),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
-    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false)
+    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
 {
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
@@ -45,10 +45,6 @@ Harmonizer<SampleType>::Harmonizer():
     updateStereoWidth(100);
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
-    
-    windowSize = 0;
-    
-    intervalLatchIsOn = false;
     
     pedal.isOn = false;
     pedal.lastPitch = -1;
@@ -140,7 +136,7 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::newMaxNumVoices(const int newMaxNumVoices)
+void Harmonizer<SampleType>::newMaxNumVoices (const int newMaxNumVoices)
 {
     panner.prepare(newMaxNumVoices);
     
@@ -179,9 +175,9 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 };
 
 
-/****************************************************************************************************************************************************
-// audio rendering-----------------------------------------------------------------------------------------------------------------------------------
- ***************************************************************************************************************************************************/
+/***********************************************************************************************************************************************
+// audio rendering------------------------------------------------------------------------------------------------------------------------------
+ **********************************************************************************************************************************************/
 
 template<typename SampleType>
 void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
@@ -247,53 +243,8 @@ void Harmonizer<SampleType>::calculateHanningWindow (AudioBuffer<SampleType>& wi
 };
 
 
-
-/***************************************************************************************************************************************************
-// functions for meta midi & note management -------------------------------------------------------------------------------------------------------
-****************************************************************************************************************************************************/
-
-template<typename SampleType>
-bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased) const
-{
-    for (auto* voice : voices)
-    {
-        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
-        {
-            if (countRingingButReleased)
-                return true;
-            
-            if (! voice->isPlayingButReleased())
-                return true;
-        }
-    }
-    
-    return false;
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased) const
-{
-    outputArray.clearQuick();
-    
-    for (auto* voice : voices)
-    {
-        if (voice->isVoiceActive())
-        {
-            if (includePlayingButReleased)
-                outputArray.add (voice->getCurrentlyPlayingNote());
-            else if (! voice->isPlayingButReleased())
-                outputArray.add (voice->getCurrentlyPlayingNote());
-        }
-    }
-    
-    if (! outputArray.isEmpty())
-        outputArray.sort();
-};
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS FOR UPDATING PARAMETERS ----------------------------------------------------------------------------------------------------------------
+// FUNCTIONS FOR UPDATING PARAMETERS -----------------------------------------------------------------------------------------------------------
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // stereo width ---------------------------------------------------------------------------------------------------
@@ -391,7 +342,7 @@ void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const i
 };
 
 
-// descant settings -----------------------------------------------------------------------------------------------------------------------------
+// descant settings ----------------------------------------------------------------------------------------------------------------------------
 template<typename SampleType>
 void Harmonizer<SampleType>::setDescant (const bool isOn)
 {
@@ -536,72 +487,6 @@ void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
     }
 };
 
-/***************************************************************************************************************************************************
-// functions for management of HarmonizerVoices------------------------------------------------------------------------------------------------------
-****************************************************************************************************************************************************/
-
-template<typename SampleType>
-void Harmonizer<SampleType>::addVoice (HarmonizerVoice<SampleType>* newVoice)
-{
-    voices.add (newVoice);
-    
-    panner.setNumberOfVoices (voices.size());
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
-{
-    if (voicesToRemove == 0)
-        return;
-    
-    int voicesRemoved = 0;
-    
-    while (voicesRemoved < voicesToRemove)
-    {
-        if (voices.isEmpty())
-            break;
-        
-        HarmonizerVoice<SampleType>* removing = nullptr;
-        
-        for (auto* voice : voices)
-        {
-            if (! voice->isVoiceActive())
-            {
-                removing = voice;
-                break;
-            }
-        }
-        
-        if (removing == nullptr)
-            removing = findVoiceToSteal (0);
-        
-        if (removing == nullptr)
-            removing = voices[0];
-        
-        if (removing->isVoiceActive())
-            panner.panValTurnedOff (removing->getCurrentMidiPan());
-        
-        voices.removeObject (removing, true);
-        
-        ++voicesRemoved;
-    }
-    
-    panner.setNumberOfVoices (std::max (voices.size(), 1));
-};
-
-
-template<typename SampleType>
-int Harmonizer<SampleType>::getNumActiveVoices() const
-{
-    int actives = 0;
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            ++actives;
-    
-    return actives;
-};
 
 
 template class Harmonizer<float>;
