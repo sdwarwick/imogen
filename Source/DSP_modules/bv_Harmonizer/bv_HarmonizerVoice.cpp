@@ -54,26 +54,6 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
-{
-    if (keyIsDown == isNowDown)
-        return;
-    
-    keyIsDown = isNowDown;
-    
-    if (isNowDown)
-        playingButReleased = false;
-    else
-    {
-        if (isPedalPitchVoice || isDescantVoice)
-            playingButReleased = false;
-        else
-            playingButReleased = isVoiceActive();
-    }
-};
-
-
-template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                                                    const int origPeriod,
                                                    const Array<int>& indicesOfGrainOnsets,
@@ -81,11 +61,9 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 {
     jassert (samplerate > 0.0);
     
-    if (! keyIsDown)
-        if ((! (isPedalPitchVoice || isDescantVoice))
-            && (! (parent->isLatched() || parent->isIntervalLatchOn()))
-            && (! (parent->isSustainPedalDown()) || parent->isSostenutoPedalDown()))
-                { stopNote (1.0f, false); }
+    if (playingButReleased)
+        if (! (parent->isSustainPedalDown() || parent->isSostenutoPedalDown()))
+            stopNote (1.0f, false);
     
     bool voiceIsOnRightNow;
     
@@ -115,13 +93,9 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
     prevSoftPedalMultiplier = softPedalMult;
     
-    if (playingButReleased)
-    {
-        if (! parent->isLatched() && ! parent->isIntervalLatchOn())
-        {
-            //  do some special gain ramping for voices that are playing but released...?
-        }
-    }
+    const float newPBRmult = playingButReleased ? 0.5f : 1.0f; // gain applied when voice is still ringing after key is released (sustain/sostenuto pedal, etc)
+    synthesisBuffer.applyGainRamp (0, numSamples, lastPBRmult, newPBRmult);
+    lastPBRmult = newPBRmult;
     
     if (parent->isADSRon())
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // midi-triggered adsr envelope
@@ -267,6 +241,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     isQuickFading = false;
     noteTurnedOff = true;
     keyIsDown     = false;
+    playingButReleased = false;
     nextSBindex = 0;
     isPedalPitchVoice = false;
     isDescantVoice = false;
@@ -293,11 +268,9 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity,
                                              const uint32 noteOnTimestamp,
-                                             const bool wasStolen,
+                                             const bool keyboardKeyIsDown,
                                              const bool isPedal, const bool isDescant)
 {
-    ignoreUnused (wasStolen);
-    
     noteOnTime = noteOnTimestamp;
     
     currentlyPlayingNote = midiPitch;
@@ -315,6 +288,29 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
     
     isPedalPitchVoice = isPedal;
     isDescantVoice = isDescant;
+    
+    if (! keyIsDown)                     // if the keyboard key wasn't previously marked as down...
+        setKeyDown (keyboardKeyIsDown);  // ...then mark it as down IF this note-on came from a keyboard midi event
+    else
+        setKeyDown (true);               // otherwise, refresh the key state w/ it still marked as down
+};
+    
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
+{
+    keyIsDown = isNowDown;
+    
+    if (isNowDown)
+        playingButReleased = false;
+    else
+        if (isPedalPitchVoice || isDescantVoice)
+            playingButReleased = false;
+        else
+            if (parent->isLatched() || parent->intervalLatchIsOn)
+                playingButReleased = false;
+            else
+                playingButReleased = isVoiceActive();
 };
 
 
@@ -334,12 +330,14 @@ void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool all
             quickRelease.noteOn();
         
         isQuickFading = true;
+        
         quickRelease.noteOff();
     }
     
     noteTurnedOff = true;
-    isPedalPitchVoice = false;
-    isDescantVoice = false;
+    playingButReleased = false;
+    isPedalPitchVoice  = false;
+    isDescantVoice     = false;
 };
 
 

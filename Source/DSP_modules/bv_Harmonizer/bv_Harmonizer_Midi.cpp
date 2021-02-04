@@ -25,7 +25,7 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
         {
             if (includePedalPitchAndDescant)
                 stopVoice (voice, velocity, allowTailOff);
-            else if (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice())
+            else if (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice()))
                 stopVoice (voice, velocity, allowTailOff);
         }
     }
@@ -146,10 +146,9 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
 template<typename SampleType>
 void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
 {
-    // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the midi keyboard input; this flag is false if this note on event was triggered automatically by pedal pitch or descant.
+    // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
-    //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered:
-    if (isPitchActive (midiPitch, false))
+    if (isPitchActive (midiPitch, false)) //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered
     {
         if (pedal.isOn && midiPitch == pedal.lastPitch)
             pedal.lastPitch = -1;
@@ -187,10 +186,6 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     
     const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
     
-    if (! voice->isKeyDown())           // if the key wasn't already marked as down...
-        voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
-    
-    // midi panning:
     if (midiPitch < lowestPannedNote) // set pan to 64 if note is below panning threshold
     {
         if (wasStolen)
@@ -199,13 +194,14 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         voice->setPan (64);
     }
     else if (! wasStolen) // don't change pan if voice was stolen
+    {
         voice->setPan (panner.getNextPanVal());
-    //
+    }
     
     const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
     const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
     
-    voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, wasStolen, isPedal, isDescant);
+    voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, isKeyboard, isPedal, isDescant);
 };
 
 
@@ -214,7 +210,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
                                       const bool allowTailOff,
                                       const bool isKeyboard)
 {
-    // N.B. the `isKeyboard` flag should be true if this note off event was triggered directly from the midi keyboard input; this flag is false if this note off event was triggered automatically by pedal pitch, descant, latch, etc
+    // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, latch, etc)
     
     auto* voice = getVoicePlayingNote (midiNoteNumber);
     
@@ -239,9 +235,28 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         if (! (sustainPedalDown || sostenutoPedalDown))
             stopVoice (voice, velocity, allowTailOff);
     }
-    else if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
+    else  // this is an automated note-off event
     {
-        stopVoice (voice, velocity, allowTailOff);
+        if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
+        {
+            stopVoice (voice, velocity, allowTailOff);
+        }
+        else
+        {
+            // we're processing an automated note-off event, but the voice's keyboard key is still being held
+            
+            if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
+            {
+                voice->isPedalPitchVoice = false;
+                pedal.lastPitch = -1;
+            }
+            
+            if (descant.isOn && midiNoteNumber == descant.lastPitch)
+            {
+                voice->isDescantVoice = false;
+                descant.lastPitch = -1;
+            }
+        }
     }
 };
 
@@ -257,10 +272,10 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
     aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, note, velocity),
                                   ++lastMidiTimeStamp);
     
-    if (pedal.isOn && voice->isCurrentPedalVoice())
+    if (voice->isCurrentPedalVoice())
         pedal.lastPitch = -1;
     
-    if (descant.isOn && voice->isCurrentDescantVoice())
+    if (voice->isCurrentDescantVoice())
         descant.lastPitch = -1;
     
     voice->stopNote (velocity, allowTailOff);
@@ -491,24 +506,24 @@ void Harmonizer<SampleType>::applyPedalPitch()
         }
     }
     
-    if ((currentLowest == 128) || (currentLowest > pedal.upperThresh))
+    if (currentLowest > pedal.upperThresh) // only create a pedal voice if the current lowest keyboard key is below a specified threshold
     {
         if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false);
+            noteOff (pedal.lastPitch, 1.0f, false, false); // turn off the old pedal note
         
         return;
     }
     
     const int newPedalPitch = currentLowest - pedal.interval;
     
-    if (newPedalPitch == pedal.lastPitch)
-        return;
-    
-    if (pedal.lastPitch > -1)
-        noteOff (pedal.lastPitch, 1.0f, false, false);
+    if (newPedalPitch == pedal.lastPitch && pedal.lastPitch > -1)
+        noteOff (pedal.lastPitch, 1.0f, false, false); // turn off the old pedal note
     
     if (newPedalPitch < 0)
+    {
+        pedal.lastPitch = -1;
         return;
+    }
     
     pedal.lastPitch = newPedalPitch;
     
@@ -527,7 +542,8 @@ void Harmonizer<SampleType>::applyPedalPitch()
 template<typename SampleType>
 void Harmonizer<SampleType>::applyDescant()
 {
-    int currentHighest = -1;
+    int currentHighest = -1; // find the current highest note being played by a keyboard key
+    
     for (auto* voice : voices)
     {
         if (voice->isVoiceActive() && voice->isKeyDown())
@@ -539,24 +555,24 @@ void Harmonizer<SampleType>::applyDescant()
         }
     }
     
-    if ((currentHighest == -1) || (currentHighest < descant.lowerThresh))
+    if (currentHighest < descant.lowerThresh) // only create a descant voice if the current highest keyboard key is above a specified threshold
     {
         if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false);
+            noteOff (descant.lastPitch, 1.0f, false, false); // turn off the old descant note
         
         return;
     }
     
     const int newDescantPitch = currentHighest + descant.interval;
     
-    if (newDescantPitch == descant.lastPitch)
-        return;
-    
-    if (descant.lastPitch > -1)
-        noteOff (descant.lastPitch, 1.0f, false, false);
+    if (newDescantPitch == descant.lastPitch && descant.lastPitch > -1)
+        noteOff (descant.lastPitch, 1.0f, false, false); // turn off the old descant note
     
     if (newDescantPitch > 127)
+    {
+        descant.lastPitch = -1;
         return;
+    }
     
     descant.lastPitch = newDescantPitch;
     

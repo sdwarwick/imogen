@@ -79,7 +79,7 @@ public:
     
     void startNote (const int midiPitch,  const float velocity,
                     const uint32 noteOnTimestamp,
-                    const bool wasStolen = false,
+                    const bool keyboardKeyIsDown,
                     const bool isPedal = false, const bool isDescant = false);
     
     void stopNote (const float velocity, const bool allowTailOff);
@@ -148,7 +148,7 @@ private:
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     int nextSBindex; // highest synthesis buffer index written to + 1
     AudioBuffer<SampleType> copyingBuffer;
-    AudioBuffer<SampleType> windowingBuffer;
+    AudioBuffer<SampleType> windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
     
     float prevSoftPedalMultiplier;
     
@@ -159,6 +159,8 @@ private:
     bool playingButReleased;
     
     double samplerate = 0.0;
+    
+    float lastPBRmult = 1.0f;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
@@ -285,8 +287,8 @@ private:
     // MIDI
     void processMidi (MidiBuffer& midiMessages);
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
-    void noteOn (const int midiPitch, const float velocity, const bool isKeyboard);
-    void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard);
+    void noteOn (const int midiPitch, const float velocity, const bool isKeyboard = true);
+    void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard = true);
     void handlePitchWheel (const int wheelValue);
     void handleAftertouch (const int midiNoteNumber, const int aftertouchValue);
     void handleChannelPressure (const int channelPressureValue);
@@ -307,17 +309,17 @@ private:
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable);
-    HarmonizerVoice<SampleType>* findVoiceToSteal();
+    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
+    HarmonizerVoice<SampleType>* findVoiceToSteal() const;
     
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
     
     // turns on a list of given pitches at once
-    void turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord);
+    void turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord = false);
     
     // turns off a list of given pitches at once. Used for turning off midi latch
-    void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord);
+    void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord = false);
     
     // this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, descant, etc
     void pitchCollectionChanged();

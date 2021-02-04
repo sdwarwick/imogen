@@ -368,6 +368,8 @@ void Harmonizer<SampleType>::setDescantLowerThresh (const int newThresh)
     if (descant.lowerThresh == newThresh)
         return;
     
+    jassert (newThresh >= 0);
+    
     descant.lowerThresh = newThresh;
     
     if (descant.isOn)
@@ -410,6 +412,8 @@ void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
 template<typename SampleType>
 void Harmonizer<SampleType>::setPedalPitchUpperThresh (const int newThresh)
 {
+    jassert (isPositiveAndBelow (newThresh, 128));
+    
     if (pedal.upperThresh == newThresh)
         return;
     
