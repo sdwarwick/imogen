@@ -51,7 +51,7 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #
 
-add_subdirectory (${juceDir})  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
+add_subdirectory (${juceDir} REQUIRED)  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
 set_directory_properties (PROPERTIES 
     JUCE_COMPANY_NAME             "BenViningMusicSoftware"
@@ -103,18 +103,22 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_VST3_CAN_REPLACE_VST2=0)
  
 foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target into a "Targets" folder
-    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")
-    
-    if (TARGET ${thisTargetName})
-        set_target_properties (${thisTargetName} PROPERTIES
-            FOLDER "Build Targets" 
-            XCODE_GENERATE_SCHEME ON)
 
-        if (launchPluginHostOnBuild)
-            set_target_properties (${thisTargetName} PROPERTIES
-                XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
-        endif()
+    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")
+
+    if (NOT TARGET ${thisTargetName})
+        continue()
     endif()
+    
+    set_target_properties (${thisTargetName} PROPERTIES
+        FOLDER "Build Targets" 
+        XCODE_GENERATE_SCHEME ON)
+
+    if (launchPluginHostOnBuild)
+        set_target_properties (${thisTargetName} PROPERTIES
+            XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
+    endif()
+
 endforeach()
 
 #######
@@ -194,7 +198,7 @@ FetchContent_MakeAvailable (Catch2)
 
 enable_testing()
 
-set (testFilesPath ${sourceDir}/Tests) 
+set (testFilesPath ${sourceDir}/Tests)
 
 set (testFiles 
     ${testFilesPath}/tests.cpp 
