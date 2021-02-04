@@ -4,11 +4,9 @@
 
 #  AUTHOR: BEN VINING
 
-#  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application.
-
-#  The Imogen source code consists of dependencies on a few JUCE modules; a couple of custom JUCE-style modules I created; and the PluginProcessor & PluginEditor source files specific to the plugin build. The bv_ImogenEngine module is a completely contained and self-sufficient audio processor with all of Imogen's features; other source files could replace the PluginProcessor/PluginEditor to adapt Imogen for other build targets.
-
-#
+#  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application. 
+#  If you do not already have JUCE on your computer, you can specify a "juceDir" that does not exist in your filesystem; this script will automatically download the JUCE code from GitHub.
+#  If you do have JUCE already and would like to avoid redownloading it, you can either move or copy your JUCE folder into the Imogen "Source" folder (so that JUCE is a subdirectory of the Imogen Source folder), and then make sure that the "juceDir" specified below matches the path to your JUCE folder. 
 
 cmake_minimum_required (VERSION 3.15) 
 
@@ -24,7 +22,7 @@ set (launchPluginHostOnBuild FALSE)  # Note that for this to work, the AudioPlug
 set (pluginHostPath "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # if you are not on MacOSX, this path must be changed to the correct executable for your OS
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
-set (juceDir ${sourceDir}/JUCE)
+set (juceDir ${sourceDir}/JUCE)  # if this subdirectory isn't found, this script will automatically download the juce library code from GitHub
 
 set (compileFeatures cxx_std_17)
 
@@ -51,16 +49,24 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #
 
-add_subdirectory (${juceDir} REQUIRED)  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
+if (EXISTS ${juceDir})
+    
+    add_subdirectory (${juceDir} REQUIRED)  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 
-set_directory_properties (PROPERTIES 
-    JUCE_COMPANY_NAME             "BenViningMusicSoftware"
-    JUCE_COMPANY_WEBSITE          "www.benvining.com"
-    JUCE_COMPANY_EMAIL            "ben.the.vining@gmail.com"
-    JUCE_COPY_PLUGIN_AFTER_BUILD  TRUE
-    JUCE_VST3_COPY_DIR            "/Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins"
-    JUCE_AU_COPY_DIR              "/Users/benvining/Library/Audio/Plug-Ins/Components"
-    JUCE_COMPANY_COPYRIGHT        "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
+else()
+
+    include (FetchContent)
+    set (fetchcontentincluded)   #  simple include guard 
+
+    FetchContent_Declare (juce   #  Downloads the latest version of JUCE if the indicated subdirectory cannot be found
+        GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+        GIT_TAG        origin/develop)
+
+    FetchContent_MakeAvailable (juce)
+
+    set (launchPluginHostOnBuild FALSE)  # the AudioPluginHost must be built from the JUCE source code before it can be used as an executable
+
+endif()
 
 #
 
@@ -74,9 +80,7 @@ juce_add_modules (
 
 #
 
-# this command adds a static library target with the shared plugin code that can be linked to for the testing target, as well as build targets for VST & AU plugins and a standalone:
-
-juce_add_plugin (${CMAKE_PROJECT_NAME} 
+juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command adds targets for each of the specified plugin formats, as well as an "All" target 
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
     VERSION                     ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                   "com.BenViningMusicSoftware.Imogen"
@@ -92,7 +96,15 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     FORMATS                     ${formats}
     VST3_CATEGORIES             "Pitch Shift"
     AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
-    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
+    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png
+    COMPANY_NAME                "BenViningMusicSoftware"
+    COMPANY_WEBSITE             "www.benvining.com"
+    COMPANY_EMAIL               "ben.the.vining@gmail.com"
+    COPY_PLUGIN_AFTER_BUILD     TRUE
+    VST3_COPY_DIR               "/Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins"
+    AU_COPY_DIR                 "/Users/benvining/Library/Audio/Plug-Ins/Components"
+    COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
+
 
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 
@@ -102,21 +114,21 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0)
  
-foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target into a "Targets" folder
+foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder
 
-    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")
+    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}") # this is how juce automatically names the build targets created for each format
 
-    if (NOT TARGET ${thisTargetName})
-        continue()
-    endif()
-    
-    set_target_properties (${thisTargetName} PROPERTIES
-        FOLDER "Build Targets" 
-        XCODE_GENERATE_SCHEME ON)
-
-    if (launchPluginHostOnBuild)
+    if (TARGET ${thisTargetName})
+        
         set_target_properties (${thisTargetName} PROPERTIES
-            XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
+            FOLDER "Build Targets" 
+            XCODE_GENERATE_SCHEME ON)
+
+        if (launchPluginHostOnBuild)
+            set_target_properties (${thisTargetName} PROPERTIES
+                XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
+        endif()
+
     endif()
 
 endforeach()
@@ -183,18 +195,15 @@ if (NOT unitTesting)
     return()
 endif()
 
-# Download the tagged version of Catch2
+if (NOT DEFINED fetchcontentincluded)  # simple include guard 
+    include (FetchContent)
+endif()
 
-include (FetchContent)
-
-FetchContent_Declare (Catch2
+FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not found 
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG        v2.13.3)
 
 FetchContent_MakeAvailable (Catch2)
-
-
-# Test executable for unit testing
 
 enable_testing()
 
@@ -204,7 +213,7 @@ set (testFiles
     ${testFilesPath}/tests.cpp 
     ${testFilesPath}/tests.h) 
 
-add_executable (Tests ${testFiles})
+add_executable (Tests ${testFiles}) # Test executable for unit testing
 
 target_include_directories (Tests PRIVATE ${testFilesPath})
 
@@ -221,7 +230,7 @@ target_link_libraries (Tests
 
 set_target_properties (Tests PROPERTIES XCODE_GENERATE_SCHEME ON)
 
-source_group(TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
+source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
 include (${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
 
