@@ -60,14 +60,23 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased) const
+void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray,
+                                                const bool includePlayingButReleased,
+                                                const bool includeKeyUpNotes) const
 {
     outputArray.clearQuick();
     
     for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            if (includePlayingButReleased || ! voice->isPlayingButReleased())
+    {
+        if (includePlayingButReleased || ! voice->isPlayingButReleased())
+        {
+            if (includeKeyUpNotes || voice->isKeyDown())
+            {
                 outputArray.add (voice->getCurrentlyPlayingNote());
+                continue;
+            }
+        }
+    }
     
     if (! outputArray.isEmpty())
         outputArray.sort();
@@ -159,20 +168,17 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
-    if (isPitchActive (midiPitch, false)) //  I don't see a useful reason to allow multiple instances of the same midi note to be retriggered
+    HarmonizerVoice<SampleType>* voice = getVoicePlayingNote (midiPitch);  // if a voice is already playing this note, this will be a ptr to it. otherwise it will be null
+    
+    if (voice != nullptr)   //  a voice already playing this note was found
     {
-        if (pedal.isOn && midiPitch == pedal.lastPitch)
-            pedal.lastPitch = -1;
-        
-        if (descant.isOn && midiPitch == descant.lastPitch)
-            descant.lastPitch = -1;
-        
-        return;
+        startVoice (voice, midiPitch, velocity, isKeyboard);  // retrigger the voice with the same note & the new velocity
     }
-    
-    bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
-    
-    startVoice (findFreeVoice(isStealing), midiPitch, velocity, isKeyboard);
+    else  // turning on a new voice
+    {
+        bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
+        startVoice (findFreeVoice(isStealing), midiPitch, velocity, isKeyboard);
+    }
 };
 
 
@@ -258,14 +264,16 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
             
             if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
             {
-                voice->isPedalPitchVoice = false;
                 pedal.lastPitch = -1;
+                voice->isPedalPitchVoice = false;
+                voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
             }
             
             if (descant.isOn && midiNoteNumber == descant.lastPitch)
             {
-                voice->isDescantVoice = false;
                 descant.lastPitch = -1;
+                voice->isDescantVoice = false;
+                voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
             }
         }
     }
@@ -534,7 +542,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
     if (newPedalPitch == pedal.lastPitch)  // pedal output note hasn't changed - do nothing
         return;
     
-    if (newPedalPitch < 0 || isPitchActive (newPedalPitch, false, false))
+    if (newPedalPitch < 0 || isPitchActive (newPedalPitch, false, true))  // impossible midinote, or the new desired pedal pitch is already on
     {
         if (pedal.lastPitch > -1)
             noteOff (pedal.lastPitch, 1.0f, false, false);
@@ -542,10 +550,10 @@ void Harmonizer<SampleType>::applyPedalPitch()
         return;
     }
     
-    HarmonizerVoice<SampleType>* prevPedalVoice = getCurrentPedalPitchVoice();
+    HarmonizerVoice<SampleType>* prevPedalVoice = getCurrentPedalPitchVoice();  // attempt to keep the pedal line consistent - using the same HarmonizerVoice
     
     if (prevPedalVoice != nullptr)
-        if (prevPedalVoice->isKeyDown())
+        if (prevPedalVoice->isKeyDown())  // can't "steal" the voice playing the last pedal note if its keyboard key is down
             prevPedalVoice = nullptr;
     
     if (prevPedalVoice != nullptr)
@@ -553,7 +561,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         //  there was a previously active pedal voice, so steal it directly without calling noteOn:
         
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevPedalVoice->getCurrentlyPlayingNote(), 1.0f),
-                                      ++lastMidiTimeStamp);
+                                      ++lastMidiTimeStamp); // note that here we're not actually sending a note off command to the voice, just switching it directly to the new note, but we output a note off for the previous pitch.
         
         const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : prevPedalVoice->getLastRecievedVelocity();
         
@@ -596,7 +604,7 @@ void Harmonizer<SampleType>::applyDescant()
         }
     }
     
-    if (currentHighest < descant.lowerThresh)
+    if (currentHighest < descant.lowerThresh)  // only create a descant voice if the current highest keyboard key is above a specified threshold
     {
         if (descant.lastPitch > -1)
             noteOff (descant.lastPitch, 1.0f, false, false);
@@ -609,7 +617,7 @@ void Harmonizer<SampleType>::applyDescant()
     if (newDescantPitch == descant.lastPitch)  // descant output note hasn't changed - do nothing
         return;
     
-    if (newDescantPitch > 127 || isPitchActive (newDescantPitch, false, false))
+    if (newDescantPitch > 127 || isPitchActive (newDescantPitch, false, true)) // impossible midinote, or the new desired descant pitch is already on
     {
         if (descant.lastPitch > -1)
             noteOff (descant.lastPitch, 1.0f, false, false);
@@ -617,10 +625,10 @@ void Harmonizer<SampleType>::applyDescant()
         return;
     }
     
-    HarmonizerVoice<SampleType>* prevDescantVoice = getCurrentDescantVoice();
+    HarmonizerVoice<SampleType>* prevDescantVoice = getCurrentDescantVoice();  // attempt to keep the descant line consistent - using the same HarmonizerVoice
     
     if (prevDescantVoice != nullptr)
-        if (prevDescantVoice->isKeyDown())
+        if (prevDescantVoice->isKeyDown())  // can't "steal" the voice playing the last descant note if its keyboard key is down
             prevDescantVoice = nullptr;
     
     if (prevDescantVoice != nullptr)
@@ -628,7 +636,7 @@ void Harmonizer<SampleType>::applyDescant()
         //  there was a previously active descant voice, so steal it directly without calling noteOn:
         
         aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevDescantVoice->getCurrentlyPlayingNote(), 1.0f),
-                                      ++lastMidiTimeStamp);
+                                      ++lastMidiTimeStamp);  // note that here we're not actually sending a note off command to the voice, just switching it directly to the new note, but we output a note off for the previous pitch.
         
         const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : prevDescantVoice->getLastRecievedVelocity();
         

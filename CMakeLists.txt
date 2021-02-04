@@ -1,5 +1,3 @@
-#
-
 #  IMOGEN 
 
 #  AUTHOR: BEN VINING
@@ -108,7 +106,6 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library
     VST3_COPY_DIR               "/Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins"
     AU_COPY_DIR                 "/Users/benvining/Library/Audio/Plug-Ins/Components"
     COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
-
 
 target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
 

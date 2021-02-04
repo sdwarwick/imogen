@@ -206,7 +206,9 @@ public:
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
     
-    void reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased = true) const; // returns an array of the currently active pitches
+    void reportActiveNotes (Array<int>& outputArray,
+                            const bool includePlayingButReleased = false,
+                            const bool includeKeyUpNotes = true) const; // returns an array of the currently active pitches
     
     void allNotesOff (const bool allowTailOff);
     
