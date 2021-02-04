@@ -4,7 +4,7 @@
  vendor:             Ben Vining
  version:            0.0.1
  name:               ImogenEngine
- description:        base class that wraps the Harmonizer & pitch detector classes into one processor
+ description:        base class that wraps the Harmonizer class into a self-sufficient audio processor
  dependencies:       bv_Harmonizer, juce_dsp
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/

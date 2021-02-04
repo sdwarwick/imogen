@@ -40,16 +40,9 @@ template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased) const
 {
     for (auto* voice : voices)
-    {
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
-        {
-            if (countRingingButReleased)
+            if (countRingingButReleased || ! voice->isPlayingButReleased())
                 return true;
-            
-            if (! voice->isPlayingButReleased())
-                return true;
-        }
-    }
     
     return false;
 };
@@ -61,15 +54,9 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray, const b
     outputArray.clearQuick();
     
     for (auto* voice : voices)
-    {
         if (voice->isVoiceActive())
-        {
-            if (includePlayingButReleased)
+            if (includePlayingButReleased || ! voice->isPlayingButReleased())
                 outputArray.add (voice->getCurrentlyPlayingNote());
-            else if (! voice->isPlayingButReleased())
-                outputArray.add (voice->getCurrentlyPlayingNote());
-        }
-    }
     
     if (! outputArray.isEmpty())
         outputArray.sort();
@@ -175,7 +162,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
     
     bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
     
-    startVoice (findFreeVoice (midiPitch, isStealing), midiPitch, velocity, isKeyboard);
+    startVoice (findFreeVoice(isStealing), midiPitch, velocity, isKeyboard);
 };
 
 
@@ -203,8 +190,8 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     if (! voice->isKeyDown())           // if the key wasn't already marked as down...
         voice->setKeyDown (isKeyboard); // then mark it as down IF this start command is because of a keyboard event
     
-    
-    if (midiPitch < lowestPannedNote)
+    // midi panning:
+    if (midiPitch < lowestPannedNote) // set pan to 64 if note is below panning threshold
     {
         if (wasStolen)
             panner.panValTurnedOff (voice->getCurrentMidiPan());
@@ -213,7 +200,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     }
     else if (! wasStolen) // don't change pan if voice was stolen
         voice->setPan (panner.getNextPanVal());
-    
+    //
     
     const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
     const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;

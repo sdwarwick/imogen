@@ -42,10 +42,14 @@ class Harmonizer; // forward declaration...
 /*
  HarmonizerVoice : represents a "voice" that the Harmonizer can use to generate one monophonic note. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
  */
+    
 template<typename SampleType>
 class HarmonizerVoice
 {
 public:
+    
+    // NB. I play a bit fast and loose with private vs public functions here, because really, you should never interface directly with any non-const methods of HarmonizerVoice from outside the Harmonizer class that owns it...
+    
     HarmonizerVoice (Harmonizer<SampleType>* h);
     
     ~HarmonizerVoice();
@@ -160,8 +164,8 @@ private:
 };
 
 
-/****************************************************************************************************************************************************
-****************************************************************************************************************************************************/
+/***********************************************************************************************************************************************
+***********************************************************************************************************************************************/
 
 /*
     Harmonizer: base class for the polyphonic instrument owning & managing a collection of HarmonizerVoices
@@ -202,10 +206,9 @@ public:
     
     void reportActiveNotes (Array<int>& outputArray, const bool includePlayingButReleased = true) const; // returns an array of the currently active pitches
     
-    // turn off all notes
     void allNotesOff (const bool allowTailOff);
     
-    // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing.
+    // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing
     void playChord (const Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
@@ -221,10 +224,10 @@ public:
     
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
     
-    // Adds a new voice to the harmonizer. The object passed in will be managed by the synthesiser, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
+    // Adds a new voice to the harmonizer. The object passed in will be managed by the harmonizer, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
     void addVoice (HarmonizerVoice<SampleType>* newVoice);
     
-    // removes a specified # of voices, attempting to remove inactive voices first
+    // removes a specified # of voices, attempting to remove inactive voices first, and only removes active voices if necessary
     void removeNumVoices (const int voicesToRemove);
     
     int getNumVoices() const noexcept { return voices.size(); }
@@ -257,14 +260,14 @@ private:
     
     friend class HarmonizerVoice<SampleType>;
     
-    static constexpr int unpitchedGrainRate = 50;
-    
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     PitchDetector<SampleType> pitchDetector;
     
     GrainExtractor<SampleType> grains;
     Array<int> indicesOfGrainOnsets;
+    
+    static constexpr int unpitchedGrainRate = 50;  // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio
     
     void setCurrentInputFreq (const float newInputFreq);
     
@@ -299,13 +302,13 @@ private:
     void handleLegato (const bool isOn);
     
     bool isADSRon() const noexcept { return adsrIsOn; }
-    juce::ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
-    juce::ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
-    juce::ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
+    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
+    ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
+    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable);
-    HarmonizerVoice<SampleType>* findVoiceToSteal (const int midiNoteNumber);
+    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable);
+    HarmonizerVoice<SampleType>* findVoiceToSteal();
     
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);

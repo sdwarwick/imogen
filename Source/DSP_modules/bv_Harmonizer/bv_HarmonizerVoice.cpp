@@ -2,7 +2,7 @@
     Part of module: bv_Harmonizer
     Parent file: bv_Harmonizer.h
     Classes: HarmonizerVoice
- */
+*/
 
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
@@ -21,13 +21,13 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
 {
     const double initSamplerate = 44100.0;
     
-    adsr        .setSampleRate(initSamplerate);
-    quickRelease.setSampleRate(initSamplerate);
-    quickAttack .setSampleRate(initSamplerate);
+    adsr        .setSampleRate (initSamplerate);
+    quickRelease.setSampleRate (initSamplerate);
+    quickAttack .setSampleRate (initSamplerate);
     
-    adsr        .setParameters(parent->getCurrentAdsrParams());
-    quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
-    quickAttack .setParameters(parent->getCurrentQuickAttackParams());
+    adsr        .setParameters (parent->getCurrentAdsrParams());
+    quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
+    quickAttack .setParameters (parent->getCurrentQuickAttackParams());
 };
 
 template<typename SampleType>
@@ -82,14 +82,10 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     jassert (samplerate > 0.0);
     
     if (! keyIsDown)
-    {
         if ((! (isPedalPitchVoice || isDescantVoice))
             && (! (parent->isLatched() || parent->isIntervalLatchOn()))
             && (! (parent->isSustainPedalDown()) || parent->isSostenutoPedalDown()))
-        {
-            stopNote (1.0f, false);
-        }
-    }
+                { stopNote (1.0f, false); }
     
     bool voiceIsOnRightNow;
     
@@ -104,9 +100,11 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         return;
     }
     
-    const float newPeriod = static_cast<float> (samplerate / currentOutputFreq);
-    
-    sola (inputAudio, origPeriod, roundToInt(newPeriod), indicesOfGrainOnsets, windowToUse.getReadPointer(0)); // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
+    sola (inputAudio, origPeriod,
+          roundToInt (samplerate / currentOutputFreq),  // new desired period, in samples
+          indicesOfGrainOnsets,
+          windowToUse.getReadPointer(0));
     
     const int numSamples = inputAudio.getNumSamples();
     
@@ -117,13 +115,21 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
     prevSoftPedalMultiplier = softPedalMult;
     
+    if (playingButReleased)
+    {
+        if (! parent->isLatched() && ! parent->isIntervalLatchOn())
+        {
+            //  do some special gain ramping for voices that are playing but released...?
+        }
+    }
+    
     if (parent->isADSRon())
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // midi-triggered adsr envelope
     else
         quickAttack.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // to prevent pops at start of notes if adsr is off
     
-    if (isQuickFading)
-        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // quick fade out for stopNote() w/ no tail off, to prevent clicks from jumping to 0
+    if (isQuickFading)  // quick fade out for stopNote w/ no tail off, to prevent clicks from jumping to 0
+        quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
     
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,

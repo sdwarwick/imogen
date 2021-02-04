@@ -27,21 +27,21 @@ int Harmonizer<SampleType>::getNumActiveVoices() const noexcept
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const int midiNoteNumber, const bool stealIfNoneAvailable)
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable)
 {
     for (auto* voice : voices)
         if (! voice->isVoiceActive())
             return voice;
     
     if (stealIfNoneAvailable)
-        return findVoiceToSteal (midiNoteNumber);
+        return findVoiceToSteal();
     
     return nullptr;
 };
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int midiNoteNumber)
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal()
 {
     // This voice-stealing algorithm applies the following heuristics:
     // - Re-use the oldest notes first
@@ -69,11 +69,11 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
         
         usableVoices.add (voice);
         
-        // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations..
+        // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations...
         struct Sorter
         {
             bool operator() (const HarmonizerVoice<SampleType>* a, const HarmonizerVoice<SampleType>* b) const noexcept
-            { return a->wasStartedBefore (*b); }
+                { return a->wasStartedBefore (*b); }
         };
         
         std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
@@ -92,10 +92,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal (const int
     
     if (top == low)  // Eliminate pathological cases (ie: only 1 note playing): we always give precedence to the lowest note(s)
         top = nullptr;
-    
-    for (auto* voice : usableVoices)
-        if (voice->getCurrentlyPlayingNote() == midiNoteNumber)
-            return voice;
     
     for (auto* voice : usableVoices)
         if (voice != low && voice != top && ! voice->isKeyDown())
@@ -176,6 +172,8 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     if (voicesToRemove == 0)
         return;
     
+    const int shouldBeLeft = voices.size() - voicesToRemove;
+    
     int voicesRemoved = 0;
     
     while (voicesRemoved < voicesToRemove)
@@ -195,7 +193,7 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
         }
         
         if (removing == nullptr)
-            removing = findVoiceToSteal (0);
+            removing = findVoiceToSteal();
         
         if (removing == nullptr)
             removing = voices[0];
@@ -207,6 +205,8 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
         
         ++voicesRemoved;
     }
+    
+    jassert (voices.isEmpty() || voices.size() == shouldBeLeft);
     
     panner.setNumberOfVoices (std::max (voices.size(), 1));
 };
