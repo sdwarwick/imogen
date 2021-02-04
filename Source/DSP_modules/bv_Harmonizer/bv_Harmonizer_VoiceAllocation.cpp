@@ -1,8 +1,8 @@
 /*
- Part of module: bv_Harmonizer
- Direct parent file: bv_Harmonizer.h
- Classes: Harmonizer
- */
+     Part of module: bv_Harmonizer
+     Direct parent file: bv_Harmonizer.h
+     Classes: Harmonizer
+*/
 
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
