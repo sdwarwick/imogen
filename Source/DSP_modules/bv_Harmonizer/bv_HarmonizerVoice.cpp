@@ -289,10 +289,7 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
     isPedalPitchVoice = isPedal;
     isDescantVoice = isDescant;
     
-    if (! keyIsDown)                     // if the keyboard key wasn't previously marked as down...
-        setKeyDown (keyboardKeyIsDown);  // ...then mark it as down IF this note-on came from a keyboard midi event
-    else
-        setKeyDown (true);               // otherwise, refresh the key state w/ it still marked as down
+    setKeyDown (keyboardKeyIsDown);
 };
     
     
@@ -335,6 +332,7 @@ void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool all
     }
     
     noteTurnedOff = true;
+    keyIsDown = false;
     playingButReleased = false;
     isPedalPitchVoice  = false;
     isDescantVoice     = false;

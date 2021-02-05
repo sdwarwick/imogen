@@ -311,7 +311,7 @@ private:
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable);
+    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
     HarmonizerVoice<SampleType>* findVoiceToSteal() const;
     
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);

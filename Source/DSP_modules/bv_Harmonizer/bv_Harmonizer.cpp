@@ -184,9 +184,9 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
                                            AudioBuffer<SampleType>& outputBuffer,
                                            MidiBuffer& midiMessages)
 {
-    const float inputFrequency = pitchDetector.detectPitch (inputAudio);
+    const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs -1 if frame is unpitched
     
-    const bool frameIsPitched = (inputFrequency != -1.0f);
+    const bool frameIsPitched = (inputFrequency >= 0.0f);
     
     if (frameIsPitched && currentInputFreq != inputFrequency)
         setCurrentInputFreq (inputFrequency);

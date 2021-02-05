@@ -20,15 +20,10 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
     const float velocity = allowTailOff ? 0.0f : 1.0f;
     
     for (auto* voice : voices)
-    {
         if (voice->isVoiceActive() && ! voice->isKeyDown())
-        {
-            if (includePedalPitchAndDescant)
-                stopVoice (voice, velocity, allowTailOff);
-            else if (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice()))
-                stopVoice (voice, velocity, allowTailOff);
-        }
-    }
+            if (includePedalPitchAndDescant
+                || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
+                  stopVoice (voice, velocity, allowTailOff);
 };
     
     
@@ -40,20 +35,10 @@ template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased, const bool countKeyUpNotes) const
 {
     for (auto* voice : voices)
-    {
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
-        {
-            if (countRingingButReleased)
+            if (countRingingButReleased || ! voice->isPlayingButReleased())
                 if (countKeyUpNotes || voice->isKeyDown())
                     return true;
-            
-            if (! voice->isPlayingButReleased() || countKeyUpNotes)
-                return true;
-            
-            if (voice->isKeyDown())
-                return true;
-        }
-    }
     
     return false;
 };
@@ -67,21 +52,16 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray,
     outputArray.clearQuick();
     
     for (auto* voice : voices)
-    {
-        if (includePlayingButReleased || ! voice->isPlayingButReleased())
-        {
-            if (includeKeyUpNotes || voice->isKeyDown())
-            {
-                outputArray.add (voice->getCurrentlyPlayingNote());
-                continue;
-            }
-        }
-    }
+        if (voice->isVoiceActive())
+            if (includePlayingButReleased || ! voice->isPlayingButReleased())
+                if (includeKeyUpNotes || voice->isKeyDown())
+                    outputArray.add (voice->getCurrentlyPlayingNote());
     
     if (! outputArray.isEmpty())
         outputArray.sort();
 };
 
+    
 /***********************************************************************************************************************************************
  // midi events from plugin's midi input -------------------------------------------------------------------------------------------------------
 ***********************************************************************************************************************************************/
@@ -168,17 +148,19 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
-    HarmonizerVoice<SampleType>* voice = getVoicePlayingNote (midiPitch);  // if a voice is already playing this note, this will be a ptr to it. otherwise it will be null
+    auto* prevVoice = getVoicePlayingNote (midiPitch);   //  if no voice is found playing this note, this will be a null ptr
     
-    if (voice != nullptr)   //  a voice already playing this note was found
+    HarmonizerVoice<SampleType>* newVoice;
+    
+    if (prevVoice != nullptr)
+        newVoice = prevVoice;  // retrigger the same voice with the new velocity
+    else
     {
-        startVoice (voice, midiPitch, velocity, isKeyboard);  // retrigger the voice with the same note & the new velocity
+        const bool isStealing = isKeyboard ? shouldStealNotes : false;  // never steal voices for automated note events, only for keyboard triggered events
+        newVoice = findFreeVoice (isStealing);
     }
-    else  // turning on a new voice
-    {
-        bool isStealing = isKeyboard ? shouldStealNotes : false; // never steal voices for automated note events, only for keyboard triggered events
-        startVoice (findFreeVoice(isStealing), midiPitch, velocity, isKeyboard);
-    }
+    
+    startVoice (newVoice, midiPitch, velocity, isKeyboard);
 };
 
 
@@ -198,19 +180,28 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         return;
     }
     
-    aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
-                                  ++lastMidiTimeStamp);
+    const int prevNote = voice->getCurrentlyPlayingNote();
+    const bool wasStolen = voice->isVoiceActive();  // we know the voice is being "stolen" from another note if it was already on before getting this start command
+    const bool sameNoteRetriggered = (wasStolen && prevNote == midiPitch);
     
-    const bool wasStolen = voice->isVoiceActive(); // we know the voice is being "stolen" from another note if it was already on before getting this start command
+    if (! sameNoteRetriggered)  // don't output any midi events if the same note is being retriggered
+    {
+        if (wasStolen)
+            aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevNote, 1.0f),   // voice was stolen: output a note off for the voice's previous note
+                                          ++lastMidiTimeStamp);
+            
+        aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),
+                                      ++lastMidiTimeStamp);
+    }
     
-    if (midiPitch < lowestPannedNote) // set pan to 64 if note is below panning threshold
+    if (midiPitch < lowestPannedNote)  // set pan to 64 if note is below panning threshold
     {
         if (wasStolen)
             panner.panValTurnedOff (voice->getCurrentMidiPan());
         
         voice->setPan (64);
     }
-    else if (! wasStolen) // don't change pan if voice was stolen
+    else if (! wasStolen)  // don't change pan if voice was stolen
     {
         voice->setPan (panner.getNextPanVal());
     }
@@ -218,7 +209,11 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
     const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
     
-    voice->startNote (midiPitch, velocity, ++lastNoteOnCounter, isKeyboard, isPedal, isDescant);
+    const uint32 timestamp = sameNoteRetriggered ? voice->noteOnTime : ++lastNoteOnCounter;  // leave the timestamp the same as it was if the same note is being retriggered
+    
+    const bool keydown = isKeyboard ? true : voice->isKeyDown();
+    
+    voice->startNote (midiPitch, velocity, timestamp, keydown, isPedal, isDescant);
 };
 
 
@@ -244,10 +239,11 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
     
     if (isKeyboard)
     {
-        voice->setKeyDown (false);
-        
         if (latchIsOn)
+        {
+            voice->setKeyDown (false);
             return;
+        }
         
         if (! (sustainPedalDown || sostenutoPedalDown))
             stopVoice (voice, velocity, allowTailOff);
@@ -307,12 +303,8 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
     const float velocity = allowTailOff ? 0.0f : 1.0f;
     
     for (auto* voice : voices)
-    {
-        voice->setKeyDown (false);
-        
         if (voice->isVoiceActive())
             stopVoice (voice, velocity, allowTailOff);
-    }
     
     panner.reset (false);
 };
@@ -340,7 +332,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     {
         // turn off all voices whose key is up and who aren't being held by the interval latch function
     
-        const int currentMidiPitch = juce::roundToInt (pitchConverter.ftom (currentInputFreq));
+        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
         
         Array<int> intervalLatchNotes;
         intervalLatchNotes.ensureStorageAllocated (intervalsLatchedTo.size());
@@ -351,7 +343,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
         const float velocity = allowTailOff ? 0.0f : 1.0f;
         
         for (auto* voice : voices)
-            if (voice->isVoiceActive() && ! voice->isKeyDown())
+            if (voice->isVoiceActive() && ! voice->isKeyDown() && ! intervalLatchNotes.contains (voice->getCurrentlyPlayingNote()))
                 if (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice())
                     stopVoice (voice, velocity, allowTailOff);
     }
@@ -372,7 +364,10 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
     if (shouldBeOn)
         updateIntervalsLatchedTo();
     else if (! latchIsOn)
+    {
         turnOffAllKeyupNotes (allowTailOff, false);
+        pitchCollectionChanged();
+    }
 };
 
 
@@ -407,13 +402,13 @@ void Harmonizer<SampleType>::playChordFromIntervalSet (const Array<int>& desired
         return;
     }
     
-    const float currentInputPitch = pitchConverter.ftom (currentInputFreq);
+    const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
     Array<int> desiredNotes;
     desiredNotes.ensureStorageAllocated (desiredIntervals.size());
     
     for (int interval : desiredIntervals)
-        desiredNotes.add (roundToInt (currentInputPitch + interval));
+        desiredNotes.add (currentInputPitch + interval);
     
     playChord (desiredNotes, 1.0f, false);
 };
@@ -436,24 +431,8 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
     
     Array<int> currentNotes;
     currentNotes.ensureStorageAllocated (voices.size());
-    
-    reportActiveNotes (currentNotes, false);
-    
-    // 1. turn off the pitches that were previously on that are not included in the list of desired pitches
-    
-    if (! currentNotes.isEmpty())
-    {
-        Array<int> toTurnOff;
-        toTurnOff.ensureStorageAllocated (currentNotes.size());
-    
-        for (int note : currentNotes)
-            if (! desiredPitches.contains (note))
-                toTurnOff.add (note);
-    
-        turnOffList (toTurnOff, !allowTailOffOfOld, allowTailOffOfOld, true);
-    }
 
-    // 2. turn on the desired pitches that aren't already on
+    reportActiveNotes (currentNotes, false, true);
     
     if (currentNotes.isEmpty())
     {
@@ -461,12 +440,25 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
     }
     else
     {
+        // 1. turn off the pitches that were previously on that are not included in the list of desired pitches
+        
+        Array<int> toTurnOff;
+        toTurnOff.ensureStorageAllocated (currentNotes.size());
+        
+        for (int note : currentNotes)
+            if (! desiredPitches.contains (note))
+                toTurnOff.add (note);
+        
+        turnOffList (toTurnOff, !allowTailOffOfOld, allowTailOffOfOld, true);
+        
+        // 2. turn on the desired pitches that aren't already on
+        
         Array<int> toTurnOn;
-        toTurnOn.ensureStorageAllocated (currentNotes.size());
+        toTurnOn.ensureStorageAllocated (desiredPitches.size());
         
         for (int note : desiredPitches)
         {
-            if (! currentNotes.contains(note))
+            if (! currentNotes.contains (note))
                 toTurnOn.add (note);
         }
         
@@ -550,7 +542,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         return;
     }
     
-    HarmonizerVoice<SampleType>* prevPedalVoice = getCurrentPedalPitchVoice();  // attempt to keep the pedal line consistent - using the same HarmonizerVoice
+    auto* prevPedalVoice = getCurrentPedalPitchVoice();  // attempt to keep the pedal line consistent - using the same HarmonizerVoice
     
     if (prevPedalVoice != nullptr)
         if (prevPedalVoice->isKeyDown())  // can't "steal" the voice playing the last pedal note if its keyboard key is down
@@ -560,13 +552,8 @@ void Harmonizer<SampleType>::applyPedalPitch()
     {
         //  there was a previously active pedal voice, so steal it directly without calling noteOn:
         
-        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevPedalVoice->getCurrentlyPlayingNote(), 1.0f),
-                                      ++lastMidiTimeStamp); // note that here we're not actually sending a note off command to the voice, just switching it directly to the new note, but we output a note off for the previous pitch.
-        
         const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : prevPedalVoice->getLastRecievedVelocity();
-        
         pedal.lastPitch = newPedalPitch;
-        
         startVoice (prevPedalVoice, pedal.lastPitch, velocity, false);
     }
     else
@@ -575,9 +562,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
             noteOff (pedal.lastPitch, 1.0f, false, false);
         
         const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : 1.0f;
-        
         pedal.lastPitch = newPedalPitch;
-        
         noteOn (pedal.lastPitch, velocity, false);
     }
 };
@@ -625,7 +610,7 @@ void Harmonizer<SampleType>::applyDescant()
         return;
     }
     
-    HarmonizerVoice<SampleType>* prevDescantVoice = getCurrentDescantVoice();  // attempt to keep the descant line consistent - using the same HarmonizerVoice
+    auto* prevDescantVoice = getCurrentDescantVoice();  // attempt to keep the descant line consistent - using the same HarmonizerVoice
     
     if (prevDescantVoice != nullptr)
         if (prevDescantVoice->isKeyDown())  // can't "steal" the voice playing the last descant note if its keyboard key is down
@@ -635,13 +620,8 @@ void Harmonizer<SampleType>::applyDescant()
     {
         //  there was a previously active descant voice, so steal it directly without calling noteOn:
         
-        aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevDescantVoice->getCurrentlyPlayingNote(), 1.0f),
-                                      ++lastMidiTimeStamp);  // note that here we're not actually sending a note off command to the voice, just switching it directly to the new note, but we output a note off for the previous pitch.
-        
         const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : prevDescantVoice->getLastRecievedVelocity();
-        
         descant.lastPitch = newDescantPitch;
-        
         startVoice (prevDescantVoice, descant.lastPitch, velocity, false);
     }
     else
@@ -650,9 +630,7 @@ void Harmonizer<SampleType>::applyDescant()
             noteOff (descant.lastPitch, 1.0f, false, false);
         
         const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : 1.0f;
-        
         descant.lastPitch = newDescantPitch;
-        
         noteOn (descant.lastPitch, velocity, false);
     }
 };
@@ -672,7 +650,7 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
                                   ++lastMidiTimeStamp);
     
     lastPitchWheelValue = wheelValue;
-    bendTracker.newPitchbendRecieved(wheelValue);
+    bendTracker.newPitchbendRecieved (wheelValue);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
