@@ -16,8 +16,7 @@ set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn'
 
 set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable target
 
-set (launchPluginHostOnBuild FALSE)  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code
-set (pluginHostPath "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # if you are not on MacOSX, this path must be changed to the correct executable for your OS
+set (launchPluginHostOnBuild TRUE)  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code
 
 set (formats "AU" "VST3" "Standalone")  
 
@@ -28,10 +27,6 @@ set (compileFeatures cxx_std_17)
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 set (dspModulesPath ${sourceDir}/DSP_modules)  # The location of the custom JUCE-style modules that make up the shared Imogen codebase. Again, these could conceivably be in a different place...  ¯\_(ツ)_/¯
 
-set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files
-
-set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
-
 set (pluginSourcesDir       ${sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
 set (guiSourcePath          ${sourceDir}/GUI)
 set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
@@ -39,18 +34,28 @@ set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
 set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
 set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
+set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
+
+set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
+
 if (NOT EXISTS ${sourceDir})
     message (FATAL_ERROR "Source code folder not found")
 elseif (NOT EXISTS ${dspModulesPath})
     message (FATAL_ERROR "DSP modules folder not found")
 elseif (NOT EXISTS ${GraphicAssetsDir})
     message (FATAL_ERROR "Graphic assets folder not found")
-elseif (NOT EXISTS ${pluginSourcesDir} OR NOT EXISTS ${guiSourcePath} OR NOT EXISTS ${HelpScreenSourcePath} OR NOT EXISTS ${IOPanelSourcePath} OR NOT EXISTS ${MidiControlSourcePath} OR NOT EXISTS ${StaffDisplaySourcePath})
-    message (FATAL_ERROR "Source tree not intact - one or more child folders missing")
-elseif (NOT EXISTS ${testFilesPath})
+elseif (NOT EXISTS ${testFilesPath} AND unitTesting)
     set (unitTesting FALSE)
     message (WARNING "Test files directory not found, testing disabled")
 endif()
+
+foreach (path ${pluginSourcesDir} ${guiSourcePath} ${HelpScreenSourcePath} ${IOPanelSourcePath} ${MidiControlSourcePath} ${StaffDisplaySourcePath})
+    if (NOT EXISTS ${path})
+        message (FATAL_ERROR "Source tree not intact - one or more child folders missing")
+    endif()
+endforeach()
+
+#
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
@@ -75,9 +80,31 @@ set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' 
 
 #
 
+function (getAudiopluginhostPath startingPlace var_to_use)
+
+    set ("${var_to_use}" 
+        "${startingPlace}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app"
+        PARENT_SCOPE)
+
+endfunction()
+
+#
+
 if (EXISTS ${juceDir})
+
     add_subdirectory (${juceDir} REQUIRED)  # JUCE can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
+
+    if (launchPluginHostOnBuild)
+        getAudiopluginhostPath (${juceDir} pluginHostPath)
+
+        if (NOT EXISTS ${pluginHostPath})
+            set (launchPluginHostOnBuild FALSE)
+            message (WARNING "AudioPluginHost not found, auto-launch feature disabled")
+        endif()
+    endif()
+
 else()
+
     include (FetchContent)
     set (fetchcontentincluded TRUE)   #  simple include guard 
 
@@ -87,7 +114,15 @@ else()
 
     FetchContent_MakeAvailable (juce)
 
-    set (launchPluginHostOnBuild FALSE)  # the AudioPluginHost must be built from the JUCE source code before it can be used as an executable
+    if (launchPluginHostOnBuild)  
+        getAudiopluginhostPath (${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src pluginHostPath)
+
+        if (NOT EXISTS ${pluginHostPath})
+            set (launchPluginHostOnBuild FALSE)
+            message (WARNING "AudioPluginHost must be built before it can be used as an executable; auto-launch feature disabled")
+        endif()
+    endif()
+
 endif()
 
 #
@@ -169,11 +204,11 @@ set (sourceFiles
 
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${sourceFiles})
 
+source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
+
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
 set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
-
-source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
 
 #
 
@@ -201,7 +236,7 @@ if (NOT unitTesting)
     return()
 endif()
 
-#
+###
 
 if (NOT fetchcontentincluded)  # simple include guard 
     include (FetchContent)
