@@ -41,7 +41,7 @@ class Harmonizer; // forward declaration...
 
 /*
  HarmonizerVoice : represents a "voice" that the Harmonizer can use to generate one monophonic note. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
- */
+*/
     
 template<typename SampleType>
 class HarmonizerVoice
@@ -62,7 +62,6 @@ public:
     
     void releaseResources();
     
-    
     int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
     bool isVoiceActive() const noexcept { return (currentlyPlayingNote >= 0); }
@@ -77,6 +76,23 @@ public:
     
     int getCurrentMidiPan() const noexcept { return panner.getLastMidiPan(); }
     
+    // DANGER!!! FOR NON REALTIME USE ONLY!
+    void increaseBufferSizes (const int newMaxBlocksize);
+    
+    void clearBuffers();
+    
+    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
+    
+    void updateSampleRate (const double newSamplerate);
+    
+    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice; }
+    bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
+    
+    
+protected:
+    
+    //  These functions will be called by the Harmonizer object that owns this voice
+    
     void startNote (const int midiPitch,  const float velocity,
                     const uint32 noteOnTimestamp,
                     const bool keyboardKeyIsDown,
@@ -86,33 +102,22 @@ public:
     
     void aftertouchChanged (const int newAftertouchValue);
     
-    // DANGER!!! FOR NON REALTIME USE ONLY!
-    void increaseBufferSizes (const int newMaxBlocksize);
-    
-    void clearBuffers();
-    
     void setVelocityMultiplier (const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; }
-    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
     
     void setCurrentOutputFreq (const float newFreq) noexcept { currentOutputFreq = newFreq; }
     
-    void updateSampleRate (const double newSamplerate);
+    void setKeyDown (bool isNowDown) noexcept;
+    
+    void setPan (const int newPan);
     
     void setAdsrParameters (const ADSR::Parameters newParams) { adsr.setParameters(newParams); }
     void setQuickReleaseParameters (const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
     void setQuickAttackParameters  (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
     
-    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice; }
-    bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
-    
     
 private:
     
     friend class Harmonizer<SampleType>;
-    
-    void setKeyDown (bool isNowDown) noexcept;
-    
-    void setPan (const int newPan);
     
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
@@ -184,6 +189,8 @@ public:
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
                        AudioBuffer<SampleType>& outputBuffer,
                        MidiBuffer& midiMessages);
+    
+    void processMidi (MidiBuffer& midiMessages);
     
     void prepare (const int blocksize);
     
@@ -287,7 +294,6 @@ private:
     float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; }
     
     // MIDI
-    void processMidi (MidiBuffer& midiMessages);
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
     void noteOn (const int midiPitch, const float velocity, const bool isKeyboard = true);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard = true);

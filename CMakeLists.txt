@@ -12,54 +12,74 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
-set (formats "AU" "VST3" "Standalone")  
+set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
 
 set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable target
 
 set (launchPluginHostOnBuild FALSE)  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code
 set (pluginHostPath "${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app")  # if you are not on MacOSX, this path must be changed to the correct executable for your OS
 
-set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn't found, this script will automatically download the juce library code from GitHub
+set (formats "AU" "VST3" "Standalone")  
 
 set (compileFeatures cxx_std_17)
 
 #
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
+set (dspModulesPath ${sourceDir}/DSP_modules)  # The location of the custom JUCE-style modules that make up the shared Imogen codebase. Again, these could conceivably be in a different place...  ¯\_(ツ)_/¯
+
+set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files
+
+set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
+
+set (pluginSourcesDir       ${sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
+set (guiSourcePath          ${sourceDir}/GUI)
+set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
+set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
+set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
+set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
 if (NOT EXISTS ${sourceDir})
-    message (FATAL_ERROR "Source code folder not found in current directory.")
+    message (FATAL_ERROR "Source code folder not found")
+elseif (NOT EXISTS ${dspModulesPath})
+    message (FATAL_ERROR "DSP modules folder not found")
+elseif (NOT EXISTS ${GraphicAssetsDir})
+    message (FATAL_ERROR "Graphic assets folder not found")
+elseif (NOT EXISTS ${pluginSourcesDir} OR NOT EXISTS ${guiSourcePath} OR NOT EXISTS ${HelpScreenSourcePath} OR NOT EXISTS ${IOPanelSourcePath} OR NOT EXISTS ${MidiControlSourcePath} OR NOT EXISTS ${StaffDisplaySourcePath})
+    message (FATAL_ERROR "Source tree not intact - one or more child folders missing")
+elseif (NOT EXISTS ${testFilesPath})
+    set (unitTesting FALSE)
+    message (WARNING "Test files directory not found, testing disabled")
 endif()
-
-set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64") # universal macOS binaries 
-set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE) # Minimum MacOS version to build for
-
-set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # static linking on Windows
-set (CMAKE_WIN32_EXECUTABLE TRUE)
-
-set (CMAKE_XCODE_GENERATE_SCHEME OFF) # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
-
-set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
-set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
-
-set (CMAKE_SUPPRESS_REGENERATION TRUE) # no "zero-check" target
-
-set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
 
+set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64")  # universal macOS binaries 
+set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)  # minimum MacOS version to build for
+
+set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")  # static linking on Windows
+set (CMAKE_WIN32_EXECUTABLE TRUE)
+
+set (CMAKE_XCODE_GENERATE_SCHEME OFF)  # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
+set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
+set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
+
+set (CMAKE_SUPPRESS_REGENERATION TRUE)  # no "zero-check" target
+set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
+set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
-set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
 
 if (EXISTS ${juceDir})
-    add_subdirectory (${juceDir} REQUIRED)  # Juce can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
+    add_subdirectory (${juceDir} REQUIRED)  # JUCE can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
 else()
     include (FetchContent)
-    set (fetchcontentincluded)   #  simple include guard 
+    set (fetchcontentincluded TRUE)   #  simple include guard 
 
     FetchContent_Declare (juce   #  Downloads the latest version of JUCE if the indicated subdirectory cannot be found
         GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
@@ -72,15 +92,11 @@ endif()
 
 #
 
-set (dspModulesPath ${sourceDir}/DSP_modules)
-
 juce_add_modules (
     ${dspModulesPath}/bv_GeneralUtils
     ${dspModulesPath}/bv_PitchDetector
     ${dspModulesPath}/bv_Harmonizer
     ${dspModulesPath}/bv_ImogenEngine)
-
-#
 
 juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library for the shared plugin code, and adds targets for each of the specified plugin formats, as well as an "All" target, linked to the shared static lib
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
@@ -116,28 +132,23 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_VST3_CAN_REPLACE_VST2=0)
  
 foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder
-    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}") # this is how juce automatically names the build targets created for each format
+    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")  # this is how juce automatically names the build targets created for each format
 
-    if (TARGET ${thisTargetName})
+    if (NOT TARGET ${thisTargetName})
+        continue()
+    endif()
+
+    set_target_properties (${thisTargetName} PROPERTIES
+        FOLDER "Build Targets" 
+        XCODE_GENERATE_SCHEME ON)
+
+    if (launchPluginHostOnBuild)
         set_target_properties (${thisTargetName} PROPERTIES
-            FOLDER "Build Targets" 
-            XCODE_GENERATE_SCHEME ON)
-
-        if (launchPluginHostOnBuild)
-            set_target_properties (${thisTargetName} PROPERTIES
-                XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
-        endif()
+            XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
     endif()
 endforeach()
 
-#######
-
-set (pluginSourcesDir ${sourceDir}/PluginSources)
-set (guiSourcePath    ${sourceDir}/GUI)
-set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
-set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
-set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
-set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
+#
 
 set (sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
@@ -164,9 +175,7 @@ set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets 
 
 source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
 
-#####
-
-set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)
+#
 
 juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
@@ -175,7 +184,7 @@ juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static librar
 
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 
-#####
+#
 
 target_link_libraries (${CMAKE_PROJECT_NAME}
     PRIVATE
@@ -186,7 +195,7 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
-#######
+#
 
 if (NOT unitTesting)
     return()
@@ -194,7 +203,7 @@ endif()
 
 #
 
-if (NOT DEFINED fetchcontentincluded)  # simple include guard 
+if (NOT fetchcontentincluded)  # simple include guard 
     include (FetchContent)
 endif()
 
@@ -204,15 +213,12 @@ FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not fo
 
 FetchContent_MakeAvailable (Catch2)
 
-enable_testing()
+# enable_testing()
 
 #
 
-set (testFilesPath ${sourceDir}/Tests)
-
 set (testFiles
     ${testFilesPath}/tests.cpp
-    ${testFilesPath}/HarmonizerVoiceTests.cpp
     ${testFilesPath}/HarmonizerTests.cpp) 
 
 source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
@@ -239,3 +245,4 @@ include (${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
 catch_discover_tests (Tests)
 
 #
+
