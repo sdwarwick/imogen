@@ -63,7 +63,8 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     if (playingButReleased)
         if (! (parent->isSustainPedalDown() || parent->isSostenutoPedalDown()))
-            stopNote (1.0f, false);
+            if (! isQuickFading)  // to make sure stopNote doesn't get RE-called if the above conditions are true between successive calls to renderNextBlock
+                stopNote (1.0f, false);
     
     bool voiceIsOnRightNow;
     

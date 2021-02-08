@@ -306,7 +306,7 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
         if (voice->isVoiceActive())
             stopVoice (voice, velocity, allowTailOff);
     
-    panner.reset (false);
+    panner.reset();
 };
 
     

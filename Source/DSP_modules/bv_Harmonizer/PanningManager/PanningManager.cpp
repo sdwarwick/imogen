@@ -12,7 +12,6 @@ namespace bav
 
 {
     
-    
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
 { };
@@ -32,13 +31,11 @@ void PanningManager::prepare (const int numVoices)
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
     unsentPanVals.ensureStorageAllocated(numVoices);
     
-    setNumberOfVoices(numVoices);
-    
-    updateStereoWidth(lastRecievedStereoWidth);
+    setNumberOfVoices (numVoices);
 };
 
 
-void PanningManager::setNumberOfVoices(const int newNumVoices)
+void PanningManager::setNumberOfVoices (const int newNumVoices)
 {
     jassert(newNumVoices > 0);
     
@@ -47,9 +44,22 @@ void PanningManager::setNumberOfVoices(const int newNumVoices)
     mapArrayIndexes();
     updateStereoWidth(lastRecievedStereoWidth);
 };
+    
+    
+int PanningManager::getNextPanVal()
+{
+    if (unsentPanVals.isEmpty())
+        reset();
+    
+    jassert (! unsentPanVals.isEmpty());
+    
+    const auto nextPan = unsentPanVals.getUnchecked(0);
+    unsentPanVals.remove(0);
+    return nextPan;
+};
 
 
-void PanningManager::updateStereoWidth(const int newWidth)
+void PanningManager::updateStereoWidth (const int newWidth)
 {
     if (currentNumVoices == 0)
         return;
@@ -65,7 +75,7 @@ void PanningManager::updateStereoWidth(const int newWidth)
     possiblePanVals.ensureStorageAllocated (currentNumVoices);
     
     for (int i = 0; i < currentNumVoices; ++i)
-        possiblePanVals.add (juce::roundToInt (minPan + (i * increment) + (increment/2.0f)));
+        possiblePanVals.add (roundToInt (minPan + (i * increment) + (increment/2.0f)));
     
     // then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
     panValsInAssigningOrder.clearQuick();
@@ -76,7 +86,10 @@ void PanningManager::updateStereoWidth(const int newWidth)
     jassert (! panValsInAssigningOrder.isEmpty());
     
     if (unsentPanVals.isEmpty())
+    {
+        reset();
         return;
+    }
     
     // the # of values we actually transfer to the I/O array being read from should correspond to the number of unsent pan vals left now -- ie, if some voices are already on, etc. And the values put in the I/O array should also be the values out of the panValsInAssigningOrder array that are closest to the old values from unsentPanVals...
     
@@ -101,23 +114,8 @@ void PanningManager::updateStereoWidth(const int newWidth)
     for (int newPan : newUnsentVals)
         unsentPanVals.add (newPan);
     
-    jassert (! unsentPanVals.isEmpty());
-};
-
-
-int PanningManager::getNextPanVal() 
-{
-    if (! unsentPanVals.isEmpty())
-    {
-        const auto nextPan = unsentPanVals.getUnchecked(0);
-        unsentPanVals.remove(0);
-        return nextPan;
-    }
-    else
-    {
-        reset(true);
-        return 64;
-    }
+    if (unsentPanVals.isEmpty())
+        reset();
 };
 
 
@@ -208,11 +206,8 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
     
     jassert (isPositiveAndBelow(oldPan, 128));
     
-    if (unsentPanVals.isEmpty())
-    {
-        reset(true);
-        return 64;
-    }
+    if (unsentPanVals.isEmpty() || unsentPanVals.size() == 1)
+        return getNextPanVal();
     
     Array<int> distances;
     distances.ensureStorageAllocated (unsentPanVals.size());
@@ -243,20 +238,18 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
     if (minIndex < 0)
         minIndex = 0;
     
-    const auto newPan = unsentPanVals.getUnchecked(minIndex);
+    const auto newPan = unsentPanVals.getUnchecked (minIndex);
     unsentPanVals.remove (minIndex);
     return newPan;
 };
 
 
-void PanningManager::reset(const bool grabbedFirst64)
+void PanningManager::reset()
 {
     unsentPanVals.clearQuick();
     
-    int starting = grabbedFirst64 ? 1 : 0;
-    
-    for (int i = starting; i < panValsInAssigningOrder.size(); ++i)
-        unsentPanVals.add (panValsInAssigningOrder.getUnchecked(i));
+    for (int pan : panValsInAssigningOrder)
+        unsentPanVals.add (pan);
 };
 
 

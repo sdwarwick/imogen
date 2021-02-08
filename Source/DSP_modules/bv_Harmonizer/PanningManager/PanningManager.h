@@ -48,8 +48,7 @@ public:
     
     
     // tells the PanningManager that all voices have been turned off -- ie, all the pan vals are available again
-    // the boolean argument should normally be false. 'true' is used in a situation where reset() needs to be called, but a new voice will be turned on immediately, or is already on - thus, the first pan value has already been taken.
-    void reset (const bool grabbedFirst64 = false);
+    void reset();
     
     
     int getCurrentStereoWidth() const noexcept { return lastRecievedStereoWidth; }
