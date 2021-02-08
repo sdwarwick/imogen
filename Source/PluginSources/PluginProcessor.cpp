@@ -551,7 +551,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
     rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
                            .getChildFile ("Imogen");
 
-#else
+#else    //  Windows, or any other operating system...
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory);
     rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
                            .getChildFile ("Imogen");

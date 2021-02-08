@@ -210,9 +210,10 @@ enable_testing()
 
 set (testFilesPath ${sourceDir}/Tests)
 
-set (testFiles 
-    ${testFilesPath}/tests.cpp 
-    ${testFilesPath}/tests.h) 
+set (testFiles
+    ${testFilesPath}/tests.cpp
+    ${testFilesPath}/HarmonizerVoiceTests.cpp
+    ${testFilesPath}/HarmonizerTests.cpp) 
 
 source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
