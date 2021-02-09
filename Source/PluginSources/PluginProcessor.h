@@ -41,7 +41,10 @@ public:
     
     bool canAddBus (bool isInput) const override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+    
+#if ! JUCE_STANDALONE_APPLICATION
     bool shouldWarnUserToEnableSidechain() const;
+#endif
     
     bool hasEditor() const override { return true; }
     juce::AudioProcessorEditor* createEditor() override;
@@ -165,7 +168,9 @@ private:
     
     int latencySamples;
     
+#if ! JUCE_STANDALONE_APPLICATION
     juce::PluginHostType host;
+#endif
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
     

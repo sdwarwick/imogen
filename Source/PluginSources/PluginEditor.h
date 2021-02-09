@@ -14,8 +14,10 @@
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
 #include "../../Source/GUI/LookAndFeel.h"
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
-#include "../../Source/GUI/EnableSidechainWarning.h"
 
+#if ! JUCE_STANDALONE_APPLICATION
+#include "../../Source/GUI/EnableSidechainWarning.h"
+#endif
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
@@ -59,20 +61,19 @@ private:
     
     HelpScreen helpScreen;
     juce::TextButton helpButton;
-    
-    bool viewHelp;  // bool to control visibility of help/documentation screen
+    bool viewHelp;  
     
     juce::ComboBox selectPreset;
     
     juce::ComboBox modulatorInputSource;
     
-    juce::PluginHostType host;
-    
-    bool sidechainWarningShowing;
-    
     void changeModulatorInputSource();
     
+#if ! JUCE_STANDALONE_APPLICATION
+    juce::PluginHostType host;
     bav::EnableSidechainWarning sidechainWarning;
+    bool sidechainWarningShowing;
+#endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

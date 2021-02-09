@@ -11,7 +11,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     AudioProcessorEditor (&p), audioProcessor (p),
     currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
     prevSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
-    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false), sidechainWarningShowing(false)
+    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), staffDisplay(p, lookAndFeel), viewHelp(false)
 {
     setSize (940, 435);
     
@@ -24,7 +24,12 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     skinLabel   .setLookAndFeel(&lookAndFeel);
     helpButton  .setLookAndFeel(&lookAndFeel);
     helpScreen  .setLookAndFeel(&lookAndFeel);
+    
+#if ! JUCE_STANDALONE_APPLICATION
     sidechainWarning.setLookAndFeel(&lookAndFeel);
+    sidechainWarningShowing = false;
+    addChildComponent(sidechainWarning);
+#endif
     
     Timer::startTimerHz(60); // framerate of graphics
     
@@ -40,8 +45,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     helpButton.onClick = [this] { helpButtonClicked(); };
     
     addChildComponent(helpScreen);
-    
-    addChildComponent(sidechainWarning);
     
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
@@ -100,6 +103,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     staffDisplay.repaint();
     
+#if ! JUCE_STANDALONE_APPLICATION
     if (host.isLogic() || host.isGarageBand())
     {
         const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
@@ -120,6 +124,7 @@ void ImogenAudioProcessorEditor::timerCallback()
             }
         }
     }
+#endif
 };
 
 

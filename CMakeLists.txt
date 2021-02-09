@@ -16,8 +16,6 @@ set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn'
 
 set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable target
 
-set (launchPluginHostOnBuild TRUE)  # Note that for this to work, the AudioPluginHost executable must first be built from the JUCE source code
-
 set (formats "AU" "VST3" "Standalone")  
 
 set (compileFeatures cxx_std_17)
@@ -38,15 +36,16 @@ set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the gra
 
 set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
 
+#
+
+# testing that all the directories we need exist (ie, the source tree is intact)
+
 if (NOT EXISTS ${sourceDir})
     message (FATAL_ERROR "Source code folder not found")
 elseif (NOT EXISTS ${dspModulesPath})
     message (FATAL_ERROR "DSP modules folder not found")
 elseif (NOT EXISTS ${GraphicAssetsDir})
     message (FATAL_ERROR "Graphic assets folder not found")
-elseif (NOT EXISTS ${testFilesPath} AND unitTesting)
-    set (unitTesting FALSE)
-    message (WARNING "Test files directory not found, testing disabled")
 endif()
 
 foreach (path ${pluginSourcesDir} ${guiSourcePath} ${HelpScreenSourcePath} ${IOPanelSourcePath} ${MidiControlSourcePath} ${StaffDisplaySourcePath})
@@ -54,6 +53,11 @@ foreach (path ${pluginSourcesDir} ${guiSourcePath} ${HelpScreenSourcePath} ${IOP
         message (FATAL_ERROR "Source tree not intact - one or more child folders missing")
     endif()
 endforeach()
+
+if (unitTesting AND NOT EXISTS ${testFilesPath})
+    set (unitTesting FALSE)
+    message (WARNING "Test files directory not found, testing disabled")
+endif()
 
 #
 
@@ -75,72 +79,33 @@ set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
 set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
+option (JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
+option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 
 set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
 
-function (getAudiopluginhostPath  startingPlace  var_to_use)
-
-    # this function attempts to locate the built executable for the JUCE AudioPluginHost to use as the plugin targets' executable for XCode projects 
-    # the 'startingPlace' should normally be the JUCE directory, but could be the location of the downloaded JUCE library code, if FetchContent has been used to download JUCE
-    # the path is saved into var_to_use
-
-    set (firstChunk 
-        "${startingPlace}/extras/AudioPluginHost/Builds")
-
-    if (APPLE)
-        set ("${var_to_use}" 
-            "${firstChunk}/MacOSX/build/Debug/AudioPluginHost.app"
-            PARENT_SCOPE)
-    elseif (WIN32)
-        set ("${var_to_use}" 
-            "${firstChunk}/VisualStudio2019"  # what should the rest of this path be...?
-            PARENT_SCOPE)
-    else()
-        set ("${var_to_use}" 
-            "${firstChunk}/LinuxMakefile/Makefile.exec"
-            PARENT_SCOPE)
-    endif()
-
-endfunction()
-
-#
-
-# add JUCE; if it can't be found, download the latest version from GitHub
+# add JUCE - if it can't be found, download the latest version from GitHub
 
 if (EXISTS ${juceDir})
 
-    add_subdirectory (${juceDir} REQUIRED)  # JUCE can also be included using find_package, but that is more complex and I couldn't get it to work, so I just copied the library code into a subdirectory of my Source folder. Works for now.
-
-    if (launchPluginHostOnBuild)
-        getAudiopluginhostPath (${juceDir} pluginHostPath)
-
-        if (NOT EXISTS ${pluginHostPath})
-            set (launchPluginHostOnBuild FALSE)
-            message (WARNING "AudioPluginHost not found, auto-launch feature disabled")
-        endif()
-    endif()
+    add_subdirectory (${juceDir} REQUIRED)
 
 else()
 
     include (FetchContent)
     set (fetchcontentincluded TRUE)   #  simple include guard 
 
+    message (STATUS "Fetching JUCE from GitHub...")
+    
     FetchContent_Declare (juce   #  Downloads the latest version of JUCE if the indicated subdirectory cannot be found
         GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
         GIT_TAG        origin/develop)
 
     FetchContent_MakeAvailable (juce)
 
-    if (launchPluginHostOnBuild)  
-        getAudiopluginhostPath (${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src  pluginHostPath)
-
-        if (NOT EXISTS ${pluginHostPath})
-            set (launchPluginHostOnBuild FALSE)
-            message (WARNING "AudioPluginHost must be built before it can be used as an executable; auto-launch feature disabled")
-        endif()
-    endif()
+    set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src)  # this is where FetchContent will download the JUCE library code to
 
 endif()
 
@@ -184,7 +149,7 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0)
- 
+
 foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder
     
     set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")  # this is how JUCE automatically names the build targets created for each format
@@ -196,11 +161,6 @@ foreach (target ${formats} "All")  # This cleans up folder organization, putting
     set_target_properties (${thisTargetName} PROPERTIES
         FOLDER "Build Targets" 
         XCODE_GENERATE_SCHEME ON)
-
-    if (launchPluginHostOnBuild)
-        set_target_properties (${thisTargetName} PROPERTIES
-            XCODE_SCHEME_EXECUTABLE ${pluginHostPath})  
-    endif()
 
 endforeach()
 
@@ -259,17 +219,19 @@ endif()
 
 ###
 
+message (STATUS "Configuring unit testing...")
+
 if (NOT fetchcontentincluded)  # simple include guard 
     include (FetchContent)
 endif()
+
+message (STATUS "Fetching Catch2 from GitHub...")
 
 FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not found 
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG        v2.13.3)
 
 FetchContent_MakeAvailable (Catch2)
-
-# enable_testing()
 
 #
 
@@ -281,7 +243,9 @@ source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
 add_executable (Tests ${testFiles}) # Test executable for unit testing
 
-set_target_properties (Tests PROPERTIES XCODE_GENERATE_SCHEME ON)
+set_target_properties (Tests PROPERTIES 
+    FOLDER "${CMAKE_PROJECT_NAME}"
+    XCODE_GENERATE_SCHEME ON)
 
 target_include_directories (Tests PRIVATE ${testFilesPath})
 
