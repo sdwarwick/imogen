@@ -87,7 +87,6 @@ option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
-# add JUCE - if it can't be found, download the latest version from GitHub
 
 if (EXISTS ${juceDir})
     add_subdirectory (${juceDir} REQUIRED)
@@ -227,7 +226,7 @@ if (NOT unitTesting)
     return()
 endif()
 
-###
+#
 
 message (STATUS "Configuring unit testing...")
 
@@ -243,15 +242,13 @@ FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not fo
 
 FetchContent_MakeAvailable (Catch2)
 
-#
-
 set (testFiles
     ${testFilesPath}/tests.cpp
     ${testFilesPath}/HarmonizerTests.cpp) 
 
 source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
-add_executable (Tests ${testFiles}) # Test executable for unit testing
+add_executable (Tests ${testFiles})   # Test executable for unit testing
 
 set_target_properties (Tests PROPERTIES 
     FOLDER "${CMAKE_PROJECT_NAME}"
