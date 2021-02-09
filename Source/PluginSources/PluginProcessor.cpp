@@ -559,14 +559,14 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 {
     juce::File rootFolder;
     
-#if defined JUCE_MAC
+#if JUCE_MAC
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
     rootFolder = rootFolder.getChildFile ("Audio")
                            .getChildFile ("Presets")
                            .getChildFile ("Ben Vining Music Software")
                            .getChildFile ("Imogen");
     
-#elif defined JUCE_LINUX
+#elif JUCE_LINUX
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
     rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
                            .getChildFile ("Imogen");
@@ -736,19 +736,17 @@ juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
 #if ! JUCE_STANDALONE_APPLICATION
-    if ( (layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()) && (! (host.isLogic() || host.isGarageBand())) )
-        return false;
+    if ( (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
+        && (! (host.isLogic() || host.isGarageBand())) )
+          return false;
     
 #else
-    if ( (layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()))
+    if (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
         return false;
     
 #endif
     
-    if ( layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled() )
-        return false;
-    
-    if ( layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
     
     return true;
@@ -762,10 +760,10 @@ bool ImogenAudioProcessor::canAddBus (bool isInput) const
     return false;
     
 #else
-    if (! host.isLogic() || host.isGarageBand())
-        return false;
+    if (host.isLogic() || host.isGarageBand())
+        return isInput;
     
-    return isInput;
+    return false;
 #endif
 };
 
