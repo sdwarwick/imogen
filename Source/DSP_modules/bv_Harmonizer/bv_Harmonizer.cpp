@@ -280,7 +280,7 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
 template<typename SampleType>
 void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) 
 {
-    if (lowestPannedNote == newPitchThresh)
+    if (lowestPannedNote.load() == newPitchThresh)
         return;
     
     for (auto* voice : voices)
@@ -298,12 +298,12 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh)
                 voice->setPan (64);
             }
         }
-        else if (note < lowestPannedNote) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
+        else if (note < lowestPannedNote.load()) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
             if (voice->getCurrentMidiPan() == 64)
                 voice->setPan (panner.getNextPanVal());
     }
     
-    lowestPannedNote = newPitchThresh;
+    lowestPannedNote.store(newPitchThresh);
 };
 
 
@@ -331,7 +331,7 @@ void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const i
     if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
         return;
     
-    bendTracker.setRange(rangeUp, rangeDown);
+    bendTracker.setRange (rangeUp, rangeDown);
     
     if (lastPitchWheelValue == 64)
         return;
@@ -442,6 +442,8 @@ void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
+    const ScopedLock sl (lock);
+    
     adsrParams.attack  = attack;
     adsrParams.decay   = decay;
     adsrParams.sustain = sustain;
@@ -456,11 +458,13 @@ void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 {
     jassert (newMs > 0);
     
+    const ScopedLock sl (lock);
+    
     const float desiredR = newMs / 1000.0f;
     
     if (quickReleaseParams.release == desiredR)
         return;
-    
+
     quickReleaseParams.release = desiredR;
     quickAttackParams .release = desiredR;
     
@@ -475,6 +479,8 @@ template<typename SampleType>
 void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
 {
     jassert (newMs > 0);
+    
+    const ScopedLock sl (lock);
     
     const float desiredA = newMs / 1000.0f;
     

@@ -131,9 +131,9 @@ void ImogenAudioProcessor::reset()
 void ImogenAudioProcessor::killAllMidi()
 {
     if (isUsingDoublePrecision())
-        doubleEngine.reset();
+        doubleEngine.killAllMidi();
     else
-        floatEngine.reset();
+        floatEngine.killAllMidi();
 };
 
 

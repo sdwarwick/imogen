@@ -21,17 +21,17 @@ ImogenEngine<SampleType>::ImogenEngine():
     limiterIsOn(false),
     resourcesReleased(true), initialized(false)
 {
-    inputGain = 1.0f;
-    prevInputGain = 1.0f;
+    inputGain.store(1.0f);
+    prevInputGain.store(1.0f);
     
-    outputGain = 1.0f;
-    prevOutputGain = 1.0f;
+    outputGain.store(1.0f);
+    prevOutputGain.store(1.0f);
     
-    dryGain = 1.0f;
-    prevDryGain = 1.0f;
+    dryGain.store(1.0f);
+    prevDryGain.store(1.0f);
     
-    wetGain = 1.0f;
-    prevWetGain = 1.0f;
+    wetGain.store(1.0f);
+    prevWetGain.store(1.0f);
 };
 
 
@@ -64,9 +64,6 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     harmonizer.newMaxNumVoices (initNumVoices);
     
     harmonizer.setCurrentPlaybackSampleRate (initSamplerate);
-    
-    prevOutputGain = outputGain;
-    prevInputGain  = inputGain;
     
     changeBlocksize (initSamplesPerBlock);
     
@@ -107,6 +104,11 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     dryWetMixer.setWetLatency(0); // latency in samples of the ESOLA algorithm
     
     resourcesReleased = false;
+    
+    prevOutputGain.store(outputGain.load());
+    prevInputGain.store(inputGain.load());
+    prevDryGain.store(dryGain.load());
+    prevWetGain.store(wetGain.load());
 };
 
 
@@ -128,12 +130,19 @@ void ImogenEngine<SampleType>::reset()
     
     releaseResources();
     
-    prevInputGain  = inputGain;
-    prevOutputGain = outputGain;
-    
-    prevDryGain = dryGain;
-    prevWetGain = wetGain;
+    prevOutputGain.store(outputGain.load());
+    prevInputGain.store(inputGain.load());
+    prevDryGain.store(dryGain.load());
+    prevWetGain.store(wetGain.load());
 };
+    
+    
+template<typename SampleType>
+void ImogenEngine<SampleType>::killAllMidi()
+{
+    harmonizer.allNotesOff(false);
+};
+
 
 
 template<typename SampleType>
@@ -308,11 +317,11 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     // master input gain
     if (input.getReadPointer(0) == inBuffer.getReadPointer(0))
-        inBuffer.applyGainRamp (0, internalBlocksize, prevInputGain, inputGain);
+        inBuffer.applyGainRamp (0, internalBlocksize, prevInputGain.load(), inputGain.load());
     else
-        inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain, inputGain);
+        inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain.load(), inputGain.load());
     
-    prevInputGain = inputGain;
+    prevInputGain.store (inputGain.load());
 
     // write to dry buffer & apply panning
     for (int chan = 0; chan < 2; ++chan)
@@ -320,22 +329,22 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
 
     // dry gain
-    dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain, dryGain);
-    prevDryGain = dryGain;
+    dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain.load(), dryGain.load());
+    prevDryGain.store (dryGain.load());
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
     harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);  // puts the harmonizer's rendered stereo output into wetBuffer
 
     // wet gain
-    wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain, wetGain);
-    prevWetGain = wetGain;
+    wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain.load(), wetGain.load());
+    prevWetGain.store (wetGain.load());
 
     dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
 
     // master output gain
-    wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain, outputGain);
-    prevOutputGain = outputGain;
+    wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain.load(), outputGain.load());
+    prevOutputGain.store (outputGain.load());
 
     if (limiterIsOn)
     {
@@ -493,42 +502,41 @@ void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateInputGain (const float newInGain)
 {
-    prevInputGain = inputGain;
-    inputGain = newInGain;
+    prevInputGain.store(inputGain.load());
+    inputGain.store(newInGain);
 };
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateOutputGain (const float newOutGain)
 {
-    prevOutputGain = outputGain;
-    outputGain = newOutGain;
+    prevOutputGain.store(outputGain.load());
+    outputGain.store(newOutGain);
 };
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDryGain (const float newDryGain)
 {
-    prevDryGain = dryGain;
-    dryGain = newDryGain;
+    prevDryGain.store(dryGain.load());
+    dryGain.store(newDryGain);
 };
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateWetGain (const float newWetGain)
 {
-    prevWetGain = wetGain;
-    wetGain = newWetGain;
+    prevWetGain.store(wetGain.load());
+    wetGain.store(newWetGain);
 };
 
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::updateDryWet(const float newWetMixProportion)
+void ImogenEngine<SampleType>::updateDryWet (const float newWetMixProportion)
 {
-    dryWetMixer.setWetMixProportion(newWetMixProportion / 100.0f);
-    
-    // need to set latency!!!
+    ScopedLock sl (lock);
+    dryWetMixer.setWetMixProportion (newWetMixProportion / 100.0f);
 };
 
 template<typename SampleType>
@@ -612,6 +620,7 @@ void ImogenEngine<SampleType>::updateIntervalLock(const bool isLocked)
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release, const bool isOn)
 {
+    ScopedLock sl (lock);
     limiterIsOn = isOn;
     limiter.setThreshold(thresh);
     limiter.setRelease(release);

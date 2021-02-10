@@ -211,7 +211,7 @@ public:
     void updateStereoWidth (const int newWidth);
     void updateLowestPannedNote (const int newPitchThresh);
     
-    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
+    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes.store(shouldSteal); }
     
     void reportActiveNotes (Array<int>& outputArray,
                             const bool includePlayingButReleased = false,
@@ -229,7 +229,7 @@ public:
     bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; }
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
-    void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
+    void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn.store(shouldBeOn); }
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);
     
@@ -255,7 +255,7 @@ public:
     
     void newMaxNumVoices (const int newMaxNumVoices);
     
-    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; }
+    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
     
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const noexcept;
     
@@ -270,6 +270,8 @@ public:
 private:
     
     friend class HarmonizerVoice<SampleType>;
+    
+    CriticalSection lock;
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
@@ -291,7 +293,7 @@ private:
     bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
     bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
-    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; }
+    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier.load(); }
     
     // MIDI
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
@@ -311,7 +313,7 @@ private:
     void handleBalance (const int controlValue);
     void handleLegato (const bool isOn);
     
-    bool isADSRon() const noexcept { return adsrIsOn; }
+    bool isADSRon() const noexcept { return adsrIsOn.load(); }
     ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
@@ -351,10 +353,10 @@ private:
     int currentInputPeriod;
     
     double sampleRate;
-    bool shouldStealNotes;
     uint32 lastNoteOnCounter;
-    int lowestPannedNote;
     int lastPitchWheelValue;
+    
+    std::atomic<bool> shouldStealNotes;
     
     // *********************************
     
@@ -382,11 +384,13 @@ private:
     // *********************************
     
     PanningManager  panner;
+    std::atomic<int> lowestPannedNote;
+    
     VelocityHelper  velocityConverter;
     PitchConverter  pitchConverter;
     PitchBendHelper bendTracker;
     
-    bool adsrIsOn;
+    std::atomic<bool> adsrIsOn;
     
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;
@@ -394,7 +398,7 @@ private:
     
     bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
     
-    float softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
+    std::atomic<float> softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
     
     AudioBuffer<SampleType> windowBuffer;
     void fillWindowBuffer (const int numSamples);

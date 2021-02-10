@@ -16,12 +16,26 @@ set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn'
 
 set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable target
 
-set (launchExecutableOnBuild FALSE)  # set to TRUE to launch a specified executable when building the Imogen targets  (XCode only)
-set (executable_path ${juceDir}/extras/AudioPluginHost/Builds/MacOSX/build/Debug/AudioPluginHost.app)  # this could be theoretically any program or application, but must be an absolute path to an executable file 
+set (launchAudioPluginHostOnBuild TRUE)  # set to TRUE to launch the JUCE AudioPluginHost when building the project  (XCode only)
 
-set (formats "AU" "VST3" "Standalone")  
+set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 AU AUv3 AAX VST. For AAX or VST, the path to the respective SDK must be provided using juce_set_aax_sdk_path or juce_set_vst2_sdk_path
 
 set (compileFeatures cxx_std_17)
+
+#
+
+message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
+
+if (unitTesting)
+    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
+else()
+    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
+endif()
+
+if (launchAudioPluginHostOnBuild)
+    message (STATUS "I'll also attempt to locate the executable for JUCE's AudioPluginHost, and link it to the plugin buid targets as their XCode scheme executable.")
+    message (STATUS "(Note that the Standalone target is still its own executable.)")
+endif()
 
 #
 
@@ -92,7 +106,7 @@ if (EXISTS ${juceDir})
     add_subdirectory (${juceDir} REQUIRED)
 else()
     include (FetchContent)
-    set (fetchcontentincluded TRUE)   #  simple include guard 
+    set (fetchcontentincluded TRUE)  # simple include guard 
 
     message (STATUS "Fetching JUCE from GitHub...")
     
@@ -107,11 +121,25 @@ endif()
 
 #
 
-if (launchExecutableOnBuild)
-    message (STATUS "Configuring executable...")
+if (launchAudioPluginHostOnBuild)
+    message (STATUS "Configuring AudioPluginHost...")
 
-    if (NOT EXISTS ${executable_path})
-        message (WARNING "Invalid executable path; auto-launch feature disabled")
+    set (AudioPluginHost_Path ${juceDir}/extras/AudioPluginHost/Builds)
+
+    if (APPLE)
+        set (AudioPluginHost_Path ${AudioPluginHost_Path}/MacOSX/build/Debug/AudioPluginHost.app)
+    elseif (UNIX)
+        set (AudioPluginHost_Path ${AudioPluginHost_Path}/LinuxMakefile/build/Debug/AudioPluginHost.elf)
+    elseif (WIN32)
+        set (AudioPluginHost_Path ${AudioPluginHost_Path}/VisualStudio2019/build/Debug/AudioPluginHost.exe)
+    else()
+        message (WARNING "Unrecognized operating system; AudioPluginHost executable could be identified. Auto-launch feature disabled.")
+        set (launchAudioPluginHostOnBuild FALSE)
+    endif()
+
+    if (NOT EXISTS ${AudioPluginHost_Path})
+        message (WARNING "AudioPluginHost executable could not be found; auto-launch feature disabled")
+        message (STATUS "Before this feature can be used, the AudioPluginHost executable must be built from the JUCE code.")
         set (launchAudioPluginHostOnBuild FALSE)
     endif()
 endif()
@@ -124,11 +152,13 @@ juce_add_modules (
     ${dspModulesPath}/bv_Harmonizer
     ${dspModulesPath}/bv_ImogenEngine)
 
+message (STATUS "Configuring Imogen...")
+
 juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library for the shared plugin code, and adds targets for each of the specified plugin formats, as well as an "All" target, linked to the shared static lib
-    PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
+    PRODUCT_NAME                Imogen
     VERSION                     ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
-    PLUGIN_NAME                 ${CMAKE_PROJECT_NAME}
+    PLUGIN_NAME                 Imogen
     PLUGIN_MANUFACTURER_CODE    Benv
     DESCRIPTION                 Real-time vocal harmonizer instrument
     IS_SYNTH                    FALSE
@@ -149,9 +179,9 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library
     AU_COPY_DIR                 /Users/benvining/Library/Audio/Plug-Ins/Components
     COMPANY_COPYRIGHT           This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
 
-target_compile_features (${CMAKE_PROJECT_NAME} PRIVATE ${compileFeatures})
+target_compile_features (Imogen PRIVATE ${compileFeatures})
 
-target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
+target_compile_definitions (Imogen PUBLIC 
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
@@ -164,12 +194,16 @@ foreach (target ${formats} "All")  # This cleans up folder organization, putting
         continue()
     endif()
 
-    set_target_properties (${thisTargetName} PROPERTIES
-        FOLDER "Build Targets" 
-        XCODE_GENERATE_SCHEME ON)
+    set_target_properties (${thisTargetName} PROPERTIES FOLDER "Build Targets" XCODE_GENERATE_SCHEME ON)
 
-    if (launchAudioPluginHostOnBuild AND NOT "${target}" STREQUAL "Standalone")
-        set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${executable_path})
+    if ("${target}" STREQUAL "Standalone"  # set the standalone to be its own executable 
+      OR ("${target}" STREQUAL "All" AND NOT launchAudioPluginHostOnBuild))  # and set the "all" target to use the standalone as an executable if not using the AudioPluginHost
+        set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone/Imogen.app)
+        continue()
+    endif()
+
+    if (launchAudioPluginHostOnBuild)
+        set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${AudioPluginHost_Path})
     endif()
 endforeach()
 
@@ -228,8 +262,6 @@ endif()
 
 #
 
-message (STATUS "Configuring unit testing...")
-
 if (NOT fetchcontentincluded)  # simple include guard 
     include (FetchContent)
 endif()
@@ -241,6 +273,8 @@ FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not fo
     GIT_TAG        v2.13.3)
 
 FetchContent_MakeAvailable (Catch2)
+
+message (STATUS "Configuring unit testing...")
 
 set (testFiles
     ${testFilesPath}/tests.cpp

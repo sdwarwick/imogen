@@ -46,6 +46,8 @@ public:
     
     void reset();
     
+    void killAllMidi();
+    
     void releaseResources();
     
     int reportLatency() const noexcept { return internalBlocksize; }
@@ -122,11 +124,7 @@ private:
     bool resourcesReleased;
     bool initialized;
     
-    float dryGain, prevDryGain;
-    float wetGain, prevWetGain;
-    
-    float inputGain, prevInputGain;
-    float outputGain, prevOutputGain;
+    std::atomic<float> dryGain, prevDryGain, wetGain, prevWetGain, inputGain, prevInputGain, outputGain, prevOutputGain;
     
     MidiBuffer midiChoppingBuffer;
     
@@ -146,6 +144,8 @@ private:
                                 const int numSamplesLeft);
     
     Panner dryPanner;
+    
+    CriticalSection lock;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

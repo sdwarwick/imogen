@@ -51,12 +51,18 @@ public:
     void reset();
     
     
-    int getCurrentStereoWidth() const noexcept { return lastRecievedStereoWidth; }
+    int getCurrentStereoWidth() const
+    {
+        const ScopedLock sl (lock);
+        return lastRecievedStereoWidth;
+    }
     
     int getCurrentNumVoices()   const noexcept { return currentNumVoices; }
     
     
 private:
+    
+    CriticalSection lock;
     
     Array<int> panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
     

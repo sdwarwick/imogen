@@ -156,7 +156,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
         newVoice = prevVoice;  // retrigger the same voice with the new velocity
     else
     {
-        const bool isStealing = isKeyboard ? shouldStealNotes : false;  // never steal voices for automated note events, only for keyboard triggered events
+        const bool isStealing = isKeyboard ? shouldStealNotes.load() : false;  // never steal voices for automated note events, only for keyboard triggered events
         newVoice = findFreeVoice (isStealing);
     }
     
@@ -194,7 +194,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
                                       ++lastMidiTimeStamp);
     }
     
-    if (midiPitch < lowestPannedNote)  // set pan to 64 if note is below panning threshold
+    if (midiPitch < lowestPannedNote.load())  // set pan to 64 if note is below panning threshold
     {
         if (wasStolen)
             panner.panValTurnedOff (voice->getCurrentMidiPan());

@@ -53,6 +53,8 @@ int PanningManager::getNextPanVal()
     
     jassert (! unsentPanVals.isEmpty());
     
+    const ScopedLock sl (lock);
+    
     const auto nextPan = unsentPanVals.getUnchecked(0);
     unsentPanVals.remove(0);
     return nextPan;
@@ -63,6 +65,8 @@ void PanningManager::updateStereoWidth (const int newWidth)
 {
     if (currentNumVoices == 0)
         return;
+    
+    const ScopedLock sl (lock);
     
     lastRecievedStereoWidth = newWidth;
     
@@ -122,6 +126,8 @@ void PanningManager::updateStereoWidth (const int newWidth)
 void PanningManager::panValTurnedOff (const int panVal)
 {
     // this function is called when a pan value is turned off and is available again for assigning. This function attempts to reinsert the pan value into unsentPanVals with respect to the order the values are in in panValsInAssigningOrder
+    
+    const ScopedLock sl (lock);
     
     const auto targetindex = panValsInAssigningOrder.indexOf (panVal);
     
@@ -205,6 +211,8 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
     // this is normally used with the unsentPanVals array, but the same function can also be used in the updating of the stereo width, to identify which new pan values should be sent to the unsentPanVals array itself, based on which new pan values are closest to the ones that were already in unsentPanVals.
     
     jassert (isPositiveAndBelow(oldPan, 128));
+    
+    const ScopedLock sl (lock);
     
     if (unsentPanVals.isEmpty() || unsentPanVals.size() == 1)
         return getNextPanVal();

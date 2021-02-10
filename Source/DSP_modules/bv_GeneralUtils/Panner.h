@@ -1,7 +1,7 @@
 /*
     Part of module: bv_GeneralUtils
     Parent file: bv_GeneralUtils.h
- */
+*/
 
 
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
@@ -21,15 +21,15 @@ public:
     ~Panner()
     { }
     
-    int getLastMidiPan() const noexcept { return lastRecievedMidiPan; }
+    int getLastMidiPan() const noexcept { return lastRecievedMidiPan.load(); }
     
-    float getLeftGain()  const noexcept { return leftGain; }
+    float getLeftGain()  const noexcept { return leftGain.load(); }
     
-    float getRightGain() const noexcept { return rightGain; }
+    float getRightGain() const noexcept { return rightGain.load(); }
     
-    float getPrevLeftGain()  const noexcept { return prevLeftGain; }
+    float getPrevLeftGain()  const noexcept { return prevLeftGain.load(); }
     
-    float getPrevRightGain() const noexcept { return prevRightGain; }
+    float getPrevRightGain() const noexcept { return prevRightGain.load(); }
     
     
     float getGainMult (const int chan) const
@@ -37,9 +37,9 @@ public:
         jassert (chan == 0 || chan == 1);
         
         if (chan == 0)
-            return leftGain;
+            return leftGain.load();
         
-        return rightGain;
+        return rightGain.load();
     }
     
     float getPrevGain (const int chan) const
@@ -47,9 +47,9 @@ public:
         jassert (chan == 0 || chan == 1);
         
         if (chan == 0)
-            return prevLeftGain;
+            return prevLeftGain.load();
         
-        return prevRightGain;
+        return prevRightGain.load();
     }
     
     
@@ -57,11 +57,11 @@ public:
     {
         jassert (juce::isPositiveAndBelow (newMidiPan, 128));
         
-        if (lastRecievedMidiPan == newMidiPan)
+        if (lastRecievedMidiPan.load() == newMidiPan)
             return;
         
-        prevLeftGain  = leftGain;
-        prevRightGain = rightGain;
+        prevLeftGain.store(leftGain.load());
+        prevRightGain.store(rightGain.load());
         
         // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
         
@@ -77,18 +77,21 @@ public:
         if (right < 0.0f) right = 0.0f;
         if (right > 1.0f) right = 1.0f;
         
-        lastRecievedMidiPan = newMidiPan;
+        leftGain.store(left);
+        rightGain.store(right);
+        
+        lastRecievedMidiPan.store(newMidiPan);
     }
     
     
 private:
     
-    int lastRecievedMidiPan;
+    std::atomic<int> lastRecievedMidiPan;
     
-    float leftGain;
-    float rightGain;
+    std::atomic<float> leftGain;
+    std::atomic<float> rightGain;
     
-    float prevLeftGain, prevRightGain;
+    std::atomic<float> prevLeftGain, prevRightGain;
 };
 
 }; // namespace
