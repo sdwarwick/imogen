@@ -164,6 +164,7 @@ endif()
 # configure standalone executable
 
 if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
+
     message (STATUS "Configuring standalone executable...")
 
     set (standalone_exec_path ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone)  # the standalone target will be used as its own build executable, and as the "All" target's executable if the AudioPluginHost option is false but launchStandaloneOnBuild is true
@@ -199,6 +200,13 @@ if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
             endif()
         endif()
     endif()
+
+    unset (overridetofalse)
+
+else()
+
+    set (canUseStandaloneExec FALSE)
+
 endif()
 
 #
