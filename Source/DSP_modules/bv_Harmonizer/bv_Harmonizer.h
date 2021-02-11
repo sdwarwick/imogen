@@ -336,7 +336,6 @@ private:
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const noexcept;
     
     void fillWindowBuffer (const int numSamples);
-    void calculateHanningWindow (AudioBuffer<SampleType>& windowToFill, const int numSamples);
     
     
     // *** //
@@ -352,7 +351,9 @@ private:
     GrainExtractor<SampleType> grains;
     Array<int> indicesOfGrainOnsets;
     
-    static constexpr int unpitchedGrainRate = 50;  // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio
+    // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio will be randomized within this range
+    // NB max value should be 1 greater than the largest possible generated number 
+    const Range<int> unpitchedArbitraryPeriodRange = Range<int> (50, 201);
     
     bool latchIsOn;
     
@@ -418,7 +419,7 @@ private:
     AudioBuffer<SampleType> windowBuffer;
     int windowSize;
     
-    AudioBuffer<SampleType> unpitchedWindow;
+    AudioBuffer<SampleType> polarityReversalBuffer;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

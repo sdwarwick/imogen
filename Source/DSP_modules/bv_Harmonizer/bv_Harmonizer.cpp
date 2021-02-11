@@ -70,6 +70,8 @@ void Harmonizer<SampleType>::clearBuffers()
 {
     for (auto* voice : voices)
         voice->clearBuffers();
+    
+    polarityReversalBuffer.clear();
 };
     
     
@@ -97,8 +99,6 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
         voice->prepare(blocksize);
     
     windowBuffer.setSize (1, blocksize * 2, true, true, true);
-    unpitchedWindow.setSize (1, unpitchedGrainRate * 2, true, true, true);
-    calculateHanningWindow (unpitchedWindow, unpitchedGrainRate * 2);
     
     indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
     
@@ -107,6 +107,8 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     grains.prepare (blocksize);
     
     lastNoteOnCounter = 0;
+    
+    polarityReversalBuffer.setSize (1, blocksize);
 };
 
 
@@ -180,8 +182,6 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
     
     currentInputPeriod = roundToInt (sampleRate / newInputFreq);
     
-    fillWindowBuffer (currentInputPeriod * 2);
-    
     if (intervalLatchIsOn && ! intervalsLatchedTo.isEmpty())
         playIntervalSet (intervalsLatchedTo, 1.0f, false, true);
 };
@@ -200,9 +200,6 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     const bool frameIsPitched = (inputFrequency >= 0.0f);
     
-    if (frameIsPitched && currentInputFreq != inputFrequency)
-        setCurrentInputFreq (inputFrequency);
-    
     processMidi (midiMessages);
     
     outputBuffer.clear();
@@ -210,15 +207,46 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     if (getNumActiveVoices() == 0)
         return;
     
-    const int periodThisFrame = frameIsPitched ? currentInputPeriod : unpitchedGrainRate;
+    int periodThisFrame;
+    bool polarityReversed = false;
     
-    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputAudio, periodThisFrame);
+    if (frameIsPitched)
+    {
+        if (currentInputFreq != inputFrequency)
+            setCurrentInputFreq (inputFrequency);
+        
+        periodThisFrame = currentInputPeriod;
+    }
+    else
+    {
+        // for unpitched frames, an arbitrary "period" is imposed on the signal for analysis grain extraction; this arbitrary period is randomized within a certain range
+        
+        Random& rand = Random::getSystemRandom();
+        
+        periodThisFrame = rand.nextInt (unpitchedArbitraryPeriodRange);
+        
+        // also sometimes reverse the polarity of unpitched frames:
+        
+        const int randomTester = rand.nextInt (100);  // generates a random integer in the range [0, 99]
+        
+        if (randomTester % 2 == 0) // reverse the polarity approx 50% of the time
+        {
+            const int numSamples = inputAudio.getNumSamples();
+            polarityReversalBuffer.copyFrom (0, 0, inputAudio, 0, 0, numSamples);
+            polarityReversalBuffer.applyGain (0, numSamples, -1.0f);
+            polarityReversed = true;
+        }
+    }
     
-    AudioBuffer<SampleType>& windowToUse = frameIsPitched ? windowBuffer : unpitchedWindow;
+    fillWindowBuffer (periodThisFrame * 2);
+    
+    const AudioBuffer<SampleType>& actualInput = polarityReversed ? polarityReversalBuffer : inputAudio;
+    
+    grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
-            voice->renderNextBlock (inputAudio, outputBuffer, periodThisFrame, indicesOfGrainOnsets, windowToUse);
+            voice->renderNextBlock (actualInput, outputBuffer, periodThisFrame, indicesOfGrainOnsets, windowBuffer);
 };
 
 
@@ -228,30 +256,23 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 template<typename SampleType>
 void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 {
+    jassert (numSamples > 1);
+    
     if (windowSize == numSamples)
         return;
     
     jassert (numSamples <= windowBuffer.getNumSamples());
     
-    calculateHanningWindow (windowBuffer, numSamples);
+    windowBuffer.clear();
+    
+    auto* writing = windowBuffer.getWritePointer(0);
+    
+    const SampleType samplemultiplier = static_cast<SampleType>( (MathConstants<SampleType>::pi * 2.0) / (numSamples - 1) );
+    
+    for (int i = 1; i < numSamples; ++i)
+        writing[i] = static_cast<SampleType>( (1.0 - (std::cos (i * samplemultiplier))) * 0.5 );
     
     windowSize = numSamples;
-};
-
-
-template<typename SampleType>
-void Harmonizer<SampleType>::calculateHanningWindow (AudioBuffer<SampleType>& windowToFill, const int numSamples)
-{
-    windowToFill.clear();
-    
-    jassert (numSamples > 1);
-    
-    auto* writing = windowToFill.getWritePointer(0);
-    
-    const auto samplemultiplier = MathConstants<SampleType>::pi / static_cast<SampleType> (numSamples - 1);
-    
-    for (int i = 0; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType> (0.5 - 0.5 * ( std::cos (static_cast<SampleType> (2.0 * i) * samplemultiplier) ) );
 };
 
 
