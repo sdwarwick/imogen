@@ -57,16 +57,13 @@ private:
     
     bav::MidiControlPanel midiPanel;
     bav::IOControlPanel ioPanel;
-    bav::StaffDisplay staffDisplay;
     
     HelpScreen helpScreen;
     juce::TextButton helpButton;
     bool viewHelp;  
     
     juce::ComboBox selectPreset;
-    
-    juce::ComboBox modulatorInputSource;
-    
+
     void changeModulatorInputSource();
     
 #if ! JUCE_STANDALONE_APPLICATION
@@ -74,6 +71,8 @@ private:
     bav::EnableSidechainWarning sidechainWarning;
     bool sidechainWarningShowing;
 #endif
+    
+    bav::StaffDisplay staffDisplay;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

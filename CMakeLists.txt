@@ -28,24 +28,6 @@ set (launchStandaloneOnBuild      TRUE)   #  if launchAudioPluginHostOnBuild is 
 
 message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
 
-if (unitTesting)
-    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
-else()
-    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
-endif()
- 
-if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode" AND (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild))
-    message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
-    set (launchAudioPluginHostOnBuild FALSE)
-    set (launchStandaloneOnBuild FALSE)
-endif()
-
-if (launchAudioPluginHostOnBuild)
-    message (STATUS "I'll also attempt to locate the executable for JUCE's AudioPluginHost, and link it to the plugin buid targets as their XCode scheme executable.")
-elseif (launchStandaloneOnBuild)
-    message (STATUS "The Standalone and All targets will use the standalone as their XCode scheme executable.")
-endif()
-
 #
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
@@ -83,6 +65,65 @@ endforeach()
 if (unitTesting AND NOT EXISTS ${testFilesPath})
     set (unitTesting FALSE)
     message (WARNING "Test files directory not found, testing disabled")
+endif()
+
+#
+
+if (unitTesting)
+    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
+else()
+    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
+endif()
+
+#
+
+if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
+    if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
+        message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
+        set (launchAudioPluginHostOnBuild FALSE)
+        set (launchStandaloneOnBuild FALSE)
+    elseif (NOT (APPLE OR UNIX OR WIN32))
+        message (WARNING "Unrecognized operating system; auto-launching executables disabled")
+        set (launchAudioPluginHostOnBuild FALSE)
+        set (launchStandaloneOnBuild FALSE)
+    endif()
+endif()
+
+#
+
+set (isBuildingStandalone FALSE)
+
+foreach (format ${formats})      
+    if ("${format}" STREQUAL "Standalone")
+        set (isBuildingStandalone TRUE)
+        break()
+    endif()
+endforeach()
+
+#
+
+# attempt to locate standalone executable
+
+if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
+
+    set (standalone_exec_path ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone) 
+    
+    if (APPLE)
+        set (standalone_exec_path ${standalone_exec_path}/Imogen.app)
+    elseif (UNIX)
+        set (AudioPluginHost_Path ${AudioPluginHost_Path}/Imogen.elf)
+    elseif (WIN32)
+        set (AudioPluginHost_Path ${AudioPluginHost_Path}/Imogen.exe)
+    endif()
+
+    if (EXISTS ${standalone_exec_path} OR isBuildingStandalone)
+        set (canUseStandaloneExec TRUE)
+    else()
+        message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
+        set (canUseStandaloneExec FALSE)
+        set (launchStandaloneOnBuild FALSE)
+    endif()
+
 endif()
 
 #
@@ -136,6 +177,7 @@ endif()
 # configure AudioPluginHost executable 
 
 if (launchAudioPluginHostOnBuild)
+
     message (STATUS "Configuring AudioPluginHost...")
 
     set (AudioPluginHost_Path ${juceDir}/extras/AudioPluginHost/Builds)
@@ -146,66 +188,35 @@ if (launchAudioPluginHostOnBuild)
         set (AudioPluginHost_Path ${AudioPluginHost_Path}/LinuxMakefile/build/Debug/AudioPluginHost.elf)
     elseif (WIN32)
         set (AudioPluginHost_Path ${AudioPluginHost_Path}/VisualStudio2019/build/Debug/AudioPluginHost.exe)
-    else()
-        message (WARNING "Unrecognized operating system; AudioPluginHost executable could be identified. Auto-launch feature disabled.")
-        set (launchAudioPluginHostOnBuild FALSE)
     endif()
 
-    if (launchAudioPluginHostOnBuild AND NOT EXISTS ${AudioPluginHost_Path})
+    if (NOT EXISTS ${AudioPluginHost_Path})
         message (WARNING "AudioPluginHost executable could not be found; auto-launch feature disabled")
         set (launchAudioPluginHostOnBuild FALSE)
 
         # TO DO: automatically build the APH here...?
 
     endif()
+
 endif()
 
+#
 
-# configure standalone executable
+if (launchAudioPluginHostOnBuild)
 
-if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
+    message (STATUS "The plugin build targets will automatically launch the JUCE AudioPluginHost as their XCode scheme executable.")
 
-    message (STATUS "Configuring standalone executable...")
+    if (isBuildingStandalone)
+        message (STATUS "The Standalone target will use itself as its own executable. The All target will launch the AudioPluginHost.")
+    endif()
 
-    set (standalone_exec_path ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone)  # the standalone target will be used as its own build executable, and as the "All" target's executable if the AudioPluginHost option is false but launchStandaloneOnBuild is true
-    set (overridetofalse FALSE)
+elseif (launchStandaloneOnBuild)
 
-    if (APPLE)
-        set (standalone_exec_path ${standalone_exec_path}/Imogen.app)
-    elseif (UNIX)
-        set (AudioPluginHost_Path ${AudioPluginHost_Path}/Imogen.elf)
-    elseif (WIN32)
-        set (AudioPluginHost_Path ${AudioPluginHost_Path}/Imogen.exe)
+    if (isBuildingStandalone)
+        message (STATUS "The Standalone and All targets will use the standalone as their XCode scheme executable.")
     else()
-        message (WARNING "Unrecognized operating system; Standalone executable could be identified. Auto-launch feature disabled.")
-        set (canUseStandaloneExec FALSE)
-        set (overridetofalse TRUE)
+        message (STATUS "The All target will use the standalone version of Imogen as its XCode scheme executable.")
     endif()
-
-    if (NOT overridetofalse)
-        if (EXISTS ${standalone_exec_path})   #  determine whether we can use the standalone executable: we can if either it already exists...
-            set (canUseStandaloneExec TRUE)
-        else()
-            set (canUseStandaloneExec FALSE)
-
-            foreach (format ${formats})       #  ...or we're going to be building it with the next build 
-                if ("${format}" STREQUAL "Standalone")
-                    set (canUseStandaloneExec TRUE)
-                    break()
-                endif()
-            endforeach()
-
-            if (NOT canUseStandaloneExec)
-                message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
-            endif()
-        endif()
-    endif()
-
-    unset (overridetofalse)
-
-else()
-
-    set (canUseStandaloneExec FALSE)
 
 endif()
 
@@ -257,7 +268,7 @@ target_compile_definitions (Imogen PUBLIC
 # This cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder, and also configures XCode scheme executables for each target
 
 foreach (target ${formats} "All") 
-    
+
     set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")  # this is how JUCE automatically names the build targets created for each format
 
     if (NOT TARGET ${thisTargetName})
@@ -271,8 +282,8 @@ foreach (target ${formats} "All")
     endif()
 
     if (canUseStandaloneExec)
-        if ("${target}" STREQUAL "Standalone" 
-          OR ("${target}" STREQUAL "All" AND NOT launchAudioPluginHostOnBuild))
+        if  ("${target}" STREQUAL "Standalone" 
+         OR ("${target}" STREQUAL "All" AND NOT launchAudioPluginHostOnBuild))
             set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${standalone_exec_path})  
             continue()
         endif()

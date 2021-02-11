@@ -182,12 +182,10 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-    int inBusNum;
-    
 #if JUCE_STANDALONE_APPLICATION
-    inBusNum = 0;
+    int inBusNum = 0;
 #else
-    inBusNum = (host.isLogic() || host.isGarageBand());
+    int inBusNum = (host.isLogic() || host.isGarageBand());
 #endif
     
     juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
@@ -245,12 +243,10 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-    int inBusNum;
-    
 #if JUCE_STANDALONE_APPLICATION
-    inBusNum = 0;
+    int inBusNum = 0;
 #else
-    inBusNum = (host.isLogic() || host.isGarageBand());
+    int inBusNum = (host.isLogic() || host.isGarageBand());
 #endif
  
     juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
