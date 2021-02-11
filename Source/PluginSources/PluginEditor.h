@@ -63,6 +63,8 @@ private:
     bool viewHelp;  
     
     juce::ComboBox selectPreset;
+    
+    juce::ComboBox modulatorInputSource;
 
     void changeModulatorInputSource();
     

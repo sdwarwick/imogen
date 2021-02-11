@@ -78,10 +78,7 @@ void Harmonizer<SampleType>::initialize (const int initNumVoices, const double i
 {
     voices.clear();
     
-    for (int i = 0; i < initNumVoices; ++i)
-        voices.add (new HarmonizerVoice<SampleType>(this));
-    
-    newMaxNumVoices (initNumVoices);
+    addNumVoices (initNumVoices);
     
     setCurrentPlaybackSampleRate (initSamplerate);
     
@@ -94,7 +91,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
 {
     aggregateMidiBuffer.ensureSize(static_cast<size_t>(blocksize * 2));
     
-    newMaxNumVoices(voices.size());
+    numVoicesChanged(voices.size());
     
     for (auto* voice : voices)
         voice->prepare(blocksize);
@@ -152,7 +149,7 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::newMaxNumVoices (const int newMaxNumVoices)
+void Harmonizer<SampleType>::numVoicesChanged (const int newMaxNumVoices)
 {
     panner.prepare (newMaxNumVoices);
     intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
@@ -186,7 +183,7 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
     fillWindowBuffer (currentInputPeriod * 2);
     
     if (intervalLatchIsOn && ! intervalsLatchedTo.isEmpty())
-        playChordFromIntervalSet (intervalsLatchedTo);
+        playIntervalSet (intervalsLatchedTo, 1.0f, false, true);
 };
 
 

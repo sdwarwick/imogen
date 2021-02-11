@@ -481,14 +481,9 @@ void ImogenEngine<SampleType>::updateNumVoices (const int newNumVoices)
         return;
     
     if (newNumVoices > currentVoices)
-    {
-        for(int i = 0; i < newNumVoices - currentVoices; ++i)
-            harmonizer.addVoice (new HarmonizerVoice<SampleType>(&harmonizer));
-        
-        harmonizer.newMaxNumVoices(newNumVoices); // increases storage overheads for internal harmonizer functions dealing with arrays of notes
-    }
+        harmonizer.addNumVoices (newNumVoices - currentVoices);
     else
-        harmonizer.removeNumVoices(currentVoices - newNumVoices);
+        harmonizer.removeNumVoices (currentVoices - newNumVoices);
 };
 
 

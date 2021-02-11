@@ -95,7 +95,7 @@ protected:
     
     void startNote (const int midiPitch,  const float velocity,
                     const uint32 noteOnTimestamp,
-                    const bool keyboardKeyIsDown,
+                    const bool keyboardKeyIsDown = true,
                     const bool isPedal = false, const bool isDescant = false);
     
     void stopNote (const float velocity, const bool allowTailOff);
@@ -186,12 +186,6 @@ public:
     
     ~Harmonizer();
     
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio,
-                       AudioBuffer<SampleType>& outputBuffer,
-                       MidiBuffer& midiMessages);
-    
-    void processMidi (MidiBuffer& midiMessages);
-    
     void initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize);
     
     void prepare (const int blocksize);
@@ -200,11 +194,58 @@ public:
     
     void clearBuffers();
     
-    int getNumActiveVoices() const noexcept;
+    void renderVoices (const AudioBuffer<SampleType>& inputAudio,
+                       AudioBuffer<SampleType>& outputBuffer,
+                       MidiBuffer& midiMessages);
+    
+    void processMidi (MidiBuffer& midiMessages);
+    
+    void processMidiEvent (const MidiMessage& m);
+    
+    void playChord (const Array<int>& desiredPitches,
+                    const float velocity = 1.0f,
+                    const bool allowTailOffOfOld = false);
+    
+    void playIntervalSet (const Array<int>& desiredIntervals,
+                          const float velocity = 1.0f,
+                          const bool allowTailOffOfOld = false,
+                          const bool isIntervalLatch = false);
+    
+    void allNotesOff (const bool allowTailOff, const float velocity = 1.0f);
+    
+    void turnOffAllKeyupNotes (const bool allowTailOff,  
+                               const bool includePedalPitchAndDescant,
+                               const float velocity = 1.0f);
     
     bool isPitchActive (const int midiPitch, const bool countRingingButReleased = false, const bool countKeyUpNotes = false) const;
     
+    void reportActiveNotes (Array<int>& outputArray,
+                            const bool includePlayingButReleased = false,
+                            const bool includeKeyUpNotes = true) const;
+    
+    int getNumActiveVoices() const noexcept;
+    
+    int getNumVoices() const noexcept { return voices.size(); }
+    
+    // adds a specified # of voices
+    void addNumVoices (const int voicesToAdd);
+    
+    // removes a specified # of voices, attempting to remove inactive voices first, and only removes active voices if necessary
+    void removeNumVoices (const int voicesToRemove);
+    
+    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes.store(shouldSteal); }
+    
     void updateMidiVelocitySensitivity (const int newSensitivity);
+    void updatePitchbendSettings (const int rangeUp, const int rangeDown);
+    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
+    
+    void setPedalPitch (const bool isOn);
+    void setPedalPitchUpperThresh (const int newThresh);
+    void setPedalPitchInterval (const int newInterval);
+    
+    void setDescant (const bool isOn);
+    void setDescantLowerThresh (const int newThresh);
+    void setDescantInterval (const int newInterval);
     
     void setCurrentPlaybackSampleRate (const double newRate);
     
@@ -212,17 +253,6 @@ public:
     
     void updateStereoWidth (const int newWidth);
     void updateLowestPannedNote (const int newPitchThresh);
-    
-    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes.store(shouldSteal); }
-    
-    void reportActiveNotes (Array<int>& outputArray,
-                            const bool includePlayingButReleased = false,
-                            const bool includeKeyUpNotes = true) const; // returns an array of the currently active pitches
-    
-    void allNotesOff (const bool allowTailOff);
-    
-    // takes a list of desired pitches & sends the appropriate note & note off messages in sequence to leave only the desired notes playing
-    void playChord (const Array<int>& desiredPitches, const float velocity, const bool allowTailOffOfOld, const bool isIntervalLatch = false);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; }
@@ -234,57 +264,16 @@ public:
     void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn.store(shouldBeOn); }
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);
-    
-    void updatePitchbendSettings (const int rangeUp, const int rangeDown);
-    
-    // Adds a new voice to the harmonizer. The object passed in will be managed by the harmonizer, which will delete it later on when no longer needed. The caller should not retain a pointer to the voice.
-    void addVoice (HarmonizerVoice<SampleType>* newVoice);
-    
-    // removes a specified # of voices, attempting to remove inactive voices first, and only removes active voices if necessary
-    void removeNumVoices (const int voicesToRemove);
-    
-    int getNumVoices() const noexcept { return voices.size(); }
-    
-    void setPedalPitch (const bool isOn);
-    void setPedalPitchUpperThresh (const int newThresh);
-    void setPedalPitchInterval (const int newInterval);
-    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const noexcept;
-    
-    void setDescant (const bool isOn);
-    void setDescantLowerThresh (const int newThresh);
-    void setDescantInterval (const int newInterval);
-    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const noexcept;
-    
-    void newMaxNumVoices (const int newMaxNumVoices);
-    
-    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
-    
-    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const noexcept;
-    
-    // turns off any pitches whose keys are not being held anymore
-    void turnOffAllKeyupNotes (const bool allowTailOff, const bool includePedalPitchAndDescant);
-    
+
     void updatePitchDetectionHzRange (const int minHz, const int maxHz) { pitchDetector.setHzRange (minHz, maxHz); }
     
     void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
         { pitchDetector.setConfidenceThresh (static_cast<SampleType>(newUpperThresh), static_cast<SampleType>(newLowerThresh)); }
     
-private:
     
-    friend class HarmonizerVoice<SampleType>;
+protected:
     
-    CriticalSection lock;
-    
-    OwnedArray< HarmonizerVoice<SampleType> > voices;
-    
-    PitchDetector<SampleType> pitchDetector;
-    
-    GrainExtractor<SampleType> grains;
-    Array<int> indicesOfGrainOnsets;
-    
-    static constexpr int unpitchedGrainRate = 50;  // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio
-    
-    void setCurrentInputFreq (const float newInputFreq);
+    // these functions will be called by the harmonizer's voices, to query for important harmonizer-wide info
     
     // returns a float velocity weighted according to the current midi velocity sensitivity settings
     float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); }
@@ -296,6 +285,18 @@ private:
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
     bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
     float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier.load(); }
+    
+    bool isADSRon() const noexcept { return adsrIsOn.load(); }
+    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
+    ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
+    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
+    
+    
+private:
+    
+    void setCurrentInputFreq (const float newInputFreq);
+    
+    void numVoicesChanged (const int newMaxNumVoices);
     
     // MIDI
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
@@ -315,22 +316,10 @@ private:
     void handleBalance (const int controlValue);
     void handleLegato (const bool isOn);
     
-    bool isADSRon() const noexcept { return adsrIsOn.load(); }
-    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
-    ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
-    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
-    
-    // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
-    HarmonizerVoice<SampleType>* findVoiceToSteal() const;
-    
     void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
     
-    // turns on a list of given pitches at once
-    void turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord = false);
-    
-    // turns off a list of given pitches at once. Used for turning off midi latch
+    void turnOnList  (const Array<int>& toTurnOn,  const float velocity, const bool partOfChord = false);
     void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord = false);
     
     // this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, descant, etc
@@ -339,13 +328,37 @@ private:
     void applyPedalPitch();
     void applyDescant();
     
+    // voice allocation
+    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
+    HarmonizerVoice<SampleType>* findVoiceToSteal() const;
+    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const noexcept;
+    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const noexcept;
+    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const noexcept;
+    
+    void fillWindowBuffer (const int numSamples);
+    void calculateHanningWindow (AudioBuffer<SampleType>& windowToFill, const int numSamples);
+    
+    
+    // *** //
+    
+    friend class HarmonizerVoice<SampleType>;
+    
+    CriticalSection lock;
+    
+    OwnedArray< HarmonizerVoice<SampleType> > voices;
+    
+    PitchDetector<SampleType> pitchDetector;
+    
+    GrainExtractor<SampleType> grains;
+    Array<int> indicesOfGrainOnsets;
+    
+    static constexpr int unpitchedGrainRate = 50;  // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio
+    
     bool latchIsOn;
     
     bool intervalLatchIsOn;
     Array<int> intervalsLatchedTo;
     void updateIntervalsLatchedTo();
-    
-    void playChordFromIntervalSet (const Array<int>& desiredIntervals);
     
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;
@@ -403,12 +416,9 @@ private:
     std::atomic<float> softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
     
     AudioBuffer<SampleType> windowBuffer;
-    void fillWindowBuffer (const int numSamples);
     int windowSize;
     
     AudioBuffer<SampleType> unpitchedWindow;
-    
-    void calculateHanningWindow (AudioBuffer<SampleType>& windowToFill, const int numSamples);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

@@ -15,14 +15,12 @@ namespace bav
 
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
-                                                   const bool includePedalPitchAndDescant)
+                                                   const bool includePedalPitchAndDescant,
+                                                   const float velocity)
 {
-    const float velocity = allowTailOff ? 0.0f : 1.0f;
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive() && ! voice->isKeyDown())
-            if (includePedalPitchAndDescant
-                || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
+            if (includePedalPitchAndDescant || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
                   stopVoice (voice, velocity, allowTailOff);
 };
     
@@ -94,6 +92,14 @@ void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
     
     lastMidiTimeStamp = -1;
 };
+    
+    
+template<typename SampleType>
+void Harmonizer<SampleType>::processMidiEvent (const MidiMessage& m)
+{
+    handleMidiEvent (m, ++lastMidiTimeStamp);
+    pitchCollectionChanged();
+};
 
 
 template<typename SampleType>
@@ -132,10 +138,7 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
         applyDescant();
     
     if (intervalLatchIsOn)
-    {
         updateIntervalsLatchedTo();
-        playChordFromIntervalSet (intervalsLatchedTo);
-    }
 };
     
     
@@ -298,10 +301,8 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff)
+void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff, const float velocity)
 {
-    const float velocity = allowTailOff ? 0.0f : 1.0f;
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             stopVoice (voice, velocity, allowTailOff);
@@ -327,7 +328,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
         return;
     
     if (! intervalLatchIsOn || intervalsLatchedTo.isEmpty())
-        turnOffAllKeyupNotes (allowTailOff, false);
+        turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff);
     else
     {
         // turn off all voices whose key is up and who aren't being held by the interval latch function
@@ -365,7 +366,7 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
         updateIntervalsLatchedTo();
     else if (! latchIsOn)
     {
-        turnOffAllKeyupNotes (allowTailOff, false);
+        turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff);
         pitchCollectionChanged();
     }
 };
@@ -394,11 +395,14 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 
 // plays a chord based on a given set of desired interval offsets from the current input pitch.
 template<typename SampleType>
-void Harmonizer<SampleType>::playChordFromIntervalSet (const Array<int>& desiredIntervals)
+void Harmonizer<SampleType>::playIntervalSet (const Array<int>& desiredIntervals,
+                                              const float velocity,
+                                              const bool allowTailOffOfOld,
+                                              const bool isIntervalLatch)
 {
     if (desiredIntervals.isEmpty())
     {
-        allNotesOff (false);
+        allNotesOff (allowTailOffOfOld);
         return;
     }
     
@@ -410,7 +414,10 @@ void Harmonizer<SampleType>::playChordFromIntervalSet (const Array<int>& desired
     for (int interval : desiredIntervals)
         desiredNotes.add (currentInputPitch + interval);
     
-    playChord (desiredNotes, 1.0f, false);
+    playChord (desiredNotes, velocity, allowTailOffOfOld);
+    
+    if (! isIntervalLatch)
+        pitchCollectionChanged();
 };
 
 
@@ -418,8 +425,7 @@ void Harmonizer<SampleType>::playChordFromIntervalSet (const Array<int>& desired
 template<typename SampleType>
 void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
                                         const float velocity,
-                                        const bool allowTailOffOfOld,
-                                        const bool isIntervalLatch)
+                                        const bool allowTailOffOfOld)
 {
     if (desiredPitches.isEmpty())
     {
@@ -464,13 +470,9 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
         
         turnOnList (toTurnOn, velocity, true);
     }
-    
-    if (! isIntervalLatch)
-        pitchCollectionChanged();
 };
 
 
-// turn on list: turns on a list of specified notes in quick sequence.
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord)
 {
@@ -485,7 +487,6 @@ void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float
 };
 
 
-// turn off list: turns off a list of specified notes in quick sequence.
 template<typename SampleType>
 void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
 {

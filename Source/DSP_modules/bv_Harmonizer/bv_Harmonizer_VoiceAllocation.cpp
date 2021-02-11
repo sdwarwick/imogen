@@ -158,13 +158,14 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
     
     
 template<typename SampleType>
-void Harmonizer<SampleType>::addVoice (HarmonizerVoice<SampleType>* newVoice)
+void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
 {
     const ScopedLock sl (lock);
     
-    voices.add (newVoice);
+    for (int i = 0; i < voicesToAdd; ++i)
+        voices.add (new HarmonizerVoice<SampleType>(this));
     
-    newMaxNumVoices (voices.size());
+    numVoicesChanged (voices.size());
 };
     
     
@@ -218,6 +219,8 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     
     panner.setNumberOfVoices (std::max (voices.size(), 1));
 };
+    
+
     
     
 };  // namespace
