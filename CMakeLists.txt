@@ -14,14 +14,15 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set (unitTesting TRUE)  # set this to 'true' to enable a unit testing executable target
 
-set (launchAudioPluginHostOnBuild TRUE)  #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
-set (launchStandaloneOnBuild TRUE)  # if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
-
 set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 AU AUv3 AAX VST. For AAX or VST, the path to the respective SDK must be provided using juce_set_aax_sdk_path or juce_set_vst2_sdk_path
 
 set (juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE)  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
 
 set (compileFeatures cxx_std_17)
+
+# XCODE ONLY!
+set (launchAudioPluginHostOnBuild TRUE)   #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
+set (launchStandaloneOnBuild      TRUE)   #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
 
 #
 
@@ -32,9 +33,17 @@ if (unitTesting)
 else()
     message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
 endif()
+ 
+if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode" AND (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild))
+    message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
+    set (launchAudioPluginHostOnBuild FALSE)
+    set (launchStandaloneOnBuild FALSE)
+endif()
 
 if (launchAudioPluginHostOnBuild)
     message (STATUS "I'll also attempt to locate the executable for JUCE's AudioPluginHost, and link it to the plugin buid targets as their XCode scheme executable.")
+elseif (launchStandaloneOnBuild)
+    message (STATUS "The Standalone and All targets will use the standalone as their XCode scheme executable.")
 endif()
 
 #
@@ -54,6 +63,7 @@ set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the gra
 set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
 
 #
+
 # testing that all the directories we need exist (ie, the source tree is intact)
 
 if (NOT EXISTS ${sourceDir})
@@ -101,6 +111,8 @@ option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
+
+# add JUCE 
 
 if (EXISTS ${juceDir})
     add_subdirectory (${juceDir} REQUIRED)
@@ -152,7 +164,9 @@ endif()
 # configure standalone executable
 
 if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
-    set (standalone_exec_path ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone)  # the standalone version will be used as its own build executable, and as the "All" target's executable if the AudioPluginHost option isn't enabled 
+    message (STATUS "Configuring standalone executable...")
+
+    set (standalone_exec_path ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone)  # the standalone target will be used as its own build executable, and as the "All" target's executable if the AudioPluginHost option is false but launchStandaloneOnBuild is true
     set (overridetofalse FALSE)
 
     if (APPLE)
@@ -162,13 +176,12 @@ if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
     elseif (WIN32)
         set (AudioPluginHost_Path ${AudioPluginHost_Path}/Imogen.exe)
     else()
-        set (launchStandaloneOnBuild FALSE)
+        message (WARNING "Unrecognized operating system; Standalone executable could be identified. Auto-launch feature disabled.")
+        set (canUseStandaloneExec FALSE)
         set (overridetofalse TRUE)
     endif()
 
-    if (overridetofalse)
-        set (canUseStandaloneExec FALSE)
-    else()
+    if (NOT overridetofalse)
         if (EXISTS ${standalone_exec_path})   #  determine whether we can use the standalone executable: we can if either it already exists...
             set (canUseStandaloneExec TRUE)
         else()
@@ -180,6 +193,10 @@ if (launchAudioPluginHostOnBuild OR launchStandaloneOnBuild)
                     break()
                 endif()
             endforeach()
+
+            if (NOT canUseStandaloneExec)
+                message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
+            endif()
         endif()
     endif()
 endif()
@@ -229,7 +246,9 @@ target_compile_definitions (Imogen PUBLIC
 
 #
 
-foreach (target ${formats} "All")  # This cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder
+# This cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder, and also configures XCode scheme executables for each target
+
+foreach (target ${formats} "All") 
     
     set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")  # this is how JUCE automatically names the build targets created for each format
 
@@ -244,11 +263,9 @@ foreach (target ${formats} "All")  # This cleans up folder organization, putting
     endif()
 
     if (canUseStandaloneExec)
-        if ("${target}" STREQUAL "Standalone")
-            set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${standalone_exec_path})  # always use the standalone as its own executable 
-            continue()
-        elseif ("${target}" STREQUAL "All" AND NOT launchAudioPluginHostOnBuild)
-            set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${standalone_exec_path})  # use the standalone for the "All" target if launchAudioPluginHostOnBuild is false but launchStandaloneOnBuild is true
+        if ("${target}" STREQUAL "Standalone" 
+          OR ("${target}" STREQUAL "All" AND NOT launchAudioPluginHostOnBuild))
+            set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${standalone_exec_path})  
             continue()
         endif()
     elseif ("${target}" STREQUAL "Standalone")
@@ -338,9 +355,7 @@ source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
 add_executable (Tests ${testFiles})   # Test executable for unit testing
 
-set_target_properties (Tests PROPERTIES 
-    FOLDER "${CMAKE_PROJECT_NAME}"
-    XCODE_GENERATE_SCHEME ON)
+set_target_properties (Tests PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}" XCODE_GENERATE_SCHEME ON)
 
 target_include_directories (Tests PRIVATE ${testFilesPath})
 
