@@ -58,12 +58,7 @@ void ImogenEngine<SampleType>::changeBlocksize (const int newBlocksize)
 template<typename SampleType>
 void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
-    for (int i = 0; i < initNumVoices; ++i)
-        harmonizer.addVoice (new HarmonizerVoice<SampleType>(&harmonizer));
-    
-    harmonizer.newMaxNumVoices (initNumVoices);
-    
-    harmonizer.setCurrentPlaybackSampleRate (initSamplerate);
+    harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
     changeBlocksize (initSamplesPerBlock);
     
@@ -180,7 +175,9 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
                                         const bool applyFadeIn, const bool applyFadeOut)
 {
     // at this layer, we check to ensure that the buffer sent to us does not exceed the internal blocksize we want to process. If it does, it is broken into smaller chunks, and processWrapped() called on each of these chunks in sequence.
-    // at this level, our only garuntee is that we will not recieve an empty buffer (ie, 0 samples long)
+    
+    if (output.getNumChannels() != 2 || output.getNumSamples() == 0 || inBus.getNumSamples() == 0 || inBus.getNumChannels() == 0)
+        return;
     
     const int totalNumSamples = inBus.getNumSamples();
     
@@ -370,6 +367,9 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
 {
+    if (output.getNumChannels() != 2 || output.getNumSamples() == 0 || inBus.getNumSamples() == 0 || inBus.getNumChannels() == 0)
+        return;
+    
     const int totalNumSamples = inBus.getNumSamples();
     
     jassert (totalNumSamples > 0);

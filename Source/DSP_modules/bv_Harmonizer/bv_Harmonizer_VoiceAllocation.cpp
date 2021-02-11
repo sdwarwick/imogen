@@ -160,9 +160,11 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
 template<typename SampleType>
 void Harmonizer<SampleType>::addVoice (HarmonizerVoice<SampleType>* newVoice)
 {
+    const ScopedLock sl (lock);
+    
     voices.add (newVoice);
     
-    panner.setNumberOfVoices (voices.size());
+    newMaxNumVoices (voices.size());
 };
     
     
@@ -171,6 +173,8 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
 {
     if (voicesToRemove == 0)
         return;
+    
+    const ScopedLock sl (lock);
     
     const int shouldBeLeft = voices.size() - voicesToRemove;
     

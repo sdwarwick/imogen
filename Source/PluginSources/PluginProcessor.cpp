@@ -168,33 +168,30 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
     
+    if (! engine.hasBeenInitialized())
+        return;
+    
 #if ! JUCE_STANDALONE_APPLICATION
     if ( (host.isLogic() || host.isGarageBand())
         && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
           return; // our audio input is disabled! can't do processing
 #endif
     
-    if (! engine.hasBeenInitialized())
-        return;
-    
     updateAllParameters (engine); // the host might use a 0-sample long audio buffer to tell us to update our state with new automation values, which is why the check for that is AFTER this call.
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-#if ! JUCE_STANDALONE_APPLICATION
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    int inBusNum;
+    
+#if JUCE_STANDALONE_APPLICATION
+    inBusNum = 0;
 #else
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, 0);
+    inBusNum = (host.isLogic() || host.isGarageBand());
 #endif
     
+    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
-    
-    if (inBus.getNumSamples() == 0 || inBus.getNumChannels() == 0)
-        return;
-    
-    if (outBus.getNumChannels() != 2) // the output bus MUST be configured to stereo!
-        return;
     
     engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
@@ -234,33 +231,30 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
     
+    if (! engine.hasBeenInitialized())
+        return;
+    
 #if ! JUCE_STANDALONE_APPLICATION
     if ( (host.isLogic() || host.isGarageBand())
         && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
           return; // our audio input is disabled! can't do processing
 #endif
     
-    if (! engine.hasBeenInitialized())
-        return;
-    
     updateAllParameters (engine);
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-#if ! JUCE_STANDALONE_APPLICATION
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
+    int inBusNum;
+    
+#if JUCE_STANDALONE_APPLICATION
+    inBusNum = 0;
 #else
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, 0);
+    inBusNum = (host.isLogic() || host.isGarageBand());
 #endif
-    
+ 
+    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
-    
-    if (inBus.getNumSamples() == 0 || inBus.getNumChannels() == 0)
-        return;
-    
-    if (outBus.getNumChannels() != 2)
-        return;
     
     if (! wasBypassedLastCallback)
         engine.process (inBus, outBus, midiMessages, false, true); // render 1 more output frame & ramp gain to 0

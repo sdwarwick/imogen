@@ -192,6 +192,8 @@ public:
     
     void processMidi (MidiBuffer& midiMessages);
     
+    void initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize);
+    
     void prepare (const int blocksize);
     
     void releaseResources();

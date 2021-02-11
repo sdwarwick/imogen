@@ -71,8 +71,24 @@ void Harmonizer<SampleType>::clearBuffers()
     for (auto* voice : voices)
         voice->clearBuffers();
 };
+    
+    
+template<typename SampleType>
+void Harmonizer<SampleType>::initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize)
+{
+    voices.clear();
+    
+    for (int i = 0; i < initNumVoices; ++i)
+        voices.add (new HarmonizerVoice<SampleType>(this));
+    
+    newMaxNumVoices (initNumVoices);
+    
+    setCurrentPlaybackSampleRate (initSamplerate);
+    
+    prepare (initBlocksize);
+};
 
-
+ 
 template<typename SampleType>
 void Harmonizer<SampleType>::prepare (const int blocksize)
 {
@@ -138,8 +154,7 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 template<typename SampleType>
 void Harmonizer<SampleType>::newMaxNumVoices (const int newMaxNumVoices)
 {
-    panner.prepare(newMaxNumVoices);
-    
+    panner.prepare (newMaxNumVoices);
     intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
 };
 
