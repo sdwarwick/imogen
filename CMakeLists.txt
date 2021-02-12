@@ -3,8 +3,7 @@
 #  AUTHOR: BEN VINING
 
 #  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application. 
-#  If you do not already have JUCE on your computer, you can specify a "juceDir" that does not exist in your filesystem; this script will automatically download the JUCE code from GitHub.
-#  If you do have JUCE already and would like to avoid redownloading it, you can either move or copy your JUCE folder into the Imogen "Source" folder (so that JUCE is a subdirectory of the Imogen Source folder), and then make sure that the "juceDir" specified below matches the path to your JUCE folder. 
+#  If you do not already have JUCE on your computer, you can specify an "IMOGEN_juceDir" that does not exist in your filesystem; this script will automatically download the JUCE code from GitHub.
 
 
 # TO DO:
@@ -96,14 +95,6 @@ endif()
 
 #
 
-determineIfBuildingStandalone()
-
-if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-    checkIfCanUseExecutables()
-endif()
-
-#
-
 # add JUCE 
 
 if (EXISTS ${IMOGEN_juceDir})
@@ -124,6 +115,12 @@ else()
 endif()
 
 #
+
+determineIfBuildingStandalone()
+
+if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
+    checkIfCanUseExecutables()
+endif()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
     configureStandaloneExecutable()

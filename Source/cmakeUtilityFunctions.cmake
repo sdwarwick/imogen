@@ -23,27 +23,25 @@ function (checkAllDirectories)
 	endif()
 endfunction()
 
-#
+###
 
 function (checkIfCanUseExecutables)
 
-	set (turnemoff FALSE)
+	function (_turnEmOff)
+		set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
+        set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
+	endfunction()
 
 	if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
         message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
-        set (turnemoff TRUE)
+        _turnEmOff()
     elseif (NOT (APPLE OR UNIX OR WIN32))
         message (WARNING "Unrecognized operating system; auto-launching executables disabled")
-        set (turnemoff TRUE)
-    endif()
-
-    if (turnemoff)
-    	set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
-        set (IMOGEN_launchStandaloneOnBuild      FALSE PARENT_SCOPE)
+        _turnEmOff()
     endif()
 endfunction()
 
-#
+###
 
 function (determineIfBuildingStandalone)
 
@@ -59,14 +57,13 @@ endfunction()
 
 #
 
-function (_standaloneNotFound)
-	message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
-    set (canUseStandaloneExec FALSE PARENT_SCOPE)
-    set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
-endfunction()
-
-
 function (configureStandaloneExecutable)
+
+	function (_standaloneNotFound)
+		message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
+	    set (canUseStandaloneExec FALSE PARENT_SCOPE)
+	    set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
+	endfunction()
 
 	if (NOT isBuildingStandalone AND NOT IMOGEN_launchStandaloneOnBuild AND NOT IMOGEN_preferStandaloneForAllTarget)
 	    set (canUseStandaloneExec FALSE PARENT_SCOPE)
@@ -102,12 +99,16 @@ function (configureStandaloneExecutable)
         if (NOT isBuildingStandalone)
             message (WARNING "The Standalone executable was located and can be used, but you are not rebuilding the Standalone with this build, so its behavior may not reflect the most recent code changes.")
         endif()
+
+        if (NOT IMOGEN_launchStandaloneOnBuild)
+		    set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
+		endif()
     else()
     	_standaloneNotFound()
     endif()
 endfunction()
 
-#
+###
 
 function (configureAudioPluginHostExecutable)
 
@@ -141,7 +142,7 @@ function (configureAudioPluginHostExecutable)
     set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
 endfunction()
 
-#
+###
 
 function (configureIndividualBuildTargets)
 
@@ -158,6 +159,8 @@ function (configureIndividualBuildTargets)
 	else()
 		set (useStandaloneForAllTarget FALSE)
 	endif()
+
+	#
 
 	foreach (target ${formats} "All") 
 	    set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
