@@ -6,6 +6,8 @@
 
 #include "../../Source/PluginSources/PluginEditor.h"
 
+#include "BinaryData.h"
+
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), audioProcessor (p),
@@ -15,6 +17,11 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     staffDisplay(p, lookAndFeel)
 {
     setSize (940, 435);
+    
+    auto splash = new juce::SplashScreen ("Welcome to Imogen!",
+                                          bav::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize)
+                                                .rescaled (400, 400, juce::Graphics::ResamplingQuality::highResamplingQuality),
+                                          true);
     
     lookAndFeel.changeSkin(currentSkin);
     
@@ -64,6 +71,8 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     addAndMakeVisible(skinLabel);
     //addAndMakeVisible(selectPreset);
     //addAndMakeVisible(modulatorInputSource);
+    
+    splash->deleteAfterDelay(juce::RelativeTime(4), true);
 };
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {

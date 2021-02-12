@@ -356,7 +356,8 @@ set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets 
 juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
     ${GraphicAssetsDir}/1-1_note_semibreve.svg 
     ${GraphicAssetsDir}/closeIcon.png 
-    ${GraphicAssetsDir}/grandStaff.png)
+    ${GraphicAssetsDir}/grandStaff.png
+    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
 
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 

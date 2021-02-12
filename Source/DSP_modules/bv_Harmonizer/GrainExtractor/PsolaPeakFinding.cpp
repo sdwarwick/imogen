@@ -49,8 +49,14 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             
             sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
             
-            while (peakCandidates.size() < numPeaksToTest) 
+            while (peakCandidates.size() < numPeaksToTest)
+            {
                 getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex, peakSearchingOrder);
+                
+                if (peakCandidates.size() > 2)
+                    if (peakCandidates.getLast() == peakCandidates.getUnchecked(peakCandidates.size() - 2))
+                        break;
+            }
         }
         
         // identify the most ideal peak for this analysis window out of our list of candidates
@@ -80,11 +86,11 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 {
                     const SampleType current = abs(reading[candidate]);
                     
-                    if (current <= strongestPeak)
-                        continue;
-                
-                    strongestPeak = current;
-                    strongestPeakIndex = candidate;
+                    if (current > strongestPeak)
+                    {
+                        strongestPeak = current;
+                        strongestPeakIndex = candidate;
+                    }
                 }
                 
                 peakIndex = strongestPeakIndex;
@@ -106,7 +112,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
 template<typename SampleType>
 void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                                           const int startSample, const int endSample, const int predictedPeak,
-                                                          Array<int>& searchingOrder)
+                                                          const Array<int>& searchingOrder)
 {
     jassert (! searchingOrder.isEmpty());
     
@@ -138,15 +144,13 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         starting = newStart;
     }
     
-    
     struct weighting
     {
         static inline SampleType weight (int index, int predicted, int numSamples)
         {
-            return SampleType(1.0) - (((abs (index - predicted)) / numSamples) * SampleType(0.5));
+            return SampleType(1.0) - ( ( (abs(index - predicted)) / numSamples ) * SampleType(0.5) );
         }
     };
-    
     
     SampleType localMin = input[starting] * weighting::weight (starting, predictedPeak, numSamples);
     SampleType localMax = localMin;
@@ -157,10 +161,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     {
         const int index = searchingOrder.getUnchecked(i);
         
-        if (index == starting)
-            continue;
-        
-        if (candidates.contains (index))
+        if (index == starting || candidates.contains (index))
             continue;
         
         const SampleType currentSample = input[index] * weighting::weight (index, predictedPeak, numSamples);
@@ -222,8 +223,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
     }
     
-    // find the highest delta value of any candidate
-    float maxDelta = 0.0f;
+    float maxDelta = 0.0f; // find the highest delta value of any candidate
+    
     for (float delta : candidateDeltas)
         if (delta > maxDelta)
             maxDelta = delta;
@@ -251,13 +252,13 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         finalHandfulDeltas.add (minDelta);
         finalHandful.add (candidates.getUnchecked (indexOfMinDelta));
         
-        candidateDeltas.set (indexOfMinDelta, minDelta + maxDelta); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
+        candidateDeltas.set (indexOfMinDelta, maxDelta + 100); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
     }
     
     // 3. identify the highest & lowest delta values for the final handful candidates
 
-    float lowestDelta  = finalHandfulDeltas.getUnchecked (0); // lowest  delta of any remaining candidate
-    float highestDelta = lowestDelta;                         // highest delta of any remaining candidate
+    float lowestDelta  = finalHandfulDeltas.getUnchecked (0);  // lowest  delta of any remaining candidate
+    float highestDelta = lowestDelta;                          // highest delta of any remaining candidate
     
     for (float delta : finalHandfulDeltas)
     {
@@ -272,7 +273,6 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     const float deltaRange = highestDelta - lowestDelta;
     
-    
     struct weighting
     {
         static inline float weight (float delta, float deltaRange)
@@ -281,7 +281,6 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         }
     };
 
-    
     int chosenPeak;
     SampleType strongestPeak;
     
@@ -306,16 +305,14 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         if (deltaRange < 1.0f)
             testingPeak = (abs(reading[candidate]));
         else
+            testingPeak = (abs(reading[candidate])) * weighting::weight (finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate)),
+                                                                         deltaRange);
+        
+        if (testingPeak > strongestPeak)
         {
-            const float testingDelta = finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate));
-            testingPeak = (abs(reading[candidate])) * weighting::weight (testingDelta, deltaRange);
+            strongestPeak = testingPeak;
+            chosenPeak = candidate;
         }
-        
-        if (testingPeak < strongestPeak)
-            continue;
-        
-        strongestPeak = testingPeak;
-        chosenPeak = candidate;
     }
     
     return chosenPeak;
@@ -347,13 +344,14 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             {
                 output.set (n, neg);
                 --m;
-                continue;
             }
-            
-            jassert (pos <= endSample);
-            
-            output.set (n, pos);
-            ++p;
+            else
+            {
+                jassert (pos <= endSample);
+                
+                output.set (n, pos);
+                ++p;
+            }
         }
         else
         {
@@ -361,13 +359,14 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             {
                 output.set (n, pos);
                 ++p;
-                continue;
             }
-            
-            jassert (neg >= startSample);
-            
-            output.set (n, neg);
-            --m;
+            else
+            {
+                jassert (neg >= startSample);
+                
+                output.set (n, neg);
+                --m;
+            }
         }
     }
 };

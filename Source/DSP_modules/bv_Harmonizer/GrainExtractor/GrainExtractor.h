@@ -56,7 +56,7 @@ private:
     
     void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
                                   const int startSample, const int endSample, const int predictedPeak,
-                                  Array<int>& searchingOrder);
+                                  const Array<int>& searchingOrder);
     
     int chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                   const int deltaTarget1, const int deltaTarget2);

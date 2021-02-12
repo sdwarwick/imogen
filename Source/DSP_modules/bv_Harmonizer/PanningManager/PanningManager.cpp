@@ -48,16 +48,14 @@ void PanningManager::setNumberOfVoices (const int newNumVoices)
     
 int PanningManager::getNextPanVal()
 {
+    const ScopedLock sl (lock);
+    
     if (unsentPanVals.isEmpty())
         reset();
     
     jassert (! unsentPanVals.isEmpty());
     
-    const ScopedLock sl (lock);
-    
-    const auto nextPan = unsentPanVals.getUnchecked(0);
-    unsentPanVals.remove(0);
-    return nextPan;
+    return unsentPanVals.removeAndReturn(0);
 };
 
 
@@ -199,9 +197,7 @@ int PanningManager::getClosestNewPanValFromNew (const int oldPan, Array<int>& re
     if (minIndex < 0)
         minIndex = 0;
     
-    const auto newPan = readingFrom.getUnchecked(minIndex);
-    readingFrom.remove (minIndex);
-    return newPan;
+    return readingFrom.removeAndReturn (minIndex);
 };
 
 
@@ -246,9 +242,7 @@ int PanningManager::getClosestNewPanValFromOld (const int oldPan)
     if (minIndex < 0)
         minIndex = 0;
     
-    const auto newPan = unsentPanVals.getUnchecked (minIndex);
-    unsentPanVals.remove (minIndex);
-    return newPan;
+    return unsentPanVals.removeAndReturn (minIndex);
 };
 
 

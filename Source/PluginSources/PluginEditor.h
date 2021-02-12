@@ -16,7 +16,7 @@
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
 
 #if ! JUCE_STANDALONE_APPLICATION
-#include "../../Source/GUI/EnableSidechainWarning.h"
+    #include "../../Source/GUI/EnableSidechainWarning.h"
 #endif
 
 
