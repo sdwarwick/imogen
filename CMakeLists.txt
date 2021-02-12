@@ -14,8 +14,6 @@
 # better cross-platforming of finding executable paths 
 # Fetch content - only download if not found locally in _deps folder 
 # in tests folder in IDE, hide modules (only show test files)
-# move more important cache options to top of cache display?
-
 # make 'formats' a cache variable?
 
 
@@ -38,7 +36,7 @@ set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE CACHE FILEPATH "Path t
 set (compileFeatures cxx_std_17)
 
 # XCODE ONLY!
-set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "Automatically launch the JUCE AudioPluginHost")   #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
+set (IMOGEN_launchAudioPluginHostOnBuild ON  CACHE BOOL "Automatically launch the JUCE AudioPluginHost")   #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
 set (IMOGEN_launchStandaloneOnBuild      ON  CACHE BOOL "Automatically launch the Imogen standalone")   #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
 set (IMOGEN_preferStandaloneForAllTarget ON  CACHE BOOL "Use the Imogen standalone for the All build target's executable")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
 

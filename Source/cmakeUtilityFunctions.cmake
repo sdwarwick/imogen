@@ -2,6 +2,7 @@
 # Imogen CMake utility functions
 
 function (checkAllDirectories)
+
 	if (NOT EXISTS ${sourceDir})
 	    message (FATAL_ERROR "Source code folder not found")
 	elseif (NOT EXISTS ${dspModulesPath})
@@ -17,7 +18,7 @@ function (checkAllDirectories)
 	endforeach()
 
 	if (IMOGEN_unitTesting AND NOT EXISTS ${testFilesPath})
-	    set (IMOGEN_unitTesting FALSE CACHE BOOL "Enable Imogen unit tests" FORCE)
+	    set (IMOGEN_unitTesting FALSE PARENT_SCOPE)
 	    message (WARNING "Test files directory not found, testing disabled")
 	endif()
 endfunction()
@@ -37,15 +38,15 @@ function (checkIfCanUseExecutables)
     endif()
 
     if (turnemoff)
-    	set (IMOGEN_launchAudioPluginHostOnBuild FALSE CACHE BOOL "Automatically launch the JUCE AudioPluginHost" FORCE)
-        set (IMOGEN_launchStandaloneOnBuild      FALSE CACHE BOOL "Automatically launch the Imogen standalone"    FORCE)
+    	set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
+        set (IMOGEN_launchStandaloneOnBuild      FALSE PARENT_SCOPE)
     endif()
-
 endfunction()
 
 #
 
 function (determineIfBuildingStandalone)
+
 	set (isBuildingStandalone FALSE PARENT_SCOPE)
 
 	foreach (format ${formats})      
@@ -57,6 +58,13 @@ function (determineIfBuildingStandalone)
 endfunction()
 
 #
+
+function (_standaloneNotFound)
+	message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
+    set (canUseStandaloneExec FALSE PARENT_SCOPE)
+    set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
+endfunction()
+
 
 function (configureStandaloneExecutable)
 
@@ -80,7 +88,7 @@ function (configureStandaloneExecutable)
     if (isBuildingStandalone OR EXISTS ${standalonePath})
     	set (IMOGEN_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file")
     else()
-    	standaloneNotFound()
+    	_standaloneNotFound()
     	return()
     endif()
 
@@ -95,42 +103,42 @@ function (configureStandaloneExecutable)
             message (WARNING "The Standalone executable was located and can be used, but you are not rebuilding the Standalone with this build, so its behavior may not reflect the most recent code changes.")
         endif()
     else()
-    	standaloneNotFound()
+    	_standaloneNotFound()
     endif()
-
-endfunction()
-
-
-function (standaloneNotFound)
-	message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
-    set (canUseStandaloneExec FALSE PARENT_SCOPE)
-    set (IMOGEN_launchStandaloneOnBuild FALSE CACHE BOOL "Automatically launch the Imogen standalone" FORCE)
-    set (IMOGEN_standalone_exec_path "" CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
 endfunction()
 
 #
 
 function (configureAudioPluginHostExecutable)
+
 	message (STATUS "Configuring JUCE AudioPluginHost executable...")
 
-    set (IMOGEN_AudioPluginHost_Path ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+	set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds)
 
     if (APPLE)
-        set (IMOGEN_AudioPluginHost_Path ${IMOGEN_AudioPluginHost_Path}/MacOSX/build/Debug/AudioPluginHost.app CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+        set (pluginHostPath ${pluginHostPath}/MacOSX/build/Debug/AudioPluginHost.app)
     elseif (UNIX)
-        set (IMOGEN_AudioPluginHost_Path ${IMOGEN_AudioPluginHost_Path}/LinuxMakefile/build/Debug/AudioPluginHost.elf CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+        set (pluginHostPath ${pluginHostPath}/LinuxMakefile/build/Debug/AudioPluginHost.elf)
     elseif (WIN32)
-        set (IMOGEN_AudioPluginHost_Path ${IMOGEN_AudioPluginHost_Path}/VisualStudio2019/build/Debug/AudioPluginHost.exe CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+        set (pluginHostPath ${pluginHostPath}/VisualStudio2019/build/Debug/AudioPluginHost.exe)
     endif()
 
-    if (NOT EXISTS ${IMOGEN_AudioPluginHost_Path})
-    	message (WARNING "AudioPluginHost executable could not be found; auto-launch feature disabled")
-        set (IMOGEN_launchAudioPluginHostOnBuild FALSE CACHE BOOL "Automatically launch the JUCE AudioPluginHost" FORCE)
-        set (IMOGEN_AudioPluginHost_Path "" CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+	set (IMOGEN_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable")
 
-        # TO DO: automatically build the APH here...?
+	if (EXISTS ${IMOGEN_AudioPluginHost_Path})
+		return()
+	endif()
 
-    endif()
+	set (IMOGEN_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+
+	if (EXISTS ${IMOGEN_AudioPluginHost_Path})
+		return()
+	endif()
+
+	# TO DO: automatically build the APH here...?
+
+	message (WARNING "AudioPluginHost executable could not be found; auto-launch feature disabled")
+    set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
 endfunction()
 
 #
@@ -151,7 +159,6 @@ function (configureIndividualBuildTargets)
 		set (useStandaloneForAllTarget FALSE)
 	endif()
 
-
 	foreach (target ${formats} "All") 
 	    set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
 
@@ -166,8 +173,7 @@ function (configureIndividualBuildTargets)
 	    endif()
 
 	    if (canUseStandaloneExec)
-	        if ( "${target}" STREQUAL "Standalone" 
-	         OR ("${target}" STREQUAL "All" AND useStandaloneForAllTarget))
+	        if ("${target}" STREQUAL "Standalone" OR ("${target}" STREQUAL "All" AND useStandaloneForAllTarget))
 	            set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${IMOGEN_standalone_exec_path})
 	            message (STATUS "Executable for ${thisTargetName} set to 'Standalone'")
 	            continue()
@@ -177,11 +183,12 @@ function (configureIndividualBuildTargets)
 	    endif()
 
 	    if (IMOGEN_launchAudioPluginHostOnBuild)
-	        set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${IMOGEN_AudioPluginHost_Path})
+	    	set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${IMOGEN_AudioPluginHost_Path})
 	        message (STATUS "Executable for ${thisTargetName} set to 'AudioPluginHost'")
 	    endif()
 	endforeach()
-
 endfunction()
 
 #
+
+
