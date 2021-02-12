@@ -27,18 +27,18 @@ include (${sourceDir}/cmakeUtilityFunctions.cmake REQUIRED)
 
 #
 
-set (IMOGEN_unitTesting ON CACHE BOOL "Enable Imogen unit tests" FORCE)  # set this to 'true' to enable a unit testing executable target
+set (IMOGEN_unitTesting ON CACHE BOOL "Enable Imogen unit tests")  # set this to 'true' to enable a unit testing executable target
 
 set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 AU AUv3 AAX VST. For AAX or VST, the path to the respective SDK must be provided using juce_set_aax_sdk_path or juce_set_vst2_sdk_path
 
-set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE CACHE FILEPATH "Path to the JUCE library code" FORCE)  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
+set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE CACHE FILEPATH "Path to the JUCE library code")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
 
 set (compileFeatures cxx_std_17)
 
 # XCODE ONLY!
-set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "Automatically launch the JUCE AudioPluginHost" FORCE)   #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
-set (IMOGEN_launchStandaloneOnBuild      ON  CACHE BOOL "Automatically launch the Imogen standalone" FORCE)   #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
-set (IMOGEN_preferStandaloneForAllTarget ON  CACHE BOOL "Use the Imogen standalone for the All build target's executable, instead of the AudioPluginHost" FORCE)  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
+set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "Automatically launch the JUCE AudioPluginHost")   #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
+set (IMOGEN_launchStandaloneOnBuild      ON  CACHE BOOL "Automatically launch the Imogen standalone")   #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
+set (IMOGEN_preferStandaloneForAllTarget ON  CACHE BOOL "Use the Imogen standalone for the All build target's executable")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
 
 #
 

@@ -1,3 +1,4 @@
+
 # Imogen CMake utility functions
 
 function (checkAllDirectories)
@@ -24,15 +25,22 @@ endfunction()
 #
 
 function (checkIfCanUseExecutables)
+
+	set (turnemoff FALSE)
+
 	if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
         message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
-        set (IMOGEN_launchAudioPluginHostOnBuild FALSE CACHE BOOL "Automatically launch the JUCE AudioPluginHost" FORCE)
-        set (IMOGEN_launchStandaloneOnBuild FALSE CACHE BOOL "Automatically launch the Imogen standalone" FORCE)
+        set (turnemoff TRUE)
     elseif (NOT (APPLE OR UNIX OR WIN32))
         message (WARNING "Unrecognized operating system; auto-launching executables disabled")
-        set (IMOGEN_launchAudioPluginHostOnBuild FALSE CACHE BOOL "Automatically launch the JUCE AudioPluginHost" FORCE)
-        set (IMOGEN_launchStandaloneOnBuild FALSE CACHE BOOL "Automatically launch the Imogen standalone" FORCE)
+        set (turnemoff TRUE)
     endif()
+
+    if (turnemoff)
+    	set (IMOGEN_launchAudioPluginHostOnBuild FALSE CACHE BOOL "Automatically launch the JUCE AudioPluginHost" FORCE)
+        set (IMOGEN_launchStandaloneOnBuild      FALSE CACHE BOOL "Automatically launch the Imogen standalone"    FORCE)
+    endif()
+
 endfunction()
 
 #
@@ -51,34 +59,53 @@ endfunction()
 #
 
 function (configureStandaloneExecutable)
+
 	if (NOT isBuildingStandalone AND NOT IMOGEN_launchStandaloneOnBuild AND NOT IMOGEN_preferStandaloneForAllTarget)
 	    set (canUseStandaloneExec FALSE PARENT_SCOPE)
-	else()
-	    message (STATUS "Configuring Imogen Standalone executable...")
-
-	    set (IMOGEN_standalone_exec_path ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE) 
-	    
-	    if (APPLE)
-	        set (IMOGEN_standalone_exec_path ${IMOGEN_standalone_exec_path}/Imogen.app CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
-	    elseif (UNIX)
-	        set (IMOGEN_standalone_exec_path ${IMOGEN_standalone_exec_path}/Imogen.elf CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
-	    elseif (WIN32)
-	        set (IMOGEN_standalone_exec_path ${IMOGEN_standalone_exec_path}/Imogen.exe CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
-	    endif()
-
-	    if (isBuildingStandalone OR EXISTS ${IMOGEN_standalone_exec_path})
-	        set (canUseStandaloneExec TRUE PARENT_SCOPE)
-	        
-	        if (NOT isBuildingStandalone)
-	            message (WARNING "The Standalone executable was located and can be used, but you are not rebuilding the Standalone with this build, so its behavior may not reflect the most recent code changes.")
-	        endif()
-	    else()
-	        message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
-	        set (canUseStandaloneExec FALSE PARENT_SCOPE)
-	        set (IMOGEN_launchStandaloneOnBuild FALSE CACHE BOOL "Automatically launch the Imogen standalone" FORCE)
-	        set (IMOGEN_standalone_exec_path "" CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
-	    endif()
+	    return()
 	endif()
+
+    message (STATUS "Configuring Imogen Standalone executable...")
+
+    set (standalonePath ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone)
+
+    if (APPLE)
+        set (standalonePath ${standalonePath}/Imogen.app)
+    elseif (UNIX)
+        set (standalonePath ${standalonePath}/Imogen.elf)
+    elseif (WIN32)
+        set (standalonePath ${standalonePath}/Imogen.exe)
+    endif()
+
+    if (isBuildingStandalone OR EXISTS ${standalonePath})
+    	set (IMOGEN_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file")
+    else()
+    	standaloneNotFound()
+    	return()
+    endif()
+
+    if (NOT EXISTS ${IMOGEN_standalone_exec_path} AND isBuildingStandalone)
+    	set (IMOGEN_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
+    endif()
+
+    if (isBuildingStandalone OR EXISTS ${IMOGEN_standalone_exec_path})
+    	set (canUseStandaloneExec TRUE PARENT_SCOPE)
+        
+        if (NOT isBuildingStandalone)
+            message (WARNING "The Standalone executable was located and can be used, but you are not rebuilding the Standalone with this build, so its behavior may not reflect the most recent code changes.")
+        endif()
+    else()
+    	standaloneNotFound()
+    endif()
+
+endfunction()
+
+
+function (standaloneNotFound)
+	message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
+    set (canUseStandaloneExec FALSE PARENT_SCOPE)
+    set (IMOGEN_launchStandaloneOnBuild FALSE CACHE BOOL "Automatically launch the Imogen standalone" FORCE)
+    set (IMOGEN_standalone_exec_path "" CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
 endfunction()
 
 #
@@ -124,11 +151,9 @@ function (configureIndividualBuildTargets)
 		set (useStandaloneForAllTarget FALSE)
 	endif()
 
-	#
 
 	foreach (target ${formats} "All") 
-
-	    set (thisTargetName "${CMAKE_PROJECT_NAME}_${target}")  # this is how JUCE automatically names the build targets created for each format
+	    set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
 
 	    if (NOT TARGET ${thisTargetName})
 	        continue()
@@ -160,7 +185,3 @@ function (configureIndividualBuildTargets)
 endfunction()
 
 #
-
-
-
-
