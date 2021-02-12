@@ -23,6 +23,8 @@ cmake_minimum_required (VERSION 3.15)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
+
 include (${sourceDir}/cmakeUtilityFunctions.cmake REQUIRED)
 
 #
@@ -46,7 +48,6 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 
 #
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 set (dspModulesPath ${sourceDir}/DSP_modules)  # The location of the custom JUCE-style modules that make up the shared Imogen codebase. Again, these could conceivably be in a different place...  ¯\_(ツ)_/¯
 
 set (pluginSourcesDir       ${sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
