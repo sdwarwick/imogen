@@ -16,10 +16,14 @@
 # in tests folder in IDE, hide modules (only show test files)
 # move more important cache options to top of cache display?
 
+# make 'formats' a cache variable?
+
 
 cmake_minimum_required (VERSION 3.15) 
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
+
+include (${sourceDir}/cmakeUtilityFunctions.cmake REQUIRED)
 
 #
 
@@ -55,10 +59,6 @@ set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
 
 set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
-
-#
-
-include (${sourceDir}/cmakeUtilityFunctions.cmake REQUIRED)
 
 checkAllDirectories()
 

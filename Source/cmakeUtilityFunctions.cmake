@@ -1,9 +1,6 @@
 # Imogen CMake utility functions
 
-#
-
 function (checkAllDirectories)
-
 	if (NOT EXISTS ${sourceDir})
 	    message (FATAL_ERROR "Source code folder not found")
 	elseif (NOT EXISTS ${dspModulesPath})
@@ -22,7 +19,6 @@ function (checkAllDirectories)
 	    set (IMOGEN_unitTesting FALSE CACHE BOOL "Enable Imogen unit tests" FORCE)
 	    message (WARNING "Test files directory not found, testing disabled")
 	endif()
-
 endfunction()
 
 #
@@ -55,7 +51,6 @@ endfunction()
 #
 
 function (configureStandaloneExecutable)
-
 	if (NOT isBuildingStandalone AND NOT IMOGEN_launchStandaloneOnBuild AND NOT IMOGEN_preferStandaloneForAllTarget)
 	    set (canUseStandaloneExec FALSE PARENT_SCOPE)
 	else()
@@ -84,13 +79,11 @@ function (configureStandaloneExecutable)
 	        set (IMOGEN_standalone_exec_path "" CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
 	    endif()
 	endif()
-
 endfunction()
 
 #
 
 function (configureAudioPluginHostExecutable)
-
 	message (STATUS "Configuring JUCE AudioPluginHost executable...")
 
     set (IMOGEN_AudioPluginHost_Path ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
@@ -111,7 +104,6 @@ function (configureAudioPluginHostExecutable)
         # TO DO: automatically build the APH here...?
 
     endif()
-
 endfunction()
 
 #
