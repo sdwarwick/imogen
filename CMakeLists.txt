@@ -171,48 +171,9 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 
 #
 
-if (NOT IMOGEN_unitTesting)
-    return()
+if (IMOGEN_unitTesting)
+    configureUnitTesting()
 endif()
-
-#
-
-if (NOT fetchcontentincluded)  # simple include guard 
-    include (FetchContent)
-endif()
-
-message (STATUS "Fetching Catch2 from GitHub...")
-
-FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not found 
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v2.13.3)
-
-FetchContent_MakeAvailable (Catch2)
-
-message (STATUS "Configuring unit testing...")
-
-source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
-
-add_executable (Tests ${testFiles})   # Test executable for unit testing
-
-set_target_properties (Tests PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}" XCODE_GENERATE_SCHEME ON)
-
-target_include_directories (Tests PRIVATE ${testFilesPath})
-
-target_compile_features (Tests PRIVATE ${compileFeatures})
-
-target_link_libraries (Tests
-    PRIVATE
-        Catch2::Catch2
-        bv_ImogenEngine
-    PUBLIC
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags)
-
-include (${Catch2_SOURCE_DIR}/contrib/Catch.cmake)
-
-catch_discover_tests (Tests)
 
 #
 
