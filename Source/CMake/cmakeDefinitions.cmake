@@ -82,16 +82,16 @@ set (sourceFiles
 
 set (binaryAssetFiles
 	${GraphicAssetsDir}/1-1_note_semibreve.svg 
-    ${GraphicAssetsDir}/closeIcon.png 
-    ${GraphicAssetsDir}/grandStaff.png
-    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
+	${GraphicAssetsDir}/closeIcon.png 
+	${GraphicAssetsDir}/grandStaff.png
+	${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
 
 
 if (IMOGEN_unitTesting)
 
 	set (testFiles
-    	${testFilesPath}/tests.cpp
-    	${testFilesPath}/HarmonizerTests.cpp) 
+		${testFilesPath}/tests.cpp
+		${testFilesPath}/HarmonizerTests.cpp) 
 
 endif()
 
@@ -101,9 +101,9 @@ endif()
 
 set (customModulesNeeded
 	${dspModulesPath}/bv_GeneralUtils
-    ${dspModulesPath}/bv_PitchDetector
-    ${dspModulesPath}/bv_Harmonizer
-    ${dspModulesPath}/bv_ImogenEngine)
+	${dspModulesPath}/bv_PitchDetector
+	${dspModulesPath}/bv_Harmonizer
+	${dspModulesPath}/bv_ImogenEngine)
 
 #
 
