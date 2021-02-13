@@ -151,15 +151,6 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::numVoicesChanged (const int newMaxNumVoices)
-{
-    panner.prepare (newMaxNumVoices);
-    intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
-};
-
-
-
-template<typename SampleType>
 void Harmonizer<SampleType>::releaseResources()
 {
     aggregateMidiBuffer.clear();

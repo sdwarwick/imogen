@@ -167,6 +167,8 @@ private:
     
     float lastPBRmult = 1.0f;
     
+    bool sustainingFromSostenutoPedal = false;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
 
@@ -215,7 +217,8 @@ public:
     
     void turnOffAllKeyupNotes (const bool allowTailOff,  
                                const bool includePedalPitchAndDescant,
-                               const float velocity = 1.0f);
+                               const float velocity,
+                               const bool overrideSostenutoPedal);
     
     bool isPitchActive (const int midiPitch, const bool countRingingButReleased = false, const bool countKeyUpNotes = false) const;
     
@@ -234,6 +237,8 @@ public:
     void removeNumVoices (const int voicesToRemove);
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes.store(shouldSteal); }
+    
+    void shouldUseChannelPressure (const bool shouldUse) noexcept { useChannelPressure = shouldUse; }
     
     void updateMidiVelocitySensitivity (const int newSensitivity);
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
@@ -305,6 +310,7 @@ private:
     void handlePitchWheel (const int wheelValue);
     void handleAftertouch (const int midiNoteNumber, const int aftertouchValue);
     void handleChannelPressure (const int channelPressureValue);
+    void updateChannelPressure (const int newIncomingAftertouch);
     void handleController (const int controllerNumber, const int controllerValue);
     void handleSustainPedal (const int value);
     void handleSostenutoPedal (const int value);
@@ -411,6 +417,7 @@ private:
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;
     int lastMidiChannel;
+    bool useChannelPressure;  // all the voices will keep track of & respond to their individual aftertouch values by default; if this is true then the harmonizer will also output an aggregate "channel pressure", which will be the maximum of any voice's recived aftertouch value.
     
     bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
     

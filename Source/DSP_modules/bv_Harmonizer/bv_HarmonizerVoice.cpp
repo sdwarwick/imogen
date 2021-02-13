@@ -15,7 +15,7 @@ namespace bav
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(64), prevSoftPedalMultiplier(1.0f),
+parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(0), prevSoftPedalMultiplier(1.0f),
     isPedalPitchVoice(false), isDescantVoice(false),
     playingButReleased(false)
 {
@@ -237,6 +237,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 {
     currentVelocityMultiplier = 0.0f;
     lastRecievedVelocity      = 0.0f;
+    currentAftertouch = 0;
     currentlyPlayingNote = -1;
     noteOnTime    = 0;
     isQuickFading = false;
@@ -246,6 +247,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     nextSBindex = 0;
     isPedalPitchVoice = false;
     isDescantVoice = false;
+    sustainingFromSostenutoPedal = false;
     
     setPan (64);
     
@@ -273,7 +275,6 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
                                              const bool isPedal, const bool isDescant)
 {
     noteOnTime = noteOnTimestamp;
-    
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
     currentVelocityMultiplier = parent->getWeightedVelocity (velocity);
@@ -304,11 +305,10 @@ void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
     else
         if (isPedalPitchVoice || isDescantVoice)
             playingButReleased = false;
+        else if (parent->isLatched() || parent->intervalLatchIsOn)
+            playingButReleased = false;
         else
-            if (parent->isLatched() || parent->intervalLatchIsOn)
-                playingButReleased = false;
-            else
-                playingButReleased = isVoiceActive();
+            playingButReleased = isVoiceActive();
 };
 
 
@@ -335,15 +335,15 @@ void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool all
     noteTurnedOff = true;
     keyIsDown = false;
     playingButReleased = false;
-    isPedalPitchVoice  = false;
-    isDescantVoice     = false;
 };
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::aftertouchChanged(const int newAftertouchValue)
+void HarmonizerVoice<SampleType>::aftertouchChanged (const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
+    
+    // do something cool, idk ¯\_(ツ)_/¯
 };
 
 

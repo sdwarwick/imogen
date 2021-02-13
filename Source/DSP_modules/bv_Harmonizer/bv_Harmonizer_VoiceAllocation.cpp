@@ -14,6 +14,14 @@ namespace bav
     
     
 template<typename SampleType>
+void Harmonizer<SampleType>::numVoicesChanged (const int newMaxNumVoices)
+{
+    panner.prepare (newMaxNumVoices);
+    intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
+};
+    
+    
+template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const noexcept
 {
     int actives = 0;
@@ -160,6 +168,9 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
 template<typename SampleType>
 void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
 {
+    if (voicesToAdd == 0)
+        return;
+    
     const ScopedLock sl (lock);
     
     for (int i = 0; i < voicesToAdd; ++i)
@@ -217,7 +228,7 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     
     jassert (voices.isEmpty() || voices.size() == shouldBeLeft);
     
-    panner.setNumberOfVoices (std::max (voices.size(), 1));
+    numVoicesChanged (voices.size());
 };
     
 
