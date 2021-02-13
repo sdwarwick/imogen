@@ -78,6 +78,8 @@ void Harmonizer<SampleType>::clearBuffers()
 template<typename SampleType>
 void Harmonizer<SampleType>::initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize)
 {
+    jassert (initNumVoices > 0 && initSamplerate > 0 && initBlocksize > 0);
+    
     voices.clear();
     
     addNumVoices (initNumVoices);
@@ -91,9 +93,12 @@ void Harmonizer<SampleType>::initialize (const int initNumVoices, const double i
 template<typename SampleType>
 void Harmonizer<SampleType>::prepare (const int blocksize)
 {
-    aggregateMidiBuffer.ensureSize(static_cast<size_t>(blocksize * 2));
+    if (blocksize <= 0)
+        return;
     
-    numVoicesChanged(voices.size());
+    aggregateMidiBuffer.ensureSize (static_cast<size_t> (blocksize * 2));
+    
+    numVoicesChanged (voices.size());
     
     for (auto* voice : voices)
         voice->prepare(blocksize);
@@ -115,9 +120,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
 template<typename SampleType>
 void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
 {
-    jassert (newRate > 0);
-    
-    if (sampleRate == newRate)
+    if (sampleRate == newRate || newRate <= 0.0)
         return;
     
     sampleRate = newRate;
@@ -134,9 +137,7 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
 template<typename SampleType>
 void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 {
-    jassert (newConcertPitchhz > 0);
-    
-    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
+    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz || newConcertPitchhz <= 0)
         return;
     
     pitchConverter.setConcertPitchHz (newConcertPitchhz);
@@ -169,6 +170,9 @@ void Harmonizer<SampleType>::releaseResources()
 template<typename SampleType>
 void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 {
+    if (newInputFreq <= 0.0f)
+        return;
+    
     currentInputFreq = newInputFreq;
     
     currentInputPeriod = roundToInt (sampleRate / newInputFreq);
@@ -273,14 +277,14 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 
 // stereo width ---------------------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
+void Harmonizer<SampleType>::updateStereoWidth (int newWidth)
 {
-    jassert (isPositiveAndBelow (newWidth, 101));
+    newWidth = jlimit (0, 100, newWidth);
     
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
     
-    panner.updateStereoWidth(newWidth);
+    panner.updateStereoWidth (newWidth);
     
     for (auto* voice : voices)
     {
@@ -302,8 +306,10 @@ void Harmonizer<SampleType>::updateStereoWidth (const int newWidth)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh) 
+void Harmonizer<SampleType>::updateLowestPannedNote (int newPitchThresh)
 {
+    newPitchThresh = jlimit (0, 127, newPitchThresh);
+    
     if (lowestPannedNote.load() == newPitchThresh)
         return;
     
@@ -333,9 +339,11 @@ void Harmonizer<SampleType>::updateLowestPannedNote (const int newPitchThresh)
 
 // midi velocity sensitivity -------------------------------------------------------------------------------------
 template<typename SampleType>
-void Harmonizer<SampleType>::updateMidiVelocitySensitivity (const int newSensitivity)
+void Harmonizer<SampleType>::updateMidiVelocitySensitivity (int newSensitivity)
 {
-    const float newSens = newSensitivity/100.0f;
+    newSensitivity = jlimit (0, 100, newSensitivity);
+    
+    const float newSens = newSensitivity / 100.0f;
     
     if (velocityConverter.getCurrentSensitivity() == newSens)
         return;
@@ -387,12 +395,12 @@ void Harmonizer<SampleType>::setDescant (const bool isOn)
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setDescantLowerThresh (const int newThresh)
+void Harmonizer<SampleType>::setDescantLowerThresh (int newThresh)
 {
+    newThresh = jlimit (0, 127, newThresh);
+    
     if (descant.lowerThresh == newThresh)
         return;
-    
-    jassert (newThresh >= 0);
     
     descant.lowerThresh = newThresh;
     
@@ -407,6 +415,9 @@ void Harmonizer<SampleType>::setDescantInterval (const int newInterval)
         return;
     
     descant.interval = newInterval;
+    
+    if (newInterval == 0)
+        descant.isOn = false;
     
     if (descant.isOn)
         applyDescant();
@@ -434,9 +445,9 @@ void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitchUpperThresh (const int newThresh)
+void Harmonizer<SampleType>::setPedalPitchUpperThresh (int newThresh)
 {
-    jassert (isPositiveAndBelow (newThresh, 128));
+    newThresh = jlimit (0, 127, newThresh);
     
     if (pedal.upperThresh == newThresh)
         return;
@@ -454,6 +465,9 @@ void Harmonizer<SampleType>::setPedalPitchInterval (const int newInterval)
         return;
     
     pedal.interval = newInterval;
+    
+    if (newInterval == 0)
+        pedal.isOn = false;
     
     if (pedal.isOn)
         applyPedalPitch();
@@ -480,7 +494,8 @@ void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float
 template<typename SampleType>
 void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 {
-    jassert (newMs > 0);
+    if (newMs <= 0)
+        return;
     
     const ScopedLock sl (lock);
     
@@ -500,9 +515,10 @@ void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 };
 
 template<typename SampleType>
-void Harmonizer<SampleType>::updateQuickAttackMs(const int newMs)
+void Harmonizer<SampleType>::updateQuickAttackMs (const int newMs)
 {
-    jassert (newMs > 0);
+    if (newMs <= 0)
+        return;
     
     const ScopedLock sl (lock);
     

@@ -194,12 +194,8 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     if (! sameNoteRetriggered)  // don't output any note events if the same note is being retriggered
     {
         if (wasStolen)
-        {
             aggregateMidiBuffer.addEvent (MidiMessage::noteOff (lastMidiChannel, prevNote, 1.0f),   // voice was stolen: output a note off for the voice's previous note
                                           ++lastMidiTimeStamp);
-            
-            voice->currentAftertouch = 0;
-        }
             
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),  // output the new note on
                                       ++lastMidiTimeStamp);
@@ -208,7 +204,8 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     {
         // same note retriggered: output aftertouch / channel pressure
         
-        const int aftertouch = roundToInt ((velocity / std::max<float>(voice->getLastRecievedVelocity(), 0.001f)) * 127.0f);
+        const int aftertouch = jlimit (0, 127,
+                                       roundToInt ((velocity / std::max<float>(voice->getLastRecievedVelocity(), 0.001f)) * 127.0f));
         
         if (useChannelPressure)
         {
@@ -234,6 +231,9 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     {
         voice->setPan (panner.getNextPanVal());
     }
+    
+    if (! wasStolen)
+        voice->currentAftertouch = 0;
     
     const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
     const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
@@ -710,14 +710,21 @@ void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const i
 template<typename SampleType>
 void Harmonizer<SampleType>::handleChannelPressure (const int channelPressureValue)
 {
-    if (! useChannelPressure)
-        return;
-    
-    aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
-                                  ++lastMidiTimeStamp);
+    if (useChannelPressure)
+        aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
+                                      ++lastMidiTimeStamp);
     
     for (auto* voice : voices)
-        voice->aftertouchChanged (channelPressureValue);
+    {
+        if (voice->isVoiceActive())
+        {
+            voice->aftertouchChanged (channelPressureValue);
+            
+            if (! useChannelPressure)
+                aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, voice->getCurrentlyPlayingNote(), channelPressureValue),
+                                              ++lastMidiTimeStamp);
+        }
+    }
 };
 
     
@@ -776,15 +783,9 @@ void Harmonizer<SampleType>::handleSustainPedal (const int value)
     
     sustainPedalDown = isDown;
     
-    if (isDown)
-    {
-        
-    }
-    else
-    {
+    if (! isDown)
         if (! (latchIsOn || intervalLatchIsOn))
             turnOffAllKeyupNotes (false, false, 0.0f, false);
-    }
 };
 
 
@@ -834,37 +835,37 @@ void Harmonizer<SampleType>::handleSoftPedal (const int value)
 template<typename SampleType>
 void Harmonizer<SampleType>::handleModWheel (const int wheelValue)
 {
-    juce::ignoreUnused(wheelValue);
+    ignoreUnused(wheelValue);
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleBreathController (const int controlValue)
 {
-    juce::ignoreUnused(controlValue);
+    ignoreUnused(controlValue);
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleFootController (const int controlValue)
 {
-    juce::ignoreUnused(controlValue);
+    ignoreUnused(controlValue);
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handlePortamentoTime (const int controlValue)
 {
-    juce::ignoreUnused(controlValue);
+    ignoreUnused(controlValue);
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleBalance (const int controlValue)
 {
-    juce::ignoreUnused(controlValue);
+    ignoreUnused(controlValue);
 };
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleLegato (const bool isOn)
 {
-    juce::ignoreUnused(isOn);
+    ignoreUnused(isOn);
 };
 
 

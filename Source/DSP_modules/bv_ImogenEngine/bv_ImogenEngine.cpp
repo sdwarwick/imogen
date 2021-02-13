@@ -58,6 +58,8 @@ void ImogenEngine<SampleType>::changeBlocksize (const int newBlocksize)
 template<typename SampleType>
 void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
+    jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
+    
     harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
     changeBlocksize (initSamplesPerBlock);

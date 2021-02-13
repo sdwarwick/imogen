@@ -22,7 +22,7 @@ void Harmonizer<SampleType>::numVoicesChanged (const int newMaxNumVoices)
     
     
 template<typename SampleType>
-int Harmonizer<SampleType>::getNumActiveVoices() const noexcept
+int Harmonizer<SampleType>::getNumActiveVoices() const 
 {
     int actives = 0;
     
@@ -127,7 +127,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal() const
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const noexcept
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() const
 {
     if (! descant.isOn)
         return nullptr;
@@ -141,7 +141,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
 
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice() const noexcept
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice() const
 {
     if (! pedal.isOn)
         return nullptr;
@@ -155,7 +155,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const noexcept
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const int midiPitch) const
 {
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)

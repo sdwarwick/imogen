@@ -64,9 +64,17 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 template <typename SampleType>
 void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    const double initSamplerate = std::max<double>(44100.0, getSampleRate());
+    double initSamplerate = getSampleRate();
     
-    activeEngine.initialize (initSamplerate, getBlockSize(), 12);
+    if (initSamplerate <= 0)
+        initSamplerate = 44100.0;
+    
+    int initBlockSize = getBlockSize();
+    
+    if (initBlockSize <= 0)
+        initBlockSize = 512;
+    
+    activeEngine.initialize (initSamplerate, initBlockSize, 12);
     
     updateAllParameters (activeEngine);
     

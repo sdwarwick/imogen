@@ -281,32 +281,23 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         }
     };
 
-    int chosenPeak;
-    SampleType strongestPeak;
+    int chosenPeak = (deltaRange < 1.0f) ? finalHandful.getUnchecked (0) : finalHandful.getUnchecked (finalHandfulDeltas.indexOf (lowestDelta));
     
-    if (deltaRange < 1.0f)
-    {
-        chosenPeak = finalHandful.getUnchecked (0);
-        strongestPeak = (abs(reading[chosenPeak]));
-    }
-    else
-    {
-        chosenPeak = finalHandful.getUnchecked (finalHandfulDeltas.indexOf (lowestDelta));
-        strongestPeak = (abs(reading[chosenPeak])) * weighting::weight(lowestDelta, deltaRange);
-    }
+    SampleType strongestPeak = abs(reading[chosenPeak]);
+    
+    if (deltaRange > 1.0f)
+        strongestPeak = strongestPeak * weighting::weight(lowestDelta, deltaRange);
     
     for (int candidate : finalHandful)
     {
         if (candidate == chosenPeak)
             continue;
         
-        SampleType testingPeak;
+        SampleType testingPeak = abs(reading[candidate]);
         
-        if (deltaRange < 1.0f)
-            testingPeak = (abs(reading[candidate]));
-        else
-            testingPeak = (abs(reading[candidate])) * weighting::weight (finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate)),
-                                                                         deltaRange);
+        if (deltaRange > 1.0f)
+            testingPeak = testingPeak * weighting::weight (finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate)),
+                                                           deltaRange);
         
         if (testingPeak > strongestPeak)
         {

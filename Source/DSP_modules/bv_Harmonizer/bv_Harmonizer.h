@@ -226,7 +226,7 @@ public:
                             const bool includePlayingButReleased = false,
                             const bool includeKeyUpNotes = true) const;
     
-    int getNumActiveVoices() const noexcept;
+    int getNumActiveVoices() const;
     
     int getNumVoices() const noexcept { return voices.size(); }
     
@@ -240,24 +240,24 @@ public:
     
     void shouldUseChannelPressure (const bool shouldUse) noexcept { useChannelPressure = shouldUse; }
     
-    void updateMidiVelocitySensitivity (const int newSensitivity);
+    void updateMidiVelocitySensitivity (int newSensitivity);
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
     void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
     
     void setPedalPitch (const bool isOn);
-    void setPedalPitchUpperThresh (const int newThresh);
+    void setPedalPitchUpperThresh (int newThresh);
     void setPedalPitchInterval (const int newInterval);
     
     void setDescant (const bool isOn);
-    void setDescantLowerThresh (const int newThresh);
+    void setDescantLowerThresh (int newThresh);
     void setDescantInterval (const int newInterval);
     
     void setCurrentPlaybackSampleRate (const double newRate);
     
     void setConcertPitchHz (const int newConcertPitchhz);
     
-    void updateStereoWidth (const int newWidth);
-    void updateLowestPannedNote (const int newPitchThresh);
+    void updateStereoWidth (int newWidth);
+    void updateLowestPannedNote (int newPitchThresh);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
     bool isLatched()  const noexcept { return latchIsOn; }
@@ -337,9 +337,9 @@ private:
     // voice allocation
     HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
     HarmonizerVoice<SampleType>* findVoiceToSteal() const;
-    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const noexcept;
-    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const noexcept;
-    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const noexcept;
+    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
+    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
+    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
     void fillWindowBuffer (const int numSamples);
     

@@ -40,11 +40,11 @@ public:
     
     
     // used to tell the PanningManager when a previously assigned panningvalue is turned off - ie, is now available again for another voice 
-    void panValTurnedOff(const int panVal);
+    void panValTurnedOff(int panVal);
     
     
     // used when updating stereo width -- voices should grab the new pan val that's closest to their old pan val
-    int getClosestNewPanValFromOld (const int oldPan);
+    int getClosestNewPanValFromOld (int oldPan);
     
     
     // tells the PanningManager that all voices have been turned off -- ie, all the pan vals are available again
@@ -76,7 +76,7 @@ private:
     
     void mapArrayIndexes();
     
-    int getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom);
+    int getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };

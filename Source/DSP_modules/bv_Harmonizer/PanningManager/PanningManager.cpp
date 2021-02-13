@@ -27,6 +27,9 @@ void PanningManager::releaseResources()
 
 void PanningManager::prepare (const int numVoices)
 {
+    if (numVoices <= 0)
+        return;
+    
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
     unsentPanVals.ensureStorageAllocated(numVoices);
@@ -37,7 +40,8 @@ void PanningManager::prepare (const int numVoices)
 
 void PanningManager::setNumberOfVoices (const int newNumVoices)
 {
-    jassert(newNumVoices > 0);
+    if (newNumVoices <= 0)
+        return;
     
     currentNumVoices = newNumVoices;
     
@@ -121,11 +125,13 @@ void PanningManager::updateStereoWidth (const int newWidth)
 };
 
 
-void PanningManager::panValTurnedOff (const int panVal)
+void PanningManager::panValTurnedOff (int panVal)
 {
     // this function is called when a pan value is turned off and is available again for assigning. This function attempts to reinsert the pan value into unsentPanVals with respect to the order the values are in in panValsInAssigningOrder
     
     const ScopedLock sl (lock);
+    
+    panVal = jlimit (0, 127, panVal);
     
     const auto targetindex = panValsInAssigningOrder.indexOf (panVal);
     
@@ -161,9 +167,9 @@ void PanningManager::panValTurnedOff (const int panVal)
 };
 
 
-int PanningManager::getClosestNewPanValFromNew (const int oldPan, Array<int>& readingFrom)
+int PanningManager::getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom)
 {
-    jassert (isPositiveAndBelow(oldPan, 128));
+    oldPan = jlimit (0, 127, oldPan);
     
     if (readingFrom.isEmpty())
         return -1;
@@ -201,17 +207,17 @@ int PanningManager::getClosestNewPanValFromNew (const int oldPan, Array<int>& re
 };
 
 
-int PanningManager::getClosestNewPanValFromOld (const int oldPan)
+int PanningManager::getClosestNewPanValFromOld (int oldPan)
 {
     // find & return the element in readingFrom array that is the closest to oldPan, then remove that val from unsentPanVals
     // this is normally used with the unsentPanVals array, but the same function can also be used in the updating of the stereo width, to identify which new pan values should be sent to the unsentPanVals array itself, based on which new pan values are closest to the ones that were already in unsentPanVals.
     
-    jassert (isPositiveAndBelow(oldPan, 128));
-    
-    const ScopedLock sl (lock);
+    oldPan = jlimit (0, 127, oldPan);
     
     if (unsentPanVals.isEmpty() || unsentPanVals.size() == 1)
         return getNextPanVal();
+    
+    const ScopedLock sl (lock);
     
     Array<int> distances;
     distances.ensureStorageAllocated (unsentPanVals.size());

@@ -25,40 +25,46 @@ public:
     
     // converts midi pitch to frequency in Hz
     template<typename T>
-    T mtof(const T midiNote) const
+    T mtof (T midiNote) const
     {
-        jassert(midiNote >= 0 && midiNote <= 127);
+        midiNote = jlimit (T(0.0), T(127.0), midiNote);
         return concertPitchHz.load() * std::pow(T(2.0), ((midiNote - rootNote.load()) / notesPerOctave.load()));
     }
     
     // converts frequency in Hz to midipitch
     template<typename T>
-    T ftom(const T inputFreq) const
+    T ftom (const T inputFreq) const
     {
-        jassert(inputFreq >= 0);
+        jassert (inputFreq >= 0);
         return notesPerOctave.load() * log2(inputFreq / concertPitchHz.load()) + rootNote.load();
     }
     
-    void setConcertPitchHz(const int newConcertPitch) noexcept
+    void setConcertPitchHz (const int newConcertPitch) noexcept
     {
-        jassert(newConcertPitch >= 0);
-        concertPitchHz.store(newConcertPitch);
+        if (newConcertPitch <= 0)
+            return;
+        
+        concertPitchHz.store (newConcertPitch);
     }
     
     int getCurrentConcertPitchHz() const noexcept { return concertPitchHz.load(); }
     
-    void setNotesPerOctave(const int newNPO) noexcept
+    void setNotesPerOctave (const int newNPO) noexcept
     {
-        jassert(newNPO > 0);
-        notesPerOctave.store(newNPO);
+        if (newNPO <= 0)
+            return;
+        
+        notesPerOctave.store (newNPO);
     }
     
     int getCurrentNotesPerOctave() const noexcept { return notesPerOctave.load(); }
     
-    void setRootNote(const int newRoot) noexcept
+    void setRootNote (const int newRoot) noexcept
     {
-        jassert(newRoot >= 0);
-        rootNote.store(newRoot);
+        if (newRoot <= 0)
+            return;
+        
+        rootNote.store (newRoot);
     }
     
     int getCurrentRootNote() const noexcept { return rootNote.load(); }
@@ -88,27 +94,24 @@ public:
     
     void setRange (const int newStUp, const int newStDown) noexcept
     {
-        jassert(newStUp >= 0 && newStDown >= 0);
-        rangeUp.store(newStUp);
-        rangeDown.store(newStDown);
+        rangeUp.store (newStUp);
+        rangeDown.store (newStDown);
     }
     
-    int getCurrentRangeUp()        const noexcept { return rangeUp.load(); }
-    
-    int getCurrentRangeDown()      const noexcept { return rangeDown.load(); }
+    int getCurrentRangeUp()   const noexcept { return rangeUp.load(); }
+    int getCurrentRangeDown() const noexcept { return rangeDown.load(); }
     
     int getLastRecievedPitchbend() const noexcept { return lastRecievedPitchbend.load(); }
     
     float newNoteRecieved (const int newMidiPitch) const
     {
-        jassert(isPositiveAndBelow(newMidiPitch, 128));
-        return getMidifloat (newMidiPitch, lastRecievedPitchbend.load());
+        return getMidifloat (jlimit (0, 127, newMidiPitch),
+                             lastRecievedPitchbend.load());
     }
     
     void newPitchbendRecieved (const int newPitchbend) noexcept
     {
-        jassert(isPositiveAndBelow(newPitchbend, 128));
-        lastRecievedPitchbend.store(newPitchbend);
+        lastRecievedPitchbend.store (jlimit (0, 127, newPitchbend));
     }
     
     
@@ -118,9 +121,9 @@ private:
     
     float getMidifloat (const int midiPitch, const int pitchbend) const
     {
-        jassert(isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
+        jassert (isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
         
-        if(pitchbend == 64)
+        if (pitchbend == 64)
             return midiPitch;
         
         if (pitchbend > 64)
@@ -141,30 +144,29 @@ public:
     VelocityHelper(const int initialSensitivity): sensitivity(initialSensitivity/100.0f)
     { }
     
-    void setSensitivity(const int newSensitivity) noexcept
+    void setSensitivity (int newSensitivity) noexcept
     {
-        jassert(isPositiveAndBelow(newSensitivity, 101));
-        sensitivity.store(newSensitivity / 100.0f);
+        newSensitivity = jlimit (0, 100, newSensitivity);
+        sensitivity.store (newSensitivity / 100.0f);
     }
     
-    void setFloatSensitivity(const float newSensitivity) noexcept
+    void setFloatSensitivity (const float newSensitivity) noexcept
     {
-        jassert(newSensitivity >= 0.0f && newSensitivity <= 1.0f);
-        sensitivity.store(newSensitivity);
+        sensitivity.store (jlimit (0.0f, 1.0f, newSensitivity));
     }
     
     float getCurrentSensitivity() const noexcept { return sensitivity.load(); }
     
-    float intVelocity(const int midiVelocity)
+    float intVelocity (int midiVelocity)
     {
-        jassert(isPositiveAndBelow(midiVelocity, 128));
+        midiVelocity = jlimit (0, 127, midiVelocity);
         return getGainMult (midiVelocity / 127.0f, sensitivity.load());
     }
     
-    float floatVelocity(const float floatVelocity) const
+    float floatVelocity (const float floatVelocity) const
     {
-        jassert(floatVelocity >= 0.0f && floatVelocity <= 1.0f);
-        return getGainMult (floatVelocity, sensitivity.load());
+        return getGainMult (jlimit (0.0f, 1.0f, floatVelocity),
+                            sensitivity.load());
     }
     
     

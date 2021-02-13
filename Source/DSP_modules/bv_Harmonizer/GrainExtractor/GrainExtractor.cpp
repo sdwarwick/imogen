@@ -28,6 +28,8 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
 {
     // maxBlocksize = max period of input audio
     
+    jassert (maxBlocksize > 0);
+    
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
     lastBlocksize = maxBlocksize;
@@ -63,20 +65,18 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     {
         int grainStart = peakIndex - period; // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
         
-        if (grainStart >= 0)
-            targetArray.add (grainStart);
-        else
+        if (grainStart < 0)
         {
-            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 2) // we have more peaks coming, so we can disregard this one
+            if (peakIndices.indexOf(peakIndex) < peakIndices.size() - 2 || targetArray.size() > 1)
                 continue;
             
-            grainStart += roundToInt (period / 2.0f);
+            const int halfPeriod = roundToInt (period / 2.0f);
             
-            if (grainStart >= 0)
-                targetArray.add (grainStart);
-            else
-                targetArray.add (peakIndex);
+            while (grainStart < 0)
+                grainStart += halfPeriod;
         }
+        
+        targetArray.add (grainStart);
     }
     
     jassert (! targetArray.isEmpty());

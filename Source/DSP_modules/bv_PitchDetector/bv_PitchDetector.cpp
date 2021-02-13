@@ -38,6 +38,7 @@ template<typename SampleType>
 void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMaxHz, const bool allowRecalc)
 {
     jassert (newMaxHz > newMinHz);
+    jassert (newMinHz > 0 && newMaxHz > 0);
     
     if ((! allowRecalc)
         && ((minHz == newMinHz) && (maxHz == newMaxHz)))
@@ -59,6 +60,8 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
 template<typename SampleType>
 void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const bool recalcHzRange)
 {
+    jassert (newSamplerate > 0);
+    
     if (samplerate == newSamplerate)
         return;
     
@@ -105,7 +108,9 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     // truncation of edge cases
     if (maxLag < minLag)
+    {
         return -1.0f;
+    }
     else if (minLag == maxLag)
     {
         if (minLag > 1)
@@ -113,8 +118,9 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         else
         {
             ++maxLag;
+            
             if (maxLag > maxPeriod)
-                return -1.0f;
+                maxLag = maxPeriod;
         }
     }
     
@@ -189,10 +195,15 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
     SampleType realPeriod = quadraticPeakPosition (asdfData, minIndex, asdfDataSize);
     realPeriod += minPeriod; // account for offset in asdf data
     
-    jassert (realPeriod <= maxPeriod);
+    if (realPeriod > maxPeriod)
+    {
+        lastFrameWasPitched = false;
+        return -1.0f;
+    }
     
     lastEstimatedPeriod = realPeriod;
     lastFrameWasPitched = true;
+    
     return static_cast<float> (samplerate / realPeriod); // return pitch in hz
 };
 

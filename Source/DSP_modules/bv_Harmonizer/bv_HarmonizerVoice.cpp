@@ -352,17 +352,17 @@ void HarmonizerVoice<SampleType>::setPan (const int newPan)
 {
     jassert (isPositiveAndBelow (newPan, 128));
     
-    if (panner.getLastMidiPan() == newPan)
-        return;
+    const int realNewPan = jlimit (0, 127, newPan);
     
-    panner.setMidiPan (newPan);
+    if (panner.getLastMidiPan() != realNewPan)
+        panner.setMidiPan (realNewPan);
 };
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::updateSampleRate (const double newSamplerate)
 {
-    if (samplerate == newSamplerate)
+    if (samplerate == newSamplerate || newSamplerate <= 0.0)
         return;
     
     samplerate = newSamplerate;
