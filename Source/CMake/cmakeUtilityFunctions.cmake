@@ -198,11 +198,32 @@ endfunction()
 
 # Various smaller utility functions...
 
+function (addJuce)
+
+    if (EXISTS ${IMOGEN_juceDir})
+        add_subdirectory (${IMOGEN_juceDir} REQUIRED)
+    else()
+        include (FetchContent)
+        set (fetchcontentincluded TRUE)  # simple include guard 
+
+        message (STATUS "Fetching JUCE from GitHub...")
+        
+        FetchContent_Declare (juce   #  Downloads the latest version of JUCE if the indicated subdirectory cannot be found
+            GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+            GIT_TAG        origin/develop)
+
+        FetchContent_MakeAvailable (juce)
+
+        set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src)  # this is where FetchContent will download the JUCE library code to
+    endif()
+
+endfunction()
+
+###
+
 function (checkAllDirectories)
 
-    if (NOT EXISTS ${sourceDir})
-        message (FATAL_ERROR "Source code folder not found")
-    elseif (NOT EXISTS ${dspModulesPath})
+    if (NOT EXISTS ${dspModulesPath})
         message (FATAL_ERROR "DSP modules folder not found")
     elseif (NOT EXISTS ${GraphicAssetsDir})
         message (FATAL_ERROR "Graphic assets folder not found")
@@ -218,6 +239,7 @@ function (checkAllDirectories)
         set (IMOGEN_unitTesting FALSE PARENT_SCOPE)
         message (WARNING "Test files directory not found, testing disabled")
     endif()
+
 endfunction()
 
 ###
@@ -236,6 +258,7 @@ function (checkIfCanUseExecutables)
         message (WARNING "Unrecognized operating system; auto-launching executables disabled")
         _turnEmOff()
     endif()
+
 endfunction()
 
 ###
@@ -250,6 +273,7 @@ function (determineIfBuildingStandalone)
             return()
         endif()
     endforeach()
+
 endfunction()
 
 # =================================================================================================================================================

@@ -20,16 +20,26 @@ cmake_minimum_required (VERSION 3.15)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
+message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
+
 #
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
+
+if (NOT EXISTS ${sourceDir})
+    message (FATAL_ERROR "Source code folder not found")
+endif()
+
+set (cmakeFilesDir ${sourceDir}/CMake)
+
+if (NOT EXISTS ${cmakeFilesDir})
+    message (FATAL_ERROR "CMake utility files not found")
+endif()
 
 include (${sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
 include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
 
 #
-
-message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
 
 checkAllDirectories()
 
@@ -62,28 +72,9 @@ option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 option (JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
 option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 
-set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
-
 #
 
-# add JUCE 
-
-if (EXISTS ${IMOGEN_juceDir})
-    add_subdirectory (${IMOGEN_juceDir} REQUIRED)
-else()
-    include (FetchContent)
-    set (fetchcontentincluded TRUE)  # simple include guard 
-
-    message (STATUS "Fetching JUCE from GitHub...")
-    
-    FetchContent_Declare (juce   #  Downloads the latest version of JUCE if the indicated subdirectory cannot be found
-        GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-        GIT_TAG        origin/develop)
-
-    FetchContent_MakeAvailable (juce)
-
-    set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src)  # this is where FetchContent will download the JUCE library code to
-endif()
+addJuce()
 
 juce_add_modules (${customModulesNeeded})
 

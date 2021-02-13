@@ -1,13 +1,14 @@
 
 # various useful definitions & declarations for Imogen
 
-#
 
 # general settings
 
 set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 AU AUv3 AAX VST. For AAX or VST, the path to the respective SDK must be provided using juce_set_aax_sdk_path or juce_set_vst2_sdk_path
 
 set (compileFeatures cxx_std_17)
+
+set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
 
