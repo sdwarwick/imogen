@@ -39,7 +39,7 @@ function (configureStandaloneExecutable)
 
     if (NOT ( DEFINED IMOGEN_standalone_exec_path AND EXISTS ${IMOGEN_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
         if (isBuildingStandalone OR EXISTS ${standalonePath})
-        	set (IMOGEN_standalone_exec_path ${standalonePath} CACHE FILEPATH "${ds_SALpath}" FORCE)
+        	set (IMOGEN_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
         else()
         	_standaloneNotFound()
         	return()
@@ -86,7 +86,7 @@ function (configureAudioPluginHostExecutable)
     endif()
 
     if (EXISTS ${pluginHostPath})
-    	set (IMOGEN_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+    	set (IMOGEN_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
     	return()
     endif()
 

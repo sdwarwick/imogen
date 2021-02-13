@@ -20,45 +20,24 @@ cmake_minimum_required (VERSION 3.15)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
-
-include (${sourceDir}/cmakeUtilityFunctions.cmake REQUIRED)
-
 #
 
-set (IMOGEN_unitTesting ON CACHE BOOL "Enable Imogen unit tests")  # set this to 'true' to enable a unit testing executable target
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
-set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 AU AUv3 AAX VST. For AAX or VST, the path to the respective SDK must be provided using juce_set_aax_sdk_path or juce_set_vst2_sdk_path
-
-set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE CACHE FILEPATH "Path to the JUCE library code")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
-
-set (compileFeatures cxx_std_17)
-
-# XCODE ONLY!
-set (IMOGEN_launchAudioPluginHostOnBuild ON  CACHE BOOL "Automatically launch the JUCE AudioPluginHost")   #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
-set (IMOGEN_launchStandaloneOnBuild      ON  CACHE BOOL "Automatically launch the Imogen standalone")   #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
-set (IMOGEN_preferStandaloneForAllTarget ON  CACHE BOOL "Use the Imogen standalone for the All build target's executable")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
+include (${sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
+include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
 
 #
 
 message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
 
-#
-
-set (dspModulesPath ${sourceDir}/DSP_modules)  # The location of the custom JUCE-style modules that make up the shared Imogen codebase. Again, these could conceivably be in a different place...  ¯\_(ツ)_/¯
-
-set (pluginSourcesDir       ${sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
-set (guiSourcePath          ${sourceDir}/GUI)
-set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
-set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
-set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
-set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
-
-set (GraphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
-
-set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
-
 checkAllDirectories()
+
+if (IMOGEN_unitTesting)
+    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
+else()
+    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
+endif()
 
 #
 
@@ -87,14 +66,6 @@ set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' 
 
 #
 
-if (IMOGEN_unitTesting)
-    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
-else()
-    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
-endif()
-
-#
-
 # add JUCE 
 
 if (EXISTS ${IMOGEN_juceDir})
@@ -114,6 +85,8 @@ else()
     set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src)  # this is where FetchContent will download the JUCE library code to
 endif()
 
+juce_add_modules (${customModulesNeeded})
+
 #
 
 determineIfBuildingStandalone()
@@ -131,12 +104,6 @@ if (IMOGEN_launchAudioPluginHostOnBuild)
 endif()
 
 #
-
-juce_add_modules (
-    ${dspModulesPath}/bv_GeneralUtils
-    ${dspModulesPath}/bv_PitchDetector
-    ${dspModulesPath}/bv_Harmonizer
-    ${dspModulesPath}/bv_ImogenEngine)
 
 message (STATUS "Configuring Imogen...")
 
@@ -177,23 +144,6 @@ configureIndividualBuildTargets()
 
 #
 
-set (sourceFiles
-    ${pluginSourcesDir}/PluginProcessor.cpp
-    ${pluginSourcesDir}/PluginProcessor.h
-    ${pluginSourcesDir}/PluginEditor.cpp
-    ${pluginSourcesDir}/PluginEditor.h
-    ${guiSourcePath}/LookAndFeel.h
-    ${guiSourcePath}/EnableSidechainWarning.h
-    ${HelpScreenSourcePath}/HelpScreen.cpp
-    ${HelpScreenSourcePath}/HelpScreen.h
-    ${IOPanelSourcePath}/IOControlPanel.cpp  
-    ${IOPanelSourcePath}/IOControlPanel.h
-    ${IOPanelSourcePath}/LimiterControlPanel.h
-    ${MidiControlSourcePath}/MidiControlPanel.cpp
-    ${MidiControlSourcePath}/MidiControlPanel.h
-    ${StaffDisplaySourcePath}/StaffDisplay.cpp
-    ${StaffDisplaySourcePath}/StaffDisplay.h)
-
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${sourceFiles})
 
 source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
@@ -204,11 +154,7 @@ set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets 
 
 #
 
-juce_add_binary_data (ImogenGraphicAssets SOURCES # this creates a static library target which JUCE will populate with Imogen's graphic assets as binary files, so it can then be linked to
-    ${GraphicAssetsDir}/1-1_note_semibreve.svg 
-    ${GraphicAssetsDir}/closeIcon.png 
-    ${GraphicAssetsDir}/grandStaff.png
-    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
+juce_add_binary_data (ImogenGraphicAssets SOURCES ${binaryAssetFiles})
 
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 
@@ -244,10 +190,6 @@ FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not fo
 FetchContent_MakeAvailable (Catch2)
 
 message (STATUS "Configuring unit testing...")
-
-set (testFiles
-    ${testFilesPath}/tests.cpp
-    ${testFilesPath}/HarmonizerTests.cpp) 
 
 source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
