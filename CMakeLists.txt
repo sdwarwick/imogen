@@ -3,7 +3,7 @@
 #  AUTHOR: BEN VINING
 
 #  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application. 
-#  If you do not already have JUCE on your computer, you can specify an "IMOGEN_juceDir" that does not exist in your filesystem; this script will automatically download the JUCE code from GitHub.
+#  If they cannot be located automatically, JUCE [and, if unit testing is enabled, Catch2] will be downloaded from GitHub.
 
 
 # TO DO:
@@ -12,7 +12,6 @@
 # automatically build AudioPluginHost if not found
 # better cross-platforming of finding executable paths 
 # in tests folder in IDE, hide modules (only show test files)
-# make 'formats' a cache variable?
 
 
 cmake_minimum_required (VERSION 3.15) 
@@ -69,7 +68,7 @@ juce_add_modules (${customModulesNeeded})
 
 #
 
-imogen_determineIfBuildingStandalone()
+imogen_makeFormatsList()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
     imogen_checkIfCanUseExecutables()
@@ -112,7 +111,7 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library
     AU_COPY_DIR                 /Users/benvining/Library/Audio/Plug-Ins/Components
     COMPANY_COPYRIGHT           This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
 
-target_compile_features (Imogen PRIVATE ${compileFeatures})
+target_compile_features (Imogen PRIVATE ${imogen_compileFeatures})
 
 target_compile_definitions (Imogen PUBLIC 
     JUCE_WEB_BROWSER=0

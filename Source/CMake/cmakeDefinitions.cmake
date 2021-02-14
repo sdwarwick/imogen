@@ -4,9 +4,9 @@
 
 # general settings
 
-set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 AU AUv3 AAX VST. For AAX or VST, the path to the respective SDK must be provided using juce_set_aax_sdk_path or juce_set_vst2_sdk_path
+set (imogen_compileFeatures "cxx_std_17" CACHE STRING "Build compile features")
 
-set (compileFeatures cxx_std_17)
+set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
 
@@ -43,6 +43,14 @@ set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")
 
 set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")
 set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")
+
+set (IMOGEN_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
+set (IMOGEN_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
+set (IMOGEN_buildAU         ON  CACHE BOOL "Builds an AudioUnit version of Imogen")
+set (IMOGEN_buildUnity      OFF CACHE BOOL "Builds a Unity plugin version of Imogen {UNTESTED}")
+set (IMOGEN_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
+set (IMOGEN_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
+set (IMOGEN_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
 
 #
 
@@ -99,10 +107,6 @@ set (customModulesNeeded
 	${dspModulesPath}/bv_PitchDetector
 	${dspModulesPath}/bv_Harmonizer
 	${dspModulesPath}/bv_ImogenEngine)
-
-#
-
-set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
 #
 
