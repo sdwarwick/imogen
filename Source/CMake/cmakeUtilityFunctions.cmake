@@ -23,7 +23,6 @@ function (imogen_makeFormatsList)
         endif()
 
         set (chooserIndex 0)
-
         list (FIND formatChoosers ${chooser} chooserIndex)
 
         if (${chooserIndex} EQUAL 0) 
@@ -49,7 +48,7 @@ function (imogen_makeFormatsList)
     set (numFormats 0)
     list (LENGTH formatlist numFormats)
 
-    if (${numFormats} EQUAL 0 OR ${numFormats} EQUAL 1)
+    if (${numFormats} LESS_EQUAL 1)
         message (FATAL_ERROR "At least one build format must be selected.")
     endif()
 
@@ -69,8 +68,6 @@ function (imogen_configureStandaloneExecutable)
         return()
     endif()
 
-    #
-
     message (STATUS "Configuring Imogen Standalone executable...")
 
     set (standalonePath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/Standalone)
@@ -83,8 +80,6 @@ function (imogen_configureStandaloneExecutable)
         set (standalonePath ${standalonePath}/Imogen.exe)
     endif()
 
-    #
-
     if (NOT ( DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
         
         if (isBuildingStandalone OR EXISTS ${standalonePath})
@@ -96,8 +91,6 @@ function (imogen_configureStandaloneExecutable)
         endif()
 
     endif()
-
-    #
 
     set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
 
@@ -206,8 +199,6 @@ function (imogen_configureUnitTesting)
 
     message (STATUS "Configuring unit testing...")
 
-    #
-
     if (EXISTS ${imogen_catchDir})
 
         add_subdirectory (${imogen_catchDir} REQUIRED)
@@ -230,8 +221,6 @@ function (imogen_configureUnitTesting)
         set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}" FORCE)
 
     endif()
-
-    #
 
     source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 

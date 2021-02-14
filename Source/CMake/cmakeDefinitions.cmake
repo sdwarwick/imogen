@@ -71,6 +71,15 @@ set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in wh
 
 #
 
+# the set of custom JUCE-style modules needed for this project
+
+set (customModulesNeeded
+	${dspModulesPath}/bv_GeneralUtils
+	${dspModulesPath}/bv_PitchDetector
+	${dspModulesPath}/bv_Harmonizer
+	${dspModulesPath}/bv_ImogenEngine)
+
+
 # the groups of actual source files 
 
 set (sourceFiles
@@ -97,16 +106,6 @@ if (IMOGEN_unitTesting)
 		${testFilesPath}/HarmonizerTests.cpp) 
 
 endif()
-
-#
-
-# the set of custom JUCE-style modules needed for this project
-
-set (customModulesNeeded
-	${dspModulesPath}/bv_GeneralUtils
-	${dspModulesPath}/bv_PitchDetector
-	${dspModulesPath}/bv_Harmonizer
-	${dspModulesPath}/bv_ImogenEngine)
 
 #
 
