@@ -9,7 +9,6 @@
 # TO DO:
 # auto executables for generators other than XCode?
 # get rid of binary data target scheme?
-# automatically build AudioPluginHost if not found
 # better cross-platforming of finding executable paths 
 # in tests folder in IDE, hide modules (only show test files)
 
@@ -77,12 +76,12 @@ juce_add_modules (${customModulesNeeded})
 
 #
 
-if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-    imogen_configureStandaloneExecutable()
-endif()
-
 if (IMOGEN_launchAudioPluginHostOnBuild)
     imogen_configureAudioPluginHostExecutable()
+endif()
+
+if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
+    imogen_configureStandaloneExecutable()
 endif()
 
 #

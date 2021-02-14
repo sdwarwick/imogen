@@ -97,6 +97,8 @@ endfunction()
 
 function (imogen_configureStandaloneExecutable)
 
+    set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
+
     if (NOT IMOGEN_buildStandalone AND NOT IMOGEN_launchStandaloneOnBuild AND NOT IMOGEN_preferStandaloneForAllTarget)  # nothing we're doing with the current build requires the standalone executable at all...
         set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
         return()
@@ -139,7 +141,7 @@ endfunction()
 
 # =================================================================================================================================================
 
-# attempts to locate the JUCE AudioPluginHost executable, if it exists 
+#  attempts to locate the JUCE AudioPluginHost executable, if it exists. If the executable can't be found, this function will attempt to build it automatically
 
 function (imogen_configureAudioPluginHostExecutable)
 
@@ -163,11 +165,41 @@ function (imogen_configureAudioPluginHostExecutable)
     	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
     	return()
     endif()
+ 
+    message (STATUS "AudioPluginHost executable not found; attempting to build now...")
 
-    # TO DO: automatically build the APH here...?
+    execute_process (
+            WORKING_DIRECTORY ${imogen_juceDir}
+            COMMAND "${CMAKE_COMMAND}"
+            "-Bbuild-aph"
+            "-DCMAKE_BUILD_TYPE=Debug"
+            "-DIS_BUILDING_APH=1"
+            "-DJUCE_BUILD_EXTRAS=1")
 
-    message (WARNING "AudioPluginHost executable could not be found; auto-launch feature disabled")
-    set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
+    execute_process (
+            WORKING_DIRECTORY ${imogen_juceDir}
+            COMMAND "${CMAKE_COMMAND}"
+            "--build" "build-aph"
+            "--target" "AudioPluginHost"
+            "--config" "Debug")
+
+    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug)
+
+    if (APPLE)
+        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.app)
+    elseif (UNIX)
+        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.elf)
+    elseif (WIN32)
+        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.exe)
+    endif()
+
+    if (EXISTS ${pluginHostPath})
+        message (STATUS "JUCE AudioPluginHost built successfully!")
+        set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+    else()
+        message (WARNING "AudioPluginHost executable could not be built; auto-launch feature disabled")
+        set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
+    endif()
 
 endfunction()
 
@@ -207,7 +239,7 @@ function (imogen_configureIndividualBuildTargets)
 
         if (IMOGEN_launchStandaloneOnBuild)
             if ("${target}" STREQUAL "Standalone" OR ("${target}" STREQUAL "All" AND useStandaloneForAllTarget))
-                set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${IMOGEN_standalone_exec_path})
+                set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${imogen_standalone_exec_path})
                 message (STATUS "Executable for ${thisTargetName} set to 'Standalone'")
                 continue()
             endif()
