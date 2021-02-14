@@ -23,7 +23,6 @@ function (imogen_makeFormatsList)
 
         # determine if the list contains the 'standalone' format
 
-        set (indexfinder 0)
         list (FIND formats "Standalone" indexfinder)
 
         if (indexfinder EQUAL -1)
@@ -32,15 +31,21 @@ function (imogen_makeFormatsList)
             set (IMOGEN_buildStandalone TRUE PARENT_SCOPE)
         endif()
 
+        unset (indexfinder)
+
         return()
 
     endif()
 
+    #
+
     set (formatChoosers IMOGEN_buildStandalone IMOGEN_buildVST3 IMOGEN_buildAU IMOGEN_buildUnity IMOGEN_buildAUv3 IMOGEN_buildAAX IMOGEN_buildVST)
 
     set (formatlist "All")
-
     set (numFormatsThereShouldBe 1)
+
+    set (boolVarName "")
+    set (chooserIndex 0)
 
     foreach (chooser ${formatChoosers})
 
@@ -52,7 +57,6 @@ function (imogen_makeFormatsList)
 
         math (EXPR numFormatsThereShouldBe "${numFormatsThereShouldBe} + 1")
 
-        set (chooserIndex 0)
         list (FIND formatChoosers ${chooser} chooserIndex)
 
         if (${chooserIndex} EQUAL 0) 
@@ -75,6 +79,10 @@ function (imogen_makeFormatsList)
 
     endforeach()
 
+    unset (formatChoosers)
+    unset (boolVarName)
+    unset (chooserIndex)
+
     set (numFormats 0)
     list (LENGTH formatlist numFormats)
 
@@ -82,27 +90,34 @@ function (imogen_makeFormatsList)
         message (FATAL_ERROR "Error in generating list of formats.")
     endif()
 
+    unset (numFormatsThereShouldBe)
+
     if (${numFormats} LESS_EQUAL 1)
         message (FATAL_ERROR "At least one build format must be selected.")
     endif()
 
+    unset (numFormats)
+
     set (formats ${formatlist} PARENT_SCOPE)
+
+    unset (formatlist)
 
 endfunction()
 
 
 # =================================================================================================================================================
 
+
 # Attempts to locate the Imogen Standalone executable, if it exists (has been built already). If the executable file does not exist, but "Standalone" is a current build format, then this function will resolve the prospective path to where the executable file WILL be after it is built, and this path will be used as the applicable schemes' executable
 
 function (imogen_configureStandaloneExecutable)
-
-    set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
 
     if (NOT IMOGEN_buildStandalone AND NOT IMOGEN_launchStandaloneOnBuild AND NOT IMOGEN_preferStandaloneForAllTarget)  # nothing we're doing with the current build requires the standalone executable at all...
         set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
         return()
     endif()
+
+    set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
 
     message (STATUS "Configuring Imogen Standalone executable...")
 
@@ -118,11 +133,12 @@ function (imogen_configureStandaloneExecutable)
 
     if (NOT ( DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
         
-        if (isBuildingStandalone OR EXISTS ${standalonePath})
-        	set (imogen_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
+        if (IMOGEN_buildStandalone OR EXISTS ${standalonePath})
+        	set (imogen_standalone_exec_path ${standalonePath} CACHE FILEPATH "${ds_SALpath}" FORCE)
         else()
         	message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
             set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
+            unset (standalonePath)
         	return()
         endif()
 
@@ -136,10 +152,13 @@ function (imogen_configureStandaloneExecutable)
     	message (WARNING "The Standalone is being built with this build, but the resolved standalone executable path does not match the path to where the standalone executable will be built. The Imogen Standalone that launches automatically with this build may not reflect the most recent code changes in its behavior.")
     endif()
 
+    unset (standalonePath)
+
 endfunction()
 
 
 # =================================================================================================================================================
+
 
 #  attempts to locate the JUCE AudioPluginHost executable, if it exists. If the executable can't be found, this function will attempt to build it automatically
 
@@ -162,8 +181,25 @@ function (imogen_configureAudioPluginHostExecutable)
     endif()
 
     if (EXISTS ${pluginHostPath})
-    	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+    	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+        unset (pluginHostPath)
     	return()
+    endif()
+
+    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug)
+
+    if (APPLE)
+        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.app)
+    elseif (UNIX)
+        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.elf)
+    elseif (WIN32)
+        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.exe)
+    endif()
+
+    if (EXISTS ${pluginHostPath})
+        set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+        unset (pluginHostPath)
+        return()
     endif()
  
     message (STATUS "AudioPluginHost executable not found; attempting to build now...")
@@ -183,16 +219,6 @@ function (imogen_configureAudioPluginHostExecutable)
             "--target" "AudioPluginHost"
             "--config" "Debug")
 
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug)
-
-    if (APPLE)
-        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.app)
-    elseif (UNIX)
-        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.elf)
-    elseif (WIN32)
-        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.exe)
-    endif()
-
     if (EXISTS ${pluginHostPath})
         message (STATUS "JUCE AudioPluginHost built successfully!")
         set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
@@ -201,10 +227,13 @@ function (imogen_configureAudioPluginHostExecutable)
         set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
     endif()
 
+    unset (pluginHostPath)
+
 endfunction()
 
 
 # =================================================================================================================================================
+
 
 # This function cleans up folder organization, putting each individual plugin format target generated by the juce_add_plugin call into a "Build Targets" folder, and also configures XCode scheme executables for each target
 
@@ -221,6 +250,8 @@ function (imogen_configureIndividualBuildTargets)
     else()
         set (autoLaunchingAnything FALSE)
     endif()
+
+    set (thisTargetName "")
 
     foreach (target ${formats}) 
 
@@ -254,10 +285,15 @@ function (imogen_configureIndividualBuildTargets)
 
     endforeach()
 
+    unset (thisTargetName)
+    unset (autoLaunchingAnything)
+    unset (useStandaloneForAllTarget)
+
 endfunction()
 
 
 # =================================================================================================================================================
+
 
 # configures unit testing 
 
@@ -316,15 +352,15 @@ endfunction()
 
 # =================================================================================================================================================
 
+
 # Various smaller utility functions...
 
 function (imogen_addJuce)
 
     if (EXISTS ${imogen_juceDir})
-
         add_subdirectory (${imogen_juceDir} REQUIRED)
-
-    else()
+        return()
+    endif()
 
     message (STATUS "Finding JUCE...")
 
@@ -341,19 +377,17 @@ function (imogen_addJuce)
 
     set (imogen_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src PARENT_SCOPE)
 
-    endif()
-
 endfunction()
 
 ###
 
 function (imogen_checkAllDirectories)
 
-    if (NOT EXISTS ${sourceDir})
+    if (NOT EXISTS ${imogen_sourceDir})
         message (FATAL_ERROR "Source code folder not found")
     elseif (NOT EXISTS ${dspModulesPath})
         message (FATAL_ERROR "DSP modules folder not found")
-    elseif (NOT EXISTS ${GraphicAssetsDir})
+    elseif (NOT EXISTS ${imogen_GraphicAssetsDir})
         message (FATAL_ERROR "Graphic assets folder not found")
     endif()
 

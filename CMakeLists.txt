@@ -17,19 +17,50 @@ cmake_minimum_required (VERSION 3.15)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
-# uncomment this to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats:
+#
+
+set (imogen_sourceDir ${CMAKE_CURRENT_SOURCE_DIR}/Source CACHE FILEPATH "The location of the Imogen source code folder")  # This could conceivably be in a different place, but the source tree must be intact 
+
+set (cmakeFilesDir ${imogen_sourceDir}/CMake)
+
+include (${cmakeFilesDir}/cmakeDefinitions.cmake REQUIRED)
+include (${cmakeFilesDir}/cmakeUtilityFunctions.cmake REQUIRED)
+
+#  initializing all the cache variables & preferences:
+
+set (IMOGEN_unitTesting ON CACHE BOOL "${ds_testing}")  # set this to 'true' to enable a unit testing executable target
+
+set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "${ds_launchAPH}")        #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
+set (IMOGEN_launchStandaloneOnBuild      OFF CACHE BOOL "${ds_launchSAL}")        #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
+set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
+
+set (IMOGEN_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
+set (IMOGEN_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
+set (IMOGEN_buildAU         ON  CACHE BOOL "Builds an AudioUnit version of Imogen")
+set (IMOGEN_buildUnity      OFF CACHE BOOL "Builds a Unity plugin version of Imogen {UNTESTED}")
+set (IMOGEN_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
+set (IMOGEN_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
+set (IMOGEN_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
+
+set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Source/JUCE             CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
+set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}") # if this subdirectory isn't found and unit testing is enabled, this script will automatically download Catch2 from GitHub
+
+set (imogen_GraphicAssetsDir ${guiSourcePath}/GraphicAssets CACHE FILEPATH "location of the Imogen grapic asset files")  # The location of the graphical asset files (images, etc)
+
+set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")  # path to the Imogen standalone executable, if it exists 
+set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")  # path to the JUCE AudioPluginHost executable, if it exists
+
+set (imogen_compileFeatures "cxx_std_17" CACHE STRING "Build compile features")
+
+#  uncomment this to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace
+#  valid formats are: Standalone VST3 AU Unity AUv3 AAX VST
+#  for AAX or VST [vst2], the API paths must be provided manually by calling juce_set_aax_sdk_path and/or juce_set_vst2_sdk_path, respectively. These calls are provided below, simply fill in the absolute path to the SDK on your filesystem and uncomment the applicable line.
+#
 # set (formats VST AU Standalone)
 
+#
+
 message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
-
-#
-
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
-
-include (${sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
-include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
-
-#
 
 imogen_checkAllDirectories()
 
@@ -47,32 +78,14 @@ endif()
 
 #
 
-set_property (GLOBAL PROPERTY USE_FOLDERS YES)
-set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
-
-set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64")  # universal macOS binaries 
-set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)  # minimum MacOS version to build for
-
-set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")  # static linking on Windows
-set (CMAKE_WIN32_EXECUTABLE TRUE)
-
-set (CMAKE_XCODE_GENERATE_SCHEME OFF)  # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
-set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
-set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
-
-set (CMAKE_SUPPRESS_REGENERATION TRUE)  # no "zero-check" target
-set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
-set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-
-option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
-option (JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
-option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
-
-#
-
 imogen_addJuce()
 
 juce_add_modules (${customModulesNeeded})
+
+#  To build AAX or VST2 plugins, fill in the absolute paths to the SDKs on your filesystem and uncomment these function calls
+
+# juce_set_aax_sdk_path (path)
+# juce_set_vst2_sdk_path (path)
 
 #
 
@@ -127,7 +140,7 @@ imogen_configureIndividualBuildTargets()
 
 target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${sourceFiles})
 
-source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
+source_group (TREE ${imogen_sourceDir} PREFIX "" FILES ${sourceFiles})
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
@@ -136,10 +149,10 @@ set_target_properties (${CMAKE_PROJECT_NAME} PROPERTIES FOLDER "")  # prevets ID
 #
 
 juce_add_binary_data (ImogenGraphicAssets SOURCES 
-    ${GraphicAssetsDir}/1-1_note_semibreve.svg
-    ${GraphicAssetsDir}/closeIcon.png
-    ${GraphicAssetsDir}/grandStaff.png
-    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
+    ${imogen_GraphicAssetsDir}/1-1_note_semibreve.svg
+    ${imogen_GraphicAssetsDir}/closeIcon.png
+    ${imogen_GraphicAssetsDir}/grandStaff.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
 
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 
@@ -159,6 +172,10 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 if (IMOGEN_unitTesting)
     imogen_configureUnitTesting()
 endif()
+
+#
+
+include (${cmakeFilesDir}/cmakeUnsetVariables.cmake)
 
 #
 
