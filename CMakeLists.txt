@@ -64,16 +64,16 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 
 imogen_checkAllDirectories()
 
-if (IMOGEN_unitTesting)
-    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
-else()
-    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
-endif()
-
 imogen_makeFormatsList()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
     imogen_checkIfCanUseExecutables()
+endif()
+
+if (IMOGEN_unitTesting)
+    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
+else()
+    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
 endif()
 
 #
@@ -89,19 +89,19 @@ juce_add_modules (${customModulesNeeded})
 
 #
 
-if (IMOGEN_launchAudioPluginHostOnBuild)
-    imogen_configureAudioPluginHostExecutable()
-endif()
-
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
+
+    imogen_configureAudioPluginHostExecutable()
+
     imogen_configureStandaloneExecutable()
+
 endif()
 
 #
 
 message (STATUS "Configuring Imogen...")
 
-juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library for the shared plugin code, and adds targets for each of the specified plugin formats, as well as an "All" target, linked to the shared static lib
+juce_add_plugin (Imogen   # this command creates a static library for the shared plugin code, and adds targets for each of the specified plugin formats, as well as an "All" target, linked to the shared static lib
     PRODUCT_NAME                Imogen
     VERSION                     ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
@@ -124,10 +124,8 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library
     COPY_PLUGIN_AFTER_BUILD     TRUE
     VST3_COPY_DIR               /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
     AU_COPY_DIR                 /Users/benvining/Library/Audio/Plug-Ins/Components
-    UNITY_COPY_DIR              ${imogen_sourceDir}/Builds/Imogen_artefacts
+    UNITY_COPY_DIR              ${imogen_sourceDir}/Builds/Imogen_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
     COMPANY_COPYRIGHT           This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
-
-list (APPEND formats "All")
 
 target_compile_features (Imogen PRIVATE ${imogen_compileFeatures})
 
@@ -141,23 +139,23 @@ imogen_configureIndividualBuildTargets()
 
 #
 
-target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${sourceFiles})
+target_sources (Imogen PRIVATE ${sourceFiles})
 
 source_group (TREE ${imogen_sourceDir} PREFIX "" FILES ${sourceFiles})
 
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
+target_include_directories (Imogen PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
-set_target_properties (${CMAKE_PROJECT_NAME} PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
+set_target_properties (Imogen PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
 
 #
 
 juce_add_binary_data (ImogenGraphicAssets SOURCES ${graphicAssetFiles})
 
-set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
+set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "Imogen")
 
 #
 
-target_link_libraries (${CMAKE_PROJECT_NAME}
+target_link_libraries (Imogen
     PRIVATE
         ImogenGraphicAssets
         bv_ImogenEngine
@@ -174,7 +172,7 @@ endif()
 
 #
 
-include (${cmakeFilesDir}/cmakeUnsetVariables.cmake)
+_imogen_unset_all_variables()
 
 #
 

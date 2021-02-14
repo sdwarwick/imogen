@@ -101,12 +101,10 @@ endfunction()
 
 function (imogen_configureStandaloneExecutable)
 
-    if (NOT IMOGEN_buildStandalone AND NOT IMOGEN_launchStandaloneOnBuild AND NOT IMOGEN_preferStandaloneForAllTarget)  # nothing we're doing with the current build requires the standalone executable at all...
+    if (NOT (IMOGEN_launchStandaloneOnBuild OR (IMOGEN_launchAudioPluginHostOnBuild AND IMOGEN_launchStandaloneOnBuild)))
         set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
         return()
     endif()
-
-    set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
 
     message (STATUS "Configuring Imogen Standalone executable...")
 
@@ -153,6 +151,10 @@ endfunction()
 
 function (imogen_configureAudioPluginHostExecutable)
 
+    if (NOT IMOGEN_launchAudioPluginHostOnBuild)
+        return()
+    endif()
+
     message (STATUS "Configuring JUCE AudioPluginHost executable...")
 
     if (DEFINED imogen_AudioPluginHost_Path AND EXISTS ${imogen_AudioPluginHost_Path}) # maybe the user has supplied a valid path to the executable already?
@@ -175,7 +177,7 @@ function (imogen_configureAudioPluginHostExecutable)
     	return()
     endif()
 
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug)
+    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug)  # this is where the APH will end up after the automatic build process...
 
     if (APPLE)
         set (pluginHostPath ${pluginHostPath}/AudioPluginHost.app)
@@ -239,6 +241,8 @@ function (imogen_configureIndividualBuildTargets)
     else()
         set (autoLaunchingAnything FALSE)
     endif()
+
+    list (APPEND formats "All")
 
     set (thisTargetName "")
 
@@ -413,5 +417,41 @@ function (imogen_checkIfCanUseExecutables)
 endfunction()
 
 ###
+
+# =================================================================================================================================================
+
+#  cleans up memory allocation by unsetting all variables possibly set by the Imogen CMake script 
+
+function (_imogen_unset_all_variables)
+    unset (IMOGEN_launchAudioPluginHostOnBuild)
+    unset (IMOGEN_launchStandaloneOnBuild)
+    unset (IMOGEN_unitTesting)
+    unset (IMOGEN_buildStandalone)
+    unset (imogen_juceDir)
+    unset (imogen_catchDir)
+    unset (cmakeFilesDir)
+    unset (dspModulesPath)
+    unset (pluginSourcesDir)
+    unset (guiSourcePath)
+    unset (HelpScreenSourcePath)
+    unset (IOPanelSourcePath)
+    unset (MidiControlSourcePath)
+    unset (StaffDisplaySourcePath)
+    unset (testFilesPath)
+    unset (customModulesNeeded)
+    unset (sourceFiles)
+    unset (testFiles)
+    unset (graphicAssetFiles)
+    unset (ds_testing)
+    unset (ds_juceDir)
+    unset (ds_catchDir)
+    unset (ds_launchAPH)
+    unset (ds_launchSAL)
+    unset (ds_preferSALforAll)
+    unset (ds_SALpath)
+    unset (ds_APHpath)
+    unset (fetchcontentincluded)
+    unset (formats)
+endfunction()
 
 
