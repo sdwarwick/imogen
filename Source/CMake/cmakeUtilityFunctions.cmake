@@ -334,5 +334,23 @@ function (imogen_checkIfCanUseExecutables)
 
 endfunction()
 
-#
+###
+
+function (imogen_checkIfBuildingStandalone)
+
+    set (buildingStandalone FALSE)
+
+    foreach (format ${formats})
+        if (${format} STREQUAL "Standalone")
+            set (buildingStandalone TRUE)
+            break()
+        endif()
+    endforeach()
+
+    set (IMOGEN_buildStandalone ${buildingStandalone} PARENT_SCOPE)
+
+endfunction()
+
+###
+
 

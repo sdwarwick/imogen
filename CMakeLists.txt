@@ -18,6 +18,9 @@ cmake_minimum_required (VERSION 3.15)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
+# uncomment this to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats:
+# set (formats VST AU Standalone)
+
 message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
 
 #
@@ -68,7 +71,11 @@ juce_add_modules (${customModulesNeeded})
 
 #
 
-imogen_makeFormatsList()
+if (DEFINED formats)
+    imogen_checkIfBuildingStandalone()
+else()
+    imogen_makeFormatsList()
+endif()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
     imogen_checkIfCanUseExecutables()
