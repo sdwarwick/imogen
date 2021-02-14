@@ -4,7 +4,6 @@
 */
 
 
-#include <JuceHeader.h>
 #include "../../Source/GUI/MidiControlPanel/MidiControlPanel.h"
 
 

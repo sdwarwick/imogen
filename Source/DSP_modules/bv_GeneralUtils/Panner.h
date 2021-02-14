@@ -53,9 +53,9 @@ public:
     }
     
     
-    void setMidiPan (const int newMidiPan)
+    void setMidiPan (int newMidiPan)
     {
-        jassert (juce::isPositiveAndBelow (newMidiPan, 128));
+        newMidiPan = juce::jlimit (0, 127, newMidiPan);
         
         if (lastRecievedMidiPan.load() == newMidiPan)
             return;
@@ -63,19 +63,12 @@ public:
         prevLeftGain.store(leftGain.load());
         prevRightGain.store(rightGain.load());
         
-        // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
+        float panningAngle = (90.0f * newMidiPan / 127.0f * juce::MathConstants<float>::pi) / 180.0f;
         
-        const float panningAngle = (90.0f * newMidiPan / 127.0f * juce::MathConstants<float>::pi) / 180.0f;
+        panningAngle = juce::jlimit (0.0f, 90.0f, panningAngle);
         
-        jassert (panningAngle >= 0.0f && panningAngle <= 90.0f);
-        
-        float left  = std::sin (panningAngle);
-        float right = std::cos (panningAngle);
-        
-        if (left < 0.0f)  left  = 0.0f;
-        if (left > 1.0f)  left  = 1.0f;
-        if (right < 0.0f) right = 0.0f;
-        if (right > 1.0f) right = 1.0f;
+        const float left  = juce::jlimit (0.0f, 1.0f, std::sin (panningAngle));
+        const float right = juce::jlimit (0.0f, 1.0f, std::cos (panningAngle));
         
         leftGain.store(left);
         rightGain.store(right);

@@ -3,12 +3,15 @@
     Parent file: HelpScreen.h.
 */
 
-#include <JuceHeader.h>
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
 
 
+namespace bav
+
+{
+
 HelpScreen::HelpScreen():
-    closeIcon(ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
+closeIcon(juce::ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {
     // close button
     {
@@ -40,3 +43,5 @@ void HelpScreen::resized()
     closeButton.setBounds(5, 5, 25, 25);
 };
 
+
+};  // namespace

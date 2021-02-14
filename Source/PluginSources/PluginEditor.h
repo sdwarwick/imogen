@@ -58,7 +58,7 @@ private:
     bav::MidiControlPanel midiPanel;
     bav::IOControlPanel ioPanel;
     
-    HelpScreen helpScreen;
+    bav::HelpScreen helpScreen;
     juce::TextButton helpButton;
     bool viewHelp;  
     

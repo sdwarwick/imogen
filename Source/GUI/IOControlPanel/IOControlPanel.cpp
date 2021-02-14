@@ -3,8 +3,6 @@
     Parent file: IOControlPanel.h.
 */
 
-
-#include <JuceHeader.h>
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
 
 

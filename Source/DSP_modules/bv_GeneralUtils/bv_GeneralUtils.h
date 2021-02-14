@@ -36,9 +36,11 @@ public:
         template <typename T>
         static bool isMidiNoteBlackKey(const T midipitch)
         {
-            jassert(midipitch >= 0);
+            if (midipitch < 0 || midipitch > 127)
+                return false;
+            
             const int modulo = (juce::roundToInt(midipitch)) % 12;
-            if(modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
+            if (modulo == 1 || modulo == 3 || modulo == 6 || modulo == 8 || modulo == 10)
                 return true;
             return false;
         }
@@ -47,7 +49,7 @@ public:
         template<typename T1, typename T2>
         static bool areSamePitchClass(const T1 pitch1, const T2 pitch2)
         {
-            jassert(pitch1 >= 0 && pitch2 >= 0);
+            jassert (pitch1 >= 0 && pitch2 >= 0);
             return ((juce::roundToInt(pitch1)) % 12) == ((juce::roundToInt(pitch2)) % 12);
         }
    };
@@ -56,64 +58,67 @@ public:
     {
         // MIDI TO FREQUENCY
         template<typename T>
-        static T mtof(const T midiNote)
+        static T mtof (const T midiNote)
         {
-            jassert(midiNote >= 0 && midiNote <= 127);
             return 440.0 * std::pow(2.0, ((midiNote - 69.0) / 12.0));
         }
         
         template<typename T1, typename T2, typename T3>
-        static T1 mtof(const T1 midiNote, const T2 concertPitchHz, const T3 rootNote, const int notesPerOctave)
+        static T1 mtof (const T1 midiNote, const T2 concertPitchHz, const T3 rootNote, const int notesPerOctave)
         {
-            jassert(midiNote >= 0 && midiNote <= 127 && concertPitchHz >= 0 && rootNote >= 0 && notesPerOctave > 0);
+            jassert (concertPitchHz > 0 && rootNote > 0 && notesPerOctave > 0);
             return concertPitchHz * std::pow(2.0, ((midiNote - rootNote) / notesPerOctave));
         }
         
         // FREQUENCY TO MIDI
         template<typename T>
-        static T ftom(const T inputFreq)
+        static T ftom (const T inputFreq)
         {
-            jassert(inputFreq >= 0);
+            jassert (inputFreq > 0.0);
             return 12.0 * log2(inputFreq / 440.0) + 69.0;
         }
         
         template<typename T1, typename T2, typename T3>
-        static T1 ftom(const T1 inputFreq, const T2 concertPitchHz, const T3 rootNote, const int notesPerOctave)
+        static T1 ftom (const T1 inputFreq, const T2 concertPitchHz, const T3 rootNote, const int notesPerOctave)
         {
-            jassert(inputFreq >= 0 && concertPitchHz >= 0 && rootNote >= 0 && notesPerOctave > 0);
+            jassert (inputFreq > 0.0 && concertPitchHz > 0 && rootNote > 0 && notesPerOctave > 0);
             return notesPerOctave * log2(inputFreq / concertPitchHz) + rootNote;
         }
     };
     
     template<typename T1, typename T2, typename T3, typename T4>
-    static float getMidifloatFromPitchBend(const T1 midiPitch, const T2 pitchbend, const T3 rangeUp, const T4 rangeDown)
+    static float getMidifloatFromPitchBend (const T1 midiPitch, T2 pitchbend, const T3 rangeUp, const T4 rangeDown)
     {
-        jassert(midiPitch >= 0 && midiPitch <= 127 && pitchbend >= 0 && pitchbend <= 127 && rangeUp >= 0 && rangeDown >= 0);
-        if(pitchbend == 64)
+        pitchbend = juce::jlimit (T2(0), T2(127), pitchbend);
+        
+        jassert (rangeUp >= 0 && rangeDown >= 0);
+        
+        if (pitchbend == 64)
             return float(midiPitch);
         if (pitchbend > 64)
             return ((rangeUp * (pitchbend - 65)) / 62) + midiPitch;
+        
         return (((1 - rangeDown) * pitchbend) / 63) + midiPitch - rangeDown;
     }
     
     struct velocityHelpers
     {
-        static float getGainMultFromVelocity(const int midiVelocity)
+        static float getGainMultFromVelocity (int midiVelocity)
         {
-            jassert(juce::isPositiveAndBelow(midiVelocity, 128));
+            midiVelocity = juce::jlimit (0, 127, midiVelocity);
             return midiVelocity / 127.0f;
         }
         
-        static float getGainMultFromVelocityWithSensitivity(const int midiVelocity, const int velocitySensitivity)
+        static float getGainMultFromVelocityWithSensitivity (int midiVelocity, int velocitySensitivity)
         {
-            jassert(juce::isPositiveAndBelow(midiVelocity, 128) && juce::isPositiveAndBelow(velocitySensitivity, 101));
-            const float velocity = midiVelocity / 127.0f;
-            return ((1.0f - velocity) * (1.0f - (velocitySensitivity / 100.0f)) + velocity);
+            midiVelocity = juce::jlimit (0, 127, midiVelocity);
+            return getGainMultFromFloatVelocityWithSensitivity (midiVelocity / 127.0f, velocitySensitivity);
         }
         
-        static float getGainMultFromFloatVelocityWithSensitivity(const float floatVelocity, const int velocitySensitivity)
+        static float getGainMultFromFloatVelocityWithSensitivity (float floatVelocity, int velocitySensitivity)
         {
-            jassert(floatVelocity >= 0.0f && floatVelocity <= 1.0f && juce::isPositiveAndBelow(velocitySensitivity, 101));
+            velocitySensitivity = juce::jlimit (0, 100, velocitySensitivity);
+            floatVelocity = juce::jlimit (0.0f, 1.0f, floatVelocity);
             return ((1.0f - floatVelocity) * (1.0f - (velocitySensitivity / 100.0f)) + floatVelocity);
         }
     };
@@ -129,42 +134,33 @@ class DspUtils
 {
 public:
     
-    static std::pair<float, float> getPanningMultsFromMidiPan(const int midiPan)
+    static std::pair<float, float> getPanningMultsFromMidiPan (int midiPan)
     {
-        jassert(juce::isPositiveAndBelow (midiPan, 128));
+        midiPan = juce::jlimit (0, 127, midiPan);
         
-        // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
-        const float panningAngle = 90 * midiPan / 127 * juce::MathConstants<float>::pi / 180;
+        float panningAngle = 90 * midiPan / 127 * juce::MathConstants<float>::pi / 180;
+        panningAngle = juce::jlimit (0.0f, 90.0f, panningAngle);
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);
         
-        if (left < 0.0f)  left = 0.0f;
-        if (left > 1.0f)  left = 1.0f;
-        if (right < 0.0f) right = 0.0f;
-        if (right > 1.0f) right = 1.0f;
-        
-        return std::make_pair(left, right); // L, R
+        return std::make_pair (juce::jlimit (0.0f, 1.0f, left),
+                               juce::jlimit (0.0f, 1.0f, right));
     }
     
     
-    static void putPanningMultsFromMidiPanInArray(const int midiPan, float (&array)[2])
+    static void putPanningMultsFromMidiPanInArray (int midiPan, float (&array)[2])
     {
-        jassert(juce::isPositiveAndBelow(midiPan, 128));
+        midiPan = juce::jlimit (0, 127, midiPan);
         
-        // convert midiPan [0-127] first to an angle between 0 & 90 degrees, then to radians
-        const float panningAngle = 90 * midiPan / 127 * juce::MathConstants<float>::pi / 180;
+        float panningAngle = 90 * midiPan / 127 * juce::MathConstants<float>::pi / 180;
+        panningAngle = juce::jlimit (0.0f, 90.0f, panningAngle);
         
         float left  = std::sin (panningAngle);
         float right = std::cos (panningAngle);
         
-        if (left < 0.0f)  left = 0.0f;
-        if (left > 1.0f)  left = 1.0f;
-        if (right < 0.0f) right = 0.0f;
-        if (right > 1.0f) right = 1.0f;
-        
-        array[0] = left;
-        array[1] = right;
+        array[0] = juce::jlimit (0.0f, 1.0f, left);
+        array[1] = juce::jlimit (0.0f, 1.0f, right);
     }
     
 private:
