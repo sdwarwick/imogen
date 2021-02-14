@@ -10,19 +10,9 @@
 
 function (imogen_makeFormatsList)
 
-    if (DEFINED formats)
-
-        # determine if the list contains the 'All' target, or if we need to add it 
+    if (DEFINED formats)  # determine if the list contains the 'standalone' format
 
         set (indexfinder 0)
-        list (FIND formats "All" indexfinder)
-
-        if (indexfinder EQUAL -1)
-            list (APPEND formats "All")
-        endif()
-
-        # determine if the list contains the 'standalone' format
-
         list (FIND formats "Standalone" indexfinder)
 
         if (indexfinder EQUAL -1)
@@ -32,7 +22,6 @@ function (imogen_makeFormatsList)
         endif()
 
         unset (indexfinder)
-
         return()
 
     endif()
@@ -41,8 +30,8 @@ function (imogen_makeFormatsList)
 
     set (formatChoosers IMOGEN_buildStandalone IMOGEN_buildVST3 IMOGEN_buildAU IMOGEN_buildUnity IMOGEN_buildAUv3 IMOGEN_buildAAX IMOGEN_buildVST)
 
-    set (formatlist "All")
-    set (numFormatsThereShouldBe 1)
+    set (formatlist "")
+    set (numFormatsThereShouldBe 0)
 
     set (boolVarName "")
     set (chooserIndex 0)

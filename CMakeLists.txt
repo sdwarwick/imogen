@@ -124,7 +124,10 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}   # this command creates a static library
     COPY_PLUGIN_AFTER_BUILD     TRUE
     VST3_COPY_DIR               /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
     AU_COPY_DIR                 /Users/benvining/Library/Audio/Plug-Ins/Components
+    UNITY_COPY_DIR              ${imogen_sourceDir}/Builds/Imogen_artefacts
     COMPANY_COPYRIGHT           This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
+
+list (APPEND formats "All")
 
 target_compile_features (Imogen PRIVATE ${imogen_compileFeatures})
 
@@ -148,11 +151,7 @@ set_target_properties (${CMAKE_PROJECT_NAME} PROPERTIES FOLDER "")  # prevets ID
 
 #
 
-juce_add_binary_data (ImogenGraphicAssets SOURCES 
-    ${imogen_GraphicAssetsDir}/1-1_note_semibreve.svg
-    ${imogen_GraphicAssetsDir}/closeIcon.png
-    ${imogen_GraphicAssetsDir}/grandStaff.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
+juce_add_binary_data (ImogenGraphicAssets SOURCES ${graphicAssetFiles})
 
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 

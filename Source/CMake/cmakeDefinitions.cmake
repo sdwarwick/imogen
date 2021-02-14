@@ -74,12 +74,16 @@ set (sourceFiles
     ${StaffDisplaySourcePath}/StaffDisplay.cpp
     ${StaffDisplaySourcePath}/StaffDisplay.h)
 
-if (IMOGEN_unitTesting)
+set (graphicAssetFiles 
+	${imogen_GraphicAssetsDir}/1-1_note_semibreve.svg 
+	${imogen_GraphicAssetsDir}/closeIcon.png 
+	${imogen_GraphicAssetsDir}/grandStaff.png 
+	${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
 
+if (IMOGEN_unitTesting)
 	set (testFiles
 		${testFilesPath}/tests.cpp
 		${testFilesPath}/HarmonizerTests.cpp) 
-
 endif()
 
 #

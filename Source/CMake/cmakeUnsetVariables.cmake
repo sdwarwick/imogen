@@ -25,6 +25,7 @@ unset (customModulesNeeded)
 
 unset (sourceFiles)
 unset (testFiles)
+unset (graphicAssetFiles)
 
 unset (ds_testing)
 unset (ds_juceDir)
