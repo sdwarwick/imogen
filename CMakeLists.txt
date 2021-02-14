@@ -11,7 +11,6 @@
 # get rid of binary data target scheme?
 # automatically build AudioPluginHost if not found
 # better cross-platforming of finding executable paths 
-# Fetch content - only download if not found locally in _deps folder 
 # in tests folder in IDE, hide modules (only show test files)
 # make 'formats' a cache variable?
 
@@ -25,16 +24,6 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 #
 
 set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
-
-if (NOT EXISTS ${sourceDir})
-    message (FATAL_ERROR "Source code folder not found")
-endif()
-
-set (cmakeFilesDir ${sourceDir}/CMake)
-
-if (NOT EXISTS ${cmakeFilesDir})
-    message (FATAL_ERROR "CMake utility files not found")
-endif()
 
 include (${sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
 include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
@@ -141,11 +130,15 @@ source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
 
 target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
-set_target_properties ("${CMAKE_PROJECT_NAME}" PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
+set_target_properties (${CMAKE_PROJECT_NAME} PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
 
 #
 
-juce_add_binary_data (ImogenGraphicAssets SOURCES ${binaryAssetFiles})
+juce_add_binary_data (ImogenGraphicAssets SOURCES 
+    ${GraphicAssetsDir}/1-1_note_semibreve.svg
+    ${GraphicAssetsDir}/closeIcon.png
+    ${GraphicAssetsDir}/grandStaff.png
+    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
 
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
 

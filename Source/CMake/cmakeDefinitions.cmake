@@ -8,15 +8,15 @@ set (formats "AU" "VST3" "Standalone")  # valid formats: Standalone Unity VST3 A
 
 set (compileFeatures cxx_std_17)
 
-set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
-
 #
 
-# descriptive strings for cache variables 
+# descriptive strings for cache variables
 
 set (ds_testing "Enable Imogen unit tests")
 
 set (ds_juceDir "Path to the JUCE library code")
+
+set (ds_catchDir "Path to the Catch2 code")
 
 set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
 
@@ -34,14 +34,15 @@ set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
 
 set (IMOGEN_unitTesting ON CACHE BOOL "${ds_testing}")  # set this to 'true' to enable a unit testing executable target
 
-set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Source/JUCE CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
+set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Source/JUCE             CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
+set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}")  # if this subdirectory isn't found and unit testing is enabled, this script will automatically download Catch2 from GitHub
 
 set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "${ds_launchAPH}")        #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
-set (IMOGEN_launchStandaloneOnBuild      ON  CACHE BOOL "${ds_launchSAL}")        #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
-set (IMOGEN_preferStandaloneForAllTarget ON  CACHE BOOL "${ds_preferSALforAll}")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
+set (IMOGEN_launchStandaloneOnBuild      OFF CACHE BOOL "${ds_launchSAL}")        #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
+set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
 
-set (IMOGEN_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")
-set (IMOGEN_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")
+set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")
+set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")
 
 #
 
@@ -62,7 +63,7 @@ set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in wh
 
 #
 
-# the actual group of source files 
+# the groups of actual source files 
 
 set (sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
@@ -80,13 +81,6 @@ set (sourceFiles
     ${MidiControlSourcePath}/MidiControlPanel.h
     ${StaffDisplaySourcePath}/StaffDisplay.cpp
     ${StaffDisplaySourcePath}/StaffDisplay.h)
-
-set (binaryAssetFiles
-	${GraphicAssetsDir}/1-1_note_semibreve.svg 
-	${GraphicAssetsDir}/closeIcon.png 
-	${GraphicAssetsDir}/grandStaff.png
-	${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png)
-
 
 if (IMOGEN_unitTesting)
 
@@ -107,5 +101,10 @@ set (customModulesNeeded
 	${dspModulesPath}/bv_ImogenEngine)
 
 #
+
+set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
+
+#
+
 
 

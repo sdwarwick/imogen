@@ -307,11 +307,11 @@ private:
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
     void noteOn (const int midiPitch, const float velocity, const bool isKeyboard = true);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard = true);
-    void handlePitchWheel (const int wheelValue);
-    void handleAftertouch (const int midiNoteNumber, const int aftertouchValue);
-    void handleChannelPressure (const int channelPressureValue);
-    void updateChannelPressure (const int newIncomingAftertouch);
-    void handleController (const int controllerNumber, const int controllerValue);
+    void handlePitchWheel (int wheelValue);
+    void handleAftertouch (int midiNoteNumber, int aftertouchValue);
+    void handleChannelPressure (int channelPressureValue);
+    void updateChannelPressure (int newIncomingAftertouch);
+    void handleController (const int controllerNumber, int controllerValue);
     void handleSustainPedal (const int value);
     void handleSostenutoPedal (const int value);
     void handleSoftPedal (const int value);

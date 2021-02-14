@@ -25,7 +25,7 @@ function (configureStandaloneExecutable)
     endfunction()
     #
 
-    set (standalonePath ${CMAKE_CURRENT_LIST_DIR}/Builds/Imogen_artefacts/Debug/Standalone)
+    set (standalonePath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/Standalone)
 
     if (APPLE)
         set (standalonePath ${standalonePath}/Imogen.app)
@@ -37,9 +37,9 @@ function (configureStandaloneExecutable)
 
     #
 
-    if (NOT ( DEFINED IMOGEN_standalone_exec_path AND EXISTS ${IMOGEN_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
+    if (NOT ( DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
         if (isBuildingStandalone OR EXISTS ${standalonePath})
-        	set (IMOGEN_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
+        	set (imogen_standalone_exec_path ${standalonePath} CACHE FILEPATH "Path to the Imogen standalone executable file" FORCE)
         else()
         	_standaloneNotFound()
         	return()
@@ -48,7 +48,7 @@ function (configureStandaloneExecutable)
 
     #
 
-    if (NOT ( isBuildingStandalone OR EXISTS ${IMOGEN_standalone_exec_path} ))
+    if (NOT ( isBuildingStandalone OR EXISTS ${imogen_standalone_exec_path} ))
     	_standaloneNotFound()
     	return()
     endif()
@@ -57,7 +57,7 @@ function (configureStandaloneExecutable)
 
     if (NOT isBuildingStandalone)
         message (WARNING "The Standalone executable was located and can be used, but you are not rebuilding the Standalone with this build, so its behavior may not reflect the most recent code changes.")
-    elseif (NOT "${IMOGEN_standalone_exec_path}" STREQUAL "${standalonePath}")
+    elseif (NOT "${imogen_standalone_exec_path}" STREQUAL "${standalonePath}")
     	message (WARNING "The Standalone is being built with this build, but the resolved standalone executable path does not match the path to where the standalone executable will be built. The Imogen Standalone that launches automatically with this build may not reflect the most recent code changes in its behavior.")
     endif()
 
@@ -71,7 +71,7 @@ function (configureAudioPluginHostExecutable)
 
     message (STATUS "Configuring JUCE AudioPluginHost executable...")
 
-    if (DEFINED IMOGEN_AudioPluginHost_Path AND EXISTS ${IMOGEN_AudioPluginHost_Path}) # maybe the user has supplied a valid path to the executable already?
+    if (DEFINED imogen_AudioPluginHost_Path AND EXISTS ${imogen_AudioPluginHost_Path}) # maybe the user has supplied a valid path to the executable already?
     	return()
     endif()
 
@@ -86,7 +86,7 @@ function (configureAudioPluginHostExecutable)
     endif()
 
     if (EXISTS ${pluginHostPath})
-    	set (IMOGEN_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
+    	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "Path to the JUCE AudioPluginHost executable" FORCE)
     	return()
     endif()
 
@@ -118,6 +118,7 @@ function (configureIndividualBuildTargets)
     #
 
     foreach (target ${formats} "All") 
+
         set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
 
         if (NOT TARGET ${thisTargetName})
@@ -141,9 +142,10 @@ function (configureIndividualBuildTargets)
         endif()
 
         if (IMOGEN_launchAudioPluginHostOnBuild)
-        	set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${IMOGEN_AudioPluginHost_Path})
+        	set_target_properties (${thisTargetName} PROPERTIES XCODE_SCHEME_EXECUTABLE ${imogen_AudioPluginHost_Path})
             message (STATUS "Executable for ${thisTargetName} set to 'AudioPluginHost'")
         endif()
+
     endforeach()
 
 endfunction()
@@ -154,20 +156,34 @@ endfunction()
 
 function (configureUnitTesting)
 
-    if (NOT fetchcontentincluded)  # simple include guard 
-        include (FetchContent)
-        set (fetchcontentincluded TRUE PARENT_SCOPE)
+    message (STATUS "Configuring unit testing...")
+
+    #
+
+    if (EXISTS ${imogen_catchDir})
+
+        add_subdirectory (${imogen_catchDir} REQUIRED)
+
+    else()
+
+        message (STATUS "Fetching Catch2 from GitHub...")
+
+        if (NOT fetchcontentincluded)  # simple include guard 
+            include (FetchContent)
+            set (fetchcontentincluded TRUE PARENT_SCOPE)
+        endif()
+
+        FetchContent_Declare (Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG        v2.13.3)
+
+        FetchContent_MakeAvailable (Catch2)
+
+        set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}" FORCE)
+
     endif()
 
-    message (STATUS "Fetching Catch2 from GitHub...")
-
-    FetchContent_Declare (Catch2  # Downloads the latest version of Catch2 if not found 
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v2.13.3)
-
-    FetchContent_MakeAvailable (Catch2)
-
-    message (STATUS "Configuring unit testing...")
+    #
 
     source_group (TREE ${testFilesPath} PREFIX "" FILES ${testFiles})
 
@@ -200,21 +216,27 @@ endfunction()
 
 function (addJuce)
 
-    if (EXISTS ${IMOGEN_juceDir})
-        add_subdirectory (${IMOGEN_juceDir} REQUIRED)
+    if (EXISTS ${imogen_juceDir})
+
+        add_subdirectory (${imogen_juceDir} REQUIRED)
+
     else()
+
+    message (STATUS "Finding JUCE...")
+
+    if (NOT fetchcontentincluded)  # simple include guard 
         include (FetchContent)
-        set (fetchcontentincluded TRUE)  # simple include guard 
+        set (fetchcontentincluded TRUE PARENT_SCOPE)
+    endif()
+    
+    FetchContent_Declare (juce
+        GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+        GIT_TAG        origin/develop)
 
-        message (STATUS "Fetching JUCE from GitHub...")
-        
-        FetchContent_Declare (juce   #  Downloads the latest version of JUCE if the indicated subdirectory cannot be found
-            GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-            GIT_TAG        origin/develop)
+    FetchContent_MakeAvailable (juce)
 
-        FetchContent_MakeAvailable (juce)
+    set (imogen_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src PARENT_SCOPE)
 
-        set (IMOGEN_juceDir ${CMAKE_CURRENT_LIST_DIR}/Builds/_deps/juce-src)  # this is where FetchContent will download the JUCE library code to
     endif()
 
 endfunction()
@@ -223,7 +245,9 @@ endfunction()
 
 function (checkAllDirectories)
 
-    if (NOT EXISTS ${dspModulesPath})
+    if (NOT EXISTS ${sourceDir})
+        message (FATAL_ERROR "Source code folder not found")
+    elseif (NOT EXISTS ${dspModulesPath})
         message (FATAL_ERROR "DSP modules folder not found")
     elseif (NOT EXISTS ${GraphicAssetsDir})
         message (FATAL_ERROR "Graphic assets folder not found")

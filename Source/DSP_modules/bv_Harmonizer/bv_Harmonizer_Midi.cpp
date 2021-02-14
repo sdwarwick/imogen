@@ -200,10 +200,8 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),  // output the new note on
                                       ++lastMidiTimeStamp);
     }
-    else
+    else  // same note retriggered: output aftertouch / channel pressure
     {
-        // same note retriggered: output aftertouch / channel pressure
-        
         const int aftertouch = jlimit (0, 127,
                                        roundToInt ((velocity / std::max<float>(voice->getLastRecievedVelocity(), 0.001f)) * 127.0f));
         
@@ -271,11 +269,14 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         if (latchIsOn)
         {
             voice->setKeyDown (false);
-            return;
         }
-        
-        if (! (sustainPedalDown || sostenutoPedalDown))
-            stopVoice (voice, velocity, allowTailOff);
+        else
+        {
+            if (! (sustainPedalDown || voice->sustainingFromSostenutoPedal))
+                stopVoice (voice, velocity, allowTailOff);
+            else
+                voice->setKeyDown (false);
+        }
     }
     else  // this is an automated note-off event
     {
@@ -283,10 +284,8 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
         {
             stopVoice (voice, velocity, allowTailOff);
         }
-        else
+        else  // we're processing an automated note-off event, but the voice's keyboard key is still being held
         {
-            // we're processing an automated note-off event, but the voice's keyboard key is still being held
-            
             if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
             {
                 pedal.lastPitch = -1;
@@ -671,8 +670,10 @@ void Harmonizer<SampleType>::applyDescant()
 ***********************************************************************************************************************************************/
 
 template<typename SampleType>
-void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
+void Harmonizer<SampleType>::handlePitchWheel (int wheelValue)
 {
+    wheelValue = jlimit (0, 127, wheelValue);
+    
     if (lastPitchWheelValue == wheelValue)
         return;
     
@@ -689,8 +690,13 @@ void Harmonizer<SampleType>::handlePitchWheel (const int wheelValue)
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const int aftertouchValue)
+void Harmonizer<SampleType>::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 {
+    if (midiNoteNumber < 0 || midiNoteNumber > 127)
+        return;
+    
+    aftertouchValue = jlimit (0, 127, aftertouchValue);
+    
     if (useChannelPressure)
     {
         updateChannelPressure (aftertouchValue);
@@ -708,8 +714,10 @@ void Harmonizer<SampleType>::handleAftertouch (const int midiNoteNumber, const i
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::handleChannelPressure (const int channelPressureValue)
+void Harmonizer<SampleType>::handleChannelPressure (int channelPressureValue)
 {
+    channelPressureValue = jlimit (0, 127, channelPressureValue);
+    
     if (useChannelPressure)
         aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
                                       ++lastMidiTimeStamp);
@@ -729,8 +737,10 @@ void Harmonizer<SampleType>::handleChannelPressure (const int channelPressureVal
 
     
 template<typename SampleType>
-void Harmonizer<SampleType>::updateChannelPressure (const int newIncomingAftertouch)
+void Harmonizer<SampleType>::updateChannelPressure (int newIncomingAftertouch)
 {
+    newIncomingAftertouch = jlimit (0, 127, newIncomingAftertouch);
+    
     int highestAftertouch = -1;
     
     for (auto* voice : voices)
@@ -752,8 +762,10 @@ void Harmonizer<SampleType>::updateChannelPressure (const int newIncomingAfterto
     
 
 template<typename SampleType>
-void Harmonizer<SampleType>::handleController (const int controllerNumber, const int controllerValue)
+void Harmonizer<SampleType>::handleController (const int controllerNumber, int controllerValue)
 {
+    controllerValue = jlimit (0, 127, controllerValue);
+    
     switch (controllerNumber)
     {
         case 0x1:   handleModWheel        (controllerValue);    return;
@@ -810,9 +822,7 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const int value)
     }
     else
     {
-        for (auto* voice : voices)
-            if (voice->isVoiceActive() && voice->sustainingFromSostenutoPedal)
-                stopVoice (voice, 0.0f, false);
+        turnOffAllKeyupNotes (false, false, 0.0f, true);
     }
 };
 
