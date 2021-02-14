@@ -30,7 +30,7 @@ include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
 
 #
 
-checkAllDirectories()
+imogen_checkAllDirectories()
 
 if (IMOGEN_unitTesting)
     message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
@@ -63,24 +63,24 @@ option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 
 #
 
-addJuce()
+imogen_addJuce()
 
 juce_add_modules (${customModulesNeeded})
 
 #
 
-determineIfBuildingStandalone()
+imogen_determineIfBuildingStandalone()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-    checkIfCanUseExecutables()
+    imogen_checkIfCanUseExecutables()
 endif()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-    configureStandaloneExecutable()
+    imogen_configureStandaloneExecutable()
 endif()
 
 if (IMOGEN_launchAudioPluginHostOnBuild)
-    configureAudioPluginHostExecutable()
+    imogen_configureAudioPluginHostExecutable()
 endif()
 
 #
@@ -120,7 +120,7 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0)
 
-configureIndividualBuildTargets()
+imogen_configureIndividualBuildTargets()
 
 #
 
@@ -156,7 +156,7 @@ target_link_libraries (${CMAKE_PROJECT_NAME}
 #
 
 if (IMOGEN_unitTesting)
-    configureUnitTesting()
+    imogen_configureUnitTesting()
 endif()
 
 #
