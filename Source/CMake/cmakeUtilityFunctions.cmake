@@ -10,9 +10,37 @@
 
 function (imogen_makeFormatsList)
 
+    if (DEFINED formats)
+
+        # determine if the list contains the 'All' target, or if we need to add it 
+
+        set (indexfinder 0)
+        list (FIND formats "All" indexfinder)
+
+        if (indexfinder EQUAL -1)
+            list (APPEND formats "All")
+        endif()
+
+        # determine if the list contains the 'standalone' format
+
+        set (indexfinder 0)
+        list (FIND formats "Standalone" indexfinder)
+
+        if (indexfinder EQUAL -1)
+            set (IMOGEN_buildStandalone FALSE PARENT_SCOPE)
+        else()
+            set (IMOGEN_buildStandalone TRUE PARENT_SCOPE)
+        endif()
+
+        return()
+
+    endif()
+
     set (formatChoosers IMOGEN_buildStandalone IMOGEN_buildVST3 IMOGEN_buildAU IMOGEN_buildUnity IMOGEN_buildAUv3 IMOGEN_buildAAX IMOGEN_buildVST)
 
     set (formatlist "All")
+
+    set (numFormatsThereShouldBe 1)
 
     foreach (chooser ${formatChoosers})
 
@@ -21,6 +49,8 @@ function (imogen_makeFormatsList)
         if (NOT ${boolVarName})
             continue()
         endif()
+
+        math (EXPR numFormatsThereShouldBe "${numFormatsThereShouldBe} + 1")
 
         set (chooserIndex 0)
         list (FIND formatChoosers ${chooser} chooserIndex)
@@ -47,6 +77,10 @@ function (imogen_makeFormatsList)
 
     set (numFormats 0)
     list (LENGTH formatlist numFormats)
+
+    if (NOT ${numFormats} EQUAL ${numFormatsThereShouldBe})
+        message (FATAL_ERROR "Error in generating list of formats.")
+    endif()
 
     if (${numFormats} LESS_EQUAL 1)
         message (FATAL_ERROR "At least one build format must be selected.")
@@ -320,23 +354,6 @@ function (imogen_checkIfCanUseExecutables)
         message (WARNING "Unrecognized operating system; auto-launching executables disabled")
         _imgn_turnEmOff()
     endif()
-
-endfunction()
-
-###
-
-function (imogen_checkIfBuildingStandalone)
-
-    set (buildingStandalone FALSE)
-
-    foreach (format ${formats})
-        if (${format} STREQUAL "Standalone")
-            set (buildingStandalone TRUE)
-            break()
-        endif()
-    endforeach()
-
-    set (IMOGEN_buildStandalone ${buildingStandalone} PARENT_SCOPE)
 
 endfunction()
 

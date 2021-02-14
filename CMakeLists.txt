@@ -40,6 +40,12 @@ else()
     message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
 endif()
 
+imogen_makeFormatsList()
+
+if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
+    imogen_checkIfCanUseExecutables()
+endif()
+
 #
 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
@@ -70,16 +76,6 @@ imogen_addJuce()
 juce_add_modules (${customModulesNeeded})
 
 #
-
-if (DEFINED formats)
-    imogen_checkIfBuildingStandalone()
-else()
-    imogen_makeFormatsList()
-endif()
-
-if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-    imogen_checkIfCanUseExecutables()
-endif()
 
 if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
     imogen_configureStandaloneExecutable()
