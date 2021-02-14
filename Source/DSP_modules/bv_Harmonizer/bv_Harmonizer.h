@@ -108,7 +108,7 @@ protected:
     
     void setKeyDown (bool isNowDown) noexcept;
     
-    void setPan (const int newPan);
+    void setPan (int newPan);
     
     void setAdsrParameters (const ADSR::Parameters newParams) { adsr.setParameters(newParams); }
     void setQuickReleaseParameters (const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
@@ -121,7 +121,7 @@ private:
     
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
-    void sola (const AudioBuffer<SampleType>& inputAudio,
+    void sola (const SampleType* input, const int totalNumInputSamples,
                const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
                const SampleType* window);
     
@@ -162,8 +162,6 @@ private:
     bool isPedalPitchVoice, isDescantVoice;
     
     bool playingButReleased;
-    
-    double samplerate = 0.0;
     
     float lastPBRmult = 1.0f;
     
@@ -281,10 +279,16 @@ protected:
     // these functions will be called by the harmonizer's voices, to query for important harmonizer-wide info
     
     // returns a float velocity weighted according to the current midi velocity sensitivity settings
-    float getWeightedVelocity (const float inputFloatVelocity) const { return velocityConverter.floatVelocity(inputFloatVelocity); }
+    float getWeightedVelocity (const float inputFloatVelocity) const
+    {
+        return velocityConverter.floatVelocity(inputFloatVelocity);
+    }
     
     // returns the actual frequency in Hz a HarmonizerVoice needs to output for its latest recieved midiNote, as an integer -- weighted for pitchbend with the current settings & pitchwheel position, then converted to frequency with the current concert pitch settings.
-    float getOutputFrequency (const int midipitch) const { return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch)); }
+    float getOutputFrequency (const int midipitch) const
+    {
+        return pitchConverter.mtof (bendTracker.newNoteRecieved(midipitch));
+    }
     
     bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
@@ -295,6 +299,8 @@ protected:
     ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
+    
+    double getSamplerate() const noexcept { return sampleRate; }
     
     
 private:

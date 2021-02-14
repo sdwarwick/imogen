@@ -108,5 +108,16 @@ set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
 
 #
 
+# expected filename extensions for executable files
+
+if (APPLE)
+    set (_imgn_xtn ".app")
+elseif (UNIX)
+    set (_imgn_xtn ".elf")
+elseif (WIN32)
+    set (_imgn_xtn ".exe")
+endif()
+
+#
 
 

@@ -39,6 +39,8 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     // blocksize = maximum period
     
+    jassert (blocksize > 0);
+    
     synthesisBuffer.setSize (1, blocksize * 4);
     synthesisBuffer.clear();
     nextSBindex = 0;
@@ -59,12 +61,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
                                                    const Array<int>& indicesOfGrainOnsets,
                                                    const AudioBuffer<SampleType>& windowToUse)
 {
-    jassert (samplerate > 0.0);
-    
-    if (playingButReleased)
-        if (! (parent->isSustainPedalDown() || parent->isSostenutoPedalDown()))
-            if (! isQuickFading)  // to make sure stopNote doesn't get RE-called if the above conditions are true between successive calls to renderNextBlock
-                stopNote (1.0f, false);
+    // determine if the voice is currently active
     
     bool voiceIsOnRightNow;
     
@@ -79,24 +76,56 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
         return;
     }
     
-    // puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
-    sola (inputAudio, origPeriod,
-          roundToInt (samplerate / currentOutputFreq),  // new desired period, in samples
-          indicesOfGrainOnsets,
-          windowToUse.getReadPointer(0));
+    //  *****************************************************************************************************
+    //  puts shifted samples into the synthesisBuffer, from sample indices 0 to numSamples-1
     
     const int numSamples = inputAudio.getNumSamples();
     
-    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, currentVelocityMultiplier); // midi velocity gain
-    prevVelocityMultiplier = currentVelocityMultiplier;
+    sola (inputAudio.getReadPointer(0), numSamples,
+          origPeriod,
+          roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
+          indicesOfGrainOnsets,
+          windowToUse.getReadPointer(0));  // precomputed window length must be input period * 2
+    
+    //  *****************************************************************************************************
+    //  midi velocity gain (aftertouch is applied here as well)
+    
+    float velocityMultNow;
+    
+    if (currentAftertouch == 0 || currentVelocityMultiplier == 1.0f)
+    {
+        velocityMultNow = currentVelocityMultiplier;
+    }
+    else
+    {
+        const float rangeOfVelocityLeft = 1.0f - currentVelocityMultiplier;
+        
+        jassert (rangeOfVelocityLeft > 0.0f);
+        
+        velocityMultNow = currentVelocityMultiplier + ((currentAftertouch / 127.0f) * rangeOfVelocityLeft);
+        
+        velocityMultNow = jlimit (0.0f, 1.0f, velocityMultNow);
+    }
+    
+    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
+    prevVelocityMultiplier = velocityMultNow;
+    
+    //  *****************************************************************************************************
+    //  soft pedal gain
     
     const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f; // soft pedal gain
     synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
     prevSoftPedalMultiplier = softPedalMult;
     
+    //  *****************************************************************************************************
+    //  playing-but-released gain
+    
     const float newPBRmult = playingButReleased ? 0.5f : 1.0f; // gain applied when voice is still ringing after key is released (sustain/sostenuto pedal, etc)
     synthesisBuffer.applyGainRamp (0, numSamples, lastPBRmult, newPBRmult);
     lastPBRmult = newPBRmult;
+    
+    //  *****************************************************************************************************
+    //  ADSR
     
     if (parent->isADSRon())
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // midi-triggered adsr envelope
@@ -106,25 +135,24 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     if (isQuickFading)  // quick fade out for stopNote w/ no tail off, to prevent clicks from jumping to 0
         quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
     
+    //  *****************************************************************************************************
+    //  write to output
+    
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
-                                      panner.getPrevGain(chan), panner.getGainMult(chan)); // panning is applied while writing to output
+                                      panner.getPrevGain(chan), panner.getGainMult(chan));  // panning is applied while writing to output
     
     moveUpSamples (numSamples);
 };
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::sola (const AudioBuffer<SampleType>& inputAudio,
+void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int totalNumInputSamples,
                                         const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
                                         const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
                                         const SampleType* window) // Hanning window, length origPeriod * 2
 {
-    const int totalNumInputSamples = inputAudio.getNumSamples();
-    
-    const auto* input = inputAudio.getReadPointer(0);
-    
     if (totalNumInputSamples < nextSBindex)
         return;
     
@@ -342,38 +370,29 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::aftertouchChanged (const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
-    
-    // do something cool, idk ¯\_(ツ)_/¯
 };
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::setPan (const int newPan)
+void HarmonizerVoice<SampleType>::setPan (int newPan)
 {
-    jassert (isPositiveAndBelow (newPan, 128));
+    newPan = jlimit(0, 127, newPan);
     
-    const int realNewPan = jlimit (0, 127, newPan);
-    
-    if (panner.getLastMidiPan() != realNewPan)
-        panner.setMidiPan (realNewPan);
+    if (panner.getLastMidiPan() != newPan)
+        panner.setMidiPan (newPan);
 };
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::updateSampleRate (const double newSamplerate)
 {
-    if (samplerate == newSamplerate || newSamplerate <= 0.0)
-        return;
+    adsr        .setSampleRate (newSamplerate);
+    quickRelease.setSampleRate (newSamplerate);
+    quickAttack .setSampleRate (newSamplerate);
     
-    samplerate = newSamplerate;
-    
-    adsr        .setSampleRate(newSamplerate);
-    quickRelease.setSampleRate(newSamplerate);
-    quickAttack .setSampleRate(newSamplerate);
-    
-    adsr        .setParameters(parent->getCurrentAdsrParams());
-    quickRelease.setParameters(parent->getCurrentQuickReleaseParams());
-    quickAttack .setParameters(parent->getCurrentQuickAttackParams());
+    adsr        .setParameters (parent->getCurrentAdsrParams());
+    quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
+    quickAttack .setParameters (parent->getCurrentQuickAttackParams());
 };
 
 

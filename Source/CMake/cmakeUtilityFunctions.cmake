@@ -10,23 +10,54 @@
 
 function (imogen_makeFormatsList)
 
-    if (DEFINED formats)  # determine if the list contains the 'standalone' format
+    if (DEFINED formats)
 
-        set (indexfinder 0)
-        list (FIND formats "Standalone" indexfinder)
+        set (validFormatStrings Standalone VST3 AU Unity AUv3 AAX VST)
 
-        if (indexfinder EQUAL -1)
-            set (IMOGEN_buildStandalone FALSE PARENT_SCOPE)
-        else()
-            set (IMOGEN_buildStandalone TRUE PARENT_SCOPE)
+        set (listIndexFinder -1)
+
+        foreach (format ${formats})  # remove any non-valid format string identifiers from the provided list 
+
+            list (FIND validFormatStrings "${format}" listIndexFinder)
+
+            if (listIndexFinder EQUAL -1)
+                message (WARNING "Invalid format string '${format}' removed from formats list")
+                list (REMOVE_ITEM formats "${format}")
+            endif()
+            
+        endforeach()
+
+        unset (validFormatStrings)
+
+        set (listLength 0)
+        list (LENGTH formats listLength)
+
+        if (listLength GREATER 0)  # we can use the user-provided string list, it contains at least 1 valid build format
+
+            set (listIndexFinder -1)
+            list (FIND formats "Standalone" listIndexFinder)
+
+            if (listIndexFinder EQUAL -1)  # test if the list contains "Standalone"
+                set (IMOGEN_buildStandalone FALSE PARENT_SCOPE)  # mask the cache variable to ensure this value is accurate for future functions 
+            else()
+                set (IMOGEN_buildStandalone TRUE PARENT_SCOPE)
+            endif()
+
+            message (STATUS "Successfully parsed format list: ${formats}")
+
+            unset (listIndexFinder)
+            unset (listLength)
+            return() 
+
+        else()  # we must attempt to construct the list from the boolean cache variables 
+
+            message (WARNING "No valid format strings provided; attempting to construct format list from boolean cache variables...")
+            unset (listLength)
+            unset (listIndexFinder)
+            
         endif()
 
-        unset (indexfinder)
-        return()
-
     endif()
-
-    #
 
     set (formatChoosers IMOGEN_buildStandalone IMOGEN_buildVST3 IMOGEN_buildAU IMOGEN_buildUnity IMOGEN_buildAUv3 IMOGEN_buildAAX IMOGEN_buildVST)
 
@@ -68,30 +99,29 @@ function (imogen_makeFormatsList)
 
     endforeach()
 
-    unset (formatChoosers)
-    unset (boolVarName)
-    unset (chooserIndex)
-
     set (numFormats 0)
     list (LENGTH formatlist numFormats)
 
-    if (NOT ${numFormats} EQUAL ${numFormatsThereShouldBe})
-        message (FATAL_ERROR "Error in generating list of formats.")
-    endif()
-
-    unset (numFormatsThereShouldBe)
-
-    if (${numFormats} LESS_EQUAL 1)
+    if (${numFormats} EQUAL 0)
         message (FATAL_ERROR "At least one build format must be selected.")
     endif()
 
-    unset (numFormats)
+    if (NOT ${numFormats} EQUAL ${numFormatsThereShouldBe})
+        message (AUTHOR_WARNING "Unknown error in generating list of formats.")
+    endif()
 
     set (formats ${formatlist} PARENT_SCOPE)
 
+    unset (formatChoosers)
+    unset (boolVarName)
+    unset (chooserIndex)
     unset (formatlist)
+    unset (numFormatsThereShouldBe)
+    unset (numFormats)
 
 endfunction()
+
+#
 
 
 # =================================================================================================================================================
@@ -108,15 +138,9 @@ function (imogen_configureStandaloneExecutable)
 
     message (STATUS "Configuring Imogen Standalone executable...")
 
-    set (standalonePath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/Standalone)
+    set (standalonePath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/Standalone/Imogen)
 
-    if (APPLE)
-        set (standalonePath ${standalonePath}/Imogen.app)
-    elseif (UNIX)
-        set (standalonePath ${standalonePath}/Imogen.elf)
-    elseif (WIN32)
-        set (standalonePath ${standalonePath}/Imogen.exe)
-    endif()
+    string (APPEND standalonePath "${_imgn_xtn}")
 
     if (NOT ( DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
         
@@ -161,15 +185,17 @@ function (imogen_configureAudioPluginHostExecutable)
     	return()
     endif()
 
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds)
-
     if (APPLE)
-        set (pluginHostPath ${pluginHostPath}/MacOSX/build/Debug/AudioPluginHost.app)
+        set (buildfolder MacOSX)
     elseif (UNIX)
-        set (pluginHostPath ${pluginHostPath}/LinuxMakefile/build/Debug/AudioPluginHost.elf)
+        set (buildfolder LinuxMakefile)
     elseif (WIN32)
-        set (pluginHostPath ${pluginHostPath}/VisualStudio2019/build/Debug/AudioPluginHost.exe)
+        set (buildfolder VisualStudio2019)
     endif()
+
+    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${buildfolder}/build/Debug/AudioPluginHost)
+
+    string (APPEND pluginHostPath "${_imgn_xtn}")
 
     if (EXISTS ${pluginHostPath})
     	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
@@ -177,15 +203,9 @@ function (imogen_configureAudioPluginHostExecutable)
     	return()
     endif()
 
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug)  # this is where the APH will end up after the automatic build process...
+    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug/AudioPluginHost)  # this is where the APH will end up after the automatic build process...
 
-    if (APPLE)
-        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.app)
-    elseif (UNIX)
-        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.elf)
-    elseif (WIN32)
-        set (pluginHostPath ${pluginHostPath}/AudioPluginHost.exe)
-    endif()
+    string (APPEND pluginHostPath "${_imgn_xtn}")
 
     if (EXISTS ${pluginHostPath})
         set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
@@ -429,7 +449,6 @@ function (_imogen_unset_all_variables)
     unset (IMOGEN_buildStandalone)
     unset (imogen_juceDir)
     unset (imogen_catchDir)
-    unset (cmakeFilesDir)
     unset (dspModulesPath)
     unset (pluginSourcesDir)
     unset (guiSourcePath)

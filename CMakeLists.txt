@@ -21,10 +21,8 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set (imogen_sourceDir ${CMAKE_CURRENT_SOURCE_DIR}/Source CACHE FILEPATH "The location of the Imogen source code folder")  # This could conceivably be in a different place, but the source tree must be intact 
 
-set (cmakeFilesDir ${imogen_sourceDir}/CMake)
-
-include (${cmakeFilesDir}/cmakeDefinitions.cmake REQUIRED)
-include (${cmakeFilesDir}/cmakeUtilityFunctions.cmake REQUIRED)
+include (${imogen_sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
+include (${imogen_sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
 
 #  initializing all the cache variables & preferences:
 
@@ -52,11 +50,11 @@ set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")  # path to t
 
 set (imogen_compileFeatures "cxx_std_17" CACHE STRING "Build compile features")
 
-#  uncomment this to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace
+#  uncomment this 'set formats' call to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace. Any non-valid strings will be removed from the list.
 #  valid formats are: Standalone VST3 AU Unity AUv3 AAX VST
 #  for AAX or VST [vst2], the API paths must be provided manually by calling juce_set_aax_sdk_path and/or juce_set_vst2_sdk_path, respectively. These calls are provided below, simply fill in the absolute path to the SDK on your filesystem and uncomment the applicable line.
 #
-# set (formats VST AU Standalone)
+# set (formats AU VST3 Standalone)
 
 #
 

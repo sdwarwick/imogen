@@ -163,10 +163,10 @@ public:
         return getGainMult (midiVelocity / 127.0f, sensitivity.load());
     }
     
-    float floatVelocity (const float floatVelocity) const
+    float floatVelocity (float floatVelocity) const
     {
-        return getGainMult (jlimit (0.0f, 1.0f, floatVelocity),
-                            sensitivity.load());
+        floatVelocity = jlimit (0.0f, 1.0f, floatVelocity);
+        return getGainMult (floatVelocity, sensitivity.load());
     }
     
     
@@ -176,7 +176,8 @@ private:
     
     float getGainMult (const float floatVelocity, const float floatSensitivity) const
     {
-        return ((1.0f - floatVelocity) * (1.0f - floatSensitivity) + floatVelocity);
+        return jlimit (0.0f, 1.0f,
+                       (1.0f - floatVelocity) * (1.0f - floatSensitivity) + floatVelocity);
     }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VelocityHelper)
