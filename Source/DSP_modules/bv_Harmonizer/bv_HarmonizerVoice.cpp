@@ -90,7 +90,8 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     //  *****************************************************************************************************
     //  midi velocity gain (aftertouch is applied here as well)
     
-    const float velocityMultNow = currentVelocityMultiplier + ((currentAftertouch / 127.0f) * (1.0f - currentVelocityMultiplier));
+    constexpr float inv127 = 1.0f / 127.0f;
+    const float velocityMultNow = currentVelocityMultiplier + ((currentAftertouch * inv127) * (1.0f - currentVelocityMultiplier));
         
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
     prevVelocityMultiplier = velocityMultNow;

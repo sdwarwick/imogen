@@ -48,6 +48,8 @@ set (imogen_GraphicAssetsDir ${guiSourcePath}/GraphicAssets CACHE FILEPATH "loca
 set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")  # path to the Imogen standalone executable, if it exists 
 set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")  # path to the JUCE AudioPluginHost executable, if it exists
 
+set (allow_build_APH TRUE)  # if false, and IMOGEN_launchAudioPluginHostOnBuild is true, and the AudioPluginHost executable can't be found, then this script will not attempt to automatically build the AudioPluginHost
+
 set (imogen_compileFeatures "cxx_std_17" CACHE STRING "Build compile features")
 
 #  uncomment this 'set formats' call to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace. Any non-valid strings will be removed from the list.

@@ -207,6 +207,13 @@ function (imogen_configureAudioPluginHostExecutable)
         unset (pluginHostPath)
         return()
     endif()
+
+    if (NOT allow_build_APH)
+        message (WARNING "AudioPluginHost executable not found, and building has been disabled. AudioPluginHost auto-launch feature disabled.")
+        set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
+        unset (pluginHostPath)
+        return()
+    endif()
  
     message (STATUS "AudioPluginHost executable not found; attempting to build now...")
 
@@ -478,6 +485,9 @@ function (_imogen_unset_all_variables)
     unset (ds_APHpath)
     unset (fetchcontentincluded)
     unset (formats)
+    unset (_imgn_xtn)
+    unset (_imgn_buildfolder)
+    unset (allow_build_APH)
 endfunction()
 
 

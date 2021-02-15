@@ -127,6 +127,8 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const int middleIndex = roundToInt(floor (numSamples / 2));
     const int halfNumSamples = roundToInt(floor ((numSamples - 1) / 2));
     
+    const SampleType invNumSamples = SampleType(1.0) / numSamples;
+    
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
     // COMPUTE ASDF
@@ -155,7 +157,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
             asdfData[index] += (difference * difference);
         }
         
-        asdfData[index] /= numSamples; // normalize
+        asdfData[index] *= invNumSamples; // normalize
         
         if (index > 2) // we're going to test the data at index - 1 to see if we can return early
         {
