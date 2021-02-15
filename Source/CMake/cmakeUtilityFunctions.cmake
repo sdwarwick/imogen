@@ -28,6 +28,7 @@ function (imogen_makeFormatsList)
             elseif (${format} STREQUAL "VST")
                 message (WARNING "Reminder: The VST2 SDK path must be manually provided by altering the main Imogen CMakeLists.txt to call juce_set_vst2_sdk_path before the juce_add_plugin call.")
             endif()
+            
         endforeach()
 
         unset (validFormatStrings)
@@ -61,7 +62,7 @@ function (imogen_makeFormatsList)
             
         endif()
 
-    endif()
+    endif (DEFINED formats)
 
     #
 
