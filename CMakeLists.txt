@@ -19,7 +19,7 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
-set (imogen_sourceDir ${CMAKE_CURRENT_SOURCE_DIR}/Source CACHE FILEPATH "The location of the Imogen source code folder")  # This could conceivably be in a different place, but the source tree must be intact 
+set (imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source CACHE FILEPATH "The location of the Imogen source code folder")  # This could conceivably be in a different place, but the source tree must be intact 
 
 include (${imogen_sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
 include (${imogen_sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)

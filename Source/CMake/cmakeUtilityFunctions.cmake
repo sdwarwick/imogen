@@ -23,8 +23,11 @@ function (imogen_makeFormatsList)
             if (listIndexFinder EQUAL -1)
                 message (WARNING "Invalid format string '${format}' removed from formats list")
                 list (REMOVE_ITEM formats "${format}")
+            elseif (${format} STREQUAL "AAX")
+                message (WARNING "Reminder: The AAX SDK path must be manually provided by altering the main Imogen CMakeLists.txt to call juce_set_aax_sdk_path before the juce_add_plugin call.")
+            elseif (${format} STREQUAL "VST")
+                message (WARNING "Reminder: The VST2 SDK path must be manually provided by altering the main Imogen CMakeLists.txt to call juce_set_vst2_sdk_path before the juce_add_plugin call.")
             endif()
-            
         endforeach()
 
         unset (validFormatStrings)
@@ -47,9 +50,10 @@ function (imogen_makeFormatsList)
 
             unset (listIndexFinder)
             unset (listLength)
+
             return() 
 
-        else()  # we must attempt to construct the list from the boolean cache variables 
+        else()  # we must attempt to construct the list from the boolean cache variables... continue on to the logic below 
 
             message (WARNING "No valid format strings provided; attempting to construct format list from boolean cache variables...")
             unset (listLength)
@@ -58,6 +62,8 @@ function (imogen_makeFormatsList)
         endif()
 
     endif()
+
+    #
 
     set (formatChoosers IMOGEN_buildStandalone IMOGEN_buildVST3 IMOGEN_buildAU IMOGEN_buildUnity IMOGEN_buildAUv3 IMOGEN_buildAAX IMOGEN_buildVST)
 
@@ -131,7 +137,7 @@ endfunction()
 
 function (imogen_configureStandaloneExecutable)
 
-    if (NOT (IMOGEN_launchStandaloneOnBuild OR (IMOGEN_launchAudioPluginHostOnBuild AND IMOGEN_launchStandaloneOnBuild)))
+    if (NOT ( IMOGEN_launchStandaloneOnBuild OR IMOGEN_buildStandalone OR (IMOGEN_launchAudioPluginHostOnBuild AND IMOGEN_preferStandaloneForAllTarget) ))
         set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
         return()
     endif()
@@ -142,8 +148,7 @@ function (imogen_configureStandaloneExecutable)
 
     string (APPEND standalonePath "${_imgn_xtn}")
 
-    if (NOT ( DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path} ))  # maybe the user has supplied a valid path to the executable somewhere else on their system?
-        
+    if (NOT (DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path}))
         if (IMOGEN_buildStandalone OR EXISTS ${standalonePath})
         	set (imogen_standalone_exec_path ${standalonePath} CACHE FILEPATH "${ds_SALpath}" FORCE)
         else()
@@ -152,7 +157,6 @@ function (imogen_configureStandaloneExecutable)
             unset (standalonePath)
         	return()
         endif()
-
     endif()
 
     set (IMOGEN_launchStandaloneOnBuild TRUE PARENT_SCOPE)
@@ -177,23 +181,13 @@ function (imogen_configureAudioPluginHostExecutable)
 
     if (NOT IMOGEN_launchAudioPluginHostOnBuild)
         return()
+    elseif (DEFINED imogen_AudioPluginHost_Path AND EXISTS ${imogen_AudioPluginHost_Path})
+        return()
     endif()
 
     message (STATUS "Configuring JUCE AudioPluginHost executable...")
 
-    if (DEFINED imogen_AudioPluginHost_Path AND EXISTS ${imogen_AudioPluginHost_Path}) # maybe the user has supplied a valid path to the executable already?
-    	return()
-    endif()
-
-    if (APPLE)
-        set (buildfolder MacOSX)
-    elseif (UNIX)
-        set (buildfolder LinuxMakefile)
-    elseif (WIN32)
-        set (buildfolder VisualStudio2019)
-    endif()
-
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${buildfolder}/build/Debug/AudioPluginHost)
+    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${_imgn_buildfolder}/build/Debug/AudioPluginHost)
 
     string (APPEND pluginHostPath "${_imgn_xtn}")
 
@@ -429,7 +423,19 @@ function (imogen_checkIfCanUseExecutables)
     if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
         message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
         _imgn_turnEmOff()
-    elseif (NOT (APPLE OR UNIX OR WIN32))
+        return()
+    endif()
+
+    if (APPLE)
+        set (_imgn_xtn ".app" PARENT_SCOPE)
+        set (_imgn_buildfolder "MacOSX" PARENT_SCOPE)
+    elseif (UNIX)
+        set (_imgn_xtn ".elf" PARENT_SCOPE)
+        set (_imgn_buildfolder "LinuxMakefile" PARENT_SCOPE)
+    elseif (WIN32)
+        set (_imgn_xtn ".exe")
+        set (_imgn_buildfolder VisualStudio2019)
+    else()
         message (WARNING "Unrecognized operating system; auto-launching executables disabled")
         _imgn_turnEmOff()
     endif()
