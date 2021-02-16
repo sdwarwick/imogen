@@ -31,7 +31,7 @@ function (imogen_makeFormatsList)
             
         endforeach()
 
-        unset (validFormatStrings)
+        list (REMOVE_DUPLICATES formats)
 
         set (listLength 0)
         list (LENGTH formats listLength)
@@ -49,16 +49,11 @@ function (imogen_makeFormatsList)
 
             message (STATUS "Successfully parsed format list: ${formats}")
 
-            unset (listIndexFinder)
-            unset (listLength)
-
             return() 
 
         else()  # we must attempt to construct the list from the boolean cache variables... continue on to the logic below 
 
             message (WARNING "No valid format strings provided; attempting to construct format list from boolean cache variables...")
-            unset (listLength)
-            unset (listIndexFinder)
             
         endif()
 
@@ -119,13 +114,6 @@ function (imogen_makeFormatsList)
 
     set (formats ${formatlist} PARENT_SCOPE)
 
-    unset (formatChoosers)
-    unset (boolVarName)
-    unset (chooserIndex)
-    unset (formatlist)
-    unset (numFormatsThereShouldBe)
-    unset (numFormats)
-
 endfunction()
 
 #
@@ -153,7 +141,6 @@ function (imogen_configureStandaloneExecutable)
         else()
         	message (WARNING "Standalone executable not found, and Standalone is not a current build target. Auto-launch feature disabled.")
             set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
-            unset (standalonePath)
         	return()
         endif()
     endif()
@@ -167,8 +154,6 @@ function (imogen_configureStandaloneExecutable)
     else()
         message (STATUS "Imogen Standalone executable found at ${imogen_standalone_exec_path}")
     endif()
-
-    unset (standalonePath)
 
 endfunction()
 
@@ -194,7 +179,6 @@ function (imogen_configureAudioPluginHostExecutable)
     if (EXISTS ${pluginHostPath})
     	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
         message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
-        unset (pluginHostPath)
     	return()
     endif()
 
@@ -203,14 +187,12 @@ function (imogen_configureAudioPluginHostExecutable)
     if (EXISTS ${pluginHostPath})
         set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
         message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
-        unset (pluginHostPath)
         return()
     endif()
 
     if (NOT allow_build_APH)
         message (WARNING "AudioPluginHost executable not found, and building has been disabled. AudioPluginHost auto-launch feature disabled.")
         set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
-        unset (pluginHostPath)
         return()
     endif()
  
@@ -238,8 +220,6 @@ function (imogen_configureAudioPluginHostExecutable)
         message (WARNING "AudioPluginHost executable could not be built; auto-launch feature disabled")
         set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
     endif()
-
-    unset (pluginHostPath)
 
 endfunction()
 
@@ -298,10 +278,6 @@ function (imogen_configureIndividualBuildTargets)
         endif()
 
     endforeach()
-
-    unset (thisTargetName)
-    unset (autoLaunchingAnything)
-    unset (useStandaloneForAllTarget)
 
 endfunction()
 
@@ -452,41 +428,5 @@ endfunction()
 ###
 
 # =================================================================================================================================================
-
-#  cleans up memory allocation by unsetting all variables possibly set by the Imogen CMake script 
-
-function (_imogen_unset_all_variables)
-    unset (IMOGEN_launchAudioPluginHostOnBuild)
-    unset (IMOGEN_launchStandaloneOnBuild)
-    unset (IMOGEN_unitTesting)
-    unset (IMOGEN_buildStandalone)
-    unset (imogen_juceDir)
-    unset (imogen_catchDir)
-    unset (dspModulesPath)
-    unset (pluginSourcesDir)
-    unset (guiSourcePath)
-    unset (HelpScreenSourcePath)
-    unset (IOPanelSourcePath)
-    unset (MidiControlSourcePath)
-    unset (StaffDisplaySourcePath)
-    unset (testFilesPath)
-    unset (customModulesNeeded)
-    unset (sourceFiles)
-    unset (testFiles)
-    unset (graphicAssetFiles)
-    unset (ds_testing)
-    unset (ds_juceDir)
-    unset (ds_catchDir)
-    unset (ds_launchAPH)
-    unset (ds_launchSAL)
-    unset (ds_preferSALforAll)
-    unset (ds_SALpath)
-    unset (ds_APHpath)
-    unset (fetchcontentincluded)
-    unset (formats)
-    unset (_imgn_xtn)
-    unset (_imgn_buildfolder)
-    unset (allow_build_APH)
-endfunction()
 
 

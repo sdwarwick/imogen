@@ -160,7 +160,3 @@ endif()
 
 #
 
-_imogen_unset_all_variables()
-
-#
-
