@@ -40,18 +40,6 @@ set (IMOGEN_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
 set (IMOGEN_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
 set (IMOGEN_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
 
-set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Source/JUCE             CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
-set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}") # if this subdirectory isn't found and unit testing is enabled, this script will automatically download Catch2 from GitHub
-
-set (imogen_GraphicAssetsDir ${guiSourcePath}/GraphicAssets CACHE FILEPATH "location of the Imogen grapic asset files")  # The location of the graphical asset files (images, etc)
-
-set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")  # path to the Imogen standalone executable, if it exists 
-set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")  # path to the JUCE AudioPluginHost executable, if it exists
-
-set (allow_build_APH TRUE)  # if false, and IMOGEN_launchAudioPluginHostOnBuild is true, and the AudioPluginHost executable can't be found, then this script will not attempt to automatically build the AudioPluginHost
-
-set (imogen_compileFeatures "cxx_std_17" CACHE STRING "Build compile features")
-
 #  uncomment this 'set formats' call to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace. Any non-valid strings will be removed from the list.
 #  valid formats are: Standalone VST3 AU Unity AUv3 AAX VST
 #  for AAX or VST [vst2], the API paths must be provided manually by calling juce_set_aax_sdk_path and/or juce_set_vst2_sdk_path, respectively. These calls are provided below, simply fill in the absolute path to the SDK on your filesystem and uncomment the applicable line.

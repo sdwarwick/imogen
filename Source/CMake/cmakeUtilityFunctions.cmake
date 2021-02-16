@@ -114,7 +114,7 @@ function (imogen_makeFormatsList)
     endif()
 
     if (NOT ${numFormats} EQUAL ${numFormatsThereShouldBe})
-        message (AUTHOR_WARNING "Unknown error in generating list of formats.")
+        message (AUTHOR_WARNING "Unknown error in generating list of formats :(")
     endif()
 
     set (formats ${formatlist} PARENT_SCOPE)
@@ -145,9 +145,7 @@ function (imogen_configureStandaloneExecutable)
 
     message (STATUS "Configuring Imogen Standalone executable...")
 
-    set (standalonePath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/Standalone/Imogen)
-
-    string (APPEND standalonePath "${_imgn_xtn}")
+    set (standalonePath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/Standalone/Imogen${_imgn_xtn})
 
     if (NOT (DEFINED imogen_standalone_exec_path AND EXISTS ${imogen_standalone_exec_path}))
         if (IMOGEN_buildStandalone OR EXISTS ${standalonePath})
@@ -166,6 +164,8 @@ function (imogen_configureStandaloneExecutable)
         message (WARNING "The Standalone executable was located and can be used, but you are not rebuilding the Standalone with this build, so its behavior may not reflect the most recent code changes.")
     elseif (NOT "${imogen_standalone_exec_path}" STREQUAL "${standalonePath}")
     	message (WARNING "The Standalone is being built with this build, but the resolved standalone executable path does not match the path to where the standalone executable will be built. The Imogen Standalone that launches automatically with this build may not reflect the most recent code changes in its behavior.")
+    else()
+        message (STATUS "Imogen Standalone executable found at ${imogen_standalone_exec_path}")
     endif()
 
     unset (standalonePath)
@@ -183,27 +183,26 @@ function (imogen_configureAudioPluginHostExecutable)
     if (NOT IMOGEN_launchAudioPluginHostOnBuild)
         return()
     elseif (DEFINED imogen_AudioPluginHost_Path AND EXISTS ${imogen_AudioPluginHost_Path})
+        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
         return()
     endif()
 
     message (STATUS "Configuring JUCE AudioPluginHost executable...")
 
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${_imgn_buildfolder}/build/Debug/AudioPluginHost)
-
-    string (APPEND pluginHostPath "${_imgn_xtn}")
+    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${_imgn_buildfolder}/build/Debug/AudioPluginHost${_imgn_xtn})
 
     if (EXISTS ${pluginHostPath})
     	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
         unset (pluginHostPath)
     	return()
     endif()
 
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug/AudioPluginHost)  # this is where the APH will end up after the automatic build process...
-
-    string (APPEND pluginHostPath "${_imgn_xtn}")
+    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/Debug/AudioPluginHost${_imgn_xtn})  # this is where the APH will end up after the automatic build process...
 
     if (EXISTS ${pluginHostPath})
         set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
         unset (pluginHostPath)
         return()
     endif()
@@ -252,6 +251,8 @@ endfunction()
 
 function (imogen_configureIndividualBuildTargets)
 
+    set (autoLaunchingAnything FALSE)
+
     if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
         set (autoLaunchingAnything TRUE)
 
@@ -260,8 +261,6 @@ function (imogen_configureIndividualBuildTargets)
     	else()
     		set (useStandaloneForAllTarget FALSE)
     	endif()
-    else()
-        set (autoLaunchingAnything FALSE)
     endif()
 
     list (APPEND formats "All")
