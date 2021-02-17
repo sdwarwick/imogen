@@ -2,19 +2,43 @@
 # various useful definitions & declarations for Imogen
 
 
+# descriptive strings for cache variables
+
+set (ds_testing "Enable Imogen unit tests")
+
+set (ds_juceDir "Path to the JUCE library code")
+
+set (ds_catchDir "Path to the Catch2 code")
+
+set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
+
+set (ds_launchSAL "Automatically launch the Imogen standalone")
+
+set (ds_runPiv "Automatically run pluginval on build")
+
+set (ds_preferSALforAll "Use the Imogen standalone for the All build target's executable")
+
+set (ds_SALpath "Path to the Imogen standalone executable file")
+
+set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
+
+set (ds_pivPath "Path to the pluginval executable")
+
+#
+
 # general settings
 
 set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Source/JUCE             CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
 set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}") # if this subdirectory isn't found and unit testing is enabled, this script will automatically download Catch2 from GitHub
 
-set (imogen_GraphicAssetsDir ${guiSourcePath}/GraphicAssets CACHE FILEPATH "location of the Imogen grapic asset files")  # The location of the graphical asset files (images, etc)
-
 set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")  # path to the Imogen standalone executable, if it exists 
 set (imogen_AudioPluginHost_Path "" CACHE FILEPATH "${ds_APHpath}")  # path to the JUCE AudioPluginHost executable, if it exists
+set (imogen_pluginval_path "" CACHE FILEPATH "${ds_pivPath}")  # path to the pluginval executable, if it exists 
 
 set (imogen_compileFeatures "cxx_std_17" CACHE STRING "Build compile features")
 
 set (allow_build_APH TRUE)  # set this to false to prevent this script from attempting to build the AudioPluginHost, if necessary 
+set (APH_build_format Debug)  # if the APH is built, this variable can be set to Debug or Release to control which mode the APH is built in.
 
 set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' package
 
@@ -28,7 +52,7 @@ set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")  # stat
 set (CMAKE_WIN32_EXECUTABLE TRUE)
 
 set (CMAKE_XCODE_GENERATE_SCHEME OFF)  # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
-set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER ON)
+set (CMAKE_XCODE_SCHEME_THREAD_SANITIZER OFF)
 set (CMAKE_XCODE_SCHEME_UNDEFINED_BEHAVIOR_SANITIZER ON)
 
 set (CMAKE_SUPPRESS_REGENERATION TRUE)  # no "zero-check" target
@@ -43,18 +67,19 @@ option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 
 # various child directories of the source tree
 
-set (dspModulesPath ${imogen_sourceDir}/DSP_modules)  # The location of the custom JUCE-style modules that make up the shared Imogen codebase. Again, these could conceivably be in a different place...  ¯\_(ツ)_/¯
+set (dspModulesPath ${sourceDir}/DSP_modules)  # The location of the custom JUCE-style modules that make up the shared Imogen codebase. Again, these could conceivably be in a different place...  ¯\_(ツ)_/¯
 
-set (pluginSourcesDir       ${imogen_sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
-set (guiSourcePath          ${imogen_sourceDir}/GUI)
+set (pluginSourcesDir       ${sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
+set (guiSourcePath          ${sourceDir}/GUI)
 set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
 set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
 set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
 set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
-if (IMOGEN_unitTesting)
-	set (testFilesPath ${imogen_sourceDir}/Tests)  # The location of the source files in which unit tests are defined
-endif()
+set (graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
+
+set (testFilesPath ${sourceDir}/Tests)  # The location of the source files in which unit tests are defined
+
 
 #
 
@@ -87,36 +112,27 @@ set (sourceFiles
     ${StaffDisplaySourcePath}/StaffDisplay.h)
 
 set (graphicAssetFiles 
-	${imogen_GraphicAssetsDir}/1-1_note_semibreve.svg 
-	${imogen_GraphicAssetsDir}/closeIcon.png 
-	${imogen_GraphicAssetsDir}/grandStaff.png 
+	${graphicAssetsDir}/1-1_note_semibreve.svg 
+	${graphicAssetsDir}/closeIcon.png 
+	${graphicAssetsDir}/grandStaff.png 
 	${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
 
-if (IMOGEN_unitTesting)
-	set (testFiles
-		${testFilesPath}/tests.cpp
-		${testFilesPath}/HarmonizerTests.cpp) 
-endif()
+set (testFiles
+	${testFilesPath}/tests.cpp
+	${testFilesPath}/HarmonizerTests.cpp) 
 
 #
 
-# descriptive strings for cache variables
-
-set (ds_testing "Enable Imogen unit tests")
-
-set (ds_juceDir "Path to the JUCE library code")
-
-set (ds_catchDir "Path to the Catch2 code")
-
-set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
-
-set (ds_launchSAL "Automatically launch the Imogen standalone")
-
-set (ds_preferSALforAll "Use the Imogen standalone for the All build target's executable")
-
-set (ds_SALpath "Path to the Imogen standalone executable file")
-
-set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
+if (APPLE)
+	set (_imgn_xtn ".app")
+	set (_imgn_buildfolder "MacOSX")
+elseif (UNIX)
+	set (_imgn_xtn "")
+	set (_imgn_buildfolder "LinuxMakefile")
+elseif (WIN32)
+	set (_imgn_xtn ".exe")
+	set (_imgn_buildfolder "VisualStudio2019")
+endif()
 
 #
 

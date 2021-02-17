@@ -12,33 +12,39 @@
 # better cross-platforming of finding executable paths 
 # in tests folder in IDE, hide modules (only show test files)
 
+# add option to automatically test each built executable with pluginval ?
 
-cmake_minimum_required (VERSION 3.15) 
+
+cmake_minimum_required (VERSION 3.18) 
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
-set (imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source CACHE FILEPATH "The location of the Imogen source code folder")  # This could conceivably be in a different place, but the source tree must be intact 
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
-include (${imogen_sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
-include (${imogen_sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
+include (${sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
+include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
 
 #  initializing all the cache variables & preferences:
 
-set (IMOGEN_unitTesting ON CACHE BOOL "${ds_testing}")  # set this to 'true' to enable a unit testing executable target
+set (IMOGEN_unitTesting OFF CACHE BOOL "${ds_testing}")  # set this to 'true' to enable a unit testing executable target
+
+set (IMOGEN_buildInstaller OFF CACHE BOOL "Build a user-friendly installer for the built Imogen executables")  # set this to true to use CPack to generate an installer for the Imogen executables
 
 set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "${ds_launchAPH}")        #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
 set (IMOGEN_launchStandaloneOnBuild      OFF CACHE BOOL "${ds_launchSAL}")        #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
 set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
 
-set (IMOGEN_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
-set (IMOGEN_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
-set (IMOGEN_buildAU         ON  CACHE BOOL "Builds an AudioUnit version of Imogen")
-set (IMOGEN_buildUnity      OFF CACHE BOOL "Builds a Unity plugin version of Imogen {UNTESTED}")
-set (IMOGEN_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
-set (IMOGEN_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
-set (IMOGEN_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
+set (IMOGEN_runPluginvalOnBuild OFF CACHE BOOL "${ds_runPiv}")  # when true, runs pluginval after building the various desired formats
+
+set (imogen_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
+set (imogen_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
+set (imogen_buildAU         ON  CACHE BOOL "Builds an AudioUnit version of Imogen")
+set (imogen_buildUnity      OFF CACHE BOOL "Builds a Unity plugin version of Imogen {UNTESTED}")
+set (imogen_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
+set (imogen_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
+set (imogen_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
 
 #  uncomment this 'set formats' call to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace. Any non-valid strings will be removed from the list.
 #  valid formats are: Standalone VST3 AU Unity AUv3 AAX VST
@@ -51,6 +57,8 @@ set (IMOGEN_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOT
 message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
 
 imogen_checkAllDirectories()
+
+imogen_clearOldBuildFiles()
 
 imogen_makeFormatsList()
 
@@ -129,7 +137,7 @@ imogen_configureIndividualBuildTargets()
 
 target_sources (Imogen PRIVATE ${sourceFiles})
 
-source_group (TREE ${imogen_sourceDir} PREFIX "" FILES ${sourceFiles})
+source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
 
 target_include_directories (Imogen PRIVATE ${pluginSourcesDir} ${guiSourcePath})
 
@@ -156,6 +164,18 @@ target_link_libraries (Imogen
 
 if (IMOGEN_unitTesting)
     imogen_configureUnitTesting()
+endif()
+
+#
+
+if (IMOGEN_buildInstaller)
+    imogen_configureInstaller()
+endif()
+
+#
+
+if (IMOGEN_runPluginvalOnBuild)
+    imogen_configurePluginval()
 endif()
 
 #
