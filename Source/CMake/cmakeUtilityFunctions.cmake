@@ -481,14 +481,22 @@ function (imogen_configurePluginval)
 
         else()
 
-            set (pluginval_zipFilePath ${pluginval_downloadDir}/pluginval_macOS.zip)
+            if (APPLE)
+                set (pluginval_pkgName "pluginval_macOS.zip")
+            elseif (UNIX)
+                set (pluginval_pkgName "pluginval_Linux.zip")
+            elseif (WIN32)
+                set (pluginval_pkgName "pluginval_Windows.zip")
+            endif()
+
+            set (pluginval_zipFilePath ${pluginval_downloadDir}/${pluginval_pkgName})
 
             if (NOT EXISTS ${pluginval_zipFilePath})
 
                 message (STATUS "Downloading pluginval binaries...")
 
-                file (DOWNLOAD 
-                    https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip 
+                file (DOWNLOAD
+                    https://github.com/Tracktion/pluginval/releases/latest/download/${pluginval_pkgName}
                     ${pluginval_zipFilePath})
 
             endif()
@@ -511,12 +519,6 @@ function (imogen_configurePluginval)
 
     endif()
 
-    if (NOT EXISTS ${imogen_pluginval_path})
-        message (WARNING "Error in configuring pluginval; auto-run feature disabled.")
-        set (IMOGEN_runPluginvalOnBuild FALSE PARENT_SCOPE)
-        return()
-    endif()
-
     if (APPLE)
         set (pluginval_path ${imogen_pluginval_path}/Contents/MacOS/pluginval)
     elseif (UNIX)
@@ -525,29 +527,37 @@ function (imogen_configurePluginval)
         set (pluginval_path ${imogen_pluginval_path}/Contents/Windows/pluginval)
     endif()
 
-    set (pluginPath "")
+    if (${pluginval_intensityLevel} LESS 1)
+        set (pluginval_intensityLevel 1 PARENT_SCOPE)
+    elseif (${pluginval_intensityLevel} GREATER 10)
+        set (pluginval_intensityLevel 10 PARENT_SCOPE)
+    endif()
 
     foreach (executable ${_imgn_listOfExecutables})
 
         if (${executable} STREQUAL "Imogen_Standalone" OR ${executable} STREQUAL "Imogen_Unity")
             continue()
-        elseif (${executable} STREQUAL "Imogen_VST3")
-            set (pluginPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/VST3/Imogen.vst3)
+        endif()
+
+        set (pluginPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/)
+
+        if (${executable} STREQUAL "Imogen_VST3")
+            string (APPEND pluginPath "VST3/Imogen.vst3")
         elseif (${executable} STREQUAL "Imogen_VST")
-            set (pluginPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/VST/Imogen.vst)
+            string (APPEND pluginPath "VST/Imogen.vst")
         elseif (${executable} STREQUAL "Imogen_AU")
-            set (pluginPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/AU/Imogen.component)
+            string (APPEND pluginPath "AU/Imogen.component")
         elseif (${executable} STREQUAL "Imogen_AUv3")
-            set (pluginPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/AUv3/Imogen.component)
+            string (APPEND pluginPath "AUv3/Imogen.component")
         elseif (${executable} STREQUAL "Imogen_AAX")
-            set (pluginPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Debug/AAX/Imogen.aaxplugin)
+            string (APPEND pluginPath "AAX/Imogen.aaxplugin")
         endif()
 
         add_custom_command (
             TARGET ${executable}
             POST_BUILD
             COMMAND "${pluginval_path}"
-            ARGS "--strictnesslevel" "5" "--validate-in-process" "--validate" "${pluginPath}"
+            ARGS "--strictnesslevel" "${pluginval_intensityLevel}" "--validate-in-process" "--validate" "${pluginPath}"
             )
 
     endforeach()
@@ -606,25 +616,35 @@ function (imogen_checkAllDirectories)
 
     if (IMOGEN_unitTesting AND NOT EXISTS ${testFilesPath})
         set (IMOGEN_unitTesting FALSE PARENT_SCOPE)
-        message (WARNING "Test files directory not found, testing disabled")
+        message (WARNING "Test files directory not found, testing disabled.")
     endif()
 
 endfunction()
 
 ###
 
-function (imogen_checkIfCanUseExecutables)
+function (imogen_checkOS)
 
-    function (_imgn_turnEmOff)
-    	set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
+    function (_imgn_turnOffAutolaunchers)
+        set (IMOGEN_launchAudioPluginHostOnBuild FALSE PARENT_SCOPE)
         set (IMOGEN_launchStandaloneOnBuild FALSE PARENT_SCOPE)
     endfunction()
 
-    if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
-        message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
-        _imgn_turnEmOff()
-    elseif (NOT (APPLE OR UNIX OR WIN32))
-        message (WARNING "Unrecognized operating system; auto-launching executables disabled")
+    if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
+        if (NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
+            message (WARNING "Auto-launching executables are currently XCode only; these have been disabled because CMake has detected that you are not generating for XCode.")
+            _imgn_turnOffAutolaunchers()
+        elseif (NOT (APPLE OR UNIX OR WIN32))
+            message (WARNING "Unrecognized operating system; auto-launching executables disabled.")
+            _imgn_turnOffAutolaunchers()
+        endif()
+    endif()
+
+    if (IMOGEN_runPluginvalOnBuild)
+        if (NOT (APPLE OR UNIX OR WIN32))
+            message (WARNING "Unrecognized operating system; auto-launch of pluginval disabled.")
+            set (IMOGEN_runPluginvalOnBuild FALSE PARENT_SCOPE)
+        endif()
     endif()
 
 endfunction()

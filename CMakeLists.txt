@@ -37,6 +37,7 @@ set (IMOGEN_launchStandaloneOnBuild      OFF CACHE BOOL "${ds_launchSAL}")      
 set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
 
 set (IMOGEN_runPluginvalOnBuild OFF CACHE BOOL "${ds_runPiv}")  # when true, runs pluginval after building the various desired formats
+set (pluginval_intensityLevel 10)  # pluginval testing intensity level 1 to 10
 
 set (imogen_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
 set (imogen_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
@@ -62,9 +63,7 @@ imogen_clearOldBuildFiles()
 
 imogen_makeFormatsList()
 
-if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-    imogen_checkIfCanUseExecutables()
-endif()
+imogen_checkOS()
 
 if (IMOGEN_unitTesting)
     message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
