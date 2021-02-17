@@ -2,7 +2,27 @@
 # various useful definitions & declarations for Imogen
 
 
-_imgn_setDescriptiveStrings()  # set descriptive strings for cache variables
+# descriptive strings for cache variables
+
+	set (ds_testing "Enable Imogen unit tests")
+
+	set (ds_juceDir "Path to the JUCE library code")
+
+	set (ds_catchDir "Path to the Catch2 code")
+
+	set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
+
+	set (ds_launchSAL "Automatically launch the Imogen standalone")
+
+	set (ds_runPiv "Automatically run pluginval on build")
+
+	set (ds_preferSALforAll "Use the Imogen standalone for the All build target's executable")
+
+	set (ds_SALpath "Path to the Imogen standalone executable file")
+
+	set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
+
+	set (ds_pivPath "Path to the pluginval executable")
 
 # general settings
 
@@ -108,34 +128,6 @@ elseif (UNIX)
 elseif (WIN32)
 	set (_imgn_xtn ".exe")
 endif()
-
-#
-
-function (_imgn_setDescriptiveStrings)
-
-	# descriptive strings for cache variables
-
-	set (ds_testing "Enable Imogen unit tests")
-
-	set (ds_juceDir "Path to the JUCE library code")
-
-	set (ds_catchDir "Path to the Catch2 code")
-
-	set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
-
-	set (ds_launchSAL "Automatically launch the Imogen standalone")
-
-	set (ds_runPiv "Automatically run pluginval on build")
-
-	set (ds_preferSALforAll "Use the Imogen standalone for the All build target's executable")
-
-	set (ds_SALpath "Path to the Imogen standalone executable file")
-
-	set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
-
-	set (ds_pivPath "Path to the pluginval executable")
-
-endfunction()
 
 #
 

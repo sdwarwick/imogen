@@ -317,9 +317,7 @@ function (imogen_configureIndividualBuildTargets)
 
         set_target_properties (${thisTargetName} PROPERTIES FOLDER "Build Targets" XCODE_GENERATE_SCHEME ON)
 
-        if (NOT ${target} STREQUAL "All")
-            list (APPEND listOfExecutables ${thisTargetName})
-        endif()
+        list (APPEND listOfExecutables ${thisTargetName})
 
         if (NOT autoLaunchingAnything)
             message (STATUS "Configuring ${thisTargetName}...")
@@ -412,14 +410,22 @@ endfunction()
 
 function (imogen_configureInstaller)
 
+    message (STATUS "Configuring CPack for installer generation...")
+
+    set (installerBuildDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts/Installers)
+
     foreach (executable ${_imgn_listOfExecutables})
+
+        if (${executable} STREQUAL "Imogen_All")
+            continue()
+        endif()
 
         install (
             TARGETS ${executable}
-            RUNTIME DESTINATION bin
-            BUNDLE  DESTINATION bin
-            LIBRARY DESTINATION lib
-            RESOURCE DESTINATION "bin/${executable}/resource"
+            RUNTIME DESTINATION ${installerBuildDir}/${executable}/bin
+            BUNDLE  DESTINATION ${installerBuildDir}/${executable}/bin
+            LIBRARY DESTINATION ${installerBuildDir}/${executable}/lib
+            RESOURCE DESTINATION ${installerBuildDir}/${executable}
             COMPONENT ${executable})
         
     endforeach()
@@ -451,7 +457,7 @@ function (imogen_configureInstaller)
 
     else()
 
-      set (CPACK_STRIP_FILES "bin/Imogen")
+      set (CPACK_STRIP_FILES "${installerBuildDir}/Imogen")
       set (CPACK_SOURCE_STRIP_FILES "")
 
     endif()
@@ -460,11 +466,26 @@ function (imogen_configureInstaller)
 
     set (CPACK_COMPONENTS_ALL ${_imgn_listOfExecutables})
 
-    set (CPACK_PACKAGE_EXECUTABLES ${_imgn_listOfExecutables})
+    # set (CPACK_PACKAGE_EXECUTABLES ${_imgn_listOfExecutables})
 
     include (CPack)
 
-    # set_target_properties (Imogen_package PROPERTIES XCODE_GENERATE_SCHEME ON)
+    if ("${CMAKE_GENERATOR}" STREQUAL "VS")
+        set (targetName PACKAGE)
+    else()
+        set (targetName package)
+    endif()
+
+    file (REMOVE_RECURSE ${installerBuildDir})
+
+    add_custom_command (
+            TARGET Imogen_All
+            POST_BUILD
+            COMMAND "${CMAKE_COMMAND}"
+            ARGS "--build" "." "--target" "${targetName}"
+            )
+
+    message (STATUS "The installer will automatically be generated when the Imogen_All target is built in your IDE.")
 
 endfunction()
 
@@ -543,7 +564,7 @@ function (imogen_configurePluginval)
 
     foreach (executable ${_imgn_listOfExecutables})
 
-        if (${executable} STREQUAL "Imogen_Standalone" OR ${executable} STREQUAL "Imogen_Unity")
+        if (${executable} STREQUAL "Imogen_All" OR ${executable} STREQUAL "Imogen_Standalone" OR ${executable} STREQUAL "Imogen_Unity")
             continue()
         endif()
 
@@ -565,7 +586,7 @@ function (imogen_configurePluginval)
             TARGET ${executable}
             POST_BUILD
             COMMAND "${pluginval_path}"
-            ARGS "--strictnesslevel" "${pluginval_intensityLevel}" "--validate-in-process" "--validate" "${pluginPath}"
+            ARGS "--strictness-level" "${pluginval_intensityLevel}" "--validate-in-process" "--validate" "${pluginPath}"
             )
 
     endforeach()
