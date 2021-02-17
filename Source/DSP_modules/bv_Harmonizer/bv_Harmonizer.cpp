@@ -226,9 +226,10 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
         
         if (randomTester % 2 == 0) // reverse the polarity approx 50% of the time
         {
-            const int numSamples = inputAudio.getNumSamples();
-            polarityReversalBuffer.copyFrom (0, 0, inputAudio, 0, 0, numSamples);
-            polarityReversalBuffer.applyGain (0, numSamples, -1.0f);
+            FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
+                                           inputAudio.getReadPointer(0),
+                                           inputAudio.getNumSamples());
+            
             polarityReversed = true;
         }
     }
