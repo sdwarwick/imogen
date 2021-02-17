@@ -59,17 +59,13 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 
 imogen_checkAllDirectories()
 
+imogen_checkOS()
+
 imogen_clearOldBuildFiles()
 
 imogen_makeFormatsList()
 
-imogen_checkOS()
-
-if (IMOGEN_unitTesting)
-    message (STATUS "JUCE and Catch2 will be downloaded from GitHub, only if the most recent versions can't be found locally.")
-else()
-    message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
-endif()
+imogen_displayPossibleDownloadsWarningMessage()
 
 #
 

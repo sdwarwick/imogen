@@ -2,29 +2,7 @@
 # various useful definitions & declarations for Imogen
 
 
-# descriptive strings for cache variables
-
-set (ds_testing "Enable Imogen unit tests")
-
-set (ds_juceDir "Path to the JUCE library code")
-
-set (ds_catchDir "Path to the Catch2 code")
-
-set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
-
-set (ds_launchSAL "Automatically launch the Imogen standalone")
-
-set (ds_runPiv "Automatically run pluginval on build")
-
-set (ds_preferSALforAll "Use the Imogen standalone for the All build target's executable")
-
-set (ds_SALpath "Path to the Imogen standalone executable file")
-
-set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
-
-set (ds_pivPath "Path to the pluginval executable")
-
-#
+_imgn_setDescriptiveStrings()  # set descriptive strings for cache variables
 
 # general settings
 
@@ -45,7 +23,7 @@ set (fetchcontentincluded FALSE)  # simple include guard for the 'FetchContent' 
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
 
-set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64")  # universal macOS binaries 
+set (CMAKE_OSX_ARCHITECTURES "arm64" "x86_64" CACHE STRING "Universal MacOS binaries" FORCE)  # universal macOS binaries 
 set (CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version" FORCE)  # minimum MacOS version to build for
 
 set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")  # static linking on Windows
@@ -125,14 +103,39 @@ set (testFiles
 
 if (APPLE)
 	set (_imgn_xtn ".app")
-	set (_imgn_buildfolder "MacOSX")
 elseif (UNIX)
 	set (_imgn_xtn "")
-	set (_imgn_buildfolder "LinuxMakefile")
 elseif (WIN32)
 	set (_imgn_xtn ".exe")
-	set (_imgn_buildfolder "VisualStudio2019")
 endif()
+
+#
+
+function (_imgn_setDescriptiveStrings)
+
+	# descriptive strings for cache variables
+
+	set (ds_testing "Enable Imogen unit tests")
+
+	set (ds_juceDir "Path to the JUCE library code")
+
+	set (ds_catchDir "Path to the Catch2 code")
+
+	set (ds_launchAPH "Automatically launch the JUCE AudioPluginHost")
+
+	set (ds_launchSAL "Automatically launch the Imogen standalone")
+
+	set (ds_runPiv "Automatically run pluginval on build")
+
+	set (ds_preferSALforAll "Use the Imogen standalone for the All build target's executable")
+
+	set (ds_SALpath "Path to the Imogen standalone executable file")
+
+	set (ds_APHpath "Path to the JUCE AudioPluginHost executable")
+
+	set (ds_pivPath "Path to the pluginval executable")
+
+endfunction()
 
 #
 

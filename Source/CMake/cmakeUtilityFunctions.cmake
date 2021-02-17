@@ -206,7 +206,15 @@ function (imogen_configureAudioPluginHostExecutable)
         set (other_APH_format "Debug")
     endif()
 
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${_imgn_buildfolder}/build/${APH_build_format}/AudioPluginHost${_imgn_xtn})
+    if (APPLE)
+        set (APHbuildfolder "MacOSX")
+    elseif (UNIX)
+        set (APHbuildfolder "LinuxMakefile")
+    elseif (WIN32)
+        set (APHbuildfolder "VisualStudio2019")
+    endif()
+
+    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${APHbuildfolder}/build/${APH_build_format}/AudioPluginHost${_imgn_xtn})
 
     if (EXISTS ${pluginHostPath})
     	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
@@ -222,7 +230,7 @@ function (imogen_configureAudioPluginHostExecutable)
         return()
     endif()
 
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${_imgn_buildfolder}/build/${other_APH_format}/AudioPluginHost${_imgn_xtn})  # check the other build format folders, to check if those executables have been built before...
+    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${APHbuildfolder}/build/${other_APH_format}/AudioPluginHost${_imgn_xtn})  # check the other build format folders, to check if those executables have been built before...
 
     if (EXISTS ${pluginHostPath})
         set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
@@ -261,7 +269,7 @@ function (imogen_configureAudioPluginHostExecutable)
             "--target" "AudioPluginHost"
             "--config" "${APH_build_format}")
 
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${APH_build_format}/AudioPluginHost${_imgn_xtn})  # this is where the APH gets built to
+    set (pluginHostPath ${imogen_juceDir}/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${APH_build_format}/AudioPluginHost${_imgn_xtn})  # this is where the APH gets built to
 
     if (EXISTS ${pluginHostPath})
         message (STATUS "JUCE AudioPluginHost built successfully!")
@@ -646,6 +654,55 @@ function (imogen_checkOS)
             set (IMOGEN_runPluginvalOnBuild FALSE PARENT_SCOPE)
         endif()
     endif()
+
+endfunction()
+
+###
+
+function (imogen_displayPossibleDownloadsWarningMessage)
+
+    if (NOT (IMOGEN_unitTesting OR IMOGEN_runPluginvalOnBuild))
+        message (STATUS "JUCE will be downloaded from GitHub, only if the most recent version can't be found locally.")
+        return()
+    endif()
+
+    set (possibleDownloads "JUCE")
+
+    if (IMOGEN_unitTesting)
+        list (APPEND possibleDownloads "Catch2")
+    endif()
+
+    if (IMOGEN_runPluginvalOnBuild)
+        list (APPEND possibleDownloads "pluginval")
+    endif()
+
+    set (numPossibleDwnlds 1)
+    list (LENGTH possibleDownloads numPossibleDwnlds)
+    math (EXPR numPossibleDwnlds "${numPossibleDwnlds} - 1")
+
+    set (message "")
+
+    set (numWrittenToMessage 0)
+
+    foreach (download ${possibleDownloads})
+
+        if (${numWrittenToMessage} EQUAL 0)
+            set (message "${download}")
+        elseif (${numWrittenToMessage} EQUAL ${numPossibleDwnlds})
+            if (${numPossibleDwnlds} GREATER 1)
+                string (APPEND message ", and ${download}")
+            else()
+                string (APPEND message " and ${download}")
+            endif()
+        else()
+            string (APPEND message ", ${download}")
+        endif()
+
+        math (EXPR numWrittenToMessage "${numWrittenToMessage} + 1")
+        
+    endforeach()
+
+    message (STATUS "${message} will be downloaded from GitHub, only if the most recent versions can't be found locally.")
 
 endfunction()
 
