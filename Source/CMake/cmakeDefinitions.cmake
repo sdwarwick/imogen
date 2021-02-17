@@ -26,6 +26,14 @@
 
 # general settings
 
+set (imogen_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
+set (imogen_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
+set (imogen_buildAU         ON  CACHE BOOL "Builds an AudioUnit version of Imogen")
+set (imogen_buildUnity      OFF CACHE BOOL "Builds a Unity plugin version of Imogen {UNTESTED}")
+set (imogen_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
+set (imogen_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
+set (imogen_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
+
 set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src   CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
 set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}") # if this subdirectory isn't found and unit testing is enabled, this script will automatically download Catch2 from GitHub
 

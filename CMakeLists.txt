@@ -12,8 +12,6 @@
 # better cross-platforming of finding executable paths 
 # in tests folder in IDE, hide modules (only show test files)
 
-# add option to automatically test each built executable with pluginval ?
-
 
 cmake_minimum_required (VERSION 3.18) 
 
@@ -38,14 +36,6 @@ set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")
 
 set (IMOGEN_runPluginvalOnBuild OFF CACHE BOOL "${ds_runPiv}")  # when true, runs pluginval after building the various desired formats
 set (pluginval_intensityLevel 10)  # pluginval testing intensity level 1 to 10
-
-set (imogen_buildStandalone ON  CACHE BOOL "Builds a standalone application version of Imogen")
-set (imogen_buildVST3       ON  CACHE BOOL "Builds a VST3 version of Imogen")
-set (imogen_buildAU         ON  CACHE BOOL "Builds an AudioUnit version of Imogen")
-set (imogen_buildUnity      OFF CACHE BOOL "Builds a Unity plugin version of Imogen {UNTESTED}")
-set (imogen_buildAUv3       OFF CACHE BOOL "Builds an Auv3 version of Imogen")
-set (imogen_buildAAX        OFF CACHE BOOL "Builds an AAX version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the AAX SDK by calling juce_set_aax_sdk_path before the call to juce_add_plugin")
-set (imogen_buildVST        OFF CACHE BOOL "Builds a VST2 version of Imogen. NOTE: for this to work, you must modify the main Imogen CMakeLists.txt to provide the path to the VST2 SDK by calling juce_set_vst2_sdk_path before the call to juce_add_plugin")
 
 #  uncomment this 'set formats' call to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace. Any non-valid strings will be removed from the list.
 #  valid formats are: Standalone VST3 AU Unity AUv3 AAX VST
@@ -108,7 +98,7 @@ juce_add_plugin (Imogen   # this command creates a static library for the shared
     FORMATS                     ${formats}
     VST3_CATEGORIES             Pitch Shift
     AU_MAIN_TYPE                kAudioUnitType_MusicEffect
-    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/imogen_icon.png
+    ICON_BIG                    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png
     COMPANY_NAME                BenViningMusicSoftware
     COMPANY_WEBSITE             www.benvining.com
     COMPANY_EMAIL               ben.the.vining@gmail.com
