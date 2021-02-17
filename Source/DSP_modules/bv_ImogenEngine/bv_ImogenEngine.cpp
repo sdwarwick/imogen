@@ -178,12 +178,10 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
 {
     // at this layer, we check to ensure that the buffer sent to us does not exceed the internal blocksize we want to process. If it does, it is broken into smaller chunks, and processWrapped() called on each of these chunks in sequence.
     
-    if (output.getNumChannels() != 2 || output.getNumSamples() == 0 || inBus.getNumSamples() == 0 || inBus.getNumChannels() == 0)
-        return;
-    
     const int totalNumSamples = inBus.getNumSamples();
     
-    jassert (totalNumSamples > 0);
+    if (output.getNumChannels() != 2 || output.getNumSamples() == 0 || totalNumSamples == 0 || inBus.getNumChannels() == 0)
+        return;
     
     if (totalNumSamples <= internalBlocksize)
     {

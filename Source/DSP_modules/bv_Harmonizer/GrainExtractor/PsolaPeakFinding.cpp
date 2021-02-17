@@ -223,11 +223,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
     }
     
-    float maxDelta = 0.0f; // find the highest delta value of any candidate
-    
-    for (float delta : candidateDeltas)
-        if (delta > maxDelta)
-            maxDelta = delta;
+    float maxDelta = FloatVectorOperations::findMaximum (candidateDeltas.getRawDataPointer(), candidateDeltas.size());
     
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
@@ -256,19 +252,10 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     }
     
     // 3. identify the highest & lowest delta values for the final handful candidates
+    
+    float lowestDelta  = FloatVectorOperations::findMinimum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
+    float highestDelta = FloatVectorOperations::findMaximum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
 
-    float lowestDelta  = finalHandfulDeltas.getUnchecked (0);  // lowest  delta of any remaining candidate
-    float highestDelta = lowestDelta;                          // highest delta of any remaining candidate
-    
-    for (float delta : finalHandfulDeltas)
-    {
-        if (delta > highestDelta)
-            highestDelta = delta;
-        
-        if (delta < lowestDelta)
-            lowestDelta = delta;
-    }
-    
     // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
     const float deltaRange = highestDelta - lowestDelta;

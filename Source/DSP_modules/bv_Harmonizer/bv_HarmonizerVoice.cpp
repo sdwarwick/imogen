@@ -176,32 +176,23 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
     
     // 1. apply the window before OLAing, so that windowing only has to be done once per analysis grain
     
-    auto* w = windowingBuffer.getWritePointer(0);
-    
-    for (int s = frameStartSample, // reading index from orignal audio
-         wi = 0;                   // writing index in the windowing multiplication storage buffer
-         s < frameEndSample;
-         ++s, ++wi)                // frame length must equal window length
-    {
-        w[wi] = inputAudio[s] * window[wi];
-    }
-    
+    FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
+                                     window,
+                                     inputAudio + frameStartSample,
+                                     frameSize);
     
     // 2. resynthesis / OLA
+    
+    const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
+    SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
     
     int synthesisIndex = nextSBindex;
     
     while (synthesisIndex < frameEndSample)
     {
-        auto* writing = synthesisBuffer.getWritePointer(0);
-        const auto* reading = windowingBuffer.getReadPointer(0);
-        
-        for (int s = nextSBindex, r = 0; // pre-windowed analysis grain starts at index 0 of windowingBuffer
-             r < frameSize;
-             ++s, ++r)
-        {
-            writing[s] += reading[r];
-        }
+        FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,
+                                    windowBufferReading,
+                                    frameSize);
         
         synthesisIndex += newPeriod;
     }
