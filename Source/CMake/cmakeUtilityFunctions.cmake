@@ -189,11 +189,11 @@ function (imogen_configureAudioPluginHostExecutable)
     endif()
 
     if (NOT DEFINED APH_build_format)
-        message (STATUS "No AudioPluginHost build format specified; defaulting to the same build type as the current build.")
-        set (APH_build_format "${_imgn_buildType}")
-    elseif (${APH_build_format} STREQUAL "DEBUG")
+        message (STATUS "No AudioPluginHost build format specified; defaulting to Debug")
+        set (APH_build_format "Debug")
+    elseif (${APH_build_format} STREQUAL "DEBUG" OR ${APH_build_format} STREQUAL "debug")
         set (APH_build_format Debug)
-    elseif (${APH_build_format} STREQUAL "RELEASE")
+    elseif (${APH_build_format} STREQUAL "RELEASE" OR ${APH_build_format} STREQUAL "release")
         set (APH_build_format Release)
     elseif (NOT (${APH_build_format} STREQUAL "Debug" OR ${APH_build_format} STREQUAL "Release"))
         message (WARNING "Invalid AudioPluginHost build format specified; defaulting to Debug build mode.")
@@ -214,38 +214,18 @@ function (imogen_configureAudioPluginHostExecutable)
         set (APHbuildfolder "VisualStudio2019")
     endif()
 
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${APHbuildfolder}/build/${APH_build_format}/AudioPluginHost${_imgn_xtn})
+    set (aph_pathsToCheck "${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${APHbuildfolder}/build/${APH_build_format}/AudioPluginHost${_imgn_xtn}")
+    list (APPEND aph_pathsToCheck "${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${APH_build_format}/AudioPluginHost${_imgn_xtn}")
+    list (APPEND aph_pathsToCheck "${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${APHbuildfolder}/build/${other_APH_format}/AudioPluginHost${_imgn_xtn}")
+    list (APPEND aph_pathsToCheck "${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${other_APH_format}/AudioPluginHost${_imgn_xtn}")
 
-    if (EXISTS ${pluginHostPath})
-    	set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
-        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
-    	return()
-    endif()
-
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${APH_build_format}/AudioPluginHost${_imgn_xtn})  # this is where the APH will end up after the automatic build process...
-
-    if (EXISTS ${pluginHostPath})
-        set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
-        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
-        return()
-    endif()
-
-    set (pluginHostPath ${IMOGEN_juceDir}/extras/AudioPluginHost/Builds/${APHbuildfolder}/build/${other_APH_format}/AudioPluginHost${_imgn_xtn})  # check the other build format folders, to check if those executables have been built before...
-
-    if (EXISTS ${pluginHostPath})
-        set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
-        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
-        return()
-    endif()
-
-    set (pluginHostPath ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${other_APH_format}/AudioPluginHost${_imgn_xtn})  
-
-    if (EXISTS ${pluginHostPath})
-        set (imogen_AudioPluginHost_Path ${pluginHostPath} CACHE FILEPATH "${ds_APHpath}" FORCE)
-        message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
-        return()
-    endif()
-
+    foreach (possiblePath ${aph_pathsToCheck})
+        if (EXISTS ${possiblePath})
+            set (imogen_AudioPluginHost_Path ${possiblePath} CACHE FILEPATH "${ds_APHpath}" FORCE)
+            message (STATUS "AudioPluginHost executable found at ${imogen_AudioPluginHost_Path}")
+            return()
+        endif()
+    endforeach()
 
     if (NOT allow_build_APH)
         message (WARNING "AudioPluginHost executable not found, and building has been disabled. AudioPluginHost auto-launch feature disabled.")
@@ -260,14 +240,16 @@ function (imogen_configureAudioPluginHostExecutable)
             COMMAND "${CMAKE_COMMAND}"
             "-Bbuild-aph"
             "-DCMAKE_BUILD_TYPE=${APH_build_format}"
-            "-DJUCE_BUILD_EXTRAS=1")
+            "-DJUCE_BUILD_EXTRAS=1"
+            OUTPUT_QUIET)
 
     execute_process (
             WORKING_DIRECTORY ${imogen_juceDir}
             COMMAND "${CMAKE_COMMAND}"
             "--build" "build-aph"
             "--target" "AudioPluginHost"
-            "--config" "${APH_build_format}")
+            "--config" "${APH_build_format}"
+            OUTPUT_QUIET)
 
     set (pluginHostPath ${imogen_juceDir}/build-aph/extras/AudioPluginHost/AudioPluginHost_artefacts/${APH_build_format}/AudioPluginHost${_imgn_xtn})  # this is where the APH gets built to
 
@@ -317,7 +299,9 @@ function (imogen_configureIndividualBuildTargets)
 
         set_target_properties (${thisTargetName} PROPERTIES FOLDER "Build Targets" XCODE_GENERATE_SCHEME ON)
 
-        list (APPEND listOfExecutables ${thisTargetName})
+        if (NOT ${thisTargetName} STREQUAL "Imogen_All")
+            list (APPEND listOfExecutables ${thisTargetName})
+        endif()
 
         if (NOT autoLaunchingAnything)
             message (STATUS "Configuring ${thisTargetName}...")
@@ -353,11 +337,18 @@ endfunction()
 
 function (imogen_configureUnitTesting)
 
+    if (IMOGEN_buildInstaller)
+        message (WARNING "Unit testing cannot be enabled while installer is being built. Unit testing disabled for this build.")
+        set (IMOGEN_unitTesting FALSE PARENT_SCOPE)
+        return()
+    endif()
+
     message (STATUS "Configuring unit testing...")
 
     if (EXISTS ${imogen_catchDir})
 
-        add_subdirectory (${imogen_catchDir} REQUIRED)
+        add_subdirectory (${imogen_catchDir})
+        message (STATUS "Local copy of Catch2 found!")
 
     else()
 
@@ -416,10 +407,6 @@ function (imogen_configureInstaller)
 
     foreach (executable ${_imgn_listOfExecutables})
 
-        if (${executable} STREQUAL "Imogen_All")
-            continue()
-        endif()
-
         install (
             TARGETS ${executable}
             RUNTIME DESTINATION ${installerBuildDir}/${executable}/bin
@@ -464,9 +451,10 @@ function (imogen_configureInstaller)
 
     #
 
+    set (CPACK_ARCHIVE_COMPONENT_INSTALL ON)
     set (CPACK_COMPONENTS_ALL ${_imgn_listOfExecutables})
 
-    # set (CPACK_PACKAGE_EXECUTABLES ${_imgn_listOfExecutables})
+    set (CPACK_PACKAGE_EXECUTABLES ${_imgn_listOfExecutables})
 
     include (CPack)
 
@@ -476,13 +464,11 @@ function (imogen_configureInstaller)
         set (targetName package)
     endif()
 
-    file (REMOVE_RECURSE ${installerBuildDir})
-
     add_custom_command (
             TARGET Imogen_All
             POST_BUILD
             COMMAND "${CMAKE_COMMAND}"
-            ARGS "--build" "." "--target" "${targetName}"
+            ARGS "--build" "." "--target" "${targetName}" "--config" "Release"
             )
 
     message (STATUS "The installer will automatically be generated when the Imogen_All target is built in your IDE.")
@@ -498,17 +484,20 @@ function (imogen_configurePluginval)
 
     message (STATUS "Configuring pluginval...")
 
-    if (NOT EXISTS ${imogen_pluginval_path})
+    if (EXISTS ${imogen_pluginval_path})
+        message (STATUS "Local copy of pluginval found!")
+    else()
 
         set (pluginval_downloadDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Downloads/pluginval)
 
         set (pluginval_path ${pluginval_downloadDir}/pluginval${_imgn_xtn})
 
         if (EXISTS ${pluginval_path})
-
             set (imogen_pluginval_path ${pluginval_path} CACHE FILEPATH "${ds_pivPath}" FORCE)  
-
+            message (STATUS "Local copy of pluginval found!")
         else()
+
+            message (STATUS "Downloading pluginval from GitHub...")
 
             if (APPLE)
                 set (pluginval_pkgName "pluginval_macOS.zip")
@@ -522,15 +511,11 @@ function (imogen_configurePluginval)
 
             if (NOT EXISTS ${pluginval_zipFilePath})
 
-                message (STATUS "Downloading pluginval binaries...")
-
                 file (DOWNLOAD
                     https://github.com/Tracktion/pluginval/releases/latest/download/${pluginval_pkgName}
                     ${pluginval_zipFilePath})
 
             endif()
-
-            message (STATUS "Unzipping pluginval...")
 
             file (ARCHIVE_EXTRACT 
                 INPUT ${pluginval_zipFilePath}
@@ -543,9 +528,7 @@ function (imogen_configurePluginval)
                 set (IMOGEN_runPluginvalOnBuild FALSE PARENT_SCOPE)
                 return()
             endif()
-
         endif()
-
     endif()
 
     if (APPLE)
@@ -564,7 +547,7 @@ function (imogen_configurePluginval)
 
     foreach (executable ${_imgn_listOfExecutables})
 
-        if (${executable} STREQUAL "Imogen_All" OR ${executable} STREQUAL "Imogen_Standalone" OR ${executable} STREQUAL "Imogen_Unity")
+        if (${executable} STREQUAL "Imogen_Standalone" OR ${executable} STREQUAL "Imogen_Unity")
             continue()
         endif()
 
@@ -601,12 +584,26 @@ endfunction()
 
 function (imogen_addJuce)
 
+    if (NOT EXISTS ${imogen_juceDir})
+        set (imogen_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src PARENT_SCOPE)
+    endif()
+
     if (EXISTS ${imogen_juceDir})
-        add_subdirectory (${imogen_juceDir} REQUIRED)
+        message (STATUS "Local copy of JUCE found!")
+
+        if (NOT ${imogen_juceDir} STREQUAL ${_imogen_prevJuceDir})
+            file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-build)
+            file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-subbuild)
+            set (_imogen_prevJuceDir ${imogen_juceDir} CACHE INTERNAL "")
+        endif()
+
+        add_subdirectory (${imogen_juceDir})
         return()
     endif()
 
-    message (STATUS "Finding JUCE...")
+    message (STATUS "Fetching JUCE from GitHub...")
+
+    set (FETCHCONTENT_QUIET OFF)
 
     if (NOT fetchcontentincluded)  # simple include guard 
         include (FetchContent)
@@ -619,7 +616,9 @@ function (imogen_addJuce)
 
     FetchContent_MakeAvailable (juce)
 
-    set (imogen_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src PARENT_SCOPE)
+    # set (imogen_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src PARENT_SCOPE)
+    set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src CACHE FILEPATH "${ds_juceDir}" FORCE)
+    set (_imogen_prevJuceDir ${imogen_juceDir} CACHE INTERNAL "")
 
 endfunction()
 

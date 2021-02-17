@@ -26,7 +26,7 @@
 
 # general settings
 
-set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Source/JUCE             CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
+set (imogen_juceDir  ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src   CACHE FILEPATH "${ds_juceDir}")  # if this subdirectory isn't found, this script will automatically download the JUCE library code from GitHub
 set (imogen_catchDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/catch2-src CACHE FILEPATH "${ds_catchDir}") # if this subdirectory isn't found and unit testing is enabled, this script will automatically download Catch2 from GitHub
 
 set (imogen_standalone_exec_path "" CACHE FILEPATH "${ds_SALpath}")  # path to the Imogen standalone executable, if it exists 
@@ -128,6 +128,10 @@ elseif (UNIX)
 elseif (WIN32)
 	set (_imgn_xtn ".exe")
 endif()
+
+#
+
+set (_imogen_prevJuceDir ${imogen_juceDir} CACHE INTERNAL "")
 
 #
 

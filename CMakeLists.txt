@@ -115,7 +115,7 @@ juce_add_plugin (Imogen   # this command creates a static library for the shared
     COPY_PLUGIN_AFTER_BUILD     TRUE
     VST3_COPY_DIR               /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
     AU_COPY_DIR                 /Users/benvining/Library/Audio/Plug-Ins/Components
-    UNITY_COPY_DIR              ${imogen_sourceDir}/Builds/Imogen_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
+    UNITY_COPY_DIR              ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
     COMPANY_COPYRIGHT           This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
 
 target_compile_features (Imogen PRIVATE ${imogen_compileFeatures})
