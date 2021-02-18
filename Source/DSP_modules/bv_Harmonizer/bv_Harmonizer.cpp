@@ -546,4 +546,4 @@ template class Harmonizer<float>;
 template class Harmonizer<double>;
 
 
-}; // namespace
+} // namespace

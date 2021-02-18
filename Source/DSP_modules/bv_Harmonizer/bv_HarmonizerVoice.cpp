@@ -391,4 +391,4 @@ template class HarmonizerVoice<float>;
 template class HarmonizerVoice<double>;
 
 
-}; // namespace
+} // namespace

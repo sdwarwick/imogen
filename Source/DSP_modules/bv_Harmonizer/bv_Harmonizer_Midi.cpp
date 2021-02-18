@@ -877,4 +877,4 @@ void Harmonizer<SampleType>::handleLegato (const bool isOn)
 };
 
 
-}; // namespace
+} // namespace

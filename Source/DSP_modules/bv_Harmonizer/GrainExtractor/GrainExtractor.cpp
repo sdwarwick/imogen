@@ -90,4 +90,4 @@ template class GrainExtractor<float>;
 template class GrainExtractor<double>;
 
 
-}; // namespace
+} // namespace

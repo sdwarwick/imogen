@@ -357,4 +357,4 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
 };
 
 
-}; // namespace
+} // namespace

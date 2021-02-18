@@ -653,4 +653,4 @@ template class ImogenEngine<float>;
 template class ImogenEngine<double>;
 
 
-}; // namespace
+} // namespace

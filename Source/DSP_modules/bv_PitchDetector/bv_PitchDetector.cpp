@@ -458,4 +458,4 @@ template class PitchDetector<float>;
 template class PitchDetector<double>;
 
 
-}; // namespace
+} // namespace

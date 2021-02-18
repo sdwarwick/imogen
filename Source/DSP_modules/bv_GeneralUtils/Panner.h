@@ -87,4 +87,4 @@ private:
     std::atomic<float> prevLeftGain, prevRightGain;
 };
 
-}; // namespace
+} // namespace

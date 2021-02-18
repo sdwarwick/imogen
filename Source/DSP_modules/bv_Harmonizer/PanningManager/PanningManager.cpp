@@ -311,4 +311,4 @@ void PanningManager::mapArrayIndexes()
 };
 
 
-}; // namespace
+} // namespace

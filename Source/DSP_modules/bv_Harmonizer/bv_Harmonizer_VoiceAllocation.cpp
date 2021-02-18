@@ -236,4 +236,4 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
 
     
     
-};  // namespace
+}  // namespace
