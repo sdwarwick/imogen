@@ -20,10 +20,10 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
                                                    const bool overrideSostenutoPedal)
 {
     for (auto* voice : voices)
-        if (voice->isVoiceActive() && ! voice->isKeyDown())
-            if (includePedalPitchAndDescant || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
-                if (overrideSostenutoPedal || ! voice->sustainingFromSostenutoPedal)
-                    stopVoice (voice, velocity, allowTailOff);
+        if ((voice->isVoiceActive() && ! voice->isKeyDown())
+            && (includePedalPitchAndDescant || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
+            && (overrideSostenutoPedal || ! voice->sustainingFromSostenutoPedal))
+                { stopVoice (voice, velocity, allowTailOff); }
 };
     
     
@@ -35,10 +35,10 @@ template<typename SampleType>
 bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased, const bool countKeyUpNotes) const
 {
     for (auto* voice : voices)
-        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
-            if (countRingingButReleased || ! voice->isPlayingButReleased())
-                if (countKeyUpNotes || voice->isKeyDown())
-                    return true;
+        if ((voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
+            && (countRingingButReleased || ! voice->isPlayingButReleased())
+            && (countKeyUpNotes || voice->isKeyDown()))
+                { return true; }
     
     return false;
 };
@@ -52,10 +52,10 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray,
     outputArray.clearQuick();
     
     for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            if (includePlayingButReleased || ! voice->isPlayingButReleased())
-                if (includeKeyUpNotes || voice->isKeyDown())
-                    outputArray.add (voice->getCurrentlyPlayingNote());
+        if ((voice->isVoiceActive())
+            && (includePlayingButReleased || ! voice->isPlayingButReleased())
+            && (includeKeyUpNotes || voice->isKeyDown()))
+                { outputArray.add (voice->getCurrentlyPlayingNote()); }
     
     if (! outputArray.isEmpty())
         outputArray.sort();
@@ -372,9 +372,9 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
         const float velocity = allowTailOff ? 0.0f : 1.0f;
         
         for (auto* voice : voices)
-            if (voice->isVoiceActive() && ! voice->isKeyDown() && ! intervalLatchNotes.contains (voice->getCurrentlyPlayingNote()))
-                if (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice())
-                    stopVoice (voice, velocity, allowTailOff);
+            if ((voice->isVoiceActive() && ! voice->isKeyDown() && ! intervalLatchNotes.contains (voice->getCurrentlyPlayingNote()))
+                && (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice()))
+                    { stopVoice (voice, velocity, allowTailOff); }
     }
     
     pitchCollectionChanged();
@@ -491,10 +491,8 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
         toTurnOn.ensureStorageAllocated (desiredPitches.size());
         
         for (int note : desiredPitches)
-        {
             if (! currentNotes.contains (note))
                 toTurnOn.add (note);
-        }
         
         turnOnList (toTurnOn, velocity, true);
     }

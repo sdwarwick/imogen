@@ -187,9 +187,11 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
         return;
     
     const ScopedLock sl (lock);
-    
+
+#if JUCE_DEBUG
     const int shouldBeLeft = voices.size() - voicesToRemove;
-    
+#endif
+
     int voicesRemoved = 0;
     
     while (voicesRemoved < voicesToRemove)

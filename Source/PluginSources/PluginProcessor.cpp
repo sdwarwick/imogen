@@ -180,8 +180,7 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
         return;
     
 #if ! JUCE_STANDALONE_APPLICATION
-    if ( (host.isLogic() || host.isGarageBand())
-        && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
+    if ( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
           return; // our audio input is disabled! can't do processing
 #endif
     
@@ -191,9 +190,9 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
         return;
     
 #if JUCE_STANDALONE_APPLICATION
-    int inBusNum = 0;
+    const int inBusNum = 0;
 #else
-    int inBusNum = (host.isLogic() || host.isGarageBand());
+    const int inBusNum = (host.isLogic() || host.isGarageBand());
 #endif
     
     juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
@@ -241,8 +240,7 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
         return;
     
 #if ! JUCE_STANDALONE_APPLICATION
-    if ( (host.isLogic() || host.isGarageBand())
-        && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
+    if ( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
           return; // our audio input is disabled! can't do processing
 #endif
     
@@ -252,9 +250,9 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
         return;
     
 #if JUCE_STANDALONE_APPLICATION
-    int inBusNum = 0;
+    const int inBusNum = 0;
 #else
-    int inBusNum = (host.isLogic() || host.isGarageBand());
+    const int inBusNum = (host.isLogic() || host.isGarageBand());
 #endif
  
     juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);

@@ -86,7 +86,10 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const int numSamples = inputAudio.getNumSamples();
     
     if (numSamples < minPeriod)
+    {
+        lastFrameWasPitched = false;
         return -1.0f;
+    }
     
     jassert (asdfBuffer.getNumSamples() > (maxPeriod - minPeriod));
     
@@ -124,10 +127,10 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         }
     }
     
-    const int middleIndex = roundToInt(floor (numSamples / 2));
-    const int halfNumSamples = roundToInt(floor ((numSamples - 1) / 2));
+    const int middleIndex = roundToInt (floor (numSamples / 2));
+    const int halfNumSamples = roundToInt (floor ((numSamples - 1) / 2));
     
-    const SampleType invNumSamples = SampleType(1.0) / numSamples;
+    const SampleType invNumSamples = SampleType(1.0) / numSamples; // avoid more divisions within our loop below...
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
@@ -141,13 +144,13 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         if (k < minLag || k > maxLag) // range compression of k is done here
         {
-            asdfData[index] = 1000.0f; // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
+            asdfData[index] = SampleType(1000.0); // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
             continue;
         }
         
-        asdfData[index] = 0.0;
+        asdfData[index] = SampleType(0.0);
         
-        const int sampleOffset = middleIndex - roundToInt((floor (k / 2)));
+        const int sampleOffset = middleIndex - roundToInt (floor (k / 2));
         
         for (int s = sampleOffset - halfNumSamples;
                  s < sampleOffset + halfNumSamples;

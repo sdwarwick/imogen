@@ -2,16 +2,6 @@
 
 #  AUTHOR: BEN VINING
 
-#  This CMake script will generate an IDE project containing all the Imogen source code files, as well as the following build targets: a static library for the shared Imogen codebase; VST & AU plugins, and a standalone application. 
-#  If they cannot be located automatically, JUCE [and, if unit testing is enabled, Catch2] will be downloaded from GitHub.
-
-
-# TO DO:
-# auto executables for generators other than XCode?
-# get rid of binary data target scheme?
-# better cross-platforming of finding executable paths 
-# in tests folder in IDE, hide modules (only show test files)
-
 
 cmake_minimum_required (VERSION 3.18) 
 
@@ -19,149 +9,67 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
+set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
-include (${sourceDir}/CMake/cmakeDefinitions.cmake REQUIRED)
-include (${sourceDir}/CMake/cmakeUtilityFunctions.cmake REQUIRED)
+set (pluginSourcesDir       ${Imogen_sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
+set (guiSourcePath          ${Imogen_sourceDir}/GUI)
+set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
+set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
+set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
+set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
-#  initializing all the cache variables & preferences:
+set (Imogen_graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
 
-set (IMOGEN_unitTesting OFF CACHE BOOL "${ds_testing}")  # set this to 'true' to enable a unit testing executable target
+set (Imogen_testFilesPath ${Imogen_sourceDir}/Tests)  # The location of the source files in which unit tests are defined
 
-set (IMOGEN_buildInstaller OFF CACHE BOOL "Build a user-friendly installer for the built Imogen executables")  # set this to true to use CPack to generate an installer for the Imogen executables
-
-set (IMOGEN_launchAudioPluginHostOnBuild OFF CACHE BOOL "${ds_launchAPH}")        #  when true, this automatically launches the AudioPluginHost on build for all targets except the Standalone, which uses itself as its own executable
-set (IMOGEN_launchStandaloneOnBuild      OFF CACHE BOOL "${ds_launchSAL}")        #  if launchAudioPluginHostOnBuild is false and this argument is true, then the Standalone will launch automatically for the Standalone and All targets, and the individual plugin formats will have no executable
-set (IMOGEN_preferStandaloneForAllTarget OFF CACHE BOOL "${ds_preferSALforAll}")  #  if both launchAudioPluginHostOnBuild and launchStandaloneOnBuild are true, then if this flag is set to true, the All target will use the Standalone as its executable instead of the AudioPluginHost. If this flag is false, the All target would default to using the AudioPluginHost.
-
-set (IMOGEN_runPluginvalOnBuild OFF CACHE BOOL "${ds_runPiv}")  # when true, runs pluginval after building the various desired formats
-set (pluginval_intensityLevel 10)  # pluginval testing intensity level 1 to 10
-
-#  uncomment this 'set formats' call to override the boolean GUI cache variables' settings for build formats, to easily & quickly type a new list of formats as text strings. Strings entered here MUST be valid JUCE build formats, separated by whitespace. Any non-valid strings will be removed from the list.
-#  valid formats are: Standalone VST3 AU Unity AUv3 AAX VST
-#  for AAX or VST [vst2], the API paths must be provided manually by calling juce_set_aax_sdk_path and/or juce_set_vst2_sdk_path, respectively. These calls are provided below, simply fill in the absolute path to the SDK on your filesystem and uncomment the applicable line.
-#
-# set (formats AU VST3 Standalone)
 
 #
 
-message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
+# the set of custom JUCE-style modules needed for this project
 
-imogen_checkAllDirectories()
+set (Imogen_customModulesPath ${Imogen_sourceDir}/DSP_modules)
 
-imogen_checkOS()
+set (Imogen_customModulesNeeded
+    bv_GeneralUtils
+    bv_PitchDetector
+    bv_Harmonizer
+    bv_ImogenEngine)
 
-imogen_clearOldBuildFiles()
 
-imogen_makeFormatsList()
+# the groups of actual source files 
 
-imogen_displayPossibleDownloadsWarningMessage()
+set (Imogen_sourceFiles
+    ${pluginSourcesDir}/PluginProcessor.cpp
+    ${pluginSourcesDir}/PluginProcessor.h
+    ${pluginSourcesDir}/PluginEditor.cpp
+    ${pluginSourcesDir}/PluginEditor.h
+    ${guiSourcePath}/LookAndFeel.h
+    ${guiSourcePath}/EnableSidechainWarning.h
+    ${HelpScreenSourcePath}/HelpScreen.cpp
+    ${HelpScreenSourcePath}/HelpScreen.h
+    ${IOPanelSourcePath}/IOControlPanel.cpp  
+    ${IOPanelSourcePath}/IOControlPanel.h
+    ${IOPanelSourcePath}/LimiterControlPanel.h
+    ${MidiControlSourcePath}/MidiControlPanel.cpp
+    ${MidiControlSourcePath}/MidiControlPanel.h
+    ${StaffDisplaySourcePath}/StaffDisplay.cpp
+    ${StaffDisplaySourcePath}/StaffDisplay.h)
 
-#
+set (Imogen_graphicAssetFiles 
+    ${Imogen_graphicAssetsDir}/1-1_note_semibreve.svg 
+    ${Imogen_graphicAssetsDir}/closeIcon.png 
+    ${Imogen_graphicAssetsDir}/grandStaff.png 
+    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
 
-imogen_addJuce()
-
-juce_add_modules (${customModulesNeeded})
-
-#  To build AAX or VST2 plugins, fill in the absolute paths to the SDKs on your filesystem and uncomment these function calls
-
-# juce_set_aax_sdk_path (path)
-# juce_set_vst2_sdk_path (path)
-
-#
-
-if (IMOGEN_launchAudioPluginHostOnBuild OR IMOGEN_launchStandaloneOnBuild)
-
-    imogen_configureAudioPluginHostExecutable()
-
-    imogen_configureStandaloneExecutable()
-
-endif()
-
-#
-
-message (STATUS "Configuring Imogen...")
-
-juce_add_plugin (Imogen   # this command creates a static library for the shared plugin code, and adds targets for each of the specified plugin formats, as well as an "All" target, linked to the shared static lib
-    PRODUCT_NAME                Imogen
-    VERSION                     ${CMAKE_PROJECT_VERSION}
-    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
-    PLUGIN_NAME                 Imogen
-    PLUGIN_MANUFACTURER_CODE    Benv
-    DESCRIPTION                 Real-time vocal harmonizer instrument
-    IS_SYNTH                    FALSE
-    NEEDS_MIDI_INPUT            TRUE
-    NEEDS_MIDI_OUTPUT           TRUE
-    IS_MIDI_EFFECT              FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    PLUGIN_CODE                 Imgn
-    FORMATS                     ${formats}
-    VST3_CATEGORIES             Pitch Shift
-    AU_MAIN_TYPE                kAudioUnitType_MusicEffect
-    ICON_BIG                    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png
-    COMPANY_NAME                BenViningMusicSoftware
-    COMPANY_WEBSITE             www.benvining.com
-    COMPANY_EMAIL               ben.the.vining@gmail.com
-    COPY_PLUGIN_AFTER_BUILD     TRUE
-    VST3_COPY_DIR               /Users/benvining/Library/Audio/Plug-Ins/VST/MyPlugins
-    AU_COPY_DIR                 /Users/benvining/Library/Audio/Plug-Ins/Components
-    UNITY_COPY_DIR              ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
-    COMPANY_COPYRIGHT           This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.)
-
-target_compile_features (Imogen PRIVATE ${imogen_compileFeatures})
-
-target_compile_definitions (Imogen PUBLIC 
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0)
-
-imogen_configureIndividualBuildTargets()
+set (Imogen_testFiles
+    ${Imogen_testFilesPath}/tests.cpp
+    ${Imogen_testFilesPath}/HarmonizerTests.cpp) 
 
 #
 
-target_sources (Imogen PRIVATE ${sourceFiles})
+include (bv_juce_wrapper.cmake)
 
-source_group (TREE ${sourceDir} PREFIX "" FILES ${sourceFiles})
-
-target_include_directories (Imogen PRIVATE ${pluginSourcesDir} ${guiSourcePath})
-
-set_target_properties (Imogen PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
-
-#
-
-juce_add_binary_data (ImogenGraphicAssets SOURCES ${graphicAssetFiles})
-
-set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "Imogen")
-
-#
-
-target_link_libraries (Imogen
-    PRIVATE
-        ImogenGraphicAssets
-        bv_ImogenEngine
-    PUBLIC
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags)
-
-#
-
-if (IMOGEN_unitTesting)
-    imogen_configureUnitTesting()
-endif()
-
-#
-
-if (IMOGEN_buildInstaller)
-    imogen_configureInstaller()
-endif()
-
-#
-
-if (IMOGEN_runPluginvalOnBuild)
-    imogen_configurePluginval()
-endif()
+bv_juce_wrapper_createPlugin()
 
 #
 

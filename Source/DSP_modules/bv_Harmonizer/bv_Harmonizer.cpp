@@ -264,9 +264,11 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     auto* writing = windowBuffer.getWritePointer(0);
     
     const SampleType samplemultiplier = static_cast<SampleType>( (MathConstants<SampleType>::pi * 2.0) / (numSamples - 1) );
+    constexpr SampleType one = SampleType(1.0);
+    constexpr SampleType pointFive = SampleType(0.5);
     
     for (int i = 1; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType>( (1.0 - (std::cos (i * samplemultiplier))) * 0.5 );
+        writing[i] = static_cast<SampleType>( (one - (std::cos (i * samplemultiplier))) * pointFive );
     
     windowSize = numSamples;
 };

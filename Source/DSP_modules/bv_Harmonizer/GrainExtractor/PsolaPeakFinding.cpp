@@ -239,11 +239,17 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     {
         float minDelta = maxDelta;
         
+        int indexOfMinDelta = 0;
+        int indexTicker = 0;
         for (float delta : candidateDeltas)
+        {
             if (delta < minDelta)
+            {
                 minDelta = delta;
-        
-        const int indexOfMinDelta = candidateDeltas.indexOf (minDelta);
+                indexOfMinDelta = indexTicker;
+            }
+            ++indexTicker;
+        }
         
         finalHandfulDeltas.add (minDelta);
         finalHandful.add (candidates.getUnchecked (indexOfMinDelta));
@@ -275,6 +281,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     if (deltaRange > 1.0f)
         strongestPeak = strongestPeak * weighting::weight(lowestDelta, deltaRange);
     
+    int candidateIndex = 0;
     for (int candidate : finalHandful)
     {
         if (candidate == chosenPeak)
@@ -283,7 +290,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         SampleType testingPeak = abs(reading[candidate]);
         
         if (deltaRange > 1.0f)
-            testingPeak = testingPeak * weighting::weight (finalHandfulDeltas.getUnchecked (finalHandful.indexOf (candidate)),
+            testingPeak = testingPeak * weighting::weight (finalHandfulDeltas.getUnchecked (candidateIndex),
                                                            deltaRange);
         
         if (testingPeak > strongestPeak)
@@ -291,6 +298,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
             strongestPeak = testingPeak;
             chosenPeak = candidate;
         }
+        
+        ++candidateIndex;
     }
     
     return chosenPeak;
@@ -326,7 +335,6 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             else
             {
                 jassert (pos <= endSample);
-                
                 output.set (n, pos);
                 ++p;
             }
@@ -341,7 +349,6 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             else
             {
                 jassert (neg >= startSample);
-                
                 output.set (n, neg);
                 --m;
             }

@@ -147,15 +147,15 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
     for (int grainStart : indicesOfGrainOnsets)
     {
         const int grainEnd = grainStart + analysisGrainLength;
-        
+
         if (grainEnd > totalNumInputSamples)
             break;
-        
+
         if (nextSBindex > grainEnd)
             continue;
-        
+
         olaFrame (input, grainStart, grainEnd, window, newPeriod);
-        
+
         if (totalNumInputSamples < nextSBindex)
             return;
     }
@@ -168,6 +168,9 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
                                             const SampleType* window,
                                             const int newPeriod)
 {
+    if (nextSBindex >= frameEndSample)
+        return;
+    
     // this processes one analysis frame of input samples, from readingStartSample to readingEndSample
     // the frame size should be 2 * the original input period, and the length of the window passed to this function MUST equal this value!
     
