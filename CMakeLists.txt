@@ -67,6 +67,31 @@ set (Imogen_testFiles
 
 #
 
+set (Imogen_Bundle_ID com.BenViningMusicSoftware.Imogen)
+set (Imogen_Manufacturer_Code Benv)
+set (Imogen_Plugin_Code Imgn)
+set (Imogen_Description "Real-time vocal harmonizer instrument")
+set (Imogen_Is_Synth FALSE)
+set (Imogen_Needs_MIDI_Input TRUE)
+set (Imogen_Needs_MIDI_Output TRUE)
+set (Imogen_Is_MIDI_Effect FALSE)
+set (Imogen_Editor_Wants_Keyboard_Focus FALSE)
+set (Imogen_VST3_Categories "Pitch Shift")
+set (Imogen_AU_Main_Type "kAudioUnitType_MusicEffect")
+set (Imogen_Icon_Path ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
+set (Imogen_Company_Name BenViningMusicSoftware)
+set (Imogen_Company_Website "www.benvining.com")
+set (Imogen_Company_Email "ben.the.vining@gmail.com")
+set (Imogen_Company_Copyright "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
+set (Imogen_Copy_Plugin_After_Build TRUE)
+
+set (Imogen_NeedsWebBrowser FALSE)
+set (Imogen_NeedsCURL FALSE)
+
+set (Imogen_UseRecommendedWarningFlags TRUE)
+
+#
+
 include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
