@@ -1,0 +1,4 @@
+[submodule "Cmake_JuceWrapper"]
+	path = Cmake_JuceWrapper
+	url = https://github.com/benthevining/juceCmakeWrapper
+	branch = main
