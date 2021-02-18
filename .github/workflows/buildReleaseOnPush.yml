@@ -7,24 +7,26 @@ env:
   BUILD_TYPE: Release
   BUILD_DIR: Builds
   
-# jobs are run in paralell on different machines
-# all steps run in series
+#
+
 jobs:
 
-  build_and_test:
+#
+
+  build:
   
     name: ${{ matrix.artifact }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-10.9]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
         - os: windows-latest
           artifact: Windows
         - os: ubuntu-latest
           artifact: Linux
-        - os: macos-10.9  # TODO: change once macos-latest catches up
+        - os: macos-latest  
           artifact: MacOS
 
     steps:
