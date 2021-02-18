@@ -1,6 +1,10 @@
 name: CMake
 
-on: [push]; [workflow_dispatch]
+on: 
+  push: 
+    branches: [ master ]
+    
+  workflow_dispatch:
 
 env:
   PROJECT_NAME: Imogen
