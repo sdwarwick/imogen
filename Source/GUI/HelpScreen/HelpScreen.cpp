@@ -3,7 +3,7 @@
     Parent file: HelpScreen.h.
 */
 
-#include "../../Source/GUI/HelpScreen/HelpScreen.h"
+#include "HelpScreen.h"
 
 
 namespace bav

@@ -3,7 +3,7 @@
     Parent file: IOControlPanel.h.
 */
 
-#include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
+#include "IOControlPanel.h"
 
 
 namespace bav
