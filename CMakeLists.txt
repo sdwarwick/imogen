@@ -90,6 +90,8 @@ set (Imogen_NeedsCURL FALSE)
 
 set (Imogen_UseRecommendedWarningFlags TRUE)
 
+set (Imogen_compileFeatures "cxx_std_17")
+
 #
 
 include (JUCE-CmakeWrapper/CMakeLists.txt)
