@@ -28,7 +28,7 @@ jobs:
           artifact: Linux
         - os: macos-latest  
           artifact: MacOS
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
     
