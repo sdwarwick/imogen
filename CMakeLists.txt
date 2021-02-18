@@ -67,9 +67,7 @@ set (Imogen_testFiles
 
 #
 
-include (bv_juce_wrapper.cmake)
-
-bv_juce_wrapper_createPlugin()
+include (juceCmakeWrapper/CMakeLists.txt)
 
 #
 
