@@ -56,7 +56,6 @@ public:
     
     void returnActivePitches (Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
     
-    void updateSamplerate (const int newSamplerate);
     void updateDryWet     (const float newWetMixProportion);
     void updateDryVoxPan  (const int newMidiPan);
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
@@ -137,11 +136,6 @@ private:
                                 const int startSampleOfInput,
                                 const int startSampleOfOutput,
                                 const int numSamples);
-    
-    
-    void pushUpLeftoverSamples (AudioBuffer<SampleType>& targetBuffer,
-                                const int numSamplesUsed,
-                                const int numSamplesLeft);
     
     Panner dryPanner;
     
