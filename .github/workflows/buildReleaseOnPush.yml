@@ -24,13 +24,13 @@ jobs:
     strategy:
       fail-fast: false 
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-11.0]
+        os: [windows-latest, ubuntu-latest, macos-10.9]
         include:
         - os: windows-latest
           artifact: Windows
         - os: ubuntu-latest
           artifact: Linux
-        - os: macos-11.0  
+        - os: macos-10.9  
           artifact: MacOS
     timeout-minutes: 20
 
