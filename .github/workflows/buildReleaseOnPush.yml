@@ -56,14 +56,7 @@ jobs:
       with:
         path: ${{github.workspace}}/build/$PROJECT_NAME.zip
         name: $PROJECT_NAME
-
- 
-  cache:
-    runs-on: ubuntu-latest
-    steps:
-        - name: Cache
-          uses: actions/cache@v2.1.4
-
+        
  #   - name: Test
  #     working-directory: ${{github.workspace}}/build
  #     shell: bash
