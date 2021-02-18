@@ -21,7 +21,7 @@ jobs:
     - name: Get latest CMake
       uses: lukka/get-cmake@latest 
       
-   - name: Checkout code
+    - name: Checkout code
       uses: actions/checkout@v2
       with:
         submodules: true 
@@ -47,7 +47,7 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
       
-   - name: Zip
+    - name: Zip
       working-directory: ${{github.workspace}}/build
       run: cmake -E tar cfv $PROJECT_NAME.zip --format=zip $PROJECT_NAME_artefacts
 
@@ -58,7 +58,7 @@ jobs:
         name: $PROJECT_NAME
 
  
- cache:
+  cache:
     runs-on: ubuntu-latest
     steps:
         - name: Cache
