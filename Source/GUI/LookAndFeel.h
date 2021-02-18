@@ -348,4 +348,4 @@ private:
 };
 
 
-};  // namespace
+}  // namespace

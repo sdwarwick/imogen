@@ -150,4 +150,4 @@ void IOControlPanel::resized()
 };
 
 
-};  // namespace
+}  // namespace

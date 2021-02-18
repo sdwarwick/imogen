@@ -443,4 +443,4 @@ Button::ButtonState MidiControlPanel::buttonStateFromBool (const bool isOn)
 }
 
 
-};  // namespace
+}  // namespace

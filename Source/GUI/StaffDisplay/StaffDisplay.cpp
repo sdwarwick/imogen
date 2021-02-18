@@ -143,4 +143,4 @@ void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
     
 };
     
-};  // namespace
+}  // namespace

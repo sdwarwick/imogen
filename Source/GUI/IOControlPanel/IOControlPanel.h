@@ -67,4 +67,4 @@ private:
 };
 
 
-};  // namespace
+}  // namespace

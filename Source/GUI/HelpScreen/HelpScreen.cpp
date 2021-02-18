@@ -44,4 +44,4 @@ void HelpScreen::resized()
 };
 
 
-};  // namespace
+}  // namespace
