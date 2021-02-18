@@ -2,8 +2,6 @@ name: CMake
 
 on: 
   push: 
-    branches: [ master ]
-    
   workflow_dispatch:
 
 env:
@@ -53,14 +51,8 @@ jobs:
 
     - name: Configure
       shell: bash
-      if: runner.os != 'MacOS'
       run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
   
-    - name: Configure with pluginval
-      shell: bash
-      if: runner.os == 'MacOS'
-      run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -DImogen_runPluginvalOnBuild=TRUE -Dbv_pluginval_intensityLevel=10 -Dbv_alwaysForceCacheInits=TRUE .
-
     - name: Build
       shell: bash
       run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
