@@ -67,7 +67,7 @@ set (Imogen_testFiles
 
 #
 
-include (juceCmakeWrapper/CMakeLists.txt)
+include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
 
