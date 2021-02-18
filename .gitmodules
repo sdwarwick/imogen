@@ -1,3 +1,6 @@
 [submodule "juceCmakeWrapper"]
 	path = juceCmakeWrapper
 	url = https://github.com/benthevining/juceCmakeWrapper
+[submodule "JUCE-CmakeWrapper"]
+	path = JUCE-CmakeWrapper
+	url = https://github.com/benthevining/JUCE-CmakeWrapper
