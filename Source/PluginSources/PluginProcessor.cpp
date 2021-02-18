@@ -108,8 +108,9 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
     
     updateAllParameters (activeEngine);
     
-    if (const int newLatency = activeEngine.reportLatency();
-        latencySamples != newLatency)
+    const int newLatency = activeEngine.reportLatency();
+    
+    if (latencySamples != newLatency)
     {
         latencySamples = newLatency;
         setLatencySamples (newLatency);
