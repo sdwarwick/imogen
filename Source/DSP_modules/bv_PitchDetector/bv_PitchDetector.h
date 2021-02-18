@@ -72,7 +72,7 @@ private:
     SampleType quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept;
     
     
-    static constexpr int periodCandidatesToTest = 15;
+    const int periodCandidatesToTest = 15;
     
     void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
     
