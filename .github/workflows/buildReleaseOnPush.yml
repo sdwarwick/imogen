@@ -18,13 +18,13 @@ jobs:
     strategy:
       fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-11.0]
+        os: [windows-latest, ubuntu-latest, macos-10.9]
         include:
         - os: windows-latest
           artifact: Windows
         - os: ubuntu-latest
           artifact: Linux
-        - os: macos-11.0  # TODO: change once macos-latest catches up
+        - os: macos-10.9  # TODO: change once macos-latest catches up
           artifact: MacOS
 
     steps:
@@ -62,8 +62,10 @@ jobs:
         path: ${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
         name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
 
+#
+
   release:
-    if: contains(github.ref, 'tags/v')
+  
     runs-on: ubuntu-latest
     needs: build_and_test
     outputs: 
