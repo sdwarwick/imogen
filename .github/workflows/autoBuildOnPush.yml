@@ -8,6 +8,7 @@ env:
   PROJECT_NAME: Imogen
   BUILD_TYPE: Release
   BUILD_DIR: Builds
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #
 
@@ -20,14 +21,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, windows-2016, ubuntu-latest, ubuntu-20.04, macos-latest]
+        os: [windows-latest, ubuntu-20.04, macos-latest]
         include:
         - os: windows-latest
           artifact: Windows
-        - os: windows-2016
-          artifact: Windows
-        - os: ubuntu-latest
-          artifact: Linux
         - os: ubuntu-20.04
           artifact: Linux
         - os: macos-latest
@@ -85,7 +82,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        draft: true
+        draft: false
         prerelease: true
 
     - name: Download all artifacts
