@@ -1,4 +1,4 @@
-name: Test other architectures
+name: Test-other-architectures
 
 on: 
   push:
@@ -77,11 +77,11 @@ jobs:
       - uses: lukka/get-cmake@latest 
         
       - uses: actions/checkout@v2
-          with:
-            arch: ${{ matrix.arch }}
-            distro: ${{ matrix.distro }}
-            shell: bin/sh
-            submodules: true 
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+          shell: bin/sh
+          submodules: true 
               
       - run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
   
@@ -90,9 +90,9 @@ jobs:
       - run: cmake -E tar cfv ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip --format=zip ${{ env.PROJECT_NAME }}_artefacts
           
       - uses: actions/upload-artifact@v2
-          with:
-            arch: ${{ matrix.arch }}
-            distro: ${{ matrix.distro }}
-            shell: bin/sh
-            path: ${PWD}/artifacts/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
-            name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+          shell: bin/sh
+          path: ${PWD}/artifacts/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
