@@ -16,8 +16,6 @@ env:
 jobs:
 
   build:
-  
-    if: "!contains(github.event.head_commit.message, '${{ env.SKIP_TOKEN }}')"
     
     name: ${{ matrix.artifact }}
     runs-on: ${{ matrix.os }}
@@ -33,7 +31,9 @@ jobs:
           artifact: Linux
         - os: macos-latest
           artifact: MacOS
-
+          
+    if: "!contains(github.event.head_commit.message, ${{ env.SKIP_TOKEN }})"
+    
     steps:
 
     - name: Install JUCE's Linux Deps and select g++ 9
