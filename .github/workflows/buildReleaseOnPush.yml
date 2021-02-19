@@ -6,7 +6,7 @@ on:
 
 env:
   PROJECT_NAME: Imogen
-  BUILD_TYPE: Debug
+  BUILD_TYPE: Release
   BUILD_DIR: Builds
 
 #
@@ -53,6 +53,7 @@ jobs:
 
     - name: Configure
       shell: bash
+      working-directory: ${{ env.BUILD_DIR }}
       run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE
 
     - name: Build
