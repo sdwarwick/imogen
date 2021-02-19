@@ -105,7 +105,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         else
             analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
     }
-};
+}
 
 
 
@@ -199,7 +199,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     
     candidates.add (std::min (indexOfLocalMax, indexOfLocalMin));
     candidates.add (std::max (indexOfLocalMax, indexOfLocalMin));
-};
+}
 
 
 
@@ -303,7 +303,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     }
     
     return chosenPeak;
-};
+}
 
 
 
@@ -354,7 +354,7 @@ void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& 
             }
         }
     }
-};
+}
 
 
 } // namespace

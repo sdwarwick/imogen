@@ -28,11 +28,11 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     adsr        .setParameters (parent->getCurrentAdsrParams());
     quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters (parent->getCurrentQuickAttackParams());
-};
+}
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::~HarmonizerVoice()
-{ };
+{ }
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
@@ -52,7 +52,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
-};
+}
 
 
 template<typename SampleType>
@@ -129,7 +129,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
                                       panner.getPrevGain(chan), panner.getGainMult(chan));  // panning is applied while writing to output
     
     moveUpSamples (numSamples);
-};
+}
 
 
 template<typename SampleType>
@@ -159,7 +159,7 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
         if (totalNumInputSamples < nextSBindex)
             return;
     }
-};
+}
 
 
 template<typename SampleType>
@@ -191,7 +191,7 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
     
     int synthesisIndex = nextSBindex;
     
-    while (synthesisIndex < frameEndSample)
+    do
     {
         FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,
                                     windowBufferReading,
@@ -199,9 +199,10 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
         
         synthesisIndex += newPeriod;
     }
+    while (synthesisIndex < frameEndSample);
     
     nextSBindex = synthesisIndex + 1;
-};
+}
 
 
 
@@ -222,21 +223,21 @@ void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
     synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
     
     nextSBindex = numSamplesLeft;
-};
+}
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::releaseResources()
 {
     synthesisBuffer.setSize(0, 0, false, false, false);
-};
+}
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::clearBuffers()
 {
     synthesisBuffer.clear();
-};
+}
 
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
@@ -272,7 +273,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     
     clearBuffers();
     synthesisBuffer.clear();
-};
+}
 
 
 // MIDI -----------------------------------------------------------------------------------------------------------
@@ -300,7 +301,7 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
     isDescantVoice = isDescant;
     
     setKeyDown (keyboardKeyIsDown);
-};
+}
     
     
 template<typename SampleType>
@@ -317,7 +318,7 @@ void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
             playingButReleased = false;
         else
             playingButReleased = isVoiceActive();
-};
+}
 
 
 template<typename SampleType>
@@ -343,14 +344,14 @@ void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool all
     noteTurnedOff = true;
     keyIsDown = false;
     playingButReleased = false;
-};
+}
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::aftertouchChanged (const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
-};
+}
 
 
 template<typename SampleType>
@@ -360,7 +361,7 @@ void HarmonizerVoice<SampleType>::setPan (int newPan)
     
     if (panner.getLastMidiPan() != newPan)
         panner.setMidiPan (newPan);
-};
+}
 
 
 template<typename SampleType>
@@ -373,7 +374,7 @@ void HarmonizerVoice<SampleType>::updateSampleRate (const double newSamplerate)
     adsr        .setParameters (parent->getCurrentAdsrParams());
     quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters (parent->getCurrentQuickAttackParams());
-};
+}
 
 
 /*+++++++++++++++++++++++++++++++++++++
@@ -384,7 +385,7 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
     synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
-};
+}
 
 
 template class HarmonizerVoice<float>;

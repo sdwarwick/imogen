@@ -18,7 +18,7 @@ void Harmonizer<SampleType>::numVoicesChanged (const int newMaxNumVoices)
 {
     panner.prepare (newMaxNumVoices);
     intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
-};
+}
     
     
 template<typename SampleType>
@@ -31,7 +31,7 @@ int Harmonizer<SampleType>::getNumActiveVoices() const
             ++actives;
     
     return actives;
-};
+}
     
     
 template<typename SampleType>
@@ -45,7 +45,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool s
         return findVoiceToSteal();
     
     return nullptr;
-};
+}
     
     
 template<typename SampleType>
@@ -123,7 +123,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal() const
         return top;
     
     return low;
-};
+}
     
     
 template<typename SampleType>
@@ -137,7 +137,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentDescantVoice() co
             return voice;
     
     return nullptr;
-};
+}
 
 
 template<typename SampleType>
@@ -151,7 +151,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getCurrentPedalPitchVoice()
             return voice;
     
     return nullptr;
-};
+}
     
     
 template<typename SampleType>
@@ -162,7 +162,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
             return voice;
     
     return nullptr;
-};
+}
     
     
 template<typename SampleType>
@@ -177,7 +177,7 @@ void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
         voices.add (new HarmonizerVoice<SampleType>(this));
     
     numVoicesChanged (voices.size());
-};
+}
     
     
 template<typename SampleType>
@@ -231,7 +231,7 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     jassert (voices.isEmpty() || voices.size() == shouldBeLeft);
     
     numVoicesChanged (voices.size());
-};
+}
     
 
     

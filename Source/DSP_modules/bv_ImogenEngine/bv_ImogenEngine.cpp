@@ -32,12 +32,12 @@ ImogenEngine<SampleType>::ImogenEngine():
     
     wetGain.store(1.0f);
     prevWetGain.store(1.0f);
-};
+}
 
 
 template<typename SampleType>
 ImogenEngine<SampleType>::~ImogenEngine()
-{ };
+{ }
 
 
 template<typename SampleType>
@@ -52,7 +52,7 @@ void ImogenEngine<SampleType>::changeBlocksize (const int newBlocksize)
     
     inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
     outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
-};
+}
 
 
 template<typename SampleType>
@@ -67,7 +67,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     prepare (initSamplerate, initSamplesPerBlock);
     
     initialized = true;
-};
+}
 
 
 template<typename SampleType>
@@ -106,7 +106,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     prevInputGain.store(inputGain.load());
     prevDryGain.store(dryGain.load());
     prevWetGain.store(wetGain.load());
-};
+}
 
 
 template<typename SampleType>
@@ -117,7 +117,7 @@ void ImogenEngine<SampleType>::clearBuffers()
     dryBuffer.clear();
     inBuffer .clear();
     midiChoppingBuffer.clear();
-};
+}
 
 
 template<typename SampleType>
@@ -131,14 +131,14 @@ void ImogenEngine<SampleType>::reset()
     prevInputGain.store(inputGain.load());
     prevDryGain.store(dryGain.load());
     prevWetGain.store(wetGain.load());
-};
+}
     
     
 template<typename SampleType>
 void ImogenEngine<SampleType>::killAllMidi()
 {
     harmonizer.allNotesOff(false);
-};
+}
 
 
 
@@ -159,7 +159,7 @@ void ImogenEngine<SampleType>::releaseResources()
     
     resourcesReleased  = true;
     initialized        = false;
-};
+}
 
 
 
@@ -218,7 +218,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         actuallyFadingIn  = false;
         actuallyFadingOut = false;
     }
-};
+}
 
 
 template<typename SampleType>
@@ -302,7 +302,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     if (applyFadeOut)
         output.applyGainRamp (0, numNewSamples, 1.0f, 0.0f);
-};
+}
 
 
 
@@ -351,7 +351,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.writeSamples (wetBuffer, chan, 0, internalBlocksize, chan);
-};
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -395,8 +395,8 @@ void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, 
         startSample += chunkNumSamples;
         samplesLeft -= chunkNumSamples;
     }
-};
-
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
@@ -432,7 +432,7 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
     
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
-};
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -465,7 +465,7 @@ void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& readingB
                                                 std::max (0,
                                                           meta.samplePosition + sampleOffset));
                        } );
-};
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -484,14 +484,14 @@ void ImogenEngine<SampleType>::updateNumVoices (const int newNumVoices)
         harmonizer.addNumVoices (newNumVoices - currentVoices);
     else
         harmonizer.removeNumVoices (currentVoices - newNumVoices);
-};
+}
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
 {
     dryPanner.setMidiPan (newMidiPan);
-};
+}
 
 
 template<typename SampleType>
@@ -499,7 +499,7 @@ void ImogenEngine<SampleType>::updateInputGain (const float newInGain)
 {
     prevInputGain.store(inputGain.load());
     inputGain.store(newInGain);
-};
+}
 
 
 template<typename SampleType>
@@ -507,7 +507,7 @@ void ImogenEngine<SampleType>::updateOutputGain (const float newOutGain)
 {
     prevOutputGain.store(outputGain.load());
     outputGain.store(newOutGain);
-};
+}
 
 
 template<typename SampleType>
@@ -515,7 +515,7 @@ void ImogenEngine<SampleType>::updateDryGain (const float newDryGain)
 {
     prevDryGain.store(dryGain.load());
     dryGain.store(newDryGain);
-};
+}
 
 
 template<typename SampleType>
@@ -523,8 +523,7 @@ void ImogenEngine<SampleType>::updateWetGain (const float newWetGain)
 {
     prevWetGain.store(wetGain.load());
     wetGain.store(newWetGain);
-};
-
+}
 
 
 template<typename SampleType>
@@ -532,45 +531,52 @@ void ImogenEngine<SampleType>::updateDryWet (const float newWetMixProportion)
 {
     ScopedLock sl (lock);
     dryWetMixer.setWetMixProportion (newWetMixProportion / 100.0f);
-};
+}
 
+    
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn)
 {
     harmonizer.updateADSRsettings(attack, decay, sustain, release);
     harmonizer.setADSRonOff(isOn);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateQuickKill(const int newMs)
 {
     harmonizer.updateQuickReleaseMs(newMs);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateQuickAttack(const int newMs)
 {
     harmonizer.updateQuickAttackMs(newMs);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateStereoWidth(const int newStereoWidth, const int lowestPannedNote)
 {
     harmonizer.updateLowestPannedNote(lowestPannedNote);
     harmonizer.updateStereoWidth     (newStereoWidth);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateMidiVelocitySensitivity(const int newSensitivity)
 {
     harmonizer.updateMidiVelocitySensitivity(newSensitivity);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updatePitchbendSettings(const int rangeUp, const int rangeDown)
 {
     harmonizer.updatePitchbendSettings(rangeUp, rangeDown);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updatePedalPitch(const bool isOn, const int upperThresh, const int interval)
@@ -578,7 +584,8 @@ void ImogenEngine<SampleType>::updatePedalPitch(const bool isOn, const int upper
     harmonizer.setPedalPitch           (isOn);
     harmonizer.setPedalPitchUpperThresh(upperThresh);
     harmonizer.setPedalPitchInterval   (interval);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateDescant(const bool isOn, const int lowerThresh, const int interval)
@@ -586,31 +593,34 @@ void ImogenEngine<SampleType>::updateDescant(const bool isOn, const int lowerThr
     harmonizer.setDescant           (isOn);
     harmonizer.setDescantLowerThresh(lowerThresh);
     harmonizer.setDescantInterval   (interval);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateConcertPitch(const int newConcertPitchHz)
 {
     harmonizer.setConcertPitchHz(newConcertPitchHz);
-};
-
+}
+    
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateNoteStealing(const bool shouldSteal)
 {
     harmonizer.setNoteStealingEnabled(shouldSteal);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateMidiLatch(const bool isLatched)
 {
     harmonizer.setMidiLatch(isLatched, true);
-};
-
+}
+    
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateIntervalLock(const bool isLocked)
 {
     harmonizer.setIntervalLatch (isLocked, true);
-};
+}
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release, const bool isOn)
@@ -619,14 +629,14 @@ void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float rel
     limiterIsOn = isOn;
     limiter.setThreshold(thresh);
     limiter.setRelease(release);
-};
+}
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updateSoftPedalGain (const float newGain)
 {
     harmonizer.setSoftPedalGainMultiplier (newGain);
-};
+}
 
 
 template<typename SampleType>
@@ -638,15 +648,14 @@ void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, con
 //
 //    if (internalBlocksize != newMaxPeriod)
 //        changeBlocksize (newMaxPeriod);
-};
+}
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
 {
     harmonizer.updatePitchDetectionConfidenceThresh (newUpperThresh, newLowerThresh);
-};
-
+}
 
 
 template class ImogenEngine<float>;

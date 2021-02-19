@@ -19,12 +19,12 @@ closeIcon(juce::ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData:
         addAndMakeVisible(closeButton);
         closeButton.onClick = [this] { this->setVisible(false); };
     }
-};
+}
 
 HelpScreen::~HelpScreen()
 {
     setLookAndFeel(nullptr);
-};
+}
 
 void HelpScreen::paint (juce::Graphics& g)
 {
@@ -36,12 +36,12 @@ void HelpScreen::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white);
     g.setFont (14.0f);
     g.drawText ("Help Screen", getLocalBounds(), juce::Justification::centred, true);
-};
+}
 
 void HelpScreen::resized()
 {
     closeButton.setBounds(5, 5, 25, 25);
-};
+}
 
 
 }  // namespace

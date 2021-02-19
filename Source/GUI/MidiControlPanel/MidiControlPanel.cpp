@@ -287,12 +287,12 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     
     // TO DO : SOFT PEDAL GAIN
     
-};
+}
 
 MidiControlPanel::~MidiControlPanel()
 {
     setLookAndFeel(nullptr);
-};
+}
 
 void MidiControlPanel::paint (juce::Graphics& g)
 {
@@ -312,7 +312,7 @@ void MidiControlPanel::paint (juce::Graphics& g)
     juce::Rectangle<int> pitchbendPanel (5, 240, 290, 65);
     g.fillRect(pitchbendPanel);
     
-};
+}
 
 void MidiControlPanel::resized()
 {
@@ -391,7 +391,7 @@ void MidiControlPanel::resized()
     numVoicesLabel.setBounds(18, 348, 115, 35);
     numberOfVoices.setBounds(42, 385, 65, 20);
     
-};
+}
 
 
 void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
@@ -408,7 +408,7 @@ void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
     box.addItem("10", 10);
     box.addItem("11", 11);
     box.addItem("12", 12);
-};
+}
 
 
 void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
@@ -425,13 +425,13 @@ void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
     box.addItem("Minor Seventh", 10);
     box.addItem("Major Seventh", 11);
     box.addItem("Octave", 12);
-};
+}
 
 
 void MidiControlPanel::updateNumVoicesCombobox(const int newNumVoices)
 {
     numberOfVoices.setSelectedId(newNumVoices);
-};
+}
 
 
 Button::ButtonState MidiControlPanel::buttonStateFromBool (const bool isOn)

@@ -15,12 +15,12 @@ namespace bav
     
 template<typename SampleType>
 GrainExtractor<SampleType>::GrainExtractor()
-{ };
+{ }
 
 
 template<typename SampleType>
 GrainExtractor<SampleType>::~GrainExtractor()
-{ };
+{ }
 
 
 template<typename SampleType>
@@ -33,14 +33,14 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
     lastBlocksize = maxBlocksize;
-};
+}
 
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::releaseResources()
 {
     peakIndices.clear();
-};
+}
 
 
 template<typename SampleType>
@@ -82,7 +82,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     }
     
     jassert (! targetArray.isEmpty());
-};
+}
 
 
 

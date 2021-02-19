@@ -73,19 +73,19 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     //addAndMakeVisible(modulatorInputSource);
     
     splash->deleteAfterDelay(juce::RelativeTime(4), true);
-};
+}
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
     setLookAndFeel(nullptr);
     Timer::stopTimer();
-};
+}
 
 
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (lookAndFeel.findColour(bav::ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
     
-};
+}
 
 
 void ImogenAudioProcessorEditor::resized()
@@ -105,7 +105,7 @@ void ImogenAudioProcessorEditor::resized()
     //modulatorInputSource.setBounds(x, y, w, h);
     
     //sidechainWarning.setBounds(x, y, w, h);
-};
+}
 
 
 
@@ -135,7 +135,7 @@ void ImogenAudioProcessorEditor::timerCallback()
         }
     }
 #endif
-};
+}
 
 
 void ImogenAudioProcessorEditor::changeModulatorInputSource()
@@ -154,7 +154,7 @@ void ImogenAudioProcessorEditor::changeModulatorInputSource()
 //        default:
 //            return;
 //    }
-};
+}
 
 
 void ImogenAudioProcessorEditor::skinSelectorChanged()
@@ -183,7 +183,7 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
         prevSkin = currentSkin;
         this->repaint();
     }
-};
+}
 
 
 void ImogenAudioProcessorEditor::helpButtonClicked()
@@ -195,19 +195,19 @@ void ImogenAudioProcessorEditor::helpButtonClicked()
     }
     else
         helpScreen.setVisible(false);
-};
+}
 
 
 void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices)
 {
     midiPanel.updateNumVoicesCombobox(newNumVoices);
-};
+}
 
 
 void ImogenAudioProcessorEditor::newPresetSelected()
 {
     audioProcessor.loadPreset(selectPreset.getItemText(selectPreset.getSelectedId()));
-};
+}
 
 
 void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
@@ -219,4 +219,4 @@ void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
         box.addItem(entry.getFile().getFileName(), id);
         ++id;
     }
-};
+}

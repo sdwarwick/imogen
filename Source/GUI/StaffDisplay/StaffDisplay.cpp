@@ -39,12 +39,12 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     
     staffImage.setImage(grandStaff);
     addAndMakeVisible(staffImage);
-};
+}
 
 StaffDisplay::~StaffDisplay()
 {
     setLookAndFeel (nullptr);
-};
+}
 
 void StaffDisplay::paint (juce::Graphics& g)
 {
@@ -55,7 +55,7 @@ void StaffDisplay::paint (juce::Graphics& g)
     audioProcessor.returnActivePitches (currentlyActive);
     
     drawPitches (currentlyActive, g);
-};
+}
 
 void StaffDisplay::resized()
 {
@@ -66,7 +66,7 @@ void StaffDisplay::resized()
     
     auto ctr{ noteheadPath.getBounds().getCentre() };
     noteheadPath.applyTransform(AffineTransform::translation(-ctr.getX(), -ctr.getY()));
-};
+}
 
 
 void StaffDisplay::drawPitches(const Array<int>& activePitches, Graphics& g)
@@ -111,7 +111,7 @@ void StaffDisplay::drawPitches(const Array<int>& activePitches, Graphics& g)
             }
         }
     }
-};
+}
 
 
 void StaffDisplay::drawNotehead(const int x, const int y, Graphics& g)
@@ -121,7 +121,7 @@ void StaffDisplay::drawNotehead(const int x, const int y, Graphics& g)
     g.setColour(juce::Colours::black);
     
     g.fillPath(noteheadPath, AffineTransform::translation(x, y));
-};
+}
 
 
 void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
@@ -141,6 +141,6 @@ void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
         
     }
     
-};
+}
     
 }  // namespace

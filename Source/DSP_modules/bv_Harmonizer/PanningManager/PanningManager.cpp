@@ -14,7 +14,7 @@ namespace bav
     
 
 PanningManager::PanningManager(): lastRecievedStereoWidth(64), currentNumVoices(0)
-{ };
+{ }
 
 
 void PanningManager::releaseResources()
@@ -22,7 +22,7 @@ void PanningManager::releaseResources()
     panValsInAssigningOrder.clear();
     arrayIndexesMapped.clear();
     unsentPanVals.clear();
-};
+}
 
 
 void PanningManager::prepare (const int numVoices)
@@ -35,8 +35,8 @@ void PanningManager::prepare (const int numVoices)
     unsentPanVals.ensureStorageAllocated(numVoices);
     
     setNumberOfVoices (numVoices);
-};
-
+}
+    
 
 void PanningManager::setNumberOfVoices (const int newNumVoices)
 {
@@ -47,7 +47,7 @@ void PanningManager::setNumberOfVoices (const int newNumVoices)
     
     mapArrayIndexes();
     updateStereoWidth(lastRecievedStereoWidth);
-};
+}
     
     
 int PanningManager::getNextPanVal()
@@ -60,7 +60,7 @@ int PanningManager::getNextPanVal()
     jassert (! unsentPanVals.isEmpty());
     
     return unsentPanVals.removeAndReturn(0);
-};
+}
 
 
 void PanningManager::updateStereoWidth (const int newWidth)
@@ -122,7 +122,7 @@ void PanningManager::updateStereoWidth (const int newWidth)
     
     if (unsentPanVals.isEmpty())
         reset();
-};
+}
 
 
 void PanningManager::panValTurnedOff (int panVal)
@@ -164,7 +164,7 @@ void PanningManager::panValTurnedOff (int panVal)
     
     if (! addedIt)
         unsentPanVals.add(panVal);
-};
+}
 
 
 int PanningManager::getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom)
@@ -204,7 +204,7 @@ int PanningManager::getClosestNewPanValFromNew (int oldPan, Array<int>& readingF
         minIndex = 0;
     
     return readingFrom.removeAndReturn (minIndex);
-};
+}
 
 
 int PanningManager::getClosestNewPanValFromOld (int oldPan)
@@ -249,7 +249,7 @@ int PanningManager::getClosestNewPanValFromOld (int oldPan)
         minIndex = 0;
     
     return unsentPanVals.removeAndReturn (minIndex);
-};
+}
 
 
 void PanningManager::reset()
@@ -258,7 +258,7 @@ void PanningManager::reset()
     
     for (int pan : panValsInAssigningOrder)
         unsentPanVals.add (pan);
-};
+}
 
 
 void PanningManager::mapArrayIndexes()
@@ -308,7 +308,7 @@ void PanningManager::mapArrayIndexes()
         }
         ++i;
     }
-};
+}
 
 
 } // namespace

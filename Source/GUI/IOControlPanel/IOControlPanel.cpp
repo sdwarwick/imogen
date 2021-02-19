@@ -88,12 +88,12 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     }
     
     addAndMakeVisible(limiterPanel);
-};
+}
 
 IOControlPanel::~IOControlPanel()
 {
     setLookAndFeel(nullptr);
-};
+}
 
 void IOControlPanel::paint (juce::Graphics& g)
 {
@@ -106,7 +106,7 @@ void IOControlPanel::paint (juce::Graphics& g)
     
     juce::Rectangle<int> outputControlPanel (5, 135, 290, 125);
     g.fillRect(outputControlPanel);
-};
+}
 
 void IOControlPanel::resized()
 {
@@ -147,7 +147,7 @@ void IOControlPanel::resized()
     }
     
     limiterPanel.setBounds(5, 265, 290, 145);
-};
+}
 
 
 }  // namespace

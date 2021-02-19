@@ -24,14 +24,14 @@ PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int ma
     setHzRange (minHz, maxHz, true);
     
     lastEstimatedPeriod = minPeriod;
-};
+}
 
 
 template<typename SampleType>
 PitchDetector<SampleType>::~PitchDetector()
 {
     
-};
+}
 
 
 template<typename SampleType>
@@ -54,7 +54,7 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
     
     if (asdfBuffer.getNumSamples() != numOfLagValues)
         asdfBuffer.setSize (1, numOfLagValues, true, true, true);
-};
+}
 
 
 template<typename SampleType>
@@ -75,7 +75,7 @@ void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const
     
     if (recalcHzRange)
         setHzRange (minHz, maxHz, true);
-};
+}
 
 
 template<typename SampleType>
@@ -188,7 +188,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         return foundThePeriod (asdfData, minIndex, asdfDataSize);
     
     return chooseIdealPeriodCandidate (asdfData, asdfDataSize, minIndex);
-};
+}
 
 
 
@@ -210,7 +210,7 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
     lastFrameWasPitched = true;
     
     return static_cast<float> (samplerate / realPeriod); // return pitch in hz
-};
+}
 
 
 template<typename SampleType>
@@ -321,7 +321,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
     }
     
     return foundThePeriod (asdfData, periodCandidates.getUnchecked(indexOfPeriod), asdfDataSize);
-};
+}
 
 
 template<typename SampleType>
@@ -377,7 +377,7 @@ void PitchDetector<SampleType>::getNextBestPeriodCandidate (Array<int>& candidat
     }
     
     candidates.add (minIndex);
-};
+}
 
 
 template<typename SampleType>
@@ -402,7 +402,7 @@ int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inp
     }
     
     return 0;
-};
+}
 
 
 
@@ -433,7 +433,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     }
     
     return minIndex;
-};
+}
 
 
 template<typename SampleType>
@@ -451,7 +451,7 @@ SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* d
     const auto s2 = data[pos + 1];
     
     return pos + SampleType(0.5) * (s2 - s0) / (SampleType(2.0) * posData - s2 - s0);
-};
+}
 
 
 template class PitchDetector<float>;

@@ -24,7 +24,7 @@ void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
             && (includePedalPitchAndDescant || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
             && (overrideSostenutoPedal || ! voice->sustainingFromSostenutoPedal))
                 { stopVoice (voice, velocity, allowTailOff); }
-};
+}
     
     
 /***********************************************************************************************************************************************
@@ -41,7 +41,7 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
                 { return true; }
     
     return false;
-};
+}
 
 
 template<typename SampleType>
@@ -59,7 +59,7 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray,
     
     if (! outputArray.isEmpty())
         outputArray.sort();
-};
+}
 
     
 /***********************************************************************************************************************************************
@@ -93,7 +93,7 @@ void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
     midiMessages.swapWith (aggregateMidiBuffer);
     
     lastMidiTimeStamp = -1;
-};
+}
     
     
 template<typename SampleType>
@@ -101,7 +101,7 @@ void Harmonizer<SampleType>::processMidiEvent (const MidiMessage& m)
 {
     handleMidiEvent (m, static_cast<int> (m.getTimeStamp()));
     pitchCollectionChanged();
-};
+}
 
 
 template<typename SampleType>
@@ -126,7 +126,7 @@ void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int sa
         handleChannelPressure (m.getChannelPressureValue());
     else if (m.isController())
         handleController (m.getControllerNumber(), m.getControllerValue());
-};
+}
 
     
 // this function should be called once after each time the harmonizer's overall pitch collection has changed - so, after a midi buffer of keyboard inout events has been processed, or after a chord has been triggered, etc.
@@ -141,7 +141,7 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
     
     if (intervalLatchIsOn)
         updateIntervalsLatchedTo();
-};
+}
     
     
 /***********************************************************************************************************************************************
@@ -178,7 +178,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
     }
     
     startVoice (newVoice, midiPitch, velocity, isKeyboard);
-};
+}
 
 
 template<typename SampleType>
@@ -241,7 +241,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     const bool keydown = isKeyboard ? true : voice->isKeyDown();
     
     voice->startNote (midiPitch, velocity, timestamp, keydown, isPedal, isDescant);
-};
+}
 
 
 template<typename SampleType>
@@ -301,7 +301,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
             }
         }
     }
-};
+}
 
 
 template<typename SampleType>
@@ -325,7 +325,7 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
         descant.lastPitch = -1;
     
     voice->stopNote (velocity, allowTailOff);
-};
+}
 
 
 template<typename SampleType>
@@ -336,7 +336,7 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff, const float v
             stopVoice (voice, velocity, allowTailOff);
     
     panner.reset();
-};
+}
 
     
 /***********************************************************************************************************************************************
@@ -378,7 +378,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     }
     
     pitchCollectionChanged();
-};
+}
 
 
 // interval latch
@@ -397,7 +397,7 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
         turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
         pitchCollectionChanged();
     }
-};
+}
 
 
 // used for interval latch -- saves the distance in semitones of each currently playing note from the current input pitch
@@ -418,7 +418,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
     
     for (int note : currentNotes)
         intervalsLatchedTo.add (note - currentMidiPitch);
-};
+}
 
 
 // plays a chord based on a given set of desired interval offsets from the current input pitch.
@@ -446,7 +446,7 @@ void Harmonizer<SampleType>::playIntervalSet (const Array<int>& desiredIntervals
     
     if (! isIntervalLatch)
         pitchCollectionChanged();
-};
+}
 
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
@@ -496,7 +496,7 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
         
         turnOnList (toTurnOn, velocity, true);
     }
-};
+}
 
 
 template<typename SampleType>
@@ -510,7 +510,7 @@ void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float
     
     if (! partOfChord)
         pitchCollectionChanged();
-};
+}
 
 
 template<typename SampleType>
@@ -524,7 +524,7 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
     
     if (! partOfChord)
         pitchCollectionChanged();
-};
+}
 
 
 // automated midi "pedal pitch": creates a polyphonic doubling of the lowest note currently being played by a keyboard key at a specified interval below that keyboard key, IF that keyboard key is below a certain pitch threshold.
@@ -592,7 +592,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
         pedal.lastPitch = newPedalPitch;
         noteOn (pedal.lastPitch, velocity, false);
     }
-};
+}
 
 
 // automated midi "descant": creates a polyphonic doubling of the highest note currently being played by a keyboard key at a specified interval above that keyboard key, IF that keyboard key is above a certain pitch threshold.
@@ -660,7 +660,7 @@ void Harmonizer<SampleType>::applyDescant()
         descant.lastPitch = newDescantPitch;
         noteOn (descant.lastPitch, velocity, false);
     }
-};
+}
 
     
 /***********************************************************************************************************************************************
@@ -684,7 +684,7 @@ void Harmonizer<SampleType>::handlePitchWheel (int wheelValue)
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
-};
+}
 
 
 template<typename SampleType>
@@ -708,7 +708,7 @@ void Harmonizer<SampleType>::handleAftertouch (int midiNoteNumber, int aftertouc
             if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiNoteNumber)
                 voice->aftertouchChanged (aftertouchValue);
     }
-};
+}
 
 
 template<typename SampleType>
@@ -731,7 +731,7 @@ void Harmonizer<SampleType>::handleChannelPressure (int channelPressureValue)
                                               ++lastMidiTimeStamp);
         }
     }
-};
+}
 
     
 template<typename SampleType>
@@ -756,7 +756,7 @@ void Harmonizer<SampleType>::updateChannelPressure (int newIncomingAftertouch)
         return;
     
     handleChannelPressure (newIncomingAftertouch);
-};
+}
     
 
 template<typename SampleType>
@@ -777,7 +777,7 @@ void Harmonizer<SampleType>::handleController (const int controllerNumber, int c
         case 0x44:  handleLegato          (controllerValue >= 64);  return;
         default:    return;
     }
-};
+}
 
 
 template<typename SampleType>
@@ -796,7 +796,7 @@ void Harmonizer<SampleType>::handleSustainPedal (const int value)
     if (! isDown)
         if (! (latchIsOn || intervalLatchIsOn))
             turnOffAllKeyupNotes (false, false, 0.0f, false);
-};
+}
 
 
 template<typename SampleType>
@@ -822,7 +822,7 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const int value)
     {
         turnOffAllKeyupNotes (false, false, 0.0f, true);
     }
-};
+}
 
 
 template<typename SampleType>
@@ -837,44 +837,44 @@ void Harmonizer<SampleType>::handleSoftPedal (const int value)
     
     aggregateMidiBuffer.addEvent (MidiMessage::controllerEvent (lastMidiChannel, 0x43, value),
                                   ++lastMidiTimeStamp);
-};
+}
 
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleModWheel (const int wheelValue)
 {
     ignoreUnused(wheelValue);
-};
+}
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleBreathController (const int controlValue)
 {
     ignoreUnused(controlValue);
-};
+}
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleFootController (const int controlValue)
 {
     ignoreUnused(controlValue);
-};
+}
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handlePortamentoTime (const int controlValue)
 {
     ignoreUnused(controlValue);
-};
+}
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleBalance (const int controlValue)
 {
     ignoreUnused(controlValue);
-};
+}
 
 template<typename SampleType>
 void Harmonizer<SampleType>::handleLegato (const bool isOn)
 {
     ignoreUnused(isOn);
-};
+}
 
 
 } // namespace

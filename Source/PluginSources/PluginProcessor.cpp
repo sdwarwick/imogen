@@ -54,10 +54,10 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-};
+}
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
-{ };
+{ }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +81,7 @@ void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngi
     latencySamples = activeEngine.reportLatency();
     
     setLatencySamples (latencySamples);
-};
+}
 
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
@@ -90,7 +90,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, samplesPerBlock, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, samplesPerBlock, floatEngine,  doubleEngine);
-};
+}
 
 
 template <typename SampleType1, typename SampleType2>
@@ -115,7 +115,7 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
         latencySamples = newLatency;
         setLatencySamples (newLatency);
     }
-};
+}
 
 
 void ImogenAudioProcessor::releaseResources()
@@ -125,7 +125,7 @@ void ImogenAudioProcessor::releaseResources()
     
     if (! floatEngine.hasBeenReleased())
         floatEngine.releaseResources();
-};
+}
 
 
 void ImogenAudioProcessor::reset()
@@ -134,7 +134,7 @@ void ImogenAudioProcessor::reset()
         doubleEngine.reset();
     else
         floatEngine.reset();
-};
+}
 
 
 void ImogenAudioProcessor::killAllMidi()
@@ -143,7 +143,7 @@ void ImogenAudioProcessor::killAllMidi()
         doubleEngine.killAllMidi();
     else
         floatEngine.killAllMidi();
-};
+}
 
 
 /*
@@ -157,7 +157,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce
         return;
     
     processBlockWrapped (buffer, midiMessages, floatEngine);
-};
+}
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
@@ -166,7 +166,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
         return;
     
     processBlockWrapped (buffer, midiMessages, doubleEngine);
-};
+}
 
 // LAYER 2:
 template <typename SampleType>
@@ -202,7 +202,7 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
     wasBypassedLastCallback = false;
-};
+}
 
 
 
@@ -217,7 +217,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
         return;
     
     processBlockBypassedWrapped (buffer, midiMessages, floatEngine);
-};
+}
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
@@ -226,7 +226,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
         return;
     
     processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
-};
+}
 
 // LAYER 2:
 template <typename SampleType>
@@ -265,7 +265,7 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
         engine.processBypassed (inBus, outBus); // N.B. midi passes through unaffected when plugin is bypassed
     
     wasBypassedLastCallback = true;
-};
+}
 
 
 /*===========================================================================================================================
@@ -278,7 +278,7 @@ bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
         return false;
     
     return (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
-};
+}
 #endif
 
 
@@ -313,7 +313,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     
     // update num voices
     
-};
+}
 
 
 void ImogenAudioProcessor::updateGains()
@@ -322,7 +322,7 @@ void ImogenAudioProcessor::updateGains()
         updateGainsPrivate (doubleEngine);
     else
         updateGainsPrivate (floatEngine);
-};
+}
 
 
 template <typename SampleType>
@@ -333,7 +333,7 @@ void ImogenAudioProcessor::updateGainsPrivate (bav::ImogenEngine<SampleType>& ac
     activeEngine.updateDryGain      (juce::Decibels::decibelsToGain (dryGain->get()));
     activeEngine.updateWetGain      (juce::Decibels::decibelsToGain (wetGain->get()));
     activeEngine.updateSoftPedalGain(juce::Decibels::decibelsToGain (softPedalGain->get()));
-};
+}
 
 
 void ImogenAudioProcessor::updateDryVoxPan()
@@ -342,7 +342,7 @@ void ImogenAudioProcessor::updateDryVoxPan()
         doubleEngine.updateDryVoxPan(dryPan->get());
     else
         floatEngine.updateDryVoxPan(dryPan->get());
-};
+}
 
 void ImogenAudioProcessor::updateDryWet()
 {
@@ -350,7 +350,7 @@ void ImogenAudioProcessor::updateDryWet()
         doubleEngine.updateDryWet(dryWet->get());
     else
         floatEngine.updateDryWet(dryWet->get());
-};
+}
 
 void ImogenAudioProcessor::updateAdsr()
 {
@@ -358,7 +358,7 @@ void ImogenAudioProcessor::updateAdsr()
         doubleEngine.updateAdsr(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
     else
         floatEngine .updateAdsr(adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
-};
+}
 
 void ImogenAudioProcessor::updateQuickKillMs()
 {
@@ -366,7 +366,7 @@ void ImogenAudioProcessor::updateQuickKillMs()
         doubleEngine.updateQuickKill(quickKillMs->get());
     else
         floatEngine .updateQuickKill(quickKillMs->get());
-};
+}
 
 void ImogenAudioProcessor::updateQuickAttackMs()
 {
@@ -374,7 +374,7 @@ void ImogenAudioProcessor::updateQuickAttackMs()
         doubleEngine.updateQuickAttack(quickAttackMs->get());
     else
         floatEngine .updateQuickAttack(quickAttackMs->get());
-};
+}
 
 void ImogenAudioProcessor::updateStereoWidth()
 {
@@ -382,7 +382,7 @@ void ImogenAudioProcessor::updateStereoWidth()
         doubleEngine.updateStereoWidth(stereoWidth->get(), lowestPanned->get());
     else
         floatEngine .updateStereoWidth(stereoWidth->get(), lowestPanned->get());
-};
+}
 
 void ImogenAudioProcessor::updateMidiVelocitySensitivity()
 {
@@ -390,7 +390,7 @@ void ImogenAudioProcessor::updateMidiVelocitySensitivity()
         doubleEngine.updateMidiVelocitySensitivity(velocitySens->get());
     else
         floatEngine .updateMidiVelocitySensitivity(velocitySens->get());
-};
+}
 
 void ImogenAudioProcessor::updatePitchbendSettings()
 {
@@ -398,7 +398,7 @@ void ImogenAudioProcessor::updatePitchbendSettings()
         doubleEngine.updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
     else
         floatEngine .updatePitchbendSettings(pitchBendUp->get(), pitchBendDown->get());
-};
+}
 
 void ImogenAudioProcessor::updatePedalPitch()
 {
@@ -406,7 +406,7 @@ void ImogenAudioProcessor::updatePedalPitch()
         doubleEngine.updatePedalPitch(pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
     else
         floatEngine .updatePedalPitch(pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
-};
+}
 
 void ImogenAudioProcessor::updateDescant()
 {
@@ -414,7 +414,7 @@ void ImogenAudioProcessor::updateDescant()
         doubleEngine.updateDescant(descantIsOn->get(), descantThresh->get(), descantInterval->get());
     else
         floatEngine .updateDescant(descantIsOn->get(), descantThresh->get(), descantInterval->get());
-};
+}
 
 void ImogenAudioProcessor::updateConcertPitch()
 {
@@ -422,7 +422,7 @@ void ImogenAudioProcessor::updateConcertPitch()
         doubleEngine.updateConcertPitch(concertPitchHz->get());
     else
         floatEngine .updateConcertPitch(concertPitchHz->get());
-};
+}
 
 void ImogenAudioProcessor::updateNoteStealing()
 {
@@ -430,7 +430,7 @@ void ImogenAudioProcessor::updateNoteStealing()
         doubleEngine.updateNoteStealing(voiceStealing->get());
     else
         floatEngine .updateNoteStealing(voiceStealing->get());
-};
+}
 
 void ImogenAudioProcessor::updateMidiLatch()
 {
@@ -438,7 +438,7 @@ void ImogenAudioProcessor::updateMidiLatch()
         doubleEngine.updateMidiLatch(latchIsOn->get());
     else
         floatEngine .updateMidiLatch(latchIsOn->get());
-};
+}
 
 void ImogenAudioProcessor::updateIntervalLock()
 {
@@ -446,7 +446,7 @@ void ImogenAudioProcessor::updateIntervalLock()
         doubleEngine.updateIntervalLock(intervalLockIsOn->get());
     else
         floatEngine.updateIntervalLock(intervalLockIsOn->get());
-};
+}
 
 void ImogenAudioProcessor::updateLimiter()
 {
@@ -454,7 +454,7 @@ void ImogenAudioProcessor::updateLimiter()
         doubleEngine.updateLimiter(limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
     else
         floatEngine.updateLimiter(limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
-};
+}
 
 
 void ImogenAudioProcessor::updatePitchDetectionSettings()
@@ -463,7 +463,7 @@ void ImogenAudioProcessor::updatePitchDetectionSettings()
         updatePitchDetectionWrapped (doubleEngine);
     else
         updatePitchDetectionWrapped (floatEngine);
-};
+}
 
 
 template <typename SampleType>
@@ -479,7 +479,7 @@ void ImogenAudioProcessor::updatePitchDetectionWrapped (bav::ImogenEngine<Sample
         latencySamples = activeEngine.reportLatency();
         setLatencySamples (latencySamples);
     }
-};
+}
 
 
 
@@ -489,7 +489,7 @@ void ImogenAudioProcessor::returnActivePitches (juce::Array<int>& outputArray) c
         doubleEngine.returnActivePitches(outputArray);
     else
         floatEngine.returnActivePitches(outputArray);
-};
+}
 
 
 void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
@@ -498,7 +498,7 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
         doubleEngine.updateNumVoices(newNumVoices);
     else
         floatEngine.updateNumVoices(newNumVoices);
-};
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -516,7 +516,7 @@ void ImogenAudioProcessor::savePreset (juce::String presetName)
    // xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
     xml->writeTo(writingTo);
     updateHostDisplay();
-};
+}
 
 
 void ImogenAudioProcessor::loadPreset (juce::String presetName)
@@ -538,7 +538,7 @@ void ImogenAudioProcessor::loadPreset (juce::String presetName)
     }
     
     suspendProcessing (false);
-};
+}
 
 
 void ImogenAudioProcessor::deletePreset (juce::String presetName)
@@ -549,7 +549,7 @@ void ImogenAudioProcessor::deletePreset (juce::String presetName)
         if(! presetToDelete.moveToTrash())
             presetToDelete.deleteFile();
     updateHostDisplay();
-};
+}
 
 
 juce::File ImogenAudioProcessor::getPresetsFolder() const
@@ -579,7 +579,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
         rootFolder.createDirectory(); // creates the presets folder if it doesn't already exist
     
     return rootFolder;
-};
+}
 
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
@@ -587,7 +587,7 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     auto xml(tree.copyState().createXml());
  //   xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
     copyXmlToBinary (*xml, destData);
-};
+}
 
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
@@ -600,7 +600,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
         const int newNumOfVoices = xmlState->getIntAttribute("numberOfVoices", 4);
         updateNumVoices(newNumOfVoices); // TO DO : send notif to GUI to update numVoices comboBox
     }
-};
+}
 
 
 // standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
@@ -680,7 +680,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     // MAKE PARAM FOR INPUT MODE !!
     
     return { params.begin(), params.end() };
-};
+}
 
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
@@ -689,31 +689,31 @@ double ImogenAudioProcessor::getTailLengthSeconds() const
         return static_cast<double> (adsrRelease->get()); // ADSR release time in seconds
     
     return static_cast<double> (quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
-};
+}
 
 int ImogenAudioProcessor::getNumPrograms() {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs, so this should be at least 1, even if you're not really implementing programs.
-};
+}
 
 int ImogenAudioProcessor::getCurrentProgram() {
     return 0;
-};
+}
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
 {
     juce::ignoreUnused (index);
-};
+}
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
 {
     juce::ignoreUnused(index);
     return {};
-};
+}
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
     ignoreUnused (index, newName);
-};
+}
 
 
 juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
@@ -727,7 +727,7 @@ juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() 
     
     return BusesProperties().withInput ("Input",     juce::AudioChannelSet::stereo(), true)
                             .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
-};
+}
 
 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -747,7 +747,7 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
         return false;
     
     return true;
-};
+}
 
 
 bool ImogenAudioProcessor::canAddBus (bool isInput) const
@@ -762,17 +762,17 @@ bool ImogenAudioProcessor::canAddBus (bool isInput) const
     
     return false;
 #endif
-};
+}
 
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {
     return new ImogenAudioProcessorEditor(*this);
-};
+}
 
 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ImogenAudioProcessor();
-};
+}
