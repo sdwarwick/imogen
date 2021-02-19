@@ -9,16 +9,15 @@ env:
   BUILD_TYPE: Release
   BUILD_DIR: Builds
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  SKIP_TOKEN: SKIP-CI
 
 #
 
 jobs:
 
   build:
-    
+
     if: "!contains(github.event.head_commit.message, 'SKIP-CI')"
-    
+
     name: ${{ matrix.artifact }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -42,7 +41,7 @@ jobs:
         sudo apt-get update && sudo apt install libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
-        
+
     - name: Initialize CodeQL
       if: runner.os == 'Linux'
       uses: github/codeql-action/init@v1
@@ -64,7 +63,7 @@ jobs:
     - name: Build
       shell: bash
       run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
-      
+
     - name: CodeQL analysis
       if: runner.os == 'Linux'
       uses: github/codeql-action/analyze@v1
