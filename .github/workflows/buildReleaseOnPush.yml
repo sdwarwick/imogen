@@ -1,4 +1,4 @@
-name: CMake
+name: Test building on all platforms
 
 on: 
   push: 
@@ -13,7 +13,6 @@ env:
 
 jobs:
 
-#
 
   build:
   
@@ -66,5 +65,6 @@ jobs:
       with:
         path: ${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
         name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
-
+        
 #
+
