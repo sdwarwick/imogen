@@ -3,6 +3,10 @@ name: Test-other-architectures
 on: 
   push:
   workflow_dispatch:
+  
+env:
+  PROJECT_NAME: Imogen
+  BUILD_TYPE: Release
 
 jobs:
 
@@ -22,8 +26,15 @@ jobs:
             distro: fedora_latest
 
     steps:
+    
+      - uses: lukka/get-cmake@latest 
+      
       - uses: actions/checkout@v2.1.0
+        with:
+          submodules: true
+      
       - uses: uraimo/run-on-arch-action@v2.0.5
+      
         name: Build artifact
         id: build
         with:
@@ -36,6 +47,9 @@ jobs:
           # Create an artifacts directory
           setup: |
             mkdir -p "${PWD}/artifacts"
+            sudo apt-get update && sudo apt install libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
 
           # Mount the artifacts directory as /artifacts in the container
           dockerRunArgs: |
@@ -70,29 +84,11 @@ jobs:
             esac
             
           run: |
-            sudo apt-get update && sudo apt install libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev
-            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
-            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
-            
-      - uses: lukka/get-cmake@latest 
+            cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
+            cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
+            cmake -E tar cfv ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip --format=zip ${{ env.PROJECT_NAME }}_artefacts
         
-      - uses: actions/checkout@v2
-        with:
-          arch: ${{ matrix.arch }}
-          distro: ${{ matrix.distro }}
-          shell: bin/sh
-          submodules: true 
-              
-      - run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
-  
-      - run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
-          
-      - run: cmake -E tar cfv ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip --format=zip ${{ env.PROJECT_NAME }}_artefacts
-          
       - uses: actions/upload-artifact@v2
         with:
-          arch: ${{ matrix.arch }}
-          distro: ${{ matrix.distro }}
-          shell: bin/sh
           path: ${PWD}/artifacts/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
           name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
