@@ -1,4 +1,4 @@
-name: CMake
+name: Test building on all platforms
 
 on: 
   push: 
