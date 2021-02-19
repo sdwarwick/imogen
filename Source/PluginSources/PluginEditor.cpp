@@ -17,6 +17,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     staffDisplay(p, lookAndFeel)
 {
     setSize (940, 435);
+    this->setBufferedToImage (true);
     
     auto splash = new juce::SplashScreen ("Welcome to Imogen!",
                                           bav::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize)

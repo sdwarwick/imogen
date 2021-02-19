@@ -134,6 +134,8 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
+    FloatVectorOperations::fill (asdfData, SampleType(0.0), asdfBuffer.getNumSamples());
+    
     // COMPUTE ASDF
     
     for (int k = minPeriod; // always write the same datasize to asdfBuffer, even if k values are being limited this frame
@@ -147,8 +149,6 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
             asdfData[index] = SampleType(1000.0); // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
             continue;
         }
-        
-        asdfData[index] = SampleType(0.0);
         
         const int sampleOffset = middleIndex - roundToInt (floor (k / 2));
         
@@ -418,6 +418,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     
     int minIndex = 0;
     
+#ifndef JUCE_USE_VDSP_FRAMEWORK
     for (int n = 1; n < dataSize; ++n)
     {
         const SampleType current = data[n];
@@ -431,6 +432,13 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
             minIndex = n;
         }
     }
+#else
+#if !DOUBLE_SAMPLES
+    vDSP_minvi (data, 1, &min, (vDSP_Length *)&minIndex, dataSize);
+#else
+    vDSP_minviD(data, 1, &min, (vDSP_Length *)&minIndex, dataSize);
+#endif
+#endif
     
     return minIndex;
 }
