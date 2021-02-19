@@ -1,7 +1,7 @@
 name: Test building on all platforms
 
-on: 
-  push: 
+on:
+  push:
   workflow_dispatch:
 
 env:
@@ -13,13 +13,12 @@ env:
 
 jobs:
 
-
   build:
   
     name: ${{ matrix.artifact }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false 
+      fail-fast: false
       matrix:
         os: [windows-latest, windows-2016, ubuntu-latest, ubuntu-20.04, macos-latest]
         include:
@@ -31,7 +30,7 @@ jobs:
           artifact: Linux
         - os: ubuntu-20.04
           artifact: Linux
-        - os: macos-latest  
+        - os: macos-latest
           artifact: MacOS
     timeout-minutes: 30
 
@@ -45,16 +44,16 @@ jobs:
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
         
     - name: Get latest CMake
-      uses: lukka/get-cmake@latest      
+      uses: lukka/get-cmake@latest  
 
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        submodules: true 
+        submodules: true
 
     - name: Configure
       shell: bash
-      run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
+      run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE
   
     - name: Build
       shell: bash
