@@ -8,13 +8,13 @@ env:
   PROJECT_NAME: Imogen
   BUILD_TYPE: Release
   BUILD_DIR: Builds
-  
+
 #
 
 jobs:
 
   build:
-  
+
     name: ${{ matrix.artifact }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -35,16 +35,16 @@ jobs:
     timeout-minutes: 30
 
     steps:
-    
+
     - name: Install JUCE's Linux Deps and select g++ 9
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update && sudo apt install libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
-        
+
     - name: Get latest CMake
-      uses: lukka/get-cmake@latest  
+      uses: lukka/get-cmake@latest
 
     - name: Checkout code
       uses: actions/checkout@v2
@@ -54,7 +54,7 @@ jobs:
     - name: Configure
       shell: bash
       run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE
-  
+
     - name: Build
       shell: bash
       run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
@@ -68,6 +68,5 @@ jobs:
       with:
         path: ${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
         name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
-        
 #
 
