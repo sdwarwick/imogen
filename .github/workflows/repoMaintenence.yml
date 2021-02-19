@@ -1,14 +1,27 @@
-name: Mark stale issues and pull requests
+name: Basic repo maintenence & utils
 
 on:
+  push:
   schedule:
   - cron: "30 1 * * *"
-
   workflow_dispatch:
 
 jobs:
-  stale:
 
+  link-checker:
+    name: Checking for dead links
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Markdown links check
+        uses: ruzickap/action-my-markdown-link-checker@v1
+
+#
+
+  stale:
+    name: Mark stale pull requests
     runs-on: ubuntu-latest
 
     steps:
