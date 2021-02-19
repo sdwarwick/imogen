@@ -25,7 +25,7 @@ class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
 {
     
 public:
-    ImogenAudioProcessorEditor (ImogenAudioProcessor&);
+    ImogenAudioProcessorEditor (ImogenAudioProcessor& p);
     ~ImogenAudioProcessorEditor() override;
     
     void paint (juce::Graphics&) override;
