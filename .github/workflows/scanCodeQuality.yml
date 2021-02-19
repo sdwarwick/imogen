@@ -1,6 +1,6 @@
 name: Scan-code-for-quality
 
-on: 
+on:
   push:
   workflow_dispatch:
 
