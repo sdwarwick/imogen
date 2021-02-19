@@ -7,6 +7,7 @@ on:
 env:
   PROJECT_NAME: Imogen
   BUILD_TYPE: Release
+  BUILD_DIR: Builds
 
 jobs:
 
@@ -16,6 +17,7 @@ jobs:
     name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
     
     strategy:   # Run steps on a matrix of 3 arch/distro combinations
+      fail-fast: false
       matrix:
         include:
           - arch: aarch64
@@ -35,7 +37,7 @@ jobs:
       
       - uses: uraimo/run-on-arch-action@v2.0.5
       
-        name: Build artifact
+        name: Configure & build
         id: build
         with:
           arch: ${{ matrix.arch }}
@@ -59,7 +61,7 @@ jobs:
           env: | 
             artifact_name: git-${{ matrix.distro }}_${{ matrix.arch }}
 
-          shell: /bin/sh
+          shell: bash
 
           # Install some dependencies in the container. This speeds up builds if
           # you are also using githubToken. Any dependencies installed here will
