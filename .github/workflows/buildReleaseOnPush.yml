@@ -13,6 +13,8 @@ env:
 
 jobs:
 
+# builds the repo code on all available platforms
+
   build:
 
     name: ${{ matrix.artifact }}
@@ -69,4 +71,16 @@ jobs:
         path: ${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
         name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}
 #
+
+#  tests for dead links in all Markdown files in the repo
+
+  link-checker:
+    name: Checking for dead links
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Markdown links check
+        uses: ruzickap/action-my-markdown-link-checker@v1
 
