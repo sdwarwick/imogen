@@ -43,8 +43,5 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: srt32/git-actions@v0.0.3
-        with:
-          args: git submodule foreach 'git fetch && git checkout origin/HEAD && git submodule update —init —recursive'
-
+      - uses: snickerbockers/submodules-init@v4
 #
