@@ -100,17 +100,23 @@ jobs:
 
     steps:
 
-      - name: Install pluginval
+      - name: Install pluginval (linux)
+        if: runner.os == 'Linux'
         uses: srt32/git-actions@v0.0.3
         with:
           args: git clone --recurse-submodules https://github.com/Tracktion/pluginval.git
+      
+      - name: Install pluginval (others)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: git clone --recurse-submodules https://github.com/Tracktion/pluginval.git
 
       - name: Build pluginval (mac)
         if: runner.os == 'MacOS'
         shell: bash
         run: |
           cd pluginval/install
-          ./mac_build
+          sudo ./mac_build
 
       - name: Build pluginval (windows)
         if: runner.os == 'Windows'
@@ -124,7 +130,7 @@ jobs:
         shell: bash
         run: |
           cd pluginval/install
-          ./linux_build
+          sudo ./linux_build
 
       - name: Download Imogen artifact
         uses: actions/download-artifact@v2
