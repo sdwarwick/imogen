@@ -105,7 +105,7 @@ jobs:
         uses: srt32/git-actions@v0.0.3
         with:
           args: git clone --recurse-submodules https://github.com/Tracktion/pluginval.git
-      
+
       - name: Install pluginval (others)
         if: runner.os != 'Linux'
         shell: bash
