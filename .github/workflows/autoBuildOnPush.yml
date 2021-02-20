@@ -43,7 +43,7 @@ jobs:
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
 
     - name: Initialize CodeQL
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && "!contains(github.event.head_commit.message, 'SCAN')"
       uses: github/codeql-action/init@v1
       with:
         languages: cpp
@@ -65,7 +65,7 @@ jobs:
       run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
 
     - name: CodeQL analysis
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && "!contains(github.event.head_commit.message, 'SCAN')"
       uses: github/codeql-action/analyze@v1
 
     - name: Zip
@@ -88,7 +88,7 @@ jobs:
 
       - name: install Google Drive scripts
         shell: bash
-        run: curl --compressed -Ls https://github.com/labbots/google-drive-upload/raw/master/install.sh | sh -s | . /home/runner/.profile
+        run: curl --compressed -Ls https://github.com/labbots/google-drive-upload/raw/master/install.sh | sh -s
 
       - name: Download all artifacts
         uses: actions/download-artifact@v2
