@@ -11,6 +11,7 @@ jobs:
 #
 
   link-checker:
+
     name: Checking for dead links
     runs-on: ubuntu-latest
 
@@ -23,6 +24,7 @@ jobs:
 #
 
   stale:
+
     name: Mark stale pull requests
     runs-on: ubuntu-latest
 
