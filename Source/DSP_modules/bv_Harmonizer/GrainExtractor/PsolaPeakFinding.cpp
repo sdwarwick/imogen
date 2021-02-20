@@ -267,19 +267,9 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     int indexOfLowestDelta = 0;
     
 #ifndef JUCE_USE_VDSP_FRAMEWORK
-    for (int n = 0; n < finalHandfulSize; ++n)
-    {
-        const float current = finalHandfulDeltas.getUnchecked(n);
-        
-        if (current == 0.0f)
-            return n;
-        
-        if (current < lowestDelta)
-        {
-            lowestDelta = current;
-            indexOfLowestDelta = n;
-        }
-    }
+    float* lowestElement = std::min_element (finalHandfulDeltas.begin(), finalHandfulDeltas.end());
+    indexOfLowestDelta = static_cast<int> (std::distance (finalHandfulDeltas.begin(), lowestElement));
+    lowestDelta = *lowestElement;
 #else
     vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), 1, &lowestDelta, (vDSP_Length *)&indexOfLowestDelta, finalHandfulSize);
 #endif
