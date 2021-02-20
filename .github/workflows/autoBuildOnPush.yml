@@ -79,7 +79,7 @@ jobs:
         name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
 #
 
-  upload to drive:
+  upload-to-drive:
 
     needs: build
     runs-on: ubuntu-latest
