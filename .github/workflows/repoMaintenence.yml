@@ -38,8 +38,13 @@ jobs:
 #
 
   update-submodules:
+  
     name: Updating git submodules
     runs-on: ubuntu-latest
     
     steps:
-      - uses: snickerbockers/submodules-init@v4
+      - uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule foreach 'git fetch && git checkout origin/HEAD && git submodule update —init —recursive'
+
+#
