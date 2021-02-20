@@ -100,14 +100,14 @@ jobs:
 
     steps:
 
-      - name: Install pluginval (linux)
+      - name: Install JUCE's Linux Deps and select g++ 9
         if: runner.os == 'Linux'
-        uses: srt32/git-actions@v0.0.3
-        with:
-          args: git clone --recurse-submodules https://github.com/Tracktion/pluginval.git
+        run: |
+          sudo apt-get update && sudo apt install libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
 
-      - name: Install pluginval (others)
-        if: runner.os != 'Linux'
+      - name: Install pluginval 
         shell: bash
         run: git clone --recurse-submodules https://github.com/Tracktion/pluginval.git
 
@@ -122,7 +122,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          cd pluginval\install
+          cd pluginval/install
           ./windows_build.bat
 
       - name: Build pluginval (linux)
@@ -143,6 +143,6 @@ jobs:
 
       - name: Run pluginval
         shell: bash
-        run: ./pluginval --strictness-level 5 --validate /imogen/Imogen_artefacts/Release
+        run: pluginval --strictness-level 5 --validate /imogen/Imogen_artefacts/Release
 
 #
