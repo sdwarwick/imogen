@@ -99,26 +99,26 @@ jobs:
     timeout-minutes: 30
 
     steps:
-    
+
       - name: Install pluginval
         uses: srt32/git-actions@v0.0.3
         with:
           args: git clone --recurse-submodules https://github.com/Tracktion/pluginval.git
-        
+
       - name: Build pluginval (mac)
         if: runner.os == 'MacOS'
         shell: bash
         run: |
           cd pluginval/install
           ./mac_build
-          
+
       - name: Build pluginval (windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           cd pluginval\install
           ./windows_build.bat
-          
+
       - name: Build pluginval (linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -134,8 +134,9 @@ jobs:
       - name: Unzip artifact
         shell: bash
         run: unzip Imogen-${{ matrix.artifact }}.zip
-        
+
       - name: Run pluginval
         shell: bash
         run: ./pluginval --strictness-level 5 --validate /imogen/Imogen_artefacts/Release
+
 #
