@@ -103,8 +103,8 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     if (lastFrameWasPitched)
     {
         // pitch shouldn't halve or double between consecutive voiced frames
-        minLag = std::max (minLag, roundToInt (lastEstimatedPeriod / 2.0));
-        maxLag = std::min (maxLag, roundToInt (lastEstimatedPeriod * 2.0));
+        minLag = std::max (minLag, roundToInt (lastEstimatedPeriod * pnt5));
+        maxLag = std::min (maxLag, roundToInt (lastEstimatedPeriod * two));
     }
     
     minLag = std::max (minLag, minPeriod);
@@ -127,14 +127,16 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         }
     }
     
-    const int middleIndex = roundToInt (floor (numSamples / 2));
-    const int halfNumSamples = roundToInt (floor ((numSamples - 1) / 2));
+    const int middleIndex = roundToInt (floor (numSamples * pnt5));
+    const int halfNumSamples = roundToInt (floor ((numSamples - 1) * pnt5));
     
-    const SampleType invNumSamples = SampleType(1.0) / numSamples; // avoid more divisions within our loop below...
+    const SampleType invNumSamples = one / numSamples; // avoid more divisions within our loop below...
     
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
-    FloatVectorOperations::fill (asdfData, SampleType(0.0), asdfBuffer.getNumSamples());
+    FloatVectorOperations::fill (asdfData, zero, asdfBuffer.getNumSamples());
+    
+    constexpr SampleType one_thousand = SampleType(1000.0);
     
     // COMPUTE ASDF
     
@@ -146,11 +148,11 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         if (k < minLag || k > maxLag) // range compression of k is done here
         {
-            asdfData[index] = SampleType(1000.0); // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
+            asdfData[index] = one_thousand; // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
             continue;
         }
         
-        const int sampleOffset = middleIndex - roundToInt (floor (k / 2));
+        const int sampleOffset = middleIndex - roundToInt (floor (k * pnt5));
         
         for (int s = sampleOffset - halfNumSamples;
                  s < sampleOffset + halfNumSamples;
@@ -299,7 +301,7 @@ float PitchDetector<SampleType>::chooseIdealPeriodCandidate (const SampleType* a
             weightedCandidateConfidence.add (asdfData[candidate]);
         else
         {
-            const SampleType weight = SampleType(1.0) + ((delta / deltaRange) * SampleType(0.5));
+            const SampleType weight = one + ((delta / deltaRange) * pnt5);
             weightedCandidateConfidence.add (asdfData[candidate] * weight);
         }
     }
@@ -363,7 +365,7 @@ void PitchDetector<SampleType>::getNextBestPeriodCandidate (Array<int>& candidat
         
         const SampleType current = asdfData[i];
         
-        if (current == 0.0)
+        if (current == zero)
         {
             candidates.add (i);
             return;
@@ -383,19 +385,19 @@ void PitchDetector<SampleType>::getNextBestPeriodCandidate (Array<int>& candidat
 template<typename SampleType>
 int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inputAudio, const int numInputSamples)
 {
-    if (inputAudio[0] == 0.0)
+    if (inputAudio[0] == zero)
         return 0;
     
-    const bool startedPositive = inputAudio[0] > 0.0;
+    const bool startedPositive = inputAudio[0] > zero;
     
     for (int s = 1; s < floor (numInputSamples / 2.0f); ++s)
     {
         const auto currentSample = inputAudio[s];
         
-        if (currentSample == 0.0)
+        if (currentSample == zero)
             return s;
         
-        const bool isNowPositive = currentSample > 0.0;
+        const bool isNowPositive = currentSample > zero;
         
         if (startedPositive != isNowPositive)
             return s;
@@ -413,7 +415,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     
     SampleType min = data[0];
     
-    if (min == 0.0)
+    if (min == zero)
         return 0;
     
     int minIndex = 0;
@@ -423,7 +425,7 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     {
         const SampleType current = data[n];
         
-        if (current == 0.0)
+        if (current == zero)
             return n;
         
         if (current < min)
@@ -452,13 +454,13 @@ SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* d
     
     const auto posData = data[pos];
     
-    if (posData == 0)
+    if (posData == zero)
         return static_cast<SampleType> (pos);
     
     const auto s0 = data[pos - 1];
     const auto s2 = data[pos + 1];
     
-    return pos + SampleType(0.5) * (s2 - s0) / (SampleType(2.0) * posData - s2 - s0);
+    return pos + pnt5 * (s2 - s0) / (two * posData - s2 - s0);
 }
 
 

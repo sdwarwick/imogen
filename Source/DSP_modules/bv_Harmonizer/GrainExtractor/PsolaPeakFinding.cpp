@@ -148,7 +148,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     {
         static inline SampleType weight (int index, int predicted, int numSamples)
         {
-            return SampleType(1.0) - ( ( (abs(index - predicted)) / numSamples ) * SampleType(0.5) );
+            return static_cast<SampleType>( 1.0 - ( ( (abs(index - predicted)) / numSamples ) * 0.5 ) );
         }
     };
     
@@ -185,13 +185,15 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         return;
     }
     
-    if (localMax < 0.0)
+    constexpr SampleType zero = SampleType(0.0);
+    
+    if (localMax < zero)
     {
         candidates.add (indexOfLocalMin);
         return;
     }
     
-    if (localMin > 0.0)
+    if (localMin > zero)
     {
         candidates.add (indexOfLocalMax);
         return;
@@ -220,7 +222,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         const int   delta1 = abs (candidate - deltaTarget1);
         const float delta2 = abs (candidate - deltaTarget2) * 1.5f; // weight this delta, this value is of more consequence
         
-        candidateDeltas.add ((delta1 + delta2) / 2.0f); // average the two delta values
+        candidateDeltas.add ((delta1 + delta2) * 0.5f); // average the two delta values
     }
     
     float maxDelta = FloatVectorOperations::findMaximum (candidateDeltas.getRawDataPointer(), candidateDeltas.size());
@@ -259,9 +261,29 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     // 3. identify the highest & lowest delta values for the final handful candidates
     
-    float lowestDelta  = FloatVectorOperations::findMinimum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
     float highestDelta = FloatVectorOperations::findMaximum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
-
+    
+    float lowestDelta = highestDelta;
+    int indexOfLowestDelta = 0;
+    
+#ifndef JUCE_USE_VDSP_FRAMEWORK
+    for (int n = 0; n < finalHandfulSize; ++n)
+    {
+        const float current = finalHandfulDeltas.getUnchecked(n);
+        
+        if (current == 0.0f)
+            return n;
+        
+        if (current < lowestDelta)
+        {
+            lowestDelta = current;
+            indexOfLowestDelta = n;
+        }
+    }
+#else
+    vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), 1, &lowestDelta, (vDSP_Length *)&indexOfLowestDelta, finalHandfulSize);
+#endif
+    
     // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
     const float deltaRange = highestDelta - lowestDelta;
@@ -274,7 +296,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         }
     };
 
-    int chosenPeak = (deltaRange < 1.0f) ? finalHandful.getUnchecked (0) : finalHandful.getUnchecked (finalHandfulDeltas.indexOf (lowestDelta));
+    int chosenPeak = (deltaRange < 1.0f) ? finalHandful.getUnchecked (0) : finalHandful.getUnchecked (indexOfLowestDelta);
     
     SampleType strongestPeak = abs(reading[chosenPeak]);
     

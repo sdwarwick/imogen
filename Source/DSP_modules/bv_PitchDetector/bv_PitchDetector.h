@@ -77,6 +77,13 @@ private:
     void getNextBestPeriodCandidate (Array<int>& candidates, const SampleType* asdfData, const int dataSize);
     
     
+    /////
+    
+    static constexpr SampleType zero = SampleType(0.0);
+    static constexpr SampleType pnt5 = SampleType(0.5);
+    static constexpr SampleType one = SampleType(1.0);
+    static constexpr SampleType two = SampleType(2.0);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchDetector)
 };
 
