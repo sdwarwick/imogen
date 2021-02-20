@@ -266,12 +266,18 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     float lowestDelta = highestDelta;
     int indexOfLowestDelta = 0;
     
-#ifndef JUCE_USE_VDSP_FRAMEWORK
-    float* lowestElement = std::min_element (finalHandfulDeltas.begin(), finalHandfulDeltas.end());
-    indexOfLowestDelta = static_cast<int> (std::distance (finalHandfulDeltas.begin(), lowestElement));
-    lowestDelta = *lowestElement;
+#if JUCE_USE_VDSP_FRAMEWORK
+    {
+        unsigned int index = 0;
+        vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), 1, &lowestDelta, (vDSP_Length *)&index, finalHandfulSize);
+        indexOfLowestDelta = static_cast<int>(index);
+    }
 #else
-    vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), 1, &lowestDelta, (vDSP_Length *)&indexOfLowestDelta, finalHandfulSize);
+    {
+        float* lowestElement = std::min_element (finalHandfulDeltas.begin(), finalHandfulDeltas.end());
+        indexOfLowestDelta = static_cast<int> (std::distance (finalHandfulDeltas.begin(), lowestElement));
+        lowestDelta = *lowestElement;
+    }
 #endif
     
     // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values

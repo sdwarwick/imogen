@@ -60,6 +60,7 @@ private:
     
     AudioBuffer<SampleType> asdfBuffer; // calculated ASDF values will be placed in this buffer
     
+    AudioBuffer<SampleType> differenceBuffer; // intermediate buffer used in calculation of the ASDF
     
     float chooseIdealPeriodCandidate (const SampleType* asdfData, const int asdfDataSize, const int minIndex);
     

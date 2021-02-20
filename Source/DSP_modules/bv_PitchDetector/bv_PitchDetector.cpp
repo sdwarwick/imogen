@@ -20,6 +20,7 @@ PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int ma
     samplerate = initSamplerate;
     
     asdfBuffer.setSize (1, 500);
+    differenceBuffer.setSize(1, 500);
     
     setHzRange (minHz, maxHz, true);
     
@@ -53,7 +54,10 @@ void PitchDetector<SampleType>::setHzRange (const int newMinHz, const int newMax
     const int numOfLagValues = maxPeriod - minPeriod + 1;
     
     if (asdfBuffer.getNumSamples() != numOfLagValues)
+    {
         asdfBuffer.setSize (1, numOfLagValues, true, true, true);
+        differenceBuffer.setSize(1, numOfLagValues, true, true, true);
+    }
 }
 
 
@@ -136,8 +140,6 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     
     FloatVectorOperations::fill (asdfData, zero, asdfBuffer.getNumSamples());
     
-    constexpr SampleType one_thousand = SampleType(1000.0);
-    
     // COMPUTE ASDF
     
     for (int k = minPeriod; // always write the same datasize to asdfBuffer, even if k values are being limited this frame
@@ -148,6 +150,7 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
         
         if (k < minLag || k > maxLag) // range compression of k is done here
         {
+            constexpr SampleType one_thousand = SampleType(1000.0);
             asdfData[index] = one_thousand; // still need to write a value to the asdf buffer, but make sure this would never be chosen as a possible minimum
             continue;
         }
@@ -420,7 +423,17 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     
     int minIndex = 0;
     
-#ifndef JUCE_USE_VDSP_FRAMEWORK
+#if JUCE_USE_VDSP_FRAMEWORK
+    {
+        unsigned int index = 0;
+#if ! DOUBLE_SAMPLES
+        vDSP_minvi (data, 1, &min, (vDSP_Length *)&index, dataSize);
+#else
+        vDSP_minviD(data, 1, &min, (vDSP_Length *)&index, dataSize);
+#endif
+        minIndex = static_cast<int> (index);
+    }
+#else
     for (int n = 1; n < dataSize; ++n)
     {
         const SampleType current = data[n];
@@ -434,12 +447,6 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
             minIndex = n;
         }
     }
-#else
-#if !DOUBLE_SAMPLES
-    vDSP_minvi (data, 1, &min, (vDSP_Length *)&minIndex, dataSize);
-#else
-    vDSP_minviD(data, 1, &min, (vDSP_Length *)&minIndex, dataSize);
-#endif
 #endif
     
     return minIndex;
