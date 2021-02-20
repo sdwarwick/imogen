@@ -38,10 +38,11 @@ jobs:
 #
 
   update-submodules:
-  
+
     name: Updating git submodules
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: snickerbockers/submodules-init@v4
+
 #
