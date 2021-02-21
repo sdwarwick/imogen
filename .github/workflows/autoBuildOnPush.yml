@@ -89,6 +89,10 @@ jobs:
         with:
           name: Imogen-Linux.zip
 
+      - name: Unzip
+        shell: bash
+        run: unzip Imogen-Linux.zip
+
       - name: CodeQL analysis
         uses: github/codeql-action/analyze@v1
 
