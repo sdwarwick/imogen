@@ -49,9 +49,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          persist-credentials: false
           submodules: recursive
+          fetch-depth: 0
 
-      - name: updating submodules
-        uses: snickerbockers/submodules-init@v4
+      - name: update submodules
+        run: git submodule foreach 'git fetch && git checkout origin/HEAD && git submodule update —init —recursive'
+
+      - name: Commit files
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "submodule auto-update SKIP-CI" -a
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
 
 #
