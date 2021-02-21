@@ -85,16 +85,23 @@ set (Imogen_Company_Email "ben.the.vining@gmail.com")
 set (Imogen_Company_Copyright "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
 set (Imogen_Copy_Plugin_After_Build TRUE)
 
-set (Imogen_NeedsWebBrowser FALSE)
-set (Imogen_NeedsCURL FALSE)
 
 set (Imogen_UseRecommendedWarningFlags TRUE)
 
-set (Imogen_compileFeatures "cxx_std_20")
 
 #
 
 include (JUCE-CmakeWrapper/CMakeLists.txt)
+
+#
+
+# target_compile_features
+
+target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    JUCE_STRICT_REFCOUNTEDPTR=1
+    JUCE_VST3_CAN_REPLACE_VST2=0)
 
 #
 
