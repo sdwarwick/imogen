@@ -69,31 +69,3 @@ jobs:
         name: ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip
 
 #
-
-  codeQL-analysis:
-
-    needs: build
-    if: "!contains(github.event.head_commit.message, 'SKIP-SCAN')"
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        with:
-          languages: cpp
-
-      - name: Download Imogen artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: Imogen-Linux.zip
-
-      - name: Unzip
-        shell: bash
-        run: unzip Imogen-Linux.zip
-
-      - name: CodeQL analysis
-        uses: github/codeql-action/analyze@v1
-
-#
