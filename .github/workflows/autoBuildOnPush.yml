@@ -42,12 +42,6 @@ jobs:
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
 
-    - name: Initialize CodeQL
-      if: runner.os == 'Linux' && contains(github.event.head_commit.message, 'SCAN')
-      uses: github/codeql-action/init@v1
-      with:
-        languages: cpp
-
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
 
@@ -64,10 +58,6 @@ jobs:
       shell: bash
       run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
 
-    - name: CodeQL analysis
-      if: runner.os == 'Linux' && contains(github.event.head_commit.message, 'SCAN')
-      uses: github/codeql-action/analyze@v1
-
     - name: Zip
       working-directory: ${{ env.BUILD_DIR }}
       run: cmake -E tar cfv ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip --format=zip ${{ env.PROJECT_NAME }}_artefacts
@@ -80,3 +70,26 @@ jobs:
 
 #
 
+  codeQL-analysis:
+
+    needs: build
+    if: "!contains(github.event.head_commit.message, 'SKIP-SCAN')"
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: cpp
+
+      - name: Download Imogen artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Imogen-Linux.zip
+
+      - name: CodeQL analysis
+        uses: github/codeql-action/analyze@v1
+
+#
