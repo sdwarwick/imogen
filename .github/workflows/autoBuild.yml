@@ -1,8 +1,10 @@
-name: Test building on all platforms
+name: AutoBuild
 
 on:
-  push:
   workflow_dispatch:
+  push:
+    paths-ignore:
+    - 'docs/**'
 
 env:
   PROJECT_NAME: Imogen
@@ -16,7 +18,7 @@ jobs:
 
   build:
 
-    if: "!contains(github.event.head_commit.message, 'SKIP-CI')"
+    if: "contains(github.event.head_commit.message, 'BUILD')"
 
     name: ${{ matrix.artifact }} build
     runs-on: ${{ matrix.os }}
