@@ -1,8 +1,11 @@
 name: Update submodules
 
 on: 
-  push:
   workflow_dispatch:
+  push:
+    paths-ignore:
+    - 'docs/**'
+    - '.github/**'
   repository_dispatch:
     types: [update_submodules]
 
