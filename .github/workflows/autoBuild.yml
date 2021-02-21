@@ -5,6 +5,7 @@ on:
   push:
     paths-ignore:
     - 'docs/**'
+    - '.github/**'
 
 env:
   PROJECT_NAME: Imogen
