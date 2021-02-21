@@ -22,7 +22,6 @@ set (Imogen_graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of 
 
 set (Imogen_testFilesPath ${Imogen_sourceDir}/Tests)  # The location of the source files in which unit tests are defined
 
-
 #
 
 # the set of custom JUCE-style modules needed for this project
@@ -34,9 +33,6 @@ set (Imogen_customModulesNeeded
     bv_PitchDetector
     bv_Harmonizer
     bv_ImogenEngine)
-
-
-# the groups of actual source files 
 
 set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
