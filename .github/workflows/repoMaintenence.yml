@@ -54,7 +54,7 @@ jobs:
           fetch-depth: 0
 
       - name: update submodules
-        run: git submodule foreach 'git fetch && git checkout origin/HEAD && git submodule update'
+        run: git submodule foreach 'git submodule update --remote --merge'
 
       - name: Commit files
         run: |
