@@ -24,8 +24,6 @@ set (Imogen_testFilesPath ${Imogen_sourceDir}/Tests)  # The location of the sour
 
 #
 
-# the set of custom JUCE-style modules needed for this project
-
 set (Imogen_customModulesPath ${Imogen_sourceDir}/DSP_modules)
 
 set (Imogen_customModulesNeeded
@@ -33,6 +31,8 @@ set (Imogen_customModulesNeeded
     bv_PitchDetector
     bv_Harmonizer
     bv_ImogenEngine)
+
+#
 
 set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
