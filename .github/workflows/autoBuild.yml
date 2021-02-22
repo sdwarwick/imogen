@@ -4,7 +4,7 @@ on:
   push:
     paths-ignore:
     - 'docs/**'
-    - '.github/**'
+    #- '.github/**'
 
 env:
   PROJECT_NAME: Imogen
@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-20.04, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
         - os: windows-latest
           artifact: Windows
