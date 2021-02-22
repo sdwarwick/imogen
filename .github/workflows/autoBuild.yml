@@ -47,7 +47,7 @@ jobs:
 
     - name: ccache
       #if: runner.os != 'Windows'
-      uses: hendrikmuhs/ccache-action@latest
+      uses: hendrikmuhs/ccache-action@v1.0.2
       with:
         key: ${{ matrix.os }}-${{ matrix.type }}
 
