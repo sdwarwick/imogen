@@ -60,7 +60,6 @@ private:
     
     bav::HelpScreen helpScreen;
     juce::TextButton helpButton;
-    bool viewHelp;  
     
     juce::ComboBox selectPreset;
     

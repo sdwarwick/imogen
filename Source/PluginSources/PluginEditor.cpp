@@ -13,7 +13,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     AudioProcessorEditor (&p), audioProcessor (p),
     currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
     prevSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
-    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel), viewHelp(false),
+    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel),
     staffDisplay(p, lookAndFeel)
 {
     setSize (940, 435);
