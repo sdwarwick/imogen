@@ -1,5 +1,5 @@
 ![Imogen icon](https://github.com/benthevining/imogen/blob/master/imogen_icon.png?raw=true)
-
+ 
 # Imogen: a 12-voice, low-latency vocal harmonizer VST
 [![CodeFactor](https://www.codefactor.io/repository/github/benthevining/imogen/badge)](https://www.codefactor.io/repository/github/benthevining/imogen)
 
