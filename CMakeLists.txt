@@ -96,7 +96,6 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0
-    JUCE_MODAL_LOOPS_PERMITTED=0
     )
 
 #
