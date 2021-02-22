@@ -395,7 +395,6 @@ int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inp
     unsigned int index = 0;
     unsigned int totalcrossings = 0;
     vDSP_nzcros (inputAudio, 1, 1, (vDSP_Length *)&index, (vDSP_Length *)&totalcrossings, static_cast<vDSP_Length>(numInputSamples));
-    
     return static_cast<int>(index);
 #else
     const bool startedPositive = inputAudio[0] > zero;
@@ -418,7 +417,6 @@ int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inp
 }
 
 
-
 template<typename SampleType>
 int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const int dataSize)
 {
@@ -429,17 +427,19 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     if (min == zero)
         return 0;
     
-    int minIndex = 0;
-    
 #if JUCE_USE_VDSP_FRAMEWORK
-        unsigned int index = 0;
+    unsigned int index = 0;
+    
     #if ! DOUBLE_SAMPLES
         vDSP_minvi (data, 1, &min, (vDSP_Length *)&index, dataSize);
     #else
         vDSP_minviD(data, 1, &min, (vDSP_Length *)&index, dataSize);
     #endif
-        return minIndex = static_cast<int> (index);
+    
+        return static_cast<int> (index);
 #else
+    int minIndex = 0;
+    
     for (int n = 1; n < dataSize; ++n)
     {
         const SampleType current = data[n];

@@ -26,7 +26,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
-    while ((analysisIndex - halfPeriod) < totalNumSamples)
+    do
     {
         Array<int> peakCandidates;
         peakCandidates.ensureStorageAllocated (numPeaksToTest + 1);
@@ -49,7 +49,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             
             sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
             
-            while (peakCandidates.size() < numPeaksToTest)
+            do
             {
                 getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex, peakSearchingOrder);
                 
@@ -57,6 +57,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                     if (peakCandidates.getLast() == peakCandidates.getUnchecked(peakCandidates.size() - 2))
                         break;
             }
+            while (peakCandidates.size() < numPeaksToTest);
         }
         
         // identify the most ideal peak for this analysis window out of our list of candidates
@@ -105,6 +106,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         else
             analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
     }
+    while ((analysisIndex - halfPeriod) < totalNumSamples);
 }
 
 

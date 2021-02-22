@@ -76,6 +76,8 @@ public:
     void updateDryGain (const float newDryGain);
     void updateWetGain (const float newWetGain);
     void updateSoftPedalGain (const float newGain);
+    void updateAftertouchGainOnOff (const bool shouldBeOn);
+    void updatePlayingButReleasedGain (const float newGainMult);
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh);
     

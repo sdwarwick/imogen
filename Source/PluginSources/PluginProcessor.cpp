@@ -49,6 +49,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     maxDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMaxHz"));            jassert(maxDetectedHz);
     pitchDetectionConfidenceUpperThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceUpperThresh")); jassert(pitchDetectionConfidenceUpperThresh);
     pitchDetectionConfidenceLowerThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceLowerThresh")); jassert(pitchDetectionConfidenceLowerThresh);
+    aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle")); jassert(aftertouchGainToggle);
+    playingButReleasedGain = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("playingButReleasedGain")); jassert(playingButReleasedGain);
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -191,12 +193,11 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
         return;
     
 #if JUCE_STANDALONE_APPLICATION
-    const int inBusNum = 0;
+    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, 0);
 #else
-    const int inBusNum = (host.isLogic() || host.isGarageBand());
+    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
 #endif
     
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
     
     engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
@@ -251,12 +252,11 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
         return;
     
 #if JUCE_STANDALONE_APPLICATION
-    const int inBusNum = 0;
+    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, 0);
 #else
-    const int inBusNum = (host.isLogic() || host.isGarageBand());
+    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
 #endif
  
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, inBusNum);
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
     
     if (! wasBypassedLastCallback)
@@ -271,15 +271,17 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-#if ! JUCE_STANDALONE_APPLICATION
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 {
+#if JUCE_STANDALONE_APPLICATION
+    return false;
+#else
     if (! (host.isLogic() || host.isGarageBand()))
         return false;
     
     return (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
-}
 #endif
+}
 
 
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
@@ -313,6 +315,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     
     // update num voices
     
+    activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
+    activeEngine.updatePlayingButReleasedGain(playingButReleasedGain->get());
 }
 
 
@@ -482,6 +486,23 @@ void ImogenAudioProcessor::updatePitchDetectionWrapped (bav::ImogenEngine<Sample
 }
 
 
+void ImogenAudioProcessor::updateAftertouchGainToggle()
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.updateAftertouchGainOnOff(aftertouchGainToggle->get());
+    else
+        floatEngine.updateAftertouchGainOnOff(aftertouchGainToggle->get());
+}
+
+
+void ImogenAudioProcessor::updatePlayingButRelesedGain()
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.updatePlayingButReleasedGain(playingButReleasedGain->get());
+    else
+        floatEngine.updatePlayingButReleasedGain(playingButReleasedGain->get());
+}
+
 
 void ImogenAudioProcessor::returnActivePitches (juce::Array<int>& outputArray) const
 {
@@ -557,22 +578,21 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
     juce::File rootFolder;
     
 #if JUCE_MAC
-    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
-    rootFolder = rootFolder.getChildFile ("Audio")
-                           .getChildFile ("Presets")
-                           .getChildFile ("Ben Vining Music Software")
-                           .getChildFile ("Imogen");
+    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
+                    .getChildFile ("Audio")
+                    .getChildFile ("Presets")
+                    .getChildFile ("Ben Vining Music Software")
+                    .getChildFile ("Imogen");
     
 #elif JUCE_LINUX
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
-    rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
-                           .getChildFile ("Imogen");
+                    .getChildFile ("Ben Vining Music Software")
+                    .getChildFile ("Imogen");
 
-#else    //  Windows, or any other operating system...
+#else    //  Windows
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory);
-    rootFolder = rootFolder.getChildFile ("Ben Vining Music Software")
-                           .getChildFile ("Imogen");
-    
+                    .getChildFile ("Ben Vining Music Software")
+                    .getChildFile ("Imogen");
 #endif
     
     if (! rootFolder.isDirectory() && ! rootFolder.existsAsFile())
@@ -667,6 +687,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     // NEED GUI FOR THIS -- soft pedal gain multiplier
     params.push_back(std::make_unique<juce::AudioParameterFloat>("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
     
+    // aftertouch gain toggle on/off
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("aftertouchGainToggle", "Aftertouch gain on/off", true));
+    
+    // playing but released gain multiplier
+    params.push_back(std::make_unique<juce::AudioParameterFloat> ("playingButReleasedGain", "Released & ringing gain", gainRange, 0.5f));
+    
     // NEED GUI -- PITCH DETECTION SETTINGS
     // Note that the minimum possible Hz value will impact the plugin's latency.
     juce::NormalisableRange<float> confidenceRange (0.0f, 1.0f, 0.01f);
@@ -736,11 +762,9 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
     if ( (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
         && (! (host.isLogic() || host.isGarageBand())) )
           return false;
-    
 #else
     if (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
         return false;
-    
 #endif
     
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
@@ -755,7 +779,6 @@ bool ImogenAudioProcessor::canAddBus (bool isInput) const
 #if JUCE_STANDALONE_APPLICATION
     juce::ignoreUnused (isInput);
     return false;
-    
 #else
     if (host.isLogic() || host.isGarageBand())
         return isInput;

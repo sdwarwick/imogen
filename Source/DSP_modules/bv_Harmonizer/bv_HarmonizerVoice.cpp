@@ -90,9 +90,18 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     //  *****************************************************************************************************
     //  midi velocity gain (aftertouch is applied here as well)
     
-    constexpr float inv127 = 1.0f / 127.0f;
-    const float velocityMultNow = currentVelocityMultiplier + ((currentAftertouch * inv127) * (1.0f - currentVelocityMultiplier));
-        
+    float velocityMultNow;
+    
+    if (parent->isAftertouchGainOn())
+    {
+        constexpr float inv127 = 1.0f / 127.0f;
+        velocityMultNow = currentVelocityMultiplier + ((currentAftertouch * inv127) * (1.0f - currentVelocityMultiplier));
+    }
+    else
+    {
+        velocityMultNow = currentVelocityMultiplier;
+    }
+    
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
     prevVelocityMultiplier = velocityMultNow;
     
@@ -106,7 +115,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     //  *****************************************************************************************************
     //  playing-but-released gain
     
-    const float newPBRmult = playingButReleased ? 0.5f : 1.0f; // gain applied when voice is still ringing after key is released (sustain/sostenuto pedal, etc)
+    const float newPBRmult = playingButReleased ? parent->getPlayingButReleasedMultiplier() : 1.0f;
     synthesisBuffer.applyGainRamp (0, numSamples, lastPBRmult, newPBRmult);
     lastPBRmult = newPBRmult;
     

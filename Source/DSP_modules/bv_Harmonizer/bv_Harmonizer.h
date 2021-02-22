@@ -241,6 +241,9 @@ public:
     void updateMidiVelocitySensitivity (int newSensitivity);
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
     void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
+    void setAftertouchGainOnOff (const bool shouldBeOn) { aftertouchGainIsOn = shouldBeOn; }
+    
+    void setPlayingButReleasedGain (const float newMultiplier) { playingButReleasedMultiplier = newMultiplier; }
     
     void setPedalPitch (const bool isOn);
     void setPedalPitchUpperThresh (int newThresh);
@@ -294,6 +297,8 @@ protected:
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
     bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
     float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier.load(); }
+    float getPlayingButReleasedMultiplier() const noexcept { return playingButReleasedMultiplier; };
+    bool isAftertouchGainOn() const noexcept { return aftertouchGainIsOn; }
     
     bool isADSRon() const noexcept { return adsrIsOn.load(); }
     ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
@@ -424,6 +429,10 @@ private:
     int lastMidiTimeStamp;
     int lastMidiChannel;
     bool useChannelPressure;  // all the voices will keep track of & respond to their individual aftertouch values by default; if this is true then the harmonizer will also output an aggregate "channel pressure", which will be the maximum of any voice's recived aftertouch value.
+    
+    bool aftertouchGainIsOn;
+    
+    float playingButReleasedMultiplier = 1.0f;
     
     bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
     

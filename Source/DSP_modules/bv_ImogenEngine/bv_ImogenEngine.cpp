@@ -656,6 +656,20 @@ void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float
 {
     harmonizer.updatePitchDetectionConfidenceThresh (newUpperThresh, newLowerThresh);
 }
+    
+    
+template<typename SampleType>
+void ImogenEngine<SampleType>::updateAftertouchGainOnOff (const bool shouldBeOn)
+{
+    harmonizer.setAftertouchGainOnOff (shouldBeOn);
+}
+    
+    
+template<typename SampleType>
+void ImogenEngine<SampleType>::updatePlayingButReleasedGain (const float newGainMult)
+{
+    harmonizer.setPlayingButReleasedGain(newGainMult);
+}
 
 
 template class ImogenEngine<float>;

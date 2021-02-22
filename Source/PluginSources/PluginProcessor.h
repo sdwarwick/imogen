@@ -42,9 +42,7 @@ public:
     bool canAddBus (bool isInput) const override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
-#if ! JUCE_STANDALONE_APPLICATION
     bool shouldWarnUserToEnableSidechain() const;
-#endif
     
     bool hasEditor() const override { return true; }
     juce::AudioProcessorEditor* createEditor() override;
@@ -91,6 +89,8 @@ public:
     void updateDescant();
     void updatePitchDetectionSettings();
     void updateGains();
+    void updateAftertouchGainToggle();
+    void updatePlayingButRelesedGain();
     
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
@@ -141,6 +141,8 @@ public:
     juce::AudioParameterInt*   maxDetectedHz;
     juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
     juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
+    juce::AudioParameterBool*  aftertouchGainToggle;
+    juce::AudioParameterFloat* playingButReleasedGain;
     
     
 private:
