@@ -297,7 +297,7 @@ protected:
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
     bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
     float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier.load(); }
-    float getPlayingButReleasedMultiplier() const noexcept { return playingButReleasedMultiplier; };
+    float getPlayingButReleasedMultiplier() const noexcept { return playingButReleasedMultiplier; }
     bool isAftertouchGainOn() const noexcept { return aftertouchGainIsOn; }
     
     bool isADSRon() const noexcept { return adsrIsOn.load(); }
