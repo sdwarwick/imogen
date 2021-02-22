@@ -585,12 +585,12 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
                     .getChildFile ("Imogen");
     
 #elif JUCE_LINUX
-    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory);
+    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
                     .getChildFile ("Ben Vining Music Software")
                     .getChildFile ("Imogen");
 
 #else    //  Windows
-    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory);
+    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory)
                     .getChildFile ("Ben Vining Music Software")
                     .getChildFile ("Imogen");
 #endif
