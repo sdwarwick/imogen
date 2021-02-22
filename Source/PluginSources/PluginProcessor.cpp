@@ -637,14 +637,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterInt>	("masterDryWet", "% wet", 0, 100, 100));
     
     // ADSR
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack",
-                                                                 juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.035f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrDecay", "ADSR Decay",
-                                                                 juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.06f));
+    juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack", msRange, 0.035f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrDecay", "ADSR Decay", msRange, 0.06f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrSustain", "ADSR Sustain",
                                                                  juce::NormalisableRange<float> (0.01f, 1.0f, 0.01f), 0.8f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrRelease", "ADSR Release",
-                                                                 juce::NormalisableRange<float> (0.001f, 1.0f, 0.001f), 0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrRelease", "ADSR Release", msRange, 0.1f));
     params.push_back(std::make_unique<juce::AudioParameterBool>	("adsrOnOff", "ADSR on/off", true));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("quickKillMs", "Quick kill ms", 1, 250, 15));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("quickAttackMs", "Quick attack ms", 1, 250, 15));
@@ -680,8 +678,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     // output limiter
     params.push_back(std::make_unique<juce::AudioParameterBool>	("limiterIsOn", "Limiter on/off", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("limiterThresh", "Limiter threshold",
-                                                                 juce::NormalisableRange<float>(-60.0f, 0.0f, 0.01f), -2.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("limiterThresh", "Limiter threshold", gainRange, -2.0f));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("limiterRelease", "limiter release (ms)", 1, 250, 10));
     
     // NEED GUI FOR THIS -- soft pedal gain multiplier
