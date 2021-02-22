@@ -3,7 +3,7 @@ name: Basic repo maintenence & utils
 on:
   workflow_dispatch:
   push:
-    paths-ignore: 
+    paths-ignore:
     - '.github/**'
     - 'docs/**'
   schedule:
