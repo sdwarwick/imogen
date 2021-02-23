@@ -91,6 +91,8 @@ include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
 
+# JUCE modules can be added after the API is included, like this, but they won't show up in the "juce modules" folder in XCode -- perfect for any git submodules you may have, as you can also specify a different absolute path for each submodule's sources this way:
+
 juce_add_module (${Imogen_customModulesPath}/Pitch-detector/bv_PitchDetector)
 target_link_libraries (Imogen PRIVATE bv_PitchDetector)
 
