@@ -65,7 +65,6 @@ private:
 
     void changeModulatorInputSource();
     
-    juce::PluginHostType host;
     bav::EnableSidechainWarning sidechainWarning;
     bool sidechainWarningShowing;
     

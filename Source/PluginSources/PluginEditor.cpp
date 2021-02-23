@@ -115,24 +115,21 @@ void ImogenAudioProcessorEditor::timerCallback()
     
     if (! juce::JUCEApplicationBase::isStandaloneApp())
     {
-        if (host.isLogic() || host.isGarageBand())
+        const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
+        
+        if (sidechainWarningShowing != shouldBeShowing)
         {
-            const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
+            sidechainWarningShowing = shouldBeShowing;
             
-            if (sidechainWarningShowing != shouldBeShowing)
+            if (shouldBeShowing)
             {
-                sidechainWarningShowing = shouldBeShowing;
-                
-                if(shouldBeShowing)
-                {
-                    sidechainWarning.setVisible (true);
-                    sidechainWarning.repaint();
-                }
-                else
-                {
-                    sidechainWarning.setVisible (false);
-                    this->repaint();
-                }
+                sidechainWarning.setVisible (true);
+                sidechainWarning.repaint();
+            }
+            else
+            {
+                sidechainWarning.setVisible (false);
+                this->repaint();
             }
         }
     }
