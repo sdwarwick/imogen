@@ -25,6 +25,10 @@
 #include "bv_Harmonizer/PanningManager/PanningManager.h"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 
+#if JUCE_USE_VDSP_FRAMEWORK
+    #include <Accelerate/Accelerate.h>
+#endif
+
 
 namespace bav
 

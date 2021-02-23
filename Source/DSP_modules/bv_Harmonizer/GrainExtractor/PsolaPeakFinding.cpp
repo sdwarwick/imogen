@@ -270,8 +270,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
 #if JUCE_USE_VDSP_FRAMEWORK
     {
-        unsigned int index = 0;
-        vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), 1, &lowestDelta, (vDSP_Length *)&index, finalHandfulSize);
+        unsigned long index = 0;
+        vDSP_minvi(finalHandfulDeltas.getRawDataPointer(), vDSP_Stride(1), &lowestDelta, &index, vDSP_Length(finalHandfulSize));
         indexOfLowestDelta = static_cast<int>(index);
     }
 #else
