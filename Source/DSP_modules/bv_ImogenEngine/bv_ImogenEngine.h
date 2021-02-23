@@ -56,7 +56,7 @@ public:
     
     void returnActivePitches (Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
     
-    void updateDryWet     (const float newWetMixProportion);
+    void updateDryWet     (const int percentWet);
     void updateDryVoxPan  (const int newMidiPan);
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
     void updateQuickKill  (const int newMs);
@@ -70,7 +70,7 @@ public:
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
     void updateIntervalLock(const bool isLocked);
-    void updateLimiter     (const float thresh, const float release, const bool isOn);
+    void updateLimiter     (const float thresh, const int release, const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateDryGain (const float newDryGain);

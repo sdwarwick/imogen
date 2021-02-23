@@ -118,9 +118,11 @@ void StaffDisplay::drawNotehead(const int x, const int y, Graphics& g)
 {
     // x & y coords are the center of the notehead.
     
+    ignoreUnused(x, y);
+    
     g.setColour(juce::Colours::black);
     
-    g.fillPath(noteheadPath, AffineTransform::translation(x, y));
+    // g.fillPath(noteheadPath, AffineTransform::translation(x, y));
 }
 
 

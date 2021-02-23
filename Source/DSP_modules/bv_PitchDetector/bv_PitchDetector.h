@@ -50,7 +50,7 @@ private:
     int minHz, maxHz;
     int minPeriod, maxPeriod;
     
-    SampleType lastEstimatedPeriod;
+    float lastEstimatedPeriod;
     bool lastFrameWasPitched = false;
     
     double samplerate;
@@ -70,7 +70,7 @@ private:
     
     float foundThePeriod (const SampleType* asdfData, const int minIndex, const int asdfDataSize);
     
-    SampleType quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept;
+    float quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept;
     
     
     const int periodCandidatesToTest = 15;

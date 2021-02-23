@@ -24,7 +24,7 @@ PitchDetector<SampleType>::PitchDetector(const int minDetectableHz, const int ma
     
     setHzRange (minHz, maxHz, true);
     
-    lastEstimatedPeriod = minPeriod;
+    lastEstimatedPeriod = float(minPeriod);
 }
 
 
@@ -72,7 +72,7 @@ void PitchDetector<SampleType>::setSamplerate (const double newSamplerate, const
     if (lastFrameWasPitched)
     {
         SampleType lastHz = static_cast<SampleType> (samplerate / lastEstimatedPeriod);
-        lastEstimatedPeriod = SampleType(newSamplerate) / lastHz;
+        lastEstimatedPeriod = float(newSamplerate / lastHz);
     }
     
     samplerate = newSamplerate;
@@ -191,7 +191,7 @@ float PitchDetector<SampleType>::foundThePeriod (const SampleType* asdfData,
                                                  const int minIndex,
                                                  const int asdfDataSize)
 {
-    SampleType realPeriod = quadraticPeakPosition (asdfData, minIndex, asdfDataSize);
+    float realPeriod = quadraticPeakPosition (asdfData, minIndex, asdfDataSize);
     realPeriod += minPeriod; // account for offset in asdf data
     
     if (realPeriod > maxPeriod)
@@ -385,9 +385,9 @@ int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inp
     unsigned long totalcrossings = 0;
     
     if constexpr (std::is_same_v <SampleType, float>)
-        vDSP_nzcros(inputAudio, vDSP_Stride(1), vDSP_Length(1), (vDSP_Length*)&index, (vDSP_Length*)&totalcrossings, vDSP_Length(numInputSamples));
+        vDSP_nzcros (inputAudio, vDSP_Stride(1), vDSP_Length(1), &index, &totalcrossings, vDSP_Length(numInputSamples));
     else
-        vDSP_nzcrosD(inputAudio, vDSP_Stride(1), vDSP_Length(1), (vDSP_Length*)&index, (vDSP_Length*)&totalcrossings, vDSP_Length(numInputSamples));
+        vDSP_nzcrosD (inputAudio, vDSP_Stride(1), vDSP_Length(1), &index, &totalcrossings, vDSP_Length(numInputSamples));
     
     return static_cast<int>(index);
 #else
@@ -425,9 +425,9 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
     unsigned long index = 0;
     
     if constexpr (std::is_same_v <SampleType, float>)
-        vDSP_minvi(data, vDSP_Stride(1), &min, (vDSP_Length*)&index, vDSP_Length(dataSize));
+        vDSP_minvi (data, vDSP_Stride(1), &min, &index, vDSP_Length(dataSize));
     else
-        vDSP_minviD(data, vDSP_Stride(1), &min, (vDSP_Length*)&index, vDSP_Length(dataSize));
+        vDSP_minviD (data, vDSP_Stride(1), &min, &index, vDSP_Length(dataSize));
     
     return static_cast<int> (index);
 #else
@@ -453,20 +453,20 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
 
 
 template<typename SampleType>
-SampleType PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept
+float PitchDetector<SampleType>::quadraticPeakPosition (const SampleType* data, const int pos, const int dataSize) noexcept
 {
     if ((pos == 0) || ((pos + 1) >= dataSize)) // edge of data, can't interpolate
-        return static_cast<SampleType> (pos);
+        return static_cast<float> (pos);
     
     const auto posData = data[pos];
     
     if (posData == zero)
-        return static_cast<SampleType> (pos);
+        return static_cast<float> (pos);
     
     const auto s0 = data[pos - 1];
     const auto s2 = data[pos + 1];
     
-    return pos + pnt5 * (s2 - s0) / (two * posData - s2 - s0);
+    return static_cast<float> (pos + pnt5 * (s2 - s0) / (two * posData - s2 - s0));
 }
 
 

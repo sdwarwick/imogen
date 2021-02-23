@@ -527,10 +527,9 @@ void ImogenEngine<SampleType>::updateWetGain (const float newWetGain)
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::updateDryWet (const float newWetMixProportion)
+void ImogenEngine<SampleType>::updateDryWet (const int percentWet)
 {
-    ScopedLock sl (lock);
-    dryWetMixer.setWetMixProportion (newWetMixProportion / 100.0f);
+    dryWetMixer.setWetMixProportion (percentWet / 100.0f);
 }
 
     
@@ -623,12 +622,12 @@ void ImogenEngine<SampleType>::updateIntervalLock(const bool isLocked)
     
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::updateLimiter(const float thresh, const float release, const bool isOn)
+void ImogenEngine<SampleType>::updateLimiter(const float thresh, const int release, const bool isOn)
 {
     ScopedLock sl (lock);
     limiterIsOn = isOn;
     limiter.setThreshold(thresh);
-    limiter.setRelease(release);
+    limiter.setRelease(float(release));
 }
 
 
