@@ -92,6 +92,11 @@ include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
 
+juce_add_module (${Imogen_customModulesPath}/Pitch-detector/bv_PitchDetector)
+target_link_libraries (Imogen PRIVATE bv_PitchDetector)
+
+#
+
 target_compile_features (Imogen PUBLIC cxx_std_17)
 
 target_compile_definitions (Imogen PUBLIC 
