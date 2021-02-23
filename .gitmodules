@@ -1,3 +1,6 @@
 [submodule "JUCE-CmakeWrapper"]
 	path = JUCE-CmakeWrapper
 	url = https://github.com/benthevining/JUCE-CmakeWrapper
+[submodule "Source/DSP_modules/bv_PitchDetector"]
+	path = Source/DSP_modules/bv_PitchDetector
+	url = https://github.com/benthevining/bv_PitchDetector
