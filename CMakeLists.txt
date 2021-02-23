@@ -28,7 +28,6 @@ set (Imogen_customModulesPath ${Imogen_sourceDir}/DSP_modules)
 
 set (Imogen_customModulesNeeded
     bv_GeneralUtils
-    bv_PitchDetector
     bv_Harmonizer
     bv_ImogenEngine)
 
