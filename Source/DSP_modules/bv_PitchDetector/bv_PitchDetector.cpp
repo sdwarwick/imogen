@@ -430,13 +430,12 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
 #if JUCE_USE_VDSP_FRAMEWORK
     unsigned int index = 0;
     
-    #if ! DOUBLE_SAMPLES
+    if (constexpr (std::is_same_v <SampleType, const float*>))  // is SampleType a float?
         vDSP_minvi (data, 1, &min, (vDSP_Length *)&index, dataSize);
-    #else
-        vDSP_minviD(data, 1, &min, (vDSP_Length *)&index, dataSize);
-    #endif
+    else
+        vDSP_minviD (data, 1, &min, (vDSP_Length *)&index, dataSize);
     
-        return static_cast<int> (index);
+    return static_cast<int> (index);
 #else
     int minIndex = 0;
     

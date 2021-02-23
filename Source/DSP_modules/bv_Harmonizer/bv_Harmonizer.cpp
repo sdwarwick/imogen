@@ -263,11 +263,10 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     auto* writing = windowBuffer.getWritePointer(0);
     
 #if JUCE_USE_VDSP_FRAMEWORK
-    #if ! DOUBLE_SAMPLES
+    if (constexpr (std::is_same_v <SampleType, const float*>))  // is SampleType a float?
         vDSP_hann_window (writing, static_cast<vDSP_Length>(numSamples), int32(2));
-    #else
+    else
         vDSP_hann_windowD (writing, static_cast<vDSP_Length>(numSamples), int32(2));
-    #endif
 #else
     const SampleType samplemultiplier = static_cast<SampleType>( (MathConstants<SampleType>::pi * 2.0) / (numSamples - 1) );
     constexpr SampleType one = SampleType(1.0);
