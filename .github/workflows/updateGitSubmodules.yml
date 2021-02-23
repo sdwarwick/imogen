@@ -26,7 +26,7 @@ jobs:
             fetch-depth: 0
 
         - name: update submodules
-          run: git submodule foreach 'git fetch && git checkout origin/HEAD && git submodule update --merge'
+          run: git submodule foreach 'git fetch && git checkout origin/HEAD && git submodule update --recursive --merge'
 
         - name: Commit files
           run: |
