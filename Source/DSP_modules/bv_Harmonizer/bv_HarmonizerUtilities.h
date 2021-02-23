@@ -125,13 +125,13 @@ private:
         jassert (isPositiveAndBelow(midiPitch, 128) && isPositiveAndBelow(pitchbend, 128));
         
         if (pitchbend == 64)
-            return midiPitch;
+            return static_cast<float>(midiPitch);
         
         if (pitchbend > 64)
-            return ((rangeUp.load() * (pitchbend - 65)) / 62) + midiPitch;
+            return static_cast<float>(((rangeUp.load() * (pitchbend - 65)) / 62) + midiPitch);
         
         const int currentdownrange = rangeDown.load();
-        return (((1 - currentdownrange) * pitchbend) / 63) + midiPitch - currentdownrange;
+        return static_cast<float>((((1 - currentdownrange) * pitchbend) / 63) + midiPitch - currentdownrange);
     }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PitchBendHelper)
