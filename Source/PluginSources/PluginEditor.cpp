@@ -40,8 +40,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     addChildComponent(sidechainWarning);
 #endif
     
-    Timer::startTimerHz(60); // framerate of graphics
-    
     selectSkin.addItem("Casual Denim", 1);
     selectSkin.addItem("Playful Boho", 2);
     selectSkin.addItem("Chic Eveningwear", 3);
@@ -73,6 +71,9 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     //addAndMakeVisible(selectPreset);
     //addAndMakeVisible(modulatorInputSource);
     
+    // addChildComponent(touchOnceSettings);
+    
+    Timer::startTimerHz(60); // framerate of graphics
     splash->deleteAfterDelay(juce::RelativeTime(4), true);
 }
 

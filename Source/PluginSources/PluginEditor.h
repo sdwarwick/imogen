@@ -14,6 +14,7 @@
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
 #include "../../Source/GUI/LookAndFeel.h"
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
+#include "../../Source/GUI/touchOnceAndForgetSettingsPanel.h"
 
 #if ! JUCE_STANDALONE_APPLICATION
     #include "../../Source/GUI/EnableSidechainWarning.h"
@@ -74,6 +75,8 @@ private:
 #endif
     
     bav::StaffDisplay staffDisplay;
+    
+    bav::Imogen_touchOnceAndForgetSettings touchOnceSettings;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
