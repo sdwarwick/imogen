@@ -92,7 +92,7 @@ include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
 
-target_compile_features (Imogen PUBLIC cxx_lambdas cxx_range_for)
+target_compile_features (Imogen PUBLIC cxx_std_17)
 
 target_compile_definitions (Imogen PUBLIC 
     JUCE_WEB_BROWSER=0

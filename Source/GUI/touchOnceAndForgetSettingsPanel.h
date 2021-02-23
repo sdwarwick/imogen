@@ -26,10 +26,10 @@ public:
     {
         if (pageName.equalsIgnoreCase (general))
             return createGeneralSettingsPage();
-        
+
         if (pageName.equalsIgnoreCase (midi))
             return createMidiSettingsPage();
-        
+
         return createPitchSettingsPage();
     }
     
@@ -38,19 +38,19 @@ private:
     
     Component* createGeneralSettingsPage()
     {
-        
+
     }
-    
-    
+
+
     Component* createMidiSettingsPage()
     {
-        
+
     }
-    
-    
+
+
     Component* createPitchSettingsPage()
     {
-        
+
     }
     
     

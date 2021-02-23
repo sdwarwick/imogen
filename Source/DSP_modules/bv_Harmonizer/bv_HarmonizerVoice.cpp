@@ -185,7 +185,7 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
     
     const int frameSize = frameEndSample - frameStartSample;  // frame size should equal the original period * 2
     
-    FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0), // apply the window before OLAing, so that windowing only has to be done once per analysis grain
+    FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0), // apply the window before OLAing
                                      window,
                                      inputAudio + frameStartSample,
                                      frameSize);

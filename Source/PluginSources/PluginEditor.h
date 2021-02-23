@@ -76,7 +76,7 @@ private:
     
     bav::StaffDisplay staffDisplay;
     
-    bav::Imogen_touchOnceAndForgetSettings touchOnceSettings;
+    // bav::Imogen_touchOnceAndForgetSettings touchOnceSettings;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

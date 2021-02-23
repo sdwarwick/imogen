@@ -14,6 +14,7 @@
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
 #include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
 
+#include <Accelerate/Accelerate.h>
 
 namespace bav
 
@@ -263,15 +264,15 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     auto* writing = windowBuffer.getWritePointer(0);
     
 #if JUCE_USE_VDSP_FRAMEWORK
-    if (constexpr (std::is_same_v <SampleType, const float*>))  // is SampleType a float?
-        vDSP_hann_window (writing, static_cast<vDSP_Length>(numSamples), int32(2));
+    if constexpr (std::is_same_v <SampleType, float>)
+        vDSP_hann_window (writing, vDSP_Length(numSamples), 2);
     else
-        vDSP_hann_windowD (writing, static_cast<vDSP_Length>(numSamples), int32(2));
+        vDSP_hann_windowD (writing, vDSP_Length(numSamples), 2);
 #else
     const SampleType samplemultiplier = static_cast<SampleType>( (MathConstants<SampleType>::pi * 2.0) / (numSamples - 1) );
     constexpr SampleType one = SampleType(1.0);
     constexpr SampleType pointFive = SampleType(0.5);
-    
+
     for (int i = 1; i < numSamples; ++i)
         writing[i] = static_cast<SampleType>( (one - (std::cos (i * samplemultiplier))) * pointFive );
 #endif

@@ -134,8 +134,6 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
     const int middleIndex = roundToInt (floor (numSamples * pnt5));
     const int halfNumSamples = roundToInt (floor ((numSamples - 1) * pnt5));
     
-    const SampleType invNumSamples = one / numSamples; // avoid more divisions within our loop below...
-    
     SampleType* asdfData = asdfBuffer.getWritePointer(0);
     
     FloatVectorOperations::fill (asdfData, zero, asdfBuffer.getNumSamples());
@@ -164,20 +162,11 @@ float PitchDetector<SampleType>::detectPitch (const AudioBuffer<SampleType>& inp
             const SampleType difference = reading[s] - reading[s + k];
             asdfData[index] += (difference * difference);
         }
-        
-        asdfData[index] *= invNumSamples; // normalize
-        
-        if (index > 2) // we're going to test the data at index - 1 to see if we can return early
-        {
-            const SampleType testing = asdfData[index - 1];
-            
-            if (testing < lowerConfidenceThresh)
-                if (testing < asdfData[index] && testing < asdfData[index - 2])
-                    return foundThePeriod (asdfData, index - 1, index + 1);
-        }
     }
     
-    const int asdfDataSize = maxPeriod - minPeriod + 1; // # of samples written to asdfBuffer
+    const int asdfDataSize = maxPeriod - minPeriod + 1;  // # of samples written to asdfBuffer
+    
+    FloatVectorOperations::multiply (asdfData, one / numSamples, asdfDataSize);  // normalize
     
     const int minIndex = indexOfMinElement (asdfData, asdfDataSize);
     
@@ -392,26 +381,31 @@ int PitchDetector<SampleType>::samplesToFirstZeroCrossing (const SampleType* inp
         return 0;
     
 #if JUCE_USE_VDSP_FRAMEWORK
-    unsigned int index = 0;
-    unsigned int totalcrossings = 0;
-    vDSP_nzcros (inputAudio, 1, 1, (vDSP_Length *)&index, (vDSP_Length *)&totalcrossings, static_cast<vDSP_Length>(numInputSamples));
+    unsigned long index = 0;
+    unsigned long totalcrossings = 0;
+    
+    if constexpr (std::is_same_v <SampleType, float>)
+        vDSP_nzcros(inputAudio, vDSP_Stride(1), vDSP_Length(1), (vDSP_Length*)&index, (vDSP_Length*)&totalcrossings, vDSP_Length(numInputSamples));
+    else
+        vDSP_nzcrosD(inputAudio, vDSP_Stride(1), vDSP_Length(1), (vDSP_Length*)&index, (vDSP_Length*)&totalcrossings, vDSP_Length(numInputSamples));
+    
     return static_cast<int>(index);
 #else
     const bool startedPositive = inputAudio[0] > zero;
-    
+
     for (int s = 1; s < numInputSamples; ++s)
     {
         const auto currentSample = inputAudio[s];
-        
+
         if (currentSample == zero)
             return s;
-        
+
         const bool isNowPositive = currentSample > zero;
-        
+
         if (startedPositive != isNowPositive)
             return s;
     }
-    
+
     return 0;
 #endif
 }
@@ -428,31 +422,31 @@ int PitchDetector<SampleType>::indexOfMinElement (const SampleType* data, const 
         return 0;
     
 #if JUCE_USE_VDSP_FRAMEWORK
-    unsigned int index = 0;
+    unsigned long index = 0;
     
-    if (constexpr (std::is_same_v <SampleType, const float*>))  // is SampleType a float?
-        vDSP_minvi (data, 1, &min, (vDSP_Length *)&index, dataSize);
+    if constexpr (std::is_same_v <SampleType, float>)
+        vDSP_minvi(data, vDSP_Stride(1), &min, (vDSP_Length*)&index, vDSP_Length(dataSize));
     else
-        vDSP_minviD (data, 1, &min, (vDSP_Length *)&index, dataSize);
+        vDSP_minviD(data, vDSP_Stride(1), &min, (vDSP_Length*)&index, vDSP_Length(dataSize));
     
     return static_cast<int> (index);
 #else
     int minIndex = 0;
-    
+
     for (int n = 1; n < dataSize; ++n)
     {
         const SampleType current = data[n];
-        
+
         if (current == zero)
             return n;
-        
+
         if (current < min)
         {
             min = current;
             minIndex = n;
         }
     }
-    
+
     return minIndex;
 #endif
 }
