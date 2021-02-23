@@ -15,10 +15,7 @@
 #include "../../Source/GUI/LookAndFeel.h"
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
 #include "../../Source/GUI/touchOnceAndForgetSettingsPanel.h"
-
-#if ! JUCE_STANDALONE_APPLICATION
-    #include "../../Source/GUI/EnableSidechainWarning.h"
-#endif
+#include "../../Source/GUI/EnableSidechainWarning.h"
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
@@ -68,11 +65,9 @@ private:
 
     void changeModulatorInputSource();
     
-#if ! JUCE_STANDALONE_APPLICATION
     juce::PluginHostType host;
     bav::EnableSidechainWarning sidechainWarning;
     bool sidechainWarningShowing;
-#endif
     
     bav::StaffDisplay staffDisplay;
     

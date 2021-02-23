@@ -34,11 +34,9 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     helpButton  .setLookAndFeel(&lookAndFeel);
     helpScreen  .setLookAndFeel(&lookAndFeel);
     
-#if ! JUCE_STANDALONE_APPLICATION
     sidechainWarning.setLookAndFeel(&lookAndFeel);
     sidechainWarningShowing = false;
     addChildComponent(sidechainWarning);
-#endif
     
     selectSkin.addItem("Casual Denim", 1);
     selectSkin.addItem("Playful Boho", 2);
@@ -115,28 +113,29 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     staffDisplay.repaint();
     
-#if ! JUCE_STANDALONE_APPLICATION
-    if (host.isLogic() || host.isGarageBand())
+    if (! juce::JUCEApplicationBase::isStandaloneApp())
     {
-        const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
-        
-        if (sidechainWarningShowing != shouldBeShowing)
+        if (host.isLogic() || host.isGarageBand())
         {
-            sidechainWarningShowing = shouldBeShowing;
+            const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
             
-            if(shouldBeShowing)
+            if (sidechainWarningShowing != shouldBeShowing)
             {
-                sidechainWarning.setVisible (true);
-                sidechainWarning.repaint();
-            }
-            else
-            {
-                sidechainWarning.setVisible (false);
-                this->repaint();
+                sidechainWarningShowing = shouldBeShowing;
+                
+                if(shouldBeShowing)
+                {
+                    sidechainWarning.setVisible (true);
+                    sidechainWarning.repaint();
+                }
+                else
+                {
+                    sidechainWarning.setVisible (false);
+                    this->repaint();
+                }
             }
         }
     }
-#endif
 }
 
 

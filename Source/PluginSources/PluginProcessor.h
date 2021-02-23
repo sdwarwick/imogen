@@ -170,9 +170,7 @@ private:
     
     int latencySamples;
     
-#if ! JUCE_STANDALONE_APPLICATION
     juce::PluginHostType host;
-#endif
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
     

@@ -182,23 +182,22 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     if (! engine.hasBeenInitialized())
         return;
     
-#if ! JUCE_STANDALONE_APPLICATION
-    if ( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
-          return; // our audio input is disabled! can't do processing
-#endif
+    if (! juce::JUCEApplicationBase::isStandaloneApp())
+        if ((host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
+            return;   // our audio input is disabled! can't do processing
     
     updateAllParameters (engine); // the host might use a 0-sample long audio buffer to tell us to update our state with new automation values, which is why the check for that is AFTER this call.
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-#if JUCE_STANDALONE_APPLICATION
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, 0);
-#else
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-#endif
+    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
+    juce::AudioBuffer<SampleType>& inBus = outBus;
     
-    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
+    if (juce::JUCEApplicationBase::isStandaloneApp())
+        inBus = AudioProcessor::getBusBuffer (buffer, true, 0);
+    else
+        inBus = AudioProcessor::getBusBuffer (buffer, true, (host.isLogic() || host.isGarageBand()));
     
     engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
@@ -241,23 +240,22 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
     if (! engine.hasBeenInitialized())
         return;
     
-#if ! JUCE_STANDALONE_APPLICATION
-    if ( (host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()) )
-          return; // our audio input is disabled! can't do processing
-#endif
+    if (! juce::JUCEApplicationBase::isStandaloneApp())
+        if ((host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
+            return;   // our audio input is disabled! can't do processing
     
     updateAllParameters (engine);
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-#if JUCE_STANDALONE_APPLICATION
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, 0);
-#else
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer(buffer, true, (host.isLogic() || host.isGarageBand()));
-#endif
- 
-    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer(buffer, false, 0);
+    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
+    juce::AudioBuffer<SampleType>& inBus = outBus;
+    
+    if (juce::JUCEApplicationBase::isStandaloneApp())
+        inBus = AudioProcessor::getBusBuffer (buffer, true, 0);
+    else
+        inBus = AudioProcessor::getBusBuffer (buffer, true, (host.isLogic() || host.isGarageBand()));
     
     if (! wasBypassedLastCallback)
         engine.process (inBus, outBus, midiMessages, false, true); // render 1 more output frame & ramp gain to 0
@@ -273,14 +271,13 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
 
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 {
-#if JUCE_STANDALONE_APPLICATION
-    return false;
-#else
+    if (juce::JUCEApplicationBase::isStandaloneApp())
+        return false;
+
     if (! (host.isLogic() || host.isGarageBand()))
         return false;
     
     return (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
-#endif
 }
 
 
@@ -741,13 +738,12 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 
 juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
-#if ! JUCE_STANDALONE_APPLICATION
-    if (host.isLogic() || host.isGarageBand())
-        return BusesProperties().withInput ("Input",     juce::AudioChannelSet::stereo(), true)
-                                .withInput ("Sidechain", juce::AudioChannelSet::mono(),   true)
-                                .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
-#endif
-    
+    if (! juce::JUCEApplicationBase::isStandaloneApp())
+        if (host.isLogic() || host.isGarageBand())
+            return BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo(), true)
+                                    .withInput ("Sidechain", juce::AudioChannelSet::mono(),   true)
+                                    .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
+
     return BusesProperties().withInput ("Input",     juce::AudioChannelSet::stereo(), true)
                             .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
 }
@@ -755,14 +751,13 @@ juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() 
 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-#if ! JUCE_STANDALONE_APPLICATION
-    if ( (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
-        && (! (host.isLogic() || host.isGarageBand())) )
-          return false;
-#else
     if (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
-        return false;
-#endif
+    {
+        if (juce::JUCEApplicationBase::isStandaloneApp())
+            return false;
+        else if ((! (host.isLogic() || host.isGarageBand())))
+                return false;
+    }
     
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
@@ -773,15 +768,13 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 bool ImogenAudioProcessor::canAddBus (bool isInput) const
 {
-#if JUCE_STANDALONE_APPLICATION
-    juce::ignoreUnused (isInput);
-    return false;
-#else
+    if (juce::JUCEApplicationBase::isStandaloneApp())
+        return false;
+    
     if (host.isLogic() || host.isGarageBand())
         return isInput;
     
     return false;
-#endif
 }
 
 
