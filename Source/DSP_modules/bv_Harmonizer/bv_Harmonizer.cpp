@@ -14,7 +14,6 @@
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
 #include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
 
-#include <Accelerate/Accelerate.h>
 
 namespace bav
 
