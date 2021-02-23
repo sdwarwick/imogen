@@ -6,6 +6,14 @@
 
 #include "bv_PitchDetector.h"
 
+#if JUCE_USE_VDSP_FRAMEWORK
+    #if (JUCE_MAC || JUCE_IOS)
+        #include <Accelerate/Accelerate.h>
+    #else
+        #undef JUCE_USE_VDSP_FRAMEWORK
+    #endif
+#endif
+
 
 namespace bav
 

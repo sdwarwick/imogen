@@ -14,10 +14,6 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 
-#if JUCE_USE_VDSP_FRAMEWORK
-    #include <Accelerate/Accelerate.h>
-#endif
-
 
 namespace bav
 

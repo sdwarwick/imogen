@@ -24,19 +24,20 @@ public:
     { }
     
     // converts midi pitch to frequency in Hz
-    template<typename T>
-    T mtof (T midiNote) const
+    template<typename SampleType>
+    SampleType mtof (SampleType midiNote) const
     {
-        midiNote = jlimit (T(0.0), T(127.0), midiNote);
-        return concertPitchHz.load() * std::pow(T(2.0), ((midiNote - rootNote.load()) / notesPerOctave.load()));
+        midiNote = jlimit (SampleType(0.0), SampleType(127.0), midiNote);
+        constexpr SampleType two = SampleType(2.0);
+        return static_cast<SampleType>(concertPitchHz.load() * std::pow(two, ((midiNote - rootNote.load()) / notesPerOctave.load())));
     }
     
     // converts frequency in Hz to midipitch
-    template<typename T>
-    T ftom (const T inputFreq) const
+    template<typename SampleType>
+    SampleType ftom (const SampleType inputFreq) const
     {
         jassert (inputFreq >= 0);
-        return notesPerOctave.load() * log2(inputFreq / concertPitchHz.load()) + rootNote.load();
+        return static_cast<SampleType>(notesPerOctave.load() * log2(inputFreq / concertPitchHz.load()) + rootNote.load());
     }
     
     void setConcertPitchHz (const int newConcertPitch) noexcept

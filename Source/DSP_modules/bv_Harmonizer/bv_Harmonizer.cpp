@@ -12,7 +12,16 @@
 #include "bv_Harmonizer/bv_Harmonizer_Midi.cpp"
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
-#include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
+
+#if JUCE_USE_VDSP_FRAMEWORK
+    #if (JUCE_MAC || JUCE_IOS)
+        #include <Accelerate/Accelerate.h>
+    #else
+        #undef JUCE_USE_VDSP_FRAMEWORK
+    #endif
+#endif
+
+#include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"  // vDSP stuff is used in this file too
 
 
 namespace bav
