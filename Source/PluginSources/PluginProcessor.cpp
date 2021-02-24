@@ -92,6 +92,11 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, samplesPerBlock, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, samplesPerBlock, floatEngine,  doubleEngine);
+    
+    if (juce::JUCEApplicationBase::isStandaloneApp())
+        needsSidechain = false;
+    else
+        needsSidechain = (host.isLogic() || host.isGarageBand());
 }
 
 
@@ -182,9 +187,8 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     if (! engine.hasBeenInitialized())
         return;
     
-    if (! juce::JUCEApplicationBase::isStandaloneApp())
-        if ((host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
-            return;   // our audio input is disabled! can't do processing
+    if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
+        return;   // our audio input is disabled! can't do processing
     
     updateAllParameters (engine); // the host might use a 0-sample long audio buffer to tell us to update our state with new automation values, which is why the check for that is AFTER this call.
     
@@ -192,8 +196,7 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
         return;
     
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
-    juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true,
-                                                                        (juce::JUCEApplicationBase::isStandaloneApp() ? 0 : (host.isLogic() || host.isGarageBand())));
+    juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
     
     engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
     
@@ -236,9 +239,8 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
     if (! engine.hasBeenInitialized())
         return;
     
-    if (! juce::JUCEApplicationBase::isStandaloneApp())
-        if ((host.isLogic() || host.isGarageBand()) && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
-            return;   // our audio input is disabled! can't do processing
+    if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
+        return;   // our audio input is disabled! can't do processing
     
     updateAllParameters (engine);
     
@@ -246,8 +248,7 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
         return;
     
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
-    juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true,
-                                                                        (juce::JUCEApplicationBase::isStandaloneApp() ? 0 : (host.isLogic() || host.isGarageBand())));
+    juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
     
     if (! wasBypassedLastCallback)
         engine.process (inBus, outBus, midiMessages, false, true); // render 1 more output frame & ramp gain to 0
@@ -718,7 +719,7 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 
 juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
-    if (! juce::JUCEApplicationBase::isStandaloneApp() && (host.isLogic() || host.isGarageBand()))
+    if ((! juce::JUCEApplicationBase::isStandaloneApp()) && (host.isLogic() || host.isGarageBand()))
         return BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo(), true)
                                 .withInput ("Sidechain", juce::AudioChannelSet::mono(),   true)
                                 .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
@@ -731,12 +732,7 @@ juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     if (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled())
-    {
-        if (juce::JUCEApplicationBase::isStandaloneApp())
-            return false;
-        else if ((! (host.isLogic() || host.isGarageBand())))
-            return false;
-    }
+        return (! needsSidechain);
     
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
@@ -747,10 +743,7 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 bool ImogenAudioProcessor::canAddBus (bool isInput) const
 {
-    if (juce::JUCEApplicationBase::isStandaloneApp())
-        return false;
-    
-    if (host.isLogic() || host.isGarageBand())
+    if (needsSidechain)
         return isInput;
     
     return false;
@@ -759,10 +752,7 @@ bool ImogenAudioProcessor::canAddBus (bool isInput) const
 
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 {
-    if (! (host.isLogic() || host.isGarageBand()))
-        return false;
-    
-    return (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
+    return needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
 }
 
 

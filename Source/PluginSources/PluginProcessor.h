@@ -178,6 +178,7 @@ private:
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
+    bool needsSidechain = false;
     
     template <typename SampleType>
     void updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine);
