@@ -18,6 +18,7 @@
         #include <Accelerate/Accelerate.h>
     #else
         #undef JUCE_USE_VDSP_FRAMEWORK
+        #define JUCE_USE_VDSP_FRAMEWORK 0
     #endif
 #endif
 

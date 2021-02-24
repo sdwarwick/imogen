@@ -49,15 +49,13 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             
             sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
             
-            do
+            for (int i = 0; i <= numPeaksToTest; ++i)
             {
                 getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex, peakSearchingOrder);
                 
-                if (peakCandidates.size() > 2)
-                    if (peakCandidates.getLast() == peakCandidates.getUnchecked(peakCandidates.size() - 2))
-                        break;
+                if (peakCandidates.size() > numPeaksToTest)
+                    break;
             }
-            while (peakCandidates.size() < numPeaksToTest);
         }
         
         // identify the most ideal peak for this analysis window out of our list of candidates
@@ -138,10 +136,7 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         }
         
         if (newStart == -1)
-        {
-            candidates.add (predictedPeak); // do this bc this function is called in a while loop whose condition is the size of the output array...
             return;
-        }
         
         starting = newStart;
     }
@@ -270,8 +265,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
 #if JUCE_USE_VDSP_FRAMEWORK
     {
-        unsigned long index = 0;
-        vDSP_minvi(finalHandfulDeltas.getRawDataPointer(), vDSP_Stride(1), &lowestDelta, &index, vDSP_Length(finalHandfulSize));
+        unsigned long index = 0; // in Apple's vDSP, the type vDSP_Length is an alias for unsigned long
+        vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), vDSP_Stride(1), &lowestDelta, &index, vDSP_Length(finalHandfulSize));
         indexOfLowestDelta = static_cast<int>(index);
     }
 #else
