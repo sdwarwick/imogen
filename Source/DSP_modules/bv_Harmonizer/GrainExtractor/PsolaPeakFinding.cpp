@@ -37,9 +37,6 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         
         if (windowStart == windowEnd) // possible edge case?
         {
-            if (windowEnd == totalNumSamples) // another possible edge case...
-                return;
-            
             peakCandidates.add (windowStart);
         }
         else
@@ -53,47 +50,37 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             {
                 getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex, peakSearchingOrder);
                 
-                if (peakCandidates.size() > numPeaksToTest)
+                if (peakCandidates.size() >= numPeaksToTest)
                     break;
             }
         }
         
-        // identify the most ideal peak for this analysis window out of our list of candidates
+        jassert (! peakCandidates.isEmpty());
         
-        int peakIndex;
+        int peakIndex;  // identify the most ideal peak for this analysis window out of our list of candidates
         
-        if (peakCandidates.size() == 1)
+        switch (peakCandidates.size())
         {
-            peakIndex = peakCandidates.getUnchecked(0);
-        }
-        else
-        {
-            if (targetArray.size() > 1)
-            {
-                peakIndex = chooseIdealPeakCandidate (peakCandidates, reading,
-                                                      targetArray.getLast() + period,
-                                                      targetArray.getUnchecked(targetArray.size() - 2) + outputGrain);
-            }
-            else
-            {
-                // for the first two peaks, choose the point of overall maximum energy in the analysis window, because we have no deltas to compare to for these peaks
+            case 1:
+                peakIndex = peakCandidates.getUnchecked(0);
+                break;
                 
-                int strongestPeakIndex = peakCandidates.getUnchecked (0);
-                SampleType strongestPeak = abs(reading[strongestPeakIndex]);
+            case 2:
+                peakIndex = choosePeakWithGreatestPower (peakCandidates, reading);
+                break;
                 
-                for (int candidate : peakCandidates)
+            default:
+                if (targetArray.size() > 1)
                 {
-                    const SampleType current = abs(reading[candidate]);
-                    
-                    if (current > strongestPeak)
-                    {
-                        strongestPeak = current;
-                        strongestPeakIndex = candidate;
-                    }
+                    peakIndex = chooseIdealPeakCandidate (peakCandidates, reading,
+                                                          targetArray.getLast() + period,
+                                                          targetArray.getUnchecked(targetArray.size() - 2) + outputGrain);
                 }
-                
-                peakIndex = strongestPeakIndex;
-            }
+                else
+                {
+                    peakIndex = choosePeakWithGreatestPower (peakCandidates, reading);
+                }
+                break;
         }
         
         targetArray.add (peakIndex);
@@ -176,28 +163,25 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         }
     }
     
+    constexpr SampleType zero = SampleType(0.0);
+    
     if (indexOfLocalMax == indexOfLocalMin)
     {
         candidates.add (indexOfLocalMax);
-        return;
     }
-    
-    constexpr SampleType zero = SampleType(0.0);
-    
-    if (localMax < zero)
+    else if (localMax < zero)
     {
         candidates.add (indexOfLocalMin);
-        return;
     }
-    
-    if (localMin > zero)
+    else if (localMin > zero)
     {
         candidates.add (indexOfLocalMax);
-        return;
     }
-    
-    candidates.add (std::min (indexOfLocalMax, indexOfLocalMin));
-    candidates.add (std::max (indexOfLocalMax, indexOfLocalMin));
+    else
+    {
+        candidates.add (std::min (indexOfLocalMax, indexOfLocalMin));
+        candidates.add (std::max (indexOfLocalMax, indexOfLocalMin));
+    }
 }
 
 
@@ -321,6 +305,26 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
 }
 
 
+template<typename SampleType>
+int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const Array<int>& candidates, const SampleType* reading)
+{
+    int strongestPeakIndex = candidates.getUnchecked (0);
+    SampleType strongestPeak = abs(reading[strongestPeakIndex]);
+    
+    for (int candidate : candidates)
+    {
+        const SampleType current = abs(reading[candidate]);
+        
+        if (current > strongestPeak)
+        {
+            strongestPeak = current;
+            strongestPeakIndex = candidate;
+        }
+    }
+    
+    return strongestPeakIndex;
+}
+    
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output, // array to write the sorted sample indices to
