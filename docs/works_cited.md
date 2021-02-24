@@ -20,5 +20,4 @@ I created Imogen (and learned how to code while doing it) by gathering a wealth 
 * [FESOLA in MATLAB by Tim Roberts](http://www.github.com/zygurt/TSM/blob/master/Batch/FESOLA_batch.m)
 * [Implementation of the YIN pitch-tracking algorithm in Java by Joren Six, Matthias Mauch & Paul Brossier](http://github.com/JorenSix/TarsosDSP/blob/master/src/core/be/tarsos/dsp/pitch/FastYin.java)
 * [YIN in Python by Patrice Guyot](http://www.github.com/patriceguyot/Yin/blob/master/yin.py)
-* [PYIN ("probabilistic YIN") in C++, by Matthias Mauch et al](http://code.soundsoftware.ac.uk/projects/pyin)
 * [Dynamic pitch-tracking library written in C by Antoine Schmitt](http://www.github.com/antoineschmitt/dywapitchtrack)
