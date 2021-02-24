@@ -4,7 +4,7 @@ on:
   push:
     paths-ignore:
     - 'docs/**'
-    - '.github/**'
+    #- '.github/**'
 
 env:
   PROJECT_NAME: Imogen
@@ -54,7 +54,7 @@ jobs:
     - name: Configure (Unix)
       if: runner.os != 'Windows'
       shell: bash
-      run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache .
+      run: cmake -B ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DImogen_runPluginvalOnBuild=TRUE -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache .
 
     - name: Configure (Windows)
       if: runner.os == 'Windows'
