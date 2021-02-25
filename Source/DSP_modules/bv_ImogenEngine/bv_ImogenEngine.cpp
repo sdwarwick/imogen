@@ -14,13 +14,14 @@ namespace bav
 
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine():
-    modulatorInput(ModulatorInputSource::left),
     internalBlocksize(512),
     inputBuffer(1, internalBlocksize, internalBlocksize),
     outputBuffer(2, internalBlocksize, internalBlocksize),
     limiterIsOn(false),
     resourcesReleased(true), initialized(false)
 {
+    modulatorInput.store(0);
+    
     inputGain.store(1.0f);
     prevInputGain.store(1.0f);
     
@@ -235,22 +236,22 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     AudioBuffer<SampleType> input; // input must be a MONO buffer!
     
-    switch (modulatorInput) // isolate a mono input buffer from the input bus, mixing to mono if necessary
+    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
-        case (ModulatorInputSource::left):
+        case (0):
         {
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
             break;
         }
             
-        case (ModulatorInputSource::right):
+        case (1):
         {
             const int channel = (inBus.getNumChannels() > 1);
             input = AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
             break;
         }
             
-        case (ModulatorInputSource::mixToMono):
+        case (2):
         {
             const int totalNumChannels = inBus.getNumChannels();
             
@@ -669,7 +670,8 @@ void ImogenEngine<SampleType>::updatePlayingButReleasedGain (const float newGain
 {
     harmonizer.setPlayingButReleasedGain(newGainMult);
 }
-
+    
+    
 
 template class ImogenEngine<float>;
 template class ImogenEngine<double>;

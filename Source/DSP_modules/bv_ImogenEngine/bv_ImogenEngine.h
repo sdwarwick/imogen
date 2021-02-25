@@ -53,6 +53,7 @@ public:
     int reportLatency() const noexcept { return internalBlocksize; }
     
     void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
+    int getCurrentNumVoices() const { return harmonizer.getNumVoices(); }
     
     void returnActivePitches (Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
     
@@ -86,16 +87,16 @@ public:
     bool hasBeenReleased()    const noexcept { return resourcesReleased; }
     bool hasBeenInitialized() const noexcept { return initialized; }
     
-    // determines how the plugin will select its mono input from the stereo buffer fed to it from the host
-    enum ModulatorInputSource { left, right, mixToMono };
-    
-    ModulatorInputSource getModulatorSource() const noexcept { return modulatorInput; }
-    
-    void setModulatorSource (const ModulatorInputSource newSource) { modulatorInput = newSource; }
+    int getModulatorSource() const noexcept { return modulatorInput.load(); }
+    void setModulatorSource (const int newSource) { modulatorInput.store(newSource); }
     
 private:
     
-    ModulatorInputSource modulatorInput; // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
+    // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
+    // 0 - left channel only
+    // 1 - right channel only
+    // 2 - mix all input channels to mono
+    std::atomic<int> modulatorInput;
     
     int internalBlocksize; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This corresponds to the latency of the pitch detector, and, thus, the minimum possible Hz it can detect.
     

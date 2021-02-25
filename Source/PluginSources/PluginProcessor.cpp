@@ -500,6 +500,15 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 }
 
 
+void ImogenAudioProcessor::updateModulatorInputSource (const int newSource)
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.setModulatorSource(newSource);
+    else
+        floatEngine.setModulatorSource(newSource);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -580,24 +589,42 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 }
 
 
+// the host calls these two functions to save/load DAW sessions, etc
+
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto xml(tree.copyState().createXml());
- //   xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
+    auto xml (tree.copyState().createXml());
+    
+    if (isUsingDoublePrecision())
+    {
+        xml->setAttribute ("numberOfVoices", doubleEngine.getCurrentNumVoices());
+        xml->setAttribute ("modulatorInputSource", doubleEngine.getModulatorSource());
+    }
+    else
+    {
+        xml->setAttribute ("numberOfVoices", floatEngine.getCurrentNumVoices());
+        xml->setAttribute ("modulatorInputSource", floatEngine.getModulatorSource());
+    }
+    
     copyXmlToBinary (*xml, destData);
 }
 
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto xmlState(getXmlFromBinary(data, sizeInBytes));
+    auto xmlState (getXmlFromBinary (data, sizeInBytes));
     
-    if (xmlState.get() != nullptr && xmlState->hasTagName (tree.state.getType()))
-    {
-        tree.replaceState(juce::ValueTree::fromXml (*xmlState));
-        const int newNumOfVoices = xmlState->getIntAttribute("numberOfVoices", 4);
-        updateNumVoices(newNumOfVoices); // TO DO : send notif to GUI to update numVoices comboBox
-    }
+    if (xmlState.get() == nullptr || ! xmlState->hasTagName (tree.state.getType()))
+        return;
+    
+    suspendProcessing (true);
+
+    tree.replaceState (juce::ValueTree::fromXml (*xmlState));
+    
+    updateNumVoices (xmlState->getIntAttribute ("numberOfVoices", 4));
+    updateModulatorInputSource (xmlState->getIntAttribute ("modulatorInputSource", 0));
+    
+    suspendProcessing (false);
 }
 
 
@@ -678,8 +705,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceLowerThresh", "Confidence lower thresh",
                                                                  confidenceRange, 0.05f));
     
-    // MAKE PARAM FOR INPUT MODE !!
-    
     return { params.begin(), params.end() };
 }
 
@@ -692,11 +717,13 @@ double ImogenAudioProcessor::getTailLengthSeconds() const
     return static_cast<double> (quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
 }
 
-int ImogenAudioProcessor::getNumPrograms() {
+int ImogenAudioProcessor::getNumPrograms()
+{
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs, so this should be at least 1, even if you're not really implementing programs.
 }
 
-int ImogenAudioProcessor::getCurrentProgram() {
+int ImogenAudioProcessor::getCurrentProgram()
+{
     return 0;
 }
 

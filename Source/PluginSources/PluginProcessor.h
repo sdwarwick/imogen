@@ -92,6 +92,8 @@ public:
     void updateAftertouchGainToggle();
     void updatePlayingButRelesedGain();
     
+    void updateModulatorInputSource (const int newSource);
+    
     // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
     void returnActivePitches(juce::Array<int>& outputArray) const;
