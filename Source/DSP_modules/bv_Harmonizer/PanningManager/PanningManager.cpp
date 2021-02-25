@@ -122,6 +122,8 @@ void PanningManager::updateStereoWidth (const int newWidth)
     
     if (unsentPanVals.isEmpty())
         reset();
+    
+    jassert (! unsentPanVals.isEmpty());
 }
 
 
@@ -140,14 +142,14 @@ void PanningManager::panValTurnedOff (int panVal)
     
     if (unsentPanVals.isEmpty())
     {
-        unsentPanVals.add(panVal);
+        unsentPanVals.add (panVal);
         return;
     }
     
     int i = 0;
     bool addedIt = false;
     
-    while (i < currentNumVoices)
+    do
     {
         if (i > panValsInAssigningOrder.size())
             break;
@@ -161,6 +163,7 @@ void PanningManager::panValTurnedOff (int panVal)
         else
             ++i;
     }
+    while (i < currentNumVoices);
     
     if (! addedIt)
         unsentPanVals.add(panVal);
@@ -174,36 +177,7 @@ int PanningManager::getClosestNewPanValFromNew (int oldPan, Array<int>& readingF
     if (readingFrom.isEmpty())
         return -1;
     
-    Array<int> distances;
-    distances.ensureStorageAllocated (readingFrom.size());
-    
-    for (int pan : readingFrom)
-    {
-        const int distance = abs (oldPan - pan);
-        distances.add (distance);
-        
-        if (distance == 0)
-            break;
-    }
-    
-    // find the minimum val in absDistances
-    int minimum = 128; // higher than highest possible midiPan of 127
-    
-    for (int distance : distances)
-    {
-        if (distance < minimum)
-            minimum = distance;
-        
-        if (distance == 0)
-            break;
-    }
-    
-    int minIndex = distances.indexOf (minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
-    
-    if (minIndex < 0)
-        minIndex = 0;
-    
-    return readingFrom.removeAndReturn (minIndex);
+    return findClosestValueInNewArray (oldPan, readingFrom, true);
 }
 
 
@@ -217,38 +191,32 @@ int PanningManager::getClosestNewPanValFromOld (int oldPan)
     if (unsentPanVals.isEmpty() || unsentPanVals.size() == 1)
         return getNextPanVal();
     
-    const ScopedLock sl (lock);
+    return findClosestValueInNewArray (oldPan, unsentPanVals, true);
+}
     
+    
+int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray, bool removeFoundValFromNewArray)
+{
     Array<int> distances;
-    distances.ensureStorageAllocated (unsentPanVals.size());
+    distances.ensureStorageAllocated (newArray.size());
     
-    for (int pan : unsentPanVals)
+    for (int newVal : newArray)
     {
-        const int distance = abs (oldPan - pan);
+        const int distance = abs (targetValue - newVal);
         distances.add (distance);
         
         if (distance == 0)
             break;
     }
     
-    // find the minimum val in absDistances
-    int minimum = 128; // higher than highest possible midiPan of 127
+    int* minElementPtr = std::min_element (distances.begin(), distances.end());
     
-    for (int distance : distances)
-    {
-        if (distance < minimum)
-            minimum = distance;
-        
-        if (distance == 0)
-            break;
-    }
+    int minimum = *minElementPtr;
     
-    int minIndex = distances.indexOf (minimum); // this is the index of the located pan value in both absDistances & unsentPanVals
+    if (! removeFoundValFromNewArray)
+        return minimum;
     
-    if (minIndex < 0)
-        minIndex = 0;
-    
-    return unsentPanVals.removeAndReturn (minIndex);
+    return newArray.removeAndReturn (static_cast<int> (std::distance (distances.begin(), minElementPtr)));
 }
 
 

@@ -78,6 +78,8 @@ private:
     
     int getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom);
     
+    int findClosestValueInNewArray (int targetValue, Array<int>& newArray, bool removeFoundValFromNewArray = false);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };
 
