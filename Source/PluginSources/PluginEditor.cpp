@@ -19,11 +19,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     setSize (940, 435);
     this->setBufferedToImage (true);
     
-    auto splash = new juce::SplashScreen ("Welcome to Imogen!",
-                                          bav::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize)
-                                                .rescaled (400, 400, juce::Graphics::ResamplingQuality::highResamplingQuality),
-                                          true);
-    
     lookAndFeel.changeSkin(currentSkin);
     
     midiPanel   .setLookAndFeel(&lookAndFeel);
@@ -72,7 +67,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     // addChildComponent(touchOnceSettings);
     
     Timer::startTimerHz(60); // framerate of graphics
-    splash->deleteAfterDelay(juce::RelativeTime(4), true);
 }
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
@@ -84,7 +78,6 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (lookAndFeel.findColour(bav::ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
-    
 }
 
 
@@ -111,7 +104,7 @@ void ImogenAudioProcessorEditor::resized()
 
 void ImogenAudioProcessorEditor::timerCallback()
 {
-    staffDisplay.repaint();
+    //staffDisplay.repaint();
     
     if (! juce::JUCEApplicationBase::isStandaloneApp())
     {

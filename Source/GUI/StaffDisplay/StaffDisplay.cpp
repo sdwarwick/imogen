@@ -27,9 +27,9 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     yCoordsOfActiveNotes.ensureStorageAllocated(12);
     yCoordsOfActiveNotes.clearQuick();
     
-    const int noteheadHeightPx = 5;
-    yCoordLookupTable[0] = 0;
-    for(int n = 1; n < 127; ++n)
+    constexpr int noteheadHeightPx = 5 + 17;
+    yCoordLookupTable[0] = 17;
+    for (int n = 1; n < 127; ++n)
     {
         if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(n))
             yCoordLookupTable[n] = yCoordLookupTable[n - 1];
@@ -73,43 +73,39 @@ void StaffDisplay::drawPitches(const Array<int>& activePitches, Graphics& g)
 {
     // TO DO :: draw ledger lines, if needed !
     
-    useFlats = displayFlats.getSelectedId() == 1 ? true : false;
+    if (activePitches.isEmpty())
+        return;
     
-    if (! activePitches.isEmpty())
+    useFlats = (displayFlats.getSelectedId() == 1);
+    
+    yCoordsOfActiveNotes.clearQuick();
+    
+    for (int pitch : activePitches)
+        yCoordsOfActiveNotes.add (yCoordLookupTable[pitch]);
+    
+    int xOffset = 0;
+    const int someScaleFactor = 7; // the scaleing factor applied to the incremented "x offset" value (ie, the amount that "1 offset" equals)
+    const int baseXCoord = 75; // the base x coordinate to which the offset value is added
+    
+    for (int n = 0; n < yCoordsOfActiveNotes.size(); ++n)
     {
-        yCoordsOfActiveNotes.clearQuick();
-        for(int n = 0; n < activePitches.size(); ++n)
-            yCoordsOfActiveNotes.add(yCoordLookupTable[activePitches.getUnchecked(n)] + 17);
+        const int yCoord = yCoordsOfActiveNotes.getUnchecked(n);
         
-        if(! yCoordsOfActiveNotes.isEmpty())
-        {
-            int xOffset = 0;
-            const int someScaleFactor = 7; // the scaleing factor applied to the incremented "x offset" value (ie, the amount that "1 offset" equals)
-            const int baseXCoord = 75; // the base x coordinate to which the offset value is added
-            
-            for(int n = 0; n < yCoordsOfActiveNotes.size(); ++n)
-            {
-                
-                const int yCoord = yCoordsOfActiveNotes.getUnchecked(n);
-                
-                if(n == yCoordsOfActiveNotes.size() - 1)
-                    xOffset = 0;
-                
-                if(n < yCoordsOfActiveNotes.size() - 2)
-                    if(yCoordsOfActiveNotes.getUnchecked(n + 1) - yCoord > halfTheStafflineHeight)
-                        xOffset = 0;
-                
-                const int xCoord = xOffset * someScaleFactor + baseXCoord;
-                
-                drawNotehead(xCoord, yCoord, g);
-                
-                if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
-                    drawAccidental(xCoord, yCoord, g);
-                
-                xOffset ^= 1;
-                
-            }
-        }
+        if (n == yCoordsOfActiveNotes.size() - 1)
+            xOffset = 0;
+        
+        if (n < yCoordsOfActiveNotes.size() - 2)
+            if (yCoordsOfActiveNotes.getUnchecked(n + 1) - yCoord > halfTheStafflineHeight)
+                xOffset = 0;
+        
+        const int xCoord = xOffset * someScaleFactor + baseXCoord;
+        
+        drawNotehead(xCoord, yCoord, g);
+        
+        if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
+            drawAccidental (xCoord, yCoord, g);
+        
+        xOffset ^= 1;
     }
 }
 
