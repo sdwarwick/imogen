@@ -188,7 +188,7 @@ private:
     template <typename SampleType>
     void updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine);
     
-    
+    void returnPluginInternalState (std::unique_ptr<juce::XmlElement>& output);
     void updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)

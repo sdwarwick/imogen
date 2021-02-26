@@ -555,47 +555,49 @@ void ImogenAudioProcessor::deletePreset (juce::String presetName)
 }
 
 
+// functions for saving state info.....................................
+
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto xml (tree.copyState().createXml());
+    std::unique_ptr<juce::XmlElement> xml;
     
-    if (isUsingDoublePrecision())
-    {
-        xml->setAttribute ("numberOfVoices", doubleEngine.getCurrentNumVoices());
-        xml->setAttribute ("modulatorInputSource", doubleEngine.getModulatorSource());
-    }
-    else
-    {
-        xml->setAttribute ("numberOfVoices", floatEngine.getCurrentNumVoices());
-        xml->setAttribute ("modulatorInputSource", floatEngine.getModulatorSource());
-    }
+    returnPluginInternalState (xml);
     
     copyXmlToBinary (*xml, destData);
 }
+
 
 void ImogenAudioProcessor::savePreset (juce::String presetName)
 {
     // this function can be used both to save new preset files or to update existing ones
     
-    juce::File writingTo = getPresetsFolder().getChildFile(presetName);
+    std::unique_ptr<juce::XmlElement> xml;
     
-    auto xml (tree.copyState().createXml());
+    returnPluginInternalState (xml);
     
-    if (isUsingDoublePrecision())
-    {
-        xml->setAttribute ("numberOfVoices", doubleEngine.getCurrentNumVoices());
-        xml->setAttribute ("modulatorInputSource", doubleEngine.getModulatorSource());
-    }
-    else
-    {
-        xml->setAttribute ("numberOfVoices", floatEngine.getCurrentNumVoices());
-        xml->setAttribute ("modulatorInputSource", floatEngine.getModulatorSource());
-    }
-    
-    xml->writeTo (writingTo);
+    xml->writeTo (getPresetsFolder().getChildFile(presetName));
     updateHostDisplay();
 }
 
+
+void ImogenAudioProcessor::returnPluginInternalState (std::unique_ptr<juce::XmlElement>& output)
+{
+    output = tree.copyState().createXml();
+    
+    if (isUsingDoublePrecision())
+    {
+        output->setAttribute ("numberOfVoices", doubleEngine.getCurrentNumVoices());
+        output->setAttribute ("modulatorInputSource", doubleEngine.getModulatorSource());
+    }
+    else
+    {
+        output->setAttribute ("numberOfVoices", floatEngine.getCurrentNumVoices());
+        output->setAttribute ("modulatorInputSource", floatEngine.getModulatorSource());
+    }
+}
+
+
+// functions for loading state info.................................
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
@@ -615,7 +617,7 @@ void ImogenAudioProcessor::loadPreset (juce::String presetName)
     if (! presetToLoad.existsAsFile())
         return;
     
-    auto xmlElement = juce::parseXML(presetToLoad);
+    auto xmlElement = juce::parseXML (presetToLoad);
     
     if (xmlElement.get() == nullptr || ! xmlElement->hasTagName (tree.state.getType()))
         return;
