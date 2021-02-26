@@ -14,10 +14,13 @@ namespace bav
     
     
 template<typename SampleType>
-void Harmonizer<SampleType>::numVoicesChanged (const int newMaxNumVoices)
+void Harmonizer<SampleType>::numVoicesChanged()
 {
-    panner.prepare (newMaxNumVoices);
+    const int newMaxNumVoices = voices.size();
+    
+    panner.prepare (newMaxNumVoices, false);
     intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
+    usableVoices.ensureStorageAllocated(newMaxNumVoices);
 }
     
     
@@ -35,7 +38,7 @@ int Harmonizer<SampleType>::getNumActiveVoices() const
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable) const
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable)
 {
     for (auto* voice : voices)
         if (! voice->isVoiceActive())
@@ -49,7 +52,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool s
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal() const
+HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal()
 {
     // This voice-stealing algorithm applies the following heuristics:
     // - Re-use the oldest notes first
@@ -66,9 +69,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal() const
     HarmonizerVoice<SampleType>* descantVoice = getCurrentDescantVoice();
     HarmonizerVoice<SampleType>* pedalVoice = getCurrentPedalPitchVoice();
     
-    // this is a list of voices we can steal, sorted by how long they've been running
-    Array< HarmonizerVoice<SampleType>* > usableVoices;
-    usableVoices.ensureStorageAllocated (voices.size());
+    usableVoices.clearQuick(); // this is a list of voices we can steal, sorted by how long they've been on
     
     for (auto* voice : voices)
     {
@@ -176,7 +177,7 @@ void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
     for (int i = 0; i < voicesToAdd; ++i)
         voices.add (new HarmonizerVoice<SampleType>(this));
     
-    numVoicesChanged (voices.size());
+    numVoicesChanged();
 }
     
     
@@ -230,7 +231,7 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     
     jassert (voices.isEmpty() || voices.size() == shouldBeLeft);
     
-    numVoicesChanged (voices.size());
+    numVoicesChanged();
 }
     
 

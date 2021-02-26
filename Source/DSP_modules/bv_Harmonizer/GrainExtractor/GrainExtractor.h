@@ -44,6 +44,12 @@ private:
     
     Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
+    Array<int> peakCandidates;
+    Array<int> peakSearchingOrder;
+    
+    Array<float> candidateDeltas;
+    Array<int>   finalHandful;
+    Array<float> finalHandfulDeltas;
     
     // functions used for finding of PSOLA peaks
     

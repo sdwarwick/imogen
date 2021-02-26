@@ -22,10 +22,14 @@ void PanningManager::releaseResources()
     panValsInAssigningOrder.clear();
     arrayIndexesMapped.clear();
     unsentPanVals.clear();
+    possiblePanVals.clear();
+    newPanVals.clear();
+    newUnsentVals.clear();
+    distances.clear();
 }
 
 
-void PanningManager::prepare (const int numVoices)
+void PanningManager::prepare (const int numVoices, bool clearArrays)
 {
     if (numVoices <= 0)
         return;
@@ -33,21 +37,28 @@ void PanningManager::prepare (const int numVoices)
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
     unsentPanVals.ensureStorageAllocated(numVoices);
+    possiblePanVals.ensureStorageAllocated(numVoices);
+    newPanVals.ensureStorageAllocated(numVoices);
+    newUnsentVals.ensureStorageAllocated(numVoices);
+    distances.ensureStorageAllocated(numVoices);
     
-    setNumberOfVoices (numVoices);
-}
+    if (clearArrays)
+    {
+        panValsInAssigningOrder.clearQuick();
+        arrayIndexesMapped.clearQuick();
+        unsentPanVals.clearQuick();
+        possiblePanVals.clearQuick();
+        newPanVals.clearQuick();
+        newUnsentVals.clearQuick();
+        distances.clearQuick();
+    }
     
-
-void PanningManager::setNumberOfVoices (const int newNumVoices)
-{
-    if (newNumVoices <= 0)
-        return;
-    
-    currentNumVoices = newNumVoices;
+    currentNumVoices = numVoices;
     
     mapArrayIndexes();
     updateStereoWidth(lastRecievedStereoWidth);
 }
+    
     
     
 int PanningManager::getNextPanVal()
@@ -77,8 +88,7 @@ void PanningManager::updateStereoWidth (const int newWidth)
     const auto minPan = 63.5f - (63.5f * rangeMultiplier);
     const auto increment = (maxPan - minPan) / currentNumVoices;
     
-    Array<int> possiblePanVals;
-    possiblePanVals.ensureStorageAllocated (currentNumVoices);
+    possiblePanVals.clearQuick();
     
     for (int i = 0; i < currentNumVoices; ++i)
         possiblePanVals.add (roundToInt (minPan + (i * increment) + (increment/2.0f)));
@@ -100,14 +110,13 @@ void PanningManager::updateStereoWidth (const int newWidth)
     // the # of values we actually transfer to the I/O array being read from should correspond to the number of unsent pan vals left now -- ie, if some voices are already on, etc. And the values put in the I/O array should also be the values out of the panValsInAssigningOrder array that are closest to the old values from unsentPanVals...
     
     // make copy of panValsInAssigningOrder bc items will be removed during the searching process below
-    Array<int> newPanVals;
-    newPanVals.ensureStorageAllocated (panValsInAssigningOrder.size());
+    
+    newPanVals.clearQuick();
     
     for (int newPan : panValsInAssigningOrder)
         newPanVals.add (newPan);
     
-    Array<int> newUnsentVals;
-    newUnsentVals.ensureStorageAllocated (unsentPanVals.size());
+    newUnsentVals.clearQuick();
     
     for (int oldPan : unsentPanVals)
         newUnsentVals.add (getClosestNewPanValFromNew (oldPan, newPanVals));
@@ -197,8 +206,7 @@ int PanningManager::getClosestNewPanValFromOld (int oldPan)
     
 int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray, bool removeFoundValFromNewArray)
 {
-    Array<int> distances;
-    distances.ensureStorageAllocated (newArray.size());
+    distances.clearQuick();
     
     for (int newVal : newArray)
     {

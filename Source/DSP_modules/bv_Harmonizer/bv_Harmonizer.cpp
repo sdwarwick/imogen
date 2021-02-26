@@ -108,7 +108,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
     
     aggregateMidiBuffer.ensureSize (static_cast<size_t> (blocksize * 2));
     
-    numVoicesChanged (voices.size());
+    numVoicesChanged();
     
     for (auto* voice : voices)
         voice->prepare(blocksize);

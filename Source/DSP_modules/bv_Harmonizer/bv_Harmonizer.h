@@ -313,7 +313,7 @@ private:
     
     void setCurrentInputFreq (const float newInputFreq);
     
-    void numVoicesChanged (const int newMaxNumVoices);
+    void numVoicesChanged();
     
     // MIDI
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
@@ -347,8 +347,8 @@ private:
     void applyDescant();
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable) const;
-    HarmonizerVoice<SampleType>* findVoiceToSteal() const;
+    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable);
+    HarmonizerVoice<SampleType>* findVoiceToSteal();
     HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
     HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
@@ -443,6 +443,8 @@ private:
     int windowSize;
     
     AudioBuffer<SampleType> polarityReversalBuffer;
+    
+    Array< HarmonizerVoice<SampleType>* > usableVoices; // this array is used to sort the voices when a 'steal' is requested
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

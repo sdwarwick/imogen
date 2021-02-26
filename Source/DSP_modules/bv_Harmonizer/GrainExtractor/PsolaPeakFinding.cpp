@@ -28,8 +28,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     
     do
     {
-        Array<int> peakCandidates;
-        peakCandidates.ensureStorageAllocated (numPeaksToTest + 1);
+        peakCandidates.clearQuick();
         
         // bounds of the current analysis window. analysisIndex = the next predicted peak = the middle of this analysis window
         const int windowStart = std::max (0, analysisIndex - halfPeriod);
@@ -41,8 +40,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         }
         else
         {
-            Array<int> peakSearchingOrder;
-            peakSearchingOrder.ensureStorageAllocated (windowEnd - windowStart);
+            peakSearchingOrder.clearQuick();
             
             sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
             
@@ -63,11 +61,9 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         {
             case 1:
                 peakIndex = peakCandidates.getUnchecked(0);
-                break;
                 
             case 2:
                 peakIndex = choosePeakWithGreatestPower (peakCandidates, reading);
-                break;
                 
             default:
                 if (targetArray.size() > 1)
@@ -80,7 +76,6 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
                 {
                     peakIndex = choosePeakWithGreatestPower (peakCandidates, reading);
                 }
-                break;
         }
         
         targetArray.add (peakIndex);
@@ -190,8 +185,9 @@ template<typename SampleType>
 int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
                                                           const int deltaTarget1, const int deltaTarget2)
 {
-    Array<float> candidateDeltas;
-    candidateDeltas.ensureStorageAllocated (candidates.size());
+    candidateDeltas.clearQuick();
+    finalHandful.clearQuick();
+    finalHandfulDeltas.clearQuick();
     
     // 1. calculate delta values for each peak candidate
     // delta represents how far off this peak candidate is from the expected peak location - in a way it's a measure of the jitter that picking a peak candidate as this frame's peak would introduce to the overall alignment of the stream of grains based on the previous grains
@@ -212,18 +208,13 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
     
-    Array<int>   finalHandful;       // copy sample indices of candidates to here from input "candidates" array
-    Array<float> finalHandfulDeltas; // delta values for candidates
-    
-    finalHandful      .ensureStorageAllocated (finalHandfulSize);
-    finalHandfulDeltas.ensureStorageAllocated (finalHandfulSize);
-    
     for (int i = 0; i < finalHandfulSize; ++i)
     {
         float minDelta = maxDelta;
         
         int indexOfMinDelta = 0;
         int indexTicker = 0;
+        
         for (float delta : candidateDeltas)
         {
             if (delta < minDelta)

@@ -33,6 +33,17 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
     lastBlocksize = maxBlocksize;
+    
+    peakCandidates.ensureStorageAllocated (numPeaksToTest);
+    peakCandidates.clearQuick();
+    peakSearchingOrder.ensureStorageAllocated(maxBlocksize);
+    peakSearchingOrder.clearQuick();
+    candidateDeltas.ensureStorageAllocated (numPeaksToTest);
+    candidateDeltas.clearQuick();
+    finalHandful.ensureStorageAllocated (numPeaksToTest);
+    finalHandful.clearQuick();
+    finalHandfulDeltas.ensureStorageAllocated (numPeaksToTest);
+    finalHandfulDeltas.clearQuick();
 }
 
 
@@ -40,6 +51,11 @@ template<typename SampleType>
 void GrainExtractor<SampleType>::releaseResources()
 {
     peakIndices.clear();
+    peakCandidates.clear();
+    peakSearchingOrder.clear();
+    candidateDeltas.clear();
+    finalHandful.clear();
+    finalHandfulDeltas.clear();
 }
 
 

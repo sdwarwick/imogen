@@ -25,11 +25,7 @@ public:
     
     void releaseResources();
     
-    void prepare (const int numVoices);
-    
-    // used to change the # of polyphony voices currently active
-    void setNumberOfVoices(const int newNumVoices);
-    
+    void prepare (const int numVoices, bool clearArrays = true);
     
     // used to update the width of the stereo field of currently available / valid pan values
     void updateStereoWidth(const int newWidth);
@@ -79,6 +75,13 @@ private:
     int getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom);
     
     int findClosestValueInNewArray (int targetValue, Array<int>& newArray, bool removeFoundValFromNewArray = false);
+    
+    Array<int> possiblePanVals;
+    
+    Array<int> newPanVals;
+    Array<int> newUnsentVals;
+    
+    Array<int> distances;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };
