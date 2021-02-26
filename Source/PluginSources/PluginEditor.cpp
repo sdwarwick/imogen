@@ -16,7 +16,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel),
     staffDisplay(p, lookAndFeel)
 {
-    setSize (940, 435);
     this->setBufferedToImage (true);
     
     lookAndFeel.changeSkin(currentSkin);
@@ -67,6 +66,8 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     //addAndMakeVisible(modulatorInputSource);
     
     // addChildComponent(touchOnceSettings);
+    
+    setSize (940, 435);
     
     Timer::startTimerHz(60); // framerate of graphics
 }
