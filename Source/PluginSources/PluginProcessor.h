@@ -5,7 +5,14 @@
 #pragma once
 
 #include <juce_audio_utils/juce_audio_utils.h>
-#include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
+
+#ifndef IMOGEN_STANDALONE_APP
+    #define IMOGEN_STANDALONE_APP 0
+#endif
+
+#if ! IMOGEN_STANDALONE_APP
+    #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
+#endif
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
@@ -172,7 +179,9 @@ private:
     
     int latencySamples;
     
+#if ! IMOGEN_STANDALONE_APP
     juce::PluginHostType host;
+#endif
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
     

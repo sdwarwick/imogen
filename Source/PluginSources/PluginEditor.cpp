@@ -29,9 +29,11 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     helpButton  .setLookAndFeel(&lookAndFeel);
     helpScreen  .setLookAndFeel(&lookAndFeel);
     
+#if ! IMOGEN_STANDALONE_APP
     sidechainWarning.setLookAndFeel(&lookAndFeel);
     sidechainWarningShowing = false;
     addChildComponent(sidechainWarning);
+#endif
     
     selectSkin.addItem("Casual Denim", 1);
     selectSkin.addItem("Playful Boho", 2);
@@ -106,6 +108,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     //staffDisplay.repaint();
     
+#if ! IMOGEN_STANDALONE_APP
     if (! juce::JUCEApplicationBase::isStandaloneApp())
     {
         const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
@@ -126,6 +129,7 @@ void ImogenAudioProcessorEditor::timerCallback()
             }
         }
     }
+#endif
 }
 
 

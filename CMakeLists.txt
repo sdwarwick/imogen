@@ -110,3 +110,15 @@ target_compile_definitions (Imogen PUBLIC
 
 #
 
+set (buildFormats "")
+
+bvjw_reportBuildFormats (buildFormats)
+
+if ("${buildFormats}" STREQUAL "Standalone")
+	target_compile_definitions (Imogen PUBLIC IMOGEN_STANDALONE_APP=1)
+else()
+	target_compile_definitions (Imogen PUBLIC IMOGEN_STANDALONE_APP=0)
+endif()
+
+#
+
