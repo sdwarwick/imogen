@@ -314,12 +314,14 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
     // master input gain
-    if (input.getReadPointer(0) == inBuffer.getReadPointer(0))
-        inBuffer.applyGainRamp (0, internalBlocksize, prevInputGain.load(), inputGain.load());
-    else
-        inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain.load(), inputGain.load());
+    const float currentInGain = inputGain.load();
     
-    prevInputGain.store (inputGain.load());
+    if (input.getReadPointer(0) == inBuffer.getReadPointer(0))
+        inBuffer.applyGainRamp (0, internalBlocksize, prevInputGain.load(), currentInGain);
+    else
+        inBuffer.copyFromWithRamp (0, 0, input.getReadPointer(0), internalBlocksize, prevInputGain.load(), currentInGain);
+    
+    prevInputGain.store(currentInGain);
 
     // write to dry buffer & apply panning
     for (int chan = 0; chan < 2; ++chan)
@@ -327,22 +329,25 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
 
     // dry gain
-    dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain.load(), dryGain.load());
-    prevDryGain.store (dryGain.load());
+    const float currentDryGain = dryGain.load();
+    dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain.load(), currentDryGain);
+    prevDryGain.store(currentDryGain);
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
     harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);  // puts the harmonizer's rendered stereo output into wetBuffer
 
     // wet gain
-    wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain.load(), wetGain.load());
-    prevWetGain.store (wetGain.load());
+    const float currentWetGain = wetGain.load();
+    wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain.load(), currentWetGain);
+    prevWetGain.store(currentWetGain);
 
     dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
 
     // master output gain
-    wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain.load(), outputGain.load());
-    prevOutputGain.store (outputGain.load());
+    const float currentOutGain = outputGain.load();
+    wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain.load(), currentOutGain);
+    prevOutputGain.store(currentOutGain);
 
     if (limiterIsOn)
     {

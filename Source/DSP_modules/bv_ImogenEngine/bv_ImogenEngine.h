@@ -14,7 +14,26 @@
 
 #include "juce_dsp/juce_dsp.h"
 
+#ifndef IMOGEN_USE_VDSP
+    #if (JUCE_MAC || JUCE_IOS)
+        #define IMOGEN_USE_VDSP 1
+    #else
+        #define IMOGEN_USE_VDSP 0
+    #endif
+#endif
+
+#ifdef BV_HARMONIZER_USE_VDSP
+    #undef BV_HARMONIZER_USE_VDSP
+#endif
+
+#if IMOGEN_USE_VDSP
+    #define BV_HARMONIZER_USE_VDSP 1
+#else
+    #define BV_HARMONIZER_USE_VDSP 0
+#endif
+
 #include "bv_Harmonizer/bv_Harmonizer.h"
+
 
 
 namespace bav
@@ -126,7 +145,8 @@ private:
     bool resourcesReleased;
     bool initialized;
     
-    std::atomic<float> dryGain, prevDryGain, wetGain, prevWetGain, inputGain, prevInputGain, outputGain, prevOutputGain;
+    std::atomic<float> dryGain, wetGain, inputGain, outputGain;
+    std::atomic<float> prevDryGain, prevWetGain, prevInputGain, prevOutputGain;
     
     MidiBuffer midiChoppingBuffer;
     

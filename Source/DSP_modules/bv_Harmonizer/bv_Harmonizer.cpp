@@ -13,13 +13,8 @@
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
 
-#if JUCE_USE_VDSP_FRAMEWORK
-    #if (JUCE_MAC || JUCE_IOS)
-        #include <Accelerate/Accelerate.h>
-    #else
-        #undef JUCE_USE_VDSP_FRAMEWORK
-        #define JUCE_USE_VDSP_FRAMEWORK 0
-    #endif
+#if BV_HARMONIZER_USE_VDSP
+    #include <Accelerate/Accelerate.h>
 #endif
 
 #include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"  // vDSP stuff is used in this file too
@@ -272,7 +267,7 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     
     auto* writing = windowBuffer.getWritePointer(0);
     
-#if JUCE_USE_VDSP_FRAMEWORK
+#if BV_HARMONIZER_USE_VDSP
     if constexpr (std::is_same_v <SampleType, float>)
         vDSP_hann_window (writing, vDSP_Length(numSamples), 2);
     else

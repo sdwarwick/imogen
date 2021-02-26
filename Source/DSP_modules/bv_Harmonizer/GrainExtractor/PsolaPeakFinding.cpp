@@ -238,7 +238,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     float lowestDelta = highestDelta;
     int indexOfLowestDelta = 0;
     
-#if JUCE_USE_VDSP_FRAMEWORK
+#if BV_HARMONIZER_USE_VDSP
     {
         unsigned long index = 0; // in Apple's vDSP, the type vDSP_Length is an alias for unsigned long
         vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), vDSP_Stride(1), &lowestDelta, &index, vDSP_Length(finalHandfulSize));
