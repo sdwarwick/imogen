@@ -213,6 +213,8 @@ public:
     
     void releaseResources();
     
+    int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
+    
     void clearBuffers();
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
