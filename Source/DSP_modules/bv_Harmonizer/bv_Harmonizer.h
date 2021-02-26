@@ -17,7 +17,17 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
 
-#ifndef BV_HARMONIZER_USE_VDSP
+#ifdef BV_HARMONIZER_USE_VDSP
+  #undef BV_HARMONIZER_USE_VDSP
+#endif
+
+#ifdef JUCE_USE_VDSP_FRAMEWORK
+  #if JUCE_USE_VDSP_FRAMEWORK
+    #define BV_HARMONIZER_USE_VDSP 1
+  #else
+    #define BV_HARMONIZER_USE_VDSP 0
+  #endif
+#else
   #if (JUCE_MAC || JUCE_IOS)
     #define BV_HARMONIZER_USE_VDSP 1
   #else
