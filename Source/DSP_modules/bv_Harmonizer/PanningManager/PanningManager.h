@@ -36,7 +36,7 @@ public:
     
     
     // used to tell the PanningManager when a previously assigned panningvalue is turned off - ie, is now available again for another voice 
-    void panValTurnedOff(int panVal);
+    void panValTurnedOff (int panVal);
     
     
     // used when updating stereo width -- voices should grab the new pan val that's closest to their old pan val
