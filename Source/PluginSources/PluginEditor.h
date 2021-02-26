@@ -65,7 +65,7 @@ private:
 
     void changeModulatorInputSource();
     
-#if ! IMOGEN_STANDALONE_APP
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     bav::EnableSidechainWarning sidechainWarning;
     bool sidechainWarningShowing;
 #endif

@@ -15,7 +15,7 @@
 #include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
 
 #if BV_HARMONIZER_USE_VDSP
-    #include <Accelerate/Accelerate.h>
+  #include <Accelerate/Accelerate.h>
 #endif
 
 

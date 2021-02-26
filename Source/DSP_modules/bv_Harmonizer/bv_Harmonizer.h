@@ -26,21 +26,21 @@
 
 
 #ifndef BV_HARMONIZER_USE_VDSP
-    #if (JUCE_MAC || JUCE_IOS)
-        #define BV_HARMONIZER_USE_VDSP 1
-    #else
-        #define BV_HARMONIZER_USE_VDSP 0
-    #endif
+  #if (JUCE_MAC || JUCE_IOS)
+    #define BV_HARMONIZER_USE_VDSP 1
+  #else
+    #define BV_HARMONIZER_USE_VDSP 0
+  #endif
 #endif
 
 #ifdef BV_PITCH_DETECTOR_USE_VDSP
-    #undef BV_PITCH_DETECTOR_USE_VDSP
+  #undef BV_PITCH_DETECTOR_USE_VDSP
 #endif
 
 #if BV_HARMONIZER_USE_VDSP
-    #define BV_PITCH_DETECTOR_USE_VDSP 1
+  #define BV_PITCH_DETECTOR_USE_VDSP 1
 #else
-    #define BV_PITCH_DETECTOR_USE_VDSP 0
+  #define BV_PITCH_DETECTOR_USE_VDSP 0
 #endif
 
 #include "bv_PitchDetector/bv_PitchDetector.h"

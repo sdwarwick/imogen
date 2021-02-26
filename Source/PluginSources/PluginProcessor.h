@@ -6,12 +6,16 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 
-#ifndef IMOGEN_STANDALONE_APP
-    #define IMOGEN_STANDALONE_APP 0
+#ifndef IMOGEN_ONLY_BUILDING_STANDALONE
+  #define IMOGEN_ONLY_BUILDING_STANDALONE 0
 #endif
 
-#if ! IMOGEN_STANDALONE_APP
-    #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
+#ifndef IMOGEN_NOT_BUILDING_STANDALONE
+  #define IMOGEN_NOT_BUILDING_STANDALONE 0
+#endif
+
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+  #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 #endif
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
@@ -49,7 +53,7 @@ public:
     bool canAddBus (bool isInput) const override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
-#if ! IMOGEN_STANDALONE_APP
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     bool shouldWarnUserToEnableSidechain() const;
 #endif
     
@@ -181,7 +185,7 @@ private:
     
     int latencySamples;
     
-#if ! IMOGEN_STANDALONE_APP
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     juce::PluginHostType host;
     bool needsSidechain = false;
 #endif

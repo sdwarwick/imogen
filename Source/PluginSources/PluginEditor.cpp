@@ -29,7 +29,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     helpButton  .setLookAndFeel(&lookAndFeel);
     helpScreen  .setLookAndFeel(&lookAndFeel);
     
-#if ! IMOGEN_STANDALONE_APP
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     sidechainWarning.setLookAndFeel(&lookAndFeel);
     sidechainWarningShowing = false;
     addChildComponent(sidechainWarning);
@@ -108,7 +108,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     //staffDisplay.repaint();
     
-#if ! IMOGEN_STANDALONE_APP
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (! juce::JUCEApplicationBase::isStandaloneApp())
     {
         const bool shouldBeShowing = audioProcessor.shouldWarnUserToEnableSidechain();
