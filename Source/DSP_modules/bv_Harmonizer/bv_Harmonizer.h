@@ -12,18 +12,10 @@
 
 // class templates defined in this file: Harmonizer<SampleType>, HarmonizerVoice<SampleType>
 
-
 #pragma once
 
-// dependencies
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
-
-// the rest of the harmonizer module
-#include "bv_Harmonizer/bv_HarmonizerUtilities.h"
-#include "bv_Harmonizer/PanningManager/PanningManager.h"
-#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
-
 
 #ifndef BV_HARMONIZER_USE_VDSP
   #if (JUCE_MAC || JUCE_IOS)
@@ -33,17 +25,10 @@
   #endif
 #endif
 
-#ifdef BV_PITCH_DETECTOR_USE_VDSP
-  #undef BV_PITCH_DETECTOR_USE_VDSP
-#endif
-
-#if BV_HARMONIZER_USE_VDSP
-  #define BV_PITCH_DETECTOR_USE_VDSP 1
-#else
-  #define BV_PITCH_DETECTOR_USE_VDSP 0
-#endif
-
-#include "bv_PitchDetector/bv_PitchDetector.h"
+#include "bv_Harmonizer/bv_HarmonizerUtilities.h"
+#include "bv_Harmonizer/PanningManager/PanningManager.h"
+#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
+#include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes <Accelerate.h> for vDSP, if needed
 
 
 

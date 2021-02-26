@@ -15,7 +15,10 @@
 #include "../../Source/GUI/LookAndFeel.h"
 #include "../../Source/GUI/HelpScreen/HelpScreen.h"
 #include "../../Source/GUI/touchOnceAndForgetSettingsPanel.h"
-#include "../../Source/GUI/EnableSidechainWarning.h"
+
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+  #include "../../Source/GUI/EnableSidechainWarning.h"
+#endif
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,

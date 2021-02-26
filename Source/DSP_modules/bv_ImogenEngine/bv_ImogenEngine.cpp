@@ -5,6 +5,7 @@
 
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
+#include "bv_Harmonizer/bv_Harmonizer.cpp"
 
 
 namespace bav

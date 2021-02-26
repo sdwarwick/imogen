@@ -4,7 +4,6 @@
     Classes: Harmonizer
 */
 
-
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 #include "bv_Harmonizer/bv_HarmonizerVoice.cpp"
@@ -13,10 +12,6 @@
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
 #include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
-
-#if BV_HARMONIZER_USE_VDSP
-  #include <Accelerate/Accelerate.h>
-#endif
 
 
 

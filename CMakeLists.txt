@@ -108,11 +108,3 @@ target_compile_definitions (Imogen PUBLIC
 
 #
 
-if (APPLE)
-	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_VDSP=1)
-else()
-	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_VDSP=0)
-endif()
-
-#
-
