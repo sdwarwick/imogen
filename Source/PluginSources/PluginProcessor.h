@@ -7,7 +7,11 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 
 #ifndef IMOGEN_STANDALONE_APP
-    #define IMOGEN_STANDALONE_APP 0
+    #if JUCE_STANDALONE_APPLICATION
+        #define IMOGEN_STANDALONE_APP 1
+    #else
+        #define IMOGEN_STANDALONE_APP 0
+    #endif
 #endif
 
 #if ! IMOGEN_STANDALONE_APP
