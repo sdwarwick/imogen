@@ -7,11 +7,7 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 
 #ifndef IMOGEN_STANDALONE_APP
-    #if JUCE_STANDALONE_APPLICATION
-        #define IMOGEN_STANDALONE_APP 1
-    #else
-        #define IMOGEN_STANDALONE_APP 0
-    #endif
+    #define IMOGEN_STANDALONE_APP 0
 #endif
 
 #if ! IMOGEN_STANDALONE_APP
@@ -53,7 +49,9 @@ public:
     bool canAddBus (bool isInput) const override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
+#if ! IMOGEN_STANDALONE_APP
     bool shouldWarnUserToEnableSidechain() const;
+#endif
     
     bool hasEditor() const override { return true; }
     juce::AudioProcessorEditor* createEditor() override;
@@ -185,6 +183,7 @@ private:
     
 #if ! IMOGEN_STANDALONE_APP
     juce::PluginHostType host;
+    bool needsSidechain = false;
 #endif
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
@@ -192,8 +191,6 @@ private:
     juce::AudioProcessor::BusesProperties makeBusProperties() const;
     
     bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
-    
-    bool needsSidechain = false;
     
     template <typename SampleType>
     void updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine);

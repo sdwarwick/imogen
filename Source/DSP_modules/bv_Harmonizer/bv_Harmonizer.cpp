@@ -12,12 +12,12 @@
 #include "bv_Harmonizer/bv_Harmonizer_Midi.cpp"
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
+#include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
 
 #if BV_HARMONIZER_USE_VDSP
     #include <Accelerate/Accelerate.h>
 #endif
 
-#include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"  // vDSP stuff is used in this file too
 
 
 namespace bav

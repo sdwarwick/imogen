@@ -98,30 +98,19 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
 {
     jassert (! searchingOrder.isEmpty());
     
-    const int numSamples = endSample - startSample;
+    int starting = -1;
     
-    int starting = predictedPeak; // sample to start analysis with, for variable initialization
-    
-    if (candidates.contains (predictedPeak)) // find the sample nearest to the predicted peak that's not already chosen as a peak candidate
+    for (int poss : searchingOrder)
     {
-        int newStart = -1;
-        
-        for (int i = 1; i < numSamples; ++i)
+        if (! candidates.contains (poss))
         {
-            const int s = searchingOrder.getUnchecked(i);
-            
-            if (! candidates.contains (s))
-            {
-                newStart = s;
-                break;
-            }
+            starting = poss;
+            break;
         }
-        
-        if (newStart == -1)
-            return;
-        
-        starting = newStart;
     }
+    
+    if (starting == -1)
+        return;
     
     struct weighting
     {
@@ -130,6 +119,8 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
             return static_cast<SampleType>( 1.0 - ( ( (abs(index - predicted)) / numSamples ) * 0.5 ) );
         }
     };
+    
+    const int numSamples = endSample - startSample;
     
     SampleType localMin = input[starting] * weighting::weight (starting, predictedPeak, numSamples);
     SampleType localMax = localMin;
@@ -202,59 +193,26 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         candidateDeltas.add ((delta1 + delta2) * 0.5f); // average the two delta values
     }
     
-    float maxDelta = FloatVectorOperations::findMaximum (candidateDeltas.getRawDataPointer(), candidateDeltas.size());
-    
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
     const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
     
     for (int i = 0; i < finalHandfulSize; ++i)
     {
-        float minDelta = maxDelta;
+        float* lowestElement = std::min_element (candidateDeltas.begin(), candidateDeltas.end());
+        const int indexOfLowestDelta = static_cast<int> (std::distance (candidateDeltas.begin(), lowestElement));
+        const float lowestDelta = *lowestElement;
         
-        int indexOfMinDelta = 0;
-        int indexTicker = 0;
+        finalHandfulDeltas.add (lowestDelta);
+        finalHandful.add (candidates.getUnchecked (indexOfLowestDelta));
         
-        for (float delta : candidateDeltas)
-        {
-            if (delta < minDelta)
-            {
-                minDelta = delta;
-                indexOfMinDelta = indexTicker;
-            }
-            ++indexTicker;
-        }
-        
-        finalHandfulDeltas.add (minDelta);
-        finalHandful.add (candidates.getUnchecked (indexOfMinDelta));
-        
-        candidateDeltas.set (indexOfMinDelta, maxDelta + 100); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
+        candidateDeltas.set (indexOfLowestDelta, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
     }
     
-    // 3. identify the highest & lowest delta values for the final handful candidates
+    // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    float highestDelta = FloatVectorOperations::findMaximum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
-    
-    float lowestDelta = highestDelta;
-    int indexOfLowestDelta = 0;
-    
-#if BV_HARMONIZER_USE_VDSP
-    {
-        unsigned long index = 0; // in Apple's vDSP, the type vDSP_Length is an alias for unsigned long
-        vDSP_minvi (finalHandfulDeltas.getRawDataPointer(), vDSP_Stride(1), &lowestDelta, &index, vDSP_Length(finalHandfulSize));
-        indexOfLowestDelta = static_cast<int>(index);
-    }
-#else
-    {
-        float* lowestElement = std::min_element (finalHandfulDeltas.begin(), finalHandfulDeltas.end());
-        indexOfLowestDelta = static_cast<int> (std::distance (finalHandfulDeltas.begin(), lowestElement));
-        lowestDelta = *lowestElement;
-    }
-#endif
-    
-    // 4. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
-    
-    const float deltaRange = highestDelta - lowestDelta;
+    const float deltaRange = FloatVectorOperations::findMaximum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize)
+                           - FloatVectorOperations::findMinimum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
     
     struct weighting
     {
@@ -264,32 +222,23 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         }
     };
 
-    int chosenPeak = (deltaRange < 1.0f) ? finalHandful.getUnchecked (0) : finalHandful.getUnchecked (indexOfLowestDelta);
+    int chosenPeak = finalHandful.getUnchecked (0);
+    SampleType strongestPeak = abs(reading[chosenPeak]) * weighting::weight(finalHandfulDeltas.getUnchecked(0), deltaRange);
     
-    SampleType strongestPeak = abs(reading[chosenPeak]);
-    
-    if (deltaRange > 1.0f)
-        strongestPeak = strongestPeak * weighting::weight(lowestDelta, deltaRange);
-    
-    int candidateIndex = 0;
-    for (int candidate : finalHandful)
+    for (int i = 1; i < finalHandfulSize; ++i)
     {
+        const int candidate = finalHandful.getUnchecked(i);
+        
         if (candidate == chosenPeak)
             continue;
         
-        SampleType testingPeak = abs(reading[candidate]);
-        
-        if (deltaRange > 1.0f)
-            testingPeak = testingPeak * weighting::weight (finalHandfulDeltas.getUnchecked (candidateIndex),
-                                                           deltaRange);
+        SampleType testingPeak = abs(reading[candidate]) * weighting::weight(finalHandfulDeltas.getUnchecked(i), deltaRange);
         
         if (testingPeak > strongestPeak)
         {
             strongestPeak = testingPeak;
             chosenPeak = candidate;
         }
-        
-        ++candidateIndex;
     }
     
     return chosenPeak;

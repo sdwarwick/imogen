@@ -56,10 +56,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-    
-#if IMOGEN_STANDALONE_APP
-    needsSidechain = false;
-#endif
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -98,7 +94,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, samplesPerBlock, floatEngine,  doubleEngine);
     
 #if ! IMOGEN_STANDALONE_APP
-    needsSidechain = juce::JUCEApplicationBase::isStandaloneApp() ? false : (host.isLogic() || host.isGarageBand());
+    needsSidechain = (host.isLogic() || host.isGarageBand());
 #endif
 }
 
@@ -543,7 +539,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
                     .getChildFile ("Imogen");
 #endif
     
-    if (! rootFolder.isDirectory() && ! rootFolder.existsAsFile())
+    if (! rootFolder.isDirectory())
         rootFolder.createDirectory(); // creates the presets folder if it doesn't already exist
     
     return rootFolder;
@@ -567,9 +563,7 @@ void ImogenAudioProcessor::deletePreset (juce::String presetName)
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     std::unique_ptr<juce::XmlElement> xml;
-    
     returnPluginInternalState (xml);
-    
     copyXmlToBinary (*xml, destData);
 }
 
@@ -579,9 +573,7 @@ void ImogenAudioProcessor::savePreset (juce::String presetName)
     // this function can be used both to save new preset files or to update existing ones
     
     std::unique_ptr<juce::XmlElement> xml;
-    
     returnPluginInternalState (xml);
-    
     xml->writeTo (getPresetsFolder().getChildFile(presetName));
     updateHostDisplay();
 }
@@ -609,10 +601,6 @@ void ImogenAudioProcessor::returnPluginInternalState (std::unique_ptr<juce::XmlE
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     auto xmlElement (getXmlFromBinary (data, sizeInBytes));
-    
-    if (xmlElement.get() == nullptr || ! xmlElement->hasTagName (tree.state.getType()))
-        return;
-    
     updatePluginInternalState (xmlElement);
 }
 
@@ -625,22 +613,26 @@ void ImogenAudioProcessor::loadPreset (juce::String presetName)
         return;
     
     auto xmlElement = juce::parseXML (presetToLoad);
-    
-    if (xmlElement.get() == nullptr || ! xmlElement->hasTagName (tree.state.getType()))
-        return;
-    
     updatePluginInternalState (xmlElement);
 }
 
 
 void ImogenAudioProcessor::updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState)
 {
+    if (newState.get() == nullptr || ! newState->hasTagName (tree.state.getType()))
+        return;
+    
     suspendProcessing (true);
     
     tree.replaceState (juce::ValueTree::fromXml (*newState));
     
     updateNumVoices (newState->getIntAttribute ("numberOfVoices", 4));
     updateModulatorInputSource (newState->getIntAttribute ("modulatorInputSource", 0));
+    
+    if (isUsingDoublePrecision())
+        updateAllParameters (doubleEngine);
+    else
+        updateAllParameters (floatEngine);
     
     suspendProcessing (false);
     
@@ -768,7 +760,7 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
 #if ! IMOGEN_STANDALONE_APP
-    if ((! juce::JUCEApplicationBase::isStandaloneApp()) && (host.isLogic() || host.isGarageBand()))
+    if (host.isLogic() || host.isGarageBand())
         return BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo(), true)
                                 .withInput ("Sidechain", juce::AudioChannelSet::mono(),   true)
                                 .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
@@ -797,14 +789,12 @@ bool ImogenAudioProcessor::canAddBus (bool isInput) const
 }
 
 
+#if ! IMOGEN_STANDALONE_APP
 bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
 {
-#if IMOGEN_STANDALONE_APP
-    return false;
-#else
     return needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
-#endif
 }
+#endif
 
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()

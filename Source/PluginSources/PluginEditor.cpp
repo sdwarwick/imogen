@@ -115,18 +115,14 @@ void ImogenAudioProcessorEditor::timerCallback()
         
         if (sidechainWarningShowing != shouldBeShowing)
         {
-            sidechainWarningShowing = shouldBeShowing;
+            sidechainWarning.setVisible (shouldBeShowing);
             
             if (shouldBeShowing)
-            {
-                sidechainWarning.setVisible (true);
                 sidechainWarning.repaint();
-            }
             else
-            {
-                sidechainWarning.setVisible (false);
                 this->repaint();
-            }
+            
+            sidechainWarningShowing = shouldBeShowing;
         }
     }
 #endif
