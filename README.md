@@ -1,5 +1,5 @@
 <p align="center">
- <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="350" height="350" />
+ <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
  </p>
 
 [![AutoBuild](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml/badge.svg?branch=master&event=push)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
