@@ -512,53 +512,7 @@ void ImogenAudioProcessor::updateModulatorInputSource (const int newSource)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-// functions for custom preset management system ----------------------------------------------------------------------------------------------------
-
-void ImogenAudioProcessor::savePreset (juce::String presetName)
-{
-    // this function can be used both to save new preset files or to update existing ones
-    
-    juce::File writingTo = getPresetsFolder().getChildFile(presetName);
-    
-    auto xml(tree.copyState().createXml());
-   // xml->setAttribute("numberOfVoices", harmonizer.getNumVoices());
-    xml->writeTo(writingTo);
-    updateHostDisplay();
-}
-
-
-void ImogenAudioProcessor::loadPreset (juce::String presetName)
-{
-    juce::File presetToLoad = getPresetsFolder().getChildFile(presetName);
-    
-    if (! presetToLoad.existsAsFile())
-        return;
-
-    suspendProcessing (true);
-    
-    auto xmlElement = juce::parseXML(presetToLoad);
-    
-    if(xmlElement.get() != nullptr && xmlElement->hasTagName (tree.state.getType()))
-    {
-        tree.replaceState(juce::ValueTree::fromXml (*xmlElement));
-        updateNumVoices( xmlElement->getIntAttribute("numberOfVoices", 4) ); // TO DO : send notif to GUI to update numVoices comboBox
-        updateHostDisplay();
-    }
-    
-    suspendProcessing (false);
-}
-
-
-void ImogenAudioProcessor::deletePreset (juce::String presetName)
-{
-    juce::File presetToDelete = getPresetsFolder().getChildFile(presetName);
-    
-    if(presetToDelete.existsAsFile())
-        if(! presetToDelete.moveToTrash())
-            presetToDelete.deleteFile();
-    updateHostDisplay();
-}
-
+// functions for preset & state management system ---------------------------------------------------------------------------------------------------
 
 juce::File ImogenAudioProcessor::getPresetsFolder() const
 {
@@ -589,7 +543,17 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
 }
 
 
-// the host calls these two functions to save/load DAW sessions, etc
+void ImogenAudioProcessor::deletePreset (juce::String presetName)
+{
+    juce::File presetToDelete = getPresetsFolder().getChildFile(presetName);
+    
+    if (presetToDelete.existsAsFile())
+        if (! presetToDelete.moveToTrash())
+            presetToDelete.deleteFile();
+    
+    updateHostDisplay();
+}
+
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
@@ -609,23 +573,71 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     copyXmlToBinary (*xml, destData);
 }
 
+void ImogenAudioProcessor::savePreset (juce::String presetName)
+{
+    // this function can be used both to save new preset files or to update existing ones
+    
+    juce::File writingTo = getPresetsFolder().getChildFile(presetName);
+    
+    auto xml (tree.copyState().createXml());
+    
+    if (isUsingDoublePrecision())
+    {
+        xml->setAttribute ("numberOfVoices", doubleEngine.getCurrentNumVoices());
+        xml->setAttribute ("modulatorInputSource", doubleEngine.getModulatorSource());
+    }
+    else
+    {
+        xml->setAttribute ("numberOfVoices", floatEngine.getCurrentNumVoices());
+        xml->setAttribute ("modulatorInputSource", floatEngine.getModulatorSource());
+    }
+    
+    xml->writeTo (writingTo);
+    updateHostDisplay();
+}
+
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto xmlState (getXmlFromBinary (data, sizeInBytes));
+    auto xmlElement (getXmlFromBinary (data, sizeInBytes));
     
-    if (xmlState.get() == nullptr || ! xmlState->hasTagName (tree.state.getType()))
+    if (xmlElement.get() == nullptr || ! xmlElement->hasTagName (tree.state.getType()))
         return;
     
-    suspendProcessing (true);
+    updatePluginInternalState (xmlElement);
+}
 
-    tree.replaceState (juce::ValueTree::fromXml (*xmlState));
+
+void ImogenAudioProcessor::loadPreset (juce::String presetName)
+{
+    juce::File presetToLoad = getPresetsFolder().getChildFile(presetName);
     
-    updateNumVoices (xmlState->getIntAttribute ("numberOfVoices", 4));
-    updateModulatorInputSource (xmlState->getIntAttribute ("modulatorInputSource", 0));
+    if (! presetToLoad.existsAsFile())
+        return;
+    
+    auto xmlElement = juce::parseXML(presetToLoad);
+    
+    if (xmlElement.get() == nullptr || ! xmlElement->hasTagName (tree.state.getType()))
+        return;
+    
+    updatePluginInternalState (xmlElement);
+}
+
+
+void ImogenAudioProcessor::updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState)
+{
+    suspendProcessing (true);
+    
+    tree.replaceState (juce::ValueTree::fromXml (*newState));
+    
+    updateNumVoices (newState->getIntAttribute ("numberOfVoices", 4));
+    updateModulatorInputSource (newState->getIntAttribute ("modulatorInputSource", 0));
     
     suspendProcessing (false);
+    
+    updateHostDisplay();
 }
+
 
 
 // standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
