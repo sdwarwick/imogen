@@ -22,7 +22,7 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     targetArray.clearQuick();
     
     const int grainSize = 2 * period;
-    const int halfPeriod  = roundToInt (ceil (period / 2));
+    const int halfPeriod  = roundToInt (ceil (period * 0.5f));
     
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
@@ -212,7 +212,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    const float deltaRange = FloatVectorOperations::findMinAndMax(finalHandfulDeltas.getRawDataPointer(), finalHandfulSize).getLength();
+    const float deltaRange = FloatVectorOperations::findMinAndMax (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize)
+                             .getLength();
     
     if (deltaRange < 2.0f)
         return finalHandful.getUnchecked(0);

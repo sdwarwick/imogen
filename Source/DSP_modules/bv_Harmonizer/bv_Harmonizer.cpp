@@ -43,7 +43,6 @@ Harmonizer<SampleType>::Harmonizer():
     quickAttackParams.sustain = 1.0f;
     quickAttackParams.release = 0.015f;
     
-    updateStereoWidth(100);
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
     

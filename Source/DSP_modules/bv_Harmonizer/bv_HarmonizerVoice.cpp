@@ -28,6 +28,8 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     adsr        .setParameters (parent->getCurrentAdsrParams());
     quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters (parent->getCurrentQuickAttackParams());
+    
+    synthesisIndex = 0;
 }
 
 template<typename SampleType>
@@ -58,6 +60,8 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     prevVelocityMultiplier = currentVelocityMultiplier;
     
     prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
+    
+    synthesisIndex = 0;
 }
 
 
@@ -89,18 +93,9 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
     
     //  *****************************************************************************************************
     //  midi velocity gain (aftertouch is applied here as well)
-
-    float velocityMultNow;
-
-    if (parent->isAftertouchGainOn())
-    {
-        constexpr float inv127 = 1.0f / 127.0f;
-        velocityMultNow = currentVelocityMultiplier + ((currentAftertouch * inv127) * (1.0f - currentVelocityMultiplier));
-    }
-    else
-    {
-        velocityMultNow = currentVelocityMultiplier;
-    }
+    constexpr float inv127 = 1.0f / 127.0f;
+    const float velocityMultNow = parent->isAftertouchGainOn() ? currentVelocityMultiplier + ((currentAftertouch * inv127) * (1.0f - currentVelocityMultiplier))
+                                                               : currentVelocityMultiplier;
 
     synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
     prevVelocityMultiplier = velocityMultNow;
@@ -129,14 +124,13 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 
     if (isQuickFading)  // quick fade out for stopNote w/ no tail off, to prevent clicks from jumping to 0
         quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
-    
+
     //  *****************************************************************************************************
-    
-    //  write to output
+    //  write to output (and apply panning)
     
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
-                                      panner.getPrevGain(chan), panner.getGainMult(chan));  // panning is applied while writing to output
+                                      panner.getPrevGain(chan), panner.getGainMult(chan));
     
     moveUpSamples (numSamples);
 }
@@ -149,32 +143,30 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
                                         const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
                                         const SampleType* window) // Hanning window, length origPeriod * 2
 {
-    const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
+    if (synthesisIndex > totalNumInputSamples)
+        return;
     
-    int thisFrameWritingStart = 0;
+    const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
     for (int grainStart : indicesOfGrainOnsets)
     {
         const int grainEnd = grainStart + analysisGrainLength;
         
-        if (grainEnd >= totalNumInputSamples)
-        {
-            thisFrameWritingStart = totalNumInputSamples;
-            break;
-        }
+        if (synthesisIndex > grainEnd)
+            continue;
 
-        olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod, thisFrameWritingStart);
-        
-        thisFrameWritingStart = grainEnd + 1;
+        olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
     }
     
-    if (thisFrameWritingStart < synthesisBuffer.getNumSamples())
+    jassert (synthesisIndex >= totalNumInputSamples);
+    
+    if (synthesisIndex > totalNumInputSamples)
     {
         // fill from the last written sample to the end of the buffer with zeroes
         constexpr SampleType zero = SampleType(0.0);
-        FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + thisFrameWritingStart,
+        FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
                                      zero,
-                                     synthesisBuffer.getNumSamples() - thisFrameWritingStart);
+                                     synthesisBuffer.getNumSamples() - synthesisIndex);
     }
 }
 
@@ -183,14 +175,8 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
                                             const int frameStartSample, const int frameEndSample, const int frameSize,
                                             const SampleType* window,
-                                            const int newPeriod,
-                                            const int synthesisBufferStartIndex)
+                                            const int newPeriod)
 {
-    jassert (frameEndSample - frameStartSample == frameSize);
-    
-    if (synthesisBufferStartIndex > frameEndSample || synthesisBufferStartIndex + frameSize >= synthesisBuffer.getNumSamples())
-        return;
-    
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
                                      window,
@@ -199,8 +185,6 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
     
     const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
-    
-    int synthesisIndex = synthesisBufferStartIndex;
     
     do {
         jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
@@ -218,11 +202,19 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
 {
-    const int numSamplesLeft = synthesisBuffer.getNumSamples() - numSamplesUsed;
+    synthesisIndex -= numSamplesUsed;
     
-    copyingBuffer.copyFrom (0, 0, synthesisBuffer, 0, numSamplesUsed, numSamplesLeft);
+    jassert (synthesisIndex >= 0);
+    
+    if (synthesisIndex == 0)
+    {
+        synthesisBuffer.clear();
+        return;
+    }
+    
+    copyingBuffer.copyFrom (0, 0, synthesisBuffer, 0, numSamplesUsed, synthesisIndex);
     synthesisBuffer.clear();
-    synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
+    synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, synthesisIndex);
 }
 
 

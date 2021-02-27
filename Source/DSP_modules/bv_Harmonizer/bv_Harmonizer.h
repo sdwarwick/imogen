@@ -142,7 +142,7 @@ private:
                const SampleType* window);
     
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample, const int frameSize, 
-                   const SampleType* window, const int newPeriod, const int synthesisBufferStartIndex = 0);
+                   const SampleType* window, const int newPeriod);
     
     void moveUpSamples (const int numSamplesUsed);
     
@@ -181,6 +181,8 @@ private:
     float lastPBRmult = 1.0f;
     
     bool sustainingFromSostenutoPedal = false;
+    
+    int synthesisIndex;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
