@@ -99,7 +99,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     limiter.prepare (dspSpec);
     
     dryWetMixer.prepare (dspSpec);
-    dryWetMixer.setWetLatency(0); // latency in samples of the ESOLA algorithm
+    dryWetMixer.setWetLatency(0);
     
     resourcesReleased = false;
     
@@ -113,7 +113,6 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 template<typename SampleType>
 void ImogenEngine<SampleType>::clearBuffers()
 {
-    harmonizer.clearBuffers();
     wetBuffer.clear();
     dryBuffer.clear();
     inBuffer .clear();

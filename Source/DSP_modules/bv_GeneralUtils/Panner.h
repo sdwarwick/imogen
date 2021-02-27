@@ -31,27 +31,35 @@ public:
     
     float getPrevRightGain() const noexcept { return prevRightGain.load(); }
     
-    
     float getGainMult (const int chan) const
     {
-        jassert (chan == 0 || chan == 1);
-        
-        if (chan == 0)
-            return leftGain.load();
-        
-        return rightGain.load();
+        switch (chan)
+        {
+            case 0:
+                return leftGain.load();
+                
+            case 1:
+                return rightGain.load();
+                
+            default:
+                return 1.0f;
+        }
     }
     
     float getPrevGain (const int chan) const
     {
-        jassert (chan == 0 || chan == 1);
-        
-        if (chan == 0)
-            return prevLeftGain.load();
-        
-        return prevRightGain.load();
+        switch (chan)
+        {
+            case 0:
+                return prevLeftGain.load();
+                
+            case 1:
+                return prevRightGain.load();
+                
+            default:
+                return 1.0f;
+        }
     }
-    
     
     void setMidiPan (int newMidiPan)
     {
@@ -69,6 +77,9 @@ public:
         
         const float left  = juce::jlimit (0.0f, 1.0f, std::sin (panningAngle));
         const float right = juce::jlimit (0.0f, 1.0f, std::cos (panningAngle));
+        
+        jassert (left >= 0.0f && left <= 1.0f);
+        jassert (right >= 0.0f && right <= 1.0f);
         
         leftGain.store(left);
         rightGain.store(right);

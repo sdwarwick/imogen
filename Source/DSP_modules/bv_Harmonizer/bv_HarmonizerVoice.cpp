@@ -42,17 +42,18 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     
     jassert (blocksize > 0);
     
+    const int doubleSize = blocksize * 2;
+    
     constexpr SampleType zero = SampleType(0.0);
     
-    synthesisBuffer.setSize (1, blocksize * 4);
-    FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0), zero, synthesisBuffer.getNumSamples());
-    nextSBindex = 0;
+    synthesisBuffer.setSize (1, doubleSize);
+    FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0), zero, doubleSize);
     
-    windowingBuffer.setSize (1, blocksize * 2);
-    FloatVectorOperations::fill (windowingBuffer.getWritePointer(0), zero, windowingBuffer.getNumSamples());
+    windowingBuffer.setSize (1, doubleSize);
+    FloatVectorOperations::fill (windowingBuffer.getWritePointer(0), zero, doubleSize);
     
-    copyingBuffer.setSize (1, blocksize * 2);
-    FloatVectorOperations::fill (copyingBuffer.getWritePointer(0), zero, copyingBuffer.getNumSamples());
+    copyingBuffer.setSize (1, doubleSize);
+    FloatVectorOperations::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
     
     prevVelocityMultiplier = currentVelocityMultiplier;
     
@@ -148,23 +149,9 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
                                         const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
                                         const SampleType* window) // Hanning window, length origPeriod * 2
 {
-    const int sampsLeftInBuffer = synthesisBuffer.getNumSamples() - nextSBindex;
-    
-    if (sampsLeftInBuffer < 1)
-        return;
-    
-    // fill from the last written sample to the end of the buffer with zeroes
-    constexpr SampleType zero = SampleType(0.0);
-    FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + nextSBindex,
-                                 zero,
-                                 sampsLeftInBuffer);
-    
-    if (nextSBindex > totalNumInputSamples)  // don't need this frame, we've written enough samples from previous frames...
-        return;
-    
     const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
-    int thisFrameWritingStart = nextSBindex;
+    int thisFrameWritingStart = 0;
     
     for (int grainStart : indicesOfGrainOnsets)
     {
@@ -176,38 +163,39 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
             break;
         }
 
-        olaFrame (input, grainStart, grainEnd, window, newPeriod, thisFrameWritingStart);
+        olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod, thisFrameWritingStart);
         
         thisFrameWritingStart = grainEnd + 1;
     }
     
-    nextSBindex = thisFrameWritingStart;
-    jassert (nextSBindex <= totalNumInputSamples);
+    if (thisFrameWritingStart < synthesisBuffer.getNumSamples())
+    {
+        // fill from the last written sample to the end of the buffer with zeroes
+        constexpr SampleType zero = SampleType(0.0);
+        FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + thisFrameWritingStart,
+                                     zero,
+                                     synthesisBuffer.getNumSamples() - thisFrameWritingStart);
+    }
 }
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
-                                            const int frameStartSample, const int frameEndSample,
+                                            const int frameStartSample, const int frameEndSample, const int frameSize,
                                             const SampleType* window,
                                             const int newPeriod,
                                             const int synthesisBufferStartIndex)
 {
-    if (synthesisBufferStartIndex > frameEndSample)
+    jassert (frameEndSample - frameStartSample == frameSize);
+    
+    if (synthesisBufferStartIndex > frameEndSample || synthesisBufferStartIndex + frameSize >= synthesisBuffer.getNumSamples())
         return;
-    
-    // this function processes one analysis frame of input samples, from readingStartSample to readingEndSample
-    // the frame size should be 2 * the original input period, and the length of the window passed to this function MUST equal this value!
-    
-    const int frameSize = frameEndSample - frameStartSample;  // frame size should equal the original period * 2
     
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
                                      window,
                                      inputAudio + frameStartSample,
                                      frameSize);
-    
-    // resynthesis / OLA
     
     const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
@@ -230,20 +218,11 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
 {
-    const int numSamplesLeft = nextSBindex - numSamplesUsed;
-    
-    if (numSamplesLeft < 1)
-    {
-        synthesisBuffer.clear();
-        nextSBindex = 0;
-        return;
-    }
+    const int numSamplesLeft = synthesisBuffer.getNumSamples() - numSamplesUsed;
     
     copyingBuffer.copyFrom (0, 0, synthesisBuffer, 0, numSamplesUsed, numSamplesLeft);
     synthesisBuffer.clear();
     synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, numSamplesLeft);
-    
-    nextSBindex = numSamplesLeft;
 }
 
 
@@ -274,7 +253,6 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
     noteTurnedOff = true;
     keyIsDown     = false;
     playingButReleased = false;
-    nextSBindex = 0;
     isPedalPitchVoice = false;
     isDescantVoice = false;
     sustainingFromSostenutoPedal = false;

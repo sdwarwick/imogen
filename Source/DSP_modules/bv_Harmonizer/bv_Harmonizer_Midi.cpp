@@ -79,8 +79,6 @@ void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
         return;
     }
     
-    lastMidiTimeStamp = 0;
-    
     std::for_each (midiIterator,
                    midiMessages.cend(),
                    [&] (const MidiMessageMetadata& meta)
@@ -153,19 +151,21 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
-    HarmonizerVoice<SampleType>* newVoice;
+    HarmonizerVoice<SampleType>* voice;
     
-    auto* prevVoice = getVoicePlayingNote (midiPitch);   //  if no voice is found playing this note, this will be a nullptr
-    
-    if (prevVoice != nullptr)
-        newVoice = prevVoice;  // retrigger the same voice with the new velocity
+    if (auto* prevVoice = getVoicePlayingNote (midiPitch))
+    {
+        voice = prevVoice;  // retrigger the same voice with the new velocity
+    }
     else
     {
         const bool isStealing = isKeyboard ? shouldStealNotes.load() : false;  // never steal voices for automated note events, only for keyboard triggered events
         
-        newVoice = findFreeVoice (isStealing);
-        
-        if (newVoice == nullptr)
+        if (auto* newVoice = findFreeVoice (isStealing))
+        {
+            voice = newVoice;
+        }
+        else
         {
             if (pedal.isOn && midiPitch == pedal.lastPitch)
                 pedal.lastPitch = -1;
@@ -177,7 +177,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
         }
     }
     
-    startVoice (newVoice, midiPitch, velocity, isKeyboard);
+    startVoice (voice, midiPitch, velocity, isKeyboard);
 }
 
 
@@ -191,6 +191,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     const bool wasStolen = voice->isVoiceActive();  // we know the voice is being "stolen" from another note if it was already on before getting this start command
     const bool sameNoteRetriggered = (wasStolen && prevNote == midiPitch);
     
+    // output midi events for this note...
     if (! sameNoteRetriggered)  // don't output any note events if the same note is being retriggered
     {
         if (wasStolen)
@@ -200,21 +201,24 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
         aggregateMidiBuffer.addEvent (MidiMessage::noteOn (lastMidiChannel, midiPitch, velocity),  // output the new note on
                                       ++lastMidiTimeStamp);
     }
-    else  // same note retriggered: output aftertouch / channel pressure
+    else if (aftertouchGainIsOn)  // same note retriggered: output aftertouch / channel pressure
     {
         const int aftertouch = jlimit (0, 127,
-                                       roundToInt ((velocity / std::max<float>(voice->getLastRecievedVelocity(), 0.001f)) * 127.0f));
+                                       roundToInt((velocity - voice->getLastRecievedVelocity()) * 127.0f));
         
-        if (useChannelPressure)
+        if (aftertouch != voice->currentAftertouch)
         {
-            updateChannelPressure (aftertouch);
-        }
-        else
-        {
-            aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiPitch, aftertouch),
-                                          ++lastMidiTimeStamp);
-            
-            voice->aftertouchChanged (aftertouch);
+            if (useChannelPressure)
+            {
+                updateChannelPressure (aftertouch);
+            }
+            else
+            {
+                aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiPitch, aftertouch),
+                                              ++lastMidiTimeStamp);
+                
+                voice->aftertouchChanged (aftertouch);
+            }
         }
     }
     
@@ -233,8 +237,8 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
     if (! wasStolen)
         voice->currentAftertouch = 0;
     
-    const bool isPedal   = pedal.isOn   ? (midiPitch == pedal.lastPitch)   : false;
-    const bool isDescant = descant.isOn ? (midiPitch == descant.lastPitch) : false;
+    const bool isPedal = pedal.isOn && midiPitch == pedal.lastPitch;
+    const bool isDescant = descant.isOn && midiPitch == descant.lastPitch;
     
     const uint32 timestamp = sameNoteRetriggered ? voice->noteOnTime : ++lastNoteOnCounter;  // leave the timestamp the same as it was if the same note is being retriggered
     
@@ -277,29 +281,32 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
             else
                 voice->setKeyDown (false);
         }
+        
+        return;
     }
-    else  // this is an automated note-off event
+    
+    // this is an automated note-off event...
+    
+    if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
     {
-        if (! voice->isKeyDown()) // for automated note-off events, only actually stop the voice if its keyboard key isn't currently down
-        {
-            stopVoice (voice, velocity, allowTailOff);
-        }
-        else  // we're processing an automated note-off event, but the voice's keyboard key is still being held
-        {
-            if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
-            {
-                pedal.lastPitch = -1;
-                voice->isPedalPitchVoice = false;
-                voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
-            }
-            
-            if (descant.isOn && midiNoteNumber == descant.lastPitch)
-            {
-                descant.lastPitch = -1;
-                voice->isDescantVoice = false;
-                voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
-            }
-        }
+        stopVoice (voice, velocity, allowTailOff);
+        return;
+    }
+    
+    // we're processing an automated note-off event, but the voice's keyboard key is still being held
+    
+    if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
+    {
+        pedal.lastPitch = -1;
+        voice->isPedalPitchVoice = false;
+        voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
+    }
+    
+    if (descant.isOn && midiNoteNumber == descant.lastPitch)
+    {
+        descant.lastPitch = -1;
+        voice->isDescantVoice = false;
+        voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
     }
 }
 
@@ -366,24 +373,20 @@ void Harmonizer<SampleType>::handlePitchWheel (int wheelValue)
 template<typename SampleType>
 void Harmonizer<SampleType>::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 {
-    if (midiNoteNumber < 0 || midiNoteNumber > 127)
-        return;
-    
     aftertouchValue = jlimit (0, 127, aftertouchValue);
     
     if (useChannelPressure)
     {
         updateChannelPressure (aftertouchValue);
+        return;
     }
-    else
-    {
-        aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiNoteNumber, aftertouchValue),
-                                      ++lastMidiTimeStamp);
-        
-        for (auto* voice : voices)
-            if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiNoteNumber)
-                voice->aftertouchChanged (aftertouchValue);
-    }
+    
+    aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiNoteNumber, aftertouchValue),
+                                  ++lastMidiTimeStamp);
+    
+    for (auto* voice : voices)
+        if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiNoteNumber)
+            voice->aftertouchChanged (aftertouchValue);
 }
 
 
@@ -488,11 +491,11 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const int value)
     
     sostenutoPedalDown = isDown;
     
-    if (isDown)
+    if (isDown && (! (latchIsOn || intervalLatchIsOn)))
     {
         for (auto* voice : voices)
-            if (voice->isVoiceActive() && !voice->isPedalPitchVoice && !voice->isDescantVoice)
-                voice->sustainingFromSostenutoPedal = (! (latchIsOn || intervalLatchIsOn));
+            if (voice->isVoiceActive() && ! voice->isPedalPitchVoice && ! voice->isDescantVoice)
+                voice->sustainingFromSostenutoPedal = true;
     }
     else
     {

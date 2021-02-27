@@ -65,16 +65,6 @@ Harmonizer<SampleType>::~Harmonizer()
     voices.clear();
 }
 
-
-template<typename SampleType>
-void Harmonizer<SampleType>::clearBuffers()
-{
-    for (auto* voice : voices)
-        voice->clearBuffers();
-    
-    polarityReversalBuffer.clear();
-}
-    
     
 template<typename SampleType>
 void Harmonizer<SampleType>::initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize)
@@ -159,15 +149,14 @@ void Harmonizer<SampleType>::releaseResources()
     windowBuffer.clear();
     intervalsLatchedTo.clear();
     indicesOfGrainOnsets.clear();
+    currentNotes.clear();
+    desiredNotes.clear();
     
     for (auto* voice : voices)
         voice->releaseResources();
     
     panner.releaseResources();
-    
     grains.releaseResources();
-    
-    lastNoteOnCounter = 0;
     
     voices.clear();
 }

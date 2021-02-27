@@ -141,7 +141,7 @@ private:
                const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
                const SampleType* window);
     
-    void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
+    void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample, const int frameSize, 
                    const SampleType* window, const int newPeriod, const int synthesisBufferStartIndex = 0);
     
     void moveUpSamples (const int numSamplesUsed);
@@ -167,7 +167,6 @@ private:
     int currentAftertouch;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
-    int nextSBindex; // highest synthesis buffer index written to + 1
     AudioBuffer<SampleType> copyingBuffer;
     AudioBuffer<SampleType> windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
     
@@ -209,8 +208,6 @@ public:
     void releaseResources();
     
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
-    
-    void clearBuffers();
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
                        AudioBuffer<SampleType>& outputBuffer,
@@ -395,6 +392,9 @@ private:
     bool intervalLatchIsOn;
     Array<int> intervalsLatchedTo;
     void updateIntervalsLatchedTo();
+    
+    Array<int> currentNotes;
+    Array<int> desiredNotes;
     
     ADSR::Parameters adsrParams;
     ADSR::Parameters quickReleaseParams;

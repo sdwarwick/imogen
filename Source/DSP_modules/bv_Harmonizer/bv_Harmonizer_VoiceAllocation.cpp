@@ -21,6 +21,8 @@ void Harmonizer<SampleType>::numVoicesChanged()
     panner.prepare (newMaxNumVoices, false);
     intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
     usableVoices.ensureStorageAllocated(newMaxNumVoices);
+    currentNotes.ensureStorageAllocated(newMaxNumVoices);
+    desiredNotes.ensureStorageAllocated(newMaxNumVoices);
 }
     
     

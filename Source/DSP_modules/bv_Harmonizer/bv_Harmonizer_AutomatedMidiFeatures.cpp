@@ -28,27 +28,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
     if (shouldBeOn)
         return;
     
-    if (! intervalLatchIsOn || intervalsLatchedTo.isEmpty())
-        turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
-    else
-    {
-        // turn off all voices whose key is up and who aren't being held by the interval latch function
-        
-        const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
-        
-        Array<int> intervalLatchNotes;
-        intervalLatchNotes.ensureStorageAllocated (intervalsLatchedTo.size());
-        
-        for (int interval : intervalsLatchedTo)
-            intervalLatchNotes.add (currentMidiPitch + interval);
-        
-        const float velocity = allowTailOff ? 0.0f : 1.0f;
-        
-        for (auto* voice : voices)
-            if ((voice->isVoiceActive() && ! voice->isKeyDown() && ! intervalLatchNotes.contains (voice->getCurrentlyPlayingNote()))
-                && (! voice->isCurrentPedalVoice() && ! voice->isCurrentDescantVoice()))
-            { stopVoice (voice, velocity, allowTailOff); }
-    }
+    turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
     
     pitchCollectionChanged();
 }
@@ -79,8 +59,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 {
     intervalsLatchedTo.clearQuick();
     
-    Array<int> currentNotes;
-    currentNotes.ensureStorageAllocated (voices.size());
+    currentNotes.clearQuick();
     
     reportActiveNotes (currentNotes, false);
     
@@ -109,8 +88,7 @@ void Harmonizer<SampleType>::playIntervalSet (const Array<int>& desiredIntervals
     
     const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
-    Array<int> desiredNotes;
-    desiredNotes.ensureStorageAllocated (desiredIntervals.size());
+    desiredNotes.clearQuick();
     
     for (int interval : desiredIntervals)
         desiredNotes.add (currentInputPitch + interval);
@@ -136,8 +114,7 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
     
     // create array containing current pitches
     
-    Array<int> currentNotes;
-    currentNotes.ensureStorageAllocated (voices.size());
+    currentNotes.clearQuick();
     
     reportActiveNotes (currentNotes, false, true);
     
@@ -149,25 +126,23 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
     {
         // 1. turn off the pitches that were previously on that are not included in the list of desired pitches
         
-        Array<int> toTurnOff;
-        toTurnOff.ensureStorageAllocated (currentNotes.size());
+        desiredNotes.clearQuick();
         
         for (int note : currentNotes)
             if (! desiredPitches.contains (note))
-                toTurnOff.add (note);
+                desiredNotes.add (note);
         
-        turnOffList (toTurnOff, !allowTailOffOfOld, allowTailOffOfOld, true);
+        turnOffList (desiredNotes, !allowTailOffOfOld, allowTailOffOfOld, true);
         
         // 2. turn on the desired pitches that aren't already on
         
-        Array<int> toTurnOn;
-        toTurnOn.ensureStorageAllocated (desiredPitches.size());
+        desiredNotes.clearQuick();
         
         for (int note : desiredPitches)
             if (! currentNotes.contains (note))
-                toTurnOn.add (note);
+                desiredNotes.add (note);
         
-        turnOnList (toTurnOn, velocity, true);
+        turnOnList (desiredNotes, velocity, true);
     }
 }
 

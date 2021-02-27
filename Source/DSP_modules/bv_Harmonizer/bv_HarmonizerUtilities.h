@@ -42,8 +42,7 @@ public:
     
     void setConcertPitchHz (const int newConcertPitch) noexcept
     {
-        if (newConcertPitch <= 0)
-            return;
+        jassert (newConcertPitch > 0);
         
         concertPitchHz.store (newConcertPitch);
     }
@@ -52,8 +51,7 @@ public:
     
     void setNotesPerOctave (const int newNPO) noexcept
     {
-        if (newNPO <= 0)
-            return;
+        jassert (newNPO > 0);
         
         notesPerOctave.store (newNPO);
     }
@@ -62,8 +60,7 @@ public:
     
     void setRootNote (const int newRoot) noexcept
     {
-        if (newRoot <= 0)
-            return;
+        jassert (newRoot > 0);
         
         rootNote.store (newRoot);
     }

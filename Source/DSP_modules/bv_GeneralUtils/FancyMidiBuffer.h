@@ -24,10 +24,7 @@ public:
         if (sourceStart == sourceBuffer.cend())
             return;
         
-        const auto sourceEnd = sourceBuffer.findNextSamplePosition(sourceStartSample + numSamples - 1);
-        
-        if (sourceStart == sourceEnd)
-            return;
+        const auto sourceEnd = sourceBuffer.findNextSamplePosition(sourceStartSample + numSamples);
         
         const int writingStartSample = (this->getNumEvents() > 0) ? this->getLastEventTime() + 1 : 0;
         
@@ -42,7 +39,7 @@ public:
     
     void deleteEventsAndPushUpRest (const int numSamplesUsed)
     {
-        if (this->findNextSamplePosition(numSamplesUsed - 1) == this->cend())
+        if (this->findNextSamplePosition(numSamplesUsed) == this->cend())
         {
             this->clear();
             return;
@@ -52,7 +49,7 @@ public:
         
         this->clear();
         
-        auto copyingStart = temp.findNextSamplePosition (numSamplesUsed - 1);
+        auto copyingStart = temp.findNextSamplePosition(numSamplesUsed);
         
         std::for_each (copyingStart, temp.cend(),
                        [&] (const juce::MidiMessageMetadata& meta)
@@ -77,9 +74,6 @@ public:
             return;
         
         const auto midiEnd = sourceBuffer.findNextSamplePosition (sourceStartSample + numSamples);
-        
-        if (midiIterator == midiEnd)
-            return;
         
         const int sampleOffset = destStartSample - sourceStartSample;
         

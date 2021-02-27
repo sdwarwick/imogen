@@ -57,13 +57,15 @@ int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int fr
     else
     {
         peakSearchingOrder.clearQuick();
-        
         sortSampleIndicesForPeakSearching (peakSearchingOrder, frameStart, frameEnd, analysisIndex);
         
-        do {
+        for (int i = 0; i < numPeaksToTest; ++i)
+        {
             getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, analysisIndex, peakSearchingOrder);
+            
+            if (peakCandidates.size() == numPeaksToTest)
+                break;
         }
-        while (peakCandidates.size() >= numPeaksToTest);
     }
     
     jassert (! peakCandidates.isEmpty());
@@ -210,8 +212,10 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    const float deltaRange = FloatVectorOperations::findMaximum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize)
-                           - FloatVectorOperations::findMinimum (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize);
+    const float deltaRange = FloatVectorOperations::findMinAndMax(finalHandfulDeltas.getRawDataPointer(), finalHandfulSize).getLength();
+    
+    if (deltaRange < 2.0f)
+        return finalHandful.getUnchecked(0);
     
     struct weighting
     {
