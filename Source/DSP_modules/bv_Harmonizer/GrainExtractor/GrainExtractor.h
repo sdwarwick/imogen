@@ -58,6 +58,9 @@ private:
                          const int totalNumSamples,
                          const int period);
     
+    int findNextPeak (const int frameStart, const int frameEnd, int analysisIndex, const SampleType* reading, const Array<int>& targetArray,
+                      const int period, const int grainSize);
+    
     void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
     
     void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,

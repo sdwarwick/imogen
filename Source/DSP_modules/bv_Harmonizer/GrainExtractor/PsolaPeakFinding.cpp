@@ -21,74 +21,74 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
 {
     targetArray.clearQuick();
     
-    const int outputGrain = 2 * period;
+    const int grainSize = 2 * period;
     const int halfPeriod  = roundToInt (ceil (period / 2));
     
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
-    do
-    {
-        peakCandidates.clearQuick();
+    do {
+        const int frameStart = std::max (0, analysisIndex - halfPeriod);
         
-        // bounds of the current analysis window. analysisIndex = the next predicted peak = the middle of this analysis window
-        const int windowStart = std::max (0, analysisIndex - halfPeriod);
-        const int windowEnd   = std::min (totalNumSamples, windowStart + period);
-        
-        if (windowStart == windowEnd) // possible edge case?
-        {
-            peakCandidates.add (windowStart);
-        }
-        else
-        {
-            peakSearchingOrder.clearQuick();
-            
-            sortSampleIndicesForPeakSearching (peakSearchingOrder, windowStart, windowEnd, analysisIndex);
-            
-            for (int i = 0; i <= numPeaksToTest; ++i)
-            {
-                getPeakCandidateInRange (peakCandidates, reading, windowStart, windowEnd, analysisIndex, peakSearchingOrder);
-                
-                if (peakCandidates.size() >= numPeaksToTest)
-                    break;
-            }
-        }
-        
-        jassert (! peakCandidates.isEmpty());
-        
-        int peakIndex;  // identify the most ideal peak for this analysis window out of our list of candidates
-        
-        switch (peakCandidates.size())
-        {
-            case 1:
-                peakIndex = peakCandidates.getUnchecked(0);
-                
-            case 2:
-                peakIndex = choosePeakWithGreatestPower (peakCandidates, reading);
-                
-            default:
-                if (targetArray.size() > 1)
-                {
-                    peakIndex = chooseIdealPeakCandidate (peakCandidates, reading,
-                                                          targetArray.getLast() + period,
-                                                          targetArray.getUnchecked(targetArray.size() - 2) + outputGrain);
-                }
-                else
-                {
-                    peakIndex = choosePeakWithGreatestPower (peakCandidates, reading);
-                }
-        }
-        
-        targetArray.add (peakIndex);
+        targetArray.add (findNextPeak (frameStart, std::min (totalNumSamples, frameStart + period),
+                                       analysisIndex, reading, targetArray, period, grainSize));
         
         // analysisIndex marks the middle of our next analysis window, so it's where our next predicted peak should be:
         if (targetArray.size() == 1)
-            analysisIndex = peakIndex + period;
+            analysisIndex = targetArray.getUnchecked(0) + period;
         else
-            analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + outputGrain;
+            analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + grainSize;
     }
     while ((analysisIndex - halfPeriod) < totalNumSamples);
 }
-
+    
+    
+template<typename SampleType>
+int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int frameEnd,
+                                              int analysisIndex, const SampleType* reading,
+                                              const Array<int>& targetArray,
+                                              const int period, const int grainSize)
+{
+    peakCandidates.clearQuick();
+    
+    if (frameStart == frameEnd) // possible edge case?
+    {
+        peakCandidates.add (frameStart);
+    }
+    else
+    {
+        peakSearchingOrder.clearQuick();
+        
+        sortSampleIndicesForPeakSearching (peakSearchingOrder, frameStart, frameEnd, analysisIndex);
+        
+        do {
+            getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, analysisIndex, peakSearchingOrder);
+        }
+        while (peakCandidates.size() >= numPeaksToTest);
+    }
+    
+    jassert (! peakCandidates.isEmpty());
+    
+    switch (peakCandidates.size())
+    {
+        case 1:
+            return peakCandidates.getUnchecked(0);
+            
+        case 2:
+            return choosePeakWithGreatestPower (peakCandidates, reading);
+            
+        default:
+            if (targetArray.size() > 1)
+            {
+                return chooseIdealPeakCandidate (peakCandidates, reading,
+                                                 targetArray.getLast() + period,
+                                                 targetArray.getUnchecked(targetArray.size() - 2) + grainSize);
+            }
+            else
+            {
+                return choosePeakWithGreatestPower (peakCandidates, reading);
+            }
+    }
+}
 
 
 template<typename SampleType>
@@ -201,9 +201,8 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     {
         float* lowestElement = std::min_element (candidateDeltas.begin(), candidateDeltas.end());
         const int indexOfLowestDelta = static_cast<int> (std::distance (candidateDeltas.begin(), lowestElement));
-        const float lowestDelta = *lowestElement;
         
-        finalHandfulDeltas.add (lowestDelta);
+        finalHandfulDeltas.add (*lowestElement);
         finalHandful.add (candidates.getUnchecked (indexOfLowestDelta));
         
         candidateDeltas.set (indexOfLowestDelta, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
