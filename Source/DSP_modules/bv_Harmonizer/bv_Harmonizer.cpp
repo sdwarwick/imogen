@@ -25,7 +25,7 @@ Harmonizer<SampleType>::Harmonizer():
     pitchDetector(80, 2400, 44100.0),
     latchIsOn(false), intervalLatchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
-    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
+    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
 {
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
@@ -93,34 +93,31 @@ void Harmonizer<SampleType>::initialize (const int initNumVoices, const double i
 template<typename SampleType>
 void Harmonizer<SampleType>::prepare (const int blocksize)
 {
-    if (blocksize <= 0)
-        return;
+    jassert (blocksize > 0);
     
     aggregateMidiBuffer.ensureSize (static_cast<size_t> (blocksize * 2));
-    
-    numVoicesChanged();
+    aggregateMidiBuffer.clear();
     
     for (auto* voice : voices)
-        voice->prepare(blocksize);
+        voice->prepare (blocksize);
     
     windowBuffer.setSize (1, blocksize * 2, true, true, true);
+    polarityReversalBuffer.setSize (1, blocksize);
     
-    indicesOfGrainOnsets.ensureStorageAllocated(blocksize);
-    
-    intervalsLatchedTo.ensureStorageAllocated(voices.size());
+    indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
     
     grains.prepare (blocksize);
     
     lastNoteOnCounter = 0;
-    
-    polarityReversalBuffer.setSize (1, blocksize);
 }
 
 
 template<typename SampleType>
 void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
 {
-    if (sampleRate == newRate || newRate <= 0.0)
+    jassert (newRate > 0);
+    
+    if (sampleRate == newRate)
         return;
     
     sampleRate = newRate;
@@ -137,7 +134,9 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
 template<typename SampleType>
 void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 {
-    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz || newConcertPitchhz <= 0)
+    jassert (newConcertPitchhz > 0);
+    
+    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
     
     pitchConverter.setConcertPitchHz (newConcertPitchhz);
@@ -154,6 +153,11 @@ template<typename SampleType>
 void Harmonizer<SampleType>::releaseResources()
 {
     aggregateMidiBuffer.clear();
+    usableVoices.clear();
+    polarityReversalBuffer.clear();
+    windowBuffer.clear();
+    intervalsLatchedTo.clear();
+    indicesOfGrainOnsets.clear();
     
     for (auto* voice : voices)
         voice->releaseResources();
@@ -163,14 +167,15 @@ void Harmonizer<SampleType>::releaseResources()
     grains.releaseResources();
     
     lastNoteOnCounter = 0;
+    
+    voices.clear();
 }
     
 
 template<typename SampleType>
 void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 {
-    if (newInputFreq <= 0.0f)
-        return;
+    jassert (newInputFreq > 0);
     
     currentInputFreq = newInputFreq;
     
@@ -192,14 +197,14 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 {
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs -1 if frame is unpitched
     
-    const bool frameIsPitched = (inputFrequency >= 0.0f);
-    
     processMidi (midiMessages);
     
     outputBuffer.clear();
     
     if (getNumActiveVoices() == 0)
         return;
+    
+    const bool frameIsPitched = (inputFrequency >= 0.0f);
     
     int periodThisFrame;
     bool polarityReversed = false;
@@ -219,11 +224,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
         
         periodThisFrame = rand.nextInt (unpitchedArbitraryPeriodRange);
         
-        // also sometimes reverse the polarity of unpitched frames:
-        
-        const int randomTester = rand.nextInt (100);  // generates a random integer in the range [0, 99]
-        
-        if (randomTester % 2 == 0) // reverse the polarity approx 50% of the time
+        if ((rand.nextInt (100) % 2) == 0)  // reverse the polarity approx 50% of the time
         {
             FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
                                            inputAudio.getReadPointer(0),
@@ -256,22 +257,23 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     if (windowSize == numSamples)
         return;
     
+    constexpr SampleType zero = SampleType(0.0);
+    FloatVectorOperations::fill (windowBuffer.getWritePointer(0), zero, windowBuffer.getNumSamples());
+    
     jassert (numSamples <= windowBuffer.getNumSamples());
-    
-    windowBuffer.clear();
-    
-    auto* writing = windowBuffer.getWritePointer(0);
     
 #if BV_HARMONIZER_USE_VDSP
     if constexpr (std::is_same_v <SampleType, float>)
-        vDSP_hann_window (writing, vDSP_Length(numSamples), 2);
-    else
-        vDSP_hann_windowD (writing, vDSP_Length(numSamples), 2);
+        vDSP_hann_window (windowBuffer.getWritePointer(0), vDSP_Length(numSamples), 2);
+    else if constexpr (std::is_same_v <SampleType, double>)
+        vDSP_hann_windowD (windowBuffer.getWritePointer(0), vDSP_Length(numSamples), 2);
 #else
     const SampleType samplemultiplier = static_cast<SampleType>( (MathConstants<SampleType>::pi * 2.0) / (numSamples - 1) );
     constexpr SampleType one = SampleType(1.0);
     constexpr SampleType pointFive = SampleType(0.5);
-
+    
+    auto* writing = windowBuffer.getWritePointer(0);
+    
     for (int i = 1; i < numSamples; ++i)
         writing[i] = static_cast<SampleType>( (one - (std::cos (i * samplemultiplier))) * pointFive );
 #endif
@@ -300,16 +302,20 @@ void Harmonizer<SampleType>::updateStereoWidth (int newWidth)
         if (! voice->isVoiceActive())
             continue;
         
+        const int currentPan = voice->getCurrentMidiPan();
+        
         if (voice->getCurrentlyPlayingNote() < lowestPannedNote)
         {
-            if (voice->getCurrentMidiPan() != 64)
+            if (currentPan != 64)
             {
-                panner.panValTurnedOff (voice->getCurrentMidiPan());
+                panner.panValTurnedOff (currentPan);
                 voice->setPan (64);
             }
         }
         else
-            voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
+        {
+            voice->setPan (panner.getClosestNewPanValFromOld (currentPan));
+        }
     }
 }
 
@@ -328,18 +334,21 @@ void Harmonizer<SampleType>::updateLowestPannedNote (int newPitchThresh)
             continue;
         
         const int note = voice->getCurrentlyPlayingNote();
+        const int currentPan = voice->getCurrentMidiPan();
     
         if (note < newPitchThresh)
         {
-            if (voice->getCurrentMidiPan() != 64)
+            if (currentPan != 64)
             {
-                panner.panValTurnedOff (voice->getCurrentMidiPan());
+                panner.panValTurnedOff (currentPan);
                 voice->setPan (64);
             }
         }
         else if (note < lowestPannedNote.load()) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
-            if (voice->getCurrentMidiPan() == 64)
+        {
+            if (currentPan == 64)
                 voice->setPan (panner.getNextPanVal());
+        }
     }
     
     lowestPannedNote.store(newPitchThresh);

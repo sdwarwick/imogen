@@ -10,7 +10,7 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "PARAMETERS", createParameters()),
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
     wasBypassedLastCallback(true)
 {
     dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                         jassert(dryPan);
@@ -615,22 +615,22 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 }
 
 
-void ImogenAudioProcessor::loadPreset (juce::String presetName)
+bool ImogenAudioProcessor::loadPreset (juce::String presetName)
 {
     juce::File presetToLoad = getPresetsFolder().getChildFile(presetName);
     
     if (! presetToLoad.existsAsFile())
-        return;
+        return false;
     
     auto xmlElement = juce::parseXML (presetToLoad);
-    updatePluginInternalState (xmlElement);
+    return updatePluginInternalState (xmlElement);
 }
 
 
-void ImogenAudioProcessor::updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState)
+bool ImogenAudioProcessor::updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState)
 {
     if (newState.get() == nullptr || ! newState->hasTagName (tree.state.getType()))
-        return;
+        return false;
     
     suspendProcessing (true);
     
@@ -647,6 +647,7 @@ void ImogenAudioProcessor::updatePluginInternalState (std::unique_ptr<juce::XmlE
     suspendProcessing (false);
     
     updateHostDisplay();
+    return true;  // TODO: how to check if replacing tree state was successful...?
 }
 
 
@@ -788,8 +789,15 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 #if IMOGEN_ONLY_BUILDING_STANDALONE
         return false;
 #else
-        if (! needsSidechain || layouts.getChannelSet (true, 1) == juce::AudioChannelSet::disabled())
+        if (needsSidechain)
+        {
+            if (layouts.getChannelSet (true, 1) == juce::AudioChannelSet::disabled())
+                return false;
+        }
+        else
+        {
             return false;
+        }
 #endif
     }
     
@@ -802,8 +810,6 @@ bool ImogenAudioProcessor::canAddBus (bool isInput) const
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (needsSidechain)
         return isInput;
-#else
-    juce::ignoreUnused (isInput);
 #endif
     
     return false;

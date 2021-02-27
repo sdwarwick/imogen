@@ -142,7 +142,7 @@ private:
                const SampleType* window);
     
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample,
-                   const SampleType* window, const int newPeriod);
+                   const SampleType* window, const int newPeriod, const int synthesisBufferStartIndex = 0);
     
     void moveUpSamples (const int numSamplesUsed);
     
@@ -450,7 +450,7 @@ private:
     
     bool aftertouchGainIsOn;
     
-    float playingButReleasedMultiplier = 1.0f;
+    float playingButReleasedMultiplier;
     
     bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
     

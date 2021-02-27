@@ -76,8 +76,7 @@ int PanningManager::getNextPanVal()
 
 void PanningManager::updateStereoWidth (const int newWidth)
 {
-    if (currentNumVoices == 0)
-        return;
+    jassert (currentNumVoices > 0);
     
     const ScopedLock sl (lock);
     
@@ -119,18 +118,21 @@ void PanningManager::updateStereoWidth (const int newWidth)
     newUnsentVals.clearQuick();
     
     for (int oldPan : unsentPanVals)
-        newUnsentVals.add (getClosestNewPanValFromNew (oldPan, newPanVals));
+        newUnsentVals.add (findClosestValueInNewArray (oldPan, newPanVals));
     
     newUnsentVals.removeAllInstancesOf (-1);
+    
+    if (newUnsentVals.isEmpty())
+    {
+        reset();
+        return;
+    }
     
     // transfer to I/O array we will be actually reading from
     unsentPanVals.clearQuick();
     
     for (int newPan : newUnsentVals)
         unsentPanVals.add (newPan);
-    
-    if (unsentPanVals.isEmpty())
-        reset();
     
     jassert (! unsentPanVals.isEmpty());
 }
@@ -142,9 +144,7 @@ void PanningManager::panValTurnedOff (int panVal)
     
     const ScopedLock sl (lock);
     
-    panVal = jlimit (0, 127, panVal);
-    
-    const auto targetindex = panValsInAssigningOrder.indexOf (panVal);
+    const int targetindex = panValsInAssigningOrder.indexOf (panVal);
     
     if (targetindex == -1) // targetindex will be -1 if the turned off pan val is not in panValsInAssigningOrder. in this case, do nothing.
         return;
@@ -158,9 +158,8 @@ void PanningManager::panValTurnedOff (int panVal)
     int i = 0;
     bool addedIt = false;
     
-    do
-    {
-        if (i > panValsInAssigningOrder.size())
+    do {
+        if (i >= panValsInAssigningOrder.size())
             break;
         
         if (panValsInAssigningOrder.indexOf (unsentPanVals.getUnchecked(i)) > targetindex)
@@ -170,23 +169,14 @@ void PanningManager::panValTurnedOff (int panVal)
             break;
         }
         else
+        {
             ++i;
+        }
     }
     while (i < currentNumVoices);
     
     if (! addedIt)
-        unsentPanVals.add(panVal);
-}
-
-
-int PanningManager::getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom)
-{
-    oldPan = jlimit (0, 127, oldPan);
-    
-    if (readingFrom.isEmpty())
-        return -1;
-    
-    return findClosestValueInNewArray (oldPan, readingFrom, true);
+        unsentPanVals.add (panVal);
 }
 
 
@@ -195,41 +185,35 @@ int PanningManager::getClosestNewPanValFromOld (int oldPan)
     // find & return the element in readingFrom array that is the closest to oldPan, then remove that val from unsentPanVals
     // this is normally used with the unsentPanVals array, but the same function can also be used in the updating of the stereo width, to identify which new pan values should be sent to the unsentPanVals array itself, based on which new pan values are closest to the ones that were already in unsentPanVals.
     
-    oldPan = jlimit (0, 127, oldPan);
-    
-    if (unsentPanVals.isEmpty() || unsentPanVals.size() == 1)
+    if (unsentPanVals.size() < 2)
         return getNextPanVal();
     
-    return findClosestValueInNewArray (oldPan, unsentPanVals, true);
+    return findClosestValueInNewArray (oldPan, unsentPanVals);
 }
     
     
-int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray, bool removeFoundValFromNewArray)
+int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray)
 {
+    if (newArray.isEmpty())
+        return -1;
+    
     distances.clearQuick();
     
     for (int newVal : newArray)
     {
         const int distance = abs (targetValue - newVal);
         distances.add (distance);
-        
-        if (distance == 0)
-            break;
     }
     
-    int* minElementPtr = std::min_element (distances.begin(), distances.end());
-    
-    int minimum = *minElementPtr;
-    
-    if (! removeFoundValFromNewArray)
-        return minimum;
-    
-    return newArray.removeAndReturn (static_cast<int> (std::distance (distances.begin(), minElementPtr)));
+    return newArray.removeAndReturn (static_cast<int> (std::distance (distances.begin(),
+                                                                      std::min_element (distances.begin(), distances.end()))));
 }
 
 
 void PanningManager::reset()
 {
+    jassert (! panValsInAssigningOrder.isEmpty());
+    
     unsentPanVals.clearQuick();
     
     for (int pan : panValsInAssigningOrder)

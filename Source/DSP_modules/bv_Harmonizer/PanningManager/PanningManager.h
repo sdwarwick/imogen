@@ -72,9 +72,7 @@ private:
     
     void mapArrayIndexes();
     
-    int getClosestNewPanValFromNew (int oldPan, Array<int>& readingFrom);
-    
-    int findClosestValueInNewArray (int targetValue, Array<int>& newArray, bool removeFoundValFromNewArray = false);
+    int findClosestValueInNewArray (int targetValue, Array<int>& newArray);
     
     Array<int> possiblePanVals;
     

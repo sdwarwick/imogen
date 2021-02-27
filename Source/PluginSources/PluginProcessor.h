@@ -80,7 +80,7 @@ public:
     
     // functions for custom preset management system ------------------------------------------------------------------------------------------------
     void savePreset  (juce::String presetName);
-    void loadPreset  (juce::String presetName);
+    bool loadPreset  (juce::String presetName);
     void deletePreset(juce::String presetName);
     juce::File getPresetsFolder() const;
     
@@ -203,7 +203,7 @@ private:
     void updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine);
     
     void returnPluginInternalState (std::unique_ptr<juce::XmlElement>& output);
-    void updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState);
+    bool updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
