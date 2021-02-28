@@ -5,7 +5,6 @@
 # Imogen: a 12-voice, low-latency vocal harmonizer VST
 
 [![AutoBuild](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml/badge.svg?branch=master&event=push)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
-
 [![CodeFactor](https://www.codefactor.io/repository/github/benthevining/imogen/badge)](https://www.codefactor.io/repository/github/benthevining/imogen)
 
 Ever since I was introduced to music like [Imogen Heap](http://www.youtube.com/watch?v=dHk2lLaDzlM), [Bon Iver](http://www.youtube.com/watch?v=CaYgMdq6NDg), and in particular [Jacob Collier's famous "Harmonizer"](http://www.youtube.com/watch?v=ZXIApugIuqk), I became obsessed with finding a way to replicate the sound of this incredible instrument, the vocal harmonizer.
