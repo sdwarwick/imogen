@@ -106,6 +106,8 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
+    void latencyChanged (const int newLatency);
+    
     Harmonizer<SampleType> harmonizer;
     
     DelayBuffer<SampleType> inputBuffer;
@@ -131,7 +133,6 @@ private:
     FancyMidiBuffer midiInputCollection;
     FancyMidiBuffer midiOutputCollection;
     FancyMidiBuffer chunkMidiBuffer;
-    
     
     void copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
                                 const int startSampleOfInput,

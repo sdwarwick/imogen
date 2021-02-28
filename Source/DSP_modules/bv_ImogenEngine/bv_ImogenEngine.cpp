@@ -71,21 +71,15 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     chunkMidiBuffer.ensureSize (aggregateBufferSizes);
     
     harmonizer.setCurrentPlaybackSampleRate (sampleRate);
-    harmonizer.prepare (internalBlocksize * 2);
-    
-    inBuffer .setSize (1, internalBlocksize, true, true, true);
-    dryBuffer.setSize (2, internalBlocksize, true, true, true);
-    wetBuffer.setSize (2, internalBlocksize, true, true, true);
-    
-    inputBuffer.changeSize (1, internalBlocksize * 2);
-    outputBuffer.changeSize(2, internalBlocksize * 2);
     
     dspSpec.sampleRate = sampleRate;
-    dspSpec.maximumBlockSize = static_cast<uint32>(samplesPerBlock);
     dspSpec.numChannels = 2;
     
-    limiter.prepare (dspSpec);
+    latencyChanged (internalBlocksize);
     
+    dspSpec.maximumBlockSize = static_cast<uint32>(std::max(samplesPerBlock, internalBlocksize));
+    
+    limiter.prepare (dspSpec);
     dryWetMixer.prepare (dspSpec);
     dryWetMixer.setWetLatency(0);
     
@@ -95,6 +89,30 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     prevInputGain.store(inputGain.load());
     prevDryGain.store(dryGain.load());
     prevWetGain.store(wetGain.load());
+}
+    
+    
+template<typename SampleType>
+void ImogenEngine<SampleType>::latencyChanged (const int newLatency)
+{
+    internalBlocksize = newLatency;
+    
+    harmonizer.prepare (internalBlocksize * 2);
+    
+    inBuffer .setSize (1, internalBlocksize, true, true, true);
+    dryBuffer.setSize (2, internalBlocksize, true, true, true);
+    wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    
+    inputBuffer.changeSize (1, internalBlocksize * 2);
+    outputBuffer.changeSize(2, internalBlocksize * 2);
+    
+    if (juce::uint32(internalBlocksize) > dspSpec.maximumBlockSize)
+    {
+        dspSpec.maximumBlockSize = juce::uint32(internalBlocksize);
+        limiter.prepare (dspSpec);
+        dryWetMixer.prepare (dspSpec);
+        dryWetMixer.setWetLatency(0);
+    }
 }
 
     
@@ -159,8 +177,10 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
     
     const int totalNumSamples = inBus.getNumSamples();
     
-    if (output.getNumChannels() != 2 || output.getNumSamples() == 0 || totalNumSamples == 0 || inBus.getNumChannels() == 0)
+    if (totalNumSamples == 0 || inBus.getNumChannels() == 0)
         return;
+    
+    jassert (output.getNumChannels() == 2);
     
     if (totalNumSamples <= internalBlocksize)
     {
@@ -252,28 +272,22 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     }
     
     inputBuffer.pushSamples (input, 0, 0, numNewSamples, 0);
-    midiInputCollection.appendToEnd (midiMessages, numNewSamples);
+    midiInputCollection.pushEvents (midiMessages, numNewSamples);
     
     if (inputBuffer.numStoredSamples() >= internalBlocksize) // render the new chunk of internalBlocksize samples
     {
         inputBuffer.popSamples (inBuffer, 0, 0, internalBlocksize, 0);
-        
-        // copy just the next internalBlocksize worth's of midi events into the chunkMidiBuffer
-        chunkMidiBuffer.clear();
-        copyRangeOfMidiBuffer (midiInputCollection, chunkMidiBuffer, 0, 0, internalBlocksize);
-        midiInputCollection.deleteEventsAndPushUpRest(internalBlocksize);
+        midiInputCollection.popEvents (chunkMidiBuffer, internalBlocksize);
         
         renderBlock (inBuffer, chunkMidiBuffer);
         
-        midiOutputCollection.appendToEnd (chunkMidiBuffer, internalBlocksize);
+        midiOutputCollection.pushEvents (chunkMidiBuffer, internalBlocksize);
     }
     
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.popSamples (output, chan, 0, numNewSamples, chan);
     
-    // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
-    copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
-    midiOutputCollection.deleteEventsAndPushUpRest(numNewSamples);
+    midiOutputCollection.popEvents (midiMessages, numNewSamples);
     
     if (applyFadeIn)
         output.applyGainRamp (0, numNewSamples, 0.0f, 1.0f);
@@ -628,10 +642,7 @@ void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, con
 {
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
-//    const int newMaxPeriod = pitchDetector.getMaxPeriod();
-//
-//    if (internalBlocksize != newMaxPeriod)
-//        changeBlocksize (newMaxPeriod);
+    latencyChanged (harmonizer.getLatencySamples());
 }
 
 

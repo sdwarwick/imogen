@@ -87,7 +87,7 @@ public:
         
         for (int s = 0; s < numSamples; ++s, ++index)
         {
-            if (index == length) index = 0;
+            if (index >= length) index = 0;
             writing[index] = inputSamples[s];
         }
         
@@ -99,7 +99,9 @@ public:
     void popSamples (juce::AudioBuffer<SampleType>& destBuffer, const int destChannel, const int destStartSample,
                      const int numSamples, const int readingChannel)
     {
-        popSamples (destBuffer.getWritePointer(destChannel, destStartSample),
+        jassert (destStartSample + numSamples <= destBuffer.getNumSamples());
+        
+        popSamples (destBuffer.getWritePointer(destChannel) + destStartSample,
                     numSamples, readingChannel);
     }
     
@@ -112,6 +114,8 @@ public:
         
         int readIndex = writeIndex - numSamples;
         if (readIndex < 0) readIndex += length;
+        
+        jassert (readIndex >= 0 && readIndex < length);
         
         const SampleType* reading = base.getReadPointer(readingChannel);
         SampleType* writing = base.getWritePointer(readingChannel);

@@ -17,16 +17,16 @@ class FancyMidiBuffer  :    public juce::MidiBuffer
     
 public:
     
-    void appendToEnd (const juce::MidiBuffer& sourceBuffer, const int numSamples, const int sourceStartSample = 0)
+    void pushEvents (const juce::MidiBuffer& source, const int numSamples, const int sourceStartSample = 0)
     {
-        auto sourceStart = sourceBuffer.findNextSamplePosition (sourceStartSample);
+        auto sourceStart = source.findNextSamplePosition (sourceStartSample);
         
-        if (sourceStart == sourceBuffer.cend())
+        if (sourceStart == source.cend())
             return;
         
-        const auto sourceEnd = sourceBuffer.findNextSamplePosition(sourceStartSample + numSamples);
+        const auto sourceEnd = source.findNextSamplePosition(sourceStartSample + numSamples);
         
-        const int writingStartSample = (this->getNumEvents() > 0) ? this->getLastEventTime() + 1 : 0;
+        const int writingStartSample = (this->getNumEvents() == 0) ? 0 : this->getLastEventTime() + 1;
         
         std::for_each (sourceStart, sourceEnd,
                        [&] (const juce::MidiMessageMetadata& meta)
@@ -37,52 +37,34 @@ public:
     }
     
     
-    void deleteEventsAndPushUpRest (const int numSamplesUsed)
+    void popEvents (juce::MidiBuffer& output, const int numSamples)
     {
-        if (this->findNextSamplePosition(numSamplesUsed) == this->cend())
-        {
-            this->clear();
-            return;
-        }
+        output.clear();
         
-        juce::MidiBuffer temp (*this);
+        auto readStart = this->findNextSamplePosition (0);
+        
+        if (readStart == this->cend())
+            return;
+        
+        auto readEnd = this->findNextSamplePosition (numSamples);
+        
+        if (readStart == readEnd)
+            return;
+        
+        std::for_each (readStart, readEnd,
+                       [&] (const juce::MidiMessageMetadata& meta)
+                       {
+                           output.addEvent (meta.getMessage(),
+                                            meta.samplePosition);
+                       } );
         
         this->clear();
         
-        auto copyingStart = temp.findNextSamplePosition(numSamplesUsed);
-        
-        std::for_each (copyingStart, temp.cend(),
+        std::for_each (output.findNextSamplePosition(0), output.findNextSamplePosition(numSamples),
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
                            this->addEvent (meta.getMessage(),
-                                           std::max (0,
-                                                    (meta.samplePosition - numSamplesUsed)) );
-                       } );
-    }
-    
-    
-    void copyFromRangeOfOtherBuffer (const juce::MidiBuffer& sourceBuffer,
-                                     const int sourceStartSample,
-                                     const int destStartSample,
-                                     const int numSamples)
-    {
-        this->clear (destStartSample, numSamples);
-        
-        auto midiIterator = sourceBuffer.findNextSamplePosition(sourceStartSample);
-        
-        if (midiIterator == sourceBuffer.cend())
-            return;
-        
-        const auto midiEnd = sourceBuffer.findNextSamplePosition (sourceStartSample + numSamples);
-        
-        const int sampleOffset = destStartSample - sourceStartSample;
-        
-        std::for_each (midiIterator, midiEnd,
-                       [&] (const juce::MidiMessageMetadata& meta)
-                       {
-                           this->addEvent (meta.getMessage(),
-                                           std::max (0,
-                                                     meta.samplePosition + sampleOffset));
+                                           std::max (0, meta.samplePosition - numSamples));
                        } );
     }
     
