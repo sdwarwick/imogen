@@ -288,7 +288,10 @@ public:
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);
 
-    void updatePitchDetectionHzRange (const int minHz, const int maxHz) { pitchDetector.setHzRange (minHz, maxHz); }
+    void updatePitchDetectionHzRange (const int minHz, const int maxHz)
+    {
+        pitchDetector.setHzRange (minHz, maxHz, (sampleRate > 0));
+    }
     
     void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
         { pitchDetector.setConfidenceThresh (static_cast<SampleType>(newUpperThresh), static_cast<SampleType>(newLowerThresh)); }
@@ -464,6 +467,8 @@ private:
     AudioBuffer<SampleType> polarityReversalBuffer;
     
     Array< HarmonizerVoice<SampleType>* > usableVoices; // this array is used to sort the voices when a 'steal' is requested
+    
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

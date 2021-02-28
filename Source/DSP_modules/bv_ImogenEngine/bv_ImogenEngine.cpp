@@ -74,6 +74,9 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 template<typename SampleType>
 void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 {
+    jassert (sampleRate > 0);
+    jassert (samplesPerBlock > 0);
+    
     const size_t aggregateBufferSizes = static_cast<size_t> (internalBlocksize * 2);
     const size_t midiBufferSizes = aggregateBufferSizes * 2;
     
@@ -83,14 +86,10 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     
     chunkMidiBuffer.ensureSize (aggregateBufferSizes);
     
+    harmonizer.setCurrentPlaybackSampleRate (sampleRate);
     harmonizer.prepare (internalBlocksize * 2);
     
     clearBuffers();
-    
-    if (sampleRate == 0)
-        return;
-    
-    harmonizer.setCurrentPlaybackSampleRate (sampleRate);
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = static_cast<uint32>(samplesPerBlock);

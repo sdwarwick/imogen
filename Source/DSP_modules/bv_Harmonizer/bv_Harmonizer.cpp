@@ -23,7 +23,6 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    pitchDetector(80, 2400, 44100.0),
     latchIsOn(false), intervalLatchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
     adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
@@ -112,7 +111,7 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
     
     sampleRate = newRate;
     
-    pitchDetector.setSamplerate (newRate);
+    pitchDetector.setSamplerate (newRate, true);
     
     setCurrentInputFreq (currentInputFreq);
     
@@ -156,6 +155,7 @@ void Harmonizer<SampleType>::releaseResources()
     
     panner.releaseResources();
     grains.releaseResources();
+    pitchDetector.releaseResources();
     
     voices.clear();
 }
