@@ -212,7 +212,8 @@ int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& new
 
 void PanningManager::reset()
 {
-    jassert (! panValsInAssigningOrder.isEmpty());
+    if (panValsInAssigningOrder.isEmpty())
+        return;
     
     unsentPanVals.clearQuick();
     

@@ -106,14 +106,12 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
 {
     jassert (newRate > 0);
     
-    if (sampleRate == newRate)
-        return;
-    
     sampleRate = newRate;
     
-    pitchDetector.setSamplerate (newRate, true);
+    pitchDetector.setSamplerate (newRate, (sampleRate == newRate));
     
-    setCurrentInputFreq (currentInputFreq);
+    if (currentInputFreq > 0)
+        setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
         voice->updateSampleRate (newRate);
@@ -225,7 +223,9 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
     
     fillWindowBuffer (periodThisFrame * 2);
     
-    const AudioBuffer<SampleType>& actualInput = polarityReversed ? polarityReversalBuffer : inputAudio;
+    AudioBuffer<SampleType> inverted (polarityReversalBuffer.getArrayOfWritePointers(), 1, 0, inputAudio.getNumSamples());
+
+    const AudioBuffer<SampleType>& actualInput = polarityReversed ? inverted : inputAudio;
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
     

@@ -17,133 +17,136 @@ class DelayBuffer
 {
 public:
     
-    DelayBuffer (const int numChannels, const int maxDelay, const int blockLength)
+    DelayBuffer (const int numChannels, const int size)
     {
-        lengthInSamples = blockLength  *  ( (maxDelay + (2 * blockLength) - 1)
-                                             / blockLength );
-        
-        base.setSize (numChannels, lengthInSamples);
-        base.clear();
-        
-        writeIndex = 0;
+        initialize (numChannels, size);
     }
     
     DelayBuffer()
     {
-        lengthInSamples = 0;
         writeIndex = 0;
+        storedSamples = 0;
         base.setSize (0, 0);
-        base.clear();
     }
     
     ~DelayBuffer()
     { }
     
     
-    void changeSize (const int newNumChannels, const int maxDelay, const int blockLength)
+    void initialize (const int numChannels, const int size)
     {
-        const int newLengthInSamples = blockLength  *  ( (maxDelay + (2 * blockLength) - 1)
-                                                          / blockLength );
+        writeIndex = 0;
+        storedSamples = 0;
         
-        if (lengthInSamples == newLengthInSamples && base.getNumChannels() == newNumChannels)
-            return;
+        base.setSize (numChannels, size);
         
-        lengthInSamples = newLengthInSamples;
+        constexpr SampleType zero = SampleType(0.0);
         
-        base.setSize (newNumChannels, lengthInSamples, true, true, true);
-        
-        if (writeIndex < 0)
-            writeIndex = lengthInSamples + writeIndex;
-        else if (writeIndex >= lengthInSamples)
-            writeIndex -= lengthInSamples;
+        for (int chan = 0; chan < numChannels; ++chan)
+            juce::FloatVectorOperations::fill (base.getWritePointer(chan), zero, size);
     }
     
     
-    void writeSamples (const SampleType* inputSamples, const int numSamples, const int destChannel)
+    void releaseResources()
     {
-        if (base.getNumSamples() == 0 || base.getNumChannels() == 0 || lengthInSamples == 0)
+        base.setSize (0, 0);
+        writeIndex = 0;
+        storedSamples = 0;
+    }
+    
+    
+    void changeSize (const int newNumChannels, const int newSize)
+    {
+        if (base.getNumSamples() == newSize && base.getNumChannels() == newNumChannels)
             return;
         
-        jassert (numSamples <= lengthInSamples);
+        base.setSize (newNumChannels, newSize, true, true, true);
+        
+        if (writeIndex >= newSize)
+            writeIndex -= newSize;
+    }
+    
+    
+    void pushSamples (const juce::AudioBuffer<SampleType>& inputBuffer, const int inputChannel, const int inputStartSample, const int numSamples, const int destChannel)
+    {
+        pushSamples (inputBuffer.getReadPointer(inputChannel, inputStartSample),
+                     numSamples, destChannel);
+    }
+    
+    
+    void pushSamples (const SampleType* inputSamples, const int numSamples, const int destChannel)
+    {
+        const int length = base.getNumSamples();
+        
+        jassert (length > 0 && base.getNumChannels() > 0);
+        jassert (numSamples <= length);
         
         SampleType* writing = base.getWritePointer(destChannel);
         
         int index = writeIndex;
         
-        for (int s = 0;
-             s < numSamples;
-             ++s, ++index)
+        for (int s = 0; s < numSamples; ++s, ++index)
         {
-            index %= lengthInSamples;
+            if (index == length) index = 0;
             writing[index] = inputSamples[s];
         }
         
         writeIndex = index;
+        storedSamples += numSamples;
     }
     
     
-    void writeSamples (const juce::AudioBuffer<SampleType>& inputBuffer, const int inputChannel, const int inputStartSample,
-                       const int numSamples, const int destChannel)
+    void popSamples (juce::AudioBuffer<SampleType>& destBuffer, const int destChannel, const int destStartSample,
+                     const int numSamples, const int readingChannel)
     {
-        writeSamples (inputBuffer.getReadPointer(inputChannel, inputStartSample),
-                      numSamples, destChannel);
+        popSamples (destBuffer.getWritePointer(destChannel, destStartSample),
+                    numSamples, readingChannel);
     }
     
     
-    void getDelayedSamples (SampleType* outputSamples, const int delay, const int numSamples, const int readingChannel) const
+    void popSamples (SampleType* output, const int numSamples, const int readingChannel)
     {
-        jassert (delay <= lengthInSamples);
-        jassert (numSamples <= lengthInSamples);
+        const int length = base.getNumSamples();
         
-        const int initRead = writeIndex - delay;
-        int readIndex = initRead < 0 ? lengthInSamples + initRead : initRead;
+        jassert (length > 0 && base.getNumChannels() > 0);
+        
+        int readIndex = writeIndex - numSamples;
+        if (readIndex < 0) readIndex += length;
         
         const SampleType* reading = base.getReadPointer(readingChannel);
+        SampleType* writing = base.getWritePointer(readingChannel);
         
-        for (int n = 0;
-             n < numSamples;
-             ++n, ++readIndex)
+        constexpr SampleType zero = SampleType(0.0);
+        
+        for (int s = 0; s < numSamples; ++s, ++readIndex)
         {
-            readIndex %= lengthInSamples;
-            outputSamples[n] = reading[readIndex];
+            if (readIndex == length) readIndex = 0;
+            output[s] = reading[readIndex];
+            writing[s] = zero;
         }
-    }
-    
-    
-    void getDelayedSamples (juce::AudioBuffer<SampleType>& destBuffer, const int destChannel, const int destStartSample,
-                            const int delay, const int numSamples, const int readingChannel) const
-    {
-        getDelayedSamples (destBuffer.getWritePointer(destChannel, destStartSample),
-                           delay, numSamples, readingChannel);
-    }
-    
-    
-    SampleType* pointToDelayedSamples (const int delay, const int readingChannel) const
-    {
-        const int initRead = writeIndex - delay;
-        const int readIndex = initRead < 0 ? lengthInSamples + initRead : initRead;
         
-        return base.getReadPointer (readingChannel, readIndex);
+        storedSamples -= numSamples;
     }
     
     
     int numStoredSamples() const noexcept
     {
-        if (writeIndex - lengthInSamples <= 0)
-            return 0;
-            
-        return writeIndex - lengthInSamples;
+        return storedSamples;
     }
     
+    
+    int getSize() const noexcept
+    {
+        return base.getNumSamples();
+    }
     
     
 private:
     
     juce::AudioBuffer<SampleType> base;
     
-    int lengthInSamples;
-    
     int writeIndex;
+    int storedSamples;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayBuffer)
 };

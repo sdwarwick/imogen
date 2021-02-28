@@ -34,8 +34,6 @@ public:
     
     ~ImogenEngine();
     
-    void changeBlocksize (const int newBlocksize);
-    
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
                   const bool applyFadeIn = false, const bool applyFadeOut = false);
     
@@ -82,8 +80,6 @@ public:
     void updatePlayingButReleasedGain (const float newGainMult);
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh);
-    
-    void clearBuffers();
     
     bool hasBeenReleased()    const noexcept { return resourcesReleased; }
     bool hasBeenInitialized() const noexcept { return initialized; }

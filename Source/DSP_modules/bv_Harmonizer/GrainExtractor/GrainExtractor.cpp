@@ -77,6 +77,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     const int grainLength = period * 2;
     const int numSamples = inputAudio.getNumSamples();
+    const int halfPeriod = roundToInt (period / 2.0f);
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
@@ -91,14 +92,23 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
             if (i < peakIndices.size() - 2 || targetArray.size() > 1)
                 continue;
             
-            const int halfPeriod = roundToInt (period / 2.0f);
-            
             while (grainStart < 0)
                 grainStart += halfPeriod;
         }
         
         if (grainStart + grainLength > numSamples)
-            continue;
+        {
+            if (i < peakIndices.size() - 2 || targetArray.size() > 1)
+                continue;
+            
+            const int quarterPeriod = roundToInt (halfPeriod * 0.5f);
+            
+            while (grainStart + grainLength > numSamples)
+                grainStart -= quarterPeriod;
+            
+            if (grainStart < 0)
+                grainStart = 0;
+        }
         
         targetArray.add (grainStart);
     }

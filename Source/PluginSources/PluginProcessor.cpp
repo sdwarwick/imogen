@@ -748,7 +748,7 @@ int ImogenAudioProcessor::getNumPrograms()
 
 int ImogenAudioProcessor::getCurrentProgram()
 {
-    return 0;
+    return 1;
 }
 
 void ImogenAudioProcessor::setCurrentProgram (int index)

@@ -73,6 +73,8 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 {
     // determine if the voice is currently active
     
+    jassert (inputAudio.getNumSamples() == outputBuffer.getNumSamples());
+    
     const bool voiceIsOnRightNow = isQuickFading ? quickRelease.isActive()
                                                  : (parent->isADSRon() ? adsr.isActive() : ! noteTurnedOff);
     
@@ -158,16 +160,11 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
         olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
     }
     
-    jassert (synthesisIndex >= totalNumInputSamples);
-    
-    if (synthesisIndex > totalNumInputSamples)
-    {
-        // fill from the last written sample to the end of the buffer with zeroes
-        constexpr SampleType zero = SampleType(0.0);
-        FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
-                                     zero,
-                                     synthesisBuffer.getNumSamples() - synthesisIndex);
-    }
+    // fill from the last written sample to the end of the buffer with zeroes
+    constexpr SampleType zero = SampleType(0.0);
+    FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
+                                 zero,
+                                 synthesisBuffer.getNumSamples() - synthesisIndex);
 }
 
 
@@ -187,6 +184,7 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
     
     do {
+        jassert (synthesisIndex >= 0);
         jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
         
         FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,
@@ -195,7 +193,7 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
         
         synthesisIndex += newPeriod;
     }
-    while (synthesisIndex < frameEndSample);
+    while (synthesisIndex < frameEndSample && synthesisIndex < synthesisBuffer.getNumSamples());
 }
 
 
@@ -204,11 +202,10 @@ void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
 {
     synthesisIndex -= numSamplesUsed;
     
-    jassert (synthesisIndex >= 0);
-    
-    if (synthesisIndex == 0)
+    if (synthesisIndex < 1)
     {
         synthesisBuffer.clear();
+        synthesisIndex = 0;
         return;
     }
     

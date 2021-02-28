@@ -15,8 +15,6 @@ namespace bav
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine():
     internalBlocksize(512),
-    inputBuffer(1, internalBlocksize, internalBlocksize),
-    outputBuffer(2, internalBlocksize, internalBlocksize),
     limiterIsOn(false),
     resourcesReleased(true), initialized(false)
 {
@@ -42,28 +40,14 @@ ImogenEngine<SampleType>::~ImogenEngine()
 
 
 template<typename SampleType>
-void ImogenEngine<SampleType>::changeBlocksize (const int newBlocksize)
-{
-    if (internalBlocksize == newBlocksize)
-        return;
-    
-    inBuffer .setSize (1, internalBlocksize, true, true, true);
-    dryBuffer.setSize (2, internalBlocksize, true, true, true);
-    wetBuffer.setSize (2, internalBlocksize, true, true, true);
-    
-    inputBuffer.changeSize(1, internalBlocksize, internalBlocksize);
-    outputBuffer.changeSize(2, internalBlocksize, internalBlocksize);
-}
-
-
-template<typename SampleType>
 void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
     jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
     
     harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
-    changeBlocksize (initSamplesPerBlock);
+    inputBuffer.initialize (1, internalBlocksize * 2);
+    outputBuffer.initialize(2, internalBlocksize * 2);
     
     prepare (initSamplerate, initSamplesPerBlock);
     
@@ -89,7 +73,12 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     harmonizer.setCurrentPlaybackSampleRate (sampleRate);
     harmonizer.prepare (internalBlocksize * 2);
     
-    clearBuffers();
+    inBuffer .setSize (1, internalBlocksize, true, true, true);
+    dryBuffer.setSize (2, internalBlocksize, true, true, true);
+    wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    
+    inputBuffer.changeSize (1, internalBlocksize * 2);
+    outputBuffer.changeSize(2, internalBlocksize * 2);
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.maximumBlockSize = static_cast<uint32>(samplesPerBlock);
@@ -108,17 +97,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
     prevWetGain.store(wetGain.load());
 }
 
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::clearBuffers()
-{
-    wetBuffer.clear();
-    dryBuffer.clear();
-    inBuffer .clear();
-    midiChoppingBuffer.clear();
-}
-
-
+    
 template<typename SampleType>
 void ImogenEngine<SampleType>::reset()
 {
@@ -151,7 +130,8 @@ void ImogenEngine<SampleType>::releaseResources()
     dryBuffer.setSize(0, 0, false, false, false);
     inBuffer .setSize(0, 0, false, false, false);
     
-    clearBuffers();
+    inputBuffer.releaseResources();
+    outputBuffer.releaseResources();
     
     dryWetMixer.reset();
     limiter.reset();
@@ -271,13 +251,12 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
         }
     }
     
-    inputBuffer.writeSamples (input, 0, 0, numNewSamples, 0);
-    
+    inputBuffer.pushSamples (input, 0, 0, numNewSamples, 0);
     midiInputCollection.appendToEnd (midiMessages, numNewSamples);
     
     if (inputBuffer.numStoredSamples() >= internalBlocksize) // render the new chunk of internalBlocksize samples
     {
-        inputBuffer.getDelayedSamples(inBuffer, 0, 0, internalBlocksize, internalBlocksize, 0);
+        inputBuffer.popSamples (inBuffer, 0, 0, internalBlocksize, 0);
         
         // copy just the next internalBlocksize worth's of midi events into the chunkMidiBuffer
         chunkMidiBuffer.clear();
@@ -290,7 +269,7 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     }
     
     for (int chan = 0; chan < 2; ++chan)
-        outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
+        outputBuffer.popSamples (output, chan, 0, numNewSamples, chan);
     
     // copy the next numNewSamples's worth of midi events from the midiOutputCollection buffer to the output midi buffer
     copyRangeOfMidiBuffer (midiOutputCollection, midiMessages, 0, 0, numNewSamples);
@@ -354,7 +333,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     }
     
     for (int chan = 0; chan < 2; ++chan)
-        outputBuffer.writeSamples (wetBuffer, chan, 0, internalBlocksize, chan);
+        outputBuffer.pushSamples (wetBuffer, chan, 0, internalBlocksize, chan);
 }
 
 
@@ -429,13 +408,15 @@ void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& 
         input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
     }
     
-    inputBuffer.writeSamples (input, 0, 0, numNewSamples, 0);
+    inputBuffer.pushSamples (input, 0, 0, numNewSamples, 0);
     
-    if (inputBuffer.numStoredSamples() >= internalBlocksize)
-        inputBuffer.getDelayedSamples(inBuffer, 0, 0, internalBlocksize, internalBlocksize, 0);
+    ignoreUnused(output);
     
-    for (int chan = 0; chan < 2; ++chan)
-        outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
+//    if (inputBuffer.numStoredSamples() >= internalBlocksize)
+//        inputBuffer.getDelayedSamples(inBuffer, 0, 0, internalBlocksize, internalBlocksize, 0);
+//
+//    for (int chan = 0; chan < 2; ++chan)
+//        outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
 }
 
 
