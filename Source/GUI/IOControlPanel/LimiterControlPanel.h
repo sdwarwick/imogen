@@ -29,37 +29,31 @@ public:
         limiterToggleLink (std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
         // threshold
-        {
-            limiterThresh.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
-            limiterThresh.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 15);
-            addAndMakeVisible(limiterThresh);
-            limiterThresh.setValue(audioProcessor.limiterThresh->get());
-            limiterThresh.onValueChange = [this] { audioProcessor.updateLimiter(); };
-            lookAndFeel.initializeLabel(threshLabel, "Threshold");
-            addAndMakeVisible(threshLabel);
-        }
+        limiterThresh.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+        limiterThresh.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 15);
+        addAndMakeVisible(limiterThresh);
+        limiterThresh.setValue(audioProcessor.limiterThresh->get(), juce::NotificationType::dontSendNotification);
+        limiterThresh.onValueChange = [this] { audioProcessor.updateLimiter(); };
+        lookAndFeel.initializeLabel(threshLabel, "Threshold");
+        addAndMakeVisible(threshLabel);
         
         // release
-        {
-            limiterRelease.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
-            limiterRelease.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 40, 20);
-            addAndMakeVisible(limiterRelease);
-            limiterRelease.setValue(audioProcessor.limiterRelease->get());
-            limiterRelease.onValueChange = [this] { audioProcessor.updateLimiter(); };
-            lookAndFeel.initializeLabel(releaseLabel, "Release time");
-            addAndMakeVisible(releaseLabel);
-        }
+        limiterRelease.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
+        limiterRelease.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 40, 20);
+        addAndMakeVisible(limiterRelease);
+        limiterRelease.setValue(audioProcessor.limiterRelease->get(), juce::NotificationType::dontSendNotification);
+        limiterRelease.onValueChange = [this] { audioProcessor.updateLimiter(); };
+        lookAndFeel.initializeLabel(releaseLabel, "Release time");
+        addAndMakeVisible(releaseLabel);
         
         // toggle
-        {
-            limiterToggle.setButtonText("Output limiter");
-            addAndMakeVisible(limiterToggle);
-            limiterToggle.onClick = [this] { audioProcessor.updateLimiter(); };
-            
-            juce::Button::ButtonState initState = (audioProcessor.limiterToggle->get()) ?
-                                            juce::Button::ButtonState::buttonDown : juce::Button::ButtonState::buttonNormal;
-            limiterToggle.setState (initState);
-        }
+        limiterToggle.setButtonText("Output limiter");
+        addAndMakeVisible(limiterToggle);
+        limiterToggle.onClick = [this] { audioProcessor.updateLimiter(); };
+        
+        juce::Button::ButtonState initState = (audioProcessor.limiterToggle->get()) ?
+                                        juce::Button::ButtonState::buttonDown : juce::Button::ButtonState::buttonNormal;
+        limiterToggle.setState (initState);
     }
     
     ~LimiterControlPanel() override

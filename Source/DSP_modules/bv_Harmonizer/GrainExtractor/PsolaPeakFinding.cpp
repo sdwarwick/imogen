@@ -79,16 +79,12 @@ int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int fr
             return choosePeakWithGreatestPower (peakCandidates, reading);
             
         default:
-            if (targetArray.size() > 1)
-            {
-                return chooseIdealPeakCandidate (peakCandidates, reading,
-                                                 targetArray.getLast() + period,
-                                                 targetArray.getUnchecked(targetArray.size() - 2) + grainSize);
-            }
-            else
-            {
+            if (targetArray.size() <= 1)
                 return choosePeakWithGreatestPower (peakCandidates, reading);
-            }
+            
+            return chooseIdealPeakCandidate (peakCandidates, reading,
+                                             targetArray.getLast() + period,
+                                             targetArray.getUnchecked(targetArray.size() - 2) + grainSize);
     }
 }
 

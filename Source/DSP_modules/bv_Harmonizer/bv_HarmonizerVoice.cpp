@@ -184,7 +184,6 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
     
     do {
-        jassert (synthesisIndex >= 0);
         jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
         
         FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,

@@ -20,7 +20,7 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
 {
     displayFlats.addItem("Display flats", 1);
     displayFlats.addItem("Display sharps", 2);
-    displayFlats.setSelectedId(2);
+    displayFlats.setSelectedId(2, juce::NotificationType::dontSendNotification);
     addAndMakeVisible(displayFlats);
     displayFlats.onChange = [this] { this->repaint(); };
     

@@ -53,7 +53,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     modulatorInputSource.addItem("left",  1);
     modulatorInputSource.addItem("right", 2);
     modulatorInputSource.addItem("mix to mono", 3);
-    modulatorInputSource.setSelectedId(1);
+    modulatorInputSource.setSelectedId (1, juce::NotificationType::dontSendNotification);
     modulatorInputSource.onChange = [this] { changeModulatorInputSource(); };
     
     addAndMakeVisible(midiPanel);
