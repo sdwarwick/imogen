@@ -11,6 +11,31 @@
 namespace bav
 
 {
+    
+    
+template<typename SampleType>
+void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
+{
+    // maxBlocksize = max period of input audio
+    
+    jassert (maxBlocksize > 0);
+    
+    peakIndices.ensureStorageAllocated (maxBlocksize);
+    
+    lastBlocksize = maxBlocksize;
+    
+#define bvhge_NUM_PEAKS_TO_TEST 10
+    peakCandidates.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    peakCandidates.clearQuick();
+    peakSearchingOrder.ensureStorageAllocated(maxBlocksize);
+    peakSearchingOrder.clearQuick();
+    candidateDeltas.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    candidateDeltas.clearQuick();
+    finalHandful.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    finalHandful.clearQuick();
+    finalHandfulDeltas.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    finalHandfulDeltas.clearQuick();
+}
 
     
 template<typename SampleType>
@@ -59,14 +84,15 @@ int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int fr
         peakSearchingOrder.clearQuick();
         sortSampleIndicesForPeakSearching (peakSearchingOrder, frameStart, frameEnd, analysisIndex);
         
-        for (int i = 0; i < numPeaksToTest; ++i)
+        for (int i = 0; i < bvhge_NUM_PEAKS_TO_TEST; ++i)
         {
             getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, analysisIndex, peakSearchingOrder);
             
-            if (peakCandidates.size() == numPeaksToTest)
+            if (peakCandidates.size() == bvhge_NUM_PEAKS_TO_TEST)
                 break;
         }
     }
+#undef bvhge_NUM_PEAKS_TO_TEST
     
     jassert (! peakCandidates.isEmpty());
     
@@ -193,7 +219,9 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
-    const int finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
+#define bvhge_DEFAULT_FINAL_HANDFUL_SIZE 5
+    const int finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
+#undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
     
     for (int i = 0; i < finalHandfulSize; ++i)
     {
@@ -211,8 +239,10 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     const float deltaRange = FloatVectorOperations::findMinAndMax (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize)
                              .getLength();
     
-    if (deltaRange < 2.0f)
+#define bvhge_MIN_DELTA_RANGE 2.0f
+    if (deltaRange < bvhge_MIN_DELTA_RANGE)
         return finalHandful.getUnchecked(0);
+#undef bvhge_MIN_DELTA_RANGE
     
     struct weighting
     {

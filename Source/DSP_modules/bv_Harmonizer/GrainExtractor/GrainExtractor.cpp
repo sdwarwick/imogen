@@ -24,30 +24,6 @@ GrainExtractor<SampleType>::~GrainExtractor()
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
-{
-    // maxBlocksize = max period of input audio
-    
-    jassert (maxBlocksize > 0);
-    
-    peakIndices.ensureStorageAllocated (maxBlocksize);
-    
-    lastBlocksize = maxBlocksize;
-    
-    peakCandidates.ensureStorageAllocated (numPeaksToTest);
-    peakCandidates.clearQuick();
-    peakSearchingOrder.ensureStorageAllocated(maxBlocksize);
-    peakSearchingOrder.clearQuick();
-    candidateDeltas.ensureStorageAllocated (numPeaksToTest);
-    candidateDeltas.clearQuick();
-    finalHandful.ensureStorageAllocated (numPeaksToTest);
-    finalHandful.clearQuick();
-    finalHandfulDeltas.ensureStorageAllocated (numPeaksToTest);
-    finalHandfulDeltas.clearQuick();
-}
-
-
-template<typename SampleType>
 void GrainExtractor<SampleType>::releaseResources()
 {
     peakIndices.clear();

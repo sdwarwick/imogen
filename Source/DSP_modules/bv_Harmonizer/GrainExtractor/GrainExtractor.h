@@ -72,10 +72,6 @@ private:
     
     int choosePeakWithGreatestPower (const Array<int>& candidates, const SampleType* reading);
     
-    
-    const int numPeaksToTest = 10; // the number of peak candidates that will be identified for each analysis window during the PSOLA peak picking process
-    const int defaultFinalHandfulSize = 5; // final # of candidates with lowest delta values, which are evaluated for the strongest peak weighted using delta
-    
 };
 
 
