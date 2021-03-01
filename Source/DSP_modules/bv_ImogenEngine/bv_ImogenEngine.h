@@ -35,9 +35,8 @@ public:
     ~ImogenEngine();
     
     void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                  const bool applyFadeIn = false, const bool applyFadeOut = false);
-    
-    void processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
+                  const bool applyFadeIn = false, const bool applyFadeOut = false,
+                  const bool isBypassed = false);
     
     void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
     
@@ -99,10 +98,8 @@ private:
     
     void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                          MidiBuffer& midiMessages,
-                         const bool applyFadeIn, const bool applyFadeOut);
-    
-    void processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output);
-    
+                         const bool applyFadeIn, const bool applyFadeOut,
+                         const bool isBypassed = false);
     
     void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
@@ -133,11 +130,6 @@ private:
     FancyMidiBuffer midiInputCollection;
     FancyMidiBuffer midiOutputCollection;
     FancyMidiBuffer chunkMidiBuffer;
-    
-    void copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
-                                const int startSampleOfInput,
-                                const int startSampleOfOutput,
-                                const int numSamples);
     
     Panner dryPanner;
     

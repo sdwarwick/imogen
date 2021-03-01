@@ -121,6 +121,8 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
         latencySamples = newLatency;
         setLatencySamples (newLatency);
     }
+    
+    wasBypassedLastCallback = false;
 }
 
 
@@ -204,7 +206,7 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
 #endif
     
-    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false);
+    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, false);
     
     wasBypassedLastCallback = false;
 }
@@ -263,10 +265,7 @@ void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<Sample
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
 #endif
     
-    if (! wasBypassedLastCallback)
-        engine.process (inBus, outBus, midiMessages, false, true); // render 1 more output frame & ramp gain to 0
-    else
-        engine.processBypassed (inBus, outBus); // N.B. midi passes through unaffected when plugin is bypassed
+    engine.process (inBus, outBus, midiMessages, false, !wasBypassedLastCallback, wasBypassedLastCallback);
     
     wasBypassedLastCallback = true;
 }

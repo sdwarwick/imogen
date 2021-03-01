@@ -124,6 +124,34 @@ public:
     };
     
     
+    static void copyRangeOfMidiBuffer (const juce::MidiBuffer& readingBuffer, juce::MidiBuffer& destBuffer,
+                                       const int startSampleOfInput,
+                                       const int startSampleOfOutput,
+                                       const int numSamples)
+    {
+        destBuffer.clear (startSampleOfOutput, numSamples);
+        
+        auto midiIterator = readingBuffer.findNextSamplePosition(startSampleOfInput);
+        
+        if (midiIterator == readingBuffer.cend())
+            return;
+        
+        const auto midiEnd = readingBuffer.findNextSamplePosition(startSampleOfInput + numSamples);
+        
+        if (midiIterator == midiEnd)
+            return;
+        
+        const int sampleOffset = startSampleOfOutput - startSampleOfInput;
+        
+        std::for_each (midiIterator, midiEnd,
+                       [&] (const juce::MidiMessageMetadata& meta)
+                       {
+                           destBuffer.addEvent (meta.getMessage(),
+                                                std::max (0, meta.samplePosition + sampleOffset));
+                       } );
+    }
+    
+    
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MidiUtils)
 };
@@ -166,6 +194,6 @@ public:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DspUtils)
 };
-
+    
 
 } // namespace

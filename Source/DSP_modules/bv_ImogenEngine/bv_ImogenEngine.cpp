@@ -171,7 +171,8 @@ void ImogenEngine<SampleType>::releaseResources()
 template<typename SampleType>
 void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                                         MidiBuffer& midiMessages,
-                                        const bool applyFadeIn, const bool applyFadeOut)
+                                        const bool applyFadeIn, const bool applyFadeOut,
+                                        const bool isBypassed)
 {
     // at this layer, we check to ensure that the buffer sent to us does not exceed the internal blocksize we want to process. If it does, it is broken into smaller chunks, and processWrapped() called on each of these chunks in sequence.
     
@@ -194,22 +195,22 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
     bool actuallyFadingIn  = applyFadeIn;
     bool actuallyFadingOut = applyFadeOut;
     
-    while (samplesLeft > 0)
-    {
+    do {
         const int chunkNumSamples = std::min (internalBlocksize, samplesLeft);
         
         AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
         AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
         
-        // put just the midi messages for this time segment into midiChoppingBuffer
-        // the harmonizer's midi output will be returned by being copied to this same region of the midiChoppingBuffer.
+        /* put just the midi messages for this time segment into the midiChoppingBuffer
+           in the midiChoppingBuffer, events will start at timestamp sample 0
+           the harmonizer's midi output will be returned by being copied to this same region of the midiChoppingBuffer */
         midiChoppingBuffer.clear();
-        copyRangeOfMidiBuffer (midiMessages, midiChoppingBuffer, startSample, 0, chunkNumSamples);
+        MidiUtils::copyRangeOfMidiBuffer (midiMessages, midiChoppingBuffer, startSample, 0, chunkNumSamples);
         
-        processWrapped (inBusProxy, outputProxy, midiChoppingBuffer, actuallyFadingIn, actuallyFadingOut);
+        processWrapped (inBusProxy, outputProxy, midiChoppingBuffer, actuallyFadingIn, actuallyFadingOut, isBypassed);
         
-        // copy the harmonizer's midi output (the beginning chunk of midiChoppingBuffer) back to midiMessages (I/O), at the original startSample
-        copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
+        // copy the harmonizer's midi output back to midiMessages (I/O), at the original startSample
+        MidiUtils::copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
         
         startSample += chunkNumSamples;
         samplesLeft -= chunkNumSamples;
@@ -217,13 +218,15 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
         actuallyFadingIn  = false;
         actuallyFadingOut = false;
     }
+    while (samplesLeft > 0);
 }
 
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                                                MidiBuffer& midiMessages,
-                                               const bool applyFadeIn, const bool applyFadeOut)
+                                               const bool applyFadeIn, const bool applyFadeOut,
+                                               const bool isBypassed)
 {
     // at this level, the buffer block sizes sent to us are garunteed to NEVER exceed the declared internalBlocksize, but they may still be SMALLER than this blocksize -- the individual buffers this function recieves may be as short as 1 sample long.
     // this is where the secret sauce happens that ensures the consistent block sizes fed to renderBlock()
@@ -236,20 +239,19 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     
     switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
-        case (0):
+        case (0): // take only the left channel
         {
             input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
             break;
         }
             
-        case (1):
+        case (1):  // take only the right channel
         {
-            const int channel = (inBus.getNumChannels() > 1);
-            input = AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + channel), 1, numNewSamples);
+            input = AudioBuffer<SampleType> ((inBus.getArrayOfWritePointers() + (inBus.getNumChannels() > 1)), 1, numNewSamples);
             break;
         }
             
-        case (2):
+        case (2):  // mix all input channels to mono
         {
             const int totalNumChannels = inBus.getNumChannels();
             
@@ -274,14 +276,23 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
     inputBuffer.pushSamples (input, 0, 0, numNewSamples, 0);
     midiInputCollection.pushEvents (midiMessages, numNewSamples);
     
-    if (inputBuffer.numStoredSamples() >= internalBlocksize) // render the new chunk of internalBlocksize samples
+    if (inputBuffer.numStoredSamples() >= internalBlocksize)  // we have enough samples, render the new chunk
     {
+        inBuffer.clear();
         inputBuffer.popSamples (inBuffer, 0, 0, internalBlocksize, 0);
-        midiInputCollection.popEvents (chunkMidiBuffer, internalBlocksize);
         
-        renderBlock (inBuffer, chunkMidiBuffer);
-        
-        midiOutputCollection.pushEvents (chunkMidiBuffer, internalBlocksize);
+        if (isBypassed)
+        {
+            for (int chan = 0; chan < 2; ++chan)
+                outputBuffer.pushSamples (inBuffer, 0, 0, internalBlocksize, chan);
+        }
+        else
+        {
+            chunkMidiBuffer.clear();
+            midiInputCollection.popEvents (chunkMidiBuffer, internalBlocksize);
+            
+            renderBlock (inBuffer, chunkMidiBuffer);
+        }
     }
     
     for (int chan = 0; chan < 2; ++chan)
@@ -326,7 +337,8 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
-    harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);  // puts the harmonizer's rendered stereo output into wetBuffer
+    // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
+    harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);
 
     // wet gain
     const float currentWetGain = wetGain.load();
@@ -346,124 +358,10 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
         limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
     
+    midiOutputCollection.pushEvents (midiMessages, internalBlocksize);
+    
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.pushSamples (wetBuffer, chan, 0, internalBlocksize, chan);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-    AUDIO RENDERING WHILE THE PLUGIN IS IN BYPASS MODE
- 
-    With the current setup, when the plugin is in bypass mode, it continues the same FIFO wrapping process around internal blocks of internalBlocksize, in order to preserve the overall latency of the plugin.
-    In order to be able to use the same buffer system, while in bypass mode, the input will be summed to mono and copied to every output channel.
- 
-    I am considering implementing the switch for the input selection process in processBypassedWrapped... ¯\_(ツ)_/¯
- */
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassed (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
-{
-    if (output.getNumChannels() != 2 || output.getNumSamples() == 0 || inBus.getNumSamples() == 0 || inBus.getNumChannels() == 0)
-        return;
-    
-    const int totalNumSamples = inBus.getNumSamples();
-    
-    jassert (totalNumSamples > 0);
-    
-    if (totalNumSamples <= internalBlocksize)
-    {
-        processBypassedWrapped (inBus, output);
-        return;
-    }
-    
-    int samplesLeft = totalNumSamples;
-    int startSample = 0;
-    
-    while (samplesLeft > 0)
-    {
-        const int chunkNumSamples = std::min (internalBlocksize, samplesLeft);
-        
-        AudioBuffer<SampleType> inBusProxy  (inBus.getArrayOfWritePointers(),  inBus.getNumChannels(), startSample, chunkNumSamples);
-        AudioBuffer<SampleType> outputProxy (output.getArrayOfWritePointers(), 2,                      startSample, chunkNumSamples);
-        
-        processBypassedWrapped (inBusProxy, outputProxy);
-        
-        startSample += chunkNumSamples;
-        samplesLeft -= chunkNumSamples;
-    }
-}
-    
-
-template<typename SampleType>
-void ImogenEngine<SampleType>::processBypassedWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output)
-{
-    // harmonizer.processMidi(midiMessages);
-    
-    const int numNewSamples = inBus.getNumSamples();
-    
-    jassert (numNewSamples <= internalBlocksize);
-    
-    AudioBuffer<SampleType> input; // input needs to be a MONO buffer!
-    
-    const int totalNumChannels = inBus.getNumChannels();
-    
-    if (totalNumChannels == 1)
-        input = AudioBuffer<SampleType> (inBus.getArrayOfWritePointers(), 1, numNewSamples);
-    else
-    {
-        inBuffer.copyFrom (0, 0, inBus, 0, 0, numNewSamples);
-        
-        for (int channel = 1; channel < totalNumChannels; ++channel)
-            inBuffer.addFrom (0, 0, inBus, channel, 0, numNewSamples);
-        
-        inBuffer.applyGain (1.0f / totalNumChannels);
-        
-        input = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, numNewSamples);
-    }
-    
-    inputBuffer.pushSamples (input, 0, 0, numNewSamples, 0);
-    
-    ignoreUnused(output);
-    
-//    if (inputBuffer.numStoredSamples() >= internalBlocksize)
-//        inputBuffer.getDelayedSamples(inBuffer, 0, 0, internalBlocksize, internalBlocksize, 0);
-//
-//    for (int chan = 0; chan < 2; ++chan)
-//        outputBuffer.getDelayedSamples (output, chan, 0, numNewSamples, numNewSamples, chan);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// copies a range of events from one MidiBuffer to another MidiBuffer, applying a timestamp offset. The number of events copied will correspond to the numSamples argument.
-template<typename SampleType>
-void ImogenEngine<SampleType>::copyRangeOfMidiBuffer (const MidiBuffer& readingBuffer, MidiBuffer& destBuffer,
-                                                      const int startSampleOfInput,
-                                                      const int startSampleOfOutput,
-                                                      const int numSamples)
-{
-    destBuffer.clear (startSampleOfOutput, numSamples);
-    
-    auto midiIterator = readingBuffer.findNextSamplePosition(startSampleOfInput);
-    
-    if (midiIterator == readingBuffer.cend())
-        return;
-    
-    const auto midiEnd = readingBuffer.findNextSamplePosition(startSampleOfInput + numSamples);
-    
-    if (midiIterator == midiEnd)
-        return;
-    
-    const int sampleOffset = startSampleOfOutput - startSampleOfInput;
-    
-    std::for_each (midiIterator, midiEnd,
-                   [&] (const MidiMessageMetadata& meta)
-                       {
-                           destBuffer.addEvent (meta.getMessage(),
-                                                std::max (0,
-                                                          meta.samplePosition + sampleOffset));
-                       } );
 }
 
 

@@ -17,7 +17,7 @@ class FancyMidiBuffer  :    public juce::MidiBuffer
     
 public:
     
-    void pushEvents (const juce::MidiBuffer& source, const int numSamples, const int sourceStartSample = 0)
+    void pushEvents (const juce::MidiBuffer& source, const int numSamples, const int sourceStartSample = 0, const int sampleOffset = 0)
     {
         auto sourceStart = source.findNextSamplePosition (sourceStartSample);
         
@@ -32,12 +32,12 @@ public:
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
                            this->addEvent (meta.getMessage(),
-                                           meta.samplePosition + writingStartSample);
+                                           std::max(0, meta.samplePosition + sampleOffset + writingStartSample));
                        } );
     }
     
     
-    void popEvents (juce::MidiBuffer& output, const int numSamples)
+    void popEvents (juce::MidiBuffer& output, const int numSamples, const int outputSampleOffset = 0)
     {
         output.clear();
         
@@ -55,7 +55,7 @@ public:
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
                            output.addEvent (meta.getMessage(),
-                                            meta.samplePosition);
+                                            std::max(0, meta.samplePosition + outputSampleOffset));
                        } );
         
         this->clear();
@@ -64,7 +64,7 @@ public:
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
                            this->addEvent (meta.getMessage(),
-                                           std::max (0, meta.samplePosition - numSamples));
+                                           std::max (0, meta.samplePosition - outputSampleOffset - numSamples));
                        } );
     }
     
