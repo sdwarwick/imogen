@@ -4,6 +4,8 @@
     Classes: PitchConverter, PitchBendHelper, VelocityHelper
 */
 
+#pragma once
+
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
 

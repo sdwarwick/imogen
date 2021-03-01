@@ -4,8 +4,7 @@
     Classes: PanningManager
  */
 
-
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#pragma once
 
 
 namespace bav

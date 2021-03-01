@@ -5,7 +5,7 @@
  */
 
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer/PanningManager/PanningManager.h"
 
 
 namespace bav

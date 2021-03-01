@@ -12,7 +12,6 @@
 #include "bv_Harmonizer/bv_Harmonizer_AutomatedMidiFeatures.cpp"
 #include "bv_Harmonizer/PanningManager/PanningManager.cpp"
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
-#include "bv_Harmonizer/GrainExtractor/PsolaPeakFinding.cpp"
 
 
 
