@@ -47,7 +47,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
     inputBuffer.initialize (1, internalBlocksize * 2);
-    outputBuffer.initialize(2, internalBlocksize * 2);
+    outputBuffer.initialize(2, internalBlocksize * 3);
     
     prepare (initSamplerate, initSamplesPerBlock);
     
@@ -104,7 +104,7 @@ void ImogenEngine<SampleType>::latencyChanged (const int newLatency)
     wetBuffer.setSize (2, internalBlocksize, true, true, true);
     
     inputBuffer.changeSize (1, internalBlocksize * 2);
-    outputBuffer.changeSize(2, internalBlocksize * 2);
+    outputBuffer.changeSize(2, internalBlocksize * 3);
     
     if (juce::uint32(internalBlocksize) > dspSpec.maximumBlockSize)
     {

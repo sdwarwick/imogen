@@ -62,8 +62,11 @@ public:
         
         base.setSize (newNumChannels, newSize, true, true, true);
         
-        if (writeIndex >= newSize)
+        if (writeIndex > newSize)
             writeIndex -= newSize;
+        
+        if (storedSamples > newSize)
+            storedSamples = newSize;
     }
     
     
@@ -93,8 +96,8 @@ public:
         
         writeIndex = index;
         storedSamples += numSamples;
-        
-        jassert (storedSamples < length);
+      
+        jassert (storedSamples <= length);
     }
     
     
@@ -115,7 +118,7 @@ public:
         jassert (length > 0 && base.getNumChannels() > 0);
         
         int readIndex = writeIndex - storedSamples;
-        if (readIndex < 0) readIndex += length;
+        if (readIndex < 0) readIndex = length - writeIndex;
         
         jassert (readIndex >= 0 && readIndex < length);
         
@@ -132,6 +135,7 @@ public:
         }
         
         storedSamples -= numSamples;
+        if (storedSamples < 0) storedSamples = 0;
     }
     
     
