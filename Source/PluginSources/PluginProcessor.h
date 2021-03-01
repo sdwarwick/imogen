@@ -168,16 +168,17 @@ private:
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
-    template <typename SampleType>
-    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, bav::ImogenEngine<SampleType>& engine);
-    
-    template <typename SampleType>
-    void processBlockBypassedWrapped (juce::AudioBuffer<SampleType>& buffer, juce::MidiBuffer& midiMessages, bav::ImogenEngine<SampleType>& engine);
-    
     template <typename SampleType1, typename SampleType2>
     void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
                                bav::ImogenEngine<SampleType1>& activeEngine,
                                bav::ImogenEngine<SampleType2>& idleEngine);
+    
+    
+    template <typename SampleType>
+    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
+                              juce::MidiBuffer& midiMessages,
+                              bav::ImogenEngine<SampleType>& engine,
+                              const bool isBypassed = false);
     
     
     bav::ImogenEngine<float>  floatEngine;

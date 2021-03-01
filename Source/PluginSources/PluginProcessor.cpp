@@ -155,16 +155,17 @@ void ImogenAudioProcessor::killAllMidi()
 
 
 /*
- These two functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
+ These four functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
  The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
  In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
  */
+
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages)
 {
     if (isUsingDoublePrecision()) // this would be a REALLY stupid host, butttt ¯\_(ツ)_/¯
         return;
     
-    processBlockWrapped (buffer, midiMessages, floatEngine);
+    processBlockWrapped (buffer, midiMessages, floatEngine, false);
 }
 
 
@@ -173,17 +174,38 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
     if (! isUsingDoublePrecision())
         return;
     
-    processBlockWrapped (buffer, midiMessages, doubleEngine);
+    processBlockWrapped (buffer, midiMessages, doubleEngine, false);
 }
 
-// LAYER 2:
+
+void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+    if (isUsingDoublePrecision())
+        return;
+    
+    processBlockWrapped (buffer, midiMessages, floatEngine, true);
+}
+
+
+void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
+{
+    if (! isUsingDoublePrecision())
+        return;
+    
+    processBlockWrapped (buffer, midiMessages, doubleEngine, true);
+}
+
+
+// LAYER 2 ---------------------------------------------------------------------------------
+
 template <typename SampleType>
 void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                 juce::MidiBuffer& midiMessages,
-                                                bav::ImogenEngine<SampleType>& engine)
+                                                bav::ImogenEngine<SampleType>& engine,
+                                                const bool isBypassed)
 {
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
-    // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
+    // NB. at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
     
     if (! engine.hasBeenInitialized())
         return;
@@ -206,68 +228,12 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
 #endif
     
-    engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, false);
+    if (isBypassed)
+        engine.process (inBus, outBus, midiMessages, false, !wasBypassedLastCallback, wasBypassedLastCallback);
+    else
+        engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, false);
     
-    wasBypassedLastCallback = false;
-}
-
-
-
-/*
- These two functions represent the top-level callbacks made by the host during audio processing when the plugin is bypassed in the signal chain. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
- The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
- In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
- */
-void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
-{
-    if (isUsingDoublePrecision())
-        return;
-    
-    processBlockBypassedWrapped (buffer, midiMessages, floatEngine);
-}
-
-
-void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
-{
-    if (! isUsingDoublePrecision())
-        return;
-    
-    processBlockBypassedWrapped (buffer, midiMessages, doubleEngine);
-}
-
-// LAYER 2:
-template <typename SampleType>
-void ImogenAudioProcessor::processBlockBypassedWrapped (juce::AudioBuffer<SampleType>& buffer,
-                                                        juce::MidiBuffer& midiMessages,
-                                                        bav::ImogenEngine<SampleType>& engine)
-{
-    // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
-    // NB at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
-    
-    if (! engine.hasBeenInitialized())
-        return;
-    
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
-        return;   // our audio input is disabled! can't do processing
-#endif
-    
-    updateAllParameters (engine);
-    
-    if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
-        return;
-    
-    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
-    
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-    juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, 0);
-#else
-    juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
-#endif
-    
-    engine.process (inBus, outBus, midiMessages, false, !wasBypassedLastCallback, wasBypassedLastCallback);
-    
-    wasBypassedLastCallback = true;
+    wasBypassedLastCallback = isBypassed;
 }
 
 
