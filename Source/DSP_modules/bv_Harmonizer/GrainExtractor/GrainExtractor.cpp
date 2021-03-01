@@ -8,6 +8,12 @@
 #include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 
 
+#undef bvhge_NUM_PEAKS_TO_TEST
+#undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
+#undef bvhge_MIN_DELTA_RANGE
+
+
+
 namespace bav
 
 {
