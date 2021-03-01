@@ -185,7 +185,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
     
     if (totalNumSamples <= internalBlocksize)
     {
-        processWrapped (inBus, output, midiMessages, applyFadeIn, applyFadeOut);
+        processWrapped (inBus, output, midiMessages, applyFadeIn, applyFadeOut, isBypassed);
         return;
     }
     

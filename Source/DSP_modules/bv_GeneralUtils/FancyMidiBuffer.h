@@ -17,27 +17,26 @@ class FancyMidiBuffer  :    public juce::MidiBuffer
     
 public:
     
-    void pushEvents (const juce::MidiBuffer& source, const int numSamples, const int sourceStartSample = 0, const int sampleOffset = 0)
+    void pushEvents (const juce::MidiBuffer& source, const int numSamples)
     {
-        auto sourceStart = source.findNextSamplePosition (sourceStartSample);
+        auto sourceStart = source.findNextSamplePosition (0);
         
         if (sourceStart == source.cend())
             return;
         
-        const auto sourceEnd = source.findNextSamplePosition(sourceStartSample + numSamples);
+        const auto sourceEnd = source.findNextSamplePosition (numSamples);
         
         const int writingStartSample = (this->getNumEvents() == 0) ? 0 : this->getLastEventTime() + 1;
         
         std::for_each (sourceStart, sourceEnd,
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
-                           this->addEvent (meta.getMessage(),
-                                           std::max(0, meta.samplePosition + sampleOffset + writingStartSample));
+                           this->addEvent (meta.getMessage(), meta.samplePosition + writingStartSample);
                        } );
     }
     
     
-    void popEvents (juce::MidiBuffer& output, const int numSamples, const int outputSampleOffset = 0)
+    void popEvents (juce::MidiBuffer& output, const int numSamples)
     {
         output.clear();
         
@@ -54,8 +53,7 @@ public:
         std::for_each (readStart, readEnd,
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
-                           output.addEvent (meta.getMessage(),
-                                            std::max(0, meta.samplePosition + outputSampleOffset));
+                           output.addEvent (meta.getMessage(), meta.samplePosition);
                        } );
         
         this->clear();
@@ -64,7 +62,7 @@ public:
                        [&] (const juce::MidiMessageMetadata& meta)
                        {
                            this->addEvent (meta.getMessage(),
-                                           std::max (0, meta.samplePosition - outputSampleOffset - numSamples));
+                                           std::max (0, meta.samplePosition - numSamples));
                        } );
     }
     

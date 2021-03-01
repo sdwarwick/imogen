@@ -93,6 +93,8 @@ public:
         
         writeIndex = index;
         storedSamples += numSamples;
+        
+        jassert (storedSamples < length);
     }
     
     
@@ -112,7 +114,7 @@ public:
         
         jassert (length > 0 && base.getNumChannels() > 0);
         
-        int readIndex = writeIndex - numSamples;
+        int readIndex = writeIndex - storedSamples;
         if (readIndex < 0) readIndex += length;
         
         jassert (readIndex >= 0 && readIndex < length);
@@ -124,7 +126,7 @@ public:
         
         for (int s = 0; s < numSamples; ++s, ++readIndex)
         {
-            if (readIndex == length) readIndex = 0;
+            if (readIndex >= length) readIndex = 0;
             output[s] = reading[readIndex];
             writing[s] = zero;
         }

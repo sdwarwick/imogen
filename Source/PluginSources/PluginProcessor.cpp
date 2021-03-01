@@ -592,16 +592,11 @@ void ImogenAudioProcessor::returnPluginInternalState (std::unique_ptr<juce::XmlE
 {
     output = tree.copyState().createXml();
     
-    if (isUsingDoublePrecision())
-    {
-        output->setAttribute ("numberOfVoices", doubleEngine.getCurrentNumVoices());
-        output->setAttribute ("modulatorInputSource", doubleEngine.getModulatorSource());
-    }
-    else
-    {
-        output->setAttribute ("numberOfVoices", floatEngine.getCurrentNumVoices());
-        output->setAttribute ("modulatorInputSource", floatEngine.getModulatorSource());
-    }
+    const int numVoices = isUsingDoublePrecision() ? doubleEngine.getCurrentNumVoices() : floatEngine.getCurrentNumVoices();
+    const int inputSource = isUsingDoublePrecision() ? doubleEngine.getModulatorSource() : floatEngine.getModulatorSource();
+    
+    output->setAttribute ("numberOfVoices", numVoices);
+    output->setAttribute ("modulatorInputSource", inputSource);
 }
 
 
