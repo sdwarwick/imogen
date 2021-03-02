@@ -64,24 +64,27 @@ bvie_VOID_TEMPLATE::prepare (double sampleRate, int samplesPerBlock)
     jassert (sampleRate > 0);
     jassert (samplesPerBlock > 0);
     
-    const size_t aggregateBufferSizes = static_cast<size_t> (internalBlocksize * 2);
-    const size_t midiBufferSizes = aggregateBufferSizes * 2;
+    midiChoppingBuffer.ensureSize (size_t(samplesPerBlock * 2));
     
-    midiChoppingBuffer  .ensureSize (midiBufferSizes * 2);
-    midiInputCollection .ensureSize (midiBufferSizes);
-    midiOutputCollection.ensureSize (midiBufferSizes);
+    const size_t doubleBlocksize = size_t(internalBlocksize * 2);
     
-    chunkMidiBuffer.ensureSize (aggregateBufferSizes);
+    midiInputCollection .ensureSize (doubleBlocksize);
+    midiOutputCollection.ensureSize (doubleBlocksize);
+    chunkMidiBuffer.ensureSize (doubleBlocksize);
+    
+    inBuffer .setSize (1, internalBlocksize, true, true, true);
+    dryBuffer.setSize (2, internalBlocksize, true, true, true);
+    wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    
+    inputBuffer.changeSize (1, internalBlocksize * 2);
+    outputBuffer.changeSize(2, internalBlocksize * 3);
     
     harmonizer.setCurrentPlaybackSampleRate (sampleRate);
+    harmonizer.prepare (internalBlocksize);
     
     dspSpec.sampleRate = sampleRate;
     dspSpec.numChannels = 2;
-    
-    latencyChanged (internalBlocksize);
-    
-    dspSpec.maximumBlockSize = static_cast<uint32>(std::max(samplesPerBlock, internalBlocksize));
-    
+    dspSpec.maximumBlockSize = uint32(internalBlocksize);
     limiter.prepare (dspSpec);
     dryWetMixer.prepare (dspSpec);
     dryWetMixer.setWetLatency(0);
@@ -99,7 +102,7 @@ bvie_VOID_TEMPLATE::latencyChanged (const int newLatency)
 {
     internalBlocksize = newLatency;
     
-    harmonizer.prepare (internalBlocksize * 2);
+    harmonizer.prepare (internalBlocksize);
     
     inBuffer .setSize (1, internalBlocksize, true, true, true);
     dryBuffer.setSize (2, internalBlocksize, true, true, true);
@@ -108,13 +111,9 @@ bvie_VOID_TEMPLATE::latencyChanged (const int newLatency)
     inputBuffer.changeSize (1, internalBlocksize * 2);
     outputBuffer.changeSize(2, internalBlocksize * 3);
     
-    if (juce::uint32(internalBlocksize) > dspSpec.maximumBlockSize)
-    {
-        dspSpec.maximumBlockSize = juce::uint32(internalBlocksize);
-        limiter.prepare (dspSpec);
-        dryWetMixer.prepare (dspSpec);
-        dryWetMixer.setWetLatency(0);
-    }
+    dspSpec.maximumBlockSize = uint32(internalBlocksize);
+    limiter.prepare (dspSpec);
+    dryWetMixer.prepare (dspSpec);
 }
 
     
@@ -122,7 +121,8 @@ bvie_VOID_TEMPLATE::reset()
 {
     harmonizer.allNotesOff(false);
     
-    releaseResources();
+    dryWetMixer.reset();
+    limiter.reset();
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store(inputGain.load());
@@ -137,11 +137,9 @@ bvie_VOID_TEMPLATE::killAllMidi()
 }
 
 
-
 bvie_VOID_TEMPLATE::releaseResources()
 {
     harmonizer.releaseResources();
-    // harmonizer.removeallvoices ?
     
     wetBuffer.setSize(0, 0, false, false, false);
     dryBuffer.setSize(0, 0, false, false, false);
@@ -149,6 +147,11 @@ bvie_VOID_TEMPLATE::releaseResources()
     
     inputBuffer.releaseResources();
     outputBuffer.releaseResources();
+    
+    midiChoppingBuffer.clear();
+    midiInputCollection.clear();
+    midiOutputCollection.clear();
+    chunkMidiBuffer.clear();
     
     dryWetMixer.reset();
     limiter.reset();

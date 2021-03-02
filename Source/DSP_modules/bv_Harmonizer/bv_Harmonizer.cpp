@@ -75,28 +75,31 @@ bvh_VOID_TEMPLATE::initialize (const int initNumVoices, const double initSampler
     
     addNumVoices (initNumVoices);
     
+    pitchDetector.initialize();
+    
     setCurrentPlaybackSampleRate (initSamplerate);
     
     prepare (initBlocksize);
 }
 
  
-bvh_VOID_TEMPLATE::prepare (const int blocksize)
+bvh_VOID_TEMPLATE::prepare (const int blocksize)  
 {
     jassert (blocksize > 0);
     
-    aggregateMidiBuffer.ensureSize (static_cast<size_t> (blocksize * 2));
+    aggregateMidiBuffer.ensureSize (size_t(blocksize * 2));
     aggregateMidiBuffer.clear();
     
     for (auto* voice : voices)
         voice->prepare (blocksize);
     
-    windowBuffer.setSize (1, blocksize * 2, true, true, true);
+    windowBuffer.setSize (1, blocksize, true, true, true);
     polarityReversalBuffer.setSize (1, blocksize);
     
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
     
     grains.prepare (blocksize);
+    panner.prepare (voices.size(), false);
     
     lastNoteOnCounter = 0;
 }

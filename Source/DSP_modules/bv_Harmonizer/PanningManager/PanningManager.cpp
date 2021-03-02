@@ -31,8 +31,7 @@ void PanningManager::releaseResources()
 
 void PanningManager::prepare (const int numVoices, bool clearArrays)
 {
-    if (numVoices <= 0)
-        return;
+    jassert (numVoices > 0);
     
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);

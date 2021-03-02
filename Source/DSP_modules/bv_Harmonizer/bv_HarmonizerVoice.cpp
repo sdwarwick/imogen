@@ -66,6 +66,14 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     
     synthesisIndex = 0;
 }
+    
+
+bvhv_VOID_TEMPLATE::releaseResources()
+{
+    synthesisBuffer.setSize (0, 0, false, false, false);
+    windowingBuffer.setSize (0, 0, false, false, false);
+    copyingBuffer.setSize (0, 0, false, false, false);
+}
 
 
 bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
@@ -213,18 +221,6 @@ bvhv_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 }
 
 
-bvhv_VOID_TEMPLATE::releaseResources()
-{
-    synthesisBuffer.setSize(0, 0, false, false, false);
-}
-
-
-bvhv_VOID_TEMPLATE::clearBuffers()
-{
-    synthesisBuffer.clear();
-}
-
-
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 bvhv_VOID_TEMPLATE::clearCurrentNote()
 {
@@ -254,7 +250,6 @@ bvhv_VOID_TEMPLATE::clearCurrentNote()
     if (quickAttack.isActive())
         quickAttack.reset();
     
-    clearBuffers();
     synthesisBuffer.clear();
 }
 

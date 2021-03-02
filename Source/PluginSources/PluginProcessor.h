@@ -184,8 +184,6 @@ private:
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
     
-    int latencySamples;
-    
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     juce::PluginHostType host;
     bool needsSidechain = false;

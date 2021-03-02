@@ -7,6 +7,8 @@
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/PluginSources/PluginEditor.h"
 
+#undef imogen_DEFAULT_NUM_VOICES
+
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
@@ -76,13 +78,13 @@ void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngi
     if (initBlockSize <= 0)
         initBlockSize = 512;
     
-    activeEngine.initialize (initSamplerate, initBlockSize, 12);
+#define imogen_DEFAULT_NUM_VOICES 12
+    activeEngine.initialize (initSamplerate, initBlockSize, imogen_DEFAULT_NUM_VOICES);
+#undef imogen_DEFAULT_NUM_VOICES
     
     updateAllParameters (activeEngine);
     
-    latencySamples = activeEngine.reportLatency();
-    
-    setLatencySamples (latencySamples);
+    setLatencySamples (activeEngine.reportLatency());
 }
 
 
@@ -104,23 +106,17 @@ void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const 
                                                  bav::ImogenEngine<SampleType1>& activeEngine,
                                                  bav::ImogenEngine<SampleType2>& idleEngine)
 {
+    if (! idleEngine.hasBeenReleased())
+        idleEngine.releaseResources();
+    
     if (! activeEngine.hasBeenInitialized())
         activeEngine.initialize (sampleRate, samplesPerBlock, 12);
     else
         activeEngine.prepare (sampleRate, samplesPerBlock);
     
-    if (! idleEngine.hasBeenReleased())
-        idleEngine.releaseResources();
-    
     updateAllParameters (activeEngine);
     
-    const int newLatency = activeEngine.reportLatency();
-    
-    if (latencySamples != newLatency)
-    {
-        latencySamples = newLatency;
-        setLatencySamples (newLatency);
-    }
+    setLatencySamples (activeEngine.reportLatency());
     
     wasBypassedLastCallback = false;
 }
@@ -158,7 +154,7 @@ void ImogenAudioProcessor::killAllMidi()
  These four functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
  The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
  In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
- */
+*/
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages)
 {
@@ -434,11 +430,7 @@ void ImogenAudioProcessor::updatePitchDetectionWrapped (bav::ImogenEngine<Sample
     activeEngine.updatePitchDetectionConfidenceThresh (pitchDetectionConfidenceUpperThresh->get(),
                                                        pitchDetectionConfidenceLowerThresh->get());
     
-    if (latencySamples != activeEngine.reportLatency())
-    {
-        latencySamples = activeEngine.reportLatency();
-        setLatencySamples (latencySamples);
-    }
+    setLatencySamples (activeEngine.reportLatency());
 }
 
 

@@ -95,8 +95,6 @@ public:
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes (const int newMaxBlocksize);
     
-    void clearBuffers();
-    
     float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
     
     void updateSampleRate (const double newSamplerate);
