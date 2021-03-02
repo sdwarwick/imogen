@@ -63,8 +63,11 @@ Harmonizer<SampleType>::~Harmonizer()
 }
 
     
-template<typename SampleType>
-void Harmonizer<SampleType>::initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize)
+#undef bvh_VOID_TEMPLATE
+#define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
+    
+    
+bvh_VOID_TEMPLATE::initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize)
 {
     jassert (initNumVoices > 0 && initSamplerate > 0 && initBlocksize > 0);
     
@@ -78,8 +81,7 @@ void Harmonizer<SampleType>::initialize (const int initNumVoices, const double i
 }
 
  
-template<typename SampleType>
-void Harmonizer<SampleType>::prepare (const int blocksize)
+bvh_VOID_TEMPLATE::prepare (const int blocksize)
 {
     jassert (blocksize > 0);
     
@@ -100,8 +102,7 @@ void Harmonizer<SampleType>::prepare (const int blocksize)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
+bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
 {
     jassert (newRate > 0);
     
@@ -117,8 +118,7 @@ void Harmonizer<SampleType>::setCurrentPlaybackSampleRate (const double newRate)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
+bvh_VOID_TEMPLATE::setConcertPitchHz (const int newConcertPitchhz)
 {
     jassert (newConcertPitchhz > 0);
     
@@ -135,8 +135,7 @@ void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::releaseResources()
+bvh_VOID_TEMPLATE::releaseResources()
 {
     aggregateMidiBuffer.clear();
     usableVoices.clear();
@@ -158,8 +157,7 @@ void Harmonizer<SampleType>::releaseResources()
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
+bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
 {
     jassert (newInputFreq > 0);
     
@@ -176,8 +174,7 @@ void Harmonizer<SampleType>::setCurrentInputFreq (const float newInputFreq)
 // audio rendering------------------------------------------------------------------------------------------------------------------------------
  **********************************************************************************************************************************************/
 
-template<typename SampleType>
-void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputAudio,
+bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                            AudioBuffer<SampleType>& outputBuffer,
                                            MidiBuffer& midiMessages)
 {
@@ -237,8 +234,7 @@ void Harmonizer<SampleType>::renderVoices (const AudioBuffer<SampleType>& inputA
 
 // calculate Hanning window ------------------------------------------------------
 
-template<typename SampleType>
-void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
+bvh_VOID_TEMPLATE::fillWindowBuffer (const int numSamples)
 {
     jassert (numSamples > 1);
     
@@ -275,8 +271,7 @@ void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // stereo width ---------------------------------------------------------------------------------------------------
-template<typename SampleType>
-void Harmonizer<SampleType>::updateStereoWidth (int newWidth)
+bvh_VOID_TEMPLATE::updateStereoWidth (int newWidth)
 {
     newWidth = jlimit (0, 100, newWidth);
     
@@ -308,8 +303,7 @@ void Harmonizer<SampleType>::updateStereoWidth (int newWidth)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::updateLowestPannedNote (int newPitchThresh)
+bvh_VOID_TEMPLATE::updateLowestPannedNote (int newPitchThresh)
 {
     newPitchThresh = jlimit (0, 127, newPitchThresh);
     
@@ -344,8 +338,7 @@ void Harmonizer<SampleType>::updateLowestPannedNote (int newPitchThresh)
 
 
 // midi velocity sensitivity -------------------------------------------------------------------------------------
-template<typename SampleType>
-void Harmonizer<SampleType>::updateMidiVelocitySensitivity (int newSensitivity)
+bvh_VOID_TEMPLATE::updateMidiVelocitySensitivity (int newSensitivity)
 {
     newSensitivity = jlimit (0, 100, newSensitivity);
     
@@ -363,8 +356,7 @@ void Harmonizer<SampleType>::updateMidiVelocitySensitivity (int newSensitivity)
 
 
 // pitch bend settings -------------------------------------------------------------------------------------------
-template<typename SampleType>
-void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const int rangeDown)
+bvh_VOID_TEMPLATE::updatePitchbendSettings (const int rangeUp, const int rangeDown)
 {
     if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
         return;
@@ -381,8 +373,7 @@ void Harmonizer<SampleType>::updatePitchbendSettings (const int rangeUp, const i
 
 
 // descant settings ----------------------------------------------------------------------------------------------------------------------------
-template<typename SampleType>
-void Harmonizer<SampleType>::setDescant (const bool isOn)
+bvh_VOID_TEMPLATE::setDescant (const bool isOn)
 {
     if (descant.isOn == isOn)
         return;
@@ -401,8 +392,7 @@ void Harmonizer<SampleType>::setDescant (const bool isOn)
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setDescantLowerThresh (int newThresh)
+bvh_VOID_TEMPLATE::setDescantLowerThresh (int newThresh)
 {
     newThresh = jlimit (0, 127, newThresh);
     
@@ -416,8 +406,7 @@ void Harmonizer<SampleType>::setDescantLowerThresh (int newThresh)
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setDescantInterval (const int newInterval)
+bvh_VOID_TEMPLATE::setDescantInterval (const int newInterval)
 {
     if (descant.interval == newInterval)
         return;
@@ -433,8 +422,7 @@ void Harmonizer<SampleType>::setDescantInterval (const int newInterval)
 
 
 // pedal pitch settings -----------------------------------------------------------------------------------------------------------------------
-template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
+bvh_VOID_TEMPLATE::setPedalPitch (const bool isOn)
 {
     if (pedal.isOn == isOn)
         return;
@@ -453,8 +441,7 @@ void Harmonizer<SampleType>::setPedalPitch (const bool isOn)
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitchUpperThresh (int newThresh)
+bvh_VOID_TEMPLATE::setPedalPitchUpperThresh (int newThresh)
 {
     newThresh = jlimit (0, 127, newThresh);
     
@@ -468,8 +455,7 @@ void Harmonizer<SampleType>::setPedalPitchUpperThresh (int newThresh)
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::setPedalPitchInterval (const int newInterval)
+bvh_VOID_TEMPLATE::setPedalPitchInterval (const int newInterval)
 {
     if (pedal.interval == newInterval)
         return;
@@ -485,8 +471,7 @@ void Harmonizer<SampleType>::setPedalPitchInterval (const int newInterval)
 
 
 // ADSR settings------------------------------------------------------------------------------------------------------------------------------
-template<typename SampleType>
-void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float decay, const float sustain, const float release)
+bvh_VOID_TEMPLATE::updateADSRsettings (const float attack, const float decay, const float sustain, const float release)
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
@@ -502,8 +487,7 @@ void Harmonizer<SampleType>::updateADSRsettings (const float attack, const float
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
+bvh_VOID_TEMPLATE::updateQuickReleaseMs (const int newMs)
 {
     if (newMs <= 0)
         return;
@@ -526,8 +510,7 @@ void Harmonizer<SampleType>::updateQuickReleaseMs (const int newMs)
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::updateQuickAttackMs (const int newMs)
+bvh_VOID_TEMPLATE::updateQuickAttackMs (const int newMs)
 {
     if (newMs <= 0)
         return;
@@ -550,6 +533,7 @@ void Harmonizer<SampleType>::updateQuickAttackMs (const int newMs)
 }
 
 
+#undef bvh_VOID_TEMPLATE
 
 template class Harmonizer<float>;
 template class Harmonizer<double>;

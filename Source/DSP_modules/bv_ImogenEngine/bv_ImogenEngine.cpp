@@ -7,6 +7,7 @@
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
 
+
 namespace bav
 
 {
@@ -38,9 +39,12 @@ template<typename SampleType>
 ImogenEngine<SampleType>::~ImogenEngine()
 { }
 
+    
+#undef bvie_VOID_TEMPLATE
+#define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
+    
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
+bvie_VOID_TEMPLATE::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
     jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
     
@@ -55,8 +59,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
+bvie_VOID_TEMPLATE::prepare (double sampleRate, int samplesPerBlock)
 {
     jassert (sampleRate > 0);
     jassert (samplesPerBlock > 0);
@@ -92,8 +95,7 @@ void ImogenEngine<SampleType>::prepare (double sampleRate, int samplesPerBlock)
 }
     
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::latencyChanged (const int newLatency)
+bvie_VOID_TEMPLATE::latencyChanged (const int newLatency)
 {
     internalBlocksize = newLatency;
     
@@ -116,8 +118,7 @@ void ImogenEngine<SampleType>::latencyChanged (const int newLatency)
 }
 
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::reset()
+bvie_VOID_TEMPLATE::reset()
 {
     harmonizer.allNotesOff(false);
     
@@ -130,16 +131,14 @@ void ImogenEngine<SampleType>::reset()
 }
     
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::killAllMidi()
+bvie_VOID_TEMPLATE::killAllMidi()
 {
     harmonizer.allNotesOff(false);
 }
 
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::releaseResources()
+bvie_VOID_TEMPLATE::releaseResources()
 {
     harmonizer.releaseResources();
     // harmonizer.removeallvoices ?
@@ -168,8 +167,7 @@ void ImogenEngine<SampleType>::releaseResources()
     In order to achieve this blocksize regulation, the processing is wrapped in several layers of buffer slicing and what essentially amounts to an audio & MIDI FIFO.
  */
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+bvie_VOID_TEMPLATE::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                                         MidiBuffer& midiMessages,
                                         const bool applyFadeIn, const bool applyFadeOut,
                                         const bool isBypassed)
@@ -222,8 +220,7 @@ void ImogenEngine<SampleType>::process (AudioBuffer<SampleType>& inBus, AudioBuf
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+bvie_VOID_TEMPLATE::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
                                                MidiBuffer& midiMessages,
                                                const bool applyFadeIn, const bool applyFadeOut,
                                                const bool isBypassed)
@@ -309,9 +306,8 @@ void ImogenEngine<SampleType>::processWrapped (AudioBuffer<SampleType>& inBus, A
 
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input,
-                                                  MidiBuffer& midiMessages)
+bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
+                                                  MidiBuffer& midiMessages)       
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
@@ -329,7 +325,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     for (int chan = 0; chan < 2; ++chan)
         dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), internalBlocksize,
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
-
     // dry gain
     const float currentDryGain = dryGain.load();
     dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain.load(), currentDryGain);
@@ -339,13 +334,15 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
     harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);
+    
+    midiOutputCollection.pushEvents (midiMessages, internalBlocksize);
 
     // wet gain
     const float currentWetGain = wetGain.load();
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain.load(), currentWetGain);
     prevWetGain.store(currentWetGain);
 
-    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into "wetProxy" (= "wetBuffer")
+    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
 
     // master output gain
     const float currentOutGain = outputGain.load();
@@ -358,8 +355,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
         limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
     
-    midiOutputCollection.pushEvents (midiMessages, internalBlocksize);
-    
     for (int chan = 0; chan < 2; ++chan)
         outputBuffer.pushSamples (wetBuffer, chan, 0, internalBlocksize, chan);
 }
@@ -369,8 +364,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
 // functions for updating parameters ----------------------------------------------------------------------------------------------------------------
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateNumVoices (const int newNumVoices)
+bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
 {
     const int currentVoices = harmonizer.getNumVoices();
     
@@ -384,98 +378,85 @@ void ImogenEngine<SampleType>::updateNumVoices (const int newNumVoices)
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateDryVoxPan  (const int newMidiPan)
+bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 {
     dryPanner.setMidiPan (newMidiPan);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateInputGain (const float newInGain)
+bvie_VOID_TEMPLATE::updateInputGain (const float newInGain)
 {
     prevInputGain.store(inputGain.load());
     inputGain.store(newInGain);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateOutputGain (const float newOutGain)
+bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
 {
     prevOutputGain.store(outputGain.load());
     outputGain.store(newOutGain);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateDryGain (const float newDryGain)
+bvie_VOID_TEMPLATE::updateDryGain (const float newDryGain)
 {
     prevDryGain.store(dryGain.load());
     dryGain.store(newDryGain);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateWetGain (const float newWetGain)
+bvie_VOID_TEMPLATE::updateWetGain (const float newWetGain)
 {
     prevWetGain.store(wetGain.load());
     wetGain.store(newWetGain);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateDryWet (const int percentWet)
+bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 {
     dryWetMixer.setWetMixProportion (percentWet / 100.0f);
 }
 
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn)
+bvie_VOID_TEMPLATE::updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn)
 {
     harmonizer.updateADSRsettings(attack, decay, sustain, release);
     harmonizer.setADSRonOff(isOn);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateQuickKill(const int newMs)
+bvie_VOID_TEMPLATE::updateQuickKill(const int newMs)
 {
     harmonizer.updateQuickReleaseMs(newMs);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateQuickAttack(const int newMs)
+bvie_VOID_TEMPLATE::updateQuickAttack(const int newMs)
 {
     harmonizer.updateQuickAttackMs(newMs);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateStereoWidth(const int newStereoWidth, const int lowestPannedNote)
+bvie_VOID_TEMPLATE::updateStereoWidth(const int newStereoWidth, const int lowestPannedNote)
 {
     harmonizer.updateLowestPannedNote(lowestPannedNote);
     harmonizer.updateStereoWidth     (newStereoWidth);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateMidiVelocitySensitivity(const int newSensitivity)
+bvie_VOID_TEMPLATE::updateMidiVelocitySensitivity(const int newSensitivity)
 {
     harmonizer.updateMidiVelocitySensitivity(newSensitivity);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updatePitchbendSettings(const int rangeUp, const int rangeDown)
+bvie_VOID_TEMPLATE::updatePitchbendSettings(const int rangeUp, const int rangeDown)
 {
     harmonizer.updatePitchbendSettings(rangeUp, rangeDown);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updatePedalPitch(const bool isOn, const int upperThresh, const int interval)
+bvie_VOID_TEMPLATE::updatePedalPitch(const bool isOn, const int upperThresh, const int interval)
 {
     harmonizer.setPedalPitch           (isOn);
     harmonizer.setPedalPitchUpperThresh(upperThresh);
@@ -483,8 +464,7 @@ void ImogenEngine<SampleType>::updatePedalPitch(const bool isOn, const int upper
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateDescant(const bool isOn, const int lowerThresh, const int interval)
+bvie_VOID_TEMPLATE::updateDescant(const bool isOn, const int lowerThresh, const int interval)
 {
     harmonizer.setDescant           (isOn);
     harmonizer.setDescantLowerThresh(lowerThresh);
@@ -492,34 +472,31 @@ void ImogenEngine<SampleType>::updateDescant(const bool isOn, const int lowerThr
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateConcertPitch(const int newConcertPitchHz)
+bvie_VOID_TEMPLATE::updateConcertPitch(const int newConcertPitchHz)
 {
     harmonizer.setConcertPitchHz(newConcertPitchHz);
 }
+   
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateNoteStealing(const bool shouldSteal)
+bvie_VOID_TEMPLATE::updateNoteStealing(const bool shouldSteal)
 {
     harmonizer.setNoteStealingEnabled(shouldSteal);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateMidiLatch(const bool isLatched)
+bvie_VOID_TEMPLATE::updateMidiLatch(const bool isLatched)
 {
     harmonizer.setMidiLatch(isLatched, true);
 }
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateIntervalLock(const bool isLocked)
+    
+bvie_VOID_TEMPLATE::updateIntervalLock(const bool isLocked)
 {
     harmonizer.setIntervalLatch (isLocked, true);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateLimiter(const float thresh, const int release, const bool isOn)
+bvie_VOID_TEMPLATE::updateLimiter(const float thresh, const int release, const bool isOn)
 {
     ScopedLock sl (lock);
     limiterIsOn = isOn;
@@ -528,15 +505,13 @@ void ImogenEngine<SampleType>::updateLimiter(const float thresh, const int relea
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateSoftPedalGain (const float newGain)
+bvie_VOID_TEMPLATE::updateSoftPedalGain (const float newGain)
 {
     harmonizer.setSoftPedalGainMultiplier (newGain);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
+bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
@@ -544,27 +519,25 @@ void ImogenEngine<SampleType>::updatePitchDetectionHzRange (const int minHz, con
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
+bvie_VOID_TEMPLATE::updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
 {
     harmonizer.updatePitchDetectionConfidenceThresh (newUpperThresh, newLowerThresh);
 }
     
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::updateAftertouchGainOnOff (const bool shouldBeOn)
+bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 {
     harmonizer.setAftertouchGainOnOff (shouldBeOn);
 }
     
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::updatePlayingButReleasedGain (const float newGainMult)
+bvie_VOID_TEMPLATE::updatePlayingButReleasedGain (const float newGainMult)
 {
     harmonizer.setPlayingButReleasedGain(newGainMult);
 }
     
     
+#undef bvie_VOID_TEMPLATE
 
 template class ImogenEngine<float>;
 template class ImogenEngine<double>;

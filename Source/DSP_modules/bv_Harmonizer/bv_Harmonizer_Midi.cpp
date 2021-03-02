@@ -12,9 +12,12 @@ namespace bav
 
 {
     
+    
+#undef bvh_VOID_TEMPLATE
+#define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
+    
 
-template<typename SampleType>
-void Harmonizer<SampleType>::turnOffAllKeyupNotes (const bool allowTailOff,
+bvh_VOID_TEMPLATE::turnOffAllKeyupNotes (const bool allowTailOff,
                                                    const bool includePedalPitchAndDescant,
                                                    const float velocity,
                                                    const bool overrideSostenutoPedal)
@@ -44,8 +47,7 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray,
+bvh_VOID_TEMPLATE::reportActiveNotes (Array<int>& outputArray,
                                                 const bool includePlayingButReleased,
                                                 const bool includeKeyUpNotes) const
 {
@@ -66,8 +68,7 @@ void Harmonizer<SampleType>::reportActiveNotes (Array<int>& outputArray,
  // midi events from plugin's midi input -------------------------------------------------------------------------------------------------------
 ***********************************************************************************************************************************************/
 
-template<typename SampleType>
-void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
+bvh_VOID_TEMPLATE::processMidi (MidiBuffer& midiMessages)
 {
     aggregateMidiBuffer.clear();
     
@@ -94,16 +95,14 @@ void Harmonizer<SampleType>::processMidi (MidiBuffer& midiMessages)
 }
     
     
-template<typename SampleType>
-void Harmonizer<SampleType>::processMidiEvent (const MidiMessage& m)
+bvh_VOID_TEMPLATE::processMidiEvent (const MidiMessage& m)
 {
     handleMidiEvent (m, static_cast<int> (m.getTimeStamp()));
     pitchCollectionChanged();
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int samplePosition)
+bvh_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int samplePosition)
 {
     // events coming from a midi keyboard, or the plugin's midi input, should be routed to this function.
 
@@ -128,8 +127,7 @@ void Harmonizer<SampleType>::handleMidiEvent (const MidiMessage& m, const int sa
 
     
 // this function should be called once after each time the harmonizer's overall pitch collection has changed - so, after a midi buffer of keyboard inout events has been processed, or after a chord has been triggered, etc.
-template<typename SampleType>
-void Harmonizer<SampleType>::pitchCollectionChanged()
+bvh_VOID_TEMPLATE::pitchCollectionChanged()
 {
     if (pedal.isOn)
         applyPedalPitch();
@@ -146,8 +144,7 @@ void Harmonizer<SampleType>::pitchCollectionChanged()
  // midi note events ---------------------------------------------------------------------------------------------------------------------------
 ***********************************************************************************************************************************************/
     
-template<typename SampleType>
-void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
+bvh_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
@@ -181,8 +178,7 @@ void Harmonizer<SampleType>::noteOn (const int midiPitch, const float velocity, 
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
+bvh_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
     if (voice == nullptr)
         return;
@@ -248,8 +244,7 @@ void Harmonizer<SampleType>::startVoice (HarmonizerVoice<SampleType>* voice, con
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velocity,
+bvh_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
                                       const bool allowTailOff,
                                       const bool isKeyboard)
 {
@@ -311,8 +306,7 @@ void Harmonizer<SampleType>::noteOff (const int midiNoteNumber, const float velo
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
+bvh_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
 {
     if (voice == nullptr)
         return;
@@ -335,8 +329,7 @@ void Harmonizer<SampleType>::stopVoice (HarmonizerVoice<SampleType>* voice, cons
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff, const float velocity)
+bvh_VOID_TEMPLATE::allNotesOff (const bool allowTailOff, const float velocity)
 {
     for (auto* voice : voices)
         if (voice->isVoiceActive())
@@ -350,8 +343,7 @@ void Harmonizer<SampleType>::allNotesOff (const bool allowTailOff, const float v
  // other midi events --------------------------------------------------------------------------------------------------------------------------
 ***********************************************************************************************************************************************/
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handlePitchWheel (int wheelValue)
+bvh_VOID_TEMPLATE::handlePitchWheel (int wheelValue)
 {
     wheelValue = jlimit (0, 127, wheelValue);
     
@@ -370,8 +362,7 @@ void Harmonizer<SampleType>::handlePitchWheel (int wheelValue)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleAftertouch (int midiNoteNumber, int aftertouchValue)
+bvh_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 {
     aftertouchValue = jlimit (0, 127, aftertouchValue);
     
@@ -390,8 +381,7 @@ void Harmonizer<SampleType>::handleAftertouch (int midiNoteNumber, int aftertouc
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleChannelPressure (int channelPressureValue)
+bvh_VOID_TEMPLATE::handleChannelPressure (int channelPressureValue)
 {
     channelPressureValue = jlimit (0, 127, channelPressureValue);
     
@@ -413,8 +403,7 @@ void Harmonizer<SampleType>::handleChannelPressure (int channelPressureValue)
 }
 
     
-template<typename SampleType>
-void Harmonizer<SampleType>::updateChannelPressure (int newIncomingAftertouch)
+bvh_VOID_TEMPLATE::updateChannelPressure (int newIncomingAftertouch)
 {
     newIncomingAftertouch = jlimit (0, 127, newIncomingAftertouch);
     
@@ -438,8 +427,7 @@ void Harmonizer<SampleType>::updateChannelPressure (int newIncomingAftertouch)
 }
     
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleController (const int controllerNumber, int controllerValue)
+bvh_VOID_TEMPLATE::handleController (const int controllerNumber, int controllerValue)
 {
     controllerValue = jlimit (0, 127, controllerValue);
     
@@ -459,8 +447,7 @@ void Harmonizer<SampleType>::handleController (const int controllerNumber, int c
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleSustainPedal (const int value)
+bvh_VOID_TEMPLATE::handleSustainPedal (const int value)
 {
     const bool isDown = (value >= 64);
     
@@ -478,8 +465,7 @@ void Harmonizer<SampleType>::handleSustainPedal (const int value)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleSostenutoPedal (const int value)
+bvh_VOID_TEMPLATE::handleSostenutoPedal (const int value)
 {
     const bool isDown = (value >= 64);
     
@@ -504,8 +490,7 @@ void Harmonizer<SampleType>::handleSostenutoPedal (const int value)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleSoftPedal (const int value)
+bvh_VOID_TEMPLATE::handleSoftPedal (const int value)
 {
     const bool isDown = value >= 64;
     
@@ -519,41 +504,37 @@ void Harmonizer<SampleType>::handleSoftPedal (const int value)
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleModWheel (const int wheelValue)
+bvh_VOID_TEMPLATE::handleModWheel (const int wheelValue)
 {
     ignoreUnused(wheelValue);
 }
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleBreathController (const int controlValue)
+bvh_VOID_TEMPLATE::handleBreathController (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleFootController (const int controlValue)
+bvh_VOID_TEMPLATE::handleFootController (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handlePortamentoTime (const int controlValue)
+bvh_VOID_TEMPLATE::handlePortamentoTime (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleBalance (const int controlValue)
+bvh_VOID_TEMPLATE::handleBalance (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-template<typename SampleType>
-void Harmonizer<SampleType>::handleLegato (const bool isOn)
+bvh_VOID_TEMPLATE::handleLegato (const bool isOn)
 {
     ignoreUnused(isOn);
 }
 
 
+#undef bvh_VOID_TEMPLATE
+    
 } // namespace

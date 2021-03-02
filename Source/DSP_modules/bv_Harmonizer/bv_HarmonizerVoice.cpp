@@ -37,8 +37,11 @@ HarmonizerVoice<SampleType>::~HarmonizerVoice()
 { }
 
     
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::prepare (const int blocksize)
+#undef bvhv_VOID_TEMPLATE
+#define bvhv_VOID_TEMPLATE template<typename SampleType> void HarmonizerVoice<SampleType>
+    
+    
+bvhv_VOID_TEMPLATE::prepare (const int blocksize)
 {
     // blocksize = maximum period
     
@@ -65,8 +68,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
                                                    const int origPeriod,
                                                    const Array<int>& indicesOfGrainOnsets,
                                                    const AudioBuffer<SampleType>& windowToUse)
@@ -138,8 +140,7 @@ void HarmonizerVoice<SampleType>::renderNextBlock (const AudioBuffer<SampleType>
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int totalNumInputSamples,
+bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSamples,
                                         const int origPeriod, // size of analysis grains = origPeriod * 2
                                         const int newPeriod,  // OLA hop size
                                         const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
@@ -168,8 +169,7 @@ void HarmonizerVoice<SampleType>::sola (const SampleType* input, const int total
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
+bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
                                             const int frameStartSample, const int frameEndSample, const int frameSize,
                                             const SampleType* window,
                                             const int newPeriod)
@@ -196,8 +196,7 @@ void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
+bvhv_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 {
     synthesisIndex -= numSamplesUsed;
     
@@ -214,23 +213,20 @@ void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::releaseResources()
+bvhv_VOID_TEMPLATE::releaseResources()
 {
     synthesisBuffer.setSize(0, 0, false, false, false);
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::clearBuffers()
+bvhv_VOID_TEMPLATE::clearBuffers()
 {
     synthesisBuffer.clear();
 }
 
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::clearCurrentNote()
+bvhv_VOID_TEMPLATE::clearCurrentNote()
 {
     currentVelocityMultiplier = 0.0f;
     lastRecievedVelocity      = 0.0f;
@@ -264,8 +260,7 @@ void HarmonizerVoice<SampleType>::clearCurrentNote()
 
 
 // MIDI -----------------------------------------------------------------------------------------------------------
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float velocity,
+bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
                                              const uint32 noteOnTimestamp,
                                              const bool keyboardKeyIsDown,
                                              const bool isPedal, const bool isDescant)
@@ -291,8 +286,7 @@ void HarmonizerVoice<SampleType>::startNote (const int midiPitch, const float ve
 }
     
     
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
+bvhv_VOID_TEMPLATE::setKeyDown (bool isNowDown) noexcept
 {
     keyIsDown = isNowDown;
     
@@ -308,8 +302,7 @@ void HarmonizerVoice<SampleType>::setKeyDown (bool isNowDown) noexcept
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool allowTailOff)
+bvhv_VOID_TEMPLATE::stopNote (const float velocity, const bool allowTailOff)
 {
     ignoreUnused (velocity);
     
@@ -334,15 +327,13 @@ void HarmonizerVoice<SampleType>::stopNote (const float velocity, const bool all
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::aftertouchChanged (const int newAftertouchValue)
+bvhv_VOID_TEMPLATE::aftertouchChanged (const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::setPan (int newPan)
+bvhv_VOID_TEMPLATE::setPan (int newPan)
 {
     newPan = jlimit(0, 127, newPan);
     
@@ -351,8 +342,7 @@ void HarmonizerVoice<SampleType>::setPan (int newPan)
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::updateSampleRate (const double newSamplerate)
+bvhv_VOID_TEMPLATE::updateSampleRate (const double newSamplerate)
 {
     adsr        .setSampleRate (newSamplerate);
     quickRelease.setSampleRate (newSamplerate);
@@ -368,13 +358,14 @@ void HarmonizerVoice<SampleType>::updateSampleRate (const double newSamplerate)
  DANGER!!!
  FOR NON REAL TIME ONLY!!!!!!!!
  ++++++++++++++++++++++++++++++++++++++*/
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
+bvhv_VOID_TEMPLATE::increaseBufferSizes(const int newMaxBlocksize)
 {
     synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
 }
 
 
+#undef bvhv_VOID_TEMPLATE
+    
 template class HarmonizerVoice<float>;
 template class HarmonizerVoice<double>;
 

@@ -11,14 +11,17 @@ namespace bav
 
 {
     
+    
+#undef bvh_VOID_TEMPLATE
+#define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
+    
 
 /***********************************************************************************************************************************************
  // automated midi events ----------------------------------------------------------------------------------------------------------------------
  ***********************************************************************************************************************************************/
 
 // midi latch: when active, holds note offs recieved from the keyboard instead of sending them immediately; held note offs are sent once latch is deactivated.
-template<typename SampleType>
-void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool allowTailOff)
+bvh_VOID_TEMPLATE::setMidiLatch (const bool shouldBeOn, const bool allowTailOff)
 {
     if (latchIsOn == shouldBeOn)
         return;
@@ -35,8 +38,7 @@ void Harmonizer<SampleType>::setMidiLatch (const bool shouldBeOn, const bool all
 
 
 // interval latch
-template<typename SampleType>
-void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool allowTailOff)
+bvh_VOID_TEMPLATE::setIntervalLatch (const bool shouldBeOn, const bool allowTailOff)
 {
     if (intervalLatchIsOn == shouldBeOn)
         return;
@@ -54,8 +56,7 @@ void Harmonizer<SampleType>::setIntervalLatch (const bool shouldBeOn, const bool
 
 
 // used for interval latch -- saves the distance in semitones of each currently playing note from the current input pitch
-template<typename SampleType>
-void Harmonizer<SampleType>::updateIntervalsLatchedTo()
+bvh_VOID_TEMPLATE::updateIntervalsLatchedTo()
 {
     intervalsLatchedTo.clearQuick();
     
@@ -74,8 +75,7 @@ void Harmonizer<SampleType>::updateIntervalsLatchedTo()
 
 
 // plays a chord based on a given set of desired interval offsets from the current input pitch.
-template<typename SampleType>
-void Harmonizer<SampleType>::playIntervalSet (const Array<int>& desiredIntervals,
+bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
                                               const float velocity,
                                               const bool allowTailOffOfOld,
                                               const bool isIntervalLatch)
@@ -101,8 +101,7 @@ void Harmonizer<SampleType>::playIntervalSet (const Array<int>& desiredIntervals
 
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
-template<typename SampleType>
-void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
+bvh_VOID_TEMPLATE::playChord (const Array<int>& desiredPitches,
                                         const float velocity,
                                         const bool allowTailOffOfOld)
 {
@@ -147,8 +146,7 @@ void Harmonizer<SampleType>::playChord (const Array<int>& desiredPitches,
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord)
+bvh_VOID_TEMPLATE::turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord)
 {
     if (toTurnOn.isEmpty())
         return;
@@ -161,8 +159,7 @@ void Harmonizer<SampleType>::turnOnList (const Array<int>& toTurnOn, const float
 }
 
 
-template<typename SampleType>
-void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
+bvh_VOID_TEMPLATE::turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
 {
     if (toTurnOff.isEmpty())
         return;
@@ -176,8 +173,7 @@ void Harmonizer<SampleType>::turnOffList (const Array<int>& toTurnOff, const flo
 
 
 // automated midi "pedal pitch": creates a polyphonic doubling of the lowest note currently being played by a keyboard key at a specified interval below that keyboard key, IF that keyboard key is below a certain pitch threshold.
-template<typename SampleType>
-void Harmonizer<SampleType>::applyPedalPitch()
+bvh_VOID_TEMPLATE::applyPedalPitch()
 {
     int currentLowest = 128;
     HarmonizerVoice<SampleType>* lowestVoice = nullptr;
@@ -244,8 +240,7 @@ void Harmonizer<SampleType>::applyPedalPitch()
 
 
 // automated midi "descant": creates a polyphonic doubling of the highest note currently being played by a keyboard key at a specified interval above that keyboard key, IF that keyboard key is above a certain pitch threshold.
-template<typename SampleType>
-void Harmonizer<SampleType>::applyDescant()
+bvh_VOID_TEMPLATE::applyDescant()
 {
     int currentHighest = -1;
     HarmonizerVoice<SampleType>* highestVoice = nullptr;
@@ -310,5 +305,7 @@ void Harmonizer<SampleType>::applyDescant()
     }
 }
 
+    
+#undef bvh_VOID_TEMPLATE
 
 }  // namespace
