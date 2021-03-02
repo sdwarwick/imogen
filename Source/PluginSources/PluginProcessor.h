@@ -205,7 +205,7 @@ private:
     void updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine);
     
     template<typename SampleType>
-    std::unique_ptr<juce::XmlElement> returnPluginInternalState (bav::ImogenEngine<SampleType>& activeEngine);
+    std::unique_ptr<juce::XmlElement> pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine);
     
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);

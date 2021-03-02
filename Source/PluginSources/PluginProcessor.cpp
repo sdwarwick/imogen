@@ -533,9 +533,9 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     std::unique_ptr<juce::XmlElement> xml;
     
     if (isUsingDoublePrecision())
-        xml = returnPluginInternalState(doubleEngine);
+        xml = pluginStateToXml(doubleEngine);
     else
-        xml = returnPluginInternalState(floatEngine);
+        xml = pluginStateToXml(floatEngine);
     
     copyXmlToBinary (*xml, destData);
 }
@@ -548,9 +548,11 @@ void ImogenAudioProcessor::savePreset (juce::String presetName)
     std::unique_ptr<juce::XmlElement> xml;
     
     if (isUsingDoublePrecision())
-        xml = returnPluginInternalState(doubleEngine);
+        xml = pluginStateToXml(doubleEngine);
     else
-        xml = returnPluginInternalState(floatEngine);
+        xml = pluginStateToXml(floatEngine);
+    
+    xml->setAttribute ("presetName", presetName);
     
     xml->writeTo (getPresetsFolder().getChildFile(presetName));
     updateHostDisplay();
@@ -558,7 +560,7 @@ void ImogenAudioProcessor::savePreset (juce::String presetName)
 
 
 template<typename SampleType>
-std::unique_ptr<juce::XmlElement> ImogenAudioProcessor::returnPluginInternalState (bav::ImogenEngine<SampleType>& activeEngine)
+std::unique_ptr<juce::XmlElement> ImogenAudioProcessor::pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine)
 {
     std::unique_ptr<juce::XmlElement> xml = tree.copyState().createXml();
     
