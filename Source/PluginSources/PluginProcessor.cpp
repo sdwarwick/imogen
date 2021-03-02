@@ -157,7 +157,7 @@ void ImogenAudioProcessor::killAllMidi()
  In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
 */
 
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce::MidiBuffer& midiMessages)
+void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     if (isUsingDoublePrecision()) // this would be a REALLY stupid host, butttt ¯\_(ツ)_/¯
         return;
@@ -716,9 +716,9 @@ juce::AudioProcessorParameter* ImogenAudioProcessor::getBypassParameter() const
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
     if (adsrToggle->get())
-        return static_cast<double> (adsrRelease->get()); // ADSR release time in seconds
+        return double(adsrRelease->get()); // ADSR release time in seconds
     
-    return static_cast<double> (quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
+    return double(quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
 }
 
 int ImogenAudioProcessor::getNumPrograms()
