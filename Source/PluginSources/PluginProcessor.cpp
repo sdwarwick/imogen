@@ -15,6 +15,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
     wasBypassedLastCallback(true)
 {
+    isBypassed         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("mainBypass"));                     jassert (isBypassed);
     dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                         jassert(dryPan);
     dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));                   jassert(dryWet);
     adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                     jassert(adsrAttack);
@@ -161,7 +162,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>&  buffer, juce
     if (isUsingDoublePrecision()) // this would be a REALLY stupid host, butttt ¯\_(ツ)_/¯
         return;
     
-    processBlockWrapped (buffer, midiMessages, floatEngine, false);
+    processBlockWrapped (buffer, midiMessages, floatEngine, isBypassed->get());
 }
 
 
@@ -170,7 +171,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
     if (! isUsingDoublePrecision())
         return;
     
-    processBlockWrapped (buffer, midiMessages, doubleEngine, false);
+    processBlockWrapped (buffer, midiMessages, doubleEngine, isBypassed->get());
 }
 
 
@@ -198,7 +199,7 @@ template <typename SampleType>
 void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                 juce::MidiBuffer& midiMessages,
                                                 bav::ImogenEngine<SampleType>& engine,
-                                                const bool isBypassed)
+                                                const bool isBypassedNow)
 {
     // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
     // NB. at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
@@ -224,12 +225,12 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
 #endif
     
-    if (isBypassed)
+    if (isBypassedNow)
         engine.process (inBus, outBus, midiMessages, false, !wasBypassedLastCallback, wasBypassedLastCallback);
     else
         engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, false);
     
-    wasBypassedLastCallback = isBypassed;
+    wasBypassedLastCallback = isBypassedNow;
 }
 
 
@@ -530,7 +531,12 @@ void ImogenAudioProcessor::deletePreset (juce::String presetName)
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     std::unique_ptr<juce::XmlElement> xml;
-    returnPluginInternalState (xml);
+    
+    if (isUsingDoublePrecision())
+        xml = returnPluginInternalState(doubleEngine);
+    else
+        xml = returnPluginInternalState(floatEngine);
+    
     copyXmlToBinary (*xml, destData);
 }
 
@@ -540,21 +546,29 @@ void ImogenAudioProcessor::savePreset (juce::String presetName)
     // this function can be used both to save new preset files or to update existing ones
     
     std::unique_ptr<juce::XmlElement> xml;
-    returnPluginInternalState (xml);
+    
+    if (isUsingDoublePrecision())
+        xml = returnPluginInternalState(doubleEngine);
+    else
+        xml = returnPluginInternalState(floatEngine);
+    
     xml->writeTo (getPresetsFolder().getChildFile(presetName));
     updateHostDisplay();
 }
 
 
-void ImogenAudioProcessor::returnPluginInternalState (std::unique_ptr<juce::XmlElement>& output)
+template<typename SampleType>
+std::unique_ptr<juce::XmlElement> ImogenAudioProcessor::returnPluginInternalState (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    output = tree.copyState().createXml();
+    std::unique_ptr<juce::XmlElement> xml = tree.copyState().createXml();
     
-    const int numVoices = isUsingDoublePrecision() ? doubleEngine.getCurrentNumVoices() : floatEngine.getCurrentNumVoices();
-    const int inputSource = isUsingDoublePrecision() ? doubleEngine.getModulatorSource() : floatEngine.getModulatorSource();
+    const int numVoices = activeEngine.getCurrentNumVoices();
+    const int inputSource = activeEngine.getModulatorSource();
     
-    output->setAttribute ("numberOfVoices", numVoices);
-    output->setAttribute ("modulatorInputSource", inputSource);
+    xml->setAttribute ("numberOfVoices", numVoices);
+    xml->setAttribute ("modulatorInputSource", inputSource);
+    
+    return xml;
 }
 
 
@@ -563,7 +577,11 @@ void ImogenAudioProcessor::returnPluginInternalState (std::unique_ptr<juce::XmlE
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     auto xmlElement (getXmlFromBinary (data, sizeInBytes));
-    updatePluginInternalState (xmlElement);
+    
+    if (isUsingDoublePrecision())
+        updatePluginInternalState (*xmlElement, doubleEngine);
+    else
+        updatePluginInternalState (*xmlElement, floatEngine);
 }
 
 
@@ -575,26 +593,28 @@ bool ImogenAudioProcessor::loadPreset (juce::String presetName)
         return false;
     
     auto xmlElement = juce::parseXML (presetToLoad);
-    return updatePluginInternalState (xmlElement);
+    
+    if (isUsingDoublePrecision())
+        return updatePluginInternalState (*xmlElement, doubleEngine);
+    
+    return updatePluginInternalState (*xmlElement, floatEngine);
 }
 
 
-bool ImogenAudioProcessor::updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState)
+template<typename SampleType>
+bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine)
 {
-    if (newState.get() == nullptr || ! newState->hasTagName (tree.state.getType()))
+    if (! newState.hasTagName (tree.state.getType()))
         return false;
     
     suspendProcessing (true);
     
-    tree.replaceState (juce::ValueTree::fromXml (*newState));
+    tree.replaceState (juce::ValueTree::fromXml (newState));
     
-    updateNumVoices (newState->getIntAttribute ("numberOfVoices", 4));
-    updateModulatorInputSource (newState->getIntAttribute ("modulatorInputSource", 0));
+    activeEngine.updateNumVoices (newState.getIntAttribute ("numberOfVoices", 4));
+    activeEngine.setModulatorSource (newState.getIntAttribute ("modulatorInputSource", 0));
     
-    if (isUsingDoublePrecision())
-        updateAllParameters (doubleEngine);
-    else
-        updateAllParameters (floatEngine);
+    updateAllParameters (activeEngine);
     
     suspendProcessing (false);
     
@@ -612,8 +632,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     juce::NormalisableRange<float> gainRange (-60.0f, 0.0f, 0.01f);
     
-    
     // general
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("dryPan", "Dry vox pan", 0, 127, 64));
     params.push_back(std::make_unique<juce::AudioParameterInt>	("masterDryWet", "% wet", 0, 100, 100));
     
@@ -682,6 +702,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                  confidenceRange, 0.05f));
     
     return { params.begin(), params.end() };
+}
+
+
+juce::AudioProcessorParameter* ImogenAudioProcessor::getBypassParameter() const
+{
+    return tree.getParameter ("mainBypass");
 }
 
 

@@ -115,11 +115,14 @@ public:
     
     juce::AudioProcessorValueTreeState tree;
     
+    juce::AudioProcessorParameter* getBypassParameter() const override;
+    
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
     void updateNumVoices (const int newNumVoices);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
+    juce::AudioParameterBool*  isBypassed;
     juce::AudioParameterInt*   dryPan;
     juce::AudioParameterInt*   dryWet;
     juce::AudioParameterFloat* adsrAttack;
@@ -201,8 +204,11 @@ private:
     template <typename SampleType>
     void updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine);
     
-    void returnPluginInternalState (std::unique_ptr<juce::XmlElement>& output);
-    bool updatePluginInternalState (std::unique_ptr<juce::XmlElement>& newState);
+    template<typename SampleType>
+    std::unique_ptr<juce::XmlElement> returnPluginInternalState (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    template<typename SampleType>
+    bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
