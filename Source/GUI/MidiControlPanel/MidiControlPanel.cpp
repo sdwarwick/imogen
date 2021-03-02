@@ -74,21 +74,21 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     addAndMakeVisible(adsrOnOff);
     adsrOnOff.onClick = [this] { audioProcessor.updateAdsr(); };
     
-    adsrOnOff.setState (buttonStateFromBool (audioProcessor.adsrToggle->get()));
+    adsrOnOff.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.adsrToggle->get()));
     adsrOnOff.setToggleState (audioProcessor.adsrToggle->get(), juce::NotificationType::dontSendNotification);
 
     // Midi latch
     latchToggle.setButtonText("MIDI latch");
     //addAndMakeVisible(latchToggle);
     latchToggle.onClick = [this] { audioProcessor.updateMidiLatch(); };
-    latchToggle.setState (buttonStateFromBool (audioProcessor.latchIsOn->get()));
+    latchToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.latchIsOn->get()));
     latchToggle.setToggleState (audioProcessor.latchIsOn->get(), juce::NotificationType::dontSendNotification);
 
     // interval lock
     intervalLock.setButtonText("Interval lock");
     //addAndMakeVisible(intervalLock);
     intervalLock.onClick = [this] { audioProcessor.updateIntervalLock(); };
-    intervalLock.setState (buttonStateFromBool (audioProcessor.intervalLockIsOn->get()));
+    intervalLock.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.intervalLockIsOn->get()));
     intervalLock.setToggleState (audioProcessor.intervalLockIsOn->get(), juce::NotificationType::dontSendNotification);
     
     // kill all midi button
@@ -148,7 +148,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     voiceStealing.setButtonText("Voice stealing");
     voiceStealing.onClick = [this] { audioProcessor.updateNoteStealing(); };
     addAndMakeVisible(voiceStealing);
-    voiceStealing.setState (buttonStateFromBool (audioProcessor.voiceStealing->get()));
+    voiceStealing.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.voiceStealing->get()));
     voiceStealing.setToggleState (audioProcessor.voiceStealing->get(), juce::NotificationType::dontSendNotification);
 
     concertPitch.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
@@ -171,7 +171,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     pedalPitchToggle.setButtonText("MIDI pedal pitch");
     //addAndMakeVisible(pedalPitchToggle);
     pedalPitchToggle.onClick = [this] { audioProcessor.updatePedalPitch(); };
-    pedalPitchToggle.setState (buttonStateFromBool (audioProcessor.pedalPitchIsOn->get()));
+    pedalPitchToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.pedalPitchIsOn->get()));
     pedalPitchToggle.setToggleState (audioProcessor.pedalPitchIsOn->get(), dontSendNotification);
     
     pedalPitchThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
@@ -196,7 +196,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     //addAndMakeVisible(descantToggle);
     descantToggle.onClick = [this] { audioProcessor.updateDescant(); };
     
-    descantToggle.setState (buttonStateFromBool (audioProcessor.descantIsOn->get()));
+    descantToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.descantIsOn->get()));
     descantToggle.setToggleState (audioProcessor.descantIsOn->get(), dontSendNotification);
     
     descantThreshold.setSliderStyle(Slider::SliderStyle::LinearBarVertical);
@@ -361,15 +361,6 @@ void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
 void MidiControlPanel::updateNumVoicesCombobox(const int newNumVoices)
 {
     numberOfVoices.setSelectedId(newNumVoices);
-}
-
-
-Button::ButtonState MidiControlPanel::buttonStateFromBool (const bool isOn)
-{
-    if (isOn)
-        return Button::ButtonState::buttonDown;
-    
-    return Button::ButtonState::buttonNormal;
 }
 
 

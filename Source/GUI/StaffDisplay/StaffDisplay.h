@@ -32,12 +32,12 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     
-    juce::ComboBox displayFlats;
     
 private:
     
     juce::Image grandStaff;
     juce::ImageComponent staffImage;
+    juce::ComboBox displayFlats;
     
     juce::Array<int> yCoordsOfActiveNotes;
     int yCoordLookupTable[127];

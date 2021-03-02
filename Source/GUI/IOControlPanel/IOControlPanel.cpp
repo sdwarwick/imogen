@@ -76,7 +76,8 @@ IOControlPanel::~IOControlPanel()
 {
     setLookAndFeel(nullptr);
 }
-
+    
+    
 void IOControlPanel::paint (juce::Graphics& g)
 {
     g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::backgroundPanelColourId));

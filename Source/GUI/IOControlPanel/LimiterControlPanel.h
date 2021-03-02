@@ -51,8 +51,7 @@ public:
         addAndMakeVisible(limiterToggle);
         limiterToggle.onClick = [this] { audioProcessor.updateLimiter(); };
         
-        juce::Button::ButtonState initState = (audioProcessor.limiterToggle->get()) ?
-                                        juce::Button::ButtonState::buttonDown : juce::Button::ButtonState::buttonNormal;
+        juce::Button::ButtonState initState = bav::GuiUtils::buttonStateFromBool (audioProcessor.limiterToggle->get());
         limiterToggle.setState (initState);
     }
     
@@ -60,20 +59,6 @@ public:
     {
         setLookAndFeel(nullptr);
     }
-    
-    // threshold, in dBFS
-    juce::Slider limiterThresh;
-    juce::Label threshLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
-    
-    // release time, in ms
-    juce::Slider limiterRelease;
-    juce::Label releaseLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
-    
-    // toggle limiter on/off
-    juce::ToggleButton limiterToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
     
     void paint (juce::Graphics& g) override
     {
@@ -91,7 +76,22 @@ public:
         limiterRelease.setBounds(180, 55, 35, 35);
     }
     
+    
 private:
+    
+    // threshold, in dBFS
+    juce::Slider limiterThresh;
+    juce::Label threshLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
+    
+    // release time, in ms
+    juce::Slider limiterRelease;
+    juce::Label releaseLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
+    
+    // toggle limiter on/off
+    juce::ToggleButton limiterToggle;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LimiterControlPanel)
 };

@@ -28,6 +28,11 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     
+    void updateNumVoicesCombobox(const int newNumVoices);
+    
+    
+private:
+    
     // MIDI-triggered ADSR
     juce::Slider adsrAttack;
     juce::Label attackLabel;
@@ -115,14 +120,8 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> descantIntervalLink;
     juce::Label descantIntervalLabel;
     
-    void updateNumVoicesCombobox(const int newNumVoices);
-    
-private:
-    
     void buildIntervalCombobox(juce::ComboBox& box);
     void buildVoicesCombobox(juce::ComboBox& box);
-    
-    juce::Button::ButtonState buttonStateFromBool (const bool isOn);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };

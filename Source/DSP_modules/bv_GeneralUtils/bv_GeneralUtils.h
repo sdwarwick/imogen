@@ -195,5 +195,22 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DspUtils)
 };
     
+    
+class GuiUtils
+{
+public:
+    
+    static juce::Button::ButtonState buttonStateFromBool (const bool isOn)
+    {
+        if (isOn)
+            return juce::Button::ButtonState::buttonDown;
+        
+        return juce::Button::ButtonState::buttonNormal;
+    }
+    
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuiUtils)
+};
+    
 
 } // namespace

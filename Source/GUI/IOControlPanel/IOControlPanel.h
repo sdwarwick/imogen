@@ -29,6 +29,9 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     
+    
+private:
+    
     // dry vox (modulator) pan (in midiPan)
     juce::Slider dryPan;
     juce::Label drypanLabel;
@@ -60,8 +63,6 @@ public:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
     
     LimiterControlPanel limiterPanel;
-    
-private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IOControlPanel)
 };
