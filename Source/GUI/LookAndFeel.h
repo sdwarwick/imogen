@@ -239,11 +239,12 @@ public:
     }
     
     
-    void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, float initValue)
+    template<typename valueType>
+    void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, valueType initValue)
     {
         slider.setSliderStyle (style);
         slider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
-        slider.setValue (initValue, juce::NotificationType::dontSendNotification);
+        slider.setValue (float(initValue), juce::NotificationType::dontSendNotification);
     }
     
     
