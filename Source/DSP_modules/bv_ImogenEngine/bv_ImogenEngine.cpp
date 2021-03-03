@@ -372,19 +372,12 @@ bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
     harmonizer.changeNumVoices (newNumVoices);
 }
 
-
-bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
-{
-    dryPanner.setMidiPan (newMidiPan);
-}
-
-
+    
 bvie_VOID_TEMPLATE::updateInputGain (const float newInGain)
 {
     prevInputGain.store(inputGain.load());
     inputGain.store(newInGain);
 }
-
 
 bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
 {
@@ -392,13 +385,11 @@ bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
     outputGain.store(newOutGain);
 }
 
-
 bvie_VOID_TEMPLATE::updateDryGain (const float newDryGain)
 {
     prevDryGain.store(dryGain.load());
     dryGain.store(newDryGain);
 }
-
 
 bvie_VOID_TEMPLATE::updateWetGain (const float newWetGain)
 {
@@ -407,9 +398,16 @@ bvie_VOID_TEMPLATE::updateWetGain (const float newWetGain)
 }
 
 
+bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
+{
+    dryPanner.setMidiPan (newMidiPan);
+}
+
+
+
 bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 {
-    dryWetMixer.setWetMixProportion (percentWet / 100.0f);
+    dryWetMixer.setWetMixProportion (percentWet * 0.01f);
 }
 
     
@@ -419,13 +417,11 @@ bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const flo
     harmonizer.setADSRonOff (isOn);
 }
     
-
 bvie_VOID_TEMPLATE::updateQuickKill (const int newMs)
 {
     harmonizer.updateQuickReleaseMs (newMs);
 }
     
-
 bvie_VOID_TEMPLATE::updateQuickAttack (const int newMs)
 {
     harmonizer.updateQuickAttackMs (newMs);

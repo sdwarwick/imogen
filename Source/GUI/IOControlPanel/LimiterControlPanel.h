@@ -11,6 +11,8 @@
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
+#undef bvi_UPDATE_LIMITER
+
 
 namespace bav
 
@@ -28,28 +30,28 @@ public:
         limiterReleaseLink(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
         limiterToggleLink (std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
+#define bvi_UPDATE_LIMITER [this] { audioProcessor.updateLimiter(); }
+        
         // threshold
-        limiterThresh.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
-        limiterThresh.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 15);
+        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.limiterThresh->get());
         addAndMakeVisible(limiterThresh);
         limiterThresh.setValue(audioProcessor.limiterThresh->get(), juce::NotificationType::dontSendNotification);
-        limiterThresh.onValueChange = [this] { audioProcessor.updateLimiter(); };
         lookAndFeel.initializeLabel(threshLabel, "Threshold");
         addAndMakeVisible(threshLabel);
         
         // release
-        limiterRelease.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
-        limiterRelease.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 40, 20);
+        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.limiterRelease->get());
         addAndMakeVisible(limiterRelease);
-        limiterRelease.setValue(audioProcessor.limiterRelease->get(), juce::NotificationType::dontSendNotification);
-        limiterRelease.onValueChange = [this] { audioProcessor.updateLimiter(); };
+        limiterRelease.onValueChange = bvi_UPDATE_LIMITER;
         lookAndFeel.initializeLabel(releaseLabel, "Release time");
         addAndMakeVisible(releaseLabel);
         
         // toggle
         limiterToggle.setButtonText("Output limiter");
         addAndMakeVisible(limiterToggle);
-        limiterToggle.onClick = [this] { audioProcessor.updateLimiter(); };
+        limiterToggle.onClick = bvi_UPDATE_LIMITER;
+        
+#undef bvi_UPDATE_LIMITER
         
         juce::Button::ButtonState initState = bav::GuiUtils::buttonStateFromBool (audioProcessor.limiterToggle->get());
         limiterToggle.setState (initState);

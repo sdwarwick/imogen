@@ -182,6 +182,8 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
         return;
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
+    
+    *isBypassed = true;
 }
 
 
@@ -191,6 +193,8 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
         return;
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
+    
+    *isBypassed = true;
 }
 
 
@@ -235,7 +239,10 @@ void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& b
 }
 
 
-///////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void ImogenAudioProcessor::returnActivePitches (juce::Array<int>& outputArray) const
 {

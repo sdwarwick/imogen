@@ -231,11 +231,19 @@ public:
     }
     
     
-    void initializeLabel(juce::Label& l, juce::String labelText)
+    void initializeLabel (juce::Label& l, juce::String labelText)
     {
         l.setFont(juce::Font(14.0f, juce::Font::bold));
         l.setJustificationType(juce::Justification::centred);
         l.setText(labelText, juce::dontSendNotification);
+    }
+    
+    
+    void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, float initValue)
+    {
+        slider.setSliderStyle (style);
+        slider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
+        slider.setValue (initValue, juce::NotificationType::dontSendNotification);
     }
     
     

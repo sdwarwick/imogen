@@ -199,7 +199,9 @@ void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices
 
 void ImogenAudioProcessorEditor::newPresetSelected()
 {
-    audioProcessor.loadPreset(selectPreset.getItemText(selectPreset.getSelectedId()));
+    auto preset = selectPreset.getItemText (selectPreset.getSelectedId());
+    
+    audioProcessor.loadPreset (preset);
 }
 
 
