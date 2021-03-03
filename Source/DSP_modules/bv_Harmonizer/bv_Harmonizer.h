@@ -205,6 +205,8 @@ public:
     
     void prepare (const int blocksize);
     
+    void setCurrentPlaybackSampleRate (const double newRate);
+    
     void releaseResources();
     
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
@@ -243,19 +245,14 @@ public:
     
     int getNumVoices() const noexcept { return voices.size(); }
     
-    // adds a specified # of voices
-    void addNumVoices (const int voicesToAdd);
-    
-    // removes a specified # of voices, attempting to remove inactive voices first, and only removes active voices if necessary
-    void removeNumVoices (const int voicesToRemove);
+    void changeNumVoices (const int newNumVoices);
     
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes.store(shouldSteal); }
-    
-    void shouldUseChannelPressure (const bool shouldUse) noexcept { useChannelPressure = shouldUse; }
-    
     void updateMidiVelocitySensitivity (int newSensitivity);
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
     void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
+    
+    void shouldUseChannelPressure (const bool shouldUse) noexcept { useChannelPressure = shouldUse; }
     void setAftertouchGainOnOff (const bool shouldBeOn) { aftertouchGainIsOn = shouldBeOn; }
     
     void setPlayingButReleasedGain (const float newMultiplier) { playingButReleasedMultiplier = newMultiplier; }
@@ -268,23 +265,20 @@ public:
     void setDescantLowerThresh (int newThresh);
     void setDescantInterval (const int newInterval);
     
-    void setCurrentPlaybackSampleRate (const double newRate);
-    
     void setConcertPitchHz (const int newConcertPitchhz);
     
     void updateStereoWidth (int newWidth);
     void updateLowestPannedNote (int newPitchThresh);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
-    bool isLatched()  const noexcept { return latchIsOn; }
-    
     void setIntervalLatch (const bool shouldBeOn, const bool allowTailOff);
-    bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; }
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
     void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn.store(shouldBeOn); }
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);
+    
+    double getSamplerate() const noexcept { return sampleRate; }
 
     void updatePitchDetectionHzRange (const int minHz, const int maxHz)
     {
@@ -292,7 +286,7 @@ public:
     }
     
     void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
-        { pitchDetector.setConfidenceThresh (static_cast<SampleType>(newUpperThresh), static_cast<SampleType>(newLowerThresh)); }
+        { pitchDetector.setConfidenceThresh (SampleType(newUpperThresh), SampleType(newLowerThresh)); }
     
     
 protected:
@@ -323,13 +317,21 @@ protected:
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
-    double getSamplerate() const noexcept { return sampleRate; }
+    bool isLatched()  const noexcept { return latchIsOn; }
+    bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; }
     
     
 private:
     
     void setCurrentInputFreq (const float newInputFreq);
     
+    // adds a specified # of voices
+    void addNumVoices (const int voicesToAdd);
+    
+    // removes a specified # of voices, attempting to remove inactive voices first, and only removes active voices if necessary
+    void removeNumVoices (const int voicesToRemove);
+    
+    // this function should be called any time the number of voices the harmonizer owns changes
     void numVoicesChanged();
     
     // MIDI

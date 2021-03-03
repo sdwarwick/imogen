@@ -369,15 +369,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
 
 bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
 {
-    const int currentVoices = harmonizer.getNumVoices();
-    
-    if (currentVoices == newNumVoices)
-        return;
-    
-    if (newNumVoices > currentVoices)
-        harmonizer.addNumVoices (newNumVoices - currentVoices);
-    else
-        harmonizer.removeNumVoices (currentVoices - newNumVoices);
+    harmonizer.changeNumVoices (newNumVoices);
 }
 
 
@@ -421,85 +413,85 @@ bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 }
 
     
-bvie_VOID_TEMPLATE::updateAdsr(const float attack, const float decay, const float sustain, const float release, const bool isOn)
+bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const float sustain, const float release, const bool isOn)
 {
-    harmonizer.updateADSRsettings(attack, decay, sustain, release);
-    harmonizer.setADSRonOff(isOn);
+    harmonizer.updateADSRsettings (attack, decay, sustain, release);
+    harmonizer.setADSRonOff (isOn);
 }
     
 
-bvie_VOID_TEMPLATE::updateQuickKill(const int newMs)
+bvie_VOID_TEMPLATE::updateQuickKill (const int newMs)
 {
-    harmonizer.updateQuickReleaseMs(newMs);
+    harmonizer.updateQuickReleaseMs (newMs);
 }
     
 
-bvie_VOID_TEMPLATE::updateQuickAttack(const int newMs)
+bvie_VOID_TEMPLATE::updateQuickAttack (const int newMs)
 {
-    harmonizer.updateQuickAttackMs(newMs);
+    harmonizer.updateQuickAttackMs (newMs);
 }
     
 
-bvie_VOID_TEMPLATE::updateStereoWidth(const int newStereoWidth, const int lowestPannedNote)
+bvie_VOID_TEMPLATE::updateStereoWidth (const int newStereoWidth, const int lowestPannedNote)
 {
-    harmonizer.updateLowestPannedNote(lowestPannedNote);
-    harmonizer.updateStereoWidth     (newStereoWidth);
+    harmonizer.updateLowestPannedNote (lowestPannedNote);
+    harmonizer.updateStereoWidth (newStereoWidth);
 }
     
 
-bvie_VOID_TEMPLATE::updateMidiVelocitySensitivity(const int newSensitivity)
+bvie_VOID_TEMPLATE::updateMidiVelocitySensitivity (const int newSensitivity)
 {
-    harmonizer.updateMidiVelocitySensitivity(newSensitivity);
+    harmonizer.updateMidiVelocitySensitivity (newSensitivity);
 }
     
 
-bvie_VOID_TEMPLATE::updatePitchbendSettings(const int rangeUp, const int rangeDown)
+bvie_VOID_TEMPLATE::updatePitchbendSettings (const int rangeUp, const int rangeDown)
 {
-    harmonizer.updatePitchbendSettings(rangeUp, rangeDown);
+    harmonizer.updatePitchbendSettings (rangeUp, rangeDown);
 }
     
 
-bvie_VOID_TEMPLATE::updatePedalPitch(const bool isOn, const int upperThresh, const int interval)
+bvie_VOID_TEMPLATE::updatePedalPitch (const bool isOn, const int upperThresh, const int interval)
 {
-    harmonizer.setPedalPitch           (isOn);
-    harmonizer.setPedalPitchUpperThresh(upperThresh);
-    harmonizer.setPedalPitchInterval   (interval);
+    harmonizer.setPedalPitch (isOn);
+    harmonizer.setPedalPitchUpperThresh (upperThresh);
+    harmonizer.setPedalPitchInterval (interval);
 }
     
 
-bvie_VOID_TEMPLATE::updateDescant(const bool isOn, const int lowerThresh, const int interval)
+bvie_VOID_TEMPLATE::updateDescant (const bool isOn, const int lowerThresh, const int interval)
 {
-    harmonizer.setDescant           (isOn);
-    harmonizer.setDescantLowerThresh(lowerThresh);
-    harmonizer.setDescantInterval   (interval);
+    harmonizer.setDescant (isOn);
+    harmonizer.setDescantLowerThresh (lowerThresh);
+    harmonizer.setDescantInterval (interval);
 }
     
 
-bvie_VOID_TEMPLATE::updateConcertPitch(const int newConcertPitchHz)
+bvie_VOID_TEMPLATE::updateConcertPitch (const int newConcertPitchHz)
 {
-    harmonizer.setConcertPitchHz(newConcertPitchHz);
+    harmonizer.setConcertPitchHz (newConcertPitchHz);
 }
    
     
-bvie_VOID_TEMPLATE::updateNoteStealing(const bool shouldSteal)
+bvie_VOID_TEMPLATE::updateNoteStealing (const bool shouldSteal)
 {
-    harmonizer.setNoteStealingEnabled(shouldSteal);
+    harmonizer.setNoteStealingEnabled (shouldSteal);
 }
     
 
-bvie_VOID_TEMPLATE::updateMidiLatch(const bool isLatched)
+bvie_VOID_TEMPLATE::updateMidiLatch (const bool isLatched)
 {
-    harmonizer.setMidiLatch(isLatched, true);
+    harmonizer.setMidiLatch (isLatched, true);
 }
     
     
-bvie_VOID_TEMPLATE::updateIntervalLock(const bool isLocked)
+bvie_VOID_TEMPLATE::updateIntervalLock (const bool isLocked)
 {
     harmonizer.setIntervalLatch (isLocked, true);
 }
     
 
-bvie_VOID_TEMPLATE::updateLimiter(const float thresh, const int release, const bool isOn)
+bvie_VOID_TEMPLATE::updateLimiter (const float thresh, const int release, const bool isOn)
 {
     ScopedLock sl (lock);
     limiterIsOn = isOn;
@@ -518,7 +510,8 @@ bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxH
 {
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
-    latencyChanged (harmonizer.getLatencySamples());
+    if (harmonizer.getSamplerate() > 0)
+        latencyChanged (harmonizer.getLatencySamples());
 }
 
 
@@ -534,9 +527,15 @@ bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 }
     
     
+bvie_VOID_TEMPLATE::updateUsingChannelPressure (const bool useChannelPressure)
+{
+    harmonizer.shouldUseChannelPressure (useChannelPressure);
+}
+    
+    
 bvie_VOID_TEMPLATE::updatePlayingButReleasedGain (const float newGainMult)
 {
-    harmonizer.setPlayingButReleasedGain(newGainMult);
+    harmonizer.setPlayingButReleasedGain (newGainMult);
 }
     
     

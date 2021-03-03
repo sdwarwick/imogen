@@ -111,30 +111,13 @@ bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
     
     sampleRate = newRate;
     
-    pitchDetector.setSamplerate (newRate, (sampleRate == newRate));
+    pitchDetector.setSamplerate (newRate, true);
     
     if (currentInputFreq > 0)
         setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
         voice->updateSampleRate (newRate);
-}
-
-
-bvh_VOID_TEMPLATE::setConcertPitchHz (const int newConcertPitchhz)
-{
-    jassert (newConcertPitchhz > 0);
-    
-    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
-        return;
-    
-    pitchConverter.setConcertPitchHz (newConcertPitchhz);
-    
-    setCurrentInputFreq (currentInputFreq);
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
 }
 
 
@@ -288,10 +271,10 @@ bvh_VOID_TEMPLATE::updateStereoWidth (int newWidth)
         if (! voice->isVoiceActive())
             continue;
         
-        const int currentPan = voice->getCurrentMidiPan();
-        
         if (voice->getCurrentlyPlayingNote() < lowestPannedNote)
         {
+            const int currentPan = voice->getCurrentMidiPan();
+            
             if (currentPan != 64)
             {
                 panner.panValTurnedOff (currentPan);
@@ -300,7 +283,7 @@ bvh_VOID_TEMPLATE::updateStereoWidth (int newWidth)
         }
         else
         {
-            voice->setPan (panner.getClosestNewPanValFromOld (currentPan));
+            voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
         }
     }
 }
@@ -310,8 +293,12 @@ bvh_VOID_TEMPLATE::updateLowestPannedNote (int newPitchThresh)
 {
     newPitchThresh = jlimit (0, 127, newPitchThresh);
     
-    if (lowestPannedNote.load() == newPitchThresh)
+    const int prevLowestnote = lowestPannedNote.load();
+    
+    if (prevLowestnote == newPitchThresh)
         return;
+    
+    lowestPannedNote.store(newPitchThresh);
     
     for (auto* voice : voices)
     {
@@ -329,147 +316,31 @@ bvh_VOID_TEMPLATE::updateLowestPannedNote (int newPitchThresh)
                 voice->setPan (64);
             }
         }
-        else if (note < lowestPannedNote.load()) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
+        else if (note < prevLowestnote) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
         {
             if (currentPan == 64)
                 voice->setPan (panner.getNextPanVal());
         }
     }
-    
-    lowestPannedNote.store(newPitchThresh);
 }
 
-
-// midi velocity sensitivity -------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::updateMidiVelocitySensitivity (int newSensitivity)
+    
+// concert pitch hz ------------------------------------------------------------------------------------------------
+    
+bvh_VOID_TEMPLATE::setConcertPitchHz (const int newConcertPitchhz)
 {
-    newSensitivity = jlimit (0, 100, newSensitivity);
+    jassert (newConcertPitchhz > 0);
     
-    const float newSens = newSensitivity / 100.0f;
-    
-    if (velocityConverter.getCurrentSensitivity() == newSens)
+    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
         return;
     
-    velocityConverter.setFloatSensitivity (newSens);
+    pitchConverter.setConcertPitchHz (newConcertPitchhz);
     
-    for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            voice->setVelocityMultiplier (velocityConverter.floatVelocity (voice->getLastRecievedVelocity()));
-}
-
-
-// pitch bend settings -------------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::updatePitchbendSettings (const int rangeUp, const int rangeDown)
-{
-    if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
-        return;
-    
-    bendTracker.setRange (rangeUp, rangeDown);
-    
-    if (lastPitchWheelValue == 64)
-        return;
+    setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
-}
-
-
-// descant settings ----------------------------------------------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::setDescant (const bool isOn)
-{
-    if (descant.isOn == isOn)
-        return;
-    
-    if (isOn)
-        applyDescant();
-    else
-    {
-        if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false);
-        
-        descant.lastPitch = -1;
-    }
-    
-   descant.isOn = isOn;
-}
-    
-
-bvh_VOID_TEMPLATE::setDescantLowerThresh (int newThresh)
-{
-    newThresh = jlimit (0, 127, newThresh);
-    
-    if (descant.lowerThresh == newThresh)
-        return;
-    
-    descant.lowerThresh = newThresh;
-    
-    if (descant.isOn)
-        applyDescant();
-}
-    
-
-bvh_VOID_TEMPLATE::setDescantInterval (const int newInterval)
-{
-    if (descant.interval == newInterval)
-        return;
-    
-    descant.interval = newInterval;
-    
-    if (newInterval == 0)
-        descant.isOn = false;
-    
-    if (descant.isOn)
-        applyDescant();
-}
-
-
-// pedal pitch settings -----------------------------------------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::setPedalPitch (const bool isOn)
-{
-    if (pedal.isOn == isOn)
-        return;
-    
-    if (isOn)
-        applyPedalPitch();
-    else
-    {
-        if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false);
-        
-        pedal.lastPitch = -1;
-    }
-    
-    pedal.isOn = isOn;
-}
-    
-
-bvh_VOID_TEMPLATE::setPedalPitchUpperThresh (int newThresh)
-{
-    newThresh = jlimit (0, 127, newThresh);
-    
-    if (pedal.upperThresh == newThresh)
-        return;
-    
-    pedal.upperThresh = newThresh;
-    
-    if (pedal.isOn)
-        applyPedalPitch();
-}
-    
-
-bvh_VOID_TEMPLATE::setPedalPitchInterval (const int newInterval)
-{
-    if (pedal.interval == newInterval)
-        return;
-    
-    pedal.interval = newInterval;
-    
-    if (newInterval == 0)
-        pedal.isOn = false;
-    
-    if (pedal.isOn)
-        applyPedalPitch();
 }
 
 
@@ -486,7 +357,7 @@ bvh_VOID_TEMPLATE::updateADSRsettings (const float attack, const float decay, co
     adsrParams.release = release;
     
     for (auto* voice : voices)
-        voice->setAdsrParameters(adsrParams);
+        voice->setAdsrParameters (adsrParams);
 }
     
 

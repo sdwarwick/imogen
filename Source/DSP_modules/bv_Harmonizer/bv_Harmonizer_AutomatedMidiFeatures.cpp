@@ -46,7 +46,9 @@ bvh_VOID_TEMPLATE::setIntervalLatch (const bool shouldBeOn, const bool allowTail
     intervalLatchIsOn = shouldBeOn;
     
     if (shouldBeOn)
+    {
         updateIntervalsLatchedTo();
+    }
     else if (! latchIsOn)
     {
         turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
@@ -304,8 +306,108 @@ bvh_VOID_TEMPLATE::applyDescant()
         noteOn (descant.lastPitch, velocity, false);
     }
 }
-
     
+    
+// descant settings ----------------------------------------------------------------------------------------------------------------------------
+    
+bvh_VOID_TEMPLATE::setDescant (const bool isOn)
+{
+    if (descant.isOn == isOn)
+        return;
+    
+    descant.isOn = isOn;
+    
+    if (isOn)
+        applyDescant();
+    else
+    {
+        if (descant.lastPitch > -1)
+            noteOff (descant.lastPitch, 1.0f, false, false);
+        
+        descant.lastPitch = -1;
+    }
+}
+
+
+bvh_VOID_TEMPLATE::setDescantLowerThresh (int newThresh)
+{
+    newThresh = jlimit (0, 127, newThresh);
+    
+    if (descant.lowerThresh == newThresh)
+        return;
+    
+    descant.lowerThresh = newThresh;
+    
+    if (descant.isOn)
+        applyDescant();
+}
+
+
+bvh_VOID_TEMPLATE::setDescantInterval (const int newInterval)
+{
+    if (descant.interval == newInterval)
+        return;
+    
+    descant.interval = newInterval;
+    
+    if (newInterval == 0)
+        descant.isOn = false;
+    
+    if (descant.isOn)
+        applyDescant();
+}
+
+
+// pedal pitch settings -----------------------------------------------------------------------------------------------------------------------
+    
+bvh_VOID_TEMPLATE::setPedalPitch (const bool isOn)
+{
+    if (pedal.isOn == isOn)
+        return;
+    
+    pedal.isOn = isOn;
+    
+    if (isOn)
+        applyPedalPitch();
+    else
+    {
+        if (pedal.lastPitch > -1)
+            noteOff (pedal.lastPitch, 1.0f, false, false);
+        
+        pedal.lastPitch = -1;
+    }
+}
+
+
+bvh_VOID_TEMPLATE::setPedalPitchUpperThresh (int newThresh)
+{
+    newThresh = jlimit (0, 127, newThresh);
+    
+    if (pedal.upperThresh == newThresh)
+        return;
+    
+    pedal.upperThresh = newThresh;
+    
+    if (pedal.isOn)
+        applyPedalPitch();
+}
+
+
+bvh_VOID_TEMPLATE::setPedalPitchInterval (const int newInterval)
+{
+    if (pedal.interval == newInterval)
+        return;
+    
+    pedal.interval = newInterval;
+    
+    if (newInterval == 0)
+        pedal.isOn = false;
+    
+    if (pedal.isOn)
+        applyPedalPitch();
+}
+
+
 #undef bvh_VOID_TEMPLATE
 
 }  // namespace

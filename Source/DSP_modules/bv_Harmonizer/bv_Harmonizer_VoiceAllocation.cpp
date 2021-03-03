@@ -14,19 +14,6 @@ namespace bav
     
     
 template<typename SampleType>
-void Harmonizer<SampleType>::numVoicesChanged()
-{
-    const int newMaxNumVoices = voices.size();
-    
-    panner.prepare (newMaxNumVoices, false);
-    intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
-    usableVoices.ensureStorageAllocated(newMaxNumVoices);
-    currentNotes.ensureStorageAllocated(newMaxNumVoices);
-    desiredNotes.ensureStorageAllocated(newMaxNumVoices);
-}
-    
-    
-template<typename SampleType>
 int Harmonizer<SampleType>::getNumActiveVoices() const 
 {
     int actives = 0;
@@ -165,6 +152,34 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
             return voice;
     
     return nullptr;
+}
+    
+
+template<typename SampleType>
+void Harmonizer<SampleType>::changeNumVoices (const int newNumVoices)
+{
+    const int currentVoices = voices.size();
+    
+    if (currentVoices == newNumVoices)
+        return;
+    
+    if (newNumVoices > currentVoices)
+        addNumVoices (newNumVoices - currentVoices);
+    else
+        removeNumVoices (currentVoices - newNumVoices);
+}
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::numVoicesChanged()
+{
+    const int newMaxNumVoices = voices.size();
+    
+    panner.prepare (newMaxNumVoices, false);
+    intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
+    usableVoices.ensureStorageAllocated(newMaxNumVoices);
+    currentNotes.ensureStorageAllocated(newMaxNumVoices);
+    desiredNotes.ensureStorageAllocated(newMaxNumVoices);
 }
     
     

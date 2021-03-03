@@ -535,6 +535,44 @@ bvh_VOID_TEMPLATE::handleLegato (const bool isOn)
 }
 
 
+/***********************************************************************************************************************************************
+ // midi preferences ---------------------------------------------------------------------------------------------------------------------------
+ ***********************************************************************************************************************************************/
+
+// midi velocity sensitivity -------------------------------------------------------------------------------------
+bvh_VOID_TEMPLATE::updateMidiVelocitySensitivity (int newSensitivity)
+{
+    newSensitivity = jlimit (0, 100, newSensitivity);
+    
+    const float newSens = newSensitivity / 100.0f;
+    
+    if (velocityConverter.getCurrentSensitivity() == newSens)
+        return;
+    
+    velocityConverter.setFloatSensitivity (newSens);
+    
+    for (auto* voice : voices)
+        if (voice->isVoiceActive())
+            voice->setVelocityMultiplier (getWeightedVelocity (voice->getLastRecievedVelocity()));
+}
+
+
+// pitch bend settings -------------------------------------------------------------------------------------------
+bvh_VOID_TEMPLATE::updatePitchbendSettings (const int rangeUp, const int rangeDown)
+{
+    if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
+        return;
+    
+    bendTracker.setRange (rangeUp, rangeDown);
+    
+    if (lastPitchWheelValue == 64)
+        return;
+    
+    for (auto* voice : voices)
+        if (voice->isVoiceActive())
+            voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
+}
+
 #undef bvh_VOID_TEMPLATE
     
 } // namespace
