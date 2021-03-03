@@ -177,6 +177,11 @@ bvh_VOID_TEMPLATE::turnOffList (const Array<int>& toTurnOff, const float velocit
 // automated midi "pedal pitch": creates a polyphonic doubling of the lowest note currently being played by a keyboard key at a specified interval below that keyboard key, IF that keyboard key is below a certain pitch threshold.
 bvh_VOID_TEMPLATE::applyPedalPitch()
 {
+    const int interval = pedal.interval.load();
+    
+    if (interval == 0)
+        return;
+    
     int currentLowest = 128;
     HarmonizerVoice<SampleType>* lowestVoice = nullptr;
     
@@ -194,23 +199,25 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
         }
     }
     
-    if (currentLowest > pedal.upperThresh) // only create a pedal voice if the current lowest keyboard key is below a specified threshold
+    const int lastPitch = pedal.lastPitch.load();
+    
+    if (currentLowest > pedal.upperThresh.load()) // only create a pedal voice if the current lowest keyboard key is below a specified threshold
     {
-        if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false);
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
         
         return;
     }
     
-    const int newPedalPitch = currentLowest - pedal.interval;
+    const int newPedalPitch = currentLowest - interval;
     
-    if (newPedalPitch == pedal.lastPitch)  // pedal output note hasn't changed - do nothing
+    if (newPedalPitch == lastPitch)  // pedal output note hasn't changed - do nothing
         return;
     
     if (newPedalPitch < 0 || isPitchActive (newPedalPitch, false, true))  // impossible midinote, or the new desired pedal pitch is already on
     {
-        if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false);
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
         
         return;
     }
@@ -221,21 +228,21 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
         if (prevPedalVoice->isKeyDown())  // can't "steal" the voice playing the last pedal note if its keyboard key is down
             prevPedalVoice = nullptr;
     
+    pedal.lastPitch.store(newPedalPitch);
+    
     if (prevPedalVoice != nullptr)
     {
         //  there was a previously active pedal voice, so steal it directly without calling noteOn:
         
         const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : prevPedalVoice->getLastRecievedVelocity();
-        pedal.lastPitch = newPedalPitch;
         startVoice (prevPedalVoice, pedal.lastPitch, velocity, false);
     }
     else
     {
-        if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false);
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
         
         const float velocity = (lowestVoice != nullptr) ? lowestVoice->getLastRecievedVelocity() : 1.0f;
-        pedal.lastPitch = newPedalPitch;
         noteOn (pedal.lastPitch, velocity, false);
     }
 }
@@ -261,23 +268,25 @@ bvh_VOID_TEMPLATE::applyDescant()
         }
     }
     
-    if (currentHighest < descant.lowerThresh)  // only create a descant voice if the current highest keyboard key is above a specified threshold
+    const int lastPitch = descant.lastPitch.load();
+    
+    if (currentHighest < descant.lowerThresh.load())  // only create a descant voice if the current highest keyboard key is above a specified threshold
     {
-        if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false);
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
         
         return;
     }
     
-    const int newDescantPitch = currentHighest + descant.interval;
+    const int newDescantPitch = currentHighest + descant.interval.load();
     
-    if (newDescantPitch == descant.lastPitch)  // descant output note hasn't changed - do nothing
+    if (newDescantPitch == lastPitch)  // descant output note hasn't changed - do nothing
         return;
     
     if (newDescantPitch > 127 || isPitchActive (newDescantPitch, false, true)) // impossible midinote, or the new desired descant pitch is already on
     {
-        if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false);
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
         
         return;
     }
@@ -288,21 +297,21 @@ bvh_VOID_TEMPLATE::applyDescant()
         if (prevDescantVoice->isKeyDown())  // can't "steal" the voice playing the last descant note if its keyboard key is down
             prevDescantVoice = nullptr;
     
+    descant.lastPitch.store(newDescantPitch);
+    
     if (prevDescantVoice != nullptr)
     {
         //  there was a previously active descant voice, so steal it directly without calling noteOn:
         
         const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : prevDescantVoice->getLastRecievedVelocity();
-        descant.lastPitch = newDescantPitch;
         startVoice (prevDescantVoice, descant.lastPitch, velocity, false);
     }
     else
     {
-        if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false);
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
         
         const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : 1.0f;
-        descant.lastPitch = newDescantPitch;
         noteOn (descant.lastPitch, velocity, false);
     }
 }
@@ -312,19 +321,21 @@ bvh_VOID_TEMPLATE::applyDescant()
     
 bvh_VOID_TEMPLATE::setDescant (const bool isOn)
 {
-    if (descant.isOn == isOn)
+    if (descant.isOn.load() == isOn)
         return;
     
-    descant.isOn = isOn;
+    descant.isOn.store(isOn);
     
     if (isOn)
         applyDescant();
     else
     {
-        if (descant.lastPitch > -1)
-            noteOff (descant.lastPitch, 1.0f, false, false);
+        const int lastPitch = descant.lastPitch.load();
         
-        descant.lastPitch = -1;
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
+        
+        descant.lastPitch.store(-1);
     }
 }
 
@@ -333,12 +344,12 @@ bvh_VOID_TEMPLATE::setDescantLowerThresh (int newThresh)
 {
     newThresh = jlimit (0, 127, newThresh);
     
-    if (descant.lowerThresh == newThresh)
+    if (descant.lowerThresh.load() == newThresh)
         return;
     
-    descant.lowerThresh = newThresh;
+    descant.lowerThresh.store(newThresh);
     
-    if (descant.isOn)
+    if (descant.isOn.load())
         applyDescant();
 }
 
@@ -350,10 +361,7 @@ bvh_VOID_TEMPLATE::setDescantInterval (const int newInterval)
     
     descant.interval = newInterval;
     
-    if (newInterval == 0)
-        descant.isOn = false;
-    
-    if (descant.isOn)
+    if (descant.isOn.load())
         applyDescant();
 }
 
@@ -362,19 +370,21 @@ bvh_VOID_TEMPLATE::setDescantInterval (const int newInterval)
     
 bvh_VOID_TEMPLATE::setPedalPitch (const bool isOn)
 {
-    if (pedal.isOn == isOn)
+    if (pedal.isOn.load() == isOn)
         return;
     
-    pedal.isOn = isOn;
+    pedal.isOn.store(isOn);
     
     if (isOn)
         applyPedalPitch();
     else
     {
-        if (pedal.lastPitch > -1)
-            noteOff (pedal.lastPitch, 1.0f, false, false);
+        const int lastPitch = pedal.lastPitch.load();
         
-        pedal.lastPitch = -1;
+        if (lastPitch > -1)
+            noteOff (lastPitch, 1.0f, false, false);
+        
+        pedal.lastPitch.store(-1);
     }
 }
 
@@ -383,27 +393,24 @@ bvh_VOID_TEMPLATE::setPedalPitchUpperThresh (int newThresh)
 {
     newThresh = jlimit (0, 127, newThresh);
     
-    if (pedal.upperThresh == newThresh)
+    if (pedal.upperThresh.load() == newThresh)
         return;
     
-    pedal.upperThresh = newThresh;
+    pedal.upperThresh.store(newThresh);
     
-    if (pedal.isOn)
+    if (pedal.isOn.load())
         applyPedalPitch();
 }
 
 
 bvh_VOID_TEMPLATE::setPedalPitchInterval (const int newInterval)
 {
-    if (pedal.interval == newInterval)
+    if (pedal.interval.load() == newInterval)
         return;
     
-    pedal.interval = newInterval;
+    pedal.interval.store(newInterval);
     
-    if (newInterval == 0)
-        pedal.isOn = false;
-    
-    if (pedal.isOn)
+    if (pedal.isOn.load())
         applyPedalPitch();
 }
 

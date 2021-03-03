@@ -82,13 +82,13 @@ public:
     
     bool isVoiceActive() const noexcept { return (currentlyPlayingNote.load() >= 0); }
     
-    bool isPlayingButReleased()   const noexcept { return playingButReleased; } // returns true if a voice is sounding, but its key has been released
+    bool isPlayingButReleased()   const noexcept { return playingButReleased.load(); } // returns true if a voice is sounding, but its key has been released
     
     // Returns true if this voice started playing its current note before the other voice did.
-    bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
+    bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime.load() < other.noteOnTime.load(); }
     
     // Returns true if the key that triggered this voice is still held down. Note that the voice may still be playing after the key was released (e.g because the sostenuto pedal is down).
-    bool isKeyDown() const noexcept { return keyIsDown; }
+    bool isKeyDown() const noexcept { return keyIsDown.load(); }
     
     int getCurrentMidiPan() const noexcept { return panner.getLastMidiPan(); }
     
@@ -99,8 +99,8 @@ public:
     
     void updateSampleRate (const double newSamplerate);
     
-    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice; }
-    bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
+    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice.load(); }
+    bool isCurrentDescantVoice() const noexcept { return isDescantVoice.load(); }
     
     
 protected:
@@ -150,14 +150,15 @@ private:
     
     Harmonizer<SampleType>* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
-    uint32 noteOnTime;
+    std::atomic<uint32> noteOnTime;
     
-    bool isQuickFading;
-    bool noteTurnedOff;
+    std::atomic<bool> isQuickFading, noteTurnedOff;
     
-    bool keyIsDown;
+    std::atomic<bool> keyIsDown;
     
-    int currentAftertouch;
+    std::atomic<int> currentAftertouch;
+    
+    std::atomic<bool> sustainingFromSostenutoPedal;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     AudioBuffer<SampleType> copyingBuffer;
@@ -169,13 +170,11 @@ private:
     
     Panner panner;
     
-    bool isPedalPitchVoice, isDescantVoice;
+    std::atomic<bool> isPedalPitchVoice, isDescantVoice;
     
-    bool playingButReleased;
+    std::atomic<bool> playingButReleased;
     
     float lastPBRmult = 1.0f;
-    
-    bool sustainingFromSostenutoPedal = false;
     
     int synthesisIndex;
     
@@ -377,6 +376,7 @@ private:
     friend class HarmonizerVoice<SampleType>;
     
     CriticalSection lock;
+    // functions that require lock: allNotesOff, changeNumVoices, renderVoices
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
@@ -417,18 +417,18 @@ private:
     
     struct pedalPitchPrefs
     {
-        bool isOn;
-        int lastPitch;
-        int upperThresh; // pedal pitch has an UPPER thresh - the auto harmony voice is only activated if the lowest keyboard note is BELOW a certain thresh
-        int interval;
+        std::atomic<bool> isOn;
+        std::atomic<int> lastPitch;
+        std::atomic<int> upperThresh; // pedal pitch has an UPPER thresh - the auto harmony voice is only activated if the lowest keyboard note is BELOW a certain thresh
+        std::atomic<int> interval;
     };
     
     struct descantPrefs
     {
-        bool isOn;
-        int lastPitch;
-        int lowerThresh; // descant has a LOWER thresh - the auto harmony voice is only activated if the highest keyboard note is ABOVE a certain thresh
-        int interval;
+        std::atomic<bool> isOn;
+        std::atomic<int> lastPitch;
+        std::atomic<int> lowerThresh; // descant has a LOWER thresh - the auto harmony voice is only activated if the highest keyboard note is ABOVE a certain thresh
+        std::atomic<int> interval;
     };
     
     pedalPitchPrefs pedal;

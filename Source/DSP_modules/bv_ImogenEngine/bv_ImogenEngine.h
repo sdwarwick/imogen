@@ -107,8 +107,6 @@ private:
     
     void latencyChanged (const int newLatency);
     
-    CriticalSection lock;
-    
     Harmonizer<SampleType> harmonizer;
     
     DelayBuffer<SampleType> inputBuffer;
@@ -119,9 +117,13 @@ private:
     AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
     
     dsp::ProcessSpec dspSpec;
-    dsp::Limiter <SampleType> limiter;
+    
     dsp::DryWetMixer<SampleType> dryWetMixer;
-    bool limiterIsOn;
+    std::atomic<SampleType> wetMixPercent;
+    
+    dsp::Limiter <SampleType> limiter;
+    std::atomic<bool> limiterIsOn;
+    std::atomic<float> limiterThresh, limiterRelease;
     
     bool resourcesReleased;
     bool initialized;
@@ -136,6 +138,7 @@ private:
     FancyMidiBuffer chunkMidiBuffer;
     
     Panner dryPanner;
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

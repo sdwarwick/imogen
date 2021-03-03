@@ -163,10 +163,14 @@ void Harmonizer<SampleType>::changeNumVoices (const int newNumVoices)
     if (currentVoices == newNumVoices)
         return;
     
+    const ScopedLock sl (lock);
+    
     if (newNumVoices > currentVoices)
         addNumVoices (newNumVoices - currentVoices);
     else
         removeNumVoices (currentVoices - newNumVoices);
+    
+    numVoicesChanged();
 }
 
 
@@ -189,12 +193,8 @@ void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
     if (voicesToAdd == 0)
         return;
     
-    const ScopedLock sl (lock);
-    
     for (int i = 0; i < voicesToAdd; ++i)
         voices.add (new HarmonizerVoice<SampleType>(this));
-    
-    numVoicesChanged();
 }
     
     
@@ -203,8 +203,6 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
 {
     if (voicesToRemove == 0)
         return;
-    
-    const ScopedLock sl (lock);
 
 #if JUCE_DEBUG
     const int shouldBeLeft = voices.size() - voicesToRemove;
@@ -247,11 +245,8 @@ void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
     }
     
     jassert (voices.isEmpty() || voices.size() == shouldBeLeft);
-    
-    numVoicesChanged();
 }
     
 
-    
-    
+
 }  // namespace

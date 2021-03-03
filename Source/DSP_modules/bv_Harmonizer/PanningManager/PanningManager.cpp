@@ -160,7 +160,7 @@ void PanningManager::panValTurnedOff (int panVal)
     bool addedIt = false;
     
     do {
-        if (i >= panValsInAssigningOrder.size())
+        if (i >= unsentPanVals.size())
             break;
         
         if (panValsInAssigningOrder.indexOf (unsentPanVals.getUnchecked(i)) > targetindex)

@@ -16,10 +16,15 @@ namespace bav
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine():
     internalBlocksize(512),
-    limiterIsOn(false),
     resourcesReleased(true), initialized(false)
 {
     modulatorInput.store(0);
+    
+    wetMixPercent.store(SampleType(1.0));
+    
+    limiterIsOn.store(false);
+    limiterThresh.store(1.0f);
+    limiterRelease.store(20.0f);
     
     inputGain.store(1.0f);
     prevInputGain.store(1.0f);
@@ -317,8 +322,6 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
-    const ScopedLock sl (lock);
-    
     // master input gain
     const float currentInGain = inputGain.load();
     
@@ -337,7 +340,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     const float currentDryGain = dryGain.load();
     dryBuffer.applyGainRamp (0, internalBlocksize, prevDryGain.load(), currentDryGain);
     prevDryGain.store(currentDryGain);
-
+    
+    dryWetMixer.setWetMixProportion (wetMixPercent.load());
     dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
 
     // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
@@ -357,8 +361,10 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     wetBuffer.applyGainRamp (0, internalBlocksize, prevOutputGain.load(), currentOutGain);
     prevOutputGain.store(currentOutGain);
 
-    if (limiterIsOn)
+    if (limiterIsOn.load())
     {
+        limiter.setThreshold (limiterThresh.load());
+        limiter.setRelease (limiterRelease.load());
         dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
         limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
@@ -412,8 +418,8 @@ bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 
 bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 {
-    const ScopedLock sl (lock);
-    dryWetMixer.setWetMixProportion (percentWet * 0.01f);
+    constexpr SampleType pointOne = SampleType(0.01);
+    wetMixPercent.store (percentWet * pointOne);
 }
 
     
@@ -495,10 +501,9 @@ bvie_VOID_TEMPLATE::updateIntervalLock (const bool isLocked)
 
 bvie_VOID_TEMPLATE::updateLimiter (const float thresh, const int release, const bool isOn)
 {
-    ScopedLock sl (lock);
-    limiterIsOn = isOn;
-    limiter.setThreshold(thresh);
-    limiter.setRelease(float(release));
+    limiterIsOn.store(isOn);
+    limiterThresh.store(thresh);
+    limiterRelease.store(float(release));
 }
 
 

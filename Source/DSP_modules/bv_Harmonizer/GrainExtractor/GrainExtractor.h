@@ -39,8 +39,6 @@ public:
     
 private:
     
-    int lastBlocksize = 0;
-    
     Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
     Array<int> peakCandidates;

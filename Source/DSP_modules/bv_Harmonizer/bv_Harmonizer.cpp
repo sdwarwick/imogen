@@ -44,15 +44,15 @@ Harmonizer<SampleType>::Harmonizer():
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
     
-    pedal.isOn = false;
-    pedal.lastPitch = -1;
-    pedal.upperThresh = 0;
-    pedal.interval = 12;
+    pedal.isOn.store(false);
+    pedal.lastPitch.store(-1);
+    pedal.upperThresh.store(0);
+    pedal.interval.store(12);
     
-    descant.isOn = false;
-    descant.lastPitch = -1;
-    descant.lowerThresh = 127;
-    descant.interval = 12;
+    descant.isOn.store(false);
+    descant.lastPitch.store(-1);
+    descant.lowerThresh.store(127);
+    descant.interval.store(12);
     
     currentInputFreq.store(0.0f);
     currentInputPeriod.store(0);

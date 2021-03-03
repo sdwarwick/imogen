@@ -50,8 +50,6 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
-    lastBlocksize = maxBlocksize;
-    
 #define bvhge_NUM_PEAKS_TO_TEST 10
     peakCandidates.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
     peakCandidates.clearQuick();
