@@ -103,6 +103,7 @@ public:
     void updatePitchDetectionSettings();
     void updateGains();
     void updateAftertouchGainToggle();
+    void updateChannelPressureToggle();
     void updatePlayingButRelesedGain();
     
     void updateModulatorInputSource (const int newSource);
@@ -160,6 +161,7 @@ public:
     juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
     juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
     juce::AudioParameterBool*  aftertouchGainToggle;
+    juce::AudioParameterBool*  channelPressureToggle;
     juce::AudioParameterFloat* playingButReleasedGain;
     
     
