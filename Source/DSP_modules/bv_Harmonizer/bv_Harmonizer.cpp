@@ -116,8 +116,10 @@ bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
     
     pitchDetector.setSamplerate (newRate, true);
     
-    if (currentInputFreq > 0)
-        setCurrentInputFreq (currentInputFreq);
+    const float currentFreq = currentInputFreq.load();
+    
+    if (currentFreq > 0)
+        setCurrentInputFreq (currentFreq);
     
     for (auto* voice : voices)
         voice->updateSampleRate (newRate);

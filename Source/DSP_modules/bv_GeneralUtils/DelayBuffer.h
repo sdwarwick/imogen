@@ -60,6 +60,8 @@ public:
         if (base.getNumSamples() == newSize && base.getNumChannels() == newNumChannels)
             return;
         
+        const juce::ScopedLock sl (lock);
+        
         base.setSize (newNumChannels, newSize, true, true, true);
         
         if (writeIndex > newSize)
@@ -79,6 +81,8 @@ public:
     
     void pushSamples (const SampleType* inputSamples, const int numSamples, const int destChannel)
     {
+        const juce::ScopedLock sl (lock);
+        
         const int length = base.getNumSamples();
         
         jassert (length > 0 && base.getNumChannels() > 0);
@@ -96,8 +100,6 @@ public:
         
         writeIndex = index;
         storedSamples += numSamples;
-      
-        jassert (storedSamples <= length);
     }
     
     
@@ -113,6 +115,8 @@ public:
     
     void popSamples (SampleType* output, const int numSamples, const int readingChannel)
     {
+        const juce::ScopedLock sl (lock);
+        
         const int length = base.getNumSamples();
         
         jassert (length > 0 && base.getNumChannels() > 0);
@@ -157,6 +161,8 @@ private:
     
     int writeIndex;
     int storedSamples;
+    
+    juce::CriticalSection lock;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayBuffer)
 };
