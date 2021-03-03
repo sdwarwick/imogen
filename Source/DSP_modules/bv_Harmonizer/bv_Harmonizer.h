@@ -78,9 +78,9 @@ public:
     
     void releaseResources();
     
-    int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
+    int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote.load(); }
     
-    bool isVoiceActive() const noexcept { return (currentlyPlayingNote >= 0); }
+    bool isVoiceActive() const noexcept { return (currentlyPlayingNote.load() >= 0); }
     
     bool isPlayingButReleased()   const noexcept { return playingButReleased; } // returns true if a voice is sounding, but its key has been released
     
@@ -95,7 +95,7 @@ public:
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes (const int newMaxBlocksize);
     
-    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
+    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity.load(); }
     
     void updateSampleRate (const double newSamplerate);
     
@@ -116,9 +116,9 @@ protected:
     
     void aftertouchChanged (const int newAftertouchValue);
     
-    void setVelocityMultiplier (const float newMultiplier) noexcept { currentVelocityMultiplier = newMultiplier; }
+    void setVelocityMultiplier (const float newMultiplier) { currentVelocityMultiplier.store(newMultiplier); }
     
-    void setCurrentOutputFreq (const float newFreq) noexcept { currentOutputFreq = newFreq; }
+    void setCurrentOutputFreq (const float newFreq) { currentOutputFreq.store(newFreq); }
     
     void setKeyDown (bool isNowDown) noexcept;
     
@@ -150,12 +150,7 @@ private:
     
     Harmonizer<SampleType>* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
-    int currentlyPlayingNote;
-    float currentOutputFreq;
     uint32 noteOnTime;
-    
-    float currentVelocityMultiplier, prevVelocityMultiplier;
-    float lastRecievedVelocity;
     
     bool isQuickFading;
     bool noteTurnedOff;
@@ -168,7 +163,9 @@ private:
     AudioBuffer<SampleType> copyingBuffer;
     AudioBuffer<SampleType> windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
     
-    float prevSoftPedalMultiplier;
+    std::atomic<int> currentlyPlayingNote;
+    std::atomic<float> currentOutputFreq;
+    std::atomic<float> lastRecievedVelocity, currentVelocityMultiplier, prevVelocityMultiplier, prevSoftPedalMultiplier;
     
     Panner panner;
     
@@ -405,8 +402,8 @@ private:
     ADSR::Parameters quickReleaseParams;
     ADSR::Parameters quickAttackParams;
     
-    float currentInputFreq;
-    int currentInputPeriod;
+    std::atomic<float> currentInputFreq;
+    std::atomic<int> currentInputPeriod;
     
     double sampleRate;
     uint32 lastNoteOnCounter;

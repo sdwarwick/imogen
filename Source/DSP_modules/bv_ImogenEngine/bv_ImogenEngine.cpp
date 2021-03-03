@@ -100,6 +100,9 @@ bvie_VOID_TEMPLATE::prepare (double sampleRate, int samplesPerBlock)
     
 bvie_VOID_TEMPLATE::latencyChanged (const int newLatency)
 {
+    if (internalBlocksize == newLatency)
+        return;
+    
     internalBlocksize = newLatency;
     
     harmonizer.prepare (internalBlocksize);
@@ -314,6 +317,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
+    const ScopedLock sl (lock);
+    
     // master input gain
     const float currentInGain = inputGain.load();
     
@@ -407,6 +412,7 @@ bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 
 bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 {
+    const ScopedLock sl (lock);
     dryWetMixer.setWetMixProportion (percentWet * 0.01f);
 }
 

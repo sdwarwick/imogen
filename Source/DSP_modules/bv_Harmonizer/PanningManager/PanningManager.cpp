@@ -33,6 +33,8 @@ void PanningManager::prepare (const int numVoices, bool clearArrays)
 {
     jassert (numVoices > 0);
     
+    const ScopedLock sl (lock);
+    
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
     unsentPanVals.ensureStorageAllocated(numVoices);
@@ -213,6 +215,8 @@ void PanningManager::reset()
 {
     if (panValsInAssigningOrder.isEmpty())
         return;
+    
+    const ScopedLock sl (lock);
     
     unsentPanVals.clearQuick();
     

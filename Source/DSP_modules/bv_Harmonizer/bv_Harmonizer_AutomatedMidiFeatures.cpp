@@ -69,7 +69,7 @@ bvh_VOID_TEMPLATE::updateIntervalsLatchedTo()
     if (currentNotes.isEmpty())
         return;
     
-    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
+    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq.load()));
     
     for (int note : currentNotes)
         intervalsLatchedTo.add (note - currentMidiPitch);
@@ -78,9 +78,9 @@ bvh_VOID_TEMPLATE::updateIntervalsLatchedTo()
 
 // plays a chord based on a given set of desired interval offsets from the current input pitch.
 bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
-                                              const float velocity,
-                                              const bool allowTailOffOfOld,
-                                              const bool isIntervalLatch)
+                                    const float velocity,
+                                    const bool allowTailOffOfOld,
+                                    const bool isIntervalLatch)
 {
     if (desiredIntervals.isEmpty())
     {
@@ -88,7 +88,7 @@ bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
         return;
     }
     
-    const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
+    const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq.load()));
     
     desiredNotes.clearQuick();
     
@@ -104,8 +104,8 @@ bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
 bvh_VOID_TEMPLATE::playChord (const Array<int>& desiredPitches,
-                                        const float velocity,
-                                        const bool allowTailOffOfOld)
+                              const float velocity,
+                              const bool allowTailOffOfOld)
 {
     if (desiredPitches.isEmpty())
     {

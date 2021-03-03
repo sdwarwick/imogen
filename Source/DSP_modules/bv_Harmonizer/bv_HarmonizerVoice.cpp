@@ -15,7 +15,7 @@ namespace bav
 
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), lastRecievedVelocity(0.0f), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(0), prevSoftPedalMultiplier(1.0f),
+parent(h), noteOnTime(0), isQuickFading(false), noteTurnedOff(true), keyIsDown(false), currentAftertouch(0),
     isPedalPitchVoice(false), isDescantVoice(false),
     playingButReleased(false)
 {
@@ -30,6 +30,13 @@ parent(h), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), noteOnTime(0), cu
     quickAttack .setParameters (parent->getCurrentQuickAttackParams());
     
     synthesisIndex = 0;
+    
+    currentlyPlayingNote.store(-1);
+    currentOutputFreq.store(-1.0f);
+    lastRecievedVelocity.store(0.0f);
+    currentVelocityMultiplier.store(0.0f);
+    prevVelocityMultiplier.store(0.0f);
+    prevSoftPedalMultiplier.store(1.0f);
 }
 
 template<typename SampleType>
@@ -60,9 +67,9 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     copyingBuffer.setSize (1, doubleSize);
     FloatVectorOperations::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
     
-    prevVelocityMultiplier = currentVelocityMultiplier;
+    prevVelocityMultiplier.store(currentVelocityMultiplier.load());
     
-    prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
+    prevSoftPedalMultiplier.store(parent->getSoftPedalMultiplier());
     
     synthesisIndex = 0;
 }
@@ -77,9 +84,9 @@ bvhv_VOID_TEMPLATE::releaseResources()
 
 
 bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                                                   const int origPeriod,
-                                                   const Array<int>& indicesOfGrainOnsets,
-                                                   const AudioBuffer<SampleType>& windowToUse)
+                                     const int origPeriod,
+                                     const Array<int>& indicesOfGrainOnsets,
+                                     const AudioBuffer<SampleType>& windowToUse)
 {
     // determine if the voice is currently active
     
@@ -99,25 +106,26 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     // puts shifted samples into the synthesisBuffer, from sample indices starting to starting + numSamples - 1
     sola (inputAudio.getReadPointer(0), numSamples,
           origPeriod,
-          roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
+          roundToInt (parent->getSamplerate() / currentOutputFreq.load()),  // new desired period, in samples
           indicesOfGrainOnsets,
           windowToUse.getReadPointer(0));  // precomputed window length must be input period * 2
     
     //  *****************************************************************************************************
     //  midi velocity gain (aftertouch is applied here as well)
     constexpr float inv127 = 1.0f / 127.0f;
-    const float velocityMultNow = parent->isAftertouchGainOn() ? currentVelocityMultiplier + ((currentAftertouch * inv127) * (1.0f - currentVelocityMultiplier))
-                                                               : currentVelocityMultiplier;
+    const float currentmult = currentVelocityMultiplier.load();
+    const float velocityMultNow = parent->isAftertouchGainOn() ? currentmult + ((currentAftertouch * inv127) * (1.0f - currentmult))
+                                                               : currentmult;
 
-    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
-    prevVelocityMultiplier = velocityMultNow;
+    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier.load(), velocityMultNow);
+    prevVelocityMultiplier.store(velocityMultNow);
 
     //  *****************************************************************************************************
     //  soft pedal gain
 
     const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f; // soft pedal gain
-    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
-    prevSoftPedalMultiplier = softPedalMult;
+    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier.load(), softPedalMult);
+    prevSoftPedalMultiplier.store(softPedalMult);
 
     //  *****************************************************************************************************
     //  playing-but-released gain
@@ -149,10 +157,10 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
 
 
 bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSamples,
-                                        const int origPeriod, // size of analysis grains = origPeriod * 2
-                                        const int newPeriod,  // OLA hop size
-                                        const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
-                                        const SampleType* window) // Hanning window, length origPeriod * 2
+                          const int origPeriod, // size of analysis grains = origPeriod * 2
+                          const int newPeriod,  // OLA hop size
+                          const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
+                          const SampleType* window) // Hanning window, length origPeriod * 2
 {
     if (synthesisIndex > totalNumInputSamples)
         return;
@@ -162,6 +170,9 @@ bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSample
     for (int grainStart : indicesOfGrainOnsets)
     {
         const int grainEnd = grainStart + analysisGrainLength;
+        
+        if (grainEnd > synthesisBuffer.getNumSamples())
+            break;
         
         if (synthesisIndex > grainEnd)
             continue;
@@ -178,10 +189,13 @@ bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSample
 
 
 bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
-                                            const int frameStartSample, const int frameEndSample, const int frameSize,
-                                            const SampleType* window,
-                                            const int newPeriod)
+                              const int frameStartSample, const int frameEndSample, const int frameSize,
+                              const SampleType* window,
+                              const int newPeriod)
 {
+//    if (synthesisIndex + frameSize > synthesisBuffer.getNumSamples())
+//        return;
+    
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
                                      window,
@@ -192,7 +206,7 @@ bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
     
     do {
-        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
+        jassert (synthesisIndex + frameSize <= synthesisBuffer.getNumSamples());
         
         FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,
                                     windowBufferReading,
@@ -200,7 +214,7 @@ bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
         
         synthesisIndex += newPeriod;
     }
-    while (synthesisIndex < frameEndSample && synthesisIndex < synthesisBuffer.getNumSamples());
+    while (synthesisIndex < frameEndSample && synthesisIndex + frameSize <= synthesisBuffer.getNumSamples());
 }
 
 
@@ -224,10 +238,10 @@ bvhv_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 bvhv_VOID_TEMPLATE::clearCurrentNote()
 {
-    currentVelocityMultiplier = 0.0f;
-    lastRecievedVelocity      = 0.0f;
+    currentVelocityMultiplier.store(0.0f);
+    lastRecievedVelocity.store(0.0f);
     currentAftertouch = 0;
-    currentlyPlayingNote = -1;
+    currentlyPlayingNote.store(-1);
     noteOnTime    = 0;
     isQuickFading = false;
     noteTurnedOff = true;
@@ -261,10 +275,10 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
                                              const bool isPedal, const bool isDescant)
 {
     noteOnTime = noteOnTimestamp;
-    currentlyPlayingNote = midiPitch;
-    lastRecievedVelocity = velocity;
-    currentVelocityMultiplier = parent->getWeightedVelocity (velocity);
-    currentOutputFreq = parent->getOutputFrequency (midiPitch);
+    currentlyPlayingNote.store(midiPitch);
+    lastRecievedVelocity.store(velocity);
+    currentVelocityMultiplier.store(parent->getWeightedVelocity (velocity));
+    currentOutputFreq.store(parent->getOutputFrequency (midiPitch));
     isQuickFading = false;
     noteTurnedOff = false;
     

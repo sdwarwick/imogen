@@ -18,9 +18,9 @@ namespace bav
     
 
 bvh_VOID_TEMPLATE::turnOffAllKeyupNotes (const bool allowTailOff,
-                                                   const bool includePedalPitchAndDescant,
-                                                   const float velocity,
-                                                   const bool overrideSostenutoPedal)
+                                         const bool includePedalPitchAndDescant,
+                                         const float velocity,
+                                         const bool overrideSostenutoPedal)
 {
     for (auto* voice : voices)
         if ((voice->isVoiceActive() && ! voice->isKeyDown())
@@ -35,7 +35,9 @@ bvh_VOID_TEMPLATE::turnOffAllKeyupNotes (const bool allowTailOff,
 ***********************************************************************************************************************************************/
 
 template<typename SampleType>
-bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool countRingingButReleased, const bool countKeyUpNotes) const
+bool Harmonizer<SampleType>::isPitchActive (const int midiPitch,
+                                            const bool countRingingButReleased,
+                                            const bool countKeyUpNotes) const
 {
     for (auto* voice : voices)
         if ((voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiPitch)
@@ -48,9 +50,11 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch, const bool coun
 
 
 bvh_VOID_TEMPLATE::reportActiveNotes (Array<int>& outputArray,
-                                                const bool includePlayingButReleased,
-                                                const bool includeKeyUpNotes) const
+                                      const bool includePlayingButReleased,
+                                      const bool includeKeyUpNotes) const
 {
+    const ScopedLock sl (lock);
+    
     outputArray.clearQuick();
     
     for (auto* voice : voices)
@@ -245,8 +249,8 @@ bvh_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int mid
 
 
 bvh_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
-                                      const bool allowTailOff,
-                                      const bool isKeyboard)
+                            const bool allowTailOff,
+                            const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, latch, etc)
     
@@ -331,6 +335,8 @@ bvh_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const float ve
 
 bvh_VOID_TEMPLATE::allNotesOff (const bool allowTailOff, const float velocity)
 {
+    const ScopedLock sl (lock);
+    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             stopVoice (voice, velocity, allowTailOff);

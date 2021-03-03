@@ -22,7 +22,7 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    latchIsOn(false), intervalLatchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
+    latchIsOn(false), intervalLatchIsOn(false), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
     adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
 {
@@ -53,6 +53,9 @@ Harmonizer<SampleType>::Harmonizer():
     descant.lastPitch = -1;
     descant.lowerThresh = 127;
     descant.interval = 12;
+    
+    currentInputFreq.store(0.0f);
+    currentInputPeriod.store(0);
 }
 
 
@@ -147,9 +150,9 @@ bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
 {
     jassert (newInputFreq > 0);
     
-    currentInputFreq = newInputFreq;
+    currentInputFreq.store(newInputFreq);
     
-    currentInputPeriod = roundToInt (sampleRate / newInputFreq);
+    currentInputPeriod.store(roundToInt (sampleRate / newInputFreq));
     
     if (intervalLatchIsOn && ! intervalsLatchedTo.isEmpty())
         playIntervalSet (intervalsLatchedTo, 1.0f, false, true);
@@ -161,9 +164,11 @@ bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
  **********************************************************************************************************************************************/
 
 bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
-                                           AudioBuffer<SampleType>& outputBuffer,
-                                           MidiBuffer& midiMessages)
+                                 AudioBuffer<SampleType>& outputBuffer,
+                                 MidiBuffer& midiMessages)
 {
+    const ScopedLock sl (lock);
+    
     outputBuffer.clear();
     
     processMidi (midiMessages);
@@ -180,10 +185,10 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     
     if (frameIsPitched)
     {
-        if (currentInputFreq != inputFrequency)
+        if (currentInputFreq.load() != inputFrequency)
             setCurrentInputFreq (inputFrequency);
         
-        periodThisFrame = currentInputPeriod;
+        periodThisFrame = currentInputPeriod.load();
     }
     else
     {

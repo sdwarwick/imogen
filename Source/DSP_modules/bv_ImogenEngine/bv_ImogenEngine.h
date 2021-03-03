@@ -53,7 +53,7 @@ public:
     void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     int getCurrentNumVoices() const { return harmonizer.getNumVoices(); }
     
-    void returnActivePitches (Array<int>& outputArray) const { return harmonizer.reportActiveNotes(outputArray); }
+    void returnActivePitches (Array<int>& outputArray) const { harmonizer.reportActiveNotes(outputArray); }
     
     void updateDryWet     (const int percentWet);
     void updateDryVoxPan  (const int newMidiPan);
@@ -87,6 +87,7 @@ public:
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource) { modulatorInput.store(newSource); }
     
+    
 private:
     
     // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
@@ -105,6 +106,8 @@ private:
     void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
     
     void latencyChanged (const int newLatency);
+    
+    CriticalSection lock;
     
     Harmonizer<SampleType> harmonizer;
     
@@ -133,8 +136,6 @@ private:
     FancyMidiBuffer chunkMidiBuffer;
     
     Panner dryPanner;
-    
-    CriticalSection lock;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
