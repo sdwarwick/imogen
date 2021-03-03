@@ -133,31 +133,44 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     const int grainSize = 2 * period;
     const int halfPeriod = roundToInt (ceil (period * 0.5f));
     
+    jassert (totalNumSamples >= grainSize);
+    
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
     do {
+#if JUCE_DEBUG
+        const int prevAnalysisIndex = analysisIndex;
+#endif
         const int frameStart = std::max (0, analysisIndex - halfPeriod);
+        const int frameEnd = std::min (totalNumSamples, frameStart + period);
         
-        targetArray.add (findNextPeak (frameStart, std::min (totalNumSamples, frameStart + period),
-                                       analysisIndex, reading, targetArray, period, grainSize));
+        targetArray.add (findNextPeak (frameStart, frameEnd,
+                                       std::min(analysisIndex, frameEnd), // predicted peak location for this frame
+                                       reading, targetArray, period, grainSize));
+        
+        jassert (! targetArray.isEmpty());
+        
+        const int targetArraySize = targetArray.size();
         
         // analysisIndex marks the middle of our next analysis window, so it's where our next predicted peak should be:
-        if (targetArray.size() == 1)
+        if (targetArraySize == 1)
             analysisIndex = targetArray.getUnchecked(0) + period;
         else
-            analysisIndex = targetArray.getUnchecked(targetArray.size() - 2) + grainSize;
+            analysisIndex = targetArray.getUnchecked(targetArraySize - 2) + grainSize;
+        
+        jassert (analysisIndex > prevAnalysisIndex);
     }
     while ((analysisIndex - halfPeriod) < totalNumSamples);
 }
     
 
 template<typename SampleType>
-int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int frameEnd,
-                                              int predictedPeak, const SampleType* reading,
+int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int frameEnd, int predictedPeak,
+                                              const SampleType* reading,
                                               const Array<int>& targetArray,
                                               const int period, const int grainSize)
 {
-    predictedPeak = jlimit (frameStart, frameEnd, predictedPeak);
+    jassert (predictedPeak >= frameStart && predictedPeak <= frameEnd);
     
     peakCandidates.clearQuick();
     
@@ -170,17 +183,21 @@ int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int fr
         peakSearchingOrder.clearQuick();
         sortSampleIndicesForPeakSearching (peakSearchingOrder, frameStart, frameEnd, predictedPeak);
         
+        jassert (peakSearchingOrder.size() == frameEnd - frameStart);
+        
         for (int i = 0; i < bvhge_NUM_PEAKS_TO_TEST; ++i)
         {
             getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, predictedPeak, peakSearchingOrder);
             
-            if (peakCandidates.size() == bvhge_NUM_PEAKS_TO_TEST)
+            if (peakCandidates.size() >= bvhge_NUM_PEAKS_TO_TEST - 1)
                 break;
         }
     }
-#undef bvhge_NUM_PEAKS_TO_TEST
     
     jassert (! peakCandidates.isEmpty());
+    jassert (peakCandidates.size() <= bvhge_NUM_PEAKS_TO_TEST);
+    
+#undef bvhge_NUM_PEAKS_TO_TEST
     
     switch (peakCandidates.size())
     {
@@ -226,13 +243,13 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     {
         static inline SampleType weight (int index, int predicted, int numSamples)
         {
-            return static_cast<SampleType>( 1.0 - ( ( (abs(index - predicted)) / numSamples ) * 0.5 ) );
+            return SampleType( 1.0 - ( ( (abs(index - predicted)) / numSamples ) * 0.5 ) );
         }
     };
     
-    const int numSamples = endSample - startSample;
-    
     jassert (starting >= startSample && starting <= endSample);
+    
+    const int numSamples = endSample - startSample;
     
     SampleType localMin = input[starting] * weighting::weight (starting, predictedPeak, numSamples);
     SampleType localMax = localMin;
@@ -245,6 +262,8 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
         
         if (index == starting || candidates.contains (index))
             continue;
+        
+        jassert (index >= startSample && index <= endSample);
         
         const SampleType currentSample = input[index] * weighting::weight (index, predictedPeak, numSamples);
         
@@ -322,10 +341,12 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
         candidateDeltas.set (indexOfLowestDelta, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
     }
     
+    jassert (finalHandful.size() == finalHandfulSize && finalHandfulDeltas.size() == finalHandfulSize);
+    
     // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
     const float deltaRange = FloatVectorOperations::findMinAndMax (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize)
-    .getLength();
+                             .getLength();
     
 #define bvhge_MIN_DELTA_RANGE 2.0f
     if (deltaRange < bvhge_MIN_DELTA_RANGE)

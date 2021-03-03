@@ -182,20 +182,24 @@ bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSample
     {
         const int grainEnd = grainStart + analysisGrainLength;
         
-        if (grainEnd > synthesisBuffer.getNumSamples())
+        if (grainEnd >= totalNumInputSamples)
             break;
         
         if (synthesisIndex > grainEnd)
             continue;
-
+        
         olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
     }
     
     // fill from the last written sample to the end of the buffer with zeroes
-    constexpr SampleType zero = SampleType(0.0);
-    FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
-                                 zero,
-                                 synthesisBuffer.getNumSamples() - synthesisIndex);
+    const int sampsLeft = synthesisBuffer.getNumSamples() - synthesisIndex;
+    
+    if (sampsLeft > 0)
+    {
+        constexpr SampleType zero = SampleType(0.0);
+        FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
+                                     zero, sampsLeft);
+    }
 }
 
 
@@ -204,9 +208,6 @@ bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
                               const SampleType* window,
                               const int newPeriod)
 {
-//    if (synthesisIndex + frameSize > synthesisBuffer.getNumSamples())
-//        return;
-    
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
                                      window,
@@ -217,7 +218,7 @@ bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
     
     do {
-        jassert (synthesisIndex + frameSize <= synthesisBuffer.getNumSamples());
+        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
         
         FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,
                                     windowBufferReading,
@@ -225,7 +226,7 @@ bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
         
         synthesisIndex += newPeriod;
     }
-    while (synthesisIndex < frameEndSample && synthesisIndex + frameSize <= synthesisBuffer.getNumSamples());
+    while (synthesisIndex < frameEndSample);
 }
 
 
