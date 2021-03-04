@@ -14,31 +14,33 @@
 
 #pragma once
 
+
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "bv_GeneralUtils/bv_GeneralUtils.h"
-
-#ifdef BV_HARMONIZER_USE_VDSP
-  #undef BV_HARMONIZER_USE_VDSP
-#endif
-
-#ifdef JUCE_USE_VDSP_FRAMEWORK
-  #if JUCE_USE_VDSP_FRAMEWORK
-    #define BV_HARMONIZER_USE_VDSP 1
-  #else
-    #define BV_HARMONIZER_USE_VDSP 0
-  #endif
-#else
-  #if (JUCE_MAC || JUCE_IOS)
-    #define BV_HARMONIZER_USE_VDSP 1
-  #else
-    #define BV_HARMONIZER_USE_VDSP 0
-  #endif
-#endif
-
-#include "bv_Harmonizer/bv_HarmonizerUtilities.h"
-#include "bv_Harmonizer/PanningManager/PanningManager.h"
-#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
 #include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes <Accelerate.h> for vDSP, if needed
+
+
+#ifndef BV_HARMONIZER_USE_VDSP
+  #ifdef JUCE_USE_VDSP_FRAMEWORK
+    #if JUCE_USE_VDSP_FRAMEWORK
+      #define BV_HARMONIZER_USE_VDSP 1
+    #else
+      #define BV_HARMONIZER_USE_VDSP 0
+    #endif
+  #else
+    #if (JUCE_MAC || JUCE_IOS)
+      #define BV_HARMONIZER_USE_VDSP 1
+    #else
+      #define BV_HARMONIZER_USE_VDSP 0
+    #endif
+  #endif
+#endif
+
+
+#include "bv_HarmonizerUtilities.h"
+#include "PanningManager/PanningManager.h"
+#include "GrainExtractor/GrainExtractor.h"
+
 
 
 
@@ -78,29 +80,29 @@ public:
     
     void releaseResources();
     
-    int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote.load(); }
+    int getCurrentlyPlayingNote() const noexcept { return currentlyPlayingNote; }
     
-    bool isVoiceActive() const noexcept { return (currentlyPlayingNote.load() >= 0); }
+    bool isVoiceActive() const noexcept { return (currentlyPlayingNote >= 0); }
     
-    bool isPlayingButReleased()   const noexcept { return playingButReleased.load(); } // returns true if a voice is sounding, but its key has been released
+    bool isPlayingButReleased()   const noexcept { return playingButReleased; } // returns true if a voice is sounding, but its key has been released
     
     // Returns true if this voice started playing its current note before the other voice did.
-    bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime.load() < other.noteOnTime.load(); }
+    bool wasStartedBefore (const HarmonizerVoice& other) const noexcept { return noteOnTime < other.noteOnTime; }
     
     // Returns true if the key that triggered this voice is still held down. Note that the voice may still be playing after the key was released (e.g because the sostenuto pedal is down).
-    bool isKeyDown() const noexcept { return keyIsDown.load(); }
+    bool isKeyDown() const noexcept { return keyIsDown; }
     
     int getCurrentMidiPan() const noexcept { return panner.getLastMidiPan(); }
     
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes (const int newMaxBlocksize);
     
-    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity.load(); }
+    float getLastRecievedVelocity() const noexcept { return lastRecievedVelocity; }
     
     void updateSampleRate (const double newSamplerate);
     
-    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice.load(); }
-    bool isCurrentDescantVoice() const noexcept { return isDescantVoice.load(); }
+    bool isCurrentPedalVoice()   const noexcept { return isPedalPitchVoice; }
+    bool isCurrentDescantVoice() const noexcept { return isDescantVoice; }
     
     
 protected:
@@ -116,9 +118,9 @@ protected:
     
     void aftertouchChanged (const int newAftertouchValue);
     
-    void setVelocityMultiplier (const float newMultiplier) { currentVelocityMultiplier.store(newMultiplier); }
+    void setVelocityMultiplier (const float newMultiplier) { currentVelocityMultiplier = newMultiplier; }
     
-    void setCurrentOutputFreq (const float newFreq) { currentOutputFreq.store(newFreq); }
+    void setCurrentOutputFreq (const float newFreq) { currentOutputFreq = newFreq; }
     
     void setKeyDown (bool isNowDown) noexcept;
     
@@ -150,29 +152,29 @@ private:
     
     Harmonizer<SampleType>* parent; // this is a pointer to the Harmonizer object that controls this HarmonizerVoice
     
-    std::atomic<uint32> noteOnTime;
+    uint32 noteOnTime;
     
-    std::atomic<bool> isQuickFading, noteTurnedOff;
+    bool isQuickFading, noteTurnedOff;
     
-    std::atomic<bool> keyIsDown;
+    bool keyIsDown;
     
-    std::atomic<int> currentAftertouch;
+    int currentAftertouch;
     
-    std::atomic<bool> sustainingFromSostenutoPedal;
+    bool sustainingFromSostenutoPedal;
     
     AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     AudioBuffer<SampleType> copyingBuffer;
     AudioBuffer<SampleType> windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
     
-    std::atomic<int> currentlyPlayingNote;
-    std::atomic<float> currentOutputFreq;
-    std::atomic<float> lastRecievedVelocity, currentVelocityMultiplier, prevVelocityMultiplier, prevSoftPedalMultiplier;
+    int currentlyPlayingNote;
+    float currentOutputFreq;
+    float lastRecievedVelocity, currentVelocityMultiplier, prevVelocityMultiplier, prevSoftPedalMultiplier;
     
     Panner panner;
     
-    std::atomic<bool> isPedalPitchVoice, isDescantVoice;
+    bool isPedalPitchVoice, isDescantVoice;
     
-    std::atomic<bool> playingButReleased;
+    bool playingButReleased;
     
     float lastPBRmult = 1.0f;
     
@@ -243,10 +245,10 @@ public:
     
     void changeNumVoices (const int newNumVoices);
     
-    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes.store(shouldSteal); }
+    void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
     void updateMidiVelocitySensitivity (int newSensitivity);
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
-    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier.store(newGain); }
+    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; }
     
     void shouldUseChannelPressure (const bool shouldUse) noexcept { useChannelPressure = shouldUse; }
     void setAftertouchGainOnOff (const bool shouldBeOn) { aftertouchGainIsOn = shouldBeOn; }
@@ -270,7 +272,7 @@ public:
     void setIntervalLatch (const bool shouldBeOn, const bool allowTailOff);
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
-    void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn.store(shouldBeOn); }
+    void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);
     
@@ -304,11 +306,11 @@ protected:
     bool isSustainPedalDown()   const noexcept { return sustainPedalDown;   }
     bool isSostenutoPedalDown() const noexcept { return sostenutoPedalDown; }
     bool isSoftPedalDown()      const noexcept { return softPedalDown;      }
-    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier.load(); }
+    float getSoftPedalMultiplier() const noexcept { return softPedalMultiplier; }
     float getPlayingButReleasedMultiplier() const noexcept { return playingButReleasedMultiplier; }
     bool isAftertouchGainOn() const noexcept { return aftertouchGainIsOn; }
     
-    bool isADSRon() const noexcept { return adsrIsOn.load(); }
+    bool isADSRon() const noexcept { return adsrIsOn; }
     ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
@@ -402,14 +404,14 @@ private:
     ADSR::Parameters quickReleaseParams;
     ADSR::Parameters quickAttackParams;
     
-    std::atomic<float> currentInputFreq;
-    std::atomic<int> currentInputPeriod;
+    float currentInputFreq;
+    int currentInputPeriod;
     
     double sampleRate;
     uint32 lastNoteOnCounter;
     int lastPitchWheelValue;
     
-    std::atomic<bool> shouldStealNotes;
+    bool shouldStealNotes;
     
     // *********************************
     
@@ -417,18 +419,18 @@ private:
     
     struct pedalPitchPrefs
     {
-        std::atomic<bool> isOn;
-        std::atomic<int> lastPitch;
-        std::atomic<int> upperThresh; // pedal pitch has an UPPER thresh - the auto harmony voice is only activated if the lowest keyboard note is BELOW a certain thresh
-        std::atomic<int> interval;
+        bool isOn;
+        int lastPitch;
+        int upperThresh; // pedal pitch has an UPPER thresh - the auto harmony voice is only activated if the lowest keyboard note is BELOW a certain thresh
+        int interval;
     };
     
     struct descantPrefs
     {
-        std::atomic<bool> isOn;
-        std::atomic<int> lastPitch;
-        std::atomic<int> lowerThresh; // descant has a LOWER thresh - the auto harmony voice is only activated if the highest keyboard note is ABOVE a certain thresh
-        std::atomic<int> interval;
+        bool isOn;
+        int lastPitch;
+        int lowerThresh; // descant has a LOWER thresh - the auto harmony voice is only activated if the highest keyboard note is ABOVE a certain thresh
+        int interval;
     };
     
     pedalPitchPrefs pedal;
@@ -437,13 +439,13 @@ private:
     // *********************************
     
     PanningManager  panner;
-    std::atomic<int> lowestPannedNote;
+    int lowestPannedNote;
     
     VelocityHelper  velocityConverter;
     PitchConverter  pitchConverter;
     PitchBendHelper bendTracker;
     
-    std::atomic<bool> adsrIsOn;
+    bool adsrIsOn;
     
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;
@@ -456,7 +458,7 @@ private:
     
     bool sustainPedalDown, sostenutoPedalDown, softPedalDown;
     
-    std::atomic<float> softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
+    float softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
     
     AudioBuffer<SampleType> windowBuffer;
     int windowSize;
@@ -464,8 +466,7 @@ private:
     AudioBuffer<SampleType> polarityReversalBuffer;
     
     Array< HarmonizerVoice<SampleType>* > usableVoices; // this array is used to sort the voices when a 'steal' is requested
-    
-    
+
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

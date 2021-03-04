@@ -1,5 +1,5 @@
 
-#include "../../Source/PluginSources/PluginProcessor.h"
+#include "PluginProcessor.h"
 
 
 juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters() const
@@ -140,9 +140,18 @@ juce::AudioProcessorParameter* ImogenAudioProcessor::getBypassParameter() const
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    updateGainsPrivate (activeEngine);
-    updatePitchDetectionWrapped (activeEngine);
+    activeEngine.updatePitchDetectionConfidenceThresh (pitchDetectionConfidenceUpperThresh->get(),
+                                                       pitchDetectionConfidenceLowerThresh->get());
     
+    activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
+    
+    setLatencySamples (activeEngine.reportLatency());
+    
+    activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
+    activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
+    activeEngine.updateDryGain      (juce::Decibels::decibelsToGain (dryGain->get()));
+    activeEngine.updateWetGain      (juce::Decibels::decibelsToGain (wetGain->get()));
+    activeEngine.updateSoftPedalGain(juce::Decibels::decibelsToGain (softPedalGain->get()));
     activeEngine.updateDryVoxPan (dryPan->get());
     activeEngine.updateDryWet (dryWet->get());
     activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
@@ -162,201 +171,6 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateUsingChannelPressure (channelPressureToggle->get());
     activeEngine.updatePlayingButReleasedGain (playingButReleasedGain->get());
 }
-
-
-void ImogenAudioProcessor::updateGains()
-{
-    if (isUsingDoublePrecision())
-        updateGainsPrivate (doubleEngine);
-    else
-        updateGainsPrivate (floatEngine);
-}
-
-
-template <typename SampleType>
-void ImogenAudioProcessor::updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine)
-{
-    activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
-    activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
-    activeEngine.updateDryGain      (juce::Decibels::decibelsToGain (dryGain->get()));
-    activeEngine.updateWetGain      (juce::Decibels::decibelsToGain (wetGain->get()));
-    activeEngine.updateSoftPedalGain(juce::Decibels::decibelsToGain (softPedalGain->get()));
-}
-
-
-void ImogenAudioProcessor::updateDryVoxPan()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateDryVoxPan (dryPan->get());
-    else
-        floatEngine.updateDryVoxPan (dryPan->get());
-}
-
-void ImogenAudioProcessor::updateDryWet()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateDryWet (dryWet->get());
-    else
-        floatEngine.updateDryWet (dryWet->get());
-}
-
-void ImogenAudioProcessor::updateAdsr()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
-    else
-        floatEngine .updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
-}
-
-void ImogenAudioProcessor::updateQuickKillMs()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateQuickKill (quickKillMs->get());
-    else
-        floatEngine .updateQuickKill (quickKillMs->get());
-}
-
-void ImogenAudioProcessor::updateQuickAttackMs()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateQuickAttack (quickAttackMs->get());
-    else
-        floatEngine .updateQuickAttack (quickAttackMs->get());
-}
-
-void ImogenAudioProcessor::updateStereoWidth()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
-    else
-        floatEngine .updateStereoWidth (stereoWidth->get(), lowestPanned->get());
-}
-
-void ImogenAudioProcessor::updateMidiVelocitySensitivity()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateMidiVelocitySensitivity (velocitySens->get());
-    else
-        floatEngine .updateMidiVelocitySensitivity (velocitySens->get());
-}
-
-void ImogenAudioProcessor::updatePitchbendSettings()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updatePitchbendSettings (pitchBendUp->get(), pitchBendDown->get());
-    else
-        floatEngine .updatePitchbendSettings (pitchBendUp->get(), pitchBendDown->get());
-}
-
-void ImogenAudioProcessor::updatePedalPitch()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
-    else
-        floatEngine .updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
-}
-
-void ImogenAudioProcessor::updateDescant()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
-    else
-        floatEngine .updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
-}
-
-
-void ImogenAudioProcessor::updateConcertPitch()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateConcertPitch (concertPitchHz->get());
-    else
-        floatEngine .updateConcertPitch (concertPitchHz->get());
-}
-
-
-void ImogenAudioProcessor::updateNoteStealing()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateNoteStealing (voiceStealing->get());
-    else
-        floatEngine .updateNoteStealing (voiceStealing->get());
-}
-
-
-void ImogenAudioProcessor::updateMidiLatch()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateMidiLatch (latchIsOn->get());
-    else
-        floatEngine .updateMidiLatch (latchIsOn->get());
-}
-
-
-void ImogenAudioProcessor::updateIntervalLock()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateIntervalLock (intervalLockIsOn->get());
-    else
-        floatEngine.updateIntervalLock (intervalLockIsOn->get());
-}
-
-
-void ImogenAudioProcessor::updateLimiter()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateLimiter (limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
-    else
-        floatEngine.updateLimiter (limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
-}
-
-
-void ImogenAudioProcessor::updatePitchDetectionSettings()
-{
-    if (isUsingDoublePrecision())
-        updatePitchDetectionWrapped (doubleEngine);
-    else
-        updatePitchDetectionWrapped (floatEngine);
-}
-
-
-template <typename SampleType>
-void ImogenAudioProcessor::updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine)
-{
-    activeEngine.updatePitchDetectionConfidenceThresh (pitchDetectionConfidenceUpperThresh->get(),
-                                                       pitchDetectionConfidenceLowerThresh->get());
-    
-    activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
-    
-    setLatencySamples (activeEngine.reportLatency());
-}
-
-
-void ImogenAudioProcessor::updateAftertouchGainToggle()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
-    else
-        floatEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
-}
-
-
-void ImogenAudioProcessor::updateChannelPressureToggle()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateUsingChannelPressure (channelPressureToggle->get());
-    else
-        floatEngine.updateUsingChannelPressure (channelPressureToggle->get());
-}
-
-
-void ImogenAudioProcessor::updatePlayingButRelesedGain()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updatePlayingButReleasedGain (playingButReleasedGain->get());
-    else
-        floatEngine.updatePlayingButReleasedGain (playingButReleasedGain->get());
-}
-
 
 
 // functions for preset & state management system ---------------------------------------------------------------------------------------------------
@@ -505,5 +319,4 @@ bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState
     updateHostDisplay();
     return true;  // TODO: how to check if replacing tree state was successful...?
 }
-
 

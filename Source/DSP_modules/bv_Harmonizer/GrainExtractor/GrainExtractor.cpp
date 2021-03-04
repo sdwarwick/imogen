@@ -5,7 +5,7 @@
  */
 
 
-#include "bv_Harmonizer/GrainExtractor/GrainExtractor.h"
+#include "GrainExtractor.h"
 
 
 #undef bvhge_NUM_PEAKS_TO_TEST

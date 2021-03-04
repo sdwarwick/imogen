@@ -7,9 +7,6 @@
 #pragma once
 
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
-
-
 namespace bav
 
 {

@@ -4,14 +4,15 @@
     Classes: Harmonizer
 */
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer.h"
 
-#include "bv_Harmonizer/bv_HarmonizerVoice.cpp"
-#include "bv_Harmonizer/bv_Harmonizer_VoiceAllocation.cpp"
-#include "bv_Harmonizer/bv_Harmonizer_Midi.cpp"
-#include "bv_Harmonizer/bv_Harmonizer_AutomatedMidiFeatures.cpp"
-#include "bv_Harmonizer/PanningManager/PanningManager.cpp"
-#include "bv_Harmonizer/GrainExtractor/GrainExtractor.cpp"
+#include "bv_HarmonizerVoice.cpp"
+#include "bv_Harmonizer_VoiceAllocation.cpp"
+#include "bv_Harmonizer_Midi.cpp"
+#include "bv_Harmonizer_AutomatedMidiFeatures.cpp"
+#include "bv_Harmonizer_Parameters.cpp"
+#include "PanningManager/PanningManager.cpp"
+#include "GrainExtractor/GrainExtractor.cpp"
 
 
 
@@ -24,7 +25,7 @@ template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
     latchIsOn(false), intervalLatchIsOn(false), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
-    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
+    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0), currentInputFreq(0.0f), currentInputPeriod(0)
 {
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;
@@ -44,18 +45,15 @@ Harmonizer<SampleType>::Harmonizer():
     setConcertPitchHz(440);
     setCurrentPlaybackSampleRate(44100.0);
     
-    pedal.isOn.store(false);
-    pedal.lastPitch.store(-1);
-    pedal.upperThresh.store(0);
-    pedal.interval.store(12);
+    pedal.isOn = false;
+    pedal.lastPitch = -1;
+    pedal.upperThresh = 0;
+    pedal.interval = 12;
     
-    descant.isOn.store(false);
-    descant.lastPitch.store(-1);
-    descant.lowerThresh.store(127);
-    descant.interval.store(12);
-    
-    currentInputFreq.store(0.0f);
-    currentInputPeriod.store(0);
+    descant.isOn = false;
+    descant.lastPitch = -1;
+    descant.lowerThresh = 127;
+    descant.interval = 12;
 }
 
 
@@ -116,7 +114,7 @@ bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
     
     pitchDetector.setSamplerate (newRate, true);
     
-    const float currentFreq = currentInputFreq.load();
+    const float currentFreq = currentInputFreq;
     
     if (currentFreq > 0)
         setCurrentInputFreq (currentFreq);
@@ -152,9 +150,9 @@ bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
 {
     jassert (newInputFreq > 0);
     
-    currentInputFreq.store(newInputFreq);
+    currentInputFreq = newInputFreq;
     
-    currentInputPeriod.store(roundToInt (sampleRate / newInputFreq));
+    currentInputPeriod = roundToInt (sampleRate / newInputFreq);
     
     if (intervalLatchIsOn && ! intervalsLatchedTo.isEmpty())
         playIntervalSet (intervalsLatchedTo, 1.0f, false, true);
@@ -187,10 +185,10 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     
     if (frameIsPitched)
     {
-        if (currentInputFreq.load() != inputFrequency)
+        if (currentInputFreq != inputFrequency)
             setCurrentInputFreq (inputFrequency);
         
-        periodThisFrame = currentInputPeriod.load();
+        periodThisFrame = currentInputPeriod;
     }
     else
     {
@@ -258,160 +256,6 @@ bvh_VOID_TEMPLATE::fillWindowBuffer (const int numSamples)
     windowSize = numSamples;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS FOR UPDATING PARAMETERS -----------------------------------------------------------------------------------------------------------
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// stereo width ---------------------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::updateStereoWidth (int newWidth)
-{
-    newWidth = jlimit (0, 100, newWidth);
-    
-    if (panner.getCurrentStereoWidth() == newWidth)
-        return;
-    
-    panner.updateStereoWidth (newWidth);
-    
-    for (auto* voice : voices)
-    {
-        if (! voice->isVoiceActive())
-            continue;
-        
-        if (voice->getCurrentlyPlayingNote() < lowestPannedNote)
-        {
-            const int currentPan = voice->getCurrentMidiPan();
-            
-            if (currentPan != 64)
-            {
-                panner.panValTurnedOff (currentPan);
-                voice->setPan (64);
-            }
-        }
-        else
-        {
-            voice->setPan (panner.getClosestNewPanValFromOld (voice->getCurrentMidiPan()));
-        }
-    }
-}
-
-
-bvh_VOID_TEMPLATE::updateLowestPannedNote (int newPitchThresh)
-{
-    newPitchThresh = jlimit (0, 127, newPitchThresh);
-    
-    const int prevLowestnote = lowestPannedNote.load();
-    
-    if (prevLowestnote == newPitchThresh)
-        return;
-    
-    lowestPannedNote.store(newPitchThresh);
-    
-    for (auto* voice : voices)
-    {
-        if (! voice->isVoiceActive())
-            continue;
-        
-        const int note = voice->getCurrentlyPlayingNote();
-        const int currentPan = voice->getCurrentMidiPan();
-    
-        if (note < newPitchThresh)
-        {
-            if (currentPan != 64)
-            {
-                panner.panValTurnedOff (currentPan);
-                voice->setPan (64);
-            }
-        }
-        else if (note < prevLowestnote) // because we haven't updated the lowestPannedNote member variable yet, voices with pitches higher than newPitchThresh but lower than lowestPannedNote are the voices that now qualify for panning
-        {
-            if (currentPan == 64)
-                voice->setPan (panner.getNextPanVal());
-        }
-    }
-}
-
-    
-// concert pitch hz ------------------------------------------------------------------------------------------------
-    
-bvh_VOID_TEMPLATE::setConcertPitchHz (const int newConcertPitchhz)
-{
-    jassert (newConcertPitchhz > 0);
-    
-    if (pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
-        return;
-    
-    pitchConverter.setConcertPitchHz (newConcertPitchhz);
-    
-    setCurrentInputFreq (currentInputFreq);
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
-}
-
-
-// ADSR settings------------------------------------------------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::updateADSRsettings (const float attack, const float decay, const float sustain, const float release)
-{
-    // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
-    
-    const ScopedLock sl (lock);
-    
-    adsrParams.attack  = attack;
-    adsrParams.decay   = decay;
-    adsrParams.sustain = sustain;
-    adsrParams.release = release;
-    
-    for (auto* voice : voices)
-        voice->setAdsrParameters (adsrParams);
-}
-    
-
-bvh_VOID_TEMPLATE::updateQuickReleaseMs (const int newMs)
-{
-    if (newMs <= 0)
-        return;
-    
-    const ScopedLock sl (lock);
-    
-    const float desiredR = newMs / 1000.0f;
-    
-    if (quickReleaseParams.release == desiredR)
-        return;
-
-    quickReleaseParams.release = desiredR;
-    quickAttackParams .release = desiredR;
-    
-    for (auto* voice : voices)
-    {
-        voice->setQuickReleaseParameters(quickReleaseParams);
-        voice->setQuickAttackParameters (quickAttackParams);
-    }
-}
-    
-
-bvh_VOID_TEMPLATE::updateQuickAttackMs (const int newMs)
-{
-    if (newMs <= 0)
-        return;
-    
-    const ScopedLock sl (lock);
-    
-    const float desiredA = newMs / 1000.0f;
-    
-    if (quickAttackParams.attack == desiredA)
-        return;
-    
-    quickAttackParams .attack = desiredA;
-    quickReleaseParams.attack = desiredA;
-    
-    for (auto* voice : voices)
-    {
-        voice->setQuickAttackParameters (quickAttackParams);
-        voice->setQuickReleaseParameters(quickReleaseParams);
-    }
-}
 
 
 #undef bvh_VOID_TEMPLATE

@@ -77,37 +77,12 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    // functions for custom preset management system ------------------------------------------------------------------------------------------------
     void savePreset  (juce::String presetName);
     bool loadPreset  (juce::String presetName);
     void deletePreset(juce::String presetName);
     juce::File getPresetsFolder() const;
     
-    // functions to update parameters ---------------------------------------------------------------------------------------------------------------
-    void updateAdsr();
-    void updateLimiter();
-    void updateStereoWidth();
-    void updateQuickKillMs();
-    void updateQuickAttackMs();
-    void updateDryVoxPan();
-    void updateMidiVelocitySensitivity();
-    void updateNoteStealing();
-    void updatePitchbendSettings();
-    void updateDryWet();
-    void updateConcertPitch();
-    void updateMidiLatch();
-    void updateIntervalLock();
-    void updatePedalPitch();
-    void updateDescant();
-    void updatePitchDetectionSettings();
-    void updateGains();
-    void updateAftertouchGainToggle();
-    void updateChannelPressureToggle();
-    void updatePlayingButRelesedGain();
-    
     void updateModulatorInputSource (const int newSource);
-    
-    // misc utility functions -----------------------------------------------------------------------------------------------------------------------
     
     void returnActivePitches(juce::Array<int>& outputArray) const;
     
@@ -120,6 +95,81 @@ public:
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
     void updateNumVoices (const int newNumVoices);
+    
+    int getDryPan() const { return dryPan->get(); }
+    int getDryWet() const { return dryWet->get(); }
+    float getInputGain() const { return inputGain->get(); }
+    float getDryGain() const { return dryGain->get(); }
+    float getWetGain() const { return wetGain->get(); }
+    float getOutputGain() const { return outputGain->get(); }
+    float getLimiterThresh() const { return limiterThresh->get(); }
+    int getLimiterRelease() const { return limiterRelease->get(); }
+    bool getIsLimiterOn() const { return limiterToggle->get(); }
+    float getAdsrAttack() const { return adsrAttack->get(); }
+    float getAdsrDecay() const { return adsrDecay->get(); }
+    float getAdsrSustain() const { return adsrSustain->get(); }
+    float getAdsrRelease() const { return adsrRelease->get(); }
+    bool getIsAdsrOn() const { return adsrToggle->get(); }
+    bool getIsMidiLatchOn() const { return latchIsOn->get(); }
+    bool getIsIntervalLockOn() const { return intervalLockIsOn->get(); }
+    int getQuickKillMs() const { return quickKillMs->get(); }
+    int getQuickAttackMs() const { return quickAttackMs->get(); }
+    int getStereoWidth() const { return stereoWidth->get(); }
+    int getLowestPannedNote() const { return lowestPanned->get(); }
+    int getMidiVelocitySensitivity() const { return velocitySens->get(); }
+    int getPitchbendRangeUp() const { return pitchBendUp->get(); }
+    int getPitchbendRangeDown() const { return pitchBendDown->get(); }
+    bool getIsVoiceStealingEnabled() const { return voiceStealing->get(); }
+    int getConcertPitchHz() const { return concertPitchHz->get(); }
+    bool getIsPedalPitchOn() const { return pedalPitchIsOn->get(); }
+    int getPedalPitchThresh() const { return pedalPitchThresh->get(); }
+    int getPedalPitchInterval() const { return pedalPitchInterval->get(); }
+    bool getIsDescantOn() const { return descantIsOn->get(); }
+    int getDescantThresh() const { return descantThresh->get(); }
+    int getDescantInterval() const { return descantInterval->get(); }
+    
+    
+private:
+    
+    template<typename SampleType>
+    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    template <typename SampleType>
+    void initialize (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    template <typename SampleType1, typename SampleType2>
+    void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
+                               bav::ImogenEngine<SampleType1>& activeEngine,
+                               bav::ImogenEngine<SampleType2>& idleEngine);
+    
+    
+    template <typename SampleType>
+    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
+                              juce::MidiBuffer& midiMessages,
+                              bav::ImogenEngine<SampleType>& engine,
+                              const bool isBypassed = false);
+    
+    
+    bav::ImogenEngine<float>  floatEngine;
+    bav::ImogenEngine<double> doubleEngine;
+    
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+    juce::PluginHostType host;
+    bool needsSidechain = false;
+#endif
+    
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    void initializeParameterPointers();
+    
+    juce::AudioProcessor::BusesProperties makeBusProperties() const;
+    
+    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
+    
+    template<typename SampleType>
+    std::unique_ptr<juce::XmlElement> pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    template<typename SampleType>
+    bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterBool*  isBypassed;
@@ -162,55 +212,6 @@ public:
     juce::AudioParameterBool*  aftertouchGainToggle;
     juce::AudioParameterBool*  channelPressureToggle;
     juce::AudioParameterFloat* playingButReleasedGain;
-    
-    
-private:
-    
-    template<typename SampleType>
-    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template <typename SampleType>
-    void initialize (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template <typename SampleType1, typename SampleType2>
-    void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
-                               bav::ImogenEngine<SampleType1>& activeEngine,
-                               bav::ImogenEngine<SampleType2>& idleEngine);
-    
-    
-    template <typename SampleType>
-    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
-                              juce::MidiBuffer& midiMessages,
-                              bav::ImogenEngine<SampleType>& engine,
-                              const bool isBypassed = false);
-    
-    
-    bav::ImogenEngine<float>  floatEngine;
-    bav::ImogenEngine<double> doubleEngine;
-    
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    juce::PluginHostType host;
-    bool needsSidechain = false;
-#endif
-    
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
-    void initializeParameterPointers();
-    
-    juce::AudioProcessor::BusesProperties makeBusProperties() const;
-    
-    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
-    
-    template <typename SampleType>
-    void updatePitchDetectionWrapped (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template <typename SampleType>
-    void updateGainsPrivate (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template<typename SampleType>
-    std::unique_ptr<juce::XmlElement> pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template<typename SampleType>
-    bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

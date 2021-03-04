@@ -4,10 +4,10 @@
 */
 
 
-#include "../../Source/PluginSources/PluginProcessor.h"
-#include "../../Source/PluginSources/PluginEditor.h"
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
 
-#include "../../Source/PluginSources/PluginProcessorParameters.cpp"
+#include "PluginProcessorParameters.cpp"
 
 #undef imogen_DEFAULT_NUM_VOICES
 

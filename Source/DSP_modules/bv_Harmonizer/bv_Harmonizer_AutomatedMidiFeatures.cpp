@@ -4,7 +4,7 @@
  Classes: Harmonizer
  */
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer.h"
 
 
 namespace bav
@@ -20,43 +20,6 @@ namespace bav
  // automated midi events ----------------------------------------------------------------------------------------------------------------------
  ***********************************************************************************************************************************************/
 
-// midi latch: when active, holds note offs recieved from the keyboard instead of sending them immediately; held note offs are sent once latch is deactivated.
-bvh_VOID_TEMPLATE::setMidiLatch (const bool shouldBeOn, const bool allowTailOff)
-{
-    if (latchIsOn == shouldBeOn)
-        return;
-    
-    latchIsOn = shouldBeOn;
-    
-    if (shouldBeOn)
-        return;
-    
-    turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
-    
-    pitchCollectionChanged();
-}
-
-
-// interval latch
-bvh_VOID_TEMPLATE::setIntervalLatch (const bool shouldBeOn, const bool allowTailOff)
-{
-    if (intervalLatchIsOn == shouldBeOn)
-        return;
-    
-    intervalLatchIsOn = shouldBeOn;
-    
-    if (shouldBeOn)
-    {
-        updateIntervalsLatchedTo();
-    }
-    else if (! latchIsOn)
-    {
-        turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
-        pitchCollectionChanged();
-    }
-}
-
-
 // used for interval latch -- saves the distance in semitones of each currently playing note from the current input pitch
 bvh_VOID_TEMPLATE::updateIntervalsLatchedTo()
 {
@@ -69,7 +32,7 @@ bvh_VOID_TEMPLATE::updateIntervalsLatchedTo()
     if (currentNotes.isEmpty())
         return;
     
-    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq.load()));
+    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
     for (int note : currentNotes)
         intervalsLatchedTo.add (note - currentMidiPitch);
@@ -88,7 +51,7 @@ bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
         return;
     }
     
-    const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq.load()));
+    const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
     desiredNotes.clearQuick();
     
@@ -177,9 +140,7 @@ bvh_VOID_TEMPLATE::turnOffList (const Array<int>& toTurnOff, const float velocit
 // automated midi "pedal pitch": creates a polyphonic doubling of the lowest note currently being played by a keyboard key at a specified interval below that keyboard key, IF that keyboard key is below a certain pitch threshold.
 bvh_VOID_TEMPLATE::applyPedalPitch()
 {
-    const int interval = pedal.interval.load();
-    
-    if (interval == 0)
+    if (pedal.interval == 0)
         return;
     
     int currentLowest = 128;
@@ -199,9 +160,9 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
         }
     }
     
-    const int lastPitch = pedal.lastPitch.load();
+    const int lastPitch = pedal.lastPitch;
     
-    if (currentLowest > pedal.upperThresh.load()) // only create a pedal voice if the current lowest keyboard key is below a specified threshold
+    if (currentLowest > pedal.upperThresh) // only create a pedal voice if the current lowest keyboard key is below a specified threshold
     {
         if (lastPitch > -1)
             noteOff (lastPitch, 1.0f, false, false);
@@ -209,7 +170,7 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
         return;
     }
     
-    const int newPedalPitch = currentLowest - interval;
+    const int newPedalPitch = currentLowest - pedal.interval;
     
     if (newPedalPitch == lastPitch)  // pedal output note hasn't changed - do nothing
         return;
@@ -228,7 +189,7 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
         if (prevPedalVoice->isKeyDown())  // can't "steal" the voice playing the last pedal note if its keyboard key is down
             prevPedalVoice = nullptr;
     
-    pedal.lastPitch.store(newPedalPitch);
+    pedal.lastPitch = newPedalPitch;
     
     if (prevPedalVoice != nullptr)
     {
@@ -251,6 +212,9 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
 // automated midi "descant": creates a polyphonic doubling of the highest note currently being played by a keyboard key at a specified interval above that keyboard key, IF that keyboard key is above a certain pitch threshold.
 bvh_VOID_TEMPLATE::applyDescant()
 {
+    if (descant.interval == 0)
+        return;
+    
     int currentHighest = -1;
     HarmonizerVoice<SampleType>* highestVoice = nullptr;
     
@@ -268,9 +232,9 @@ bvh_VOID_TEMPLATE::applyDescant()
         }
     }
     
-    const int lastPitch = descant.lastPitch.load();
+    const int lastPitch = descant.lastPitch;
     
-    if (currentHighest < descant.lowerThresh.load())  // only create a descant voice if the current highest keyboard key is above a specified threshold
+    if (currentHighest < descant.lowerThresh)  // only create a descant voice if the current highest keyboard key is above a specified threshold
     {
         if (lastPitch > -1)
             noteOff (lastPitch, 1.0f, false, false);
@@ -278,7 +242,7 @@ bvh_VOID_TEMPLATE::applyDescant()
         return;
     }
     
-    const int newDescantPitch = currentHighest + descant.interval.load();
+    const int newDescantPitch = currentHighest + descant.interval;
     
     if (newDescantPitch == lastPitch)  // descant output note hasn't changed - do nothing
         return;
@@ -297,7 +261,7 @@ bvh_VOID_TEMPLATE::applyDescant()
         if (prevDescantVoice->isKeyDown())  // can't "steal" the voice playing the last descant note if its keyboard key is down
             prevDescantVoice = nullptr;
     
-    descant.lastPitch.store(newDescantPitch);
+    descant.lastPitch = newDescantPitch;
     
     if (prevDescantVoice != nullptr)
     {
@@ -314,104 +278,6 @@ bvh_VOID_TEMPLATE::applyDescant()
         const float velocity = (highestVoice != nullptr) ? highestVoice->getLastRecievedVelocity() : 1.0f;
         noteOn (descant.lastPitch, velocity, false);
     }
-}
-    
-    
-// descant settings ----------------------------------------------------------------------------------------------------------------------------
-    
-bvh_VOID_TEMPLATE::setDescant (const bool isOn)
-{
-    if (descant.isOn.load() == isOn)
-        return;
-    
-    descant.isOn.store(isOn);
-    
-    if (isOn)
-        applyDescant();
-    else
-    {
-        const int lastPitch = descant.lastPitch.load();
-        
-        if (lastPitch > -1)
-            noteOff (lastPitch, 1.0f, false, false);
-        
-        descant.lastPitch.store(-1);
-    }
-}
-
-
-bvh_VOID_TEMPLATE::setDescantLowerThresh (int newThresh)
-{
-    newThresh = jlimit (0, 127, newThresh);
-    
-    if (descant.lowerThresh.load() == newThresh)
-        return;
-    
-    descant.lowerThresh.store(newThresh);
-    
-    if (descant.isOn.load())
-        applyDescant();
-}
-
-
-bvh_VOID_TEMPLATE::setDescantInterval (const int newInterval)
-{
-    if (descant.interval == newInterval)
-        return;
-    
-    descant.interval = newInterval;
-    
-    if (descant.isOn.load())
-        applyDescant();
-}
-
-
-// pedal pitch settings -----------------------------------------------------------------------------------------------------------------------
-    
-bvh_VOID_TEMPLATE::setPedalPitch (const bool isOn)
-{
-    if (pedal.isOn.load() == isOn)
-        return;
-    
-    pedal.isOn.store(isOn);
-    
-    if (isOn)
-        applyPedalPitch();
-    else
-    {
-        const int lastPitch = pedal.lastPitch.load();
-        
-        if (lastPitch > -1)
-            noteOff (lastPitch, 1.0f, false, false);
-        
-        pedal.lastPitch.store(-1);
-    }
-}
-
-
-bvh_VOID_TEMPLATE::setPedalPitchUpperThresh (int newThresh)
-{
-    newThresh = jlimit (0, 127, newThresh);
-    
-    if (pedal.upperThresh.load() == newThresh)
-        return;
-    
-    pedal.upperThresh.store(newThresh);
-    
-    if (pedal.isOn.load())
-        applyPedalPitch();
-}
-
-
-bvh_VOID_TEMPLATE::setPedalPitchInterval (const int newInterval)
-{
-    if (pedal.interval.load() == newInterval)
-        return;
-    
-    pedal.interval.store(newInterval);
-    
-    if (pedal.isOn.load())
-        applyPedalPitch();
 }
 
 

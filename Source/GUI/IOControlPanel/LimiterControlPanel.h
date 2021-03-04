@@ -11,8 +11,6 @@
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
-#undef bvi_UPDATE_LIMITER
-
 
 namespace bav
 
@@ -30,31 +28,19 @@ public:
         limiterReleaseLink(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
         limiterToggleLink (std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
-#define bvi_UPDATE_LIMITER [this] { audioProcessor.updateLimiter(); }
-        
-        // threshold
-        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.limiterThresh->get());
+        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.getLimiterThresh());
         addAndMakeVisible(limiterThresh);
-        limiterThresh.setValue(audioProcessor.limiterThresh->get(), juce::NotificationType::dontSendNotification);
         lookAndFeel.initializeLabel(threshLabel, "Threshold");
         addAndMakeVisible(threshLabel);
         
-        // release
-        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.limiterRelease->get());
+        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.getLimiterRelease());
         addAndMakeVisible(limiterRelease);
-        limiterRelease.onValueChange = bvi_UPDATE_LIMITER;
         lookAndFeel.initializeLabel(releaseLabel, "Release time");
         addAndMakeVisible(releaseLabel);
         
-        // toggle
         limiterToggle.setButtonText("Output limiter");
         addAndMakeVisible(limiterToggle);
-        limiterToggle.onClick = bvi_UPDATE_LIMITER;
-        
-#undef bvi_UPDATE_LIMITER
-        
-        juce::Button::ButtonState initState = bav::GuiUtils::buttonStateFromBool (audioProcessor.limiterToggle->get());
-        limiterToggle.setState (initState);
+        limiterToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsLimiterOn()));
     }
     
     ~LimiterControlPanel() override

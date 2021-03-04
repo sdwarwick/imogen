@@ -5,7 +5,7 @@
 */
 
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer.h"
 
 
 namespace bav
@@ -25,7 +25,7 @@ bvh_VOID_TEMPLATE::turnOffAllKeyupNotes (const bool allowTailOff,
     for (auto* voice : voices)
         if ((voice->isVoiceActive() && ! voice->isKeyDown())
             && (includePedalPitchAndDescant || (! (voice->isCurrentPedalVoice() || voice->isCurrentDescantVoice())))
-            && (overrideSostenutoPedal || ! voice->sustainingFromSostenutoPedal.load()))
+            && (overrideSostenutoPedal || ! voice->sustainingFromSostenutoPedal))
                 { stopVoice (voice, velocity, allowTailOff); }
 }
     
@@ -131,10 +131,10 @@ bvh_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int samplePositi
 // this function should be called once after each time the harmonizer's overall pitch collection has changed - so, after a midi buffer of keyboard inout events has been processed, or after a chord has been triggered, etc.
 bvh_VOID_TEMPLATE::pitchCollectionChanged()
 {
-    if (pedal.isOn.load())
+    if (pedal.isOn)
         applyPedalPitch();
     
-    if (descant.isOn.load())
+    if (descant.isOn)
         applyDescant();
     
     if (intervalLatchIsOn)
@@ -158,7 +158,7 @@ bvh_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool
     }
     else
     {
-        const bool isStealing = isKeyboard ? shouldStealNotes.load() : false;  // never steal voices for automated note events, only for keyboard triggered events
+        const bool isStealing = isKeyboard ? shouldStealNotes : false;  // never steal voices for automated note events, only for keyboard triggered events
         
         if (auto* newVoice = findFreeVoice (isStealing))
         {
@@ -166,10 +166,10 @@ bvh_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool
         }
         else
         {
-            if (pedal.isOn.load() && midiPitch == pedal.lastPitch.load())
+            if (pedal.isOn && midiPitch == pedal.lastPitch)
                 pedal.lastPitch = -1;
             
-            if (descant.isOn.load() && midiPitch == descant.lastPitch.load())
+            if (descant.isOn && midiPitch == descant.lastPitch)
                 descant.lastPitch = -1;
             
             return;
@@ -220,7 +220,7 @@ bvh_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int mid
         }
     }
     
-    if (midiPitch < lowestPannedNote.load())  // set pan to 64 if note is below panning threshold
+    if (midiPitch < lowestPannedNote)  // set pan to 64 if note is below panning threshold
     {
         if (wasStolen)
             panner.panValTurnedOff (voice->getCurrentMidiPan());
@@ -235,10 +235,10 @@ bvh_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int mid
     if (! wasStolen)
         voice->currentAftertouch = 0;
     
-    const bool isPedal = pedal.isOn.load() && midiPitch == pedal.lastPitch.load();
-    const bool isDescant = descant.isOn.load() && midiPitch == descant.lastPitch.load();
+    const bool isPedal = pedal.isOn && midiPitch == pedal.lastPitch;
+    const bool isDescant = descant.isOn && midiPitch == descant.lastPitch;
     
-    const uint32 timestamp = sameNoteRetriggered ? voice->noteOnTime.load() : ++lastNoteOnCounter;  // leave the timestamp the same as it was if the same note is being retriggered
+    const uint32 timestamp = sameNoteRetriggered ? voice->noteOnTime : ++lastNoteOnCounter;  // leave the timestamp the same as it was if the same note is being retriggered
     
     const bool keydown = isKeyboard ? true : voice->isKeyDown();
     
@@ -256,10 +256,10 @@ bvh_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
     
     if (voice == nullptr)
     {
-        if (pedal.isOn.load() && midiNoteNumber == pedal.lastPitch.load())
+        if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
             pedal.lastPitch = -1;
         
-        if (descant.isOn.load() && midiNoteNumber == descant.lastPitch.load())
+        if (descant.isOn && midiNoteNumber == descant.lastPitch)
             descant.lastPitch = -1;
         
         return;
@@ -292,14 +292,14 @@ bvh_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
     
     // we're processing an automated note-off event, but the voice's keyboard key is still being held
     
-    if (pedal.isOn.load() && midiNoteNumber == pedal.lastPitch.load())
+    if (pedal.isOn && midiNoteNumber == pedal.lastPitch)
     {
-        pedal.lastPitch.store(-1);
+        pedal.lastPitch = -1;
         voice->isPedalPitchVoice = false;
         voice->setKeyDown (true);  // refresh the voice's own internal tracking of its key state
     }
     
-    if (descant.isOn.load() && midiNoteNumber == descant.lastPitch.load())
+    if (descant.isOn && midiNoteNumber == descant.lastPitch)
     {
         descant.lastPitch = -1;
         voice->isDescantVoice = false;
@@ -322,10 +322,10 @@ bvh_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const float ve
                                   ++lastMidiTimeStamp);
     
     if (voice->isCurrentPedalVoice())
-        pedal.lastPitch.store(-1);
+        pedal.lastPitch = -1;
     
     if (voice->isCurrentDescantVoice())
-        descant.lastPitch.store(-1);
+        descant.lastPitch = -1;
     
     voice->stopNote (velocity, allowTailOff);
 }
@@ -418,7 +418,7 @@ bvh_VOID_TEMPLATE::updateChannelPressure (int newIncomingAftertouch)
         if (! voice->isVoiceActive())
             continue;
         
-        const int at = voice->currentAftertouch.load();
+        const int at = voice->currentAftertouch;
         
         if (at > highestAftertouch)
             highestAftertouch = at;
@@ -485,7 +485,7 @@ bvh_VOID_TEMPLATE::handleSostenutoPedal (const int value)
     {
         for (auto* voice : voices)
             if (voice->isVoiceActive() && ! voice->isPedalPitchVoice && ! voice->isDescantVoice)
-                voice->sustainingFromSostenutoPedal.store(true);
+                voice->sustainingFromSostenutoPedal = true;
     }
     else
     {
@@ -538,44 +538,6 @@ bvh_VOID_TEMPLATE::handleLegato (const bool isOn)
     ignoreUnused(isOn);
 }
 
-
-/***********************************************************************************************************************************************
- // midi preferences ---------------------------------------------------------------------------------------------------------------------------
- ***********************************************************************************************************************************************/
-
-// midi velocity sensitivity -------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::updateMidiVelocitySensitivity (int newSensitivity)
-{
-    newSensitivity = jlimit (0, 100, newSensitivity);
-    
-    const float newSens = newSensitivity / 100.0f;
-    
-    if (velocityConverter.getCurrentSensitivity() == newSens)
-        return;
-    
-    velocityConverter.setFloatSensitivity (newSens);
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            voice->setVelocityMultiplier (getWeightedVelocity (voice->getLastRecievedVelocity()));
-}
-
-
-// pitch bend settings -------------------------------------------------------------------------------------------
-bvh_VOID_TEMPLATE::updatePitchbendSettings (const int rangeUp, const int rangeDown)
-{
-    if ((bendTracker.getCurrentRangeUp() == rangeUp) && (bendTracker.getCurrentRangeDown() == rangeDown))
-        return;
-    
-    bendTracker.setRange (rangeUp, rangeDown);
-    
-    if (lastPitchWheelValue == 64)
-        return;
-    
-    for (auto* voice : voices)
-        if (voice->isVoiceActive())
-            voice->setCurrentOutputFreq (getOutputFrequency (voice->getCurrentlyPlayingNote()));
-}
 
 #undef bvh_VOID_TEMPLATE
     

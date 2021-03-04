@@ -5,7 +5,7 @@
  */
 
 
-#include "bv_Harmonizer/PanningManager/PanningManager.h"
+#include "PanningManager.h"
 
 
 namespace bav
@@ -33,7 +33,7 @@ void PanningManager::prepare (const int numVoices, bool clearArrays)
 {
     jassert (numVoices > 0);
     
-    const ScopedLock sl (lock);
+    //const ScopedLock sl (lock);
     
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
@@ -64,8 +64,6 @@ void PanningManager::prepare (const int numVoices, bool clearArrays)
     
 int PanningManager::getNextPanVal()
 {
-    const ScopedLock sl (lock);
-    
     if (unsentPanVals.isEmpty())
         reset();
     
@@ -78,8 +76,6 @@ int PanningManager::getNextPanVal()
 void PanningManager::updateStereoWidth (const int newWidth)
 {
     jassert (currentNumVoices > 0);
-    
-    const ScopedLock sl (lock);
     
     lastRecievedStereoWidth = newWidth;
     
@@ -142,8 +138,6 @@ void PanningManager::updateStereoWidth (const int newWidth)
 void PanningManager::panValTurnedOff (int panVal)
 {
     // this function is called when a pan value is turned off and is available again for assigning. This function attempts to reinsert the pan value into unsentPanVals with respect to the order the values are in in panValsInAssigningOrder
-    
-    const ScopedLock sl (lock);
     
     const int targetindex = panValsInAssigningOrder.indexOf (panVal);
     
@@ -215,8 +209,6 @@ void PanningManager::reset()
 {
     if (panValsInAssigningOrder.isEmpty())
         return;
-    
-    const ScopedLock sl (lock);
     
     unsentPanVals.clearQuick();
     

@@ -5,7 +5,7 @@
 */
 
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer.h"
 
 
 namespace bav
@@ -152,25 +152,6 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
             return voice;
     
     return nullptr;
-}
-    
-
-template<typename SampleType>
-void Harmonizer<SampleType>::changeNumVoices (const int newNumVoices)
-{
-    const int currentVoices = voices.size();
-    
-    if (currentVoices == newNumVoices)
-        return;
-    
-    const ScopedLock sl (lock);
-    
-    if (newNumVoices > currentVoices)
-        addNumVoices (newNumVoices - currentVoices);
-    else
-        removeNumVoices (currentVoices - newNumVoices);
-    
-    numVoicesChanged();
 }
 
 

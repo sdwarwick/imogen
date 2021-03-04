@@ -4,8 +4,7 @@
 */
 
 
-#include "../../Source/PluginSources/PluginEditor.h"
-
+#include "PluginEditor.h"
 #include "BinaryData.h"
 
 

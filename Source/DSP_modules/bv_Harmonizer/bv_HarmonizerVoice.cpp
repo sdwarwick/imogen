@@ -5,7 +5,7 @@
 */
 
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer.h"
 
 
 namespace bav
@@ -14,7 +14,7 @@ namespace bav
     
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(h)
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(h), noteOnTime(0), isQuickFading(false), noteTurnedOff(false), keyIsDown(false), currentAftertouch(0), sustainingFromSostenutoPedal(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), lastRecievedVelocity(0.0f), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), prevSoftPedalMultiplier(1.0f), playingButReleased(false), isPedalPitchVoice(false), isDescantVoice(false), synthesisIndex(0)
 {
     const double initSamplerate = 44100.0;
     
@@ -25,29 +25,6 @@ HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(
     adsr        .setParameters (parent->getCurrentAdsrParams());
     quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters (parent->getCurrentQuickAttackParams());
-    
-    synthesisIndex = 0;
-    
-    noteOnTime.store(0);
-    
-    currentlyPlayingNote.store(-1);
-    currentOutputFreq.store(-1.0f);
-    lastRecievedVelocity.store(0.0f);
-    currentVelocityMultiplier.store(0.0f);
-    prevVelocityMultiplier.store(0.0f);
-    prevSoftPedalMultiplier.store(1.0f);
-    
-    playingButReleased.store(false);
-    isQuickFading.store(false);
-    noteTurnedOff.store(true);
-    keyIsDown.store(false);
-    
-    isPedalPitchVoice.store(false);
-    isDescantVoice.store(false);
-    
-    currentAftertouch.store(0);
-    
-    sustainingFromSostenutoPedal.store(false);
 }
 
 template<typename SampleType>
@@ -78,9 +55,9 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     copyingBuffer.setSize (1, doubleSize);
     FloatVectorOperations::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
     
-    prevVelocityMultiplier.store(currentVelocityMultiplier.load());
+    prevVelocityMultiplier = currentVelocityMultiplier;
     
-    prevSoftPedalMultiplier.store(parent->getSoftPedalMultiplier());
+    prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
     
     synthesisIndex = 0;
 }
@@ -103,8 +80,8 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     
     jassert (inputAudio.getNumSamples() == outputBuffer.getNumSamples());
     
-    const bool voiceIsOnRightNow = isQuickFading.load() ? quickRelease.isActive()
-                                                        : (parent->isADSRon() ? adsr.isActive() : ! noteTurnedOff.load());
+    const bool voiceIsOnRightNow = isQuickFading ? quickRelease.isActive()
+                                                 : (parent->isADSRon() ? adsr.isActive() : ! noteTurnedOff);
     
     if (! voiceIsOnRightNow)
     {
@@ -117,31 +94,31 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     // puts shifted samples into the synthesisBuffer, from sample indices starting to starting + numSamples - 1
     sola (inputAudio.getReadPointer(0), numSamples,
           origPeriod,
-          roundToInt (parent->getSamplerate() / currentOutputFreq.load()),  // new desired period, in samples
+          roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
           indicesOfGrainOnsets,
           windowToUse.getReadPointer(0));  // precomputed window length must be input period * 2
     
     //  *****************************************************************************************************
     //  midi velocity gain (aftertouch is applied here as well)
     constexpr float inv127 = 1.0f / 127.0f;
-    const float currentmult = currentVelocityMultiplier.load();
-    const float velocityMultNow = parent->isAftertouchGainOn() ? currentmult + ((currentAftertouch.load() * inv127) * (1.0f - currentmult))
+    const float currentmult = currentVelocityMultiplier;
+    const float velocityMultNow = parent->isAftertouchGainOn() ? currentmult + ((currentAftertouch * inv127) * (1.0f - currentmult))
                                                                : currentmult;
 
-    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier.load(), velocityMultNow);
-    prevVelocityMultiplier.store(velocityMultNow);
+    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
+    prevVelocityMultiplier = velocityMultNow;
 
     //  *****************************************************************************************************
     //  soft pedal gain
 
     const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f; // soft pedal gain
-    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier.load(), softPedalMult);
-    prevSoftPedalMultiplier.store(softPedalMult);
+    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
+    prevSoftPedalMultiplier = softPedalMult;
 
     //  *****************************************************************************************************
     //  playing-but-released gain
 
-    const float newPBRmult = playingButReleased.load() ? parent->getPlayingButReleasedMultiplier() : 1.0f;
+    const float newPBRmult = playingButReleased ? parent->getPlayingButReleasedMultiplier() : 1.0f;
     synthesisBuffer.applyGainRamp (0, numSamples, lastPBRmult, newPBRmult);
     lastPBRmult = newPBRmult;
 
@@ -250,17 +227,17 @@ bvhv_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 bvhv_VOID_TEMPLATE::clearCurrentNote()
 {
-    currentVelocityMultiplier.store(0.0f);
-    lastRecievedVelocity.store(0.0f);
-    currentAftertouch.store(0);
-    currentlyPlayingNote.store(-1);
-    noteOnTime.store(0);
-    isQuickFading.store(false);
-    noteTurnedOff.store(true);
-    keyIsDown.store(false);
-    playingButReleased.store(false);
-    isPedalPitchVoice.store(false);
-    isDescantVoice.store(false);
+    currentVelocityMultiplier = 0.0f;
+    lastRecievedVelocity = 0.0f;
+    currentAftertouch = 0;
+    currentlyPlayingNote = -1;
+    noteOnTime = 0;
+    isQuickFading = false;
+    noteTurnedOff = true;
+    keyIsDown = false;
+    playingButReleased = false;
+    isPedalPitchVoice = false;
+    isDescantVoice = false;
     sustainingFromSostenutoPedal = false;
     
     setPan (64);
@@ -286,13 +263,13 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
                                const bool keyboardKeyIsDown,
                                const bool isPedal, const bool isDescant)
 {
-    noteOnTime.store(noteOnTimestamp);
-    currentlyPlayingNote.store(midiPitch);
-    lastRecievedVelocity.store(velocity);
-    currentVelocityMultiplier.store(parent->getWeightedVelocity (velocity));
-    currentOutputFreq.store(parent->getOutputFrequency (midiPitch));
-    isQuickFading.store(false);
-    noteTurnedOff.store(false);
+    noteOnTime = noteOnTimestamp;
+    currentlyPlayingNote = midiPitch;
+    lastRecievedVelocity = velocity;
+    currentVelocityMultiplier = parent->getWeightedVelocity (velocity);
+    currentOutputFreq = parent->getOutputFrequency (midiPitch);
+    isQuickFading = false;
+    noteTurnedOff = false;
     
     adsr.noteOn();
     quickAttack.noteOn();
@@ -300,8 +277,8 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
     if (! quickRelease.isActive())
         quickRelease.noteOn();
     
-    isPedalPitchVoice.store(isPedal);
-    isDescantVoice.store(isDescant);
+    isPedalPitchVoice = isPedal;
+    isDescantVoice = isDescant;
     
     setKeyDown (keyboardKeyIsDown);
 }
@@ -309,17 +286,17 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
     
 bvhv_VOID_TEMPLATE::setKeyDown (bool isNowDown) noexcept
 {
-    keyIsDown.store(isNowDown);
+    keyIsDown = isNowDown;
     
     if (isNowDown)
-        playingButReleased.store(false);
+        playingButReleased = false;
     else
-        if (isPedalPitchVoice.load() || isDescantVoice.load())
-            playingButReleased.store(false);
+        if (isPedalPitchVoice || isDescantVoice)
+            playingButReleased = false;
         else if (parent->isLatched() || parent->intervalLatchIsOn)
-            playingButReleased.store(false);
+            playingButReleased = false;
         else
-            playingButReleased.store(isVoiceActive());
+            playingButReleased = isVoiceActive();
 }
 
 
@@ -330,27 +307,27 @@ bvhv_VOID_TEMPLATE::stopNote (const float velocity, const bool allowTailOff)
     if (allowTailOff)
     {
         adsr.noteOff();
-        isQuickFading.store(false);
+        isQuickFading = false;
     }
     else
     {
         if (! quickRelease.isActive())
             quickRelease.noteOn();
         
-        isQuickFading.store(true);
+        isQuickFading = true;
         
         quickRelease.noteOff();
     }
     
-    noteTurnedOff.store(true);
-    keyIsDown.store(false);
-    playingButReleased.store(false);
+    noteTurnedOff = true;
+    keyIsDown = false;
+    playingButReleased = false;
 }
 
 
 bvhv_VOID_TEMPLATE::aftertouchChanged (const int newAftertouchValue)
 {
-    currentAftertouch.store(newAftertouchValue);
+    currentAftertouch = newAftertouchValue;
 }
 
 

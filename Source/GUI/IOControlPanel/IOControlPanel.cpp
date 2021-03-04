@@ -5,7 +5,6 @@
 
 #include "IOControlPanel.h"
 
-#undef bvi_UPDATE_GAINS
 #undef bvi_ROTARY_SLIDER
 #undef bvi_LINEAR_SLIDER
 
@@ -26,43 +25,35 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     outputGainLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
     limiterPanel(p, l)
 {
-    lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.dryPan->get());
+    lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan());
     addAndMakeVisible(dryPan);
-    dryPan.onValueChange = [this] { audioProcessor.updateDryVoxPan(); };
     lookAndFeel.initializeLabel(drypanLabel, "Modulator pan");
     addAndMakeVisible(drypanLabel);
 
-    lookAndFeel.initializeSlider (masterDryWet, bvi_ROTARY_SLIDER, audioProcessor.dryWet->get());
+    lookAndFeel.initializeSlider (masterDryWet, bvi_ROTARY_SLIDER, audioProcessor.getDryWet());
     addAndMakeVisible(masterDryWet);
-    masterDryWet.onValueChange = [this] { audioProcessor.updateDryWet(); };
     lookAndFeel.initializeLabel(drywetLabel, "% wet signal");
     addAndMakeVisible(drywetLabel);
 
-#define bvi_UPDATE_GAINS [this] { audioProcessor.updateGains(); }
-    lookAndFeel.initializeSlider (inputGain, bvi_LINEAR_SLIDER, audioProcessor.inputGain->get());
+    lookAndFeel.initializeSlider (inputGain, bvi_LINEAR_SLIDER, audioProcessor.getInputGain());
     addAndMakeVisible(inputGain);
-    inputGain.onValueChange = bvi_UPDATE_GAINS;
     lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
     addAndMakeVisible(inputGainLabel);
 
-    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.dryGain->get());
+    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.getDryGain());
     //addAndMakeVisible(dryGain);
-    dryGain.onValueChange = bvi_UPDATE_GAINS;
     lookAndFeel.initializeLabel(dryGainLabel, "Dry gain");
     //addAndMakeVisible(dryGainLabel);
 
-    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.wetGain->get());
+    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.getWetGain());
     //addAndMakeVisible(wetGain);
-    wetGain.onValueChange = bvi_UPDATE_GAINS;
     lookAndFeel.initializeLabel(wetGainLabel, "Wet gain");
     //addAndMakeVisible(wetGainLabel);
 
-    lookAndFeel.initializeSlider(outputGain, bvi_LINEAR_SLIDER, audioProcessor.outputGain->get());
+    lookAndFeel.initializeSlider(outputGain, bvi_LINEAR_SLIDER, audioProcessor.getOutputGain());
     addAndMakeVisible(outputGain);
-    outputGain.onValueChange = bvi_UPDATE_GAINS;
     lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
     addAndMakeVisible(outputgainLabel);
-#undef bvi_UPDATE_GAINS
 
     addAndMakeVisible(limiterPanel);
 }

@@ -4,7 +4,7 @@
 */
 
 
-#include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
+#include "StaffDisplay.h"
 
 
 namespace bav
