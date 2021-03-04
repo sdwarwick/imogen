@@ -196,7 +196,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
     .getChildFile ("Ben Vining Music Software")
     .getChildFile ("Imogen");
 #else
-#error Unsupported operating system!
+  #error Unsupported operating system!
 #endif
     
     if (! rootFolder.isDirectory())

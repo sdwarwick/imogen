@@ -3,9 +3,9 @@
     Parent file: PluginProcessor.h
 */
 
-
 #include "PluginEditor.h"
-#include "PluginProcessorParameters.cpp"
+#include "PluginProcessor.h"
+
 
 #undef imogen_DEFAULT_NUM_VOICES
 
