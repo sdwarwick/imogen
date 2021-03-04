@@ -26,6 +26,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     skinLabel   .setLookAndFeel(&lookAndFeel);
     helpButton  .setLookAndFeel(&lookAndFeel);
     helpScreen  .setLookAndFeel(&lookAndFeel);
+    touchOnceSettingsButton.setLookAndFeel(&lookAndFeel);
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     sidechainWarning.setLookAndFeel(&lookAndFeel);
@@ -43,8 +44,11 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     
     helpButton.setButtonText("Help");
     helpButton.onClick = [this] { helpButtonClicked(); };
-    
     addChildComponent(helpScreen);
+    
+    touchOnceSettingsButton.setButtonText("Advanced preferences");
+    touchOnceSettingsButton.onClick = [this] { touchOnceSettingsButtonClicked(); };
+    addChildComponent (touchOnceSettings);
     
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
@@ -60,6 +64,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     addAndMakeVisible(staffDisplay);
     addAndMakeVisible(selectSkin);
     addAndMakeVisible(helpButton);
+    //addAndMakeVisible(touchOnceSettingsButton);
     addAndMakeVisible(skinLabel);
     //addAndMakeVisible(selectPreset);
     //addAndMakeVisible(modulatorInputSource);
@@ -93,8 +98,9 @@ void ImogenAudioProcessorEditor::resized()
     selectSkin  .setBounds(775, 388, 150, 30);
     skinLabel   .setBounds(775, 365, 150, 25);
     helpButton  .setBounds(685, 388, 75, 30);
-    
     helpScreen  .setBounds(158, 45, 625, 315);
+    //touchOnceSettingsButton.setBounds(x, y, 150, 30);
+    touchOnceSettings.setBounds (158, 45, 625, 315);
     
     //selectPreset.setBounds(x, y, w, h);
     
@@ -187,6 +193,18 @@ void ImogenAudioProcessorEditor::helpButtonClicked()
     }
     else
         helpScreen.setVisible(false);
+}
+
+
+void ImogenAudioProcessorEditor::touchOnceSettingsButtonClicked()
+{
+    if (! touchOnceSettings.isVisible() )
+    {
+        touchOnceSettings.setVisible(true);
+        touchOnceSettings.repaint();
+    }
+    else
+        touchOnceSettings.setVisible(false);
 }
 
 

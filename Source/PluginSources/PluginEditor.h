@@ -13,7 +13,7 @@
 #include "GUI/IOControlPanel/IOControlPanel.h"
 #include "GUI/LookAndFeel.h"
 #include "GUI/HelpScreen/HelpScreen.h"
-#include "GUI/TouchOnceAndForget/touchOnceAndForgetSettingsPanel.h"
+#include "GUI/touchOnceAndForgetSettingsPanel.h"
 
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
   #include "../../Source/GUI/EnableSidechainWarning.h"
@@ -44,11 +44,13 @@ private:
     
     void skinSelectorChanged();
     
-    void helpButtonClicked();
-    
     void newPresetSelected();
     
     void makePresetMenu(juce::ComboBox& box);
+    
+    bav::TouchOnceAndForgetSettingsComponent touchOnceSettings;
+    juce::TextButton touchOnceSettingsButton;
+    void touchOnceSettingsButtonClicked();
     
     bav::ImogenLookAndFeel lookAndFeel;
     bav::ImogenLookAndFeel::Skin currentSkin;
@@ -62,6 +64,7 @@ private:
     
     bav::HelpScreen helpScreen;
     juce::TextButton helpButton;
+    void helpButtonClicked();
     
     juce::ComboBox selectPreset;
     

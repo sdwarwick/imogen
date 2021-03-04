@@ -13,12 +13,9 @@ namespace bav
 HelpScreen::HelpScreen():
 closeIcon(juce::ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {
-    // close button
-    {
-        closeButton.setImages(true, true, true, closeIcon, 1.0f, juce::Colours::transparentBlack, closeIcon, 1.0f, juce::Colours::transparentWhite, closeIcon, 1.0f, juce::Colours::transparentWhite);
-        addAndMakeVisible(closeButton);
-        closeButton.onClick = [this] { this->setVisible(false); };
-    }
+    closeButton.setImages(true, true, true, closeIcon, 1.0f, juce::Colours::transparentBlack, closeIcon, 1.0f, juce::Colours::transparentWhite, closeIcon, 1.0f, juce::Colours::transparentWhite);
+    addAndMakeVisible(closeButton);
+    closeButton.onClick = [this] { this->setVisible(false); };
 }
 
 HelpScreen::~HelpScreen()

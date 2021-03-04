@@ -40,10 +40,7 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginEditor.h
     ${guiSourcePath}/LookAndFeel.h
     ${guiSourcePath}/EnableSidechainWarning.h
-    ${guiSourcePath}/TouchOnceAndForget/touchOnceAndForgetSettingsPanel.h
-    ${guiSourcePath}/TouchOnceAndForget/GeneralSettingsPage.h
-    ${guiSourcePath}/TouchOnceAndForget/MidiSettingsPage.h
-    ${guiSourcePath}/TouchOnceAndForget/GeneralSettingsPage.h
+    ${guiSourcePath}/touchOnceAndForgetSettingsPanel.h
     ${HelpScreenSourcePath}/HelpScreen.cpp
     ${HelpScreenSourcePath}/HelpScreen.h
     ${IOPanelSourcePath}/IOControlPanel.cpp  
