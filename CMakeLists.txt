@@ -35,6 +35,7 @@ set (Imogen_customModulesNeeded
 
 set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
+    ${pluginSourcesDir}/PluginProcessorParameters.cpp
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h

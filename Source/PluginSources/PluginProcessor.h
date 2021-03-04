@@ -5,6 +5,8 @@
 #pragma once
 
 #include <juce_audio_utils/juce_audio_utils.h>
+#include "bv_ImogenEngine/bv_ImogenEngine.h"
+
 
 #ifndef IMOGEN_ONLY_BUILDING_STANDALONE
   #define IMOGEN_ONLY_BUILDING_STANDALONE 0
@@ -17,9 +19,6 @@
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
   #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 #endif
-
-
-#include "bv_ImogenEngine/bv_ImogenEngine.h"
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
@@ -41,7 +40,6 @@ public:
     void releaseResources() override;
     
     void reset() override;
-    
     
     void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
     
@@ -196,6 +194,7 @@ private:
 #endif
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    void initializeParameterPointers();
     
     juce::AudioProcessor::BusesProperties makeBusProperties() const;
     
