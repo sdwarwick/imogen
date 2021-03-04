@@ -4,9 +4,7 @@
 */
 
 
-#include "PluginProcessor.h"
 #include "PluginEditor.h"
-
 #include "PluginProcessorParameters.cpp"
 
 #undef imogen_DEFAULT_NUM_VOICES

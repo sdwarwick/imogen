@@ -4,7 +4,6 @@
     Classes: Harmonizer
 */
 
-#include "bv_Harmonizer.h"
 
 #include "bv_HarmonizerVoice.cpp"
 #include "bv_Harmonizer_VoiceAllocation.cpp"

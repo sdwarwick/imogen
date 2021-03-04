@@ -4,8 +4,6 @@
 */
 
 
-#include "bv_ImogenEngine.h"
-
 #include "bv_ImogenEngineParameters.cpp"
 
 
