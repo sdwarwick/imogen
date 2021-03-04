@@ -7,10 +7,7 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-
-#include "../../Source/PluginSources/PluginProcessor.h"
 #include "LimiterControlPanel.h"
-#include "../../Source/GUI/LookAndFeel.h"
 
 
 namespace bav

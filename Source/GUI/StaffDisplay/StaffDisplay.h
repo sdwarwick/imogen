@@ -10,8 +10,8 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "../../Source/PluginSources/PluginProcessor.h"
-#include "../../Source/GUI/LookAndFeel.h"
+#include "PluginSources/PluginProcessor.h"
+#include "GUI/LookAndFeel.h"
 
 
 namespace bav

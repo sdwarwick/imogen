@@ -8,12 +8,12 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
-#include "../../Source/GUI/MidiControlPanel/MidiControlPanel.h"
-#include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
-#include "../../Source/GUI/LookAndFeel.h"
-#include "../../Source/GUI/HelpScreen/HelpScreen.h"
-#include "../../Source/GUI/touchOnceAndForgetSettingsPanel.h"
+#include "GUI/StaffDisplay/StaffDisplay.h"
+#include "GUI/MidiControlPanel/MidiControlPanel.h"
+#include "GUI/IOControlPanel/IOControlPanel.h"
+#include "GUI/LookAndFeel.h"
+#include "GUI/HelpScreen/HelpScreen.h"
+#include "GUI/TouchOnceAndForget/touchOnceAndForgetSettingsPanel.h"
 
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
   #include "../../Source/GUI/EnableSidechainWarning.h"

@@ -17,6 +17,8 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "bv_SharedCode/bv_SharedCode.h"
+#include "PanningManager/PanningManager.h"
+#include "GrainExtractor/GrainExtractor.h"
 #include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes <Accelerate.h> for vDSP, if needed
 
 
@@ -35,11 +37,6 @@
     #endif
   #endif
 #endif
-
-
-#include "PanningManager/PanningManager.h"
-#include "GrainExtractor/GrainExtractor.h"
-
 
 
 

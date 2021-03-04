@@ -2,13 +2,14 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
+#include "PitchSettingsPage.h"
+#include "MidiSettingsPage.h"
+#include "GeneralSettingsPage.h"
+
 
 namespace bav
 
 {
-    
-using namespace juce;
-    
     
 class Imogen_touchOnceAndForgetSettings : public juce::PreferencesPanel
 {
@@ -22,41 +23,20 @@ public:
         // this->setCurrentPage (juce::String("General"));
     }
     
-    Component* createComponentForPage (const String &pageName) override
+    
+    juce::Component* createComponentForPage (const juce::String &pageName) override
     {
-        if (pageName.equalsIgnoreCase (general))
-            return createGeneralSettingsPage();
+        if (pageName.equalsIgnoreCase ("General"))
+            return new GeneralSettingsPageComponent;
 
-        if (pageName.equalsIgnoreCase (midi))
-            return createMidiSettingsPage();
+        if (pageName.equalsIgnoreCase ("MIDI"))
+            return new MidiSettingsPageComponent;
 
-        return createPitchSettingsPage();
+        return new PitchSettingsPageComponent;
     }
     
     
 private:
-    
-    Component* createGeneralSettingsPage()
-    {
-
-    }
-
-
-    Component* createMidiSettingsPage()
-    {
-
-    }
-
-
-    Component* createPitchSettingsPage()
-    {
-
-    }
-    
-    
-    const String general = String("General");
-    const String midi = String("MIDI");
-    
     
 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Imogen_touchOnceAndForgetSettings)
     
