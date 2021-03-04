@@ -196,7 +196,7 @@ juce::File ImogenAudioProcessor::getPresetsFolder() const
     .getChildFile ("Ben Vining Music Software")
     .getChildFile ("Imogen");
 #else
-  #error Unsupported operating system!
+#error Unsupported operating system!
 #endif
     
     if (! rootFolder.isDirectory())
@@ -319,4 +319,3 @@ bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState
     updateHostDisplay();
     return true;  // TODO: how to check if replacing tree state was successful...?
 }
-

@@ -8,7 +8,6 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "PluginProcessor.h"
 #include "../../Source/GUI/StaffDisplay/StaffDisplay.h"
 #include "../../Source/GUI/MidiControlPanel/MidiControlPanel.h"
 #include "../../Source/GUI/IOControlPanel/IOControlPanel.h"
