@@ -40,7 +40,7 @@ public:
         
         limiterToggle.setButtonText("Output limiter");
         addAndMakeVisible(limiterToggle);
-        limiterToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsLimiterOn()));
+        limiterToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsLimiterOn()));
     }
     
     ~LimiterControlPanel() override

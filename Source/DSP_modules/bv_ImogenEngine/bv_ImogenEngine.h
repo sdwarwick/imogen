@@ -109,19 +109,19 @@ private:
     
     Harmonizer<SampleType> harmonizer;
     
-    DelayBuffer<SampleType> inputBuffer;
-    DelayBuffer<SampleType> outputBuffer;
+    bav::dsp::AudioFIFO<SampleType> inputBuffer;
+    bav::dsp::AudioFIFO<SampleType> outputBuffer;
     
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
     
-    dsp::ProcessSpec dspSpec;
+    juce::dsp::ProcessSpec dspSpec;
     
-    dsp::DryWetMixer<SampleType> dryWetMixer;
+    juce::dsp::DryWetMixer<SampleType> dryWetMixer;
     std::atomic<SampleType> wetMixPercent;
     
-    dsp::Limiter <SampleType> limiter;
+    juce::dsp::Limiter <SampleType> limiter;
     std::atomic<bool> limiterIsOn;
     std::atomic<float> limiterThresh, limiterRelease;
     
@@ -133,11 +133,11 @@ private:
     
     MidiBuffer midiChoppingBuffer;
     
-    FancyMidiBuffer midiInputCollection;
-    FancyMidiBuffer midiOutputCollection;
-    FancyMidiBuffer chunkMidiBuffer;
+    bav::midi::MidiFIFO midiInputCollection;
+    bav::midi::MidiFIFO midiOutputCollection;
+    bav::midi::MidiFIFO chunkMidiBuffer;
     
-    Panner dryPanner;
+    bav::dsp::Panner dryPanner;
     
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)

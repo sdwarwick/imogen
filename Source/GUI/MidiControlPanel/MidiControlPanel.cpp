@@ -65,17 +65,17 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     
     adsrOnOff.setButtonText("MIDI-triggered ADSR");
     addAndMakeVisible(adsrOnOff);
-    adsrOnOff.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsAdsrOn()));
+    adsrOnOff.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsAdsrOn()));
     adsrOnOff.setToggleState (audioProcessor.getIsAdsrOn(), juce::NotificationType::dontSendNotification);
 
     latchToggle.setButtonText("MIDI latch");
     //addAndMakeVisible(latchToggle);
-    latchToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsMidiLatchOn()));
+    latchToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsMidiLatchOn()));
     latchToggle.setToggleState (audioProcessor.getIsMidiLatchOn(), juce::NotificationType::dontSendNotification);
 
     intervalLock.setButtonText("Interval lock");
     //addAndMakeVisible(intervalLock);
-    intervalLock.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsIntervalLockOn()));
+    intervalLock.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsIntervalLockOn()));
     intervalLock.setToggleState (audioProcessor.getIsIntervalLockOn(), juce::NotificationType::dontSendNotification);
     
     midiKill.setButtonText("Kill all MIDI");
@@ -117,7 +117,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 
     voiceStealing.setButtonText("Voice stealing");
     addAndMakeVisible(voiceStealing);
-    voiceStealing.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsVoiceStealingEnabled()));
+    voiceStealing.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsVoiceStealingEnabled()));
     voiceStealing.setToggleState (audioProcessor.getIsVoiceStealingEnabled(), juce::NotificationType::dontSendNotification);
 
     lookAndFeel.initializeSlider (concertPitch, bvi_LINEAR_SLIDER, audioProcessor.getConcertPitchHz());
@@ -134,7 +134,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 
     pedalPitchToggle.setButtonText("MIDI pedal pitch");
     //addAndMakeVisible(pedalPitchToggle);
-    pedalPitchToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsPedalPitchOn()));
+    pedalPitchToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsPedalPitchOn()));
     pedalPitchToggle.setToggleState (audioProcessor.getIsPedalPitchOn(), dontSendNotification);
     
     lookAndFeel.initializeSlider (pedalPitchThreshold, bvi_LINEAR_SLIDER, audioProcessor.getPedalPitchThresh());
@@ -150,7 +150,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 
     descantToggle.setButtonText("MIDI descant");
     //addAndMakeVisible(descantToggle);
-    descantToggle.setState (bav::GuiUtils::buttonStateFromBool (audioProcessor.getIsDescantOn()));
+    descantToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsDescantOn()));
     descantToggle.setToggleState (audioProcessor.getIsDescantOn(), dontSendNotification);
     
     lookAndFeel.initializeSlider (descantThreshold, bvi_LINEAR_SLIDER, audioProcessor.getDescantThresh());

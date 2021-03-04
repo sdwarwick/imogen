@@ -31,7 +31,7 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     yCoordLookupTable[0] = 17;
     for (int n = 1; n < 127; ++n)
     {
-        if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(n))
+        if (bav::midi::isMidiNoteBlackKey(n))
             yCoordLookupTable[n] = yCoordLookupTable[n - 1];
         else
             yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
@@ -102,7 +102,7 @@ void StaffDisplay::drawPitches(const Array<int>& activePitches, Graphics& g)
         
         drawNotehead(xCoord, yCoord, g);
         
-        if (bav::MidiUtils::NoteHelpers::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
+        if (bav::midi::isMidiNoteBlackKey(activePitches.getUnchecked(n)))
             drawAccidental (xCoord, yCoord, g);
         
         xOffset ^= 1;

@@ -213,12 +213,12 @@ bvie_VOID_TEMPLATE::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleT
            in the midiChoppingBuffer, events will start at timestamp sample 0
            the harmonizer's midi output will be returned by being copied to this same region of the midiChoppingBuffer */
         midiChoppingBuffer.clear();
-        MidiUtils::copyRangeOfMidiBuffer (midiMessages, midiChoppingBuffer, startSample, 0, chunkNumSamples);
+        bav::midi::copyRangeOfMidiBuffer (midiMessages, midiChoppingBuffer, startSample, 0, chunkNumSamples);
         
         processWrapped (inBusProxy, outputProxy, midiChoppingBuffer, actuallyFadingIn, actuallyFadingOut, isBypassed);
         
         // copy the harmonizer's midi output back to midiMessages (I/O), at the original startSample
-        MidiUtils::copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
+        bav::midi::copyRangeOfMidiBuffer (midiChoppingBuffer, midiMessages, 0, startSample, chunkNumSamples);
         
         startSample += chunkNumSamples;
         samplesLeft -= chunkNumSamples;
@@ -341,7 +341,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     prevDryGain.store(currentDryGain);
     
     dryWetMixer.setWetMixProportion (wetMixPercent.load());
-    dryWetMixer.pushDrySamples ( dsp::AudioBlock<SampleType>(dryBuffer) );
+    dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
     // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
     harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);
@@ -353,7 +353,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     wetBuffer.applyGainRamp (0, internalBlocksize, prevWetGain.load(), currentWetGain);
     prevWetGain.store(currentWetGain);
 
-    dryWetMixer.mixWetSamples ( dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
+    dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
 
     // master output gain
     const float currentOutGain = outputGain.load();
@@ -364,8 +364,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     {
         limiter.setThreshold (limiterThresh.load());
         limiter.setRelease (limiterRelease.load());
-        dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
-        limiter.process (dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+        juce::dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
+        limiter.process (juce::dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }
     
     for (int chan = 0; chan < 2; ++chan)

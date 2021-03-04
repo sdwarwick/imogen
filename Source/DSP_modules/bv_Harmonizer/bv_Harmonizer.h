@@ -5,7 +5,7 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       juce_audio_utils, bv_PitchDetector, bv_GeneralUtils
+ dependencies:       juce_audio_utils, bv_PitchDetector, bv_SharedCode
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -16,7 +16,7 @@
 
 
 #include <juce_audio_utils/juce_audio_utils.h>
-#include "bv_GeneralUtils/bv_GeneralUtils.h"
+#include "bv_SharedCode/bv_SharedCode.h"
 #include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes <Accelerate.h> for vDSP, if needed
 
 
@@ -37,7 +37,6 @@
 #endif
 
 
-#include "bv_HarmonizerUtilities.h"
 #include "PanningManager/PanningManager.h"
 #include "GrainExtractor/GrainExtractor.h"
 
@@ -170,7 +169,7 @@ private:
     float currentOutputFreq;
     float lastRecievedVelocity, currentVelocityMultiplier, prevVelocityMultiplier, prevSoftPedalMultiplier;
     
-    Panner panner;
+    bav::dsp::Panner panner;
     
     bool isPedalPitchVoice, isDescantVoice;
     
@@ -441,9 +440,9 @@ private:
     PanningManager  panner;
     int lowestPannedNote;
     
-    VelocityHelper  velocityConverter;
-    PitchConverter  pitchConverter;
-    PitchBendHelper bendTracker;
+    bav::midi::VelocityHelper  velocityConverter;
+    bav::midi::PitchConverter  pitchConverter;
+    bav::midi::PitchBendHelper bendTracker;
     
     bool adsrIsOn;
     

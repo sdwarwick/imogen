@@ -27,7 +27,6 @@ set (Imogen_testFilesPath ${Imogen_sourceDir}/Tests)  # The location of the sour
 set (Imogen_customModulesPath ${Imogen_sourceDir}/DSP_modules)
 
 set (Imogen_customModulesNeeded
-    bv_GeneralUtils
     bv_Harmonizer
     bv_ImogenEngine)
 
@@ -94,6 +93,9 @@ include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 juce_add_module (${Imogen_customModulesPath}/Pitch-detector/bv_PitchDetector)
 target_link_libraries (Imogen PRIVATE bv_PitchDetector)
+
+juce_add_module (${Imogen_sourceDir}/bv_SharedCode)
+target_link_libraries (Imogen PRIVATE bv_SharedCode)
 
 #
 

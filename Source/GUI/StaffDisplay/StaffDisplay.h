@@ -13,8 +13,6 @@
 #include "../../Source/PluginSources/PluginProcessor.h"
 #include "../../Source/GUI/LookAndFeel.h"
 
-#include "bv_GeneralUtils/bv_GeneralUtils.h"
-
 
 namespace bav
 
