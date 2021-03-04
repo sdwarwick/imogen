@@ -22,9 +22,9 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    latchIsOn(false), intervalLatchIsOn(false), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
+    latchIsOn(false), intervalLatchIsOn(false), currentInputFreq(0.0f), currentInputPeriod(0), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
-    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0), currentInputFreq(0.0f), currentInputPeriod(0)
+    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
 {
     adsrParams.attack  = 0.035f;
     adsrParams.decay   = 0.06f;

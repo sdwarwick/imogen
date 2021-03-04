@@ -14,14 +14,13 @@ namespace bav
     
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(h), noteOnTime(0), isQuickFading(false), noteTurnedOff(false), keyIsDown(false), currentAftertouch(0), sustainingFromSostenutoPedal(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), lastRecievedVelocity(0.0f), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), prevSoftPedalMultiplier(1.0f), playingButReleased(false), isPedalPitchVoice(false), isDescantVoice(false), synthesisIndex(0)
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(h), noteOnTime(0), isQuickFading(false), noteTurnedOff(false), keyIsDown(false), currentAftertouch(0), sustainingFromSostenutoPedal(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), lastRecievedVelocity(0.0f), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), prevSoftPedalMultiplier(1.0f), isPedalPitchVoice(false), isDescantVoice(false), playingButReleased(false), lastPBRmult(1.0f), synthesisIndex(0)
 {
     const double initSamplerate = 44100.0;
     
     adsr        .setSampleRate (initSamplerate);
     quickRelease.setSampleRate (initSamplerate);
     quickAttack .setSampleRate (initSamplerate);
-    
     adsr        .setParameters (parent->getCurrentAdsrParams());
     quickRelease.setParameters (parent->getCurrentQuickReleaseParams());
     quickAttack .setParameters (parent->getCurrentQuickAttackParams());

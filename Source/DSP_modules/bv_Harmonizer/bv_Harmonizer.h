@@ -176,7 +176,7 @@ private:
     
     bool playingButReleased;
     
-    float lastPBRmult = 1.0f;
+    float lastPBRmult;
     
     int synthesisIndex;
     
