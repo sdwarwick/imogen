@@ -16,10 +16,10 @@
 
 
 #include <juce_audio_utils/juce_audio_utils.h>
-#include "bv_SharedCode/bv_SharedCode.h"
+
 #include "PanningManager/PanningManager.h"
 #include "GrainExtractor/GrainExtractor.h"
-#include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes <Accelerate.h> for vDSP, if needed
+#include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
 
 
 #ifndef BV_HARMONIZER_USE_VDSP
@@ -374,7 +374,7 @@ private:
     friend class HarmonizerVoice<SampleType>;
     
     CriticalSection lock;
-    // functions that require lock: allNotesOff, changeNumVoices, renderVoices
+    // functions that require lock: allNotesOff, changeNumVoices, renderVoices, playIntervalSet, playChord
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
@@ -462,7 +462,6 @@ private:
     AudioBuffer<SampleType> polarityReversalBuffer;
     
     Array< HarmonizerVoice<SampleType>* > usableVoices; // this array is used to sort the voices when a 'steal' is requested
-
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

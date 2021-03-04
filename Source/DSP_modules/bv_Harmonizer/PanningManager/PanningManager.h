@@ -14,7 +14,8 @@ namespace bav
 
 using namespace juce;
     
-    
+/* PanningManager: helper class to keep track of possible midi panning values within a given stero width, evenly spaced for the current number of harmony voices.
+*/
 class PanningManager
 {
 public:

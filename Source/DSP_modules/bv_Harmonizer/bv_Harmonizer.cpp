@@ -235,21 +235,7 @@ bvh_VOID_TEMPLATE::fillWindowBuffer (const int numSamples)
     
     jassert (numSamples <= windowBuffer.getNumSamples());
     
-#if BV_HARMONIZER_USE_VDSP
-    if constexpr (std::is_same_v <SampleType, float>)
-        vDSP_hann_window (windowBuffer.getWritePointer(0), vDSP_Length(numSamples), 2);
-    else if constexpr (std::is_same_v <SampleType, double>)
-        vDSP_hann_windowD (windowBuffer.getWritePointer(0), vDSP_Length(numSamples), 2);
-#else
-    const SampleType samplemultiplier = static_cast<SampleType>( (MathConstants<SampleType>::pi * 2.0) / (numSamples - 1) );
-    constexpr SampleType one = SampleType(1.0);
-    constexpr SampleType pointFive = SampleType(0.5);
-    
-    auto* writing = windowBuffer.getWritePointer(0);
-    
-    for (int i = 1; i < numSamples; ++i)
-        writing[i] = static_cast<SampleType>( (one - (std::cos (i * samplemultiplier))) * pointFive );
-#endif
+    bav::vecops::makeHannWindow (windowBuffer.getWritePointer(0), numSamples);
     
     windowSize = numSamples;
 }

@@ -51,6 +51,8 @@ bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
         return;
     }
     
+    const ScopedLock sl (lock);
+    
     const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
     
     desiredNotes.clearQuick();
@@ -75,6 +77,8 @@ bvh_VOID_TEMPLATE::playChord (const Array<int>& desiredPitches,
         allNotesOff (allowTailOffOfOld);
         return;
     }
+    
+    const ScopedLock sl (lock);
     
     // create array containing current pitches
     

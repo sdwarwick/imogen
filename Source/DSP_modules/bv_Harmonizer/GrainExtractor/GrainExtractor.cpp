@@ -330,23 +330,25 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     const int finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
 #undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
     
+    float minimum = candidateDeltas.getUnchecked(0);
+    int minimumIndex = 0;
+    const int dataSize = candidateDeltas.size();
+    
     for (int i = 0; i < finalHandfulSize; ++i)
     {
-        float* lowestElement = std::min_element (candidateDeltas.begin(), candidateDeltas.end());
-        const int indexOfLowestDelta = static_cast<int> (std::distance (candidateDeltas.begin(), lowestElement));
+        bav::vecops::findMinAndMinIndex (candidateDeltas.getRawDataPointer(), dataSize, minimum, minimumIndex);
         
-        finalHandfulDeltas.add (*lowestElement);
-        finalHandful.add (candidates.getUnchecked (indexOfLowestDelta));
+        finalHandfulDeltas.add (minimum);
+        finalHandful.add (candidates.getUnchecked (minimumIndex));
         
-        candidateDeltas.set (indexOfLowestDelta, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
+        candidateDeltas.set (minimumIndex, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
     }
     
     jassert (finalHandful.size() == finalHandfulSize && finalHandfulDeltas.size() == finalHandfulSize);
     
     // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    const float deltaRange = FloatVectorOperations::findMinAndMax (finalHandfulDeltas.getRawDataPointer(), finalHandfulSize)
-                             .getLength();
+    const float deltaRange = bav::vecops::findRangeOfExtrema(finalHandfulDeltas.getRawDataPointer(), finalHandfulDeltas.size());
     
 #define bvhge_MIN_DELTA_RANGE 2.0f
     if (deltaRange < bvhge_MIN_DELTA_RANGE)

@@ -87,7 +87,7 @@ bvh_VOID_TEMPLATE::setDescant (const bool isOn)
 
 bvh_VOID_TEMPLATE::setDescantLowerThresh (int newThresh)
 {
-    newThresh = jlimit (0, 127, newThresh);
+    jassert (newThresh >= 0 && newThresh <= 127);
     
     if (descant.lowerThresh == newThresh)
         return;
@@ -134,7 +134,7 @@ bvh_VOID_TEMPLATE::setPedalPitch (const bool isOn)
 
 bvh_VOID_TEMPLATE::setPedalPitchUpperThresh (int newThresh)
 {
-    newThresh = jlimit (0, 127, newThresh);
+    jassert (newThresh >= 0 && newThresh <= 127);
     
     if (pedal.upperThresh == newThresh)
         return;
@@ -161,7 +161,7 @@ bvh_VOID_TEMPLATE::setPedalPitchInterval (const int newInterval)
 // stereo width ---------------------------------------------------------------------------------------------------
 bvh_VOID_TEMPLATE::updateStereoWidth (int newWidth)
 {
-    newWidth = jlimit (0, 100, newWidth);
+    jassert (newWidth >= 0 && newWidth <= 100);
     
     if (panner.getCurrentStereoWidth() == newWidth)
         return;
@@ -193,7 +193,7 @@ bvh_VOID_TEMPLATE::updateStereoWidth (int newWidth)
 
 bvh_VOID_TEMPLATE::updateLowestPannedNote (int newPitchThresh)
 {
-    newPitchThresh = jlimit (0, 127, newPitchThresh);
+    jassert (newPitchThresh >= 0 && newPitchThresh <= 127);
     
     const int prevLowestnote = lowestPannedNote;
     
@@ -316,7 +316,7 @@ bvh_VOID_TEMPLATE::updateQuickAttackMs (const int newMs)
 // midi velocity sensitivity -------------------------------------------------------------------------------------
 bvh_VOID_TEMPLATE::updateMidiVelocitySensitivity (int newSensitivity)
 {
-    newSensitivity = jlimit (0, 100, newSensitivity);
+    jassert (newSensitivity >= 0 && newSensitivity <= 100);
     
     const float newSens = newSensitivity / 100.0f;
     

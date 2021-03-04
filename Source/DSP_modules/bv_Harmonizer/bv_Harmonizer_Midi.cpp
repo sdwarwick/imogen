@@ -150,7 +150,7 @@ bvh_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
-    HarmonizerVoice<SampleType>* voice;
+    HarmonizerVoice<SampleType>* voice = nullptr;
     
     if (auto* prevVoice = getVoicePlayingNote (midiPitch))
     {
@@ -349,7 +349,7 @@ bvh_VOID_TEMPLATE::allNotesOff (const bool allowTailOff, const float velocity)
 
 bvh_VOID_TEMPLATE::handlePitchWheel (int wheelValue)
 {
-    wheelValue = jlimit (0, 127, wheelValue);
+    jassert (wheelValue >= 0 && wheelValue <= 127);
     
     if (lastPitchWheelValue == wheelValue)
         return;
@@ -368,7 +368,8 @@ bvh_VOID_TEMPLATE::handlePitchWheel (int wheelValue)
 
 bvh_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 {
-    aftertouchValue = jlimit (0, 127, aftertouchValue);
+    jassert (midiNoteNumber >= 0 && midiNoteNumber <= 127);
+    jassert (aftertouchValue >= 0 && aftertouchValue <= 127);
     
     if (useChannelPressure)
     {
@@ -387,7 +388,7 @@ bvh_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 
 bvh_VOID_TEMPLATE::handleChannelPressure (int channelPressureValue)
 {
-    channelPressureValue = jlimit (0, 127, channelPressureValue);
+    jassert (channelPressureValue >= 0 && channelPressureValue <= 127);
     
     if (useChannelPressure)
         aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
@@ -409,7 +410,7 @@ bvh_VOID_TEMPLATE::handleChannelPressure (int channelPressureValue)
     
 bvh_VOID_TEMPLATE::updateChannelPressure (int newIncomingAftertouch)
 {
-    newIncomingAftertouch = jlimit (0, 127, newIncomingAftertouch);
+    jassert (newIncomingAftertouch >= 0 && newIncomingAftertouch <= 127);
     
     int highestAftertouch = -1;
     
@@ -433,7 +434,7 @@ bvh_VOID_TEMPLATE::updateChannelPressure (int newIncomingAftertouch)
 
 bvh_VOID_TEMPLATE::handleController (const int controllerNumber, int controllerValue)
 {
-    controllerValue = jlimit (0, 127, controllerValue);
+    jassert (controllerValue >= 0 && controllerValue <= 127);
     
     switch (controllerNumber)
     {

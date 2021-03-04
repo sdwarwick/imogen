@@ -131,7 +131,7 @@ private:
     std::atomic<float> dryGain, wetGain, inputGain, outputGain;
     std::atomic<float> prevDryGain, prevWetGain, prevInputGain, prevOutputGain;
     
-    MidiBuffer midiChoppingBuffer;
+    juce::MidiBuffer midiChoppingBuffer;
     
     bav::midi::MidiFIFO midiInputCollection;
     bav::midi::MidiFIFO midiOutputCollection;
