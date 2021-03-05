@@ -4,3 +4,6 @@
 [submodule "Source/DSP_modules/Pitch-detector"]
 	path = Source/DSP_modules/Pitch-detector
 	url = https://github.com/benthevining/Pitch-detector
+[submodule "Source/Shared-code"]
+	path = Source/Shared-code
+	url = https://github.com/benthevining/Shared-code.git
