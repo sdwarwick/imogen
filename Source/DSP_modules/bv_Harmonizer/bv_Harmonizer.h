@@ -17,9 +17,9 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 
+#include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
 #include "PanningManager/PanningManager.h"
 #include "GrainExtractor/GrainExtractor.h"
-#include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
 
 
 #ifndef BV_HARMONIZER_USE_VDSP
