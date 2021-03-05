@@ -1,7 +1,3 @@
-<p align="center">
- <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
- </p>
-
 # Imogen: a 12-voice, low-latency vocal harmonizer VST
 
 [![AutoBuild](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml/badge.svg?branch=master&event=push)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
@@ -13,7 +9,11 @@ Commercial plugins offering this effect [do exist](http://www.izotope.com/en/pro
 
 As far as I know, there is no piece of software currently commercially available that offers the features of Jacob Collier's Harmonizer: 16 real-time, incredibly human-sounding harmony voices. 
 
-So I decided to create it myself.  
+So I decided to create it myself.
+
+<p align="center">
+ <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
+ </p>
 
 ## Author
 **Ben Vining**: ben.the.vining@gmail.com | [Facebook](http://www.facebook.com/benviningofficial/) | [Twitter](http://twitter.com/benthevining) | [Gumroad](http://gumroad.com/benvining)
