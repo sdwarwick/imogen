@@ -83,6 +83,8 @@ set (Imogen_Copy_Plugin_After_Build TRUE)
 
 set (Imogen_UseRecommendedWarningFlags TRUE)
 
+set (bv_generatePreprocessorDefinitions TRUE)
+
 #
 
 include (JUCE-CmakeWrapper/CMakeLists.txt)
