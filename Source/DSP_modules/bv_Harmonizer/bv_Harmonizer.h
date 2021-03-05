@@ -22,23 +22,6 @@
 #include "GrainExtractor/GrainExtractor.h"
 
 
-#ifndef BV_HARMONIZER_USE_VDSP
-  #ifdef JUCE_USE_VDSP_FRAMEWORK
-    #if JUCE_USE_VDSP_FRAMEWORK
-      #define BV_HARMONIZER_USE_VDSP 1
-    #else
-      #define BV_HARMONIZER_USE_VDSP 0
-    #endif
-  #else
-    #if (JUCE_MAC || JUCE_IOS)
-      #define BV_HARMONIZER_USE_VDSP 1
-    #else
-      #define BV_HARMONIZER_USE_VDSP 0
-    #endif
-  #endif
-#endif
-
-
 
 namespace bav
 

@@ -330,7 +330,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     const int finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
 #undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
     
-    float minimum = candidateDeltas.getUnchecked(0);
+    float minimum = 0.0f;
     int minimumIndex = 0;
     const int dataSize = candidateDeltas.size();
     
@@ -348,7 +348,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
     
     // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    const float deltaRange = bav::vecops::findRangeOfExtrema(finalHandfulDeltas.getRawDataPointer(), finalHandfulDeltas.size());
+    const float deltaRange = bav::vecops::findRangeOfExtrema (finalHandfulDeltas.getRawDataPointer(), finalHandfulDeltas.size());
     
 #define bvhge_MIN_DELTA_RANGE 2.0f
     if (deltaRange < bvhge_MIN_DELTA_RANGE)
