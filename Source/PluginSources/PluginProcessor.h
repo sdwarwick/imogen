@@ -128,6 +128,8 @@ public:
     int getDescantThresh() const { return descantThresh->get(); }
     int getDescantInterval() const { return descantInterval->get(); }
     
+    void updatePitchDetectionHzRange (int minHz, int maxHz);
+    
     
 private:
     
@@ -205,8 +207,6 @@ private:
     juce::AudioParameterFloat* dryGain;
     juce::AudioParameterFloat* wetGain;
     juce::AudioParameterFloat* softPedalGain;
-    juce::AudioParameterInt*   minDetectedHz;
-    juce::AudioParameterInt*   maxDetectedHz;
     juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
     juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
     juce::AudioParameterBool*  aftertouchGainToggle;

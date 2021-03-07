@@ -72,8 +72,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     // NEED GUI -- PITCH DETECTION SETTINGS
     // Note that the minimum possible Hz value will impact the plugin's latency.
     juce::NormalisableRange<float> confidenceRange (0.0f, 1.0f, 0.01f);
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("pitchDetectionMinHz", "Min possible Hz", 40, 600, 80));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("pitchDetectionMaxHz", "Max possible Hz", 1000, 10000, 2600));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceUpperThresh", "Confidence upper thresh",
                                                                  confidenceRange, 0.15f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceLowerThresh", "Confidence lower thresh",
@@ -118,8 +116,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     dryGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("dryGain"));                    jassert(dryGain);
     wetGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("wetGain"));                    jassert(wetGain);
     softPedalGain      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("softPedalGain"));              jassert(softPedalGain);
-    minDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMinHz"));        jassert(minDetectedHz);
-    maxDetectedHz      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pitchDetectionMaxHz"));        jassert(maxDetectedHz);
     pitchDetectionConfidenceUpperThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceUpperThresh")); jassert(pitchDetectionConfidenceUpperThresh);
     pitchDetectionConfidenceLowerThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceLowerThresh")); jassert(pitchDetectionConfidenceLowerThresh);
     aftertouchGainToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle"));   jassert(aftertouchGainToggle);
@@ -142,10 +138,6 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 {
     activeEngine.updatePitchDetectionConfidenceThresh (pitchDetectionConfidenceUpperThresh->get(),
                                                        pitchDetectionConfidenceLowerThresh->get());
-    
-    activeEngine.updatePitchDetectionHzRange (minDetectedHz->get(), maxDetectedHz->get());
-    
-    setLatencySamples (activeEngine.reportLatency());
     
     activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
@@ -170,6 +162,25 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
     activeEngine.updateUsingChannelPressure (channelPressureToggle->get());
     activeEngine.updatePlayingButReleasedGain (playingButReleasedGain->get());
+}
+
+
+void ImogenAudioProcessor::updatePitchDetectionHzRange (int minHz, int maxHz)
+{
+    if (isUsingDoublePrecision())
+    {
+        doubleEngine.updatePitchDetectionHzRange (minHz, maxHz);
+        
+        if (getLatencySamples() != doubleEngine.reportLatency())
+            setLatencySamples (doubleEngine.reportLatency());
+    }
+    else
+    {
+        floatEngine.updatePitchDetectionHzRange (minHz, maxHz);
+        
+        if (getLatencySamples() != floatEngine.reportLatency())
+            setLatencySamples (floatEngine.reportLatency());
+    }
 }
 
 

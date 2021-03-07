@@ -120,6 +120,7 @@ private:
     
     bav::dsp::Panner dryPanner;
     
+    CriticalSection lock;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

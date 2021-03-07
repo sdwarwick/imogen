@@ -11,7 +11,8 @@ namespace bav
 
 bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
 {
-    harmonizer.changeNumVoices (newNumVoices);
+    if (harmonizer.getNumVoices() != newNumVoices)
+        harmonizer.changeNumVoices (newNumVoices);
 }
 
 
@@ -42,7 +43,8 @@ bvie_VOID_TEMPLATE::updateWetGain (const float newWetGain)
 
 bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 {
-    dryPanner.setMidiPan (newMidiPan);
+    if (dryPanner.getLastMidiPan() != newMidiPan)
+        dryPanner.setMidiPan (newMidiPan);
 }
 
 
@@ -56,6 +58,7 @@ bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 
 bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const float sustain, const float release, const bool isOn)
 {
+    const ScopedLock sl (lock);
     harmonizer.updateADSRsettings (attack, decay, sustain, release);
     harmonizer.setADSRonOff (isOn);
 }
@@ -146,6 +149,10 @@ bvie_VOID_TEMPLATE::updateSoftPedalGain (const float newGain)
 
 bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
+    
+    
+    const ScopedLock sl (lock);
+    
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
     if (initialized)

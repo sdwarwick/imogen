@@ -79,7 +79,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     intervalLock.setToggleState (audioProcessor.getIsIntervalLockOn(), juce::NotificationType::dontSendNotification);
     
     midiKill.setButtonText("Kill all MIDI");
-    midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
+    //midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
     addAndMakeVisible(midiKill);
     
     lookAndFeel.initializeSlider (quickKillMs, bvi_LINEAR_SLIDER, audioProcessor.getQuickKillMs());
@@ -125,7 +125,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     lookAndFeel.initializeLabel(concertPitchLabel, "Concert pitch (Hz)");
     addAndMakeVisible(concertPitchLabel);
 
-    numberOfVoices.onChange = [this] { audioProcessor.updateNumVoices (numberOfVoices.getSelectedId()); };
+    //numberOfVoices.onChange = [this] { audioProcessor.updateNumVoices (numberOfVoices.getSelectedId()); };
     buildVoicesCombobox(numberOfVoices);
     numberOfVoices.setSelectedId(12, juce::NotificationType::dontSendNotification);
     addAndMakeVisible(numberOfVoices);

@@ -121,7 +121,7 @@ bvh_INLINE_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int sampl
     else if (m.isAllNotesOff() || m.isAllSoundOff())
         allNotesOff (false);
     else if (m.isPitchWheel())
-        handlePitchWheel (m.getPitchWheelValue());
+        handlePitchWheel (jmap (m.getPitchWheelValue(), 0, 16383, 0, 127));
     else if (m.isAftertouch())
         handleAftertouch (m.getNoteNumber(), m.getAfterTouchValue());
     else if (m.isChannelPressure())

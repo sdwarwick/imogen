@@ -46,6 +46,9 @@ template<typename SampleType>
 void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
     jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
+#if ! JUCE_DEBUG
+    juce::ignoreUnused(initSamplesPerBlock);
+#endif
     
     const int blocksize = FIFOEngine::getLatency();
     
@@ -84,19 +87,22 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
 {
     jassert (samplerate > 0);
     jassert (blocksize > 0);
+#if ! JUCE_DEBUG
+    juce::ignoreUnused(blocksize);
+#endif
     
-    const int internalBlocksize = FIFOEngine::getLatency();
+    const int block = FIFOEngine::getLatency();
     
-    monoBuffer.setSize(1, internalBlocksize, true, true, true);
-    dryBuffer.setSize (2, internalBlocksize, true, true, true);
-    wetBuffer.setSize (2, internalBlocksize, true, true, true);
+    monoBuffer.setSize(1, block, true, true, true);
+    dryBuffer.setSize (2, block, true, true, true);
+    wetBuffer.setSize (2, block, true, true, true);
     
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
-    harmonizer.prepare (internalBlocksize);
+    harmonizer.prepare (block);
     
     dspSpec.sampleRate = samplerate;
     dspSpec.numChannels = 2;
-    dspSpec.maximumBlockSize = uint32(internalBlocksize);
+    dspSpec.maximumBlockSize = uint32(block);
     limiter.prepare (dspSpec);
     dryWetMixer.prepare (dspSpec);
     dryWetMixer.setWetLatency(0);
@@ -148,6 +154,8 @@ void ImogenEngine<SampleType>::release()
 template <typename SampleType>
 void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
 {
+    const ScopedLock sl (lock);
+    
     const int blockSize = input.getNumSamples();
     
     jassert (blockSize == FIFOEngine::getLatency());

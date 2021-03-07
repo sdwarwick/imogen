@@ -40,11 +40,11 @@ void StaffDisplay::paint (juce::Graphics& g)
 {
     g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::staffDisplayBackgroundColourId));
     
-    Array<int> currentlyActive;
-    currentlyActive.ensureStorageAllocated(12);
-    audioProcessor.returnActivePitches (currentlyActive);
+//    Array<int> currentlyActive;
+//    currentlyActive.ensureStorageAllocated(12);
+//    audioProcessor.returnActivePitches (currentlyActive);
     
-    drawPitches (currentlyActive, g);
+    //drawPitches (currentlyActive, g);
 }
 
 void StaffDisplay::resized()
