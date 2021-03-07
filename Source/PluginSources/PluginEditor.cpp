@@ -79,10 +79,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
-    this->setBufferedToImage (false);
     this->setLookAndFeel(nullptr);
-    helpScreen.setLookAndFeel(nullptr);
-    touchOnceSettings.setLookAndFeel(nullptr);
     Timer::stopTimer();
 }
 

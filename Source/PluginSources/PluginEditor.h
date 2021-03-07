@@ -80,7 +80,5 @@ private:
     bav::ImogenLookAndFeel::Skin currentSkin;
     bav::ImogenLookAndFeel::Skin prevSkin;
     
-    // bav::Imogen_touchOnceAndForgetSettings touchOnceSettings;
-    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

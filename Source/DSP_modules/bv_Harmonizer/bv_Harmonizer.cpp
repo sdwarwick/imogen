@@ -174,9 +174,9 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     if (getNumActiveVoices() == 0)
         return;
     
-    const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs -1 if frame is unpitched
+    const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
     
-    const bool frameIsPitched = (inputFrequency >= 0.0f);
+    const bool frameIsPitched = (inputFrequency > 0.0f);
     
     int periodThisFrame;
     bool polarityReversed = false;

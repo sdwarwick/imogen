@@ -238,7 +238,8 @@ bvh_VOID_TEMPLATE::setConcertPitchHz (const int newConcertPitchhz)
     
     pitchConverter.setConcertPitchHz (newConcertPitchhz);
     
-    setCurrentInputFreq (currentInputFreq);
+    if (currentInputFreq > 0.0f)
+        setCurrentInputFreq (currentInputFreq);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive())
