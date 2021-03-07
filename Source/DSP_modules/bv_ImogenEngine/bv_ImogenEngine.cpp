@@ -47,6 +47,9 @@ ImogenEngine<SampleType>::~ImogenEngine()
 #undef bvie_VOID_TEMPLATE
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
     
+#undef bvie_INLINE_VOID_TEMPLATE
+#define bvie_INLINE_VOID_TEMPLATE template<typename SampleType> inline void ImogenEngine<SampleType>
+    
 
 bvie_VOID_TEMPLATE::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
@@ -102,7 +105,7 @@ bvie_VOID_TEMPLATE::prepare (double sampleRate, int samplesPerBlock)
 }
     
     
-bvie_VOID_TEMPLATE::latencyChanged (const int newLatency)
+bvie_INLINE_VOID_TEMPLATE::latencyChanged (const int newLatency)
 {
     if (internalBlocksize == newLatency)
         return;
@@ -178,9 +181,9 @@ bvie_VOID_TEMPLATE::releaseResources()
  */
 
 bvie_VOID_TEMPLATE::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
-                                        MidiBuffer& midiMessages,
-                                        const bool applyFadeIn, const bool applyFadeOut,
-                                        const bool isBypassed)
+                             MidiBuffer& midiMessages,
+                             const bool applyFadeIn, const bool applyFadeOut,
+                             const bool isBypassed)
 {
     // at this layer, we check to ensure that the buffer sent to us does not exceed the internal blocksize we want to process. If it does, it is broken into smaller chunks, and processWrapped() called on each of these chunks in sequence.
     
@@ -230,10 +233,10 @@ bvie_VOID_TEMPLATE::process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleT
 }
 
 
-bvie_VOID_TEMPLATE::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
-                                               MidiBuffer& midiMessages,
-                                               const bool applyFadeIn, const bool applyFadeOut,
-                                               const bool isBypassed)
+bvie_INLINE_VOID_TEMPLATE::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
+                                           MidiBuffer& midiMessages,
+                                           const bool applyFadeIn, const bool applyFadeOut,
+                                           const bool isBypassed)
 {
     // at this level, the buffer block sizes sent to us are garunteed to NEVER exceed the declared internalBlocksize, but they may still be SMALLER than this blocksize -- the individual buffers this function recieves may be as short as 1 sample long.
     // this is where the secret sauce happens that ensures the consistent block sizes fed to renderBlock()
@@ -316,8 +319,8 @@ bvie_VOID_TEMPLATE::processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<
 
 
 
-bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
-                                                  MidiBuffer& midiMessages)       
+bvie_INLINE_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
+                                        MidiBuffer& midiMessages)
 {
     // at this stage, the blocksize is garunteed to ALWAYS be the declared internalBlocksize (2 * the max detectable period)
     
@@ -374,6 +377,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
 
     
 #undef bvie_VOID_TEMPLATE
+#undef bvie_INLINE_VOID_TEMPLATE
+    
 
 template class ImogenEngine<float>;
 template class ImogenEngine<double>;

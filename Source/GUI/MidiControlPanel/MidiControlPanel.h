@@ -122,8 +122,8 @@ private:
     std::unique_ptr<APVTS::ComboBoxAttachment> descantIntervalLink;
     juce::Label descantIntervalLabel;
     
-    void buildIntervalCombobox(juce::ComboBox& box);
-    void buildVoicesCombobox(juce::ComboBox& box);
+    inline void buildIntervalCombobox(juce::ComboBox& box);
+    inline void buildVoicesCombobox(juce::ComboBox& box);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiControlPanel)
 };

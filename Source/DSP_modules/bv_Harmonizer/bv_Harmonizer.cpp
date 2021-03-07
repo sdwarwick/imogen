@@ -223,7 +223,8 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
 
 // calculate Hanning window ------------------------------------------------------
 
-bvh_VOID_TEMPLATE::fillWindowBuffer (const int numSamples)
+template<typename SampleType>
+inline void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
 {
     jassert (numSamples > 1);
     

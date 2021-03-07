@@ -27,7 +27,7 @@ int Harmonizer<SampleType>::getNumActiveVoices() const
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable)
+inline HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool stealIfNoneAvailable)
 {
     for (auto* voice : voices)
         if (! voice->isVoiceActive())
@@ -41,7 +41,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findFreeVoice (const bool s
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal()
+inline HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal()
 {
     // This voice-stealing algorithm applies the following heuristics:
     // - Re-use the oldest notes first
@@ -156,7 +156,7 @@ HarmonizerVoice<SampleType>* Harmonizer<SampleType>::getVoicePlayingNote (const 
 
 
 template<typename SampleType>
-void Harmonizer<SampleType>::numVoicesChanged()
+inline void Harmonizer<SampleType>::numVoicesChanged()
 {
     const int newMaxNumVoices = voices.size();
     
@@ -169,7 +169,7 @@ void Harmonizer<SampleType>::numVoicesChanged()
     
     
 template<typename SampleType>
-void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
+inline void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
 {
     if (voicesToAdd == 0)
         return;
@@ -180,7 +180,7 @@ void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
     
     
 template<typename SampleType>
-void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
+inline void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
 {
     if (voicesToRemove == 0)
         return;

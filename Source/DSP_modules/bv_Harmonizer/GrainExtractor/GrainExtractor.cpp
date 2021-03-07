@@ -123,10 +123,10 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     
 template<typename SampleType>
-void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
-                                                 const SampleType* reading,
-                                                 const int totalNumSamples,
-                                                 const int period)
+inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
+                                                        const SampleType* reading,
+                                                        const int totalNumSamples,
+                                                        const int period)
 {
     targetArray.clearQuick();
     
@@ -165,10 +165,10 @@ void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     
 
 template<typename SampleType>
-int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int frameEnd, int predictedPeak,
-                                              const SampleType* reading,
-                                              const Array<int>& targetArray,
-                                              const int period, const int grainSize)
+inline int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int frameEnd, int predictedPeak,
+                                                     const SampleType* reading,
+                                                     const Array<int>& targetArray,
+                                                     const int period, const int grainSize)
 {
     jassert (predictedPeak >= frameStart && predictedPeak <= frameEnd);
     
@@ -219,9 +219,9 @@ int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int fr
     
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
-                                                          const int startSample, const int endSample, const int predictedPeak,
-                                                          const Array<int>& searchingOrder)
+inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
+                                                                 const int startSample, const int endSample, const int predictedPeak,
+                                                                 const Array<int>& searchingOrder)
 {
     jassert (! searchingOrder.isEmpty());
     
@@ -304,8 +304,8 @@ void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates
     
 
 template<typename SampleType>
-int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
-                                                          const int deltaTarget1, const int deltaTarget2)
+inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
+                                                                 const int deltaTarget1, const int deltaTarget2)
 {
     candidateDeltas.clearQuick();
     finalHandful.clearQuick();
@@ -387,7 +387,7 @@ int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& cand
 
 
 template<typename SampleType>
-int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const Array<int>& candidates, const SampleType* reading)
+inline int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const Array<int>& candidates, const SampleType* reading)
 {
     int strongestPeakIndex = candidates.getUnchecked (0);
     SampleType strongestPeak = abs(reading[strongestPeakIndex]);
@@ -408,9 +408,9 @@ int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const Array<int>& c
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output, // array to write the sorted sample indices to
-                                                                    const int startSample, const int endSample,
-                                                                    const int predictedPeak)
+inline void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output, // array to write the sorted sample indices to
+                                                                           const int startSample, const int endSample,
+                                                                           const int predictedPeak)
 {
     jassert (predictedPeak >= startSample && predictedPeak <= endSample);
     

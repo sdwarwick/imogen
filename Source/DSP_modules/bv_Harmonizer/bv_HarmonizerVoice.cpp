@@ -34,6 +34,9 @@ HarmonizerVoice<SampleType>::~HarmonizerVoice()
 #undef bvhv_VOID_TEMPLATE
 #define bvhv_VOID_TEMPLATE template<typename SampleType> void HarmonizerVoice<SampleType>
     
+#undef bvbv_INLINE_VOID_TEMPLATE
+#define bvbv_INLINE_VOID_TEMPLATE template<typename SampleType> inline void HarmonizerVoice<SampleType>
+    
     
 bvhv_VOID_TEMPLATE::prepare (const int blocksize)
 {
@@ -143,11 +146,11 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
 }
 
 
-bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSamples,
-                          const int origPeriod, // size of analysis grains = origPeriod * 2
-                          const int newPeriod,  // OLA hop size
-                          const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
-                          const SampleType* window) // Hanning window, length origPeriod * 2
+bvbv_INLINE_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSamples,
+                                 const int origPeriod, // size of analysis grains = origPeriod * 2
+                                 const int newPeriod,  // OLA hop size
+                                 const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
+                                 const SampleType* window) // Hanning window, length origPeriod * 2
 {
     if (synthesisIndex > totalNumInputSamples)
         return;
@@ -179,10 +182,10 @@ bvhv_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSample
 }
 
 
-bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
-                              const int frameStartSample, const int frameEndSample, const int frameSize,
-                              const SampleType* window,
-                              const int newPeriod)
+bvbv_INLINE_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
+                                     const int frameStartSample, const int frameEndSample, const int frameSize,
+                                     const SampleType* window,
+                                     const int newPeriod)
 {
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
@@ -206,7 +209,7 @@ bvhv_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
 }
 
 
-bvhv_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
+bvbv_INLINE_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 {
     synthesisIndex -= numSamplesUsed;
     
@@ -224,7 +227,7 @@ bvhv_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
-bvhv_VOID_TEMPLATE::clearCurrentNote()
+bvbv_INLINE_VOID_TEMPLATE::clearCurrentNote()
 {
     currentVelocityMultiplier = 0.0f;
     lastRecievedVelocity = 0.0f;
@@ -362,6 +365,8 @@ bvhv_VOID_TEMPLATE::increaseBufferSizes(const int newMaxBlocksize)
 
 
 #undef bvhv_VOID_TEMPLATE
+#undef bvbv_INLINE_VOID_TEMPLATE
+    
     
 template class HarmonizerVoice<float>;
 template class HarmonizerVoice<double>;

@@ -50,6 +50,8 @@ private:
     juce::String noteheadSvg;
     juce::Path noteheadPath;
     
+    void makeYcoordLookupTable();
+    
     inline juce::String _notehead_svg();
     
     //String flatSvg;

@@ -16,6 +16,9 @@ namespace bav
 #undef bvh_VOID_TEMPLATE
 #define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
     
+#undef bvh_INLINE_VOID_TEMPLATE
+#define bvh_INLINE_VOID_TEMPLATE template<typename SampleType> inline void Harmonizer<SampleType>
+    
 
 bvh_VOID_TEMPLATE::turnOffAllKeyupNotes (const bool allowTailOff,
                                          const bool includePedalPitchAndDescant,
@@ -104,7 +107,7 @@ bvh_VOID_TEMPLATE::processMidiEvent (const MidiMessage& m)
 }
 
 
-bvh_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int samplePosition)
+bvh_INLINE_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int samplePosition)
 {
     // events coming from a midi keyboard, or the plugin's midi input, should be routed to this function.
 
@@ -129,7 +132,7 @@ bvh_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int samplePositi
 
     
 // this function should be called once after each time the harmonizer's overall pitch collection has changed - so, after a midi buffer of keyboard inout events has been processed, or after a chord has been triggered, etc.
-bvh_VOID_TEMPLATE::pitchCollectionChanged()
+bvh_INLINE_VOID_TEMPLATE::pitchCollectionChanged()
 {
     if (pedal.isOn)
         applyPedalPitch();
@@ -146,7 +149,7 @@ bvh_VOID_TEMPLATE::pitchCollectionChanged()
  // midi note events ---------------------------------------------------------------------------------------------------------------------------
 ***********************************************************************************************************************************************/
     
-bvh_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
+bvh_INLINE_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
@@ -180,7 +183,7 @@ bvh_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, const bool
 }
 
 
-bvh_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
+bvh_INLINE_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
     if (voice == nullptr)
         return;
@@ -246,9 +249,9 @@ bvh_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int mid
 }
 
 
-bvh_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
-                            const bool allowTailOff,
-                            const bool isKeyboard)
+bvh_INLINE_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
+                                   const bool allowTailOff,
+                                   const bool isKeyboard)
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, latch, etc)
     
@@ -308,7 +311,7 @@ bvh_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocity,
 }
 
 
-bvh_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
+bvh_INLINE_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
 {
     if (voice == nullptr)
         return;
@@ -347,7 +350,7 @@ bvh_VOID_TEMPLATE::allNotesOff (const bool allowTailOff, const float velocity)
  // other midi events --------------------------------------------------------------------------------------------------------------------------
 ***********************************************************************************************************************************************/
 
-bvh_VOID_TEMPLATE::handlePitchWheel (int wheelValue)
+bvh_INLINE_VOID_TEMPLATE::handlePitchWheel (int wheelValue)
 {
     jassert (wheelValue >= 0 && wheelValue <= 127);
     
@@ -366,7 +369,7 @@ bvh_VOID_TEMPLATE::handlePitchWheel (int wheelValue)
 }
 
 
-bvh_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchValue)
+bvh_INLINE_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 {
     jassert (midiNoteNumber >= 0 && midiNoteNumber <= 127);
     jassert (aftertouchValue >= 0 && aftertouchValue <= 127);
@@ -386,7 +389,7 @@ bvh_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchValue)
 }
 
 
-bvh_VOID_TEMPLATE::handleChannelPressure (int channelPressureValue)
+bvh_INLINE_VOID_TEMPLATE::handleChannelPressure (int channelPressureValue)
 {
     jassert (channelPressureValue >= 0 && channelPressureValue <= 127);
     
@@ -432,7 +435,7 @@ bvh_VOID_TEMPLATE::updateChannelPressure (int newIncomingAftertouch)
 }
     
 
-bvh_VOID_TEMPLATE::handleController (const int controllerNumber, int controllerValue)
+bvh_INLINE_VOID_TEMPLATE::handleController (const int controllerNumber, int controllerValue)
 {
     jassert (controllerValue >= 0 && controllerValue <= 127);
     
@@ -452,7 +455,7 @@ bvh_VOID_TEMPLATE::handleController (const int controllerNumber, int controllerV
 }
 
 
-bvh_VOID_TEMPLATE::handleSustainPedal (const int value)
+bvh_INLINE_VOID_TEMPLATE::handleSustainPedal (const int value)
 {
     const bool isDown = (value >= 64);
     
@@ -470,7 +473,7 @@ bvh_VOID_TEMPLATE::handleSustainPedal (const int value)
 }
 
 
-bvh_VOID_TEMPLATE::handleSostenutoPedal (const int value)
+bvh_INLINE_VOID_TEMPLATE::handleSostenutoPedal (const int value)
 {
     const bool isDown = (value >= 64);
     
@@ -495,7 +498,7 @@ bvh_VOID_TEMPLATE::handleSostenutoPedal (const int value)
 }
 
 
-bvh_VOID_TEMPLATE::handleSoftPedal (const int value)
+bvh_INLINE_VOID_TEMPLATE::handleSoftPedal (const int value)
 {
     const bool isDown = value >= 64;
     
@@ -509,37 +512,38 @@ bvh_VOID_TEMPLATE::handleSoftPedal (const int value)
 }
 
 
-bvh_VOID_TEMPLATE::handleModWheel (const int wheelValue)
+bvh_INLINE_VOID_TEMPLATE::handleModWheel (const int wheelValue)
 {
     ignoreUnused(wheelValue);
 }
 
-bvh_VOID_TEMPLATE::handleBreathController (const int controlValue)
+bvh_INLINE_VOID_TEMPLATE::handleBreathController (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-bvh_VOID_TEMPLATE::handleFootController (const int controlValue)
+bvh_INLINE_VOID_TEMPLATE::handleFootController (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-bvh_VOID_TEMPLATE::handlePortamentoTime (const int controlValue)
+bvh_INLINE_VOID_TEMPLATE::handlePortamentoTime (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-bvh_VOID_TEMPLATE::handleBalance (const int controlValue)
+bvh_INLINE_VOID_TEMPLATE::handleBalance (const int controlValue)
 {
     ignoreUnused(controlValue);
 }
 
-bvh_VOID_TEMPLATE::handleLegato (const bool isOn)
+bvh_INLINE_VOID_TEMPLATE::handleLegato (const bool isOn)
 {
     ignoreUnused(isOn);
 }
 
 
 #undef bvh_VOID_TEMPLATE
+#undef bvh_INLINE_VOID_TEMPLATE
     
 } // namespace

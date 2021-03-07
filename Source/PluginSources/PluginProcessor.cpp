@@ -29,7 +29,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename SampleType>
-void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
+inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
 {
     double initSamplerate = getSampleRate();
     
@@ -65,7 +65,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
 
 
 template <typename SampleType1, typename SampleType2>
-void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
+inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
                                                  bav::ImogenEngine<SampleType1>& activeEngine,
                                                  bav::ImogenEngine<SampleType2>& idleEngine)
 {
@@ -162,7 +162,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
 // LAYER 2 ---------------------------------------------------------------------------------
 
 template <typename SampleType>
-void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
+inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                 juce::MidiBuffer& midiMessages,
                                                 bav::ImogenEngine<SampleType>& engine,
                                                 const bool isBypassedNow)
@@ -272,7 +272,7 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 }
 
 
-juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
+inline juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (host.isLogic() || host.isGarageBand())

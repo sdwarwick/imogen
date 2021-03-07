@@ -175,26 +175,24 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 
 // functions for preset & state management system ---------------------------------------------------------------------------------------------------
 
-juce::File ImogenAudioProcessor::getPresetsFolder() const
+inline juce::File ImogenAudioProcessor::getPresetsFolder() const
 {
     juce::File rootFolder;
     
 #if JUCE_MAC
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
-    .getChildFile ("Audio")
-    .getChildFile ("Presets")
-    .getChildFile ("Ben Vining Music Software")
-    .getChildFile ("Imogen");
-    
+                    .getChildFile ("Audio")
+                    .getChildFile ("Presets")
+                    .getChildFile ("Ben Vining Music Software")
+                    .getChildFile ("Imogen");
 #elif JUCE_LINUX
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
-    .getChildFile ("Ben Vining Music Software")
-    .getChildFile ("Imogen");
-    
+                    .getChildFile ("Ben Vining Music Software")
+                    .getChildFile ("Imogen");
 #elif JUCE_WINDOWS
     rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory)
-    .getChildFile ("Ben Vining Music Software")
-    .getChildFile ("Imogen");
+                    .getChildFile ("Ben Vining Music Software")
+                    .getChildFile ("Imogen");
 #else
   #error Unsupported operating system!
 #endif
@@ -254,7 +252,7 @@ void ImogenAudioProcessor::savePreset (juce::String presetName)
 
 
 template<typename SampleType>
-std::unique_ptr<juce::XmlElement> ImogenAudioProcessor::pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine)
+inline std::unique_ptr<juce::XmlElement> ImogenAudioProcessor::pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine)
 {
     std::unique_ptr<juce::XmlElement> xml = tree.copyState().createXml();
     
@@ -300,7 +298,7 @@ bool ImogenAudioProcessor::loadPreset (juce::String presetName)
 
 
 template<typename SampleType>
-bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine)
+inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine)
 {
     if (! newState.hasTagName (tree.state.getType()))
         return false;

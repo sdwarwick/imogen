@@ -27,16 +27,6 @@ noteheadPath(Drawable::parseSVGPath(noteheadSvg))
     yCoordsOfActiveNotes.ensureStorageAllocated(12);
     yCoordsOfActiveNotes.clearQuick();
     
-    constexpr int noteheadHeightPx = 5 + 17;
-    yCoordLookupTable[0] = 17;
-    for (int n = 1; n < 127; ++n)
-    {
-        if (bav::midi::isMidiNoteBlackKey(n))
-            yCoordLookupTable[n] = yCoordLookupTable[n - 1];
-        else
-            yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
-    }
-    
     staffImage.setImage(grandStaff);
     addAndMakeVisible(staffImage);
 }
@@ -66,6 +56,8 @@ void StaffDisplay::resized()
     
     auto ctr{ noteheadPath.getBounds().getCentre() };
     noteheadPath.applyTransform(AffineTransform::translation(-ctr.getX(), -ctr.getY()));
+    
+    makeYcoordLookupTable();
 }
 
 
@@ -140,6 +132,22 @@ void StaffDisplay::drawAccidental(const int x, const int y, Graphics& g)
     }
     
 }
+
+    
+inline void StaffDisplay::makeYcoordLookupTable()
+{
+    constexpr int noteheadHeightPx = 5 + 17;
+    yCoordLookupTable[0] = 17;
+    
+    for (int n = 1; n < 127; ++n)
+    {
+        if (bav::midi::isMidiNoteBlackKey(n))
+            yCoordLookupTable[n] = yCoordLookupTable[n - 1];
+        else
+            yCoordLookupTable[n] = yCoordLookupTable[n - 1] + noteheadHeightPx;
+    }
+}
+
     
 inline juce::String StaffDisplay::_notehead_svg()
 {

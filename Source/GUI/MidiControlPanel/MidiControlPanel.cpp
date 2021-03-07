@@ -253,7 +253,7 @@ void MidiControlPanel::resized()
 }
 
 
-void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
+inline void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
 {
     box.addItem("1", 1);
     box.addItem("2", 2);
@@ -270,7 +270,7 @@ void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
 }
 
 
-void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
+inline void MidiControlPanel::buildIntervalCombobox(ComboBox& box)
 {
     box.addItem("Minor Second", 1);
     box.addItem("Major Second", 2);

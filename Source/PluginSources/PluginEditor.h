@@ -42,15 +42,15 @@ private:
     
     ImogenAudioProcessor& audioProcessor;
     
-    void skinSelectorChanged();
+    inline void skinSelectorChanged();
     
-    void newPresetSelected();
+    inline void newPresetSelected();
     
-    void makePresetMenu(juce::ComboBox& box);
+    inline void makePresetMenu(juce::ComboBox& box);
     
     bav::TouchOnceAndForgetSettingsComponent touchOnceSettings;
     juce::TextButton touchOnceSettingsButton;
-    void touchOnceSettingsButtonClicked();
+    inline void touchOnceSettingsButtonClicked();
     
     bav::ImogenLookAndFeel lookAndFeel;
     bav::ImogenLookAndFeel::Skin currentSkin;
@@ -64,13 +64,13 @@ private:
     
     bav::HelpScreen helpScreen;
     juce::TextButton helpButton;
-    void helpButtonClicked();
+    inline void helpButtonClicked();
     
     juce::ComboBox selectPreset;
     
     juce::ComboBox modulatorInputSource;
 
-    void changeModulatorInputSource();
+    inline void changeModulatorInputSource();
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     bav::EnableSidechainWarning sidechainWarning;

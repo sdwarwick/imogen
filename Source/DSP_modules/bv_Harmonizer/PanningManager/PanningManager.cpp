@@ -187,7 +187,7 @@ int PanningManager::getClosestNewPanValFromOld (int oldPan)
 }
     
     
-int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray)
+inline int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray)
 {
     if (newArray.isEmpty())
         return -1;
@@ -217,7 +217,7 @@ void PanningManager::reset()
 }
 
 
-void PanningManager::mapArrayIndexes()
+inline void PanningManager::mapArrayIndexes()
 {
     /* In my updateStereoWidth() function, possible panning values are written to the possiblePanVals array in order from least to greatest absolute value. Index 0 will contain the smallest midiPan value, and the highest index will contain the largest midiPan value.
      

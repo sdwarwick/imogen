@@ -136,7 +136,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 }
 
 
-void ImogenAudioProcessorEditor::changeModulatorInputSource()
+inline void ImogenAudioProcessorEditor::changeModulatorInputSource()
 {
 //    switch (modulatorInputSource.getSelectedId())
 //    {
@@ -155,7 +155,7 @@ void ImogenAudioProcessorEditor::changeModulatorInputSource()
 }
 
 
-void ImogenAudioProcessorEditor::skinSelectorChanged()
+inline void ImogenAudioProcessorEditor::skinSelectorChanged()
 {
     switch (selectSkin.getSelectedId())
     {
@@ -184,7 +184,7 @@ void ImogenAudioProcessorEditor::skinSelectorChanged()
 }
 
 
-void ImogenAudioProcessorEditor::helpButtonClicked()
+inline void ImogenAudioProcessorEditor::helpButtonClicked()
 {
     if (! helpScreen.isVisible() )
     {
@@ -196,7 +196,7 @@ void ImogenAudioProcessorEditor::helpButtonClicked()
 }
 
 
-void ImogenAudioProcessorEditor::touchOnceSettingsButtonClicked()
+inline void ImogenAudioProcessorEditor::touchOnceSettingsButtonClicked()
 {
     if (! touchOnceSettings.isVisible() )
     {
@@ -214,7 +214,7 @@ void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices
 }
 
 
-void ImogenAudioProcessorEditor::newPresetSelected()
+inline void ImogenAudioProcessorEditor::newPresetSelected()
 {
     auto preset = selectPreset.getItemText (selectPreset.getSelectedId());
     
@@ -222,7 +222,7 @@ void ImogenAudioProcessorEditor::newPresetSelected()
 }
 
 
-void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
+inline void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
 {
     int id = 1;
     

@@ -231,7 +231,7 @@ public:
     }
     
     
-    void initializeLabel (juce::Label& l, juce::String labelText)
+    inline void initializeLabel (juce::Label& l, juce::String labelText)
     {
         l.setFont(juce::Font(14.0f, juce::Font::bold));
         l.setJustificationType(juce::Justification::centred);
@@ -240,7 +240,7 @@ public:
     
     
     template<typename valueType>
-    void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, valueType initValue)
+    inline void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, valueType initValue)
     {
         slider.setSliderStyle (style);
         slider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
@@ -261,7 +261,7 @@ public:
     
 private:
     
-    void CasualDenimSkin()
+    inline void CasualDenimSkin()
     {
         // GUI background
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
@@ -285,7 +285,7 @@ private:
     }
     
     
-    void PlayfulBohoSkin()
+    inline void PlayfulBohoSkin()
     {
         // GUI background
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::tomato);
@@ -309,7 +309,7 @@ private:
     }
     
     
-    void ChicEveningwearSkin()
+    inline void ChicEveningwearSkin()
     {
         // GUI background
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::black);
@@ -333,7 +333,7 @@ private:
     }
     
     
-    void goDesign4()
+    inline void goDesign4()
     {
         // GUI background
         this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
