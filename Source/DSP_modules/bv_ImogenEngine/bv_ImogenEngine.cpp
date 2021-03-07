@@ -99,11 +99,16 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
     juce::ignoreUnused (blocksize);
 #endif
     
+    const int before = FIFOEngine::getLatency();
+    
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
     
     FIFOEngine::changeLatency (harmonizer.getLatencySamples());
     
     const int block = FIFOEngine::getLatency();
+    
+    if (before == block)
+        latencyChanged (block);
     
     dspSpec.sampleRate = samplerate;
     dspSpec.numChannels = 2;
@@ -124,6 +129,8 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
 template <typename SampleType>
 void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
 {
+    jassert (newInternalBlocksize == FIFOEngine::getLatency());
+    
     harmonizer.prepare (newInternalBlocksize);
     
     dryBuffer.setSize (2, newInternalBlocksize, true, true, true);
