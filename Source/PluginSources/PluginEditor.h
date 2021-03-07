@@ -35,7 +35,7 @@ public:
     
     void timerCallback() override;
     
-    void updateNumVoicesCombobox(const int newNumVoices);
+    void updateNumVoicesCombobox (const int newNumVoices);
     
     
 private:
@@ -46,15 +46,13 @@ private:
     
     inline void newPresetSelected();
     
-    inline void makePresetMenu(juce::ComboBox& box);
+    inline void makePresetMenu (juce::ComboBox& box);
+    
+    bav::ImogenLookAndFeel lookAndFeel;
     
     bav::TouchOnceAndForgetSettingsComponent touchOnceSettings;
     juce::TextButton touchOnceSettingsButton;
     inline void touchOnceSettingsButtonClicked();
-    
-    bav::ImogenLookAndFeel lookAndFeel;
-    bav::ImogenLookAndFeel::Skin currentSkin;
-    bav::ImogenLookAndFeel::Skin prevSkin;
     
     juce::ComboBox selectSkin;
     juce::Label skinLabel;
@@ -78,6 +76,9 @@ private:
 #endif
     
     bav::StaffDisplay staffDisplay;
+    
+    bav::ImogenLookAndFeel::Skin currentSkin;
+    bav::ImogenLookAndFeel::Skin prevSkin;
     
     // bav::Imogen_touchOnceAndForgetSettings touchOnceSettings;
     

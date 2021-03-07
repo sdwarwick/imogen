@@ -23,11 +23,6 @@ public:
 
     }
 
-    ~EnableSidechainWarning() override
-    {
-        setLookAndFeel(nullptr);
-    }
-
     void paint (juce::Graphics& g) override
     {
         g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background

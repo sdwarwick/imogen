@@ -23,7 +23,7 @@ closeIcon(juce::ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData:
 
 HelpScreen::~HelpScreen()
 {
-    setLookAndFeel(nullptr);
+    this->setLookAndFeel(nullptr);
 }
 
     

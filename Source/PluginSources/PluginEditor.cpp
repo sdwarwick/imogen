@@ -10,10 +10,10 @@
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), audioProcessor (p),
-    currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
-    prevSkin(currentSkin),
     midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel),
-    staffDisplay(p, lookAndFeel)
+    staffDisplay(p, lookAndFeel),
+    currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
+    prevSkin(currentSkin)
 {
     this->setBufferedToImage (true);
     
@@ -77,8 +77,12 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 }
 
 
-ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor() {
-    setLookAndFeel(nullptr);
+ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
+{
+    this->setBufferedToImage (false);
+    this->setLookAndFeel(nullptr);
+    helpScreen.setLookAndFeel(nullptr);
+    touchOnceSettings.setLookAndFeel(nullptr);
     Timer::stopTimer();
 }
 

@@ -46,7 +46,7 @@ public:
     
     ~LimiterControlPanel() override
     {
-        setLookAndFeel(nullptr);
+        this->setLookAndFeel(nullptr);
     }
     
     void paint (juce::Graphics& g) override

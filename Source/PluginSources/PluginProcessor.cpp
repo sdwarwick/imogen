@@ -173,6 +173,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     if (! engine.hasBeenInitialized())
         return;
     
+    jassert (! engine.hasBeenReleased());
+    
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
         return;   // our audio input is disabled! can't do processing

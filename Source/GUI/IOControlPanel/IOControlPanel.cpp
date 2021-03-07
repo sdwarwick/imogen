@@ -64,7 +64,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
 
 IOControlPanel::~IOControlPanel()
 {
-    setLookAndFeel(nullptr);
+    this->setLookAndFeel(nullptr);
 }
     
     

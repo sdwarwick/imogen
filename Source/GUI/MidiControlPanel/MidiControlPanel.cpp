@@ -173,7 +173,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
 
 MidiControlPanel::~MidiControlPanel()
 {
-    setLookAndFeel(nullptr);
+    this->setLookAndFeel(nullptr);
 }
 
 void MidiControlPanel::paint (juce::Graphics& g)

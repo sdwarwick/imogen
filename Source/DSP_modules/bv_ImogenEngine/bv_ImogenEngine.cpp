@@ -35,6 +35,10 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1),
     
     wetGain.store(1.0f);
     prevWetGain.store(1.0f);
+    
+    dspSpec.numChannels = 2;
+    dspSpec.sampleRate = 44100.0;
+    dspSpec.maximumBlockSize = 512;
 }
 
     
@@ -43,9 +47,11 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 {
     jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
     
-    harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
+    const int blocksize = FIFOEngine::getLatency();
     
-    FIFOEngine::prepare(initSamplerate, initSamplesPerBlock);
+    monoBuffer.setSize (1, blocksize, true, true, true);
+    
+    harmonizer.initialize (initNumVoices, initSamplerate, blocksize);
     
     initialized = true;
 }
@@ -57,6 +63,8 @@ void ImogenEngine<SampleType>::reset()
     
     dryWetMixer.reset();
     limiter.reset();
+    
+    monoBuffer.clear();
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store(inputGain.load());
@@ -79,6 +87,7 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
     
     const int internalBlocksize = FIFOEngine::getLatency();
     
+    monoBuffer.setSize(1, internalBlocksize, true, true, true);
     dryBuffer.setSize (2, internalBlocksize, true, true, true);
     wetBuffer.setSize (2, internalBlocksize, true, true, true);
     
@@ -109,7 +118,11 @@ void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
     dryBuffer.setSize (2, newInternalBlocksize, true, true, true);
     wetBuffer.setSize (2, newInternalBlocksize, true, true, true);
     
+    monoBuffer.setSize (1, newInternalBlocksize, true, true, true);
+    
     dspSpec.maximumBlockSize = uint32(newInternalBlocksize);
+    dspSpec.numChannels = 2;
+    
     limiter.prepare (dspSpec);
     dryWetMixer.prepare (dspSpec);
 }
@@ -122,7 +135,7 @@ void ImogenEngine<SampleType>::release()
     
     wetBuffer.setSize(0, 0, false, false, false);
     dryBuffer.setSize(0, 0, false, false, false);
-    inBuffer .setSize(0, 0, false, false, false);
+    monoBuffer.setSize(0, 0, false, false, false);
     
     dryWetMixer.reset();
     limiter.reset();
@@ -138,26 +151,25 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     const int blockSize = input.getNumSamples();
     
     jassert (blockSize == FIFOEngine::getLatency());
-
-    AudioBuffer<SampleType> realInput; // isolate a mono input from the input buffer...
-
+    jassert (blockSize == output.getNumSamples());
+    
     switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
         case (0): // take only the left channel
         {
-            inBuffer.copyFrom(0, 0, input, 0, 0, blockSize);
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
             break;
         }
 
         case (1):  // take only the right channel
         {
-            inBuffer.copyFrom(0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
+            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
             break;
         }
 
         case (2):  // mix all input channels to mono
         {
-            inBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
             
             const int totalNumChannels = input.getNumChannels();
             
@@ -165,22 +177,22 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
                 break;
 
             for (int channel = 1; channel < totalNumChannels; ++channel)
-                inBuffer.addFrom (0, 0, input, channel, 0, blockSize);
+                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
 
-            inBuffer.applyGain (1.0f / totalNumChannels);
+            monoBuffer.applyGain (1.0f / totalNumChannels);
         }
     }
     
-    realInput = AudioBuffer<SampleType> (inBuffer.getArrayOfWritePointers(), 1, blockSize);
-    
     // master input gain
     const float currentInGain = inputGain.load();
-    inBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
+    monoBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
     prevInputGain.store(currentInGain);
+    
+    const AudioBuffer<SampleType> realInput = AudioBuffer<SampleType> (monoBuffer.getArrayOfWritePointers(), 1, blockSize);
 
     // write to dry buffer & apply panning
     for (int chan = 0; chan < 2; ++chan)
-        dryBuffer.copyFromWithRamp (chan, 0, inBuffer.getReadPointer(0), blockSize,
+        dryBuffer.copyFromWithRamp (chan, 0, realInput.getReadPointer(0), blockSize,
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
     // dry gain
     const float currentDryGain = dryGain.load();
@@ -191,7 +203,7 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
     // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
-    harmonizer.renderVoices (inBuffer, wetBuffer, midiMessages);
+    harmonizer.renderVoices (realInput, wetBuffer, midiMessages);
     
     // wet gain
     const float currentWetGain = wetGain.load();

@@ -26,10 +26,10 @@ using namespace juce;
 
 
 template<typename SampleType>
-    class ImogenEngine  :   public bav::dsp::FIFOWrappedEngine<SampleType>
+class ImogenEngine  :   public bav::dsp::FIFOWrappedEngineWithMidi<SampleType>
 {
     
-    using FIFOEngine = bav::dsp::FIFOWrappedEngine<SampleType>;
+    using FIFOEngine = bav::dsp::FIFOWrappedEngineWithMidi<SampleType>;
     
 public:
     ImogenEngine();
@@ -99,7 +99,7 @@ private:
     
     Harmonizer<SampleType> harmonizer;
     
-    AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
+    AudioBuffer<SampleType> monoBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
     
