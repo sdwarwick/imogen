@@ -53,8 +53,16 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
     monoBuffer.setSize (1, initSamplesPerBlock);
+    dryBuffer.setSize (2, initSamplesPerBlock);
+    wetBuffer.setSize (2, initSamplesPerBlock);
     
     initialized = true;
+    
+#define bvie_INIT_MIN_HZ 80
+#define bvie_INIT_MAX_HZ 2400
+    updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+#undef bvie_INIT_MIN_HZ
+#undef bvie_INIT_MAX_HZ
     
     FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
 }
@@ -91,20 +99,11 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
     juce::ignoreUnused (blocksize);
 #endif
     
-#define bvie_INIT_MIN_HZ 80
-#define bvie_INIT_MAX_HZ 2400
-    updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
-#undef bvie_INIT_MIN_HZ
-#undef bvie_INIT_MAX_HZ
+    harmonizer.setCurrentPlaybackSampleRate (samplerate);
+    
+    FIFOEngine::changeLatency (harmonizer.getLatencySamples());
     
     const int block = FIFOEngine::getLatency();
-    
-    monoBuffer.setSize(1, block, true, true, true);
-    dryBuffer.setSize (2, block, true, true, true);
-    wetBuffer.setSize (2, block, true, true, true);
-    
-    harmonizer.setCurrentPlaybackSampleRate (samplerate);
-    harmonizer.prepare (block);
     
     dspSpec.sampleRate = samplerate;
     dspSpec.numChannels = 2;
