@@ -14,50 +14,54 @@ namespace bav
 
 {
     
+    using APVTS = juce::AudioProcessorValueTreeState;
+    
 
 class IOControlPanel  : public juce::Component
 {
 public:
-    ImogenAudioProcessor& audioProcessor;
-    ImogenLookAndFeel& lookAndFeel;
+    
     IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l);
     ~IOControlPanel() override;
     
-    void paint (juce::Graphics&) override;
+    void paint (juce::Graphics& g) override;
     void resized() override;
     
     
 private:
     
+    ImogenAudioProcessor& audioProcessor;
+    ImogenLookAndFeel& lookAndFeel;
+    
     // dry vox (modulator) pan (in midiPan)
     juce::Slider dryPan;
     juce::Label drypanLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryPanLink;
+    std::unique_ptr<APVTS::SliderAttachment> dryPanLink;
     
     // modulator input gain (gain applied before mod signal is sent into harmony algorithm)
     juce::Slider inputGain;
     juce::Label inputGainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainLink;
+    std::unique_ptr<APVTS::SliderAttachment> inputGainLink;
     
     // master dry/wet
     juce::Slider masterDryWet;
     juce::Label drywetLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterDryWetLink;
+    std::unique_ptr<APVTS::SliderAttachment> masterDryWetLink;
     
     // dry gain
     juce::Slider dryGain;
     juce::Label dryGainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryGainLink;
+    std::unique_ptr<APVTS::SliderAttachment> dryGainLink;
     
     // wet gain
     juce::Slider wetGain;
     juce::Label wetGainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> wetGainLink;
+    std::unique_ptr<APVTS::SliderAttachment> wetGainLink;
     
     // master output gain
     juce::Slider outputGain;
     juce::Label outputgainLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputGainLink;
+    std::unique_ptr<APVTS::SliderAttachment> outputGainLink;
     
     LimiterControlPanel limiterPanel;
     

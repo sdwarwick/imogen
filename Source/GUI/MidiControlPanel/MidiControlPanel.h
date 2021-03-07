@@ -15,6 +15,8 @@
 namespace bav
 
 {
+    
+    using APVTS = juce::AudioProcessorValueTreeState;
 
     
 class MidiControlPanel  : public juce::Component
@@ -25,7 +27,7 @@ public:
     MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l);
     ~MidiControlPanel() override;
     
-    void paint (juce::Graphics&) override;
+    void paint (juce::Graphics& g) override;
     void resized() override;
     
     void updateNumVoicesCombobox(const int newNumVoices);
@@ -42,46 +44,46 @@ private:
     juce::Label sustainLabel;
     juce::Slider adsrRelease;
     juce::Label releaseLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackLink;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayLink;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sustainLink;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseLink;
+    std::unique_ptr<APVTS::SliderAttachment> attackLink;
+    std::unique_ptr<APVTS::SliderAttachment> decayLink;
+    std::unique_ptr<APVTS::SliderAttachment> sustainLink;
+    std::unique_ptr<APVTS::SliderAttachment> releaseLink;
     juce::ToggleButton adsrOnOff;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> adsrOnOffLink;
+    std::unique_ptr<APVTS::ButtonAttachment> adsrOnOffLink;
     
     // Midi latch
     juce::ToggleButton latchToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> latchToggleLink;
+    std::unique_ptr<APVTS::ButtonAttachment> latchToggleLink;
     
     // interval lock
     juce::ToggleButton intervalLock;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> intervalLockLink;
+    std::unique_ptr<APVTS::ButtonAttachment> intervalLockLink;
     
     // stereo width of harmony output
     juce::Slider stereoWidth;
     juce::Label stereowidthLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stereoWidthLink;
+    std::unique_ptr<APVTS::SliderAttachment> stereoWidthLink;
     // sets threshold for lowest panned midiPitch. set to 0 to turn off (pan all notes); set to 127 to bypass panning entirely (pan no notes)
     juce::Slider lowestPan;
     juce::Label lowestpanLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lowestPanLink;
+    std::unique_ptr<APVTS::SliderAttachment> lowestPanLink;
     
     // MIDI velocity sensitivity dial
     juce::Slider midiVelocitySens;
     juce::Label midivelocitysensLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> midiVelocitySensLink;
+    std::unique_ptr<APVTS::SliderAttachment> midiVelocitySensLink;
     
     // MIDI pitch bend range up/down controls
     juce::ComboBox pitchBendUp;
     juce::Label pitchbendUpLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendUpLink;
+    std::unique_ptr<APVTS::ComboBoxAttachment> pitchBendUpLink;
     juce::ComboBox pitchBendDown;
     juce::Label pitchbendDownLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> pitchBendDownLink;
+    std::unique_ptr<APVTS::ComboBoxAttachment> pitchBendDownLink;
     
     // voice stealing on/off toggle
     juce::ToggleButton voiceStealing;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> voiceStealingLink;
+    std::unique_ptr<APVTS::ButtonAttachment> voiceStealingLink;
     
     // kill all MIDI button
     juce::TextButton midiKill;
@@ -89,12 +91,12 @@ private:
     // set quick kill ms - amount of time it takes for voices to ramp to 0 if "kill all" button is pressed
     juce::Slider quickKillMs;
     juce::Label quickKillmsLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> quickKillMsLink;
+    std::unique_ptr<APVTS::SliderAttachment> quickKillMsLink;
     
     // set concert pitch in Hz
     juce::Slider concertPitch;
     juce::Label concertPitchLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> concertPitchLink;
+    std::unique_ptr<APVTS::SliderAttachment> concertPitchLink;
     
     // # of harmony voices
     juce::ComboBox numberOfVoices;
@@ -102,22 +104,22 @@ private:
     
     // pedal pitch
     juce::ToggleButton pedalPitchToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> pedalPitchToggleLink;
+    std::unique_ptr<APVTS::ButtonAttachment> pedalPitchToggleLink;
     juce::Slider pedalPitchThreshold;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pedalPitchThreshLink;
+    std::unique_ptr<APVTS::SliderAttachment> pedalPitchThreshLink;
     juce::Label pedalPitchThreshLabel;
     juce::ComboBox pedalPitchInterval;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> pedalPitchIntervalLink;
+    std::unique_ptr<APVTS::ComboBoxAttachment> pedalPitchIntervalLink;
     juce::Label pedalPitchIntervalLabel;
     
     // descant
     juce::ToggleButton descantToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> descantToggleLink;
+    std::unique_ptr<APVTS::ButtonAttachment> descantToggleLink;
     juce::Slider descantThreshold;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> descantThresholdLink;
+    std::unique_ptr<APVTS::SliderAttachment> descantThresholdLink;
     juce::Label descantThreshLabel;
     juce::ComboBox descantInterval;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> descantIntervalLink;
+    std::unique_ptr<APVTS::ComboBoxAttachment> descantIntervalLink;
     juce::Label descantIntervalLabel;
     
     void buildIntervalCombobox(juce::ComboBox& box);

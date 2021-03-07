@@ -21,27 +21,27 @@ namespace bav
     
 MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
-    attackLink (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),
-    decayLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay)),
-    sustainLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
-    releaseLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
-    adsrOnOffLink  (std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
-    latchToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "latchIsOn", latchToggle)),
-    intervalLockLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "intervalLock", intervalLock)),
-    stereoWidthLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
-    lowestPanLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
-    midiVelocitySensLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
-    pitchBendUpLink  (std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
-    pitchBendDownLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
-    voiceStealingLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing)),
-    quickKillMsLink  (std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs)),
-    concertPitchLink (std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "concertPitch", concertPitch)),
-    pedalPitchToggleLink(std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
-    pedalPitchThreshLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThreshold)),
-    pedalPitchIntervalLink(std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.tree, "pedalPitchInterval", pedalPitchInterval)),
-    descantToggleLink   (std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "descantToggle", descantToggle)),
-    descantThresholdLink(std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "descantThresh", descantThreshold)),
-    descantIntervalLink (std::make_unique<AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.tree, "descantInterval", descantInterval))
+    attackLink (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),
+    decayLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay)),
+    sustainLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
+    releaseLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
+    adsrOnOffLink  (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
+    latchToggleLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "latchIsOn", latchToggle)),
+    intervalLockLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "intervalLock", intervalLock)),
+    stereoWidthLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
+    lowestPanLink  (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
+    midiVelocitySensLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
+    pitchBendUpLink  (std::make_unique<APVTS::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
+    pitchBendDownLink(std::make_unique<APVTS::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
+    voiceStealingLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing)),
+    quickKillMsLink  (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs)),
+    concertPitchLink (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "concertPitch", concertPitch)),
+    pedalPitchToggleLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
+    pedalPitchThreshLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThreshold)),
+    pedalPitchIntervalLink(std::make_unique<APVTS::ComboBoxAttachment>(audioProcessor.tree, "pedalPitchInterval", pedalPitchInterval)),
+    descantToggleLink   (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "descantToggle", descantToggle)),
+    descantThresholdLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "descantThresh", descantThreshold)),
+    descantIntervalLink (std::make_unique<APVTS::ComboBoxAttachment>(audioProcessor.tree, "descantInterval", descantInterval))
 {
     lookAndFeel.initializeSlider (adsrAttack, bvi_ROTARY_SLIDER, audioProcessor.getAdsrAttack());
     addAndMakeVisible(adsrAttack);
@@ -198,69 +198,46 @@ void MidiControlPanel::paint (juce::Graphics& g)
 
 void MidiControlPanel::resized()
 {
-    // adsr
-    {
-        attackLabel.setBounds	(5, 130, 75, 35);
-        adsrAttack.setBounds	(5, 152, 75, 75);
-        
-        decayLabel.setBounds	(78, 130, 75, 35);
-        adsrDecay.setBounds		(78, 152, 75, 75);
-        
-        sustainLabel.setBounds	(148, 130, 75, 35);
-        adsrSustain.setBounds	(148, 152, 75, 75);
-        
-        releaseLabel.setBounds	(220, 130, 75, 35);
-        adsrRelease.setBounds	(220, 152, 75, 75);
-        
-        adsrOnOff.setBounds		(70, 110, 175, 35);
-    }
+    attackLabel.setBounds	(5, 130, 75, 35);
+    adsrAttack.setBounds	(5, 152, 75, 75);
+    decayLabel.setBounds	(78, 130, 75, 35);
+    adsrDecay.setBounds		(78, 152, 75, 75);
+    sustainLabel.setBounds	(148, 130, 75, 35);
+    adsrSustain.setBounds	(148, 152, 75, 75);
+    releaseLabel.setBounds	(220, 130, 75, 35);
+    adsrRelease.setBounds	(220, 152, 75, 75);
+    adsrOnOff.setBounds		(70, 110, 175, 35);
     
     // midi latch
     //latchToggle.setBounds(x, y, w, h);
     //latchTailOff.setBounds(x, y, w, h);
+
+    stereowidthLabel.setBounds	(165, 300, 50, 50);
+    stereoWidth.setBounds		(153, 333, 75, 75);
+    lowestpanLabel.setBounds	(240, 310, 50, 50);
+    lowestPan.setBounds			(248, 365, 35, 35);
+
+    midivelocitysensLabel.setBounds(5, 10, 85, 35);
+    midiVelocitySens.setBounds(25, 50, 45, 45);
+
+    pitchbendUpLabel.setBounds	(15, 235, 130, 35);
+    pitchBendUp.setBounds		(15, 265, 130, 30);
     
-    // stereo width
-    {
-        stereowidthLabel.setBounds	(165, 300, 50, 50);
-        stereoWidth.setBounds		(153, 333, 75, 75);
-        
-        lowestpanLabel.setBounds	(240, 310, 50, 50);
-        lowestPan.setBounds			(248, 365, 35, 35);
-    }
-    
-    // midi velocity sensitivity
-    {
-        midivelocitysensLabel.setBounds(5, 10, 85, 35);
-        midiVelocitySens.setBounds(25, 50, 45, 45);
-    }
-    
-    // pitch bend
-    {
-        pitchbendUpLabel.setBounds	(15, 235, 130, 35);
-        pitchBendUp.setBounds		(15, 265, 130, 30);
-        
-        pitchbendDownLabel.setBounds(150, 235, 140, 35);
-        pitchBendDown.setBounds		(155, 265, 130, 30);
-    }
-    
-    // pedal pitch
-    {
-        //pedalPitchToggle.setBounds(x, y, w, h);
-        //pedalPitchThreshold.setBounds(x, y, w, h);
-        //pedalPitchThreshLabel.setBounds(x, y, w, h);
-        //pedalPitchInterval.setBounds(x, y, w, h);
-        //pedalPitchIntervalLabel.setBounds(x, y, w, h);
-    }
-    
-    // descant
-    {
-        //descantToggle.setBounds(x, y, w, h);
-        //descantThreshold.setBounds(x, y, w, h);
-        //descantThreshLabel.setBounds(x, y, w, h);
-        //descantInterval.setBounds(x, y, w, h);
-        //descantIntervalLabel.setBounds(x, y, w, h);
-    }
-    
+    pitchbendDownLabel.setBounds(150, 235, 140, 35);
+    pitchBendDown.setBounds		(155, 265, 130, 30);
+
+    //pedalPitchToggle.setBounds(x, y, w, h);
+    //pedalPitchThreshold.setBounds(x, y, w, h);
+    //pedalPitchThreshLabel.setBounds(x, y, w, h);
+    //pedalPitchInterval.setBounds(x, y, w, h);
+    //pedalPitchIntervalLabel.setBounds(x, y, w, h);
+
+    //descantToggle.setBounds(x, y, w, h);
+    //descantThreshold.setBounds(x, y, w, h);
+    //descantThreshLabel.setBounds(x, y, w, h);
+    //descantInterval.setBounds(x, y, w, h);
+    //descantIntervalLabel.setBounds(x, y, w, h);
+
     midiKill.setBounds(145, 5, 100, 35);
     quickKillmsLabel.setBounds(98, 35, 85, 35);
     quickKillMs.setBounds(118, 60, 45, 45);

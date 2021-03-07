@@ -6,7 +6,6 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-
 #include "BinaryData.h"
 
 
@@ -21,7 +20,7 @@ public:
     HelpScreen();
     ~HelpScreen() override;
     
-    void paint (juce::Graphics&) override;
+    void paint (juce::Graphics& g) override;
     void resized() override;
 
     

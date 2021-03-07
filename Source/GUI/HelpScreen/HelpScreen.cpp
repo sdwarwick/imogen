@@ -13,7 +13,10 @@ namespace bav
 HelpScreen::HelpScreen():
 closeIcon(juce::ImageCache::getFromMemory(BinaryData::closeIcon_png, BinaryData::closeIcon_pngSize))
 {
-    closeButton.setImages(true, true, true, closeIcon, 1.0f, juce::Colours::transparentBlack, closeIcon, 1.0f, juce::Colours::transparentWhite, closeIcon, 1.0f, juce::Colours::transparentWhite);
+    closeButton.setImages(true, true, true, closeIcon, 1.0f,
+                          juce::Colours::transparentBlack, closeIcon, 1.0f,
+                          juce::Colours::transparentWhite, closeIcon, 1.0f,
+                          juce::Colours::transparentWhite);
     addAndMakeVisible(closeButton);
     closeButton.onClick = [this] { this->setVisible(false); };
 }
@@ -23,6 +26,7 @@ HelpScreen::~HelpScreen()
     setLookAndFeel(nullptr);
 }
 
+    
 void HelpScreen::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
@@ -35,6 +39,7 @@ void HelpScreen::paint (juce::Graphics& g)
     g.drawText ("Help Screen", getLocalBounds(), juce::Justification::centred, true);
 }
 
+    
 void HelpScreen::resized()
 {
     closeButton.setBounds(5, 5, 25, 25);

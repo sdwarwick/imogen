@@ -11,7 +11,7 @@
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), audioProcessor (p),
     currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
-    prevSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
+    prevSkin(currentSkin),
     midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel),
     staffDisplay(p, lookAndFeel)
 {

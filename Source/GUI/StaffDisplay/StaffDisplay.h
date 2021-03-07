@@ -27,7 +27,7 @@ public:
     StaffDisplay(ImogenAudioProcessor& p, ImogenLookAndFeel& l);
     ~StaffDisplay() override;
     
-    void paint (juce::Graphics&) override;
+    void paint (juce::Graphics& g) override;
     void resized() override;
     
     
@@ -49,6 +49,8 @@ private:
     
     juce::String noteheadSvg;
     juce::Path noteheadPath;
+    
+    inline juce::String _notehead_svg();
     
     //String flatSvg;
     //Path flatPath;

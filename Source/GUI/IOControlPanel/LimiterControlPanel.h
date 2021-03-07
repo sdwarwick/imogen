@@ -7,7 +7,6 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-
 #include "PluginSources/PluginProcessor.h"
 #include "GUI/LookAndFeel.h"
 
@@ -15,6 +14,8 @@
 namespace bav
 
 {
+    
+    using APVTS = juce::AudioProcessorValueTreeState;
     
 
 class LimiterControlPanel  : public juce::Component
@@ -24,9 +25,9 @@ public:
     ImogenLookAndFeel& lookAndFeel;
     LimiterControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
         audioProcessor(p), lookAndFeel(l),
-        limiterThreshLink (std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
-        limiterReleaseLink(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
-        limiterToggleLink (std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
+        limiterThreshLink (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "limiterThresh", limiterThresh)),
+        limiterReleaseLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
+        limiterToggleLink (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
         lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.getLimiterThresh());
         addAndMakeVisible(limiterThresh);
@@ -70,16 +71,16 @@ private:
     // threshold, in dBFS
     juce::Slider limiterThresh;
     juce::Label threshLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterThreshLink;
+    std::unique_ptr<APVTS::SliderAttachment> limiterThreshLink;
     
     // release time, in ms
     juce::Slider limiterRelease;
     juce::Label releaseLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> limiterReleaseLink;
+    std::unique_ptr<APVTS::SliderAttachment> limiterReleaseLink;
     
     // toggle limiter on/off
     juce::ToggleButton limiterToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> limiterToggleLink;
+    std::unique_ptr<APVTS::ButtonAttachment> limiterToggleLink;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LimiterControlPanel)
 };
