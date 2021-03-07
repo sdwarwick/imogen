@@ -110,7 +110,7 @@ bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
     
     sampleRate = newRate;
     
-    pitchDetector.setSamplerate (newRate, true);
+    pitchDetector.setSamplerate (newRate);
     
     const float currentFreq = currentInputFreq;
     

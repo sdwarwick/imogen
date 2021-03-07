@@ -32,14 +32,10 @@ template <typename SampleType>
 inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
 {
     double initSamplerate = getSampleRate();
-    
-    if (initSamplerate <= 0)
-        initSamplerate = 44100.0;
+    if (initSamplerate <= 0) initSamplerate = 44100.0;
     
     int initBlockSize = getBlockSize();
-    
-    if (initBlockSize <= 0)
-        initBlockSize = 512;
+    if (initBlockSize <= 0) initBlockSize = 512;
     
 #define imogen_DEFAULT_NUM_VOICES 12
     activeEngine.initialize (initSamplerate, initBlockSize, imogen_DEFAULT_NUM_VOICES);
@@ -57,10 +53,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, samplesPerBlock, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, samplesPerBlock, floatEngine,  doubleEngine);
-    
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    needsSidechain = (host.isLogic() || host.isGarageBand());
-#endif
 }
 
 
@@ -81,7 +73,11 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     
     setLatencySamples (activeEngine.reportLatency());
     
-    wasBypassedLastCallback = false;
+    wasBypassedLastCallback = true;
+    
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+    needsSidechain = (host.isLogic() || host.isGarageBand());
+#endif
 }
 
 

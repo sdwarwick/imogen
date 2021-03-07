@@ -259,7 +259,8 @@ public:
 
     void updatePitchDetectionHzRange (const int minHz, const int maxHz)
     {
-        pitchDetector.setHzRange (minHz, maxHz, (sampleRate > 0));
+        pitchDetector.setHzRange (minHz, maxHz);
+        if (sampleRate > 0) pitchDetector.setSamplerate (sampleRate);
     }
     
     void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)

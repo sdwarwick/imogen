@@ -119,6 +119,11 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     }
     
     jassert (! targetArray.isEmpty());
+    
+#if JUCE_DEBUG
+    for (int i = 2; i < targetArray.size(); ++i)
+        jassert (targetArray.getUnchecked(i) > targetArray.getUnchecked(i - 2));
+#endif
 }
     
     

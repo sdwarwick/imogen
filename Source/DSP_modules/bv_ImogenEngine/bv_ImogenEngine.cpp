@@ -50,13 +50,13 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     juce::ignoreUnused(initSamplesPerBlock);
 #endif
     
-    const int blocksize = FIFOEngine::getLatency();
+    harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
-    monoBuffer.setSize (1, blocksize, true, true, true);
-    
-    harmonizer.initialize (initNumVoices, initSamplerate, blocksize);
+    monoBuffer.setSize (1, initSamplesPerBlock);
     
     initialized = true;
+    
+    FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
 }
 
 template<typename SampleType>
@@ -88,8 +88,14 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
     jassert (samplerate > 0);
     jassert (blocksize > 0);
 #if ! JUCE_DEBUG
-    juce::ignoreUnused(blocksize);
+    juce::ignoreUnused (blocksize);
 #endif
+    
+#define bvie_INIT_MIN_HZ 80
+#define bvie_INIT_MAX_HZ 2400
+    updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+#undef bvie_INIT_MIN_HZ
+#undef bvie_INIT_MAX_HZ
     
     const int block = FIFOEngine::getLatency();
     
@@ -123,7 +129,6 @@ void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
     
     dryBuffer.setSize (2, newInternalBlocksize, true, true, true);
     wetBuffer.setSize (2, newInternalBlocksize, true, true, true);
-    
     monoBuffer.setSize (1, newInternalBlocksize, true, true, true);
     
     dspSpec.maximumBlockSize = uint32(newInternalBlocksize);

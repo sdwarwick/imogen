@@ -149,14 +149,13 @@ bvie_VOID_TEMPLATE::updateSoftPedalGain (const float newGain)
 
 bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
-    
-    
     const ScopedLock sl (lock);
+    
+    jassert (harmonizer.getSamplerate() > 0);
     
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
-    if (initialized)
-        FIFOEngine::changeLatency (harmonizer.getLatencySamples());
+    FIFOEngine::changeLatency (harmonizer.getLatencySamples());
 }
 
 
