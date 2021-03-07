@@ -149,7 +149,7 @@ bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxH
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
     
     if (initialized)
-        latencyChanged (harmonizer.getLatencySamples());
+        FIFOEngine::changeLatency (harmonizer.getLatencySamples());
 }
 
 

@@ -14,7 +14,7 @@
 
 #include "juce_dsp/juce_dsp.h"
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "bv_Harmonizer/bv_Harmonizer.h"  // this file includes the bv_SharedCode header
 
 
 
@@ -26,29 +26,22 @@ using namespace juce;
 
 
 template<typename SampleType>
-class ImogenEngine
+    class ImogenEngine  :   public bav::dsp::FIFOWrappedEngine<SampleType>
 {
+    
+    using FIFOEngine = bav::dsp::FIFOWrappedEngine<SampleType>;
     
 public:
     ImogenEngine();
     
-    ~ImogenEngine();
-    
-    void process (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages,
-                  const bool applyFadeIn = false, const bool applyFadeOut = false,
-                  const bool isBypassed = false);
     
     void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
-    
-    void prepare (double sampleRate, int samplesPerBlock);
     
     void reset();
     
     void killAllMidi();
     
-    void releaseResources();
-    
-    int reportLatency() const noexcept { return internalBlocksize; }
+    int reportLatency() const noexcept { return FIFOEngine::getLatency(); }
     
     void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     int getCurrentNumVoices() const { return harmonizer.getNumVoices(); }
@@ -96,21 +89,15 @@ private:
     // 2 - mix all input channels to mono
     std::atomic<int> modulatorInput;
     
-    int internalBlocksize; // the size of the processing blocks, in samples, that the algorithm will be processing at a time. This corresponds to the latency of the pitch detector, and, thus, the minimum possible Hz it can detect.
+    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages) override;
     
-    void processWrapped (AudioBuffer<SampleType>& inBus, AudioBuffer<SampleType>& output,
-                         MidiBuffer& midiMessages,
-                         const bool applyFadeIn, const bool applyFadeOut,
-                         const bool isBypassed = false);
+    void prepareToPlay (double samplerate, int blocksize) override;
     
-    void renderBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages);
+    void latencyChanged (int newInternalBlocksize) override;
     
-    void latencyChanged (const int newLatency);
+    void release() override;
     
     Harmonizer<SampleType> harmonizer;
-    
-    bav::dsp::AudioFIFO<SampleType> inputBuffer;
-    bav::dsp::AudioFIFO<SampleType> outputBuffer;
     
     AudioBuffer<SampleType> inBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
@@ -130,12 +117,6 @@ private:
     
     std::atomic<float> dryGain, wetGain, inputGain, outputGain;
     std::atomic<float> prevDryGain, prevWetGain, prevInputGain, prevOutputGain;
-    
-    juce::MidiBuffer midiChoppingBuffer;
-    
-    bav::midi::MidiFIFO midiInputCollection;
-    bav::midi::MidiFIFO midiOutputCollection;
-    bav::midi::MidiFIFO chunkMidiBuffer;
     
     bav::dsp::Panner dryPanner;
     
