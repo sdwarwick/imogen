@@ -46,7 +46,7 @@ public:
     void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     int getCurrentNumVoices() const { return harmonizer.getNumVoices(); }
     
-    void returnActivePitches (Array<int>& outputArray) const { harmonizer.reportActiveNotes(outputArray); }
+    void returnActivePitches (Array<int>& outputArray) const;
     
     void updateDryWet     (const int percentWet);
     void updateDryVoxPan  (const int newMidiPan);
@@ -79,6 +79,10 @@ public:
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource) { modulatorInput.store(newSource); }
+    
+    void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
+    
+    void playIntervalSet (const Array<int>& desiredIntervals, const float velocity, const bool allowTailOffOfOld);
     
     
 private:

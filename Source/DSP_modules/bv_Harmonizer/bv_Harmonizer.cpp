@@ -165,8 +165,6 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                  AudioBuffer<SampleType>& outputBuffer,
                                  MidiBuffer& midiMessages)
 {
-    const ScopedLock sl (lock);
-    
     outputBuffer.clear();
     
     processMidi (midiMessages);

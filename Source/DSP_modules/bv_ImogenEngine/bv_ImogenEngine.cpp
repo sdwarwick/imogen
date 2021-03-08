@@ -50,13 +50,13 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     juce::ignoreUnused(initSamplesPerBlock);
 #endif
     
+    const ScopedLock sl (lock);
+    
     harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
     
     monoBuffer.setSize (1, initSamplesPerBlock);
     dryBuffer.setSize (2, initSamplesPerBlock);
     wetBuffer.setSize (2, initSamplesPerBlock);
-    
-    initialized = true;
     
 #define bvie_INIT_MIN_HZ 80
 #define bvie_INIT_MAX_HZ 2400
@@ -65,11 +65,15 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 #undef bvie_INIT_MAX_HZ
     
     FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
+    
+    initialized = true;
 }
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::reset()
 {
+    const ScopedLock sl (lock);
+    
     harmonizer.allNotesOff(false);
     
     dryWetMixer.reset();
@@ -82,13 +86,39 @@ void ImogenEngine<SampleType>::reset()
     prevDryGain.store(dryGain.load());
     prevWetGain.store(wetGain.load());
 }
-   
+    
+
 template<typename SampleType>
 void ImogenEngine<SampleType>::killAllMidi()
 {
+    const ScopedLock sl (lock);
     harmonizer.allNotesOff(false);
 }
 
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld)
+{
+    const ScopedLock sl (lock);
+    harmonizer.playChord (desiredNotes, velocity, allowTailOffOfOld);
+}
+    
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::playIntervalSet (const Array<int>& desiredIntervals, const float velocity, const bool allowTailOffOfOld)
+{
+    const ScopedLock sl (lock);
+    harmonizer.playIntervalSet (desiredIntervals, velocity, allowTailOffOfOld, false);
+}
+    
+
+template<typename SampleType>
+void ImogenEngine<SampleType>::returnActivePitches (Array<int>& outputArray) const
+{
+    const ScopedLock sl (lock);
+    harmonizer.reportActiveNotes(outputArray);
+}
+    
 
 template <typename SampleType>
 void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
@@ -99,30 +129,24 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
     juce::ignoreUnused (blocksize);
 #endif
     
+    const ScopedLock sl (lock);
+    
+    dspSpec.sampleRate = samplerate;
+    dspSpec.numChannels = 2;
+    
     const int before = FIFOEngine::getLatency();
     
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
     
     FIFOEngine::changeLatency (harmonizer.getLatencySamples());
     
-    const int block = FIFOEngine::getLatency();
-    
-    if (before == block)
-        latencyChanged (block);
-    
-    dspSpec.sampleRate = samplerate;
-    dspSpec.numChannels = 2;
-    dspSpec.maximumBlockSize = uint32(block);
-    limiter.prepare (dspSpec);
-    dryWetMixer.prepare (dspSpec);
-    dryWetMixer.setWetLatency(0);
-    
-    resourcesReleased = false;
+    if (before == FIFOEngine::getLatency())  // if the latency *didn't* change, still force a refresh of everything by calling this manually
+        latencyChanged (before);
     
     prevOutputGain.store(outputGain.load());
-    prevInputGain.store(inputGain.load());
-    prevDryGain.store(dryGain.load());
-    prevWetGain.store(wetGain.load());
+    prevInputGain.store (inputGain.load());
+    prevDryGain.store (dryGain.load());
+    prevWetGain.store (wetGain.load());
 }
     
 
@@ -133,8 +157,8 @@ void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
     
     harmonizer.prepare (newInternalBlocksize);
     
-    dryBuffer.setSize (2, newInternalBlocksize, true, true, true);
-    wetBuffer.setSize (2, newInternalBlocksize, true, true, true);
+    dryBuffer.setSize  (2, newInternalBlocksize, true, true, true);
+    wetBuffer.setSize  (2, newInternalBlocksize, true, true, true);
     monoBuffer.setSize (1, newInternalBlocksize, true, true, true);
     
     dspSpec.maximumBlockSize = uint32(newInternalBlocksize);
@@ -142,23 +166,28 @@ void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
     
     limiter.prepare (dspSpec);
     dryWetMixer.prepare (dspSpec);
+    dryWetMixer.setWetLatency(0);
+    
+    resourcesReleased = false;
 }
     
 
 template <typename SampleType>
 void ImogenEngine<SampleType>::release()
 {
+    const ScopedLock sl (lock);
+    
     harmonizer.releaseResources();
     
-    wetBuffer.setSize(0, 0, false, false, false);
-    dryBuffer.setSize(0, 0, false, false, false);
+    wetBuffer.setSize (0, 0, false, false, false);
+    dryBuffer.setSize (0, 0, false, false, false);
     monoBuffer.setSize(0, 0, false, false, false);
     
     dryWetMixer.reset();
     limiter.reset();
     
-    resourcesReleased  = true;
-    initialized        = false;
+    resourcesReleased = true;
+    initialized       = false;
 }
 
     
@@ -199,6 +228,13 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
                 monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
 
             monoBuffer.applyGain (1.0f / totalNumChannels);
+        }
+            
+        default:
+        {
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+            modulatorInput.store (0);
+            break;
         }
     }
     

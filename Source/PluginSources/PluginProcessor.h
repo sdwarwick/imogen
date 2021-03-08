@@ -96,6 +96,12 @@ public:
     
     void updateNumVoices (const int newNumVoices);
     
+    void updatePitchDetectionHzRange (int minHz, int maxHz);
+    
+    void setMidiLatch (const bool isOn);
+    void setIntervalLock (const bool isOn);
+    
+    // these functions return parameters' current state/value
     int getDryPan() const { return dryPan->get(); }
     int getDryWet() const { return dryWet->get(); }
     float getInputGain() const { return inputGain->get(); }
@@ -110,8 +116,8 @@ public:
     float getAdsrSustain() const { return adsrSustain->get(); }
     float getAdsrRelease() const { return adsrRelease->get(); }
     bool getIsAdsrOn() const { return adsrToggle->get(); }
-    bool getIsMidiLatchOn() const { return latchIsOn->get(); }
-    bool getIsIntervalLockOn() const { return intervalLockIsOn->get(); }
+    bool getIsMidiLatchOn() const { return latchIsOn.load(); }
+    bool getIsIntervalLockOn() const { return intervalLockIsOn.load(); }
     int getQuickKillMs() const { return quickKillMs->get(); }
     int getQuickAttackMs() const { return quickAttackMs->get(); }
     int getStereoWidth() const { return stereoWidth->get(); }
@@ -128,7 +134,27 @@ public:
     int getDescantThresh() const { return descantThresh->get(); }
     int getDescantInterval() const { return descantInterval->get(); }
     
-    void updatePitchDetectionHzRange (int minHz, int maxHz);
+    
+    // these functions return the default values for each parameter, according to the most recently loaded state from the host, or user-selected preset.
+    int getDefaultDryPan() const { return defaultDryPan.load(); }
+    int getDefaultDryWet() const { return defaultDryWet.load(); }
+    float getDefaultInputGain() const { return defaultInputGain.load(); }
+    float getDefaultDryGain() const { return defaultDryGain.load(); }
+    float getDefaultWetGain() const { return defaultWetGain.load(); }
+    float getDefaultOutputGain() const { return defaultOutputGain.load(); }
+    float getDefaultLimiterThresh() const { return defaultLimiterThresh.load(); }
+    int getDefaultLimiterRelease() const { return defaultLimiterRelease.load(); }
+    float getDefaultAdsrAttack() const { return defaultAdsrAttack.load(); }
+    float getDefaultAdsrDecay() const { return defaultAdsrDecay.load(); }
+    float getDefaultAdsrSustain() const { return defaultAdsrSustain.load(); }
+    float getDefaultAdsrRelease() const { return defaultAdsrRelease.load(); }
+    int getDefaultQuickKillMs() const { return defaultQuickKillMs.load(); }
+    int getDefaultStereoWidth() const { return defaultStereoWidth.load(); }
+    int getDefaultLowestPannedNote() const { return defaultLowestPannedNote.load(); }
+    int getDefaultMidiVelocitySensitivity() const { return defaultVelocitySensitivity.load(); }
+    int getDefaultConcertPitchHz() const { return defaultConcertPitchHz.load(); }
+    int getDefaultPedalPitchThresh() const { return defaultPedalPitchThresh.load(); }
+    int getDefaultDescantThresh() const { return defaultDescantThresh.load(); }
     
     
 private:
@@ -173,6 +199,8 @@ private:
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
+    std::atomic<bool> latchIsOn, intervalLockIsOn;
+    
     // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterBool*  isBypassed;
     juce::AudioParameterInt*   dryPan;
@@ -197,8 +225,6 @@ private:
     juce::AudioParameterInt*   descantInterval;
     juce::AudioParameterInt*   concertPitchHz;
     juce::AudioParameterBool*  voiceStealing;
-    juce::AudioParameterBool*  latchIsOn;
-    juce::AudioParameterBool*  intervalLockIsOn;
     juce::AudioParameterFloat* inputGain;
     juce::AudioParameterFloat* outputGain;
     juce::AudioParameterBool*  limiterToggle;
@@ -212,6 +238,11 @@ private:
     juce::AudioParameterBool*  aftertouchGainToggle;
     juce::AudioParameterBool*  channelPressureToggle;
     juce::AudioParameterFloat* playingButReleasedGain;
+    
+    void updateParameterDefaults();
+    
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultQuickKillMs, defaultQuickAttackMs, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultLimiterRelease;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultLimiterThresh, defaultDryGain, defaultWetGain, defaultSoftPedalGain, defaultPitchUpperConfidenceThresh, defaultPitchLowerConfidenceThresh, defaultPlayingButReleasedGain;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

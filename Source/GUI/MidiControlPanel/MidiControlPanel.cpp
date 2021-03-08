@@ -26,8 +26,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     sustainLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
     releaseLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
     adsrOnOffLink  (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
-    latchToggleLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "latchIsOn", latchToggle)),
-    intervalLockLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "intervalLock", intervalLock)),
     stereoWidthLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
     lowestPanLink  (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
     midiVelocitySensLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
@@ -43,22 +41,22 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     descantThresholdLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "descantThresh", descantThreshold)),
     descantIntervalLink (std::make_unique<APVTS::ComboBoxAttachment>(audioProcessor.tree, "descantInterval", descantInterval))
 {
-    lookAndFeel.initializeSlider (adsrAttack, bvi_ROTARY_SLIDER, audioProcessor.getAdsrAttack());
+    lookAndFeel.initializeSlider (adsrAttack, bvi_ROTARY_SLIDER, audioProcessor.getAdsrAttack(), audioProcessor.getDefaultAdsrAttack(), true);
     addAndMakeVisible(adsrAttack);
     lookAndFeel.initializeLabel(attackLabel, "Attack");
     addAndMakeVisible(attackLabel);
     
-    lookAndFeel.initializeSlider (adsrDecay, bvi_ROTARY_SLIDER, audioProcessor.getAdsrDecay());
+    lookAndFeel.initializeSlider (adsrDecay, bvi_ROTARY_SLIDER, audioProcessor.getAdsrDecay(), audioProcessor.getDefaultAdsrDecay(), true);
     addAndMakeVisible(adsrDecay);
     lookAndFeel.initializeLabel(decayLabel, "Decay");
     addAndMakeVisible(decayLabel);
     
-    lookAndFeel.initializeSlider (adsrSustain, bvi_ROTARY_SLIDER, audioProcessor.getAdsrSustain());
+    lookAndFeel.initializeSlider (adsrSustain, bvi_ROTARY_SLIDER, audioProcessor.getAdsrSustain(), audioProcessor.getDefaultAdsrSustain(), true);
     addAndMakeVisible(adsrSustain);
     lookAndFeel.initializeLabel(sustainLabel, "Sustain");
     addAndMakeVisible(sustainLabel);
     
-    lookAndFeel.initializeSlider (adsrRelease, bvi_ROTARY_SLIDER, audioProcessor.getAdsrRelease());
+    lookAndFeel.initializeSlider (adsrRelease, bvi_ROTARY_SLIDER, audioProcessor.getAdsrRelease(), audioProcessor.getDefaultAdsrRelease(), true);
     addAndMakeVisible(adsrRelease);
     lookAndFeel.initializeLabel(releaseLabel, "Release");
     addAndMakeVisible(releaseLabel);
@@ -69,36 +67,40 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     adsrOnOff.setToggleState (audioProcessor.getIsAdsrOn(), juce::NotificationType::dontSendNotification);
 
     latchToggle.setButtonText("MIDI latch");
+    latchToggle.onClick = [this] { audioProcessor.setMidiLatch(latchToggle.isDown()); };
     //addAndMakeVisible(latchToggle);
     latchToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsMidiLatchOn()));
     latchToggle.setToggleState (audioProcessor.getIsMidiLatchOn(), juce::NotificationType::dontSendNotification);
 
     intervalLock.setButtonText("Interval lock");
+    intervalLock.onClick = [this] { audioProcessor.setIntervalLock(intervalLock.isDown()); };
     //addAndMakeVisible(intervalLock);
     intervalLock.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsIntervalLockOn()));
     intervalLock.setToggleState (audioProcessor.getIsIntervalLockOn(), juce::NotificationType::dontSendNotification);
     
     midiKill.setButtonText("Kill all MIDI");
-    //midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
+    midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
     addAndMakeVisible(midiKill);
     
-    lookAndFeel.initializeSlider (quickKillMs, bvi_LINEAR_SLIDER, audioProcessor.getQuickKillMs());
+    lookAndFeel.initializeSlider (quickKillMs, bvi_LINEAR_SLIDER, audioProcessor.getQuickKillMs(), audioProcessor.getDefaultQuickKillMs(), true);
     quickKillMs.setNumDecimalPlacesToDisplay(0);
     addAndMakeVisible(quickKillMs);
     lookAndFeel.initializeLabel(quickKillmsLabel, "Quick kill ms");
     addAndMakeVisible(quickKillmsLabel);
     
-    lookAndFeel.initializeSlider (stereoWidth, bvi_ROTARY_SLIDER, audioProcessor.getStereoWidth());
+    lookAndFeel.initializeSlider (stereoWidth, bvi_ROTARY_SLIDER, audioProcessor.getStereoWidth(), audioProcessor.getDefaultStereoWidth(), true);
     addAndMakeVisible(stereoWidth);
     lookAndFeel.initializeLabel(stereowidthLabel, "Stereo width");
     addAndMakeVisible(stereowidthLabel);
 
-    lookAndFeel.initializeSlider (lowestPan, bvi_LINEAR_SLIDER, audioProcessor.getLowestPannedNote());
+    lookAndFeel.initializeSlider (lowestPan, bvi_LINEAR_SLIDER, audioProcessor.getLowestPannedNote(),
+                                  audioProcessor.getDefaultLowestPannedNote(), true);
     addAndMakeVisible(lowestPan);
     lookAndFeel.initializeLabel(lowestpanLabel, "Lowest panned pitch");
     addAndMakeVisible(lowestpanLabel);
 
-    lookAndFeel.initializeSlider (midiVelocitySens, bvi_LINEAR_SLIDER, audioProcessor.getMidiVelocitySensitivity());
+    lookAndFeel.initializeSlider (midiVelocitySens, bvi_LINEAR_SLIDER, audioProcessor.getMidiVelocitySensitivity(),
+                                  audioProcessor.getDefaultMidiVelocitySensitivity(), true);
     addAndMakeVisible(midiVelocitySens);
     lookAndFeel.initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
     addAndMakeVisible(midivelocitysensLabel);
@@ -120,12 +122,13 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     voiceStealing.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsVoiceStealingEnabled()));
     voiceStealing.setToggleState (audioProcessor.getIsVoiceStealingEnabled(), juce::NotificationType::dontSendNotification);
 
-    lookAndFeel.initializeSlider (concertPitch, bvi_LINEAR_SLIDER, audioProcessor.getConcertPitchHz());
+    lookAndFeel.initializeSlider (concertPitch, bvi_LINEAR_SLIDER, audioProcessor.getConcertPitchHz(),
+                                  audioProcessor.getDefaultConcertPitchHz(), true);
     addAndMakeVisible(concertPitch);
     lookAndFeel.initializeLabel(concertPitchLabel, "Concert pitch (Hz)");
     addAndMakeVisible(concertPitchLabel);
 
-    //numberOfVoices.onChange = [this] { audioProcessor.updateNumVoices (numberOfVoices.getSelectedId()); };
+    numberOfVoices.onChange = [this] { audioProcessor.updateNumVoices (numberOfVoices.getSelectedId()); };
     buildVoicesCombobox(numberOfVoices);
     numberOfVoices.setSelectedId(12, juce::NotificationType::dontSendNotification);
     addAndMakeVisible(numberOfVoices);
@@ -137,7 +140,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     pedalPitchToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsPedalPitchOn()));
     pedalPitchToggle.setToggleState (audioProcessor.getIsPedalPitchOn(), dontSendNotification);
     
-    lookAndFeel.initializeSlider (pedalPitchThreshold, bvi_LINEAR_SLIDER, audioProcessor.getPedalPitchThresh());
+    lookAndFeel.initializeSlider (pedalPitchThreshold, bvi_LINEAR_SLIDER, audioProcessor.getPedalPitchThresh(),
+                                  audioProcessor.getDefaultPedalPitchThresh(), true);
     //addAndMakeVisible(pedalPitchThreshold);
     lookAndFeel.initializeLabel(pedalPitchThreshLabel, "Upper threshold");
     //addAndMakeVisible(pedalPitchThreshLabel);
@@ -153,7 +157,8 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     descantToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsDescantOn()));
     descantToggle.setToggleState (audioProcessor.getIsDescantOn(), dontSendNotification);
     
-    lookAndFeel.initializeSlider (descantThreshold, bvi_LINEAR_SLIDER, audioProcessor.getDescantThresh());
+    lookAndFeel.initializeSlider (descantThreshold, bvi_LINEAR_SLIDER, audioProcessor.getDescantThresh(),
+                                  audioProcessor.getDefaultDescantThresh(), true);
     //addAndMakeVisible(descantThreshold);
     lookAndFeel.initializeLabel(descantThreshLabel, "Lower threshold");
     //addAndMakeVisible(descantThreshLabel);

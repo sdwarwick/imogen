@@ -16,11 +16,15 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     wasBypassedLastCallback(true)
 {
     initializeParameterPointers();
+    updateParameterDefaults();
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
         initialize (floatEngine);
+    
+    latchIsOn.store(false);
+    intervalLockIsOn.store(false);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -106,6 +110,28 @@ void ImogenAudioProcessor::killAllMidi()
         doubleEngine.killAllMidi();
     else
         floatEngine.killAllMidi();
+}
+
+
+void ImogenAudioProcessor::setMidiLatch (const bool isOn)
+{
+    latchIsOn.store (isOn);
+    
+    if (isUsingDoublePrecision())
+        doubleEngine.updateMidiLatch (isOn);
+    else
+        floatEngine.updateMidiLatch (isOn);
+}
+
+
+void ImogenAudioProcessor::setIntervalLock (const bool isOn)
+{
+    intervalLockIsOn.store (isOn);
+    
+    if (isUsingDoublePrecision())
+        doubleEngine.updateIntervalLock (isOn);
+    else
+        floatEngine.updateIntervalLock (isOn);
 }
 
 
@@ -208,24 +234,6 @@ void ImogenAudioProcessor::returnActivePitches (juce::Array<int>& outputArray) c
         doubleEngine.returnActivePitches (outputArray);
     else
         floatEngine.returnActivePitches (outputArray);
-}
-
-
-void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.updateNumVoices (newNumVoices);
-    else
-        floatEngine.updateNumVoices (newNumVoices);
-}
-
-
-void ImogenAudioProcessor::updateModulatorInputSource (const int newSource)
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.setModulatorSource (newSource);
-    else
-        floatEngine.setModulatorSource (newSource);
 }
 
 

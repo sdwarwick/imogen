@@ -53,11 +53,9 @@ private:
     
     // Midi latch
     juce::ToggleButton latchToggle;
-    std::unique_ptr<APVTS::ButtonAttachment> latchToggleLink;
     
     // interval lock
     juce::ToggleButton intervalLock;
-    std::unique_ptr<APVTS::ButtonAttachment> intervalLockLink;
     
     // stereo width of harmony output
     juce::Slider stereoWidth;

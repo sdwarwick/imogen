@@ -17,8 +17,6 @@ bvh_VOID_TEMPLATE::changeNumVoices (const int newNumVoices)
     if (currentVoices == newNumVoices)
         return;
     
-    const ScopedLock sl (lock);
-    
     if (newNumVoices > currentVoices)
         addNumVoices (newNumVoices - currentVoices);
     else
@@ -252,8 +250,6 @@ bvh_VOID_TEMPLATE::updateADSRsettings (const float attack, const float decay, co
 {
     // attack/decay/release time in SECONDS; sustain ratio 0.0 - 1.0
     
-    const ScopedLock sl (lock);
-    
     adsrParams.attack  = attack;
     adsrParams.decay   = decay;
     adsrParams.sustain = sustain;
@@ -268,8 +264,6 @@ bvh_VOID_TEMPLATE::updateQuickReleaseMs (const int newMs)
 {
     if (newMs <= 0)
         return;
-    
-    const ScopedLock sl (lock);
     
     const float desiredR = newMs / 1000.0f;
     
@@ -291,8 +285,6 @@ bvh_VOID_TEMPLATE::updateQuickAttackMs (const int newMs)
 {
     if (newMs <= 0)
         return;
-    
-    const ScopedLock sl (lock);
     
     const float desiredA = newMs / 1000.0f;
     

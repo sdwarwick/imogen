@@ -25,32 +25,32 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     outputGainLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
     limiterPanel(p, l)
 {
-    lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan());
+    lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan(), audioProcessor.getDefaultDryPan(), true);
     addAndMakeVisible(dryPan);
     lookAndFeel.initializeLabel(drypanLabel, "Modulator pan");
     addAndMakeVisible(drypanLabel);
 
-    lookAndFeel.initializeSlider (masterDryWet, bvi_ROTARY_SLIDER, audioProcessor.getDryWet());
+    lookAndFeel.initializeSlider (masterDryWet, bvi_ROTARY_SLIDER, audioProcessor.getDryWet(), audioProcessor.getDefaultDryWet(), true);
     addAndMakeVisible(masterDryWet);
     lookAndFeel.initializeLabel(drywetLabel, "% wet signal");
     addAndMakeVisible(drywetLabel);
 
-    lookAndFeel.initializeSlider (inputGain, bvi_LINEAR_SLIDER, audioProcessor.getInputGain());
+    lookAndFeel.initializeSlider (inputGain, bvi_LINEAR_SLIDER, audioProcessor.getInputGain(), audioProcessor.getDefaultInputGain(), true);
     addAndMakeVisible(inputGain);
     lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
     addAndMakeVisible(inputGainLabel);
 
-    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.getDryGain());
+    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.getDryGain(), audioProcessor.getDefaultDryGain(), true);
     //addAndMakeVisible(dryGain);
     lookAndFeel.initializeLabel(dryGainLabel, "Dry gain");
     //addAndMakeVisible(dryGainLabel);
 
-    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.getWetGain());
+    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.getWetGain(), audioProcessor.getDefaultWetGain(), true);
     //addAndMakeVisible(wetGain);
     lookAndFeel.initializeLabel(wetGainLabel, "Wet gain");
     //addAndMakeVisible(wetGainLabel);
 
-    lookAndFeel.initializeSlider(outputGain, bvi_LINEAR_SLIDER, audioProcessor.getOutputGain());
+    lookAndFeel.initializeSlider (outputGain, bvi_LINEAR_SLIDER, audioProcessor.getOutputGain(), audioProcessor.getDefaultOutputGain(), true);
     addAndMakeVisible(outputGain);
     lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
     addAndMakeVisible(outputgainLabel);

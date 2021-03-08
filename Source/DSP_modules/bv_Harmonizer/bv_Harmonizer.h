@@ -357,9 +357,6 @@ private:
     
     friend class HarmonizerVoice<SampleType>;
     
-    CriticalSection lock;
-    // functions that require lock: allNotesOff, changeNumVoices, renderVoices, playIntervalSet, playChord
-    
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     PitchDetector<SampleType> pitchDetector;

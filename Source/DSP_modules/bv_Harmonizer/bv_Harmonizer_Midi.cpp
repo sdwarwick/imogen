@@ -336,8 +336,6 @@ bvh_INLINE_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const f
 
 bvh_VOID_TEMPLATE::allNotesOff (const bool allowTailOff, const float velocity)
 {
-    const ScopedLock sl (lock);
-    
     for (auto* voice : voices)
         if (voice->isVoiceActive())
             stopVoice (voice, velocity, allowTailOff);

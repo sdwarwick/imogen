@@ -34,8 +34,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
     params.push_back(std::make_unique<juce::AudioParameterBool> ("voiceStealing", "Voice stealing", false));
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("latchIsOn", "MIDI latch on/off", false));
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("intervalLock", "MIDI interval lock", false));
     // pedal pitch
     params.push_back(std::make_unique<juce::AudioParameterBool> ("pedalPitchToggle", "Pedal pitch on/off", false));
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
@@ -106,8 +104,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     descantInterval    = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantInterval"));            jassert(descantInterval);
     concertPitchHz     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("concertPitch"));               jassert(concertPitchHz);
     voiceStealing      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("voiceStealing"));              jassert(voiceStealing);
-    latchIsOn          = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("latchIsOn"));                  jassert(latchIsOn);
-    intervalLockIsOn   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("intervalLock"));               jassert(intervalLockIsOn);
     inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert(inputGain);
     outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert(outputGain);
     limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert(limiterToggle);
@@ -121,6 +117,39 @@ void ImogenAudioProcessor::initializeParameterPointers()
     aftertouchGainToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle"));   jassert(aftertouchGainToggle);
     channelPressureToggle  = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("channelPressureToggle"));  jassert(channelPressureToggle);
     playingButReleasedGain = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("playingButReleasedGain")); jassert(playingButReleasedGain);
+}
+
+
+void ImogenAudioProcessor::updateParameterDefaults()
+{
+    defaultDryPan.store (dryPan->get());
+    defaultDryWet.store (dryWet->get());
+    defaultQuickKillMs.store (quickKillMs->get());
+    defaultQuickAttackMs.store (quickAttackMs->get());
+    defaultStereoWidth.store (stereoWidth->get());
+    defaultLowestPannedNote.store (lowestPanned->get());
+    defaultVelocitySensitivity.store (velocitySens->get());
+    defaultPitchbendUp.store (pitchBendUp->get());
+    defaultPitchbendDown.store (pitchBendDown->get());
+    defaultPedalPitchThresh.store (pedalPitchThresh->get());
+    defaultPedalPitchInterval.store (pedalPitchInterval->get());
+    defaultDescantThresh.store (descantThresh->get());
+    defaultDescantInterval.store (descantInterval->get());
+    defaultConcertPitchHz.store (concertPitchHz->get());
+    defaultLimiterRelease.store (limiterRelease->get());
+    defaultAdsrAttack.store (adsrAttack->get());
+    defaultAdsrDecay.store (adsrDecay->get());
+    defaultAdsrSustain.store (adsrSustain->get());
+    defaultAdsrRelease.store (adsrRelease->get());
+    defaultInputGain.store (inputGain->get());
+    defaultOutputGain.store (outputGain->get());
+    defaultLimiterThresh.store (limiterThresh->get());
+    defaultDryGain.store (dryGain->get());
+    defaultWetGain.store (wetGain->get());
+    defaultSoftPedalGain.store (softPedalGain->get());
+    defaultPitchUpperConfidenceThresh.store (pitchDetectionConfidenceUpperThresh->get());
+    defaultPitchLowerConfidenceThresh.store (pitchDetectionConfidenceLowerThresh->get());
+    defaultPlayingButReleasedGain.store (playingButReleasedGain->get());
 }
 
 
@@ -156,8 +185,6 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
     activeEngine.updateConcertPitch (concertPitchHz->get());
     activeEngine.updateNoteStealing (voiceStealing->get());
-    activeEngine.updateMidiLatch (latchIsOn->get());
-    activeEngine.updateIntervalLock (intervalLockIsOn->get());
     activeEngine.updateLimiter (limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
     activeEngine.updateUsingChannelPressure (channelPressureToggle->get());
@@ -167,6 +194,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 
 void ImogenAudioProcessor::updatePitchDetectionHzRange (int minHz, int maxHz)
 {
+    suspendProcessing (true);
+    
     if (isUsingDoublePrecision())
     {
         doubleEngine.updatePitchDetectionHzRange (minHz, maxHz);
@@ -181,6 +210,42 @@ void ImogenAudioProcessor::updatePitchDetectionHzRange (int minHz, int maxHz)
         if (getLatencySamples() != floatEngine.reportLatency())
             setLatencySamples (floatEngine.reportLatency());
     }
+    
+    suspendProcessing (false);
+}
+
+
+void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
+{
+    if (isUsingDoublePrecision())
+    {
+        if (doubleEngine.getCurrentNumVoices() == newNumVoices)
+            return;
+        
+        suspendProcessing (true);
+        doubleEngine.updateNumVoices (newNumVoices);
+    }
+    else
+    {
+        if (floatEngine.getCurrentNumVoices() == newNumVoices)
+            return;
+        
+        suspendProcessing (true);
+        floatEngine.updateNumVoices (newNumVoices);
+    }
+    
+    suspendProcessing (false);
+}
+
+
+void ImogenAudioProcessor::updateModulatorInputSource (const int newSource)
+{
+    jassert (newSource == 0 || newSource == 1 || newSource == 2);
+    
+    if (isUsingDoublePrecision())
+        doubleEngine.setModulatorSource (newSource);
+    else
+        floatEngine.setModulatorSource (newSource);
 }
 
 
@@ -322,6 +387,8 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
     activeEngine.setModulatorSource (newState.getIntAttribute ("modulatorInputSource", 0));
     
     updateAllParameters (activeEngine);
+    
+    updateParameterDefaults();
     
     suspendProcessing (false);
     

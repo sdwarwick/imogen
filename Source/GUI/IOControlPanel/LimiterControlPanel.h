@@ -29,12 +29,14 @@ public:
         limiterReleaseLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
         limiterToggleLink (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
-        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.getLimiterThresh());
+        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.getLimiterThresh(),
+                                      audioProcessor.getDefaultLimiterThresh(), true);
         addAndMakeVisible(limiterThresh);
         lookAndFeel.initializeLabel(threshLabel, "Threshold");
         addAndMakeVisible(threshLabel);
         
-        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.getLimiterRelease());
+        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.getLimiterRelease(),
+                                      audioProcessor.getDefaultLimiterRelease(), true);
         addAndMakeVisible(limiterRelease);
         lookAndFeel.initializeLabel(releaseLabel, "Release time");
         addAndMakeVisible(releaseLabel);
