@@ -17,6 +17,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     initializeParameterPointers();
     updateParameterDefaults();
     
+    parameterDefaultsAreDirty.store (false);
+    
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else

@@ -25,37 +25,39 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     outputGainLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
     limiterPanel(p, l)
 {
-    lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan(), audioProcessor.getDefaultDryPan(), true);
+    lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan());
     addAndMakeVisible(dryPan);
     lookAndFeel.initializeLabel(drypanLabel, "Modulator pan");
     addAndMakeVisible(drypanLabel);
 
-    lookAndFeel.initializeSlider (masterDryWet, bvi_ROTARY_SLIDER, audioProcessor.getDryWet(), audioProcessor.getDefaultDryWet(), true);
+    lookAndFeel.initializeSlider (masterDryWet, bvi_ROTARY_SLIDER, audioProcessor.getDryWet());
     addAndMakeVisible(masterDryWet);
     lookAndFeel.initializeLabel(drywetLabel, "% wet signal");
     addAndMakeVisible(drywetLabel);
 
-    lookAndFeel.initializeSlider (inputGain, bvi_LINEAR_SLIDER, audioProcessor.getInputGain(), audioProcessor.getDefaultInputGain(), true);
+    lookAndFeel.initializeSlider (inputGain, bvi_LINEAR_SLIDER, audioProcessor.getInputGain());
     addAndMakeVisible(inputGain);
     lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
     addAndMakeVisible(inputGainLabel);
 
-    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.getDryGain(), audioProcessor.getDefaultDryGain(), true);
+    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.getDryGain());
     //addAndMakeVisible(dryGain);
     lookAndFeel.initializeLabel(dryGainLabel, "Dry gain");
     //addAndMakeVisible(dryGainLabel);
 
-    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.getWetGain(), audioProcessor.getDefaultWetGain(), true);
+    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.getWetGain());
     //addAndMakeVisible(wetGain);
     lookAndFeel.initializeLabel(wetGainLabel, "Wet gain");
     //addAndMakeVisible(wetGainLabel);
 
-    lookAndFeel.initializeSlider (outputGain, bvi_LINEAR_SLIDER, audioProcessor.getOutputGain(), audioProcessor.getDefaultOutputGain(), true);
+    lookAndFeel.initializeSlider (outputGain, bvi_LINEAR_SLIDER, audioProcessor.getOutputGain());
     addAndMakeVisible(outputGain);
     lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
     addAndMakeVisible(outputgainLabel);
 
     addAndMakeVisible(limiterPanel);
+    
+    updateParameterDefaults();
 }
     
 #undef bvi_ROTARY_SLIDER
@@ -105,4 +107,16 @@ void IOControlPanel::resized()
 }
 
 
+void IOControlPanel::updateParameterDefaults()
+{
+    dryPan.setDoubleClickReturnValue (true, audioProcessor.getDefaultDryPan());
+    masterDryWet.setDoubleClickReturnValue (true, audioProcessor.getDefaultDryWet());
+    inputGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultInputGain());
+    dryGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultDryGain());
+    wetGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultWetGain());
+    outputGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultOutputGain());
+    limiterPanel.updateParameterDefaults();
+}
+
+    
 }  // namespace

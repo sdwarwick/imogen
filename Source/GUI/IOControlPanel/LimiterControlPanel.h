@@ -29,14 +29,12 @@ public:
         limiterReleaseLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "limiterRelease", limiterRelease)),
         limiterToggleLink (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "limiterIsOn", limiterToggle))
     {
-        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.getLimiterThresh(),
-                                      audioProcessor.getDefaultLimiterThresh(), true);
+        lookAndFeel.initializeSlider (limiterThresh, juce::Slider::SliderStyle::LinearVertical, audioProcessor.getLimiterThresh());
         addAndMakeVisible(limiterThresh);
         lookAndFeel.initializeLabel(threshLabel, "Threshold");
         addAndMakeVisible(threshLabel);
         
-        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.getLimiterRelease(),
-                                      audioProcessor.getDefaultLimiterRelease(), true);
+        lookAndFeel.initializeSlider (limiterRelease, juce::Slider::SliderStyle::LinearBarVertical, audioProcessor.getLimiterRelease());
         addAndMakeVisible(limiterRelease);
         lookAndFeel.initializeLabel(releaseLabel, "Release time");
         addAndMakeVisible(releaseLabel);
@@ -44,6 +42,8 @@ public:
         limiterToggle.setButtonText("Output limiter");
         addAndMakeVisible(limiterToggle);
         limiterToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsLimiterOn()));
+        
+        updateParameterDefaults();
     }
     
     ~LimiterControlPanel() override
@@ -65,6 +65,12 @@ public:
         
         releaseLabel.setBounds  (150, 25, 100, 35);
         limiterRelease.setBounds(180, 55, 35, 35);
+    }
+    
+    void updateParameterDefaults()
+    {
+        limiterThresh.setDoubleClickReturnValue (true, audioProcessor.getDefaultLimiterThresh());
+        limiterRelease.setDoubleClickReturnValue (true, audioProcessor.getDefaultLimiterRelease());
     }
     
     

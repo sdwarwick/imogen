@@ -116,6 +116,9 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     //staffDisplay.repaint();
     
+    if (audioProcessor.hasUpdatedParamDefaults())
+        updateParameterDefaults();
+    
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (! juce::JUCEApplicationBase::isStandaloneApp())
     {
@@ -232,4 +235,11 @@ inline void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
         box.addItem(entry.getFile().getFileName(), id);
         ++id;
     }
+}
+
+
+void ImogenAudioProcessorEditor::updateParameterDefaults()
+{
+    ioPanel.updateParameterDefaults();
+    midiPanel.updateParameterDefaults();
 }

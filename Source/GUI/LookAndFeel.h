@@ -240,13 +240,11 @@ public:
     
     
     template<typename valueType>
-    inline void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, valueType initValue,
-                                  valueType defaultResetValue, bool doubleClickToResetEnabled)
+    inline void initializeSlider (juce::Slider& slider, juce::Slider::SliderStyle style, valueType initValue)
     {
         slider.setSliderStyle (style);
         slider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 20);
         slider.setValue (float(initValue), juce::NotificationType::dontSendNotification);
-        slider.setDoubleClickReturnValue (doubleClickToResetEnabled, double(defaultResetValue));
     }
     
     

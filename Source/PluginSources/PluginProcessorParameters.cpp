@@ -150,6 +150,8 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultPitchUpperConfidenceThresh.store (pitchDetectionConfidenceUpperThresh->get());
     defaultPitchLowerConfidenceThresh.store (pitchDetectionConfidenceLowerThresh->get());
     defaultPlayingButReleasedGain.store (playingButReleasedGain->get());
+    
+    parameterDefaultsAreDirty.store (true);
 }
 
 

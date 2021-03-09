@@ -27,6 +27,8 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
+    void updateParameterDefaults();
+    
     
 private:
     

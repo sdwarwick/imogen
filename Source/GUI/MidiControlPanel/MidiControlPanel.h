@@ -32,6 +32,8 @@ public:
     
     void updateNumVoicesCombobox(const int newNumVoices);
     
+    void updateParameterDefaults();
+    
     
 private:
     

@@ -156,6 +156,8 @@ public:
     int getDefaultPedalPitchThresh() const { return defaultPedalPitchThresh.load(); }
     int getDefaultDescantThresh() const { return defaultDescantThresh.load(); }
     
+    bool hasUpdatedParamDefaults() const { return parameterDefaultsAreDirty.load(); }
+    
     
 private:
     
@@ -238,6 +240,8 @@ private:
     juce::AudioParameterFloat* playingButReleasedGain;
     
     void updateParameterDefaults();
+    
+    std::atomic<bool> parameterDefaultsAreDirty;
     
     std::atomic<int> defaultDryPan, defaultDryWet, defaultQuickKillMs, defaultQuickAttackMs, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultLimiterRelease;
     std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultLimiterThresh, defaultDryGain, defaultWetGain, defaultSoftPedalGain, defaultPitchUpperConfidenceThresh, defaultPitchLowerConfidenceThresh, defaultPlayingButReleasedGain;
