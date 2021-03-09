@@ -12,8 +12,7 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
-    wasBypassedLastCallback(true)
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
 {
     initializeParameterPointers();
     updateParameterDefaults();
@@ -76,8 +75,6 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     updateAllParameters (activeEngine);
     
     setLatencySamples (activeEngine.reportLatency());
-    
-    wasBypassedLastCallback = true;
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     needsSidechain = (host.isLogic() || host.isGarageBand());
@@ -166,7 +163,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
     
-    *isBypassed = true;
+    isBypassed->setValueNotifyingHost (1.0f);
 }
 
 
@@ -177,7 +174,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
     
-    *isBypassed = true;
+    isBypassed->setValueNotifyingHost (1.0f);
 }
 
 
@@ -185,13 +182,10 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
 
 template <typename SampleType>
 inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
-                                                juce::MidiBuffer& midiMessages,
-                                                bav::ImogenEngine<SampleType>& engine,
-                                                const bool isBypassedNow)
+                                                       juce::MidiBuffer& midiMessages,
+                                                       bav::ImogenEngine<SampleType>& engine,
+                                                       const bool isBypassedNow)
 {
-    // at this level, we check that our input is not disabled, the processing engine has been initialized, and that the buffer sent to us is not empty.
-    // NB. at this stage, the buffers may still exceed the default blocksize and/or the value prepared for with the last prepareToPlay() call, and they may also be as short as 1 sample long.
-    
     if (! engine.hasBeenInitialized())
         return;
     
@@ -215,12 +209,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
 #endif
     
-    if (isBypassedNow)
-        engine.process (inBus, outBus, midiMessages, false, !wasBypassedLastCallback, wasBypassedLastCallback);
-    else
-        engine.process (inBus, outBus, midiMessages, wasBypassedLastCallback, false, false);
-    
-    wasBypassedLastCallback = isBypassedNow;
+    engine.process (inBus, outBus, midiMessages, isBypassedNow);
 }
 
 

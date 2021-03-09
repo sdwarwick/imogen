@@ -172,10 +172,10 @@ private:
     
     
     template <typename SampleType>
-    void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
-                              juce::MidiBuffer& midiMessages,
-                              bav::ImogenEngine<SampleType>& engine,
-                              const bool isBypassed = false);
+    inline void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
+                                     juce::MidiBuffer& midiMessages,
+                                     bav::ImogenEngine<SampleType>& engine,
+                                     const bool isBypassed = false);
     
     
     bav::ImogenEngine<float>  floatEngine;
@@ -190,8 +190,6 @@ private:
     void initializeParameterPointers();
     
     juce::AudioProcessor::BusesProperties makeBusProperties() const;
-    
-    bool wasBypassedLastCallback; // used to activate a fade out instead of an instant kill when the bypass is activated
     
     template<typename SampleType>
     std::unique_ptr<juce::XmlElement> pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine);
