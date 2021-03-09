@@ -78,7 +78,7 @@ public:
     bool hasBeenInitialized() const noexcept { return initialized; }
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
-    void setModulatorSource (const int newSource) { modulatorInput.store(newSource); }
+    void setModulatorSource (const int newSource);
     
     void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
     

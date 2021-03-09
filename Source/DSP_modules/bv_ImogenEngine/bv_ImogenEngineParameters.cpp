@@ -18,6 +18,13 @@ bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
     
     harmonizer.changeNumVoices (newNumVoices);
 }
+    
+
+bvie_VOID_TEMPLATE::setModulatorSource (const int newSource)
+{
+    jassert (newSource == 0 || newSource == 1 || newSource == 2);
+    modulatorInput.store (newSource);
+}
 
 
 bvie_VOID_TEMPLATE::updateInputGain (const float newInGain)

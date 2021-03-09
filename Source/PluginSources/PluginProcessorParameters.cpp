@@ -240,8 +240,6 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 
 void ImogenAudioProcessor::updateModulatorInputSource (const int newSource)
 {
-    jassert (newSource == 0 || newSource == 1 || newSource == 2);
-    
     if (isUsingDoublePrecision())
         doubleEngine.setModulatorSource (newSource);
     else
@@ -383,7 +381,7 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
     
     tree.replaceState (juce::ValueTree::fromXml (newState));
     
-    activeEngine.updateNumVoices (newState.getIntAttribute ("numberOfVoices", 4));
+    updateNumVoices (newState.getIntAttribute ("numberOfVoices", 4));
     activeEngine.setModulatorSource (newState.getIntAttribute ("modulatorInputSource", 0));
     
     updateAllParameters (activeEngine);
