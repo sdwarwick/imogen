@@ -6,8 +6,11 @@
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
 
+#ifdef imogen_DEFAULT_NUM_VOICES
+  #error imogen_DEFAULT_NUM_VOICES symbol already defined elsewhere!
+#endif
 
-#undef imogen_DEFAULT_NUM_VOICES
+#define imogen_DEFAULT_NUM_VOICES 12
 
 
 ImogenAudioProcessor::ImogenAudioProcessor():
@@ -42,14 +45,14 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
     int initBlockSize = getBlockSize();
     if (initBlockSize <= 0) initBlockSize = 512;
     
-#define imogen_DEFAULT_NUM_VOICES 12
     activeEngine.initialize (initSamplerate, initBlockSize, imogen_DEFAULT_NUM_VOICES);
-#undef imogen_DEFAULT_NUM_VOICES
     
     updateAllParameters (activeEngine);
     
     setLatencySamples (activeEngine.reportLatency());
 }
+
+#undef imogen_DEFAULT_NUM_VOICES
 
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)

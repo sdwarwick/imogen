@@ -8,10 +8,27 @@
 #include "GrainExtractor.h"
 
 
-#undef bvhge_NUM_PEAKS_TO_TEST
-#undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
-#undef bvhge_MIN_DELTA_RANGE
+#ifdef bvhge_NUM_PEAKS_TO_TEST
+  #error bvhge_NUM_PEAKS_TO_TEST symbol already defined elsewhere!
+#endif
 
+#ifdef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
+  #error bvhge_DEFAULT_FINAL_HANDFUL_SIZE symbol already defined elsewhere!
+#endif
+
+#ifdef bvhge_MIN_DELTA_RANGE
+  #error bvhge_MIN_DELTA_RANGE symbol already defined elsewhere!
+#endif
+
+#ifdef bvhge_WEIGHT
+  #error bv_WEIGHT symbol already defined elsewhere!
+#endif
+
+#ifdef bvhge_DELTA_WEIGHT
+  #error bvhge_DELTA_WEIGHT symbol already defined elsewhere!
+#endif
+
+#define bvhge_NUM_PEAKS_TO_TEST 10
 
 
 namespace bav
@@ -50,7 +67,6 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
-#define bvhge_NUM_PEAKS_TO_TEST 10
     peakCandidates.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
     peakCandidates.clearQuick();
     peakSearchingOrder.ensureStorageAllocated(maxBlocksize);
@@ -244,19 +260,13 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
     if (starting == -1)
         return;
     
-    struct weighting
-    {
-        static inline SampleType weight (int index, int predicted, int numSamples)
-        {
-            return SampleType( 1.0 - ( ( (abs(index - predicted)) / numSamples ) * 0.5 ) );
-        }
-    };
+#define bvhge_WEIGHT(index, predicted, numSamples) SampleType(1.0 - ((abs(index - predicted) / numSamples) * 0.5))
     
     jassert (starting >= startSample && starting <= endSample);
     
     const int numSamples = endSample - startSample;
     
-    SampleType localMin = input[starting] * weighting::weight (starting, predictedPeak, numSamples);
+    SampleType localMin = input[starting] * bvhge_WEIGHT(starting, predictedPeak, numSamples);
     SampleType localMax = localMin;
     int indexOfLocalMin = starting;
     int indexOfLocalMax = starting;
@@ -270,7 +280,7 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
         
         jassert (index >= startSample && index <= endSample);
         
-        const SampleType currentSample = input[index] * weighting::weight (index, predictedPeak, numSamples);
+        const SampleType currentSample = input[index] * bvhge_WEIGHT(index, predictedPeak, numSamples);
         
         if (currentSample < localMin)
         {
@@ -284,6 +294,8 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
             indexOfLocalMax = index;
         }
     }
+    
+#undef bvhge_WEIGHT
     
     constexpr SampleType zero = SampleType(0.0);
     
@@ -360,16 +372,10 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
         return finalHandful.getUnchecked(0);
 #undef bvhge_MIN_DELTA_RANGE
     
-    struct weighting
-    {
-        static inline float weight (float delta, float deltaRange)
-        {
-            return 1.0f - ((delta / deltaRange) * 0.75f);
-        }
-    };
+#define bvhge_DELTA_WEIGHT(delta, deltaRange) 1.0f - ((delta / deltaRange) * 0.75f)
     
     int chosenPeak = finalHandful.getUnchecked (0);
-    SampleType strongestPeak = abs(reading[chosenPeak]) * weighting::weight(finalHandfulDeltas.getUnchecked(0), deltaRange);
+    SampleType strongestPeak = abs(reading[chosenPeak]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(0), deltaRange);
     
     for (int i = 1; i < finalHandfulSize; ++i)
     {
@@ -378,7 +384,7 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
         if (candidate == chosenPeak)
             continue;
         
-        SampleType testingPeak = abs(reading[candidate]) * weighting::weight(finalHandfulDeltas.getUnchecked(i), deltaRange);
+        SampleType testingPeak = abs(reading[candidate]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(i), deltaRange);
         
         if (testingPeak > strongestPeak)
         {
@@ -386,6 +392,8 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
             chosenPeak = candidate;
         }
     }
+    
+#undef bvhge_DELTA_WEIGHT
     
     return chosenPeak;
 }

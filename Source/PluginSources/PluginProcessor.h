@@ -105,11 +105,7 @@ public:
     int getDryPan() const { return dryPan->get(); }
     int getDryWet() const { return dryWet->get(); }
     float getInputGain() const { return inputGain->get(); }
-    float getDryGain() const { return dryGain->get(); }
-    float getWetGain() const { return wetGain->get(); }
     float getOutputGain() const { return outputGain->get(); }
-    float getLimiterThresh() const { return limiterThresh->get(); }
-    int getLimiterRelease() const { return limiterRelease->get(); }
     bool getIsLimiterOn() const { return limiterToggle->get(); }
     float getAdsrAttack() const { return adsrAttack->get(); }
     float getAdsrDecay() const { return adsrDecay->get(); }
@@ -139,11 +135,7 @@ public:
     int getDefaultDryPan() const { return defaultDryPan.load(); }
     int getDefaultDryWet() const { return defaultDryWet.load(); }
     float getDefaultInputGain() const { return defaultInputGain.load(); }
-    float getDefaultDryGain() const { return defaultDryGain.load(); }
-    float getDefaultWetGain() const { return defaultWetGain.load(); }
     float getDefaultOutputGain() const { return defaultOutputGain.load(); }
-    float getDefaultLimiterThresh() const { return defaultLimiterThresh.load(); }
-    int getDefaultLimiterRelease() const { return defaultLimiterRelease.load(); }
     float getDefaultAdsrAttack() const { return defaultAdsrAttack.load(); }
     float getDefaultAdsrDecay() const { return defaultAdsrDecay.load(); }
     float getDefaultAdsrSustain() const { return defaultAdsrSustain.load(); }
@@ -228,10 +220,6 @@ private:
     juce::AudioParameterFloat* inputGain;
     juce::AudioParameterFloat* outputGain;
     juce::AudioParameterBool*  limiterToggle;
-    juce::AudioParameterFloat* limiterThresh;
-    juce::AudioParameterInt*   limiterRelease;
-    juce::AudioParameterFloat* dryGain;
-    juce::AudioParameterFloat* wetGain;
     juce::AudioParameterFloat* softPedalGain;
     juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
     juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
@@ -243,8 +231,8 @@ private:
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultQuickKillMs, defaultQuickAttackMs, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultLimiterRelease;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultLimiterThresh, defaultDryGain, defaultWetGain, defaultSoftPedalGain, defaultPitchUpperConfidenceThresh, defaultPitchLowerConfidenceThresh, defaultPlayingButReleasedGain;
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultQuickKillMs, defaultQuickAttackMs, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultSoftPedalGain, defaultPitchUpperConfidenceThresh, defaultPitchLowerConfidenceThresh, defaultPlayingButReleasedGain;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

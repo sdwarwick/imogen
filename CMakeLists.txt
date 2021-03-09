@@ -45,7 +45,6 @@ set (Imogen_sourceFiles
     ${HelpScreenSourcePath}/HelpScreen.h
     ${IOPanelSourcePath}/IOControlPanel.cpp  
     ${IOPanelSourcePath}/IOControlPanel.h
-    ${IOPanelSourcePath}/LimiterControlPanel.h
     ${MidiControlSourcePath}/MidiControlPanel.cpp
     ${MidiControlSourcePath}/MidiControlPanel.h
     ${StaffDisplaySourcePath}/StaffDisplay.cpp

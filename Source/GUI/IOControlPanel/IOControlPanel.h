@@ -7,7 +7,8 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-#include "LimiterControlPanel.h"
+#include "PluginSources/PluginProcessor.h"
+#include "GUI/LookAndFeel.h"
 
 
 namespace bav
@@ -50,22 +51,10 @@ private:
     juce::Label drywetLabel;
     std::unique_ptr<APVTS::SliderAttachment> masterDryWetLink;
     
-    // dry gain
-    juce::Slider dryGain;
-    juce::Label dryGainLabel;
-    std::unique_ptr<APVTS::SliderAttachment> dryGainLink;
-    
-    // wet gain
-    juce::Slider wetGain;
-    juce::Label wetGainLabel;
-    std::unique_ptr<APVTS::SliderAttachment> wetGainLink;
-    
     // master output gain
     juce::Slider outputGain;
     juce::Label outputgainLabel;
     std::unique_ptr<APVTS::SliderAttachment> outputGainLink;
-    
-    LimiterControlPanel limiterPanel;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (IOControlPanel)
 };

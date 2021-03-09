@@ -7,6 +7,13 @@
 #include "bv_ImogenEngineParameters.cpp"
 
 
+#define bvie_LIMITER_THRESH_DB 0.0
+#define bvie_LIMITER_RELEASE_MS 35
+
+#define bvie_INIT_MIN_HZ 80
+#define bvie_INIT_MAX_HZ 2400
+
+
 namespace bav
 
 {
@@ -30,12 +37,6 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1),
     outputGain.store(1.0f);
     prevOutputGain.store(1.0f);
     
-    dryGain.store(1.0f);
-    prevDryGain.store(1.0f);
-    
-    wetGain.store(1.0f);
-    prevWetGain.store(1.0f);
-    
     dspSpec.numChannels = 2;
     dspSpec.sampleRate = 44100.0;
     dspSpec.maximumBlockSize = 512;
@@ -58,16 +59,19 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
     dryBuffer.setSize (2, initSamplesPerBlock);
     wetBuffer.setSize (2, initSamplesPerBlock);
     
-#define bvie_INIT_MIN_HZ 80
-#define bvie_INIT_MAX_HZ 2400
+    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
+    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
+    
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
-#undef bvie_INIT_MIN_HZ
-#undef bvie_INIT_MAX_HZ
     
     FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
     
     initialized = true;
 }
+    
+#undef bvie_INIT_MIN_HZ
+#undef bvie_INIT_MAX_HZ
+    
 
 template<typename SampleType>
 void ImogenEngine<SampleType>::reset()
@@ -83,8 +87,6 @@ void ImogenEngine<SampleType>::reset()
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store(inputGain.load());
-    prevDryGain.store(dryGain.load());
-    prevWetGain.store(wetGain.load());
 }
     
 
@@ -145,8 +147,6 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store (inputGain.load());
-    prevDryGain.store (dryGain.load());
-    prevWetGain.store (wetGain.load());
 }
     
 
@@ -168,10 +168,16 @@ void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
     dryWetMixer.prepare (dspSpec);
     dryWetMixer.setWetLatency(0);
     
+    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
+    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
+    
     resourcesReleased = false;
 }
     
+#undef bvie_LIMITER_RELEASE_MS
+#undef bvie_LIMITER_THRESH_DB
 
+    
 template <typename SampleType>
 void ImogenEngine<SampleType>::release()
 {
@@ -249,10 +255,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     for (int chan = 0; chan < 2; ++chan)
         dryBuffer.copyFromWithRamp (chan, 0, realInput.getReadPointer(0), blockSize,
                                     dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
-    // dry gain
-    const float currentDryGain = dryGain.load();
-    dryBuffer.applyGainRamp (0, blockSize, prevDryGain.load(), currentDryGain);
-    prevDryGain.store(currentDryGain);
     
     dryWetMixer.setWetMixProportion (wetMixPercent.load());
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
@@ -260,11 +262,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
     // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
     harmonizer.renderVoices (realInput, wetBuffer, midiMessages);
     
-    // wet gain
-    const float currentWetGain = wetGain.load();
-    wetBuffer.applyGainRamp (0, blockSize, prevWetGain.load(), currentWetGain);
-    prevWetGain.store(currentWetGain);
-
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
 
     // master output gain
@@ -274,8 +271,6 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
 
     if (limiterIsOn.load())
     {
-        limiter.setThreshold (limiterThresh.load());
-        limiter.setRelease (limiterRelease.load());
         juce::dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
         limiter.process (juce::dsp::ProcessContextReplacing<SampleType>(limiterBlock));
     }

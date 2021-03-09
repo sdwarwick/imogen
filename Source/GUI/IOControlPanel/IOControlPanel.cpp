@@ -20,10 +20,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     dryPanLink      (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
     inputGainLink   (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
     masterDryWetLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "masterDryWet", masterDryWet)),
-    dryGainLink     (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "dryGain", dryGain)),
-    wetGainLink     (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "wetGain", wetGain)),
-    outputGainLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain)),
-    limiterPanel(p, l)
+    outputGainLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain))
 {
     lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan());
     addAndMakeVisible(dryPan);
@@ -40,23 +37,11 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     lookAndFeel.initializeLabel(inputGainLabel, "Input gain");
     addAndMakeVisible(inputGainLabel);
 
-    lookAndFeel.initializeSlider (dryGain, bvi_LINEAR_SLIDER, audioProcessor.getDryGain());
-    //addAndMakeVisible(dryGain);
-    lookAndFeel.initializeLabel(dryGainLabel, "Dry gain");
-    //addAndMakeVisible(dryGainLabel);
-
-    lookAndFeel.initializeSlider (wetGain, bvi_LINEAR_SLIDER, audioProcessor.getWetGain());
-    //addAndMakeVisible(wetGain);
-    lookAndFeel.initializeLabel(wetGainLabel, "Wet gain");
-    //addAndMakeVisible(wetGainLabel);
-
     lookAndFeel.initializeSlider (outputGain, bvi_LINEAR_SLIDER, audioProcessor.getOutputGain());
     addAndMakeVisible(outputGain);
     lookAndFeel.initializeLabel(outputgainLabel, "Output gain");
     addAndMakeVisible(outputgainLabel);
 
-    addAndMakeVisible(limiterPanel);
-    
     updateParameterDefaults();
 }
     
@@ -94,16 +79,8 @@ void IOControlPanel::resized()
     drywetLabel.setBounds (50, 138, 75, 35);
     masterDryWet.setBounds(50, 163, 75, 75);
 
-    //dryGain.setBounds(x, y, w, h);
-    //dryGainLabel.setBounds(x, y, w, h);
-
-    //wetGain.setBounds(x, y, w, h);
-    //wetGainLabel.setBounds(x, y, w, h);
-
     outputgainLabel.setBounds(165, 138, 75, 35);
     outputGain.setBounds	 (177, 160, 50, 90);
-
-    limiterPanel.setBounds(5, 265, 290, 145);
 }
 
 
@@ -112,10 +89,7 @@ void IOControlPanel::updateParameterDefaults()
     dryPan.setDoubleClickReturnValue (true, audioProcessor.getDefaultDryPan());
     masterDryWet.setDoubleClickReturnValue (true, audioProcessor.getDefaultDryWet());
     inputGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultInputGain());
-    dryGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultDryGain());
-    wetGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultWetGain());
     outputGain.setDoubleClickReturnValue (true, audioProcessor.getDefaultOutputGain());
-    limiterPanel.updateParameterDefaults();
 }
 
     

@@ -62,11 +62,9 @@ public:
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
     void updateIntervalLock(const bool isLocked);
-    void updateLimiter     (const float thresh, const int release, const bool isOn);
+    void updateLimiter     (const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
-    void updateDryGain (const float newDryGain);
-    void updateWetGain (const float newWetGain);
     void updateSoftPedalGain (const float newGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
     void updateUsingChannelPressure (const bool useChannelPressure);
@@ -119,8 +117,8 @@ private:
     bool resourcesReleased;
     bool initialized;
     
-    std::atomic<float> dryGain, wetGain, inputGain, outputGain;
-    std::atomic<float> prevDryGain, prevWetGain, prevInputGain, prevOutputGain;
+    std::atomic<float> inputGain, outputGain;
+    std::atomic<float> prevInputGain, prevOutputGain;
     
     bav::dsp::Panner dryPanner;
     

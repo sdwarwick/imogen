@@ -47,14 +47,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterFloat>("inputGain", "Input gain",   gainRange, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("outputGain", "Output gain", gainRange, -4.0f));
     
-    // dry & wet gain
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("dryGain", "Dry gain", gainRange, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("wetGain", "Wet gain", gainRange, 0.0f));
-    
     // output limiter
     params.push_back(std::make_unique<juce::AudioParameterBool> ("limiterIsOn", "Limiter on/off", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("limiterThresh", "Limiter threshold", gainRange, -2.0f));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("limiterRelease", "limiter release (ms)", 1, 250, 10));
     
     // NEED GUI FOR THIS -- soft pedal gain multiplier
     params.push_back(std::make_unique<juce::AudioParameterFloat>("softPedalGain", "Soft pedal gain", gainRange, 0.0f));
@@ -107,10 +101,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert(inputGain);
     outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert(outputGain);
     limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert(limiterToggle);
-    limiterThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("limiterThresh"));              jassert(limiterThresh);
-    limiterRelease     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("limiterRelease"));             jassert(limiterRelease);
-    dryGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("dryGain"));                    jassert(dryGain);
-    wetGain            = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("wetGain"));                    jassert(wetGain);
     softPedalGain      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("softPedalGain"));              jassert(softPedalGain);
     pitchDetectionConfidenceUpperThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceUpperThresh")); jassert(pitchDetectionConfidenceUpperThresh);
     pitchDetectionConfidenceLowerThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceLowerThresh")); jassert(pitchDetectionConfidenceLowerThresh);
@@ -136,16 +126,12 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultDescantThresh.store (descantThresh->get());
     defaultDescantInterval.store (descantInterval->get());
     defaultConcertPitchHz.store (concertPitchHz->get());
-    defaultLimiterRelease.store (limiterRelease->get());
     defaultAdsrAttack.store (adsrAttack->get());
     defaultAdsrDecay.store (adsrDecay->get());
     defaultAdsrSustain.store (adsrSustain->get());
     defaultAdsrRelease.store (adsrRelease->get());
     defaultInputGain.store (inputGain->get());
     defaultOutputGain.store (outputGain->get());
-    defaultLimiterThresh.store (limiterThresh->get());
-    defaultDryGain.store (dryGain->get());
-    defaultWetGain.store (wetGain->get());
     defaultSoftPedalGain.store (softPedalGain->get());
     defaultPitchUpperConfidenceThresh.store (pitchDetectionConfidenceUpperThresh->get());
     defaultPitchLowerConfidenceThresh.store (pitchDetectionConfidenceLowerThresh->get());
@@ -172,8 +158,6 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     
     activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
-    activeEngine.updateDryGain      (juce::Decibels::decibelsToGain (dryGain->get()));
-    activeEngine.updateWetGain      (juce::Decibels::decibelsToGain (wetGain->get()));
     activeEngine.updateSoftPedalGain(juce::Decibels::decibelsToGain (softPedalGain->get()));
     activeEngine.updateDryVoxPan (dryPan->get());
     activeEngine.updateDryWet (dryWet->get());
@@ -187,7 +171,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
     activeEngine.updateConcertPitch (concertPitchHz->get());
     activeEngine.updateNoteStealing (voiceStealing->get());
-    activeEngine.updateLimiter (limiterThresh->get(), limiterRelease->get(), limiterToggle->get());
+    activeEngine.updateLimiter (limiterToggle->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
     activeEngine.updateUsingChannelPressure (channelPressureToggle->get());
     activeEngine.updatePlayingButReleasedGain (playingButReleasedGain->get());

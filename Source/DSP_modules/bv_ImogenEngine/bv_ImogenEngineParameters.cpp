@@ -39,18 +39,6 @@ bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
     outputGain.store(newOutGain);
 }
 
-bvie_VOID_TEMPLATE::updateDryGain (const float newDryGain)
-{
-    prevDryGain.store(dryGain.load());
-    dryGain.store(newDryGain);
-}
-
-bvie_VOID_TEMPLATE::updateWetGain (const float newWetGain)
-{
-    prevWetGain.store(wetGain.load());
-    wetGain.store(newWetGain);
-}
-
 
 bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 {
@@ -157,11 +145,9 @@ bvie_VOID_TEMPLATE::updateIntervalLock (const bool isLocked)
 }
 
 
-bvie_VOID_TEMPLATE::updateLimiter (const float thresh, const int release, const bool isOn)
+bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 {
     limiterIsOn.store(isOn);
-    limiterThresh.store(thresh);
-    limiterRelease.store(float(release));
 }
 
 
