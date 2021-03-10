@@ -267,6 +267,9 @@ public:
         { pitchDetector.setConfidenceThresh (SampleType(newUpperThresh), SampleType(newLowerThresh)); }
     
     
+    void handlePitchWheel (int wheelValue);
+    
+    
 protected:
     
     // these functions will be called by the harmonizer's voices, to query for important harmonizer-wide info
@@ -316,7 +319,6 @@ private:
     void handleMidiEvent (const MidiMessage& m, const int samplePosition);
     void noteOn (const int midiPitch, const float velocity, const bool isKeyboard = true);
     void noteOff (const int midiNoteNumber, const float velocity, const bool allowTailOff, const bool isKeyboard = true);
-    void handlePitchWheel (int wheelValue);
     void handleAftertouch (int midiNoteNumber, int aftertouchValue);
     void handleChannelPressure (int channelPressureValue);
     void updateChannelPressure (int newIncomingAftertouch);

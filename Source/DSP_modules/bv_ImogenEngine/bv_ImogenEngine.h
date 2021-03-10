@@ -48,6 +48,8 @@ public:
     
     void returnActivePitches (Array<int>& outputArray) const;
     
+    void recieveExternalPitchbend (const int bend);
+    
     void updateDryWet     (const int percentWet);
     void updateDryVoxPan  (const int newMidiPan);
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);

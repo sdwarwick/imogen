@@ -88,6 +88,8 @@ public:
     
     void killAllMidi();
     
+    void pitchbendFromEditor (const int pitchbend);
+    
     juce::AudioProcessorValueTreeState tree;
     
     juce::AudioProcessorParameter* getBypassParameter() const override;
@@ -95,8 +97,6 @@ public:
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
     void updateNumVoices (const int newNumVoices);
-    
-    void updatePitchDetectionHzRange (int minHz, int maxHz);
     
     void setMidiLatch (const bool isOn);
     void setIntervalLock (const bool isOn);
@@ -156,6 +156,10 @@ private:
     template<typename SampleType>
     void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
     
+    void updateVocalRangeType (int rangeTypeIndex);
+    
+    void updatePitchDetectionHzRange (int minHz, int maxHz);
+    
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
@@ -180,7 +184,7 @@ private:
     bool needsSidechain = false;
 #endif
     
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameters() const;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     
     juce::AudioProcessor::BusesProperties makeBusProperties() const;
@@ -223,6 +227,7 @@ private:
     juce::AudioParameterFloat* softPedalGain;
     juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
     juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
+    juce::AudioParameterChoice* vocalRangeType;
     juce::AudioParameterBool*  aftertouchGainToggle;
     juce::AudioParameterBool*  channelPressureToggle;
     juce::AudioParameterFloat* playingButReleasedGain;
@@ -233,6 +238,10 @@ private:
     
     std::atomic<int> defaultDryPan, defaultDryWet, defaultQuickKillMs, defaultQuickAttackMs, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
     std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultSoftPedalGain, defaultPitchUpperConfidenceThresh, defaultPitchLowerConfidenceThresh, defaultPlayingButReleasedGain;
+    
+    int prevRangeTypeIndex;
+    
+    juce::StringArray vocalRangeTypes;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

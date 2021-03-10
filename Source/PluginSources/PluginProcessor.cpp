@@ -15,7 +15,8 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
+    prevRangeTypeIndex(0)
 {
     initializeParameterPointers();
     updateParameterDefaults();
@@ -112,6 +113,15 @@ void ImogenAudioProcessor::killAllMidi()
         doubleEngine.killAllMidi();
     else
         floatEngine.killAllMidi();
+}
+
+
+void ImogenAudioProcessor::pitchbendFromEditor (const int pitchbend)
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.recieveExternalPitchbend (pitchbend);
+    else
+        floatEngine.recieveExternalPitchbend (pitchbend);
 }
 
 

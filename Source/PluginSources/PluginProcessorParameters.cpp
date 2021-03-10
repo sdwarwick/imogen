@@ -2,7 +2,7 @@
 #include "PluginProcessor.h"
 
 
-juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters() const
+juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
@@ -68,7 +68,30 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                  confidenceRange, 0.15f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("pitchDetectionConfidenceLowerThresh", "Confidence lower thresh",
                                                                  confidenceRange, 0.05f));
-    
+    // pitch detection vocal range
+    vocalRangeTypes.add ("Soprano");
+    vocalRangeTypes.add ("Alto");
+    vocalRangeTypes.add ("Tenor");
+    vocalRangeTypes.add ("Bass");
+#define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("vocalRangeType", "Input vocal range", vocalRangeTypes,
+                                                                  imogen_DEFAULT_VOCAL_RANGE_TYPE, "Input vocal range",
+                                                                  [this] (int index, int maximumStringLength)
+                                                                         {
+                                                                             juce::String name = vocalRangeTypes[index];
+                                                                             if (name.length() > maximumStringLength)
+                                                                                 name = name.substring (0, maximumStringLength);
+                                                                             return name;
+                                                                         },
+                                                                  [this] (const juce::String& text)
+                                                                         {
+                                                                             for (int i = 0; i < 4; ++i)
+                                                                                 if (text.equalsIgnoreCase(vocalRangeTypes[i]))
+                                                                                     return i;
+                                                                             
+                                                                             return imogen_DEFAULT_VOCAL_RANGE_TYPE;
+                                                                         } ));
+#undef imogen_DEFAULT_VOCAL_RANGE_TYPE
     return { params.begin(), params.end() };
 }
 
@@ -104,6 +127,7 @@ void ImogenAudioProcessor::initializeParameterPointers()
     softPedalGain      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("softPedalGain"));              jassert(softPedalGain);
     pitchDetectionConfidenceUpperThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceUpperThresh")); jassert(pitchDetectionConfidenceUpperThresh);
     pitchDetectionConfidenceLowerThresh = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("pitchDetectionConfidenceLowerThresh")); jassert(pitchDetectionConfidenceLowerThresh);
+    vocalRangeType = dynamic_cast<juce::AudioParameterChoice*>(tree.getParameter("vocalRangeType")); jassert (vocalRangeType);
     aftertouchGainToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle"));   jassert(aftertouchGainToggle);
     channelPressureToggle  = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("channelPressureToggle"));  jassert(channelPressureToggle);
     playingButReleasedGain = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("playingButReleasedGain")); jassert(playingButReleasedGain);
@@ -156,6 +180,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updatePitchDetectionConfidenceThresh (pitchDetectionConfidenceUpperThresh->get(),
                                                        pitchDetectionConfidenceLowerThresh->get());
     
+    updateVocalRangeType (vocalRangeType->getIndex());
+    
     activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
     activeEngine.updateSoftPedalGain(juce::Decibels::decibelsToGain (softPedalGain->get()));
@@ -178,6 +204,42 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 }
 
 
+void ImogenAudioProcessor::updateVocalRangeType (int rangeTypeIndex)
+{
+    if (prevRangeTypeIndex == rangeTypeIndex)
+        return;
+    
+    const juce::String rangeType = vocalRangeTypes[rangeTypeIndex];
+    
+    int minHz = 80;
+    int maxHz = 2400;
+    
+    if (rangeType.equalsIgnoreCase("Soprano"))
+    {
+        minHz = bav::dsp::midiToFreq (57);
+        maxHz = bav::dsp::midiToFreq (88);
+    }
+    else if (rangeType.equalsIgnoreCase("Alto"))
+    {
+        minHz = bav::dsp::midiToFreq (50);
+        maxHz = bav::dsp::midiToFreq (81);
+    }
+    else if (rangeType.equalsIgnoreCase("Tenor"))
+    {
+        minHz = bav::dsp::midiToFreq (43);
+        maxHz = bav::dsp::midiToFreq (76);
+    }
+    else if (rangeType.equalsIgnoreCase("Bass"))
+    {
+        minHz = bav::dsp::midiToFreq (36);
+        maxHz = bav::dsp::midiToFreq (67);
+    }
+    
+    updatePitchDetectionHzRange (minHz, maxHz);
+    prevRangeTypeIndex = rangeTypeIndex;
+}
+
+
 void ImogenAudioProcessor::updatePitchDetectionHzRange (int minHz, int maxHz)
 {
     suspendProcessing (true);
@@ -185,16 +247,12 @@ void ImogenAudioProcessor::updatePitchDetectionHzRange (int minHz, int maxHz)
     if (isUsingDoublePrecision())
     {
         doubleEngine.updatePitchDetectionHzRange (minHz, maxHz);
-        
-        if (getLatencySamples() != doubleEngine.reportLatency())
-            setLatencySamples (doubleEngine.reportLatency());
+        setLatencySamples (doubleEngine.reportLatency());
     }
     else
     {
         floatEngine.updatePitchDetectionHzRange (minHz, maxHz);
-        
-        if (getLatencySamples() != floatEngine.reportLatency())
-            setLatencySamples (floatEngine.reportLatency());
+        setLatencySamples (floatEngine.reportLatency());
     }
     
     suspendProcessing (false);

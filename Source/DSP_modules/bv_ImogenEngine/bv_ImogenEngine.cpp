@@ -121,6 +121,14 @@ void ImogenEngine<SampleType>::returnActivePitches (Array<int>& outputArray) con
     harmonizer.reportActiveNotes(outputArray);
 }
     
+    
+template<typename SampleType>
+void ImogenEngine<SampleType>::recieveExternalPitchbend (const int bend)
+{
+    const ScopedLock sl (lock);
+    harmonizer.handlePitchWheel (bend);
+}
+    
 
 template <typename SampleType>
 void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
