@@ -13,10 +13,8 @@ namespace bav
 {
     
     
-#undef bvh_VOID_TEMPLATE
 #define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
     
-#undef bvh_INLINE_VOID_TEMPLATE
 #define bvh_INLINE_VOID_TEMPLATE template<typename SampleType> inline void Harmonizer<SampleType>
     
 

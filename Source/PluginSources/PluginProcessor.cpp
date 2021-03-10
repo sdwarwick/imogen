@@ -6,9 +6,6 @@
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
 
-#ifdef imogen_DEFAULT_NUM_VOICES
-  #error imogen_DEFAULT_NUM_VOICES symbol already defined elsewhere!
-#endif
 
 #define imogen_DEFAULT_NUM_VOICES 12
 

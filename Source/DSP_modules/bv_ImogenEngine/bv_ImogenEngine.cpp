@@ -14,6 +14,9 @@
 #define bvie_INIT_MAX_HZ 2400
 
 
+#define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
+
+
 namespace bav
 
 {
@@ -43,8 +46,7 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1),
 }
 
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
+bvie_VOID_TEMPLATE::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
 {
     jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
 #if ! JUCE_DEBUG
@@ -73,8 +75,7 @@ void ImogenEngine<SampleType>::initialize (const double initSamplerate, const in
 #undef bvie_INIT_MAX_HZ
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::reset()
+bvie_VOID_TEMPLATE::reset()
 {
     const ScopedLock sl (lock);
     
@@ -90,48 +91,42 @@ void ImogenEngine<SampleType>::reset()
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::killAllMidi()
+bvie_VOID_TEMPLATE::killAllMidi()
 {
     const ScopedLock sl (lock);
     harmonizer.allNotesOff(false);
 }
 
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld)
+bvie_VOID_TEMPLATE::playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld)
 {
     const ScopedLock sl (lock);
     harmonizer.playChord (desiredNotes, velocity, allowTailOffOfOld);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::playIntervalSet (const Array<int>& desiredIntervals, const float velocity, const bool allowTailOffOfOld)
+bvie_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals, const float velocity, const bool allowTailOffOfOld)
 {
     const ScopedLock sl (lock);
     harmonizer.playIntervalSet (desiredIntervals, velocity, allowTailOffOfOld, false);
 }
     
 
-template<typename SampleType>
-void ImogenEngine<SampleType>::returnActivePitches (Array<int>& outputArray) const
+bvie_VOID_TEMPLATE::returnActivePitches (Array<int>& outputArray) const
 {
     const ScopedLock sl (lock);
     harmonizer.reportActiveNotes(outputArray);
 }
     
     
-template<typename SampleType>
-void ImogenEngine<SampleType>::recieveExternalPitchbend (const int bend)
+bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
 {
     const ScopedLock sl (lock);
     harmonizer.handlePitchWheel (bend);
 }
     
 
-template <typename SampleType>
-void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
+bvie_VOID_TEMPLATE::prepareToPlay (double samplerate, int blocksize)
 {
     jassert (samplerate > 0);
     jassert (blocksize > 0);
@@ -158,8 +153,7 @@ void ImogenEngine<SampleType>::prepareToPlay (double samplerate, int blocksize)
 }
     
 
-template <typename SampleType>
-void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
+bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
 {
     jassert (newInternalBlocksize == FIFOEngine::getLatency());
     
@@ -186,8 +180,7 @@ void ImogenEngine<SampleType>::latencyChanged (int newInternalBlocksize)
 #undef bvie_LIMITER_THRESH_DB
 
     
-template <typename SampleType>
-void ImogenEngine<SampleType>::release()
+bvie_VOID_TEMPLATE::release()
 {
     const ScopedLock sl (lock);
     
@@ -205,8 +198,7 @@ void ImogenEngine<SampleType>::release()
 }
 
     
-template <typename SampleType>
-void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
 {
     const ScopedLock sl (lock);
     
@@ -287,6 +279,8 @@ void ImogenEngine<SampleType>::renderBlock (const AudioBuffer<SampleType>& input
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
 }
 
+    
+#undef bvie_VOID_TEMPLATE
     
 template class ImogenEngine<float>;
 template class ImogenEngine<double>;

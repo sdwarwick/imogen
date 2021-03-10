@@ -7,28 +7,8 @@
 
 #include "GrainExtractor.h"
 
-
-#ifdef bvhge_NUM_PEAKS_TO_TEST
-  #error bvhge_NUM_PEAKS_TO_TEST symbol already defined elsewhere!
-#endif
-
-#ifdef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
-  #error bvhge_DEFAULT_FINAL_HANDFUL_SIZE symbol already defined elsewhere!
-#endif
-
-#ifdef bvhge_MIN_DELTA_RANGE
-  #error bvhge_MIN_DELTA_RANGE symbol already defined elsewhere!
-#endif
-
-#ifdef bvhge_WEIGHT
-  #error bv_WEIGHT symbol already defined elsewhere!
-#endif
-
-#ifdef bvhge_DELTA_WEIGHT
-  #error bvhge_DELTA_WEIGHT symbol already defined elsewhere!
-#endif
-
 #define bvhge_NUM_PEAKS_TO_TEST 10
+#define bvhge_DEFAULT_FINAL_HANDFUL_SIZE 5
 
 
 namespace bav
@@ -318,7 +298,6 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
     }
 }
 
-    
 
 template<typename SampleType>
 inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
@@ -343,7 +322,6 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
     
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
-#define bvhge_DEFAULT_FINAL_HANDFUL_SIZE 5
     const int finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
 #undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
     

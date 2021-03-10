@@ -2,7 +2,6 @@
 #include "bv_Harmonizer.h"
 
 
-#undef bvh_VOID_TEMPLATE
 #define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
 
 

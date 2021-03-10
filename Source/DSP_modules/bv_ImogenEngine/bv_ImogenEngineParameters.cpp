@@ -2,7 +2,6 @@
 #include "bv_ImogenEngine.h"
 
 
-#undef bvie_VOID_TEMPLATE
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
 
