@@ -7,8 +7,9 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
+
 #include "PluginSources/PluginProcessor.h"
-#include "GUI/LookAndFeel.h"
+#include "GUI/LookAndFeel/ImogenLookAndFeel.h"
 
 
 namespace bav

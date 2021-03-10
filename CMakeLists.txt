@@ -38,11 +38,8 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
-    ${guiSourcePath}/LookAndFeel.h
-    ${guiSourcePath}/EnableSidechainWarning.h
-    ${guiSourcePath}/touchOnceAndForgetSettingsPanel.h
-    ${HelpScreenSourcePath}/HelpScreen.cpp
-    ${HelpScreenSourcePath}/HelpScreen.h
+    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
+    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${IOPanelSourcePath}/IOControlPanel.cpp  
     ${IOPanelSourcePath}/IOControlPanel.h
     ${MidiControlSourcePath}/MidiControlPanel.cpp

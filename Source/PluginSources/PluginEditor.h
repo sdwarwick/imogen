@@ -8,17 +8,8 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "PluginSources/PluginProcessor.h"
-#include "GUI/LookAndFeel.h"
-
 #include "GUI/MidiControlPanel/MidiControlPanel.h"
 #include "GUI/IOControlPanel/IOControlPanel.h"
-#include "GUI/HelpScreen/HelpScreen.h"
-#include "GUI/touchOnceAndForgetSettingsPanel.h"
-
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-  #include "../../Source/GUI/EnableSidechainWarning.h"
-#endif
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
@@ -51,30 +42,17 @@ private:
     
     bav::ImogenLookAndFeel lookAndFeel;
     
-    bav::TouchOnceAndForgetSettingsComponent touchOnceSettings;
-    juce::TextButton touchOnceSettingsButton;
-    inline void touchOnceSettingsButtonClicked();
-    
     juce::ComboBox selectSkin;
     juce::Label skinLabel;
     
     bav::MidiControlPanel midiPanel;
     bav::IOControlPanel ioPanel;
     
-    bav::HelpScreen helpScreen;
-    juce::TextButton helpButton;
-    inline void helpButtonClicked();
-    
     juce::ComboBox selectPreset;
     
     juce::ComboBox modulatorInputSource;
 
     inline void changeModulatorInputSource();
-    
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    bav::EnableSidechainWarning sidechainWarning;
-    bool sidechainWarningShowing;
-#endif
     
     bav::ImogenLookAndFeel::Skin currentSkin;
     bav::ImogenLookAndFeel::Skin prevSkin;
