@@ -2,7 +2,6 @@
 
 #  AUTHOR: BEN VINING
 
-
 cmake_minimum_required (VERSION 3.18) 
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
@@ -103,4 +102,3 @@ target_compile_definitions (Imogen PUBLIC
     )
 
 #
-
