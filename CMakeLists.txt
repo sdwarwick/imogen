@@ -46,14 +46,10 @@ set (Imogen_sourceFiles
     ${IOPanelSourcePath}/IOControlPanel.cpp  
     ${IOPanelSourcePath}/IOControlPanel.h
     ${MidiControlSourcePath}/MidiControlPanel.cpp
-    ${MidiControlSourcePath}/MidiControlPanel.h
-    ${StaffDisplaySourcePath}/StaffDisplay.cpp
-    ${StaffDisplaySourcePath}/StaffDisplay.h)
+    ${MidiControlSourcePath}/MidiControlPanel.h)
 
-set (Imogen_graphicAssetFiles 
-    ${Imogen_graphicAssetsDir}/1-1_note_semibreve.svg 
-    ${Imogen_graphicAssetsDir}/closeIcon.png 
-    ${Imogen_graphicAssetsDir}/grandStaff.png 
+set (Imogen_graphicAssetFiles
+    ${Imogen_graphicAssetsDir}/closeIcon.png
     ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
 
 set (Imogen_testFiles

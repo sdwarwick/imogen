@@ -11,7 +11,6 @@
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), audioProcessor (p),
     midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel),
-    staffDisplay(p, lookAndFeel),
     currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
     prevSkin(currentSkin)
 {
@@ -21,7 +20,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     
     midiPanel   .setLookAndFeel(&lookAndFeel);
     ioPanel     .setLookAndFeel(&lookAndFeel);
-    staffDisplay.setLookAndFeel(&lookAndFeel);
     selectSkin  .setLookAndFeel(&lookAndFeel);
     skinLabel   .setLookAndFeel(&lookAndFeel);
     helpButton  .setLookAndFeel(&lookAndFeel);
@@ -61,7 +59,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     
     addAndMakeVisible(midiPanel);
     addAndMakeVisible(ioPanel);
-    addAndMakeVisible(staffDisplay);
     addAndMakeVisible(selectSkin);
     addAndMakeVisible(helpButton);
     //addAndMakeVisible(touchOnceSettingsButton);
@@ -94,7 +91,6 @@ void ImogenAudioProcessorEditor::resized()
 {
     midiPanel   .setBounds(10, 10, 300, 415);
     ioPanel     .setBounds(320, 10, 300, 415);
-    staffDisplay.setBounds(630, 10, 300, 350);
     
     selectSkin  .setBounds(775, 388, 150, 30);
     skinLabel   .setBounds(775, 365, 150, 25);
@@ -114,8 +110,6 @@ void ImogenAudioProcessorEditor::resized()
 
 void ImogenAudioProcessorEditor::timerCallback()
 {
-    //staffDisplay.repaint();
-    
     if (audioProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
     

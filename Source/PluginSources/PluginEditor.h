@@ -8,10 +8,11 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "GUI/StaffDisplay/StaffDisplay.h"
+#include "PluginSources/PluginProcessor.h"
+#include "GUI/LookAndFeel.h"
+
 #include "GUI/MidiControlPanel/MidiControlPanel.h"
 #include "GUI/IOControlPanel/IOControlPanel.h"
-#include "GUI/LookAndFeel.h"
 #include "GUI/HelpScreen/HelpScreen.h"
 #include "GUI/touchOnceAndForgetSettingsPanel.h"
 
@@ -74,8 +75,6 @@ private:
     bav::EnableSidechainWarning sidechainWarning;
     bool sidechainWarningShowing;
 #endif
-    
-    bav::StaffDisplay staffDisplay;
     
     bav::ImogenLookAndFeel::Skin currentSkin;
     bav::ImogenLookAndFeel::Skin prevSkin;
