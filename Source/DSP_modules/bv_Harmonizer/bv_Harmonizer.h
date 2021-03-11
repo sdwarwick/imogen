@@ -200,11 +200,6 @@ public:
                     const float velocity = 1.0f,
                     const bool allowTailOffOfOld = false);
     
-    void playIntervalSet (const Array<int>& desiredIntervals,
-                          const float velocity = 1.0f,
-                          const bool allowTailOffOfOld = false,
-                          const bool isIntervalLatch = false);
-    
     void allNotesOff (const bool allowTailOff, const float velocity = 1.0f);
     
     void turnOffAllKeyupNotes (const bool allowTailOff,  
@@ -248,7 +243,6 @@ public:
     void updateLowestPannedNote (int newPitchThresh);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
-    void setIntervalLatch (const bool shouldBeOn, const bool allowTailOff);
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
     void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
@@ -299,7 +293,6 @@ protected:
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     bool isLatched()  const noexcept { return latchIsOn; }
-    bool isIntervalLatchOn() const noexcept { return intervalLatchIsOn; }
     
     
 private:
@@ -371,10 +364,6 @@ private:
     const Range<int> unpitchedArbitraryPeriodRange = Range<int> (50, 201);
     
     bool latchIsOn;
-    
-    bool intervalLatchIsOn;
-    Array<int> intervalsLatchedTo;
-    void updateIntervalsLatchedTo();
     
     Array<int> currentNotes;
     Array<int> desiredNotes;

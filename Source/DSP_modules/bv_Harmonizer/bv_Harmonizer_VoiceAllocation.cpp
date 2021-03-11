@@ -161,7 +161,6 @@ inline void Harmonizer<SampleType>::numVoicesChanged()
     const int newMaxNumVoices = voices.size();
     
     panner.prepare (newMaxNumVoices, false);
-    intervalsLatchedTo.ensureStorageAllocated(newMaxNumVoices);
     usableVoices.ensureStorageAllocated(newMaxNumVoices);
     currentNotes.ensureStorageAllocated(newMaxNumVoices);
     desiredNotes.ensureStorageAllocated(newMaxNumVoices);

@@ -56,9 +56,6 @@ private:
     // Midi latch
     juce::ToggleButton latchToggle;
     
-    // interval lock
-    juce::ToggleButton intervalLock;
-    
     // stereo width of harmony output
     juce::Slider stereoWidth;
     juce::Label stereowidthLabel;

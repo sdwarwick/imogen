@@ -19,11 +19,6 @@ class ImogenLookAndFeel : public juce::LookAndFeel_V4
 public:
     ImogenLookAndFeel();
     
-    enum Skin { CasualDenim, PlayfulBoho, ChicEveningwear };
-    
-    void changeSkin (Skin& newskin);
-    
-    
     void drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                            float sliderPos,
                            const float rotaryStartAngle,
@@ -65,84 +60,12 @@ public:
         backgroundPanelColourId,
         insetPanelColourId,
         blankCanvasColourId,
-        staffDisplayBackgroundColourId,
         toggleButtonColourId,
         numboxSliderFill
     };
     
     
 private:
-    
-    inline void CasualDenimSkin()
-    {
-        // GUI background
-        this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::dimgrey);
-        
-        // rotary sliders
-        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::royalblue);
-        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
-        
-        // buttons
-        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::cadetblue);
-        
-        // comboboxes
-        this->setColour(juce::ComboBox::ColourIds::backgroundColourId,		juce::Colours::cadetblue);
-        
-        // gui panels
-        this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::burlywood);
-        this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::steelblue);
-        
-        // staff display
-        this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::oldlace);
-    }
-    
-    
-    inline void PlayfulBohoSkin()
-    {
-        // GUI background
-        this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::tomato);
-        
-        // rotary sliders
-        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::indianred);
-        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
-        
-        // buttons
-        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::slategrey);
-        
-        // comboboxes
-        this->setColour(juce::ComboBox::ColourIds::backgroundColourId,		juce::Colours::slategrey);
-        
-        // gui panels
-        this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::rosybrown);
-        this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::slateblue);
-        
-        // staff display
-        this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::navajowhite);
-    }
-    
-    
-    inline void ChicEveningwearSkin()
-    {
-        // GUI background
-        this->setColour(uiColourIds::blankCanvasColourId,				juce::Colours::black);
-        
-        // rotary sliders
-        this->setColour(juce::Slider::ColourIds::rotarySliderFillColourId, 	juce::Colours::darkred);
-        this->setColour(juce::Slider::ColourIds::thumbColourId, 				juce::Colours::black);
-        
-        // buttons
-        this->setColour(juce::TextButton::buttonColourId,						juce::Colours::black);
-        
-        // comboboxes
-        this->setColour(juce::ComboBox::ColourIds::backgroundColourId,		juce::Colours::black);
-        
-        // gui panels
-        this->setColour(uiColourIds::backgroundPanelColourId, 			juce::Colours::blueviolet);
-        this->setColour(uiColourIds::insetPanelColourId, 				juce::Colours::darkslateblue);
-        
-        // staff display
-        this->setColour(uiColourIds::staffDisplayBackgroundColourId,	juce::Colours::snow);
-    }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImogenLookAndFeel)
 };

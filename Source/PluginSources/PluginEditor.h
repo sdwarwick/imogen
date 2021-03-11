@@ -34,16 +34,11 @@ private:
     
     ImogenAudioProcessor& audioProcessor;
     
-    inline void skinSelectorChanged();
-    
     inline void newPresetSelected();
     
     inline void makePresetMenu (juce::ComboBox& box);
     
     bav::ImogenLookAndFeel lookAndFeel;
-    
-    juce::ComboBox selectSkin;
-    juce::Label skinLabel;
     
     bav::MidiControlPanel midiPanel;
     bav::IOControlPanel ioPanel;
@@ -52,11 +47,6 @@ private:
     
     juce::ComboBox modulatorInputSource;
 
-    inline void changeModulatorInputSource();
-    
-    bav::ImogenLookAndFeel::Skin currentSkin;
-    bav::ImogenLookAndFeel::Skin prevSkin;
-    
     void updateParameterDefaults();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)

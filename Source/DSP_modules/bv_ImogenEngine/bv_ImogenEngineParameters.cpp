@@ -21,7 +21,7 @@ bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
 
 bvie_VOID_TEMPLATE::setModulatorSource (const int newSource)
 {
-    jassert (newSource == 0 || newSource == 1 || newSource == 2);
+    jassert (newSource == 1 || newSource == 2 || newSource == 3);
     modulatorInput.store (newSource);
 }
 
@@ -134,13 +134,6 @@ bvie_VOID_TEMPLATE::updateMidiLatch (const bool isLatched)
 {
     const ScopedLock sl (lock);
     harmonizer.setMidiLatch (isLatched, true);
-}
-
-
-bvie_VOID_TEMPLATE::updateIntervalLock (const bool isLocked)
-{
-    const ScopedLock sl (lock);
-    harmonizer.setIntervalLatch (isLocked, true);
 }
 
 

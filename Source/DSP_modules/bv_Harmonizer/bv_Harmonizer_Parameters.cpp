@@ -39,26 +39,6 @@ bvh_VOID_TEMPLATE::setMidiLatch (const bool shouldBeOn, const bool allowTailOff)
     
     pitchCollectionChanged();
 }
-
-
-// interval latch
-bvh_VOID_TEMPLATE::setIntervalLatch (const bool shouldBeOn, const bool allowTailOff)
-{
-    if (intervalLatchIsOn == shouldBeOn)
-        return;
-    
-    intervalLatchIsOn = shouldBeOn;
-    
-    if (shouldBeOn)
-    {
-        updateIntervalsLatchedTo();
-    }
-    else if (! latchIsOn)
-    {
-        turnOffAllKeyupNotes (allowTailOff, false, !allowTailOff, false);
-        pitchCollectionChanged();
-    }
-}
     
     
 // descant settings ----------------------------------------------------------------------------------------------------------------------------

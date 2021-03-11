@@ -137,9 +137,6 @@ bvh_INLINE_VOID_TEMPLATE::pitchCollectionChanged()
     
     if (descant.isOn)
         applyDescant();
-    
-    if (intervalLatchIsOn)
-        updateIntervalsLatchedTo();
 }
     
     
@@ -463,9 +460,8 @@ bvh_INLINE_VOID_TEMPLATE::handleSustainPedal (const int value)
     
     sustainPedalDown = isDown;
     
-    if (! isDown)
-        if (! (latchIsOn || intervalLatchIsOn))
-            turnOffAllKeyupNotes (false, false, 0.0f, false);
+    if (! isDown && ! latchIsOn)
+        turnOffAllKeyupNotes (false, false, 0.0f, false);
 }
 
 
@@ -481,7 +477,7 @@ bvh_INLINE_VOID_TEMPLATE::handleSostenutoPedal (const int value)
     
     sostenutoPedalDown = isDown;
     
-    if (isDown && (! (latchIsOn || intervalLatchIsOn)))
+    if (isDown && ! latchIsOn)
     {
         for (auto* voice : voices)
             if (voice->isVoiceActive() && ! voice->isPedalPitchVoice && ! voice->isDescantVoice)

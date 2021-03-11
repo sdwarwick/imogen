@@ -21,7 +21,7 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    latchIsOn(false), intervalLatchIsOn(false), currentInputFreq(0.0f), currentInputPeriod(0), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
+    latchIsOn(false), currentInputFreq(0.0f), currentInputPeriod(0), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
     adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
 {
@@ -128,7 +128,6 @@ bvh_VOID_TEMPLATE::releaseResources()
     usableVoices.clear();
     polarityReversalBuffer.clear();
     windowBuffer.clear();
-    intervalsLatchedTo.clear();
     indicesOfGrainOnsets.clear();
     currentNotes.clear();
     desiredNotes.clear();
@@ -151,9 +150,6 @@ bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
     currentInputFreq = newInputFreq;
     
     currentInputPeriod = roundToInt (sampleRate / newInputFreq);
-    
-    if (intervalLatchIsOn && ! intervalsLatchedTo.isEmpty())
-        playIntervalSet (intervalsLatchedTo, 1.0f, false, true);
 }
 
 

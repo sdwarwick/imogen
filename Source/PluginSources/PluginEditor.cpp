@@ -8,48 +8,40 @@
 #include "BinaryData.h"
 
 
+#define bvi_GRAPHICS_FRAMERATE_HZ 60
+
+
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), audioProcessor (p),
-    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel),
-    currentSkin(bav::ImogenLookAndFeel::Skin::CasualDenim),
-    prevSkin(currentSkin)
+    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel)
 {
     this->setBufferedToImage (true);
     
-    lookAndFeel.changeSkin(currentSkin);
-    
     midiPanel   .setLookAndFeel(&lookAndFeel);
     ioPanel     .setLookAndFeel(&lookAndFeel);
-    selectSkin  .setLookAndFeel(&lookAndFeel);
-    skinLabel   .setLookAndFeel(&lookAndFeel);
-    
-    selectSkin.addItem("Casual Denim", 1);
-    selectSkin.addItem("Playful Boho", 2);
-    selectSkin.addItem("Chic Eveningwear", 3);
-    selectSkin.setSelectedId(1);
-    selectSkin.onChange = [this] { skinSelectorChanged(); };
-    lookAndFeel.initializeLabel(skinLabel, "Select skin");
     
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
     
-    modulatorInputSource.addItem("left",  1);
-    modulatorInputSource.addItem("right", 2);
-    modulatorInputSource.addItem("mix to mono", 3);
-    //modulatorInputSource.onChange = [this] { changeModulatorInputSource(); };
-    modulatorInputSource.setSelectedId (1, juce::NotificationType::dontSendNotification);
+    modulatorInputSource.addItem ("Left",  1);
+    modulatorInputSource.addItem ("Right", 2);
+    modulatorInputSource.addItem ("Mix to mono", 3);
+    modulatorInputSource.setSelectedId (audioProcessor.getCurrentModulatorInputSource(),
+                                        juce::NotificationType::dontSendNotification);
+    modulatorInputSource.onChange = [this] { audioProcessor.updateModulatorInputSource (modulatorInputSource.getSelectedId()); };
     
     addAndMakeVisible(midiPanel);
     addAndMakeVisible(ioPanel);
-    addAndMakeVisible(selectSkin);
-    addAndMakeVisible(skinLabel);
+    
     //addAndMakeVisible(selectPreset);
     //addAndMakeVisible(modulatorInputSource);
     
     setSize (940, 435);
     
-    Timer::startTimerHz(60); // framerate of graphics
+    Timer::startTimerHz (bvi_GRAPHICS_FRAMERATE_HZ);
 }
+
+#undef bvi_GRAPHICS_FRAMERATE_HZ
 
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
@@ -70,9 +62,6 @@ void ImogenAudioProcessorEditor::resized()
     midiPanel   .setBounds(10, 10, 300, 415);
     ioPanel     .setBounds(320, 10, 300, 415);
     
-    selectSkin  .setBounds(775, 388, 150, 30);
-    skinLabel   .setBounds(775, 365, 150, 25);
-    
     //selectPreset.setBounds(x, y, w, h);
     
     //modulatorInputSource.setBounds(x, y, w, h);
@@ -84,49 +73,6 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     if (audioProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
-}
-
-
-inline void ImogenAudioProcessorEditor::changeModulatorInputSource()
-{
-//    switch (modulatorInputSource.getSelectedId())
-//    {
-//        case 1:
-//            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::left);
-//            break;
-//        case 2:
-//            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::right);
-//            break;
-//        case 3:
-//            audioProcessor.changeModulatorInputSource(ImogenAudioProcessor::ModulatorInputSource::mixToMono);
-//            break;
-//        default:
-//            return;
-//    }
-}
-
-
-inline void ImogenAudioProcessorEditor::skinSelectorChanged()
-{
-    switch (selectSkin.getSelectedId())
-    {
-        case(1):
-            currentSkin = bav::ImogenLookAndFeel::Skin::CasualDenim;
-            break;
-        case(2):
-            currentSkin = bav::ImogenLookAndFeel::Skin::PlayfulBoho;
-            break;
-        case(3):
-            currentSkin = bav::ImogenLookAndFeel::Skin::ChicEveningwear;
-            break;
-    }
-    
-    if (currentSkin != prevSkin)
-    {
-        lookAndFeel.changeSkin(currentSkin);
-        prevSkin = currentSkin;
-        this->repaint();
-    }
 }
 
 

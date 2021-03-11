@@ -103,14 +103,7 @@ bvie_VOID_TEMPLATE::playChord (const Array<int>& desiredNotes, const float veloc
     const ScopedLock sl (lock);
     harmonizer.playChord (desiredNotes, velocity, allowTailOffOfOld);
 }
-    
 
-bvie_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals, const float velocity, const bool allowTailOffOfOld)
-{
-    const ScopedLock sl (lock);
-    harmonizer.playIntervalSet (desiredIntervals, velocity, allowTailOffOfOld, false);
-}
-    
 
 bvie_VOID_TEMPLATE::returnActivePitches (Array<int>& outputArray) const
 {
@@ -209,19 +202,19 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuff
     
     switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
-        case (0): // take only the left channel
+        case (1): // take only the left channel
         {
             monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
             break;
         }
 
-        case (1):  // take only the right channel
+        case (2):  // take only the right channel
         {
             monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
             break;
         }
 
-        case (2):  // mix all input channels to mono
+        case (3):  // mix all input channels to mono
         {
             monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
             
@@ -239,7 +232,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuff
         default:
         {
             monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-            modulatorInput.store (0);
+            modulatorInput.store (1);
             break;
         }
     }

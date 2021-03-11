@@ -7,8 +7,7 @@
 #include "MidiControlPanel.h"
 
 
-#undef bvi_ROTARY_SLIDER
-#undef bvi_LINEAR_SLIDER
+#define bvi_MAX_POSSIBLE_NUM_HARMONY_VOICES 16
 
 
 namespace bav
@@ -18,28 +17,34 @@ namespace bav
 #define bvi_ROTARY_SLIDER Slider::SliderStyle::RotaryVerticalDrag
 #define bvi_LINEAR_SLIDER Slider::SliderStyle::LinearBarVertical
     
+#define bvi_SLIDER_ATTACHMENT std::make_unique<APVTS::SliderAttachment>
+#define bvi_BUTTON_ATTACHMENT std::make_unique<APVTS::ButtonAttachment>
+#define bvi_COMBOBOX_ATTACHMENT std::make_unique<APVTS::ComboBoxAttachment>
     
 MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
-    attackLink (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrAttack", adsrAttack)),
-    decayLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrDecay", adsrDecay)),
-    sustainLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrSustain", adsrSustain)),
-    releaseLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "adsrRelease", adsrRelease)),
-    adsrOnOffLink  (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
-    stereoWidthLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "stereoWidth", stereoWidth)),
-    lowestPanLink  (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "lowestPan", lowestPan)),
-    midiVelocitySensLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
-    pitchBendUpLink  (std::make_unique<APVTS::ComboBoxAttachment> (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
-    pitchBendDownLink(std::make_unique<APVTS::ComboBoxAttachment> (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
-    voiceStealingLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "voiceStealing", voiceStealing)),
-    quickKillMsLink  (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "quickKillMs", quickKillMs)),
-    concertPitchLink (std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "concertPitch", concertPitch)),
-    pedalPitchToggleLink(std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
-    pedalPitchThreshLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "pedalPitchThresh", pedalPitchThreshold)),
-    pedalPitchIntervalLink(std::make_unique<APVTS::ComboBoxAttachment>(audioProcessor.tree, "pedalPitchInterval", pedalPitchInterval)),
-    descantToggleLink   (std::make_unique<APVTS::ButtonAttachment>(audioProcessor.tree, "descantToggle", descantToggle)),
-    descantThresholdLink(std::make_unique<APVTS::SliderAttachment>(audioProcessor.tree, "descantThresh", descantThreshold)),
-    descantIntervalLink (std::make_unique<APVTS::ComboBoxAttachment>(audioProcessor.tree, "descantInterval", descantInterval))
+    attackLink (bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "adsrAttack", adsrAttack)),
+    decayLink  (bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "adsrDecay", adsrDecay)),
+    sustainLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "adsrSustain", adsrSustain)),
+    releaseLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "adsrRelease", adsrRelease)),
+    adsrOnOffLink  (bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "adsrOnOff", adsrOnOff)),
+    stereoWidthLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "stereoWidth", stereoWidth)),
+    lowestPanLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "lowestPan", lowestPan)),
+    midiVelocitySensLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
+    pitchBendUpLink  (bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
+    pitchBendDownLink(bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
+    voiceStealingLink(bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "voiceStealing", voiceStealing)),
+    quickKillMsLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "quickKillMs", quickKillMs)),
+    concertPitchLink (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "concertPitch", concertPitch)),
+    pedalPitchToggleLink  (bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
+    pedalPitchThreshLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "pedalPitchThresh", pedalPitchThreshold)),
+    pedalPitchIntervalLink(bvi_COMBOBOX_ATTACHMENT(audioProcessor.tree, "pedalPitchInterval", pedalPitchInterval)),
+    descantToggleLink     (bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "descantToggle", descantToggle)),
+    descantThresholdLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "descantThresh", descantThreshold)),
+    descantIntervalLink   (bvi_COMBOBOX_ATTACHMENT(audioProcessor.tree, "descantInterval", descantInterval))
+#undef bvi_SLIDER_ATTACHMENT
+#undef bvi_BUTTON_ATTACHMENT
+#undef bvi_COMBOBOX_ATTACHMENT
 {
     lookAndFeel.initializeSlider (adsrAttack, bvi_ROTARY_SLIDER, audioProcessor.getAdsrAttack());
     addAndMakeVisible(adsrAttack);
@@ -72,12 +77,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     latchToggle.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsMidiLatchOn()));
     latchToggle.setToggleState (audioProcessor.getIsMidiLatchOn(), juce::NotificationType::dontSendNotification);
 
-    intervalLock.setButtonText("Interval lock");
-    intervalLock.onClick = [this] { audioProcessor.setIntervalLock(intervalLock.isDown()); };
-    //addAndMakeVisible(intervalLock);
-    intervalLock.setState (bav::gui::buttonStateFromBool (audioProcessor.getIsIntervalLockOn()));
-    intervalLock.setToggleState (audioProcessor.getIsIntervalLockOn(), juce::NotificationType::dontSendNotification);
-    
     midiKill.setButtonText("Kill all MIDI");
     midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
     addAndMakeVisible(midiKill);
@@ -273,18 +272,8 @@ void MidiControlPanel::updateParameterDefaults()
 
 inline void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
 {
-    box.addItem("1", 1);
-    box.addItem("2", 2);
-    box.addItem("3", 3);
-    box.addItem("4", 4);
-    box.addItem("5", 5);
-    box.addItem("6", 6);
-    box.addItem("7", 7);
-    box.addItem("8", 8);
-    box.addItem("9", 9);
-    box.addItem("10", 10);
-    box.addItem("11", 11);
-    box.addItem("12", 12);
+    for (int i = 1; i <= bvi_MAX_POSSIBLE_NUM_HARMONY_VOICES; ++i)
+        box.addItem ("i", i);
 }
 
 

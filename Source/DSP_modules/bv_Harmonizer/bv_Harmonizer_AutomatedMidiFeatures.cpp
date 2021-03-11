@@ -19,51 +19,6 @@ namespace bav
  // automated midi events ----------------------------------------------------------------------------------------------------------------------
  ***********************************************************************************************************************************************/
 
-// used for interval latch -- saves the distance in semitones of each currently playing note from the current input pitch
-bvh_VOID_TEMPLATE::updateIntervalsLatchedTo()
-{
-    intervalsLatchedTo.clearQuick();
-    
-    currentNotes.clearQuick();
-    
-    reportActiveNotes (currentNotes, false);
-    
-    if (currentNotes.isEmpty())
-        return;
-    
-    const int currentMidiPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
-    
-    for (int note : currentNotes)
-        intervalsLatchedTo.add (note - currentMidiPitch);
-}
-
-
-// plays a chord based on a given set of desired interval offsets from the current input pitch.
-bvh_VOID_TEMPLATE::playIntervalSet (const Array<int>& desiredIntervals,
-                                    const float velocity,
-                                    const bool allowTailOffOfOld,
-                                    const bool isIntervalLatch)
-{
-    if (desiredIntervals.isEmpty())
-    {
-        allNotesOff (allowTailOffOfOld);
-        return;
-    }
-    
-    const int currentInputPitch = roundToInt (pitchConverter.ftom (currentInputFreq));
-    
-    desiredNotes.clearQuick();
-    
-    for (int interval : desiredIntervals)
-        desiredNotes.add (currentInputPitch + interval);
-    
-    playChord (desiredNotes, velocity, allowTailOffOfOld);
-    
-    if (! isIntervalLatch)
-        pitchCollectionChanged();
-}
-
-
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
 bvh_VOID_TEMPLATE::playChord (const Array<int>& desiredPitches,
                               const float velocity,

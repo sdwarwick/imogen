@@ -7,8 +7,6 @@ namespace bav
     
     ImogenLookAndFeel::ImogenLookAndFeel()
     {
-        // so far these colors are consistent across all the themes:
-        
         // rotary sliders
         this->setColour(juce::Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
         
@@ -21,26 +19,6 @@ namespace bav
         // numbox slider fill
         this->setColour(uiColourIds::numboxSliderFill, juce::Colours::grey);
     }
-    
-    
-    void ImogenLookAndFeel::changeSkin (Skin& newskin)
-    {
-        switch (newskin)
-        {
-            case (CasualDenim):
-                CasualDenimSkin();
-                break;
-                
-            case (PlayfulBoho):
-                PlayfulBohoSkin();
-                break;
-                
-            case (ChicEveningwear):
-                ChicEveningwearSkin();
-                break;
-        }
-    }
-    
     
     void ImogenLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
                                               float sliderPos,

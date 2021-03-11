@@ -15,12 +15,14 @@ namespace bav
 #define bvi_ROTARY_SLIDER Slider::SliderStyle::RotaryVerticalDrag
 #define bvi_LINEAR_SLIDER Slider::SliderStyle::LinearVertical
     
+#define bvi_SLIDER_ATTACHMENT std::make_unique<APVTS::SliderAttachment>
+    
 IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     audioProcessor(p), lookAndFeel(l),
-    dryPanLink      (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "dryPan", dryPan)),
-    inputGainLink   (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "inputGain", inputGain)),
-    masterDryWetLink(std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "masterDryWet", masterDryWet)),
-    outputGainLink  (std::make_unique<APVTS::SliderAttachment> (audioProcessor.tree, "outputGain", outputGain))
+    dryPanLink      (bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "dryPan", dryPan)),
+    inputGainLink   (bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "inputGain", inputGain)),
+    masterDryWetLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "masterDryWet", masterDryWet)),
+    outputGainLink  (bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "outputGain", outputGain))
 {
     lookAndFeel.initializeSlider (dryPan, bvi_ROTARY_SLIDER, audioProcessor.getDryPan());
     addAndMakeVisible(dryPan);
@@ -47,6 +49,7 @@ IOControlPanel::IOControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l):
     
 #undef bvi_ROTARY_SLIDER
 #undef bvi_LINEAR_SLIDER
+#undef bvi_SLIDER_ATTACHMENT
     
 
 IOControlPanel::~IOControlPanel()

@@ -295,7 +295,7 @@ bvhv_VOID_TEMPLATE::setKeyDown (bool isNowDown) noexcept
     else
         if (isPedalPitchVoice || isDescantVoice)
             playingButReleased = false;
-        else if (parent->isLatched() || parent->intervalLatchIsOn)
+        else if (parent->isLatched())
             playingButReleased = false;
         else
             playingButReleased = isVoiceActive();

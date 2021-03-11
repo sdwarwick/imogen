@@ -83,6 +83,7 @@ public:
     juce::File getPresetsFolder() const;
     
     void updateModulatorInputSource (const int newSource);
+    int getCurrentModulatorInputSource() const;
     
     void returnActivePitches(juce::Array<int>& outputArray) const;
     
@@ -99,7 +100,6 @@ public:
     void updateNumVoices (const int newNumVoices);
     
     void setMidiLatch (const bool isOn);
-    void setIntervalLock (const bool isOn);
     
     // these functions return parameters' current state/value
     int getDryPan() const { return dryPan->get(); }

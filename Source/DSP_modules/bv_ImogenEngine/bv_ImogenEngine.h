@@ -63,7 +63,6 @@ public:
     void updateConcertPitch(const int newConcertPitchHz);
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
-    void updateIntervalLock(const bool isLocked);
     void updateLimiter     (const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
@@ -81,8 +80,6 @@ public:
     void setModulatorSource (const int newSource);
     
     void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
-    
-    void playIntervalSet (const Array<int>& desiredIntervals, const float velocity, const bool allowTailOffOfOld);
     
     
 private:

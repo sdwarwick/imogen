@@ -133,14 +133,12 @@ void ImogenAudioProcessor::setMidiLatch (const bool isOn)
 }
 
 
-void ImogenAudioProcessor::setIntervalLock (const bool isOn)
+int ImogenAudioProcessor::getCurrentModulatorInputSource() const
 {
-    intervalLockIsOn.store (isOn);
-    
     if (isUsingDoublePrecision())
-        doubleEngine.updateIntervalLock (isOn);
+        return doubleEngine.getModulatorSource();
     else
-        floatEngine.updateIntervalLock (isOn);
+        return floatEngine.getModulatorSource();
 }
 
 
