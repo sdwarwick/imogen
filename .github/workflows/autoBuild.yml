@@ -1,10 +1,7 @@
 name: AutoBuild
 
 on:
-  push:
-    paths-ignore:
-    - 'docs/**'
-    - '.github/**'
+  workflow_dispatch:
 
 env:
   PROJECT_NAME: Imogen
@@ -17,8 +14,6 @@ env:
 jobs:
 
   build:
-
-    if: "contains(github.event.head_commit.message, 'BUILD')"
 
     name: ${{ matrix.artifact }} build
     runs-on: ${{ matrix.os }}
@@ -52,7 +47,7 @@ jobs:
       run: cd $GITHUB_WORKSPACE/imogen && bash imogen_build_script.sh
   
     - name: Zip
-      working-directory: ${{ env.BUILD_DIR }}
+      working-directory: $GITHUB_WORKSPACE/imogen
       run: cmake -E tar cfv ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip --format=zip ${{ env.PROJECT_NAME }}_artefacts
 
     - name: Upload Artifact
