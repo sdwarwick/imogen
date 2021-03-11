@@ -11,9 +11,11 @@
 # The JUCE library code will be downloaded from GitHub into /imogen/Builds/_deps. If you are on Linux, this script will also use apt to download/update JUCE's Linux dependencies, as necessary.
 
 # Before invoking this script, you should use the cd command to navigate to the directory containing the Imogen git repo (and, presumably, this script).
-# An example invocation of this script look like this:
+# An example invocation of this script looks like this:
 # cd /Desktop/imogen
 # bash imogen_build_script.sh
+
+# After executing this script, the built Imogen executables will be located at /imogen/Builds/Imogen_artefacts/Release/.
 
 
 # set up execute permissions
@@ -22,15 +24,15 @@ chmod 755 ${PWD}/imogen_build_script.sh
 
 ###  UTILITY FUNCTIONS  ###
 
-# simple function to check if a requested command is valid
+# function to check if a requested command is valid
 command_exists () {
-    type "$1" &> /dev/null ;
+	loc="$(type "$1" > /dev/null)" || [[ -z $loc ]] ;
 }
 
 # no cmake, and you're on Windows :(
 windows_no_cmake () {
-	echo -e "\t \v CMake cannot be found, and I've detected you're on Windows. \n"
-	echo -e "\t \v Installing software from the command line on Windows is the realm of gods and demons. \n"
+	echo -e "\n \t \v CMake cannot be found, and I've detected you're on Windows. \n"
+	echo -e "\t Installing software from the command line on Windows is the realm of gods and demons. \n"
 	echo -e "Please manually install CMake and re-run this script."
 	exit 1
 }
@@ -41,16 +43,16 @@ windows_no_cmake () {
 # if CMake can't be found, install it
 if ! command_exists cmake ; then
 	case "$OSTYPE" in
-	  darwin*)	brew install cmake ;;  # MacOS
-	  msys*)	windows_no_cmake ;;
-	  *)		sudo apt-get -y install cmake ;;  # Linux
+		darwin*) echo -e "\n \t \v Installing CMake..." && brew install cmake ;;  # MacOS
+		msys*)	 windows_no_cmake ;;
+		*)		 echo -e "\n \t \v Installing Cmake..." && sudo apt-get -y install cmake ;;  # Linux
 	esac
 fi
 
 
 # if CMake still can't be found, there must be some error
 if ! command_exists cmake ; then
-	echo -e "\t \v CMake could not be found, and could not be automatically installed. \n Please manually install CMake and then re-run this script."
+	echo -e "\n \t \v CMake could not be found, and could not be automatically installed. \n Please manually install CMake and then re-run this script."
 	exit 1
 fi
 
@@ -65,5 +67,10 @@ echo -e "\n \t \v Building Imogen... \n"
 cmake --build Builds --config Release
 
 
-echo -e "\n \t \v Imogen built successfully! \n Enjoy!"
+echo -e "\n \t \v Imogen built successfully!"
+echo -e "\n \t \v Enjoy! \n"
+
+exit 0
+
+###
 
