@@ -49,7 +49,7 @@ if [ ${#@} -ne 0 ] && ( [ "${@#"--help"}" = "" ] || [ "${@#"-h"}" = "" ] ); then
 fi
 
 # check to see if the script was invoked with the --zip or -z flags
-if ( [ "${@#"--zip"}" = "" ] || [ "${@#"-z"}" = "" ] ); then
+if [ "${@#"--zip"}" = "" ] || [ "${@#"-z"}" = "" ] ; then
   ZIPPING=1;
 fi
 
