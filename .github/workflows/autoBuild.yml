@@ -47,7 +47,7 @@ jobs:
       run: cd $GITHUB_WORKSPACE/imogen && bash imogen_build_script.sh
   
     - name: Zip
-      working-directory: $GITHUB_WORKSPACE/imogen
+      working-directory: $GITHUB_WORKSPACE/imogen/Builds
       run: cmake -E tar cfv ${{ env.PROJECT_NAME }}-${{ matrix.artifact }}.zip --format=zip ${{ env.PROJECT_NAME }}_artefacts
 
     - name: Upload Artifact
