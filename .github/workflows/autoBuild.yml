@@ -29,10 +29,6 @@ jobs:
 
     steps:
 
-    - name: Get latest CMake
-      if: runner.os == 'Windows'
-      uses: lukka/get-cmake@latest
-
     - name: Checkout code
       uses: actions/checkout@v2
       with:
