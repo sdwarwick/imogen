@@ -4,9 +4,9 @@
 # IMOGEN BUILD SCRIPT
 
 # This shell script will build a default release configuration of Imogen. 
-# Imogen can also be built with CMake, using the CMakeLists.txt in the Imogen repo. This script is essentially a wrapper around Imogen's CMake scripts that selects the appropriate default options for you.
+# Imogen's build options can be customized using CMake. This script is essentially a wrapper around Imogen's CMake scripts that selects the appropriate default options for you.
 
-# When this script is run, if CMake cannot be found, the script will attempt to install it.
+# When this script is run, if CMake cannot be found, it will be downloaded and installed.
 # Running this script will create a directory "Builds" and execute the entire CMake configuration and build process. 
 # The JUCE library code will be downloaded from GitHub into /imogen/Builds/_deps. If you are on Linux, this script will also use apt to download/update JUCE's Linux dependencies, as necessary.
 
@@ -38,14 +38,14 @@ windows_no_cmake () {
 }
 
 
-###  THE BUILD SCRIPT  ###
+###  CMAKE INSTALLATION  ###
 
 # if CMake can't be found, install it
 if ! command_exists cmake ; then
 	case "$OSTYPE" in
 		darwin*) echo -e "\n \t \v Installing CMake..." && brew install cmake ;;  # MacOS
-		msys*)	 windows_no_cmake ;;
-		*)		 echo -e "\n \t \v Installing Cmake..." && sudo apt-get -y install cmake ;;  # Linux
+		msys*)   windows_no_cmake ;;
+		*)       echo -e "\n \t \v Installing Cmake..." && sudo apt-get -y install cmake ;;  # Linux
 	esac
 fi
 
@@ -57,7 +57,10 @@ if ! command_exists cmake ; then
 fi
 
 
+###  THE BUILD SCRIPT  ###
+
 # first, make sure the local copy of the repo is up to date
+echo -e "\n \t \v Checking for new commits to Imogen remote... \n"
 git pull --recurse-submodules=yes
 
 
@@ -69,6 +72,12 @@ cmake -B Builds --config Release -DImogen_unitTesting=FALSE -Dbv_alwaysForceCach
 # execute build
 echo -e "\n \t \v Building Imogen... \n"
 cmake --build Builds --config Release
+
+
+# zip artifacts 
+echo -e "\n \t \v Zipping artifacts... \n"
+cd Builds
+cmake -E tar cfv Imogen_build_artefacts.zip --format=zip Imogen_artefacts
 
 
 echo -e "\n \t \v Imogen built successfully!"
