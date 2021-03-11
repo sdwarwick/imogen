@@ -20,6 +20,36 @@
 chmod 755 ${PWD}/imogen_build_script.sh
 
 
+###
+
+# simple function to check if a requested command is valid
+command_exists () {
+    type "$1" &> /dev/null ;
+}
+
+
+# installs cmake (for linux use only)
+linux_get_cmake() {
+	sudo apt-get -y install cmake
+}
+
+
+# installs cmake (for MaxOSX use only)
+mac_get_cmake() {
+	brew install cmake
+}
+
+
+# installs cmake (for windows use only)
+windows_get_cmake () {
+	echo -e "\t \v CMake cannot be found, and I've detected you're on Windows. \n"
+	echo -e "\t \v Installing software from the command line on Windows is the realm of gods and demons. \n"
+	echo -e "Please manually install CMake and re-run this script."
+}
+
+###
+
+
 # if CMake can't be found, install it
 if ! command_exists cmake ; then
 	case "$OSTYPE" in
@@ -48,34 +78,4 @@ cmake --build Builds --config Release
 
 
 echo -e "\t \v Imogen built successfully \n Enjoy!"
-
-
-###
-
-
-# simple function to check if a requested command is valid
-command_exists () {
-    type "$1" &> /dev/null ;
-}
-
-
-# installs cmake (for linux use only)
-linux_get_cmake() {
-	sudo apt-get -y install cmake
-}
-
-
-# installs cmake (for MaxOSX use only)
-mac_get_cmake() {
-	brew install cmake
-}
-
-
-# installs cmake (for windows use only)
-windows_get_cmake () {
-	echo -e "\t \v CMake cannot be found, and I've detected you're on Windows. \n"
-	echo -e "\t \v Installing software from the command line on Windows is the realm of gods and demons. \n"
-	echo -e "Please manually install CMake and re-run this script."
-}
-
 
