@@ -37,17 +37,17 @@ jobs:
 
     - name: Run build script
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/imogen_build_script.sh
+      run: bash $GITHUB_WORKSPACE/imogen_build_script.sh
 
     - name: Zip
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/imogen/Builds
+      working-directory: $GITHUB_WORKSPACE/Builds
       run: cmake -E tar cfv Imogen-${{ matrix.artifact }}.zip --format=zip Imogen_artefacts
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        path: $GITHUB_WORKSPACE/imogen/Builds/Imogen_artefacts/Release/Imogen-${{ matrix.artifact }}.zip
+        path: $GITHUB_WORKSPACE/Builds/Imogen_artefacts/Release/Imogen-${{ matrix.artifact }}.zip
         name: Imogen-${{ matrix.artifact }}.zip
 
 #
