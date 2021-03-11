@@ -10,15 +10,12 @@
 # Running this script will create a directory "Builds" and execute the entire CMake configuration and build process. 
 # The JUCE library code will be downloaded from GitHub into /imogen/Builds/_deps. If you are on Linux, this script will also use apt to download/update JUCE's Linux dependencies, as necessary.
 
-# Before invoking this script, you should use the cd command to navigate to the directory containing the Imogen git repo (and, presumably, this script).
-# An example invocation of this script looks like this:
-# cd /Desktop/imogen
-# bash imogen_build_script.sh
-
 # After executing this script, the built Imogen executables will be located at /imogen/Builds/Imogen_artefacts/Release/.
 
 
-IMOGEN_DIR="$(dirname $0)" # save the directory of the script
+IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
+
+ZIPPING=0;
 
 
 # set up execute permissions
@@ -45,8 +42,15 @@ windows_no_cmake () {
 
 # check to see if the script was invoked with the --help or -h flags
 if [ ${#@} -ne 0 ] && ( [ "${@#"--help"}" = "" ] || [ "${@#"-h"}" = "" ] ); then
-  printf "\n \t \v IMOGEN BUILD SCRIPT \n USAGE: \n \n Simply execute this script with no flags or arguments to build a default release confguration of Imogen in VST, AU and Standalone formats. \n"
+  printf "\n \t \v IMOGEN BUILD SCRIPT \n USAGE: \n \n"
+  printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in VST, AU and Standalone formats. \n"
+  printf "Invoke this script with the --zip or -z flags to zip the build artifacts together into one .zip file upon completion of the build. \n \n"
   exit 0
+fi
+
+# check to see if the script was invoked with the --zip or -z flags
+if ( [ "${@#"--zip"}" = "" ] || [ "${@#"-z"}" = "" ] ); then
+  ZIPPING=1;
 fi
 
 
@@ -91,13 +95,13 @@ printf "\n \t \v Building Imogen... \n \n"
 cmake --build Builds --config Release
 
 
-set +e;  # an error in zipping shouldn't be fatal
-
-
-# zip artifacts 
-printf "\n \t \v Zipping artifacts... \n \n"
-cd Builds
-cmake -E tar cfv Imogen_build_artefacts.zip --format=zip Imogen_artefacts
+# zip artifacts (if requested by user)
+if [ "$ZIPPING" -eq "1" ] ; then
+	set +e;  # an error in zipping shouldn't be fatal
+	printf "\n \t \v Zipping artifacts... \n \n"
+	cd Builds
+	cmake -E tar cfv Imogen_build_artefacts.zip --format=zip Imogen_artefacts
+fi
 
 
 printf "\n \t \v Imogen built successfully!"
