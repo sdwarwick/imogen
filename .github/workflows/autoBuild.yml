@@ -37,7 +37,7 @@ jobs:
 
     - name: Run build script
       shell: bash
-      run: cd $GITHUB_WORKSPACE/imogen && bash imogen_build_script.sh
+      run: cd $GITHUB_WORKSPACE/imogen && bash imogen_build_script.sh -z
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
