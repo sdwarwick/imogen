@@ -16,9 +16,6 @@
   #define IMOGEN_NOT_BUILDING_STANDALONE 0
 #endif
 
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-  #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
-#endif
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
