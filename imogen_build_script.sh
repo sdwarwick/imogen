@@ -6,8 +6,8 @@
 # This shell script will build a default release configuration of Imogen. 
 # Imogen can also be built with CMake, using the CMakeLists.txt in the Imogen repo. This script is essentially a wrapper around Imogen's CMake scripts that selects the appropriate default options for you.
 
-# Running this script for the first time will create a directory "Builds" and execute the entire CMake configuration and build process. 
-# If CMake can't be found, this script will download it.
+# When this script is run, if CMake cannot be found, the script will attempt to install it.
+# Running this script will create a directory "Builds" and execute the entire CMake configuration and build process. 
 # The JUCE library code will be downloaded from GitHub into /imogen/Builds/_deps. If you are on Linux, this script will also use apt to download/update JUCE's Linux dependencies, as necessary.
 
 # Before invoking this script, you should use the cd command to navigate to the directory containing the Imogen git repo (and, presumably, this script).
@@ -20,42 +20,30 @@
 chmod 755 ${PWD}/imogen_build_script.sh
 
 
-###
+###  UTILITY FUNCTIONS  ###
 
 # simple function to check if a requested command is valid
 command_exists () {
     type "$1" &> /dev/null ;
 }
 
-
-# installs cmake (for linux use only)
-linux_get_cmake() {
-	sudo apt-get -y install cmake
-}
-
-
-# installs cmake (for MaxOSX use only)
-mac_get_cmake() {
-	brew install cmake
-}
-
-
-# installs cmake (for windows use only)
-windows_get_cmake () {
+# no cmake, and you're on Windows :(
+windows_no_cmake () {
 	echo -e "\t \v CMake cannot be found, and I've detected you're on Windows. \n"
 	echo -e "\t \v Installing software from the command line on Windows is the realm of gods and demons. \n"
 	echo -e "Please manually install CMake and re-run this script."
+	exit 1
 }
 
-###
 
+###  THE BUILD SCRIPT  ###
 
 # if CMake can't be found, install it
 if ! command_exists cmake ; then
 	case "$OSTYPE" in
-	  darwin*)	mac_get_cmake ;;
-	  msys*)	windows_get_cmake ;;
-	  *)		linux_get_cmake ;;
+	  darwin*)	brew install cmake ;;  # MacOS
+	  msys*)	windows_no_cmake ;;
+	  *)		sudo apt-get -y install cmake ;;  # Linux
 	esac
 fi
 
@@ -68,14 +56,14 @@ fi
 
 
 # configure CMake
-echo -e "\t \v Configuring CMake..."
-cmake -B Builds --config Release -DCMAKE_BUILD_TYPE=Release -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
+echo -e "\n \t \v Configuring CMake... \n"
+cmake -B Builds --config Release -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
 
 
 # execute build
-echo -e "\t \v Building Imogen..."
+echo -e "\n \t \v Building Imogen... \n"
 cmake --build Builds --config Release
 
 
-echo -e "\t \v Imogen built successfully \n Enjoy!"
+echo -e "\n \t \v Imogen built successfully! \n Enjoy!"
 
