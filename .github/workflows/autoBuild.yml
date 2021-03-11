@@ -34,14 +34,14 @@ jobs:
       with:
         submodules: recursive
         path: imogen
-        
+
     - name: Run build script
       shell: bash
       run: bash $GITHUB_WORKSPACE/imogen/imogen_build_script.sh
-  
+
     - name: Zip
       shell: bash
-      working-directory: Builds
+      working-directory: $GITHUB_WORKSPACE/imogen/Builds
       run: cmake -E tar cfv Imogen-${{ matrix.artifact }}.zip --format=zip Imogen_artefacts
 
     - name: Upload Artifact
