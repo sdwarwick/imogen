@@ -57,6 +57,10 @@ if ! command_exists cmake ; then
 fi
 
 
+# first, make sure the local copy of the repo is up to date
+git pull --recurse-submodules=yes
+
+
 # configure CMake
 echo -e "\n \t \v Configuring CMake... \n"
 cmake -B Builds --config Release -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
