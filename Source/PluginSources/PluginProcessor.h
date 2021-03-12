@@ -153,7 +153,7 @@ private:
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
     template <typename SampleType1, typename SampleType2>
-    void prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
+    void prepareToPlayWrapped (const double sampleRate,
                                bav::ImogenEngine<SampleType1>& activeEngine,
                                bav::ImogenEngine<SampleType2>& idleEngine);
     

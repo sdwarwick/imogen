@@ -186,7 +186,9 @@ bvie_VOID_TEMPLATE::release()
 }
 
     
-bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
+bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
+                                 AudioBuffer<SampleType>& output,
+                                 MidiBuffer& midiMessages)
 {
     const ScopedLock sl (lock);
     

@@ -56,16 +56,16 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {
     if (isUsingDoublePrecision())
-        prepareToPlayWrapped (sampleRate, samplesPerBlock, doubleEngine, floatEngine);
+        prepareToPlayWrapped (sampleRate, doubleEngine, floatEngine);
     else
-        prepareToPlayWrapped (sampleRate, samplesPerBlock, floatEngine,  doubleEngine);
+        prepareToPlayWrapped (sampleRate, floatEngine,  doubleEngine);
 }
 
 
 template <typename SampleType1, typename SampleType2>
-inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate, const int samplesPerBlock,
-                                                 bav::ImogenEngine<SampleType1>& activeEngine,
-                                                 bav::ImogenEngine<SampleType2>& idleEngine)
+inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
+                                                        bav::ImogenEngine<SampleType1>& activeEngine,
+                                                        bav::ImogenEngine<SampleType2>& idleEngine)
 {
     if (! idleEngine.hasBeenReleased())
         idleEngine.releaseResources();
