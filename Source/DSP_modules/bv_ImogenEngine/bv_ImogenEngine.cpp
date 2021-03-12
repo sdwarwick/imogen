@@ -10,12 +10,15 @@
 #define bvie_LIMITER_THRESH_DB 0.0
 #define bvie_LIMITER_RELEASE_MS 35
 
+#define bvie_NOISE_GATE_ATTACK_MS 25
+#define bvie_NOISE_GATE_RELEASE_MS 100
+#define bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE 10
+#define bvie_NOISE_GATE_INIT_THRESH_DB -20.0
+
 #define bvie_INIT_MIN_HZ 80
 #define bvie_INIT_MAX_HZ 2400
 
 #define bvie_INITIAL_HIDDEN_HI_PASS_FREQ 65
-
-#define bvie_INIT_NUM_VOICES 12
 
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
@@ -46,6 +49,8 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
     dspSpec.numChannels = 2;
     dspSpec.sampleRate = 44100.0;
     dspSpec.maximumBlockSize = 512;
+    
+    noiseGateThreshDB.store(SampleType(bvie_NOISE_GATE_INIT_THRESH_DB));
 }
     
 
@@ -55,6 +60,8 @@ bvie_VOID_TEMPLATE::resetTriggered()
     
     harmonizer.allNotesOff(false);
     
+    initialHiddenLoCut.reset();
+    gate.reset();
     dryWetMixer.reset();
     limiter.reset();
     
@@ -95,18 +102,24 @@ bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
 
 bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 {
-    jassert (samplerate > 0 && newInternalBlocksize > 0 && bvie_INIT_NUM_VOICES > 0);
+    jassert (samplerate > 0 && newInternalBlocksize > 0);
 
     const ScopedLock sl (lock);
     
-    harmonizer.initialize (bvie_INIT_NUM_VOICES, samplerate, newInternalBlocksize);
+    harmonizer.initialize (12, samplerate, newInternalBlocksize);
     
     monoBuffer.setSize (1, newInternalBlocksize);
     dryBuffer.setSize (2, newInternalBlocksize);
     wetBuffer.setSize (2, newInternalBlocksize);
     
+    // constant limiter settings
     limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
     limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
+    
+    // constant noise gate settings
+    gate.setRatio (SampleType(bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE));
+    gate.setAttack (SampleType(bvie_NOISE_GATE_ATTACK_MS));
+    gate.setRelease (SampleType(bvie_NOISE_GATE_RELEASE_MS));
     
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
 }
@@ -124,14 +137,20 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     dspSpec.sampleRate = samplerate;
     dspSpec.numChannels = 2;
     
-    const int before = FIFOEngine::getLatency();
-    
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
     
-    FIFOEngine::changeLatency (harmonizer.getLatencySamples());
+    if (harmonizer.getLatencySamples() != FIFOEngine::getLatency())
+        FIFOEngine::changeLatency (harmonizer.getLatencySamples());
     
-    if (before == FIFOEngine::getLatency())  // if the latency *didn't* change, still force a refresh of everything by calling this manually
-        latencyChanged (before);
+    initialHiddenLoCut.prepare(dspSpec);
+    gate.prepare(dspSpec);
+    
+    dryWetMixer.setWetLatency(0);
+    dryWetMixer.prepare (dspSpec);
+    
+    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
+    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
+    limiter.prepare (dspSpec);
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store (inputGain.load());
@@ -155,16 +174,6 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
     monoBuffer.setSize (1, newInternalBlocksize, true, true, true);
     
     dspSpec.maximumBlockSize = uint32(newInternalBlocksize);
-    dspSpec.numChannels = 2;
-    
-    initialHiddenLoCut.prepare(dspSpec);
-    limiter.prepare (dspSpec);
-    
-    dryWetMixer.setWetLatency(0);
-    dryWetMixer.prepare (dspSpec);
-    
-    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
-    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
 }
     
 #undef bvie_LIMITER_RELEASE_MS
@@ -181,6 +190,8 @@ bvie_VOID_TEMPLATE::release()
     dryBuffer.setSize (0, 0, false, false, false);
     monoBuffer.setSize(0, 0, false, false, false);
     
+    initialHiddenLoCut.reset();
+    gate.reset();
     dryWetMixer.reset();
     limiter.reset();
 }
@@ -235,16 +246,18 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
         }
     }
     
-    AudioBuffer<SampleType> realInput (monoBuffer.getArrayOfWritePointers(), 1, blockSize);
+    AudioBuffer<SampleType> realInput (monoBuffer.getArrayOfWritePointers(), 1, blockSize); // alias buffer containing exactly the # of samples we're working with
     
     // master input gain
     const float currentInGain = inputGain.load();
     realInput.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
     prevInputGain.store(currentInGain);
     
-    // initial hi-pass filter (hidden from the user)
     juce::dsp::AudioBlock<SampleType> inblock (realInput);
-    initialHiddenLoCut.process (juce::dsp::ProcessContextReplacing<SampleType>(inblock));
+    juce::dsp::ProcessContextReplacing<SampleType> inputContext (inblock);
+    initialHiddenLoCut.process (inputContext); // initial hi-pass filter (hidden from the user)
+    gate.setThreshold (noiseGateThreshDB.load());
+    gate.process (inputContext); // noise gate
 
     // write to dry buffer & apply panning
     for (int chan = 0; chan < 2; ++chan)

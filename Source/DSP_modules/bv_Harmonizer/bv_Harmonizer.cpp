@@ -19,8 +19,8 @@
 #define bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER 0.4
 #define bvh_SOFT_PEDAL_GAIN_MULTIPLIER 0.65
 
-#define bvh_PITCH_DETECTION_CONFIDENCE_UPPER_THRESH 0.35
-#define bvh_PITCH_DETECTION_CONFIDENCE_LOWER_THRESH 0.1
+#define bvh_PITCH_DETECTION_CONFIDENCE_UPPER_THRESH 0.15
+#define bvh_PITCH_DETECTION_CONFIDENCE_LOWER_THRESH 0.05
 
 
 namespace bav
@@ -91,9 +91,7 @@ bvh_VOID_TEMPLATE::initialize (const int initNumVoices, const double initSampler
 {
     jassert (initNumVoices > 0 && initSamplerate > 0 && initBlocksize > 0);
     
-    voices.clear();
-    
-    addNumVoices (initNumVoices);
+    changeNumVoices (initNumVoices);
     
     pitchDetector.initialize();
     
@@ -106,6 +104,7 @@ bvh_VOID_TEMPLATE::initialize (const int initNumVoices, const double initSampler
 bvh_VOID_TEMPLATE::prepare (const int blocksize)  
 {
     jassert (blocksize > 0);
+    jassert (! voices.isEmpty());
     
     aggregateMidiBuffer.ensureSize (size_t(blocksize * 2));
     aggregateMidiBuffer.clear();
@@ -182,6 +181,8 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                  AudioBuffer<SampleType>& outputBuffer,
                                  MidiBuffer& midiMessages)
 {
+    jassert (! voices.isEmpty());
+    
     outputBuffer.clear();
     
     processMidi (midiMessages);

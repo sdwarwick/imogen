@@ -55,6 +55,7 @@ public:
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const bool isOn);
+    void updateNoiseGate (const float newThreshDB);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
@@ -93,6 +94,9 @@ private:
     AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
     
     juce::dsp::ProcessSpec dspSpec;
+    
+    juce::dsp::NoiseGate<SampleType> gate;
+    std::atomic<SampleType> noiseGateThreshDB;
     
     juce::dsp::DryWetMixer<SampleType> dryWetMixer;
     std::atomic<SampleType> wetMixPercent;

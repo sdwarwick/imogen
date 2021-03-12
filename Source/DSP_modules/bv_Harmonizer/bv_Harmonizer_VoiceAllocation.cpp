@@ -175,6 +175,8 @@ inline void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
     
     for (int i = 0; i < voicesToAdd; ++i)
         voices.add (new HarmonizerVoice<SampleType>(this));
+    
+    jassert (voices.size() >= voicesToAdd);
 }
     
     

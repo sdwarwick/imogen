@@ -127,7 +127,7 @@ bvie_VOID_TEMPLATE::updateMidiLatch (const bool isLatched)
 
 bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 {
-    limiterIsOn.store(isOn);
+    limiterIsOn.store (isOn);
 }
 
 
@@ -147,6 +147,12 @@ bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 {
     const ScopedLock sl (lock);
     harmonizer.setAftertouchGainOnOff (shouldBeOn);
+}
+
+    
+bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB)
+{
+    noiseGateThreshDB.store (SampleType(newThreshDB));
 }
 
 

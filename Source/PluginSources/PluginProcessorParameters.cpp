@@ -50,6 +50,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     // limiter toggle
     params.push_back(std::make_unique<juce::AudioParameterBool> ("limiterIsOn", "Limiter on/off", true));
+    // noise gate threshold (in dB)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
     
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
@@ -103,6 +105,7 @@ void ImogenAudioProcessor::initializeParameterPointers()
     inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert(inputGain);
     outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert(outputGain);
     limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert(limiterToggle);
+    noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*> (tree.getParameter("noiseGateThresh"));           jassert(noiseGateThreshold);
     vocalRangeType     = dynamic_cast<juce::AudioParameterChoice*>(tree.getParameter("vocalRangeType"));            jassert (vocalRangeType);
     aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle"));     jassert(aftertouchGainToggle);
 }
@@ -128,6 +131,7 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultAdsrRelease.store (adsrRelease->get());
     defaultInputGain.store (inputGain->get());
     defaultOutputGain.store (outputGain->get());
+    defaultNoiseGateThresh.store (noiseGateThreshold->get());
     
     parameterDefaultsAreDirty.store (true);
 }
@@ -160,6 +164,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateConcertPitch (concertPitchHz->get());
     activeEngine.updateNoteStealing (voiceStealing->get());
     activeEngine.updateLimiter (limiterToggle->get());
+    activeEngine.updateNoiseGate (noiseGateThreshold->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
 }
 

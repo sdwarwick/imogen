@@ -59,6 +59,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, floatEngine,  doubleEngine);
+    
+    juce::ignoreUnused (samplesPerBlock);
 }
 
 
@@ -70,11 +72,14 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     if (! idleEngine.hasBeenReleased())
         idleEngine.releaseResources();
     
-    jassert (activeEngine.hasBeenInitialized());
+    updateAllParameters (activeEngine);
+    
+    jassert (activeEngine.getLatency() > 0);
+    
+    if (! activeEngine.hasBeenInitialized())
+        activeEngine.initialize (sampleRate, activeEngine.getLatency());
     
     activeEngine.prepare (sampleRate);
-    
-    updateAllParameters (activeEngine);
     
     setLatencySamples (activeEngine.reportLatency());
     
@@ -195,10 +200,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
                                                        bav::ImogenEngine<SampleType>& engine,
                                                        const bool masterBypass)
 {
-    if (! engine.hasBeenInitialized())
-        return;
-    
     jassert (! engine.hasBeenReleased());
+    jassert (engine.hasBeenInitialized());
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))

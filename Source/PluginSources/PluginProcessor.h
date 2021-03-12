@@ -99,6 +99,7 @@ public:
     float getInputGain() const { return inputGain->get(); }
     float getOutputGain() const { return outputGain->get(); }
     bool getIsLimiterOn() const { return limiterToggle->get(); }
+    float getNoiseGateThresh() const { return noiseGateThreshold->get(); }
     float getAdsrAttack() const { return adsrAttack->get(); }
     float getAdsrDecay() const { return adsrDecay->get(); }
     float getAdsrSustain() const { return adsrSustain->get(); }
@@ -136,6 +137,7 @@ public:
     int getDefaultConcertPitchHz() const { return defaultConcertPitchHz.load(); }
     int getDefaultPedalPitchThresh() const { return defaultPedalPitchThresh.load(); }
     int getDefaultDescantThresh() const { return defaultDescantThresh.load(); }
+    float getDefaultNoiseGateThresh() const { return defaultNoiseGateThresh.load(); }
     
     bool hasUpdatedParamDefaults() const { return parameterDefaultsAreDirty.load(); }
     
@@ -211,6 +213,7 @@ private:
     juce::AudioParameterFloat* inputGain;
     juce::AudioParameterFloat* outputGain;
     juce::AudioParameterBool*  limiterToggle;
+    juce::AudioParameterFloat* noiseGateThreshold;
     juce::AudioParameterChoice* vocalRangeType;
     juce::AudioParameterBool*  aftertouchGainToggle;
     
@@ -219,7 +222,7 @@ private:
     std::atomic<bool> parameterDefaultsAreDirty;
     
     std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh;
     
     int prevRangeTypeIndex;
     

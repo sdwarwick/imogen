@@ -139,9 +139,8 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
     int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
     
     do {
-#if JUCE_DEBUG
         const int prevAnalysisIndex = analysisIndex;
-#endif
+
         const int frameStart = std::max (0, analysisIndex - halfPeriod);
         const int frameEnd = std::min (totalNumSamples, frameStart + period);
         
@@ -159,7 +158,8 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         else
             analysisIndex = targetArray.getUnchecked(targetArraySize - 2) + grainSize;
         
-        jassert (analysisIndex > prevAnalysisIndex);
+        if (! (analysisIndex > prevAnalysisIndex))
+            analysisIndex = prevAnalysisIndex + period;
     }
     while ((analysisIndex - halfPeriod) < totalNumSamples);
 }

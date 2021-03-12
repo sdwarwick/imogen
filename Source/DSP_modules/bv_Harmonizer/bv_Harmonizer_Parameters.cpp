@@ -13,15 +13,14 @@ bvh_VOID_TEMPLATE::changeNumVoices (const int newNumVoices)
 {
     const int currentVoices = voices.size();
     
-    if (currentVoices == newNumVoices)
-        return;
-    
     if (newNumVoices > currentVoices)
         addNumVoices (newNumVoices - currentVoices);
-    else
+    else if (newNumVoices < currentVoices)
         removeNumVoices (currentVoices - newNumVoices);
     
     numVoicesChanged();
+    
+    jassert (voices.size() == newNumVoices);
 }
 
 // midi latch: when active, holds note offs recieved from the keyboard instead of sending them immediately; held note offs are sent once latch is deactivated.
