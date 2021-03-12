@@ -32,11 +32,6 @@ class ImogenEngine  :   public bav::dsp::FIFOWrappedEngineWithMidi<SampleType>
 public:
     ImogenEngine();
     
-    
-    void initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices);
-    
-    void reset();
-    
     void killAllMidi();
     
     int reportLatency() const noexcept { return FIFOEngine::getLatency(); }
@@ -70,8 +65,6 @@ public:
     
     void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
     
-    bool hasBeenInitialized() const noexcept { return initialized; }
-    
     
 private:
     
@@ -83,7 +76,11 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages) override;
     
+    void initialized (int newInternalBlocksize) override;
+    
     void prepareToPlay (double samplerate, int blocksize) override;
+    
+    void resetTriggered() override;
     
     void latencyChanged (int newInternalBlocksize) override;
     
@@ -112,8 +109,6 @@ private:
     bav::dsp::Panner dryPanner;
     
     CriticalSection lock;
-    
-    bool initialized;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

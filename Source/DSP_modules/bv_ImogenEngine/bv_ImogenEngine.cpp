@@ -47,36 +47,11 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1), initialized(false)
 }
 
     
-bvie_VOID_TEMPLATE::initialize (const double initSamplerate, const int initSamplesPerBlock, const int initNumVoices)
-{
-    jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
-#if ! JUCE_DEBUG
-    juce::ignoreUnused(initSamplesPerBlock);
-#endif
-    
-    const ScopedLock sl (lock);
-    
-    harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
-    
-    monoBuffer.setSize (1, initSamplesPerBlock);
-    dryBuffer.setSize (2, initSamplesPerBlock);
-    wetBuffer.setSize (2, initSamplesPerBlock);
-    
-    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
-    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
-    
-    updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
-    
-    FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
-    
-    initialized = true;
-}
-    
 #undef bvie_INIT_MIN_HZ
 #undef bvie_INIT_MAX_HZ
     
 
-bvie_VOID_TEMPLATE::reset()
+bvie_VOID_TEMPLATE::resetTriggered()
 {
     const ScopedLock sl (lock);
     
@@ -117,6 +92,32 @@ bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
 {
     const ScopedLock sl (lock);
     harmonizer.handlePitchWheel (bend);
+}
+    
+
+bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize)
+{
+    jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
+#if ! JUCE_DEBUG
+    juce::ignoreUnused(initSamplesPerBlock);
+#endif
+    
+    const ScopedLock sl (lock);
+    
+    harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
+    
+    monoBuffer.setSize (1, initSamplesPerBlock);
+    dryBuffer.setSize (2, initSamplesPerBlock);
+    wetBuffer.setSize (2, initSamplesPerBlock);
+    
+    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
+    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
+    
+    updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+    
+    FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
+    
+    initialized = true;
 }
     
 
