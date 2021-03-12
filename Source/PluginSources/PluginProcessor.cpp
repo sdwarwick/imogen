@@ -7,9 +7,6 @@
 #include "PluginProcessor.h"
 
 
-#define imogen_DEFAULT_NUM_VOICES 12
-
-
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
@@ -46,7 +43,7 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
     int initBlockSize = getBlockSize();
     if (initBlockSize <= 0) initBlockSize = 512;
     
-    activeEngine.initialize (initSamplerate, initBlockSize, imogen_DEFAULT_NUM_VOICES);
+    activeEngine.initialize (initSamplerate, initBlockSize);
     
     updateAllParameters (activeEngine);
     
@@ -73,10 +70,9 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     if (! idleEngine.hasBeenReleased())
         idleEngine.releaseResources();
     
-    if (! activeEngine.hasBeenInitialized())
-        activeEngine.initialize (sampleRate, samplesPerBlock, 12);
-    else
-        activeEngine.prepare (sampleRate, samplesPerBlock);
+    jassert (activeEngine.hasBeenInitialized());
+    
+    activeEngine.prepare (sampleRate);
     
     updateAllParameters (activeEngine);
     

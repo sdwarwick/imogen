@@ -4,7 +4,7 @@
  vendor:             Ben Vining
  version:            0.0.1
  name:               ImogenEngine
- description:        base class that wraps the Harmonizer class into a self-sufficient audio processor
+ description:        base class that wraps the Harmonizer class into a self-sufficient audio engine
  dependencies:       bv_Harmonizer
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
@@ -24,10 +24,10 @@ using namespace juce;
 
 
 template<typename SampleType>
-class ImogenEngine  :   public bav::dsp::FIFOWrappedEngineWithMidi<SampleType>
+class ImogenEngine  :   public bav::dsp::FIFOWrappedEngine<SampleType>
 {
     
-    using FIFOEngine = bav::dsp::FIFOWrappedEngineWithMidi<SampleType>;
+    using FIFOEngine = bav::dsp::FIFOWrappedEngine<SampleType>;
     
 public:
     ImogenEngine();
@@ -76,9 +76,9 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages) override;
     
-    void initialized (int newInternalBlocksize) override;
+    void initialized (int newInternalBlocksize, double samplerate) override;
     
-    void prepareToPlay (double samplerate, int blocksize) override;
+    void prepareToPlay (double samplerate) override;
     
     void resetTriggered() override;
     

@@ -15,6 +15,8 @@
 
 #define bvie_INITIAL_HIDDEN_HI_PASS_FREQ 65
 
+#define bvie_INIT_NUM_VOICES 12
+
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
@@ -25,7 +27,7 @@ namespace bav
     
 
 template<typename SampleType>
-ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1), initialized(false)
+ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
 {
     modulatorInput.store(0);
     
@@ -45,10 +47,6 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1), initialized(false)
     dspSpec.sampleRate = 44100.0;
     dspSpec.maximumBlockSize = 512;
 }
-
-    
-#undef bvie_INIT_MIN_HZ
-#undef bvie_INIT_MAX_HZ
     
 
 bvie_VOID_TEMPLATE::resetTriggered()
@@ -95,39 +93,31 @@ bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
 }
     
 
-bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize)
+bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 {
-    jassert (initSamplerate > 0 && initSamplesPerBlock > 0 && initNumVoices > 0);
-#if ! JUCE_DEBUG
-    juce::ignoreUnused(initSamplesPerBlock);
-#endif
-    
+    jassert (samplerate > 0 && newInternalBlocksize > 0 && bvie_INIT_NUM_VOICES > 0);
+
     const ScopedLock sl (lock);
     
-    harmonizer.initialize (initNumVoices, initSamplerate, initSamplesPerBlock);
+    harmonizer.initialize (bvie_INIT_NUM_VOICES, samplerate, newInternalBlocksize);
     
-    monoBuffer.setSize (1, initSamplesPerBlock);
-    dryBuffer.setSize (2, initSamplesPerBlock);
-    wetBuffer.setSize (2, initSamplesPerBlock);
+    monoBuffer.setSize (1, newInternalBlocksize);
+    dryBuffer.setSize (2, newInternalBlocksize);
+    wetBuffer.setSize (2, newInternalBlocksize);
     
     limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
     limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
     
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
-    
-    FIFOEngine::prepare (initSamplerate, initSamplesPerBlock);
-    
-    initialized = true;
 }
     
+#undef bvie_INIT_MIN_HZ
+#undef bvie_INIT_MAX_HZ
+    
 
-bvie_VOID_TEMPLATE::prepareToPlay (double samplerate, int blocksize)
+bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
 {
     jassert (samplerate > 0);
-    jassert (blocksize > 0);
-#if ! JUCE_DEBUG
-    juce::ignoreUnused (blocksize);
-#endif
     
     const ScopedLock sl (lock);
     
@@ -149,8 +139,6 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate, int blocksize)
     initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate,
                                                                                              SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
     initialHiddenLoCut.reset();
-    
-    initialized = true;
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -195,15 +183,11 @@ bvie_VOID_TEMPLATE::release()
     
     dryWetMixer.reset();
     limiter.reset();
-    
-    initialized = false;
 }
 
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
 {
-    jassert (initialized);
-    
     const ScopedLock sl (lock);
     
     const int blockSize = input.getNumSamples();
