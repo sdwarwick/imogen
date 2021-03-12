@@ -7,17 +7,7 @@ namespace bav
     
     ImogenLookAndFeel::ImogenLookAndFeel()
     {
-        // rotary sliders
-        this->setColour(juce::Slider::ColourIds::rotarySliderOutlineColourId, juce::Colours::black);
         
-        // labels
-        this->setColour(juce::Label::ColourIds::textColourId, juce::Colours::black);
-        
-        // buttons
-        this->setColour(uiColourIds::toggleButtonColourId, juce::Colours::black);
-    
-        // numbox slider fill
-        this->setColour(uiColourIds::numboxSliderFill, juce::Colours::grey);
     }
     
     void ImogenLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, int height,
@@ -62,7 +52,7 @@ namespace bav
     {
         if (slider.isBar())
         {
-            g.setColour (this->findColour(uiColourIds::numboxSliderFill));
+            //g.setColour (this->findColour(uiColourIds::numboxSliderFill));
             g.fillRect (slider.isHorizontal() ? juce::Rectangle<float> (static_cast<float> (x), (float) y + 0.5f, sliderPos - (float) x, (float) height - 1.0f)
                         : juce::Rectangle<float> ((float) x + 0.5f, sliderPos, (float) width - 1.0f, (float) y + ((float) height - sliderPos)));
         }
@@ -162,7 +152,7 @@ namespace bav
         drawCheckbox(g, 4.0f, ((float) b.getHeight() - tickWidth) * 0.5f,
                      tickWidth, tickWidth, b.getToggleState());
         
-        g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
+        //g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
         g.setFont (fontSize);
         
         if (! b.isEnabled())
@@ -178,12 +168,12 @@ namespace bav
     {
         juce::Rectangle<float> tickBounds (x, y, w, h);
         
-        g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
+        //g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
         g.drawRoundedRectangle (tickBounds, 4.0f, 1.0f);
         
         if (ticked)
         {
-            g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
+            //g.setColour (this->findColour(uiColourIds::toggleButtonColourId));
             const auto tick = getTickShape (0.75f);
             g.fillPath (tick, tick.getTransformToScaleToFit (tickBounds.reduced (4, 5).toFloat(), false));
         }

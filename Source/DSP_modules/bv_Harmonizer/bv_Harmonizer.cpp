@@ -13,6 +13,15 @@
 #include "GrainExtractor/GrainExtractor.cpp"
 
 
+#define bvh_ADSR_QUICK_ATTACK_MS 5
+#define bvh_ADSR_QUICK_RELEASE_MS 5
+
+#define bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER 0.4
+#define bvh_SOFT_PEDAL_GAIN_MULTIPLIER 0.65
+
+#define bvh_PITCH_DETECTION_CONFIDENCE_UPPER_THRESH 0.35
+#define bvh_PITCH_DETECTION_CONFIDENCE_LOWER_THRESH 0.1
+
 
 namespace bav
 
@@ -52,7 +61,19 @@ Harmonizer<SampleType>::Harmonizer():
     descant.lastPitch = -1;
     descant.lowerThresh = 127;
     descant.interval = 12;
+    
+    updateQuickAttackMs (bvh_ADSR_QUICK_ATTACK_MS);
+    updateQuickReleaseMs (bvh_ADSR_QUICK_RELEASE_MS);
+    
+    playingButReleasedMultiplier = float(bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER);
+    softPedalMultiplier = float(bvh_SOFT_PEDAL_GAIN_MULTIPLIER);
+    
+    pitchDetector.setConfidenceThresh (SampleType(bvh_PITCH_DETECTION_CONFIDENCE_UPPER_THRESH),
+                                       SampleType(bvh_PITCH_DETECTION_CONFIDENCE_LOWER_THRESH));
 }
+    
+#undef bvh_ADSR_QUICK_ATTACK_MS
+#undef bvh_ADSR_QUICK_RELEASE_MS
 
 
 template<typename SampleType>
@@ -230,8 +251,10 @@ inline void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     
     jassert (numSamples <= windowBuffer.getNumSamples());
     
-    bav::vecops::makeHannWindow (windowBuffer.getWritePointer(0), numSamples);
-    
+    juce::dsp::WindowingFunction<SampleType>::fillWindowingTables (windowBuffer.getWritePointer(0),
+                                                                   size_t(numSamples),
+                                                                   juce::dsp::WindowingFunction<SampleType>::hann,
+                                                                   true);
     windowSize = numSamples;
 }
 

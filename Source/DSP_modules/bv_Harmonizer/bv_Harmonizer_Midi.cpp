@@ -204,17 +204,12 @@ bvh_INLINE_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const 
         
         if (aftertouch != voice->currentAftertouch)
         {
-            if (useChannelPressure)
-            {
-                updateChannelPressure (aftertouch);
-            }
-            else
-            {
-                aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiPitch, aftertouch),
-                                              ++lastMidiTimeStamp);
-                
-                voice->aftertouchChanged (aftertouch);
-            }
+            aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiPitch, aftertouch),
+                                          ++lastMidiTimeStamp);
+            
+            voice->aftertouchChanged (aftertouch);
+            
+            updateChannelPressure (aftertouch);
         }
     }
     
@@ -367,18 +362,17 @@ bvh_INLINE_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchVa
     jassert (midiNoteNumber >= 0 && midiNoteNumber <= 127);
     jassert (aftertouchValue >= 0 && aftertouchValue <= 127);
     
-    if (useChannelPressure)
-    {
-        updateChannelPressure (aftertouchValue);
-        return;
-    }
-    
     aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, midiNoteNumber, aftertouchValue),
                                   ++lastMidiTimeStamp);
     
     for (auto* voice : voices)
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiNoteNumber)
+        {
             voice->aftertouchChanged (aftertouchValue);
+            break;
+        }
+    
+    updateChannelPressure (aftertouchValue);
 }
 
 
@@ -386,21 +380,11 @@ bvh_INLINE_VOID_TEMPLATE::handleChannelPressure (int channelPressureValue)
 {
     jassert (channelPressureValue >= 0 && channelPressureValue <= 127);
     
-    if (useChannelPressure)
-        aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
-                                      ++lastMidiTimeStamp);
+    aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, channelPressureValue),
+                                  ++lastMidiTimeStamp);
     
     for (auto* voice : voices)
-    {
-        if (voice->isVoiceActive())
-        {
-            voice->aftertouchChanged (channelPressureValue);
-            
-            if (! useChannelPressure)
-                aggregateMidiBuffer.addEvent (MidiMessage::aftertouchChange (lastMidiChannel, voice->getCurrentlyPlayingNote(), channelPressureValue),
-                                              ++lastMidiTimeStamp);
-        }
-    }
+        voice->aftertouchChanged (channelPressureValue);
 }
 
     
@@ -424,7 +408,8 @@ bvh_VOID_TEMPLATE::updateChannelPressure (int newIncomingAftertouch)
     if (newIncomingAftertouch < highestAftertouch)
         return;
     
-    handleChannelPressure (newIncomingAftertouch);
+    aggregateMidiBuffer.addEvent (MidiMessage::channelPressureChange (lastMidiChannel, highestAftertouch),
+                                  ++lastMidiTimeStamp);
 }
     
 

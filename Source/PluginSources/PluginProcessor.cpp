@@ -13,6 +13,9 @@
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+    needsSidechain(false),
+#endif
     prevRangeTypeIndex(0)
 {
     initializeParameterPointers();
@@ -153,7 +156,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     if (isUsingDoublePrecision()) // this would be a REALLY stupid host, butttt ¯\_(ツ)_/¯
         return;
     
-    processBlockWrapped (buffer, midiMessages, floatEngine, isBypassed->get());
+    processBlockWrapped (buffer, midiMessages, floatEngine, mainBypass->get());
 }
 
 
@@ -162,7 +165,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
     if (! isUsingDoublePrecision())
         return;
     
-    processBlockWrapped (buffer, midiMessages, doubleEngine, isBypassed->get());
+    processBlockWrapped (buffer, midiMessages, doubleEngine, mainBypass->get());
 }
 
 
@@ -173,7 +176,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
     
-    isBypassed->setValueNotifyingHost (1.0f);
+    mainBypass->setValueNotifyingHost (1.0f);
 }
 
 
@@ -184,7 +187,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
     
-    isBypassed->setValueNotifyingHost (1.0f);
+    mainBypass->setValueNotifyingHost (1.0f);
 }
 
 
@@ -194,7 +197,7 @@ template <typename SampleType>
 inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                        juce::MidiBuffer& midiMessages,
                                                        bav::ImogenEngine<SampleType>& engine,
-                                                       const bool isBypassedNow)
+                                                       const bool masterBypass)
 {
     if (! engine.hasBeenInitialized())
         return;
@@ -211,15 +214,15 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
-    
 #if IMOGEN_ONLY_BUILDING_STANDALONE
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, 0);
 #else
     juce::AudioBuffer<SampleType> inBus = AudioProcessor::getBusBuffer (buffer, true, needsSidechain);
 #endif
     
-    engine.process (inBus, outBus, midiMessages, isBypassedNow);
+    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
+    
+    engine.process (inBus, outBus, midiMessages, masterBypass);
 }
 
 
@@ -247,7 +250,7 @@ double ImogenAudioProcessor::getTailLengthSeconds() const
     if (adsrToggle->get())
         return double(adsrRelease->get()); // ADSR release time in seconds
     
-    return double(quickKillMs->get() * 1000.0f); // "quick kill" time in seconds
+    return 0.005;  // "quick kill" time in seconds -- must be the same as the ms value defined in the macro in bv_Harmonizer.cpp !!
 }
 
 int ImogenAudioProcessor::getNumPrograms()

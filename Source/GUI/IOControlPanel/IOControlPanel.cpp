@@ -60,10 +60,6 @@ IOControlPanel::~IOControlPanel()
     
 void IOControlPanel::paint (juce::Graphics& g)
 {
-    g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::backgroundPanelColourId));
-    
-    g.setColour(lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::insetPanelColourId));
-    
     juce::Rectangle<int> inputControlPanel (5, 5, 290, 125);
     g.fillRect(inputControlPanel);
     

@@ -238,16 +238,12 @@ bvh_VOID_TEMPLATE::updateADSRsettings (const float attack, const float decay, co
         voice->setAdsrParameters (adsrParams);
 }
 
+    
+// these two functions are run only once, in the constructor. As of now, these are not user-accessible parameters.
 
 bvh_VOID_TEMPLATE::updateQuickReleaseMs (const int newMs)
 {
-    if (newMs <= 0)
-        return;
-    
-    const float desiredR = newMs / 1000.0f;
-    
-    if (quickReleaseParams.release == desiredR)
-        return;
+    const float desiredR = newMs * 0.001f;
     
     quickReleaseParams.release = desiredR;
     quickAttackParams .release = desiredR;
@@ -259,16 +255,10 @@ bvh_VOID_TEMPLATE::updateQuickReleaseMs (const int newMs)
     }
 }
 
-
 bvh_VOID_TEMPLATE::updateQuickAttackMs (const int newMs)
 {
-    if (newMs <= 0)
-        return;
     
-    const float desiredA = newMs / 1000.0f;
-    
-    if (quickAttackParams.attack == desiredA)
-        return;
+    const float desiredA = newMs * 0.001f;
     
     quickAttackParams .attack = desiredA;
     quickReleaseParams.attack = desiredA;

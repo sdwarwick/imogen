@@ -34,7 +34,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     pitchBendUpLink  (bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
     pitchBendDownLink(bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
     voiceStealingLink(bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "voiceStealing", voiceStealing)),
-    quickKillMsLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "quickKillMs", quickKillMs)),
     concertPitchLink (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "concertPitch", concertPitch)),
     pedalPitchToggleLink  (bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
     pedalPitchThreshLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "pedalPitchThresh", pedalPitchThreshold)),
@@ -80,12 +79,6 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     midiKill.setButtonText("Kill all MIDI");
     midiKill.onClick = [this] { audioProcessor.killAllMidi(); };
     addAndMakeVisible(midiKill);
-    
-    lookAndFeel.initializeSlider (quickKillMs, bvi_LINEAR_SLIDER, audioProcessor.getQuickKillMs());
-    quickKillMs.setNumDecimalPlacesToDisplay(0);
-    addAndMakeVisible(quickKillMs);
-    lookAndFeel.initializeLabel(quickKillmsLabel, "Quick kill ms");
-    addAndMakeVisible(quickKillmsLabel);
     
     lookAndFeel.initializeSlider (stereoWidth, bvi_ROTARY_SLIDER, audioProcessor.getStereoWidth());
     addAndMakeVisible(stereoWidth);
@@ -179,10 +172,6 @@ MidiControlPanel::~MidiControlPanel()
 
 void MidiControlPanel::paint (juce::Graphics& g)
 {
-    g.fillAll (lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::backgroundPanelColourId));
-    
-    g.setColour(lookAndFeel.findColour(ImogenLookAndFeel::uiColourIds::insetPanelColourId));
-    
     juce::Rectangle<int> adsrPanel (5, 110, 290, 125);
     g.fillRect(adsrPanel);
     
@@ -240,8 +229,6 @@ void MidiControlPanel::resized()
     //descantIntervalLabel.setBounds(x, y, w, h);
 
     midiKill.setBounds(145, 5, 100, 35);
-    quickKillmsLabel.setBounds(98, 35, 85, 35);
-    quickKillMs.setBounds(118, 60, 45, 45);
     
     concertPitchLabel.setBounds(190, 35, 110, 35);
     concertPitch.setBounds(220, 60, 45, 45);
@@ -260,7 +247,6 @@ void MidiControlPanel::updateParameterDefaults()
     adsrDecay.setDoubleClickReturnValue (true, audioProcessor.getDefaultAdsrDecay());
     adsrSustain.setDoubleClickReturnValue (true, audioProcessor.getDefaultAdsrSustain());
     adsrRelease.setDoubleClickReturnValue (true, audioProcessor.getDefaultAdsrRelease());
-    quickKillMs.setDoubleClickReturnValue (true, audioProcessor.getDefaultQuickKillMs());
     stereoWidth.setDoubleClickReturnValue (true, audioProcessor.getDefaultStereoWidth());
     lowestPan.setDoubleClickReturnValue (true, audioProcessor.getDefaultLowestPannedNote());
     midiVelocitySens.setDoubleClickReturnValue (true, audioProcessor.getDefaultMidiVelocitySensitivity());
@@ -273,7 +259,7 @@ void MidiControlPanel::updateParameterDefaults()
 inline void MidiControlPanel::buildVoicesCombobox(ComboBox& box)
 {
     for (int i = 1; i <= bvi_MAX_POSSIBLE_NUM_HARMONY_VOICES; ++i)
-        box.addItem ("i", i);
+        box.addItem (juce::String(i), i);
 }
 
 

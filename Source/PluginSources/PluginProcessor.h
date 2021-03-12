@@ -4,16 +4,10 @@
 
 #pragma once
 
-#include <juce_audio_utils/juce_audio_utils.h>
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
-
 
 #ifndef IMOGEN_ONLY_BUILDING_STANDALONE
   #define IMOGEN_ONLY_BUILDING_STANDALONE 0
-#endif
-
-#ifndef IMOGEN_NOT_BUILDING_STANDALONE
-  #define IMOGEN_NOT_BUILDING_STANDALONE 0
 #endif
 
 
@@ -111,8 +105,6 @@ public:
     bool getIsAdsrOn() const { return adsrToggle->get(); }
     bool getIsMidiLatchOn() const { return latchIsOn.load(); }
     bool getIsIntervalLockOn() const { return intervalLockIsOn.load(); }
-    int getQuickKillMs() const { return quickKillMs->get(); }
-    int getQuickAttackMs() const { return quickAttackMs->get(); }
     int getStereoWidth() const { return stereoWidth->get(); }
     int getLowestPannedNote() const { return lowestPanned->get(); }
     int getMidiVelocitySensitivity() const { return velocitySens->get(); }
@@ -137,7 +129,6 @@ public:
     float getDefaultAdsrDecay() const { return defaultAdsrDecay.load(); }
     float getDefaultAdsrSustain() const { return defaultAdsrSustain.load(); }
     float getDefaultAdsrRelease() const { return defaultAdsrRelease.load(); }
-    int getDefaultQuickKillMs() const { return defaultQuickKillMs.load(); }
     int getDefaultStereoWidth() const { return defaultStereoWidth.load(); }
     int getDefaultLowestPannedNote() const { return defaultLowestPannedNote.load(); }
     int getDefaultMidiVelocitySensitivity() const { return defaultVelocitySensitivity.load(); }
@@ -170,7 +161,7 @@ private:
     inline void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                      juce::MidiBuffer& midiMessages,
                                      bav::ImogenEngine<SampleType>& engine,
-                                     const bool isBypassed = false);
+                                     const bool masterBypass);
     
     
     bav::ImogenEngine<float>  floatEngine;
@@ -178,7 +169,7 @@ private:
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     juce::PluginHostType host;
-    bool needsSidechain = false;
+    bool needsSidechain;
 #endif
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
@@ -195,7 +186,7 @@ private:
     std::atomic<bool> latchIsOn, intervalLockIsOn;
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
-    juce::AudioParameterBool*  isBypassed;
+    juce::AudioParameterBool*  mainBypass;
     juce::AudioParameterInt*   dryPan;
     juce::AudioParameterInt*   dryWet;
     juce::AudioParameterFloat* adsrAttack;
@@ -203,8 +194,6 @@ private:
     juce::AudioParameterFloat* adsrSustain;
     juce::AudioParameterFloat* adsrRelease;
     juce::AudioParameterBool*  adsrToggle;
-    juce::AudioParameterInt*   quickKillMs;
-    juce::AudioParameterInt*   quickAttackMs;
     juce::AudioParameterInt*   stereoWidth;
     juce::AudioParameterInt*   lowestPanned;
     juce::AudioParameterInt*   velocitySens;
@@ -221,24 +210,21 @@ private:
     juce::AudioParameterFloat* inputGain;
     juce::AudioParameterFloat* outputGain;
     juce::AudioParameterBool*  limiterToggle;
-    juce::AudioParameterFloat* softPedalGain;
-    juce::AudioParameterFloat* pitchDetectionConfidenceUpperThresh;
-    juce::AudioParameterFloat* pitchDetectionConfidenceLowerThresh;
     juce::AudioParameterChoice* vocalRangeType;
     juce::AudioParameterBool*  aftertouchGainToggle;
-    juce::AudioParameterBool*  channelPressureToggle;
-    juce::AudioParameterFloat* playingButReleasedGain;
     
     void updateParameterDefaults();
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultQuickKillMs, defaultQuickAttackMs, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultSoftPedalGain, defaultPitchUpperConfidenceThresh, defaultPitchLowerConfidenceThresh, defaultPlayingButReleasedGain;
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain;
     
     int prevRangeTypeIndex;
     
-    juce::StringArray vocalRangeTypes;
+#define imgn_VOCAL_RANGE_TYPES juce::StringArray { "Soprano","Alto","Tenor","Bass" }
+    
+    juce::StringArray vocalRangeTypes = imgn_VOCAL_RANGE_TYPES;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

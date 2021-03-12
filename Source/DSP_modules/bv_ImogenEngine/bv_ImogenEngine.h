@@ -5,16 +5,14 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer class into a self-sufficient audio processor
- dependencies:       bv_Harmonizer, juce_dsp
+ dependencies:       bv_Harmonizer
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
 
 #pragma once
 
-#include "juce_dsp/juce_dsp.h"
-
-#include "bv_Harmonizer/bv_Harmonizer.h"  // this file includes the bv_SharedCode header
+#include "bv_Harmonizer/bv_Harmonizer.h"
 
 
 
@@ -53,8 +51,6 @@ public:
     void updateDryWet     (const int percentWet);
     void updateDryVoxPan  (const int newMidiPan);
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
-    void updateQuickKill  (const int newMs);
-    void updateQuickAttack(const int newMs);
     void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     void updatePitchbendSettings(const int rangeUp, const int rangeDown);
@@ -66,20 +62,15 @@ public:
     void updateLimiter     (const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
-    void updateSoftPedalGain (const float newGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
-    void updateUsingChannelPressure (const bool useChannelPressure);
-    void updatePlayingButReleasedGain (const float newGainMult);
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
-    void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh);
-    
-    bool hasBeenReleased()    const noexcept { return resourcesReleased; }
-    bool hasBeenInitialized() const noexcept { return initialized; }
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource);
     
     void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
+    
+    bool hasBeenInitialized() const noexcept { return initialized; }
     
     
 private:
@@ -109,12 +100,11 @@ private:
     juce::dsp::DryWetMixer<SampleType> dryWetMixer;
     std::atomic<SampleType> wetMixPercent;
     
+    juce::dsp::IIR::Filter<SampleType> initialHiddenLoCut;
+    
     juce::dsp::Limiter <SampleType> limiter;
     std::atomic<bool> limiterIsOn;
     std::atomic<float> limiterThresh, limiterRelease;
-    
-    bool resourcesReleased;
-    bool initialized;
     
     std::atomic<float> inputGain, outputGain;
     std::atomic<float> prevInputGain, prevOutputGain;
@@ -122,6 +112,8 @@ private:
     bav::dsp::Panner dryPanner;
     
     CriticalSection lock;
+    
+    bool initialized;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

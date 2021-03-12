@@ -13,6 +13,8 @@
 #define bvie_INIT_MIN_HZ 80
 #define bvie_INIT_MAX_HZ 2400
 
+#define bvie_INITIAL_HIDDEN_HI_PASS_FREQ 65
+
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
@@ -23,8 +25,7 @@ namespace bav
     
 
 template<typename SampleType>
-ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1),
-    resourcesReleased(true), initialized(false)
+ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine(1), initialized(false)
 {
     modulatorInput.store(0);
     
@@ -143,7 +144,15 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate, int blocksize)
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store (inputGain.load());
+    
+    initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate,
+                                                                                             SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
+    initialHiddenLoCut.reset();
+    
+    initialized = true;
 }
+    
+#undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
     
 
 bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
@@ -159,14 +168,14 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
     dspSpec.maximumBlockSize = uint32(newInternalBlocksize);
     dspSpec.numChannels = 2;
     
+    initialHiddenLoCut.prepare(dspSpec);
     limiter.prepare (dspSpec);
-    dryWetMixer.prepare (dspSpec);
+    
     dryWetMixer.setWetLatency(0);
+    dryWetMixer.prepare (dspSpec);
     
     limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
     limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
-    
-    resourcesReleased = false;
 }
     
 #undef bvie_LIMITER_RELEASE_MS
@@ -186,13 +195,14 @@ bvie_VOID_TEMPLATE::release()
     dryWetMixer.reset();
     limiter.reset();
     
-    resourcesReleased = true;
-    initialized       = false;
+    initialized = false;
 }
 
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages)
 {
+    jassert (initialized);
+    
     const ScopedLock sl (lock);
     
     const int blockSize = input.getNumSamples();
@@ -227,6 +237,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuff
                 monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
 
             monoBuffer.applyGain (1.0f / totalNumChannels);
+            break;
         }
             
         default:
@@ -237,12 +248,16 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuff
         }
     }
     
+    AudioBuffer<SampleType> realInput (monoBuffer.getArrayOfWritePointers(), 1, blockSize);
+    
     // master input gain
     const float currentInGain = inputGain.load();
-    monoBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
+    realInput.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
     prevInputGain.store(currentInGain);
     
-    const AudioBuffer<SampleType> realInput = AudioBuffer<SampleType> (monoBuffer.getArrayOfWritePointers(), 1, blockSize);
+    // initial hi-pass filter (hidden from the user)
+    juce::dsp::AudioBlock<SampleType> inblock (realInput);
+    initialHiddenLoCut.process (juce::dsp::ProcessContextReplacing<SampleType>(inblock));
 
     // write to dry buffer & apply panning
     for (int chan = 0; chan < 2; ++chan)
@@ -265,7 +280,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input, AudioBuff
     if (limiterIsOn.load())
     {
         juce::dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
-        limiter.process (juce::dsp::ProcessContextReplacing<SampleType>(limiterBlock));
+        limiter.process (juce::dsp::ProcessContextReplacing<SampleType> (limiterBlock));
     }
     
     for (int chan = 0; chan < 2; ++chan)

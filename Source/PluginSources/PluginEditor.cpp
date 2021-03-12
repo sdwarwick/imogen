@@ -53,14 +53,14 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (lookAndFeel.findColour(bav::ImogenLookAndFeel::uiColourIds::blankCanvasColourId));
+    g.fillAll (juce::Colours::black);
 }
 
 
 void ImogenAudioProcessorEditor::resized()
 {
-    midiPanel   .setBounds(10, 10, 300, 415);
-    ioPanel     .setBounds(320, 10, 300, 415);
+    midiPanel.setBounds(10, 10, 300, 415);
+    ioPanel  .setBounds(320, 10, 300, 415);
     
     //selectPreset.setBounds(x, y, w, h);
     

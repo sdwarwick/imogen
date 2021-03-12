@@ -85,11 +85,6 @@ private:
     // kill all MIDI button
     juce::TextButton midiKill;
     
-    // set quick kill ms - amount of time it takes for voices to ramp to 0 if "kill all" button is pressed
-    juce::Slider quickKillMs;
-    juce::Label quickKillmsLabel;
-    std::unique_ptr<APVTS::SliderAttachment> quickKillMsLink;
-    
     // set concert pitch in Hz
     juce::Slider concertPitch;
     juce::Label concertPitchLabel;

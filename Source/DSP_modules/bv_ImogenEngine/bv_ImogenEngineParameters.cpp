@@ -62,19 +62,7 @@ bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const flo
     harmonizer.updateADSRsettings (attack, decay, sustain, release);
     harmonizer.setADSRonOff (isOn);
 }
-
-bvie_VOID_TEMPLATE::updateQuickKill (const int newMs)
-{
-    const ScopedLock sl (lock);
-    harmonizer.updateQuickReleaseMs (newMs);
-}
-
-bvie_VOID_TEMPLATE::updateQuickAttack (const int newMs)
-{
-    const ScopedLock sl (lock);
-    harmonizer.updateQuickAttackMs (newMs);
-}
-
+    
 
 bvie_VOID_TEMPLATE::updateStereoWidth (const int newStereoWidth, const int lowestPannedNote)
 {
@@ -143,13 +131,6 @@ bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 }
 
 
-bvie_VOID_TEMPLATE::updateSoftPedalGain (const float newGain)
-{
-    const ScopedLock sl (lock);
-    harmonizer.setSoftPedalGainMultiplier (newGain);
-}
-
-
 bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
     const ScopedLock sl (lock);
@@ -162,31 +143,10 @@ bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxH
 }
 
 
-bvie_VOID_TEMPLATE::updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
-{
-    const ScopedLock sl (lock);
-    harmonizer.updatePitchDetectionConfidenceThresh (newUpperThresh, newLowerThresh);
-}
-
-
 bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 {
     const ScopedLock sl (lock);
     harmonizer.setAftertouchGainOnOff (shouldBeOn);
-}
-
-
-bvie_VOID_TEMPLATE::updateUsingChannelPressure (const bool useChannelPressure)
-{
-    const ScopedLock sl (lock);
-    harmonizer.shouldUseChannelPressure (useChannelPressure);
-}
-
-
-bvie_VOID_TEMPLATE::updatePlayingButReleasedGain (const float newGainMult)
-{
-    const ScopedLock sl (lock);
-    harmonizer.setPlayingButReleasedGain (newGainMult);
 }
 
 

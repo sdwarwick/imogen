@@ -5,7 +5,7 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       juce_audio_utils, bv_PitchDetector, bv_SharedCode
+ dependencies:       juce_audio_utils, juce_dsp, bv_PitchDetector
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -14,8 +14,7 @@
 
 #pragma once
 
-
-#include <juce_audio_utils/juce_audio_utils.h>
+#include "juce_dsp/juce_dsp.h"
 
 #include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
 #include "PanningManager/PanningManager.h"
@@ -222,12 +221,8 @@ public:
     void setNoteStealingEnabled (const bool shouldSteal) noexcept { shouldStealNotes = shouldSteal; }
     void updateMidiVelocitySensitivity (int newSensitivity);
     void updatePitchbendSettings (const int rangeUp, const int rangeDown);
-    void setSoftPedalGainMultiplier (const float newGain) { softPedalMultiplier = newGain; }
     
-    void shouldUseChannelPressure (const bool shouldUse) noexcept { useChannelPressure = shouldUse; }
     void setAftertouchGainOnOff (const bool shouldBeOn) { aftertouchGainIsOn = shouldBeOn; }
-    
-    void setPlayingButReleasedGain (const float newMultiplier) { playingButReleasedMultiplier = newMultiplier; }
     
     void setPedalPitch (const bool isOn);
     void setPedalPitchUpperThresh (int newThresh);
@@ -246,8 +241,6 @@ public:
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
     void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
-    void updateQuickReleaseMs (const int newMs);
-    void updateQuickAttackMs  (const int newMs);
     
     double getSamplerate() const noexcept { return sampleRate; }
 
@@ -256,10 +249,6 @@ public:
         pitchDetector.setHzRange (minHz, maxHz);
         if (sampleRate > 0) pitchDetector.setSamplerate (sampleRate);
     }
-    
-    void updatePitchDetectionConfidenceThresh (const float newUpperThresh, const float newLowerThresh)
-        { pitchDetector.setConfidenceThresh (SampleType(newUpperThresh), SampleType(newLowerThresh)); }
-    
     
     void handlePitchWheel (int wheelValue);
     
@@ -331,6 +320,9 @@ private:
     
     void turnOnList  (const Array<int>& toTurnOn,  const float velocity, const bool partOfChord = false);
     void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord = false);
+    
+    void updateQuickReleaseMs (const int newMs);
+    void updateQuickAttackMs  (const int newMs);
     
     // this function is called any time the collection of pitches is changed (ie, with regular keyboard input, on each note on/off, or for chord input, once after each chord is triggered). Used for things like pedal pitch, descant, etc
     void pitchCollectionChanged();
@@ -418,7 +410,6 @@ private:
     MidiBuffer aggregateMidiBuffer; // this midi buffer will be used to collect the harmonizer's aggregate MIDI output
     int lastMidiTimeStamp;
     int lastMidiChannel;
-    bool useChannelPressure;  // all the voices will keep track of & respond to their individual aftertouch values by default; if this is true then the harmonizer will also output an aggregate "channel pressure", which will be the maximum of any voice's recived aftertouch value.
     
     bool aftertouchGainIsOn;
     
