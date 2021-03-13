@@ -20,6 +20,9 @@
 
 #define bvie_INITIAL_HIDDEN_HI_PASS_FREQ 65
 
+#define bvie_COMPRESSOR_ATTACK_MS 4
+#define bvie_COMPRESSOR_RELEASE_MS 200
+
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
@@ -124,11 +127,22 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     gate.setAttack (SampleType(bvie_NOISE_GATE_ATTACK_MS));
     gate.setRelease (SampleType(bvie_NOISE_GATE_RELEASE_MS));
     
+    // constant compressor settings
+    compressor.setAttack (bvie_COMPRESSOR_ATTACK_MS);
+    compressor.setRelease (bvie_COMPRESSOR_RELEASE_MS);
+    
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
 }
     
+#undef bvie_LIMITER_RELEASE_MS
+#undef bvie_LIMITER_THRESH_DB
+#undef bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE
+#undef bvie_NOISE_GATE_ATTACK_MS
+#undef bvie_NOISE_GATE_RELEASE_MS
 #undef bvie_INIT_MIN_HZ
 #undef bvie_INIT_MAX_HZ
+#undef bvie_COMPRESSOR_ATTACK_MS
+#undef bvie_COMPRESSOR_RELEASE_MS
     
 
 bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
@@ -151,9 +165,9 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     dryWetMixer.setWetLatency(0);
     dryWetMixer.prepare (dspSpec);
     
-    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
-    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
     limiter.prepare (dspSpec);
+    
+    compressor.prepare (dspSpec);
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store (inputGain.load());
@@ -268,9 +282,17 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     juce::dsp::AudioBlock<SampleType> inblock (monoBuffer);
     juce::dsp::ProcessContextReplacing<SampleType> inputContext (inblock);
-    initialHiddenLoCut.process (inputContext); // initial hi-pass filter (hidden from the user)
+    // initial hi-pass filter (hidden from the user)
+    initialHiddenLoCut.process (inputContext);
+    // noise gate
     gate.setThreshold (noiseGateThreshDB.load());
-    gate.process (inputContext); // noise gate
+    gate.process (inputContext);
+    
+    // compressor
+    compressor.setThreshold (compThresh.load());
+    compressor.setRatio (compRatio.load());
+    if (compressorIsOn.load())
+        compressor.process (inputContext);
 
     // write to dry buffer & apply panning
     dryBuffer.clear();

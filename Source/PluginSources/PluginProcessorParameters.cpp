@@ -55,6 +55,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterBool> ("limiterIsOn", "Limiter on/off", true));
     // noise gate threshold (in dB)
     params.push_back(std::make_unique<juce::AudioParameterFloat>("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
+    // compressor
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("compressorToggle", "Compressor on/off", false));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount",
+                                                                 juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.35f));
     
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
@@ -110,6 +114,8 @@ void ImogenAudioProcessor::initializeParameterPointers()
     outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert(outputGain);
     limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert(limiterToggle);
     noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*> (tree.getParameter("noiseGateThresh"));           jassert(noiseGateThreshold);
+    compressorToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("compressorToggle"));           jassert(compressorToggle);
+    compressorAmount   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("compressorAmount"));           jassert (compressorAmount);
     vocalRangeType     = dynamic_cast<juce::AudioParameterChoice*>(tree.getParameter("vocalRangeType"));            jassert (vocalRangeType);
     aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle"));     jassert(aftertouchGainToggle);
 }
@@ -135,6 +141,7 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultInputGain.store (inputGain->get());
     defaultOutputGain.store (outputGain->get());
     defaultNoiseGateThresh.store (noiseGateThreshold->get());
+    defaultCompressorAmount.store (compressorAmount->get());
     
     parameterDefaultsAreDirty.store (true);
 }
@@ -171,6 +178,11 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateLimiter (limiterToggle->get());
     activeEngine.updateNoiseGate (noiseGateThreshold->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
+    
+    if (isUsingDoublePrecision())
+        updateCompressor (doubleEngine, compressorToggle->get(), compressorAmount->get());
+    else
+        updateCompressor (floatEngine, compressorToggle->get(), compressorAmount->get());
 }
 
 
@@ -207,6 +219,18 @@ void ImogenAudioProcessor::updateVocalRangeType (int rangeTypeIndex)
     
     updatePitchDetectionHzRange (minHz, maxHz);
     prevRangeTypeIndex = rangeTypeIndex;
+}
+
+
+template<typename SampleType>
+void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
+                                             bool compressorIsOn, float knobValue)
+{
+    jassert (knobValue >= 0.0f && knobValue <= 1.0f);
+    
+    activeEngine.updateCompressor (juce::jmap (knobValue, 0.0f, 1.0f, 0.0f, -60.0f),  // threshold (dB)
+                                   juce::jmap (knobValue, 0.0f, 1.0f, 2.0f, 10.0f),   // ratio
+                                   compressorIsOn);
 }
 
 

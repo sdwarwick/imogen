@@ -56,6 +56,7 @@ public:
     void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const bool isOn);
     void updateNoiseGate (const float newThreshDB);
+    void updateCompressor (const float threshDB, const float ratio, const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
@@ -103,6 +104,10 @@ private:
     std::atomic<SampleType> wetMixPercent;
     
     juce::dsp::IIR::Filter<SampleType> initialHiddenLoCut;
+    
+    juce::dsp::Compressor<SampleType> compressor;
+    std::atomic<bool> compressorIsOn;
+    std::atomic<SampleType> compThresh, compRatio;
     
     juce::dsp::Limiter <SampleType> limiter;
     std::atomic<bool> limiterIsOn;

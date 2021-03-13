@@ -136,6 +136,14 @@ bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 {
     limiterIsOn.store (isOn);
 }
+    
+
+bvie_VOID_TEMPLATE::updateCompressor (const float threshDB, const float ratio, const bool isOn)
+{
+    compThresh.store (SampleType(threshDB));
+    compRatio.store (SampleType(ratio));
+    compressorIsOn.store (isOn);
+}
 
 
 bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)

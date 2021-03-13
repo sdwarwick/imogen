@@ -100,6 +100,8 @@ public:
     float getOutputGain() const { return outputGain->get(); }
     bool getIsLimiterOn() const { return limiterToggle->get(); }
     float getNoiseGateThresh() const { return noiseGateThreshold->get(); }
+    bool getIsCompressorOn() const { return compressorToggle->get(); }
+    float getCompressorAmount() const { return compressorAmount->get(); }
     float getAdsrAttack() const { return adsrAttack->get(); }
     float getAdsrDecay() const { return adsrDecay->get(); }
     float getAdsrSustain() const { return adsrSustain->get(); }
@@ -140,6 +142,7 @@ public:
     int getDefaultDescantThresh() const { return defaultDescantThresh.load(); }
     float getDefaultNoiseGateThresh() const { return defaultNoiseGateThresh.load(); }
     int getDefaultPitchbendRange() const { return defaultPitchbendRange.load(); }
+    float getDefaultCompressorAmount() const { return defaultCompressorAmount.load(); }
     
     bool hasUpdatedParamDefaults()
     {
@@ -182,6 +185,10 @@ private:
     bool needsSidechain;
 #endif
     
+    template<typename SampleType>
+    void updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
+                           bool compressorIsOn, float knobValue);
+    
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     
@@ -222,6 +229,8 @@ private:
     juce::AudioParameterFloat* outputGain;
     juce::AudioParameterBool*  limiterToggle;
     juce::AudioParameterFloat* noiseGateThreshold;
+    juce::AudioParameterBool*  compressorToggle;
+    juce::AudioParameterFloat* compressorAmount;
     juce::AudioParameterChoice* vocalRangeType;
     juce::AudioParameterBool*  aftertouchGainToggle;
     
@@ -230,7 +239,7 @@ private:
     std::atomic<bool> parameterDefaultsAreDirty;
     
     std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount;
     
     int prevRangeTypeIndex;
     
