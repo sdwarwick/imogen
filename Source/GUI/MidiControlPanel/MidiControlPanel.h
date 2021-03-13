@@ -70,13 +70,10 @@ private:
     juce::Label midivelocitysensLabel;
     std::unique_ptr<APVTS::SliderAttachment> midiVelocitySensLink;
     
-    // MIDI pitch bend range up/down controls
-    juce::ComboBox pitchBendUp;
-    juce::Label pitchbendUpLabel;
-    std::unique_ptr<APVTS::ComboBoxAttachment> pitchBendUpLink;
-    juce::ComboBox pitchBendDown;
-    juce::Label pitchbendDownLabel;
-    std::unique_ptr<APVTS::ComboBoxAttachment> pitchBendDownLink;
+    // MIDI pitch bend range
+    juce::ComboBox pitchBendRange;
+    juce::Label pitchbendRangeLabel;
+    std::unique_ptr<APVTS::ComboBoxAttachment> pitchBendRangeLink;
     
     // voice stealing on/off toggle
     juce::ToggleButton voiceStealing;

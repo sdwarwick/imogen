@@ -29,8 +29,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     // midi settings
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("PitchBendUpRange", "Pitch bend range (up)", 0, 12, 2));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("PitchBendDownRange", "Pitch bend range (down)", 0, 12, 2));
+    params.push_back(std::make_unique<juce::AudioParameterInt>  ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2));
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
     params.push_back(std::make_unique<juce::AudioParameterBool> ("voiceStealing", "Voice stealing", false));
     params.push_back(std::make_unique<juce::AudioParameterBool> ("aftertouchGainToggle", "Aftertouch gain on/off", true));
@@ -92,8 +91,7 @@ void ImogenAudioProcessor::initializeParameterPointers()
     stereoWidth        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("stereoWidth"));                jassert(stereoWidth);
     lowestPanned       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("lowestPan"));                  jassert(lowestPanned);
     velocitySens       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity"));    jassert(velocitySens);
-    pitchBendUp        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendUpRange"));           jassert(pitchBendUp);
-    pitchBendDown      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendDownRange"));         jassert(pitchBendDown);
+    pitchBendRange     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendRange"));             jassert(pitchBendRange);
     pedalPitchIsOn     = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("pedalPitchToggle"));           jassert(pedalPitchIsOn);
     pedalPitchThresh   = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchThresh"));           jassert(pedalPitchThresh);
     pedalPitchInterval = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchInterval"));         jassert(pedalPitchInterval);
@@ -118,8 +116,7 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultStereoWidth.store (stereoWidth->get());
     defaultLowestPannedNote.store (lowestPanned->get());
     defaultVelocitySensitivity.store (velocitySens->get());
-    defaultPitchbendUp.store (pitchBendUp->get());
-    defaultPitchbendDown.store (pitchBendDown->get());
+    defaultPitchbendRange.store (pitchBendRange->get());
     defaultPedalPitchThresh.store (pedalPitchThresh->get());
     defaultPedalPitchInterval.store (pedalPitchInterval->get());
     defaultDescantThresh.store (descantThresh->get());
@@ -158,7 +155,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
     activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
     activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
-    activeEngine.updatePitchbendSettings (pitchBendUp->get(), pitchBendDown->get());
+    activeEngine.updatePitchbendRange (pitchBendRange->get());
     activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
     activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
     activeEngine.updateConcertPitch (concertPitchHz->get());
@@ -179,22 +176,22 @@ void ImogenAudioProcessor::updateVocalRangeType (int rangeTypeIndex)
     int minHz = 80;
     int maxHz = 2400;
     
-    if (rangeType.equalsIgnoreCase("Soprano"))
+    if (rangeType.equalsIgnoreCase ("Soprano"))
     {
         minHz = bav::dsp::midiToFreq (57);
         maxHz = bav::dsp::midiToFreq (88);
     }
-    else if (rangeType.equalsIgnoreCase("Alto"))
+    else if (rangeType.equalsIgnoreCase ("Alto"))
     {
         minHz = bav::dsp::midiToFreq (50);
         maxHz = bav::dsp::midiToFreq (81);
     }
-    else if (rangeType.equalsIgnoreCase("Tenor"))
+    else if (rangeType.equalsIgnoreCase ("Tenor"))
     {
         minHz = bav::dsp::midiToFreq (43);
         maxHz = bav::dsp::midiToFreq (76);
     }
-    else if (rangeType.equalsIgnoreCase("Bass"))
+    else if (rangeType.equalsIgnoreCase ("Bass"))
     {
         minHz = bav::dsp::midiToFreq (36);
         maxHz = bav::dsp::midiToFreq (67);

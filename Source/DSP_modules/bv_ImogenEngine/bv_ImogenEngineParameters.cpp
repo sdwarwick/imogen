@@ -79,10 +79,10 @@ bvie_VOID_TEMPLATE::updateMidiVelocitySensitivity (const int newSensitivity)
 }
 
 
-bvie_VOID_TEMPLATE::updatePitchbendSettings (const int rangeUp, const int rangeDown)
+bvie_VOID_TEMPLATE::updatePitchbendRange (const int rangeST)
 {
     const ScopedLock sl (lock);
-    harmonizer.updatePitchbendSettings (rangeUp, rangeDown);
+    harmonizer.updatePitchbendSettings (rangeST, rangeST);
 }
 
 

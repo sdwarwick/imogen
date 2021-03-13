@@ -110,8 +110,7 @@ public:
     int getStereoWidth() const { return stereoWidth->get(); }
     int getLowestPannedNote() const { return lowestPanned->get(); }
     int getMidiVelocitySensitivity() const { return velocitySens->get(); }
-    int getPitchbendRangeUp() const { return pitchBendUp->get(); }
-    int getPitchbendRangeDown() const { return pitchBendDown->get(); }
+    int getPitchbendRange() const { return pitchBendRange->get(); }
     bool getIsVoiceStealingEnabled() const { return voiceStealing->get(); }
     int getConcertPitchHz() const { return concertPitchHz->get(); }
     bool getIsPedalPitchOn() const { return pedalPitchIsOn->get(); }
@@ -138,8 +137,14 @@ public:
     int getDefaultPedalPitchThresh() const { return defaultPedalPitchThresh.load(); }
     int getDefaultDescantThresh() const { return defaultDescantThresh.load(); }
     float getDefaultNoiseGateThresh() const { return defaultNoiseGateThresh.load(); }
+    int getDefaultPitchbendRange() const { return defaultPitchbendRange.load(); }
     
-    bool hasUpdatedParamDefaults() const { return parameterDefaultsAreDirty.load(); }
+    bool hasUpdatedParamDefaults()
+    {
+        const bool hasUpdated = parameterDefaultsAreDirty.load();
+        parameterDefaultsAreDirty.store (false);
+        return hasUpdated;
+    }
     
     
 private:
@@ -200,8 +205,7 @@ private:
     juce::AudioParameterInt*   stereoWidth;
     juce::AudioParameterInt*   lowestPanned;
     juce::AudioParameterInt*   velocitySens;
-    juce::AudioParameterInt*   pitchBendUp;
-    juce::AudioParameterInt*   pitchBendDown;
+    juce::AudioParameterInt*   pitchBendRange;
     juce::AudioParameterBool*  pedalPitchIsOn;
     juce::AudioParameterInt*   pedalPitchThresh;
     juce::AudioParameterInt*   pedalPitchInterval;
@@ -221,7 +225,7 @@ private:
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendUp, defaultPitchbendDown, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
     std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh;
     
     int prevRangeTypeIndex;

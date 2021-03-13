@@ -48,7 +48,7 @@ public:
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
     void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
     void updateMidiVelocitySensitivity(const int newSensitivity);
-    void updatePitchbendSettings(const int rangeUp, const int rangeDown);
+    void updatePitchbendRange (const int rangeST);
     void updatePedalPitch  (const bool isOn, const int upperThresh, const int interval);
     void updateDescant     (const bool isOn, const int lowerThresh, const int interval);
     void updateConcertPitch(const int newConcertPitchHz);

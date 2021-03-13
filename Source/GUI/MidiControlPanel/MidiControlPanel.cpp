@@ -31,8 +31,7 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     stereoWidthLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "stereoWidth", stereoWidth)),
     lowestPanLink  (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "lowestPan", lowestPan)),
     midiVelocitySensLink(bvi_SLIDER_ATTACHMENT (audioProcessor.tree, "midiVelocitySensitivity", midiVelocitySens)),
-    pitchBendUpLink  (bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendUpRange", pitchBendUp)),
-    pitchBendDownLink(bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendDownRange", pitchBendDown)),
+    pitchBendRangeLink  (bvi_COMBOBOX_ATTACHMENT (audioProcessor.tree, "PitchBendRange", pitchBendRange)),
     voiceStealingLink(bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "voiceStealing", voiceStealing)),
     concertPitchLink (bvi_SLIDER_ATTACHMENT(audioProcessor.tree, "concertPitch", concertPitch)),
     pedalPitchToggleLink  (bvi_BUTTON_ATTACHMENT(audioProcessor.tree, "pedalPitchToggle", pedalPitchToggle)),
@@ -95,17 +94,11 @@ MidiControlPanel::MidiControlPanel(ImogenAudioProcessor& p, ImogenLookAndFeel& l
     lookAndFeel.initializeLabel(midivelocitysensLabel, "MIDI velocity sensitivity");
     addAndMakeVisible(midivelocitysensLabel);
     
-    buildIntervalCombobox(pitchBendUp);
-    pitchBendUp.setSelectedId(audioProcessor.getPitchbendRangeUp(), juce::NotificationType::dontSendNotification);
-    addAndMakeVisible(pitchBendUp);
-    lookAndFeel.initializeLabel(pitchbendUpLabel, "Pitch bend range up");
-    addAndMakeVisible(pitchbendUpLabel);
-
-    buildIntervalCombobox(pitchBendDown);
-    pitchBendDown.setSelectedId(audioProcessor.getPitchbendRangeDown(), juce::NotificationType::dontSendNotification);
-    addAndMakeVisible(pitchBendDown);
-    lookAndFeel.initializeLabel(pitchbendDownLabel, "Pitch bend range down");
-    addAndMakeVisible(pitchbendDownLabel);
+    buildIntervalCombobox(pitchBendRange);
+    pitchBendRange.setSelectedId(audioProcessor.getPitchbendRange(), juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(pitchBendRange);
+    lookAndFeel.initializeLabel(pitchbendRangeLabel, "Pitch bend range");
+    addAndMakeVisible(pitchbendRangeLabel);
 
     voiceStealing.setButtonText("Voice stealing");
     addAndMakeVisible(voiceStealing);
@@ -210,11 +203,8 @@ void MidiControlPanel::resized()
     midivelocitysensLabel.setBounds(5, 10, 85, 35);
     midiVelocitySens.setBounds(25, 50, 45, 45);
 
-    pitchbendUpLabel.setBounds	(15, 235, 130, 35);
-    pitchBendUp.setBounds		(15, 265, 130, 30);
-    
-    pitchbendDownLabel.setBounds(150, 235, 140, 35);
-    pitchBendDown.setBounds		(155, 265, 130, 30);
+    pitchbendRangeLabel.setBounds	(15, 235, 130, 35);
+    pitchBendRange.setBounds		(15, 265, 130, 30);
 
     //pedalPitchToggle.setBounds(x, y, w, h);
     //pedalPitchThreshold.setBounds(x, y, w, h);
