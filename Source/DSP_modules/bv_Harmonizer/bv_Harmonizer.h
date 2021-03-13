@@ -189,7 +189,8 @@ public:
     
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
                        AudioBuffer<SampleType>& outputBuffer,
-                       MidiBuffer& midiMessages);
+                       MidiBuffer& midiMessages,
+                       bool harmonyIsBypassed);
     
     void processMidi (MidiBuffer& midiMessages);
     

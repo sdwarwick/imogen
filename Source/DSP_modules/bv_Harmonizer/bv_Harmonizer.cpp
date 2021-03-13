@@ -179,7 +179,8 @@ bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
 
 bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
                                  AudioBuffer<SampleType>& outputBuffer,
-                                 MidiBuffer& midiMessages)
+                                 MidiBuffer& midiMessages,
+                                 bool harmonyIsBypassed)
 {
     jassert (! voices.isEmpty());
     
@@ -187,7 +188,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     
     processMidi (midiMessages);
     
-    if (getNumActiveVoices() == 0)
+    if (harmonyIsBypassed || getNumActiveVoices() == 0)
         return;
     
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched

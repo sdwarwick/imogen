@@ -18,6 +18,13 @@ bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
     harmonizer.changeNumVoices (newNumVoices);
 }
     
+    
+bvie_VOID_TEMPLATE::updateBypassStates (bool leadIsBypassed, bool harmoniesAreBypassed)
+{
+    leadBypass.store (leadIsBypassed);
+    harmonyBypass.store (harmoniesAreBypassed);
+}
+    
 
 bvie_VOID_TEMPLATE::setModulatorSource (const int newSource)
 {

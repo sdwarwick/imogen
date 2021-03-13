@@ -10,6 +10,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     
     // main bypass
     params.push_back(std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
+    // lead bypass
+    params.push_back(std::make_unique<juce::AudioParameterBool>("leadBypass", "Lead bypass", false));
+    // harmony bypass
+    params.push_back(std::make_unique<juce::AudioParameterBool>("harmonyBypass", "Harmony bypass", false));
     
     // lead vox pan
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("dryPan", "Dry vox pan", 0, 127, 64));
@@ -81,6 +85,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 void ImogenAudioProcessor::initializeParameterPointers()
 {
     mainBypass         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("mainBypass"));                 jassert (mainBypass);
+    leadBypass         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("leadBypass"));                 jassert (leadBypass);
+    harmonyBypass      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("harmonyBypass"));              jassert (harmonyBypass);
     dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                     jassert(dryPan);
     dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));               jassert(dryWet);
     adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                 jassert(adsrAttack);
@@ -147,6 +153,8 @@ template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
 {
     updateVocalRangeType (vocalRangeType->getIndex());
+    
+    activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
     
     activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
     activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));

@@ -119,6 +119,8 @@ public:
     bool getIsDescantOn() const { return descantIsOn->get(); }
     int getDescantThresh() const { return descantThresh->get(); }
     int getDescantInterval() const { return descantInterval->get(); }
+    bool getIsLeadBypassed() const { return leadBypass->get(); }
+    bool getIsHarmonyBypassed() const { return harmonyBypass->get(); }
     
     
     // these functions return the default values for each parameter, according to the most recently loaded state from the host, or user-selected preset.
@@ -195,6 +197,8 @@ private:
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterBool*  mainBypass;
+    juce::AudioParameterBool*  leadBypass;
+    juce::AudioParameterBool*  harmonyBypass;
     juce::AudioParameterInt*   dryPan;
     juce::AudioParameterInt*   dryWet;
     juce::AudioParameterFloat* adsrAttack;
