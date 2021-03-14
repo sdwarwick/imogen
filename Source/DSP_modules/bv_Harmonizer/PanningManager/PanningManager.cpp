@@ -92,6 +92,9 @@ void PanningManager::updateStereoWidth (const int newWidth)
     // then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
     panValsInAssigningOrder.clearQuick();
     
+    mapArrayIndexes();
+    jassert (! arrayIndexesMapped.isEmpty());
+    
     for (int index : arrayIndexesMapped)
         panValsInAssigningOrder.add (possiblePanVals.getUnchecked(index));
     

@@ -47,7 +47,7 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
-    peakCandidates.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    peakCandidates.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST + 1);
     peakCandidates.clearQuick();
     peakSearchingOrder.ensureStorageAllocated(maxBlocksize);
     peakSearchingOrder.clearQuick();
@@ -131,25 +131,26 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
 {
     targetArray.clearQuick();
     
-    const int grainSize = 2 * period;
-    const int halfPeriod = roundToInt (ceil (period * 0.5f));
+    const int grainSize = 2 * period; // output grains are 2 periods long w/ 50% overlap
+    const int halfPeriod = roundToInt (period * 0.5f);
     
     jassert (totalNumSamples >= grainSize);
     
-    int analysisIndex = 0; // marks the center of the analysis windows (which are 1 period long) -- but start @ 0
+    int analysisIndex = halfPeriod; // marks the center of the analysis windows, which are 1 period long
     
     do {
-        const int prevAnalysisIndex = analysisIndex;
-
-        const int frameStart = std::max (0, analysisIndex - halfPeriod);
-        const int frameEnd = std::min (totalNumSamples, frameStart + period);
+        const int frameStart = analysisIndex - halfPeriod;
+        const int frameEnd = std::min (totalNumSamples, frameStart + period); // analysis grains are 1 period long
+        
+        jassert (frameStart >= 0 && frameEnd <= totalNumSamples);
         
         targetArray.add (findNextPeak (frameStart, frameEnd,
-                                       std::min(analysisIndex, frameEnd), // predicted peak location for this frame
+                                       std::min (analysisIndex, frameEnd), // predicted peak location for this frame
                                        reading, targetArray, period, grainSize));
         
         jassert (! targetArray.isEmpty());
         
+        const int prevAnalysisIndex = analysisIndex;
         const int targetArraySize = targetArray.size();
         
         // analysisIndex marks the middle of our next analysis window, so it's where our next predicted peak should be:
@@ -158,10 +159,12 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
         else
             analysisIndex = targetArray.getUnchecked(targetArraySize - 2) + grainSize;
         
-        if (! (analysisIndex > prevAnalysisIndex))
-            analysisIndex = prevAnalysisIndex + period;
+        if (analysisIndex == prevAnalysisIndex)
+            analysisIndex = prevAnalysisIndex + halfPeriod;
+        else
+            jassert (analysisIndex > prevAnalysisIndex);
     }
-    while ((analysisIndex - halfPeriod) < totalNumSamples);
+    while (analysisIndex - halfPeriod < totalNumSamples);
 }
     
 
@@ -171,32 +174,20 @@ inline int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const
                                                      const Array<int>& targetArray,
                                                      const int period, const int grainSize)
 {
+    jassert (frameEnd > frameStart);
     jassert (predictedPeak >= frameStart && predictedPeak <= frameEnd);
+    
+    peakSearchingOrder.clearQuick();
+    sortSampleIndicesForPeakSearching (peakSearchingOrder, frameStart, frameEnd, predictedPeak);
+    
+    jassert (peakSearchingOrder.size() == frameEnd - frameStart);
     
     peakCandidates.clearQuick();
     
-    if (frameStart == frameEnd) // possible edge case?
-    {
-        peakCandidates.add (frameStart);
-    }
-    else
-    {
-        peakSearchingOrder.clearQuick();
-        sortSampleIndicesForPeakSearching (peakSearchingOrder, frameStart, frameEnd, predictedPeak);
-        
-        jassert (peakSearchingOrder.size() == frameEnd - frameStart);
-        
-        for (int i = 0; i < bvhge_NUM_PEAKS_TO_TEST; ++i)
-        {
-            getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, predictedPeak, peakSearchingOrder);
-            
-            if (peakCandidates.size() >= bvhge_NUM_PEAKS_TO_TEST - 1)
-                break;
-        }
-    }
+    for (int i = 0; i < bvhge_NUM_PEAKS_TO_TEST; ++i)
+        getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, predictedPeak, peakSearchingOrder);
     
     jassert (! peakCandidates.isEmpty());
-    jassert (peakCandidates.size() <= bvhge_NUM_PEAKS_TO_TEST);
     
 #undef bvhge_NUM_PEAKS_TO_TEST
     
@@ -209,12 +200,14 @@ inline int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const
             return choosePeakWithGreatestPower (peakCandidates, reading);
             
         default:
+        {
             if (targetArray.size() <= 1)
                 return choosePeakWithGreatestPower (peakCandidates, reading);
             
             return chooseIdealPeakCandidate (peakCandidates, reading,
                                              targetArray.getLast() + period,
                                              targetArray.getUnchecked(targetArray.size() - 2) + grainSize);
+        }
     }
 }
     
@@ -251,10 +244,8 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
     int indexOfLocalMin = starting;
     int indexOfLocalMax = starting;
     
-    for (int i = 0; i < numSamples; ++i)
+    for (int index : searchingOrder)
     {
-        const int index = searchingOrder.getUnchecked(i);
-        
         if (index == starting || candidates.contains (index))
             continue;
         

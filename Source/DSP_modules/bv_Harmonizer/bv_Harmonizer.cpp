@@ -19,8 +19,7 @@
 #define bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER 0.4
 #define bvh_SOFT_PEDAL_GAIN_MULTIPLIER 0.65
 
-#define bvh_PITCH_DETECTION_CONFIDENCE_UPPER_THRESH 0.15
-#define bvh_PITCH_DETECTION_CONFIDENCE_LOWER_THRESH 0.05
+#define bvh_PITCH_DETECTION_CONFIDENCE_THRESH 0.15
 
 
 namespace bav
@@ -68,8 +67,7 @@ Harmonizer<SampleType>::Harmonizer():
     playingButReleasedMultiplier = float(bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER);
     softPedalMultiplier = float(bvh_SOFT_PEDAL_GAIN_MULTIPLIER);
     
-    pitchDetector.setConfidenceThresh (SampleType(bvh_PITCH_DETECTION_CONFIDENCE_UPPER_THRESH),
-                                       SampleType(bvh_PITCH_DETECTION_CONFIDENCE_LOWER_THRESH));
+    pitchDetector.setConfidenceThresh (SampleType(bvh_PITCH_DETECTION_CONFIDENCE_THRESH));
 }
     
 #undef bvh_ADSR_QUICK_ATTACK_MS
@@ -158,8 +156,6 @@ bvh_VOID_TEMPLATE::releaseResources()
     panner.releaseResources();
     grains.releaseResources();
     pitchDetector.releaseResources();
-    
-    voices.clear();
 }
     
 
