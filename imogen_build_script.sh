@@ -16,8 +16,7 @@
 IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
 
 ZIPPING=0;
-INSTALLING=0;
-
+TESTING=0;
 
 # set up execute permissions
 chmod 755 "$IMOGEN_DIR"/imogen_build_script.sh
@@ -27,7 +26,7 @@ chmod 755 "$IMOGEN_DIR"/imogen_build_script.sh
 
 # function to check if a requested command is valid
 command_exists () {
-	loc="$(type "$1" > /dev/null)" || [[ -z $loc ]] ;
+	loc="$(type "$1" > /dev/null)" || [[ -z "$loc" ]] ;
 }
 
 # no cmake, and you're on Windows :(
@@ -62,9 +61,9 @@ fi
 
 for flag in "$@" ; do
 	case "$flag" in
-		--zip*) enable_zip ;;
-		-z*)	enable_zip ;;
-		*)		unknown_argument "$flag" ;;
+		--zip*)  enable_zip ;;
+		-z*)	 enable_zip ;;
+		*)		 unknown_argument "$flag" ;;
 	esac
 done
 
