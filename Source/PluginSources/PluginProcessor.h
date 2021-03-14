@@ -99,6 +99,7 @@ public:
     float getInputGain() const { return inputGain->get(); }
     float getOutputGain() const { return outputGain->get(); }
     bool getIsLimiterOn() const { return limiterToggle->get(); }
+    bool getIsNoiseGateOn() const { return noiseGateToggle->get(); }
     float getNoiseGateThresh() const { return noiseGateThreshold->get(); }
     bool getIsCompressorOn() const { return compressorToggle->get(); }
     float getCompressorAmount() const { return compressorAmount->get(); }
@@ -228,6 +229,7 @@ private:
     juce::AudioParameterFloat* inputGain;
     juce::AudioParameterFloat* outputGain;
     juce::AudioParameterBool*  limiterToggle;
+    juce::AudioParameterBool*  noiseGateToggle;
     juce::AudioParameterFloat* noiseGateThreshold;
     juce::AudioParameterBool*  compressorToggle;
     juce::AudioParameterFloat* compressorAmount;

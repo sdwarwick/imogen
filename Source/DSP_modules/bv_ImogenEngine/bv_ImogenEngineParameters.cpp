@@ -165,9 +165,10 @@ bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 }
 
     
-bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB)
+bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB, const bool isOn)
 {
     noiseGateThreshDB.store (SampleType(newThreshDB));
+    noiseGateIsOn.store (isOn);
 }
 
 

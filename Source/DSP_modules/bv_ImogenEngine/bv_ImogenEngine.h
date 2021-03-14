@@ -55,7 +55,7 @@ public:
     void updateNoteStealing(const bool shouldSteal);
     void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const bool isOn);
-    void updateNoiseGate (const float newThreshDB);
+    void updateNoiseGate (const float newThreshDB, const bool isOn);
     void updateCompressor (const float threshDB, const float ratio, const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
@@ -99,6 +99,7 @@ private:
     
     juce::dsp::NoiseGate<SampleType> gate;
     std::atomic<SampleType> noiseGateThreshDB;
+    std::atomic<bool> noiseGateIsOn;
     
     juce::dsp::DryWetMixer<SampleType> dryWetMixer;
     std::atomic<SampleType> wetMixPercent;

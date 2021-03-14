@@ -284,9 +284,11 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     juce::dsp::ProcessContextReplacing<SampleType> inputContext (inblock);
     // initial hi-pass filter (hidden from the user)
     initialHiddenLoCut.process (inputContext);
+    
     // noise gate
     gate.setThreshold (noiseGateThreshDB.load());
-    gate.process (inputContext);
+    if (noiseGateIsOn.load())
+        gate.process (inputContext);
     
     // compressor
     compressor.setThreshold (compThresh.load());
