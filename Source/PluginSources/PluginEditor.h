@@ -40,9 +40,6 @@ private:
     
     bav::ImogenLookAndFeel lookAndFeel;
     
-    bav::MidiControlPanel midiPanel;
-    bav::IOControlPanel ioPanel;
-    
     juce::ComboBox selectPreset;
     
     juce::ComboBox modulatorInputSource;

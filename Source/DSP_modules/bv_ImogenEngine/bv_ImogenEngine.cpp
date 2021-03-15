@@ -306,8 +306,12 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     dryWetMixer.setWetMixProportion (wetMixPercent.load());
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
-    // puts the harmonizer's rendered stereo output into wetBuffer & returns its midi output into midiMessages
-    harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages, harmoniesAreBypassed);
+    wetBuffer.clear();
+    
+    if (harmoniesAreBypassed)
+        harmonizer.processMidi (midiMessages);
+    else
+        harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages);
     
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
 

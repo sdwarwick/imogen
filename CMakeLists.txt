@@ -38,14 +38,9 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
-    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
-    ${IOPanelSourcePath}/IOControlPanel.cpp  
-    ${IOPanelSourcePath}/IOControlPanel.h
-    ${MidiControlSourcePath}/MidiControlPanel.cpp
-    ${MidiControlSourcePath}/MidiControlPanel.h)
+    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp)
 
 set (Imogen_graphicAssetFiles
-    ${Imogen_graphicAssetsDir}/closeIcon.png
     ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
 
 set (Imogen_testFiles

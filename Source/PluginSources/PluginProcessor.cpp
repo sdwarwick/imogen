@@ -76,9 +76,6 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     
     jassert (activeEngine.getLatency() > 0);
     
-    if (! activeEngine.hasBeenInitialized())
-        activeEngine.initialize (sampleRate, activeEngine.getLatency());
-    
     activeEngine.prepare (sampleRate);
     
     setLatencySamples (activeEngine.reportLatency());
@@ -149,46 +146,35 @@ int ImogenAudioProcessor::getCurrentModulatorInputSource() const
 /*
  These four functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
  The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
- In this first layer, we just check that the host has initialzed the processor with the correct processing precision mode...
 */
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (isUsingDoublePrecision()) // this would be a REALLY stupid host, butttt ¯\_(ツ)_/¯
-        return;
-    
     processBlockWrapped (buffer, midiMessages, floatEngine, mainBypass->get());
 }
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! isUsingDoublePrecision())
-        return;
-    
     processBlockWrapped (buffer, midiMessages, doubleEngine, mainBypass->get());
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (isUsingDoublePrecision())
-        return;
-    
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
     
-    mainBypass->setValueNotifyingHost (1.0f);
+    if (! mainBypass->get())
+        mainBypass->setValueNotifyingHost (1.0f);
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! isUsingDoublePrecision())
-        return;
-    
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
     
-    mainBypass->setValueNotifyingHost (1.0f);
+    if (! mainBypass->get())
+        mainBypass->setValueNotifyingHost (1.0f);
 }
 
 

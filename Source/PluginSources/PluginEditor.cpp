@@ -12,13 +12,9 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), audioProcessor (p),
-    midiPanel(p, lookAndFeel), ioPanel(p, lookAndFeel)
+    AudioProcessorEditor (&p), audioProcessor (p)
 {
     this->setBufferedToImage (true);
-    
-    midiPanel   .setLookAndFeel(&lookAndFeel);
-    ioPanel     .setLookAndFeel(&lookAndFeel);
     
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
@@ -29,9 +25,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     modulatorInputSource.setSelectedId (audioProcessor.getCurrentModulatorInputSource(),
                                         juce::NotificationType::dontSendNotification);
     modulatorInputSource.onChange = [this] { audioProcessor.updateModulatorInputSource (modulatorInputSource.getSelectedId()); };
-    
-    addAndMakeVisible(midiPanel);
-    addAndMakeVisible(ioPanel);
     
     //addAndMakeVisible(selectPreset);
     //addAndMakeVisible(modulatorInputSource);
@@ -59,9 +52,6 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 
 void ImogenAudioProcessorEditor::resized()
 {
-    midiPanel.setBounds(10, 10, 300, 415);
-    ioPanel  .setBounds(320, 10, 300, 415);
-    
     //selectPreset.setBounds(x, y, w, h);
     
     //modulatorInputSource.setBounds(x, y, w, h);
@@ -78,15 +68,13 @@ void ImogenAudioProcessorEditor::timerCallback()
 
 void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices)
 {
-    midiPanel.updateNumVoicesCombobox(newNumVoices);
+    
 }
 
 
 inline void ImogenAudioProcessorEditor::newPresetSelected()
 {
-    auto preset = selectPreset.getItemText (selectPreset.getSelectedId());
-    
-    audioProcessor.loadPreset (preset);
+    audioProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
 }
 
 
@@ -104,6 +92,5 @@ inline void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
 
 void ImogenAudioProcessorEditor::updateParameterDefaults()
 {
-    ioPanel.updateParameterDefaults();
-    midiPanel.updateParameterDefaults();
+    
 }
