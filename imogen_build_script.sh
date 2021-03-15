@@ -13,13 +13,14 @@
 # After executing this script, the built Imogen executables will be located at /imogen/Builds/Imogen_artefacts/Release/.
 
 
+# set up execute permissions
+chmod 755 "$IMOGEN_DIR"/imogen_build_script.sh
+
+
 IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
 
 ZIPPING=0;
 TESTING=0;
-
-# set up execute permissions
-chmod 755 "$IMOGEN_DIR"/imogen_build_script.sh
 
 
 ###  UTILITY FUNCTIONS  ###
