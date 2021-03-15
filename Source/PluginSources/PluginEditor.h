@@ -7,9 +7,8 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-
-#include "GUI/MidiControlPanel/MidiControlPanel.h"
-#include "GUI/IOControlPanel/IOControlPanel.h"
+#include "GUI/LookAndFeel/ImogenLookAndFeel.h"
+#include "PluginProcessor.h"
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
