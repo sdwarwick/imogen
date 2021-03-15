@@ -60,7 +60,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterBool> ("compressorToggle", "Compressor on/off", false));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount",
                                                                  juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.35f));
-    
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
     params.push_back(std::make_unique<juce::AudioParameterChoice>("vocalRangeType", "Input vocal range",
@@ -114,12 +113,12 @@ void ImogenAudioProcessor::initializeParameterPointers()
     inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert(inputGain);
     outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert(outputGain);
     limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert(limiterToggle);
-    noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*> (tree.getParameter("noiseGateThresh"));           jassert(noiseGateThreshold);
+    noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("noiseGateThresh"));            jassert(noiseGateThreshold);
     noiseGateToggle    = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("noiseGateIsOn"));              jassert(noiseGateToggle);
     compressorToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("compressorToggle"));           jassert(compressorToggle);
     compressorAmount   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("compressorAmount"));           jassert (compressorAmount);
     vocalRangeType     = dynamic_cast<juce::AudioParameterChoice*>(tree.getParameter("vocalRangeType"));            jassert (vocalRangeType);
-    aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("aftertouchGainToggle"));     jassert(aftertouchGainToggle);
+    aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*>(tree.getParameter("aftertouchGainToggle"));       jassert(aftertouchGainToggle);
 }
 
 

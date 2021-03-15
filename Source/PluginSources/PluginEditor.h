@@ -15,6 +15,7 @@ class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public juce::Timer
 {
     
+    
 public:
     
     ImogenAudioProcessorEditor (ImogenAudioProcessor& p);
