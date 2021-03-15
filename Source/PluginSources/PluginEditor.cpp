@@ -68,7 +68,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 
 void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices)
 {
-    
+    juce::ignoreUnused (newNumVoices);
 }
 
 

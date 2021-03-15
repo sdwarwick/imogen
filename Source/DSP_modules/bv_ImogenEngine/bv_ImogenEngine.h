@@ -101,6 +101,8 @@ private:
     std::atomic<SampleType> noiseGateThreshDB;
     std::atomic<bool> noiseGateIsOn;
     
+    bav::dsp::DeEsser<SampleType> deEsser;
+    
     juce::dsp::DryWetMixer<SampleType> dryWetMixer;
     std::atomic<SampleType> wetMixPercent;
     
