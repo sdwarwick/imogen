@@ -290,7 +290,7 @@ private:
     int prevRangeTypeIndex;
     
     
-    // attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs
+    /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */
     class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
     {
     public:
@@ -313,7 +313,7 @@ private:
         const int paramID;
     };
     
-    std::vector<ParameterMessenger> parameterMessengers;
+    std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
     
     void addParameterMessenger (juce::String stringID, int paramID);
     

@@ -241,16 +241,18 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
                 activeEngine.updateDryVoxPan (dryPan->get());
             case (dryWetID):
                 activeEngine.updateDryWet (dryWet->get());
+#define bviap_UPDATE_ASDR activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get())
             case (adsrAttackID):
-                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+                bviap_UPDATE_ASDR;
             case (adsrDecayID):
-                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+                bviap_UPDATE_ASDR;
             case (adsrSustainID):
-                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+                bviap_UPDATE_ASDR;
             case (adsrReleaseID):
-                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+                bviap_UPDATE_ASDR;
             case (adsrToggleID):
-                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+                bviap_UPDATE_ASDR;
+#undef bviap_UPDATE_ASDR
             case (stereoWidthID):
                 activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
             case (lowestPannedID):
@@ -259,18 +261,22 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
                 activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
             case (pitchBendRangeID):
                 activeEngine.updatePitchbendRange (pitchBendRange->get());
+#define bviap_UPDATE_PEDAL_PITCH activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get())
             case (pedalPitchIsOnID):
-                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+                bviap_UPDATE_PEDAL_PITCH;
             case (pedalPitchThreshID):
-                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+                bviap_UPDATE_PEDAL_PITCH;
             case (pedalPitchIntervalID):
-                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+                bviap_UPDATE_PEDAL_PITCH;
+#undef bviap_UPDATE_PEDAL_PITCH
+#define bviap_UPDATE_DESCANT activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get())
             case (descantIsOnID):
-                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+                bviap_UPDATE_DESCANT;
             case (descantThreshID):
-                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+                bviap_UPDATE_DESCANT;
             case (descantIntervalID):
-                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+                bviap_UPDATE_DESCANT;
+#undef bviap_UPDATE_DESCANT
             case (concertPitchHzID):
                 activeEngine.updateConcertPitch (concertPitchHz->get());
             case (voiceStealingID):

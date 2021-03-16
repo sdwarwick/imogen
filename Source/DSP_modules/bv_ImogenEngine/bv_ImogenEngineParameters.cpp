@@ -48,10 +48,6 @@ bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
 
 bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 {
-    if (dryPanner.getLastMidiPan() == newMidiPan)
-        return;
-        
-    const ScopedLock sl (lock);
     dryPanner.setMidiPan (newMidiPan);
 }
 
@@ -65,7 +61,6 @@ bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 
 bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const float sustain, const float release, const bool isOn)
 {
-    const ScopedLock sl (lock);
     harmonizer.updateADSRsettings (attack, decay, sustain, release);
     harmonizer.setADSRonOff (isOn);
 }
@@ -73,7 +68,6 @@ bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const flo
 
 bvie_VOID_TEMPLATE::updateStereoWidth (const int newStereoWidth, const int lowestPannedNote)
 {
-    const ScopedLock sl (lock);
     harmonizer.updateLowestPannedNote (lowestPannedNote);
     harmonizer.updateStereoWidth (newStereoWidth);
 }
@@ -81,21 +75,18 @@ bvie_VOID_TEMPLATE::updateStereoWidth (const int newStereoWidth, const int lowes
 
 bvie_VOID_TEMPLATE::updateMidiVelocitySensitivity (const int newSensitivity)
 {
-    const ScopedLock sl (lock);
     harmonizer.updateMidiVelocitySensitivity (newSensitivity);
 }
 
 
 bvie_VOID_TEMPLATE::updatePitchbendRange (const int rangeST)
 {
-    const ScopedLock sl (lock);
     harmonizer.updatePitchbendSettings (rangeST, rangeST);
 }
 
 
 bvie_VOID_TEMPLATE::updatePedalPitch (const bool isOn, const int upperThresh, const int interval)
 {
-    const ScopedLock sl (lock);
     harmonizer.setPedalPitch (isOn);
     harmonizer.setPedalPitchUpperThresh (upperThresh);
     harmonizer.setPedalPitchInterval (interval);
@@ -104,7 +95,6 @@ bvie_VOID_TEMPLATE::updatePedalPitch (const bool isOn, const int upperThresh, co
 
 bvie_VOID_TEMPLATE::updateDescant (const bool isOn, const int lowerThresh, const int interval)
 {
-    const ScopedLock sl (lock);
     harmonizer.setDescant (isOn);
     harmonizer.setDescantLowerThresh (lowerThresh);
     harmonizer.setDescantInterval (interval);
@@ -113,21 +103,18 @@ bvie_VOID_TEMPLATE::updateDescant (const bool isOn, const int lowerThresh, const
 
 bvie_VOID_TEMPLATE::updateConcertPitch (const int newConcertPitchHz)
 {
-    const ScopedLock sl (lock);
     harmonizer.setConcertPitchHz (newConcertPitchHz);
 }
 
 
 bvie_VOID_TEMPLATE::updateNoteStealing (const bool shouldSteal)
 {
-    const ScopedLock sl (lock);
     harmonizer.setNoteStealingEnabled (shouldSteal);
 }
 
 
 bvie_VOID_TEMPLATE::updateMidiLatch (const bool isLatched)
 {
-    const ScopedLock sl (lock);
     harmonizer.setMidiLatch (isLatched, true);
 }
 
@@ -160,7 +147,6 @@ bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxH
 
 bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 {
-    const ScopedLock sl (lock);
     harmonizer.setAftertouchGainOnOff (shouldBeOn);
 }
 
