@@ -7,20 +7,20 @@
 #include "bv_ImogenEngineParameters.cpp"
 
 
-#define bvie_LIMITER_THRESH_DB 0.0
-#define bvie_LIMITER_RELEASE_MS 35
+#define bvie_LIMITER_THRESH_DB 0.0f
+#define bvie_LIMITER_RELEASE_MS 35.0f
 
-#define bvie_NOISE_GATE_ATTACK_MS 25
-#define bvie_NOISE_GATE_RELEASE_MS 100
-#define bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE 10
+#define bvie_NOISE_GATE_ATTACK_MS 25.0f
+#define bvie_NOISE_GATE_RELEASE_MS 100.0f
+#define bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE 10.0f
 
 #define bvie_INIT_MIN_HZ 80
 #define bvie_INIT_MAX_HZ 2400
 
 #define bvie_INITIAL_HIDDEN_HI_PASS_FREQ 65
 
-#define bvie_COMPRESSOR_ATTACK_MS 4
-#define bvie_COMPRESSOR_RELEASE_MS 200
+#define bvie_COMPRESSOR_ATTACK_MS 4.0f
+#define bvie_COMPRESSOR_RELEASE_MS 200.0f
 
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
@@ -117,13 +117,13 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     wetBuffer.setSize (2, newInternalBlocksize);
     
     // constant limiter settings
-    limiter.setRelease (SampleType(bvie_LIMITER_RELEASE_MS));
-    limiter.setThreshold (SampleType(bvie_LIMITER_THRESH_DB));
+    limiter.setRelease (bvie_LIMITER_RELEASE_MS);
+    limiter.setThreshold (bvie_LIMITER_THRESH_DB);
     
     // constant noise gate settings
-    gate.setRatio (SampleType(bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE));
-    gate.setAttack (SampleType(bvie_NOISE_GATE_ATTACK_MS));
-    gate.setRelease (SampleType(bvie_NOISE_GATE_RELEASE_MS));
+    gate.setRatio (bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE);
+    gate.setAttack (bvie_NOISE_GATE_ATTACK_MS);
+    gate.setRelease (bvie_NOISE_GATE_RELEASE_MS);
     
     // constant compressor settings
     compressor.setAttack (bvie_COMPRESSOR_ATTACK_MS);
@@ -161,15 +161,18 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     if (harmonizer.getLatencySamples() != FIFOEngine::getLatency())
         FIFOEngine::changeLatency (harmonizer.getLatencySamples());
     
+    const int blocksize = FIFOEngine::getLatency();
+    
     initialHiddenLoCut.prepare(dspSpec);
-    gate.prepare(dspSpec);
+    
+    gate.prepare (1, blocksize, samplerate);
     
     dryWetMixer.setWetLatency(0);
     dryWetMixer.prepare (dspSpec);
     
-    limiter.prepare (dspSpec);
+    limiter.prepare (blocksize, samplerate, 2);
     
-    compressor.prepare (dspSpec);
+    compressor.prepare (blocksize, samplerate, 1);
     
     prevOutputGain.store(outputGain.load());
     prevInputGain.store (inputGain.load());
@@ -178,9 +181,9 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
                                                                                              SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
     initialHiddenLoCut.reset();
     
-    deEsser.prepare (FIFOEngine::getLatency(), samplerate);
+    deEsser.prepare (blocksize, samplerate);
     
-    reverb.prepare (FIFOEngine::getLatency(), samplerate);
+    reverb.prepare (blocksize, samplerate);
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -288,19 +291,18 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     monoBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
     prevInputGain.store(currentInGain);
     
+    // initial hi-pass filter (hidden from the user)
     juce::dsp::AudioBlock<SampleType> inblock (monoBuffer);
-    juce::dsp::ProcessContextReplacing<SampleType> inputContext (inblock);
-    
-    initialHiddenLoCut.process (inputContext);  // initial hi-pass filter (hidden from the user)
+    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType> (inblock) );
     
     if (noiseGateIsOn.load())
-        gate.process (inputContext);
+        gate.process (0, nullptr, monoBuffer.getWritePointer(0), blockSize);
     
     if (deEsserIsOn.load())
         deEsser.process (monoBuffer);
-    
+
     if (compressorIsOn.load())
-        compressor.process (inputContext);
+        compressor.process (0, nullptr, monoBuffer.getWritePointer(0), blockSize);
 
     dryBuffer.clear();
     
@@ -329,10 +331,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     prevOutputGain.store(currentOutGain);
 
     if (limiterIsOn.load())
-    {
-        juce::dsp::AudioBlock<SampleType> limiterBlock (wetBuffer);
-        limiter.process (juce::dsp::ProcessContextReplacing<SampleType> (limiterBlock));
-    }
+        for (int chan = 0; chan < 2; ++chan)
+            limiter.process (chan, nullptr, wetBuffer.getWritePointer(chan), blockSize);
     
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);

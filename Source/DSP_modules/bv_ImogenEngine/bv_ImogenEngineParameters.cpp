@@ -128,8 +128,8 @@ bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 
 bvie_VOID_TEMPLATE::updateCompressor (const float threshDB, const float ratio, const bool isOn)
 {
-    compressor.setThreshold (SampleType(threshDB));
-    compressor.setRatio (SampleType(ratio));
+    compressor.setThreshold (threshDB);
+    compressor.setRatio (ratio);
     compressorIsOn.store (isOn);
 }
     
@@ -162,7 +162,7 @@ bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
     
 bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB, const bool isOn)
 {
-    gate.setThreshold (SampleType(newThreshDB));
+    gate.setThreshold (newThreshDB);
     noiseGateIsOn.store (isOn);
 }
     
