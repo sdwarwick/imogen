@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "juce_dsp/juce_dsp.h"
-
 #include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
 #include "PanningManager/PanningManager.h"
 #include "GrainExtractor/GrainExtractor.h"
