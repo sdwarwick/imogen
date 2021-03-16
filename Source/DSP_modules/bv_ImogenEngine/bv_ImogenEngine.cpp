@@ -52,6 +52,7 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
     harmonyBypass.store (false);
     
     deEsserIsOn.store (false);
+    reverbIsOn.store (false);
 }
     
 
@@ -66,6 +67,7 @@ bvie_VOID_TEMPLATE::resetTriggered()
     dryWetMixer.reset();
     limiter.reset();
     deEsser.reset();
+    reverb.reset();
     
     monoBuffer.clear();
     
@@ -129,6 +131,8 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     
     deEsser.prepare (newInternalBlocksize, samplerate);
     
+    reverb.prepare (newInternalBlocksize, samplerate);
+    
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
 }
     
@@ -175,6 +179,8 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     initialHiddenLoCut.reset();
     
     deEsser.prepare (FIFOEngine::getLatency(), samplerate);
+    
+    reverb.prepare (FIFOEngine::getLatency(), samplerate);
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -212,6 +218,7 @@ bvie_VOID_TEMPLATE::release()
     dryWetMixer.reset();
     limiter.reset();
     deEsser.reset();
+    reverb.reset();
 }
 
     
@@ -312,6 +319,9 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
         harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages);
     
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
+    
+    if (reverbIsOn.load())
+        reverb.process (wetBuffer);
 
     // master output gain
     const float currentOutGain = outputGain.load();

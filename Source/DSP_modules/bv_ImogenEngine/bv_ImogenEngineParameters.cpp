@@ -70,6 +70,7 @@ bvie_VOID_TEMPLATE::updateStereoWidth (const int newStereoWidth, const int lowes
 {
     harmonizer.updateLowestPannedNote (lowestPannedNote);
     harmonizer.updateStereoWidth (newStereoWidth);
+    reverb.setWidth (newStereoWidth * 0.01f);
 }
 
 
@@ -163,6 +164,15 @@ bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB, const bool isOn)
 {
     gate.setThreshold (SampleType(newThreshDB));
     noiseGateIsOn.store (isOn);
+}
+    
+
+bvie_VOID_TEMPLATE::updateReverb (const float roomSize, const float damping, const int wetPcnt, const bool isOn)
+{
+    reverbIsOn.store (isOn);
+    reverb.setDryWet (wetPcnt);
+    reverb.setDamping (damping);
+    reverb.setRoomSize (roomSize);
 }
 
 

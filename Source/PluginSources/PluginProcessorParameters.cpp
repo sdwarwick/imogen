@@ -63,6 +63,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     // compressor
     params.push_back(std::make_unique<juce::AudioParameterBool> ("compressorToggle", "Compressor on/off", false));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
+    // reverb
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("reverbIsOn", "Reverb toggle", false));
     
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
@@ -126,6 +128,7 @@ void ImogenAudioProcessor::initializeParameterPointers()
     deEsserToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("deEsserIsOn"));                jassert (deEsserToggle);
     deEsserThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserThresh"));              jassert (deEsserThresh);
     deEsserAmount      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserAmount"));              jassert (deEsserAmount);
+    reverbToggle       = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("reverbIsOn"));                 jassert (reverbToggle);
 }
 
 
@@ -165,6 +168,7 @@ void ImogenAudioProcessor::initializeParameterListeners()
     addParameterMessenger ("deEsserIsOn", deEsserToggleID);
     addParameterMessenger ("deEsserThresh", deEsserThreshID);
     addParameterMessenger ("deEsserAmount", deEsserAmountID);
+    addParameterMessenger ("reverbIsOn", reverbToggleID);
 }
 
 void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int paramID)
@@ -236,6 +240,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
     
     updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+    
+    activeEngine.updateReverb (0.35f, 0.5f, 35, reverbToggle->get());
 }
 
 
@@ -244,28 +250,30 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
 {
     while (! paramChangesForProcessor.isEmpty())
     {
-        switch (paramChangesForProcessor.popMessage().type())
+        auto msg = paramChangesForProcessor.popMessage();
+        
+#define _BOOL_MSG_ msg.value() >= 0.5f
+        
+        switch (msg.type())
         {
             case (leadBypassID):
-                activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
+                activeEngine.updateBypassStates (_BOOL_MSG_, harmonyBypass->get());
             case (harmonyBypassID):
-                activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
+                activeEngine.updateBypassStates (leadBypass->get(), _BOOL_MSG_);
             case (dryPanID):
                 activeEngine.updateDryVoxPan (dryPan->get());
             case (dryWetID):
                 activeEngine.updateDryWet (dryWet->get());
-#define bviap_UPDATE_ASDR activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get())
             case (adsrAttackID):
-                bviap_UPDATE_ASDR;
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
             case (adsrDecayID):
-                bviap_UPDATE_ASDR;
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
             case (adsrSustainID):
-                bviap_UPDATE_ASDR;
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), msg.value(), adsrRelease->get(), adsrToggle->get());
             case (adsrReleaseID):
-                bviap_UPDATE_ASDR;
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
             case (adsrToggleID):
-                bviap_UPDATE_ASDR;
-#undef bviap_UPDATE_ASDR
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), _BOOL_MSG_);
             case (stereoWidthID):
                 activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
             case (lowestPannedID):
@@ -274,52 +282,48 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
                 activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
             case (pitchBendRangeID):
                 activeEngine.updatePitchbendRange (pitchBendRange->get());
-#define bviap_UPDATE_PEDAL_PITCH activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get())
             case (pedalPitchIsOnID):
-                bviap_UPDATE_PEDAL_PITCH;
+                activeEngine.updatePedalPitch (_BOOL_MSG_, pedalPitchThresh->get(), pedalPitchInterval->get());
             case (pedalPitchThreshID):
-                bviap_UPDATE_PEDAL_PITCH;
+                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
             case (pedalPitchIntervalID):
-                bviap_UPDATE_PEDAL_PITCH;
-#undef bviap_UPDATE_PEDAL_PITCH
-#define bviap_UPDATE_DESCANT activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get())
+                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
             case (descantIsOnID):
-                bviap_UPDATE_DESCANT;
+                activeEngine.updateDescant (_BOOL_MSG_, descantThresh->get(), descantInterval->get());
             case (descantThreshID):
-                bviap_UPDATE_DESCANT;
+                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
             case (descantIntervalID):
-                bviap_UPDATE_DESCANT;
-#undef bviap_UPDATE_DESCANT
+                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
             case (concertPitchHzID):
                 activeEngine.updateConcertPitch (concertPitchHz->get());
             case (voiceStealingID):
-                activeEngine.updateNoteStealing (voiceStealing->get());
+                activeEngine.updateNoteStealing (_BOOL_MSG_);
             case (inputGainID):
                 activeEngine.updateInputGain (juce::Decibels::decibelsToGain (inputGain->get()));
             case (outputGainID):
                 activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (outputGain->get()));
             case (limiterToggleID):
-                activeEngine.updateLimiter (limiterToggle->get());
+                activeEngine.updateLimiter (_BOOL_MSG_);
             case (noiseGateToggleID):
-                activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
+                activeEngine.updateNoiseGate (noiseGateThreshold->get(), _BOOL_MSG_);
             case (noiseGateThresholdID):
                 activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
             case (compressorToggleID):
-                updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+                updateCompressor (activeEngine, _BOOL_MSG_, compressorAmount->get());
             case (compressorAmountID):
-                updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+                updateCompressor (activeEngine, compressorToggle->get(), msg.value());
             case (vocalRangeTypeID):
                 updateVocalRangeType (vocalRangeType->getIndex());
             case (aftertouchGainToggleID):
-                activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
-#define bviap_UPDATE_DE_ESSER activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get())
+                activeEngine.updateAftertouchGainOnOff (_BOOL_MSG_);
             case (deEsserToggleID):
-                bviap_UPDATE_DE_ESSER;
+                activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), _BOOL_MSG_);
             case (deEsserThreshID):
-                bviap_UPDATE_DE_ESSER;
+                activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
             case (deEsserAmountID):
-                bviap_UPDATE_DE_ESSER;
-#undef bviap_UPDATE_DE_ESSER
+                activeEngine.updateDeEsser (msg.value(), deEsserThresh->get(), deEsserToggle->get());
+            case (reverbToggleID):
+                activeEngine.updateReverb (0.35f, 0.5f, 35, _BOOL_MSG_);
                 
             default:
                 break;

@@ -127,6 +127,7 @@ public:
     bool getIsDeEsserOn() const { return deEsserToggle->get(); }
     float getDeEsserThresh() const { return deEsserThresh->get(); }
     float getDeEsserAmount() const { return deEsserAmount->get(); }
+    bool getIsReverbOn() const { return reverbToggle->get(); }
     
     
     // these functions return the default values for each parameter, according to the most recently loaded state from the host, or user-selected preset.
@@ -195,7 +196,8 @@ public:
         aftertouchGainToggleID,
         deEsserToggleID,
         deEsserThreshID,
-        deEsserAmountID
+        deEsserAmountID,
+        reverbToggleID
     };
     
     
@@ -290,6 +292,7 @@ private:
     juce::AudioParameterBool* deEsserToggle;
     juce::AudioParameterFloat* deEsserThresh;
     juce::AudioParameterFloat* deEsserAmount;
+    juce::AudioParameterBool*  reverbToggle;
     
     void updateParameterDefaults();
     
@@ -312,12 +315,10 @@ private:
         void parameterChanged (const juce::String& s, float value) override
         {
             juce::ignoreUnused (s);
-            
-            bav::MessageQueue::Message message { paramID, value };
-            
-            q1.pushMessage (message);
-            q2.pushMessage (message);
+            q1.pushMessage (paramID, value);
+            q2.pushMessage (paramID, value);
         }
+        
     private:
         bav::MessageQueue& q1;
         bav::MessageQueue& q2;
