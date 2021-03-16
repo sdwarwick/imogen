@@ -63,6 +63,76 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     if (audioProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
+    
+    while (! audioProcessor.paramChangesForEditor.isEmpty())
+    {
+        switch (audioProcessor.paramChangesForEditor.popMessage().type())
+        {
+            case (ids::leadBypassID):
+                break;
+            case (ids::harmonyBypassID):
+                break;
+            case (ids::dryPanID):
+                break;
+            case (ids::dryWetID):
+                break;
+            case (ids::adsrAttackID):
+                break;
+            case (ids::adsrDecayID):
+                break;
+            case (ids::adsrSustainID):
+                break;
+            case (ids::adsrReleaseID):
+                break;
+            case (ids::adsrToggleID):
+                break;
+            case (ids::stereoWidthID):
+                break;
+            case (ids::lowestPannedID):
+                break;
+            case (ids::velocitySensID):
+                break;
+            case (ids::pitchBendRangeID):
+                break;
+            case (ids::pedalPitchIsOnID):
+                break;
+            case (ids::pedalPitchThreshID):
+                break;
+            case (ids::pedalPitchIntervalID):
+                break;
+            case (ids::descantIsOnID):
+                break;
+            case (ids::descantThreshID):
+                break;
+            case (ids::descantIntervalID):
+                break;
+            case (ids::concertPitchHzID):
+                break;
+            case (ids::voiceStealingID):
+                break;
+            case (ids::inputGainID):
+                break;
+            case (ids::outputGainID):
+                break;
+            case (ids::limiterToggleID):
+                break;
+            case (ids::noiseGateToggleID):
+                break;
+            case (ids::noiseGateThresholdID):
+                break;
+            case (ids::compressorToggleID):
+                break;
+            case (ids::compressorAmountID):
+                break;
+            case (ids::vocalRangeTypeID):
+                break;
+            case (ids::aftertouchGainToggleID):
+                break;
+                
+            default:
+                break;
+        }
+    }
 }
 
 

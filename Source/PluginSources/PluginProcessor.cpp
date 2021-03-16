@@ -194,7 +194,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
         return;   // our audio input is disabled! can't do processing
 #endif
     
-    updateAllParameters (engine); // the host might use a 0-sample long audio buffer to tell us to update our state with new automation values, which is why the check for that is AFTER this call.
+    processQueuedParameterChanges (engine); // the host might use a 0-sample long audio buffer to tell us to update our state with new automation values, which is why the check for that is AFTER this call.
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;

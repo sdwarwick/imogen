@@ -122,6 +122,48 @@ void ImogenAudioProcessor::initializeParameterPointers()
 }
 
 
+void ImogenAudioProcessor::initializeParameterListeners()
+{
+    addParameterMessenger ("mainBypass", mainBypassID);
+    addParameterMessenger ("leadBypass", leadBypassID);
+    addParameterMessenger ("harmonyBypass", harmonyBypassID);
+    addParameterMessenger ("dryPan", dryPanID);
+    addParameterMessenger ("masterDryWet", dryWetID);
+    addParameterMessenger ("adsrAttack", adsrAttackID);
+    addParameterMessenger ("adsrDecay", adsrDecayID);
+    addParameterMessenger ("adsrSustain", adsrSustainID);
+    addParameterMessenger ("adsrRelease", adsrReleaseID);
+    addParameterMessenger ("adsrOnOff", adsrToggleID);
+    addParameterMessenger ("stereoWidth", stereoWidthID);
+    addParameterMessenger ("lowestPan", lowestPannedID);
+    addParameterMessenger ("midiVelocitySensitivity", velocitySensID);
+    addParameterMessenger ("PitchBendRange", pitchBendRangeID);
+    addParameterMessenger ("pedalPitchToggle", pedalPitchIsOnID);
+    addParameterMessenger ("pedalPitchThresh", pedalPitchThreshID);
+    addParameterMessenger ("pedalPitchInterval", pedalPitchIntervalID);
+    addParameterMessenger ("descantToggle", descantIsOnID);
+    addParameterMessenger ("descantThresh", descantThreshID);
+    addParameterMessenger ("descantInterval", descantIntervalID);
+    addParameterMessenger ("concertPitch", concertPitchHzID);
+    addParameterMessenger ("voiceStealing", voiceStealingID);
+    addParameterMessenger ("inputGain", inputGainID);
+    addParameterMessenger ("outputGain", outputGainID);
+    addParameterMessenger ("limiterIsOn", limiterToggleID);
+    addParameterMessenger ("noiseGateIsOn", noiseGateToggleID);
+    addParameterMessenger ("noiseGateThresh", noiseGateThresholdID);
+    addParameterMessenger ("compressorToggle", compressorToggleID);
+    addParameterMessenger ("compressorAmount", compressorAmountID);
+    addParameterMessenger ("vocalRangeType", vocalRangeTypeID);
+    addParameterMessenger ("aftertouchGainToggle", aftertouchGainToggleID);
+}
+
+void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int paramID)
+{
+    auto& messenger { parameterMessengers.emplace_back (paramChangesForProcessor, paramChangesForEditor, paramID) };
+    tree.addParameterListener (stringID, &messenger);
+}
+
+
 void ImogenAudioProcessor::updateParameterDefaults()
 {
     defaultDryPan.store (dryPan->get());
@@ -164,8 +206,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     
     activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
     
-    activeEngine.updateInputGain    (juce::Decibels::decibelsToGain (inputGain->get()));
-    activeEngine.updateOutputGain   (juce::Decibels::decibelsToGain (outputGain->get()));
+    activeEngine.updateInputGain (juce::Decibels::decibelsToGain (inputGain->get()));
+    activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (outputGain->get()));
     activeEngine.updateDryVoxPan (dryPan->get());
     activeEngine.updateDryWet (dryWet->get());
     activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
@@ -180,11 +222,86 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
     
-    if (isUsingDoublePrecision())
-        updateCompressor (doubleEngine, compressorToggle->get(), compressorAmount->get());
-    else
-        updateCompressor (floatEngine, compressorToggle->get(), compressorAmount->get());
+    updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
 }
+
+
+template<typename SampleType>
+void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
+{
+    while (! paramChangesForProcessor.isEmpty())
+    {
+        switch (paramChangesForProcessor.popMessage().type())
+        {
+            case (leadBypassID):
+                activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
+            case (harmonyBypassID):
+                activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
+            case (dryPanID):
+                activeEngine.updateDryVoxPan (dryPan->get());
+            case (dryWetID):
+                activeEngine.updateDryWet (dryWet->get());
+            case (adsrAttackID):
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+            case (adsrDecayID):
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+            case (adsrSustainID):
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+            case (adsrReleaseID):
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+            case (adsrToggleID):
+                activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+            case (stereoWidthID):
+                activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
+            case (lowestPannedID):
+                activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
+            case (velocitySensID):
+                activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
+            case (pitchBendRangeID):
+                activeEngine.updatePitchbendRange (pitchBendRange->get());
+            case (pedalPitchIsOnID):
+                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+            case (pedalPitchThreshID):
+                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+            case (pedalPitchIntervalID):
+                activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+            case (descantIsOnID):
+                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+            case (descantThreshID):
+                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+            case (descantIntervalID):
+                activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+            case (concertPitchHzID):
+                activeEngine.updateConcertPitch (concertPitchHz->get());
+            case (voiceStealingID):
+                activeEngine.updateNoteStealing (voiceStealing->get());
+            case (inputGainID):
+                activeEngine.updateInputGain (juce::Decibels::decibelsToGain (inputGain->get()));
+            case (outputGainID):
+                activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (outputGain->get()));
+            case (limiterToggleID):
+                activeEngine.updateLimiter (limiterToggle->get());
+            case (noiseGateToggleID):
+                activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
+            case (noiseGateThresholdID):
+                activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
+            case (compressorToggleID):
+                updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+            case (compressorAmountID):
+                updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+            case (vocalRangeTypeID):
+                updateVocalRangeType (vocalRangeType->getIndex());
+            case (aftertouchGainToggleID):
+                activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
+                
+            default:
+                break;
+        }
+    }
+}
+
+template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<float>& activeEngine);
+template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<double>& activeEngine);
 
 
 void ImogenAudioProcessor::updateVocalRangeType (int rangeTypeIndex)

@@ -153,10 +153,53 @@ public:
     }
     
     
+    bav::MessageQueue paramChangesForEditor;
+    
+    enum parameterIDs
+    {
+        mainBypassID,
+        leadBypassID,
+        harmonyBypassID,
+        dryPanID,
+        dryWetID,
+        adsrAttackID,
+        adsrDecayID,
+        adsrSustainID,
+        adsrReleaseID,
+        adsrToggleID,
+        stereoWidthID,
+        lowestPannedID,
+        velocitySensID,
+        pitchBendRangeID,
+        pedalPitchIsOnID,
+        pedalPitchThreshID,
+        pedalPitchIntervalID,
+        descantIsOnID,
+        descantThreshID,
+        descantIntervalID,
+        concertPitchHzID,
+        voiceStealingID,
+        inputGainID,
+        outputGainID,
+        limiterToggleID,
+        noiseGateToggleID,
+        noiseGateThresholdID,
+        compressorToggleID,
+        compressorAmountID,
+        vocalRangeTypeID,
+        aftertouchGainToggleID
+    };
+    
+    
 private:
+    
+    bav::MessageQueue paramChangesForProcessor;
     
     template<typename SampleType>
     void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    template<typename SampleType>
+    void processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine);
     
     void updateVocalRangeType (int rangeTypeIndex);
     
@@ -192,6 +235,7 @@ private:
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
+    void initializeParameterListeners();
     
     juce::AudioProcessor::BusesProperties makeBusProperties() const;
     
@@ -244,6 +288,36 @@ private:
     std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount;
     
     int prevRangeTypeIndex;
+    
+    
+    // attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs
+    class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
+    {
+    public:
+        ParameterMessenger(bav::MessageQueue& queue1, bav::MessageQueue& queue2, int paramIDtoListen):
+            q1(queue1), q2(queue2), paramID(paramIDtoListen)
+        { }
+        
+        void parameterChanged (const juce::String& s, float value) override
+        {
+            juce::ignoreUnused (s);
+            
+            bav::MessageQueue::Message message { paramID, value };
+            
+            q1.pushMessage (message);
+            q2.pushMessage (message);
+        }
+    private:
+        bav::MessageQueue& q1;
+        bav::MessageQueue& q2;
+        const int paramID;
+    };
+    
+    std::vector<ParameterMessenger> parameterMessengers;
+    
+    void addParameterMessenger (juce::String stringID, int paramID);
+    
+    
     
 #define imgn_VOCAL_RANGE_TYPES juce::StringArray { "Soprano","Alto","Tenor","Bass" }
     
