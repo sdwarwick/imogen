@@ -56,6 +56,7 @@ public:
     void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const bool isOn);
     void updateNoiseGate (const float newThreshDB, const bool isOn);
+    void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
     void updateCompressor (const float threshDB, const float ratio, const bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
@@ -98,19 +99,17 @@ private:
     juce::dsp::ProcessSpec dspSpec;
     
     juce::dsp::NoiseGate<SampleType> gate;
-    std::atomic<SampleType> noiseGateThreshDB;
     std::atomic<bool> noiseGateIsOn;
     
     bav::dsp::DeEsser<SampleType> deEsser;
+    std::atomic<bool> deEsserIsOn;
     
     juce::dsp::DryWetMixer<SampleType> dryWetMixer;
-    std::atomic<SampleType> wetMixPercent;
     
     juce::dsp::IIR::Filter<SampleType> initialHiddenLoCut;
     
     juce::dsp::Compressor<SampleType> compressor;
     std::atomic<bool> compressorIsOn;
-    std::atomic<SampleType> compThresh, compRatio;
     
     juce::dsp::Limiter <SampleType> limiter;
     std::atomic<bool> limiterIsOn;

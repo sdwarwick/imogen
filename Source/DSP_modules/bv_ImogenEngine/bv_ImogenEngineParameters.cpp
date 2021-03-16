@@ -55,7 +55,7 @@ bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 {
     constexpr SampleType pointOne = SampleType(0.01);
-    wetMixPercent.store (percentWet * pointOne);
+    dryWetMixer.setWetMixProportion (percentWet * pointOne);
 }
 
 
@@ -127,9 +127,17 @@ bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 
 bvie_VOID_TEMPLATE::updateCompressor (const float threshDB, const float ratio, const bool isOn)
 {
-    compThresh.store (SampleType(threshDB));
-    compRatio.store (SampleType(ratio));
+    compressor.setThreshold (SampleType(threshDB));
+    compressor.setRatio (SampleType(ratio));
     compressorIsOn.store (isOn);
+}
+    
+
+bvie_VOID_TEMPLATE::updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn)
+{
+    deEsser.setThresh (thresh_dB);
+    deEsser.setDeEssAmount (deEssAmount);
+    deEsserIsOn.store (isOn);
 }
 
 
@@ -153,7 +161,7 @@ bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
     
 bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB, const bool isOn)
 {
-    noiseGateThreshDB.store (SampleType(newThreshDB));
+    gate.setThreshold (SampleType(newThreshDB));
     noiseGateIsOn.store (isOn);
 }
 

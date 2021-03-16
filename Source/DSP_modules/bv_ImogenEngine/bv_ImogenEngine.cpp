@@ -13,7 +13,6 @@
 #define bvie_NOISE_GATE_ATTACK_MS 25
 #define bvie_NOISE_GATE_RELEASE_MS 100
 #define bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE 10
-#define bvie_NOISE_GATE_INIT_THRESH_DB -20.0
 
 #define bvie_INIT_MIN_HZ 80
 #define bvie_INIT_MAX_HZ 2400
@@ -37,11 +36,7 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
 {
     modulatorInput.store(0);
     
-    wetMixPercent.store(SampleType(1.0));
-    
     limiterIsOn.store(false);
-    limiterThresh.store(1.0f);
-    limiterRelease.store(20.0f);
     
     inputGain.store(1.0f);
     prevInputGain.store(1.0f);
@@ -56,7 +51,7 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
     leadBypass.store (false);
     harmonyBypass.store (false);
     
-    noiseGateThreshDB.store(SampleType(bvie_NOISE_GATE_INIT_THRESH_DB));
+    deEsserIsOn.store (false);
 }
     
 
@@ -70,6 +65,7 @@ bvie_VOID_TEMPLATE::resetTriggered()
     gate.reset();
     dryWetMixer.reset();
     limiter.reset();
+    deEsser.reset();
     
     monoBuffer.clear();
     
@@ -131,6 +127,8 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     compressor.setAttack (bvie_COMPRESSOR_ATTACK_MS);
     compressor.setRelease (bvie_COMPRESSOR_RELEASE_MS);
     
+    deEsser.prepare (newInternalBlocksize, samplerate);
+    
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
 }
     
@@ -175,6 +173,8 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate,
                                                                                              SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
     initialHiddenLoCut.reset();
+    
+    deEsser.prepare (FIFOEngine::getLatency(), samplerate);
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -211,6 +211,7 @@ bvie_VOID_TEMPLATE::release()
     gate.reset();
     dryWetMixer.reset();
     limiter.reset();
+    deEsser.reset();
 }
 
     
@@ -283,29 +284,24 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     juce::dsp::AudioBlock<SampleType> inblock (monoBuffer);
     juce::dsp::ProcessContextReplacing<SampleType> inputContext (inblock);
     
-    // initial hi-pass filter (hidden from the user)
-    initialHiddenLoCut.process (inputContext);
+    initialHiddenLoCut.process (inputContext);  // initial hi-pass filter (hidden from the user)
     
-    // noise gate
-    gate.setThreshold (noiseGateThreshDB.load());
     if (noiseGateIsOn.load())
         gate.process (inputContext);
     
-    // compressor
-    compressor.setThreshold (compThresh.load());
-    compressor.setRatio (compRatio.load());
+    if (deEsserIsOn.load())
+        deEsser.process (monoBuffer);
+    
     if (compressorIsOn.load())
         compressor.process (inputContext);
 
-    // write to dry buffer & apply panning
     dryBuffer.clear();
     
-    if (! leadIsBypassed)
+    if (! leadIsBypassed)  // write to dry buffer & apply panning
         for (int chan = 0; chan < 2; ++chan)
             dryBuffer.copyFromWithRamp (chan, 0, monoBuffer.getReadPointer(0), blockSize,
                                         dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
     
-    dryWetMixer.setWetMixProportion (wetMixPercent.load());
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
     wetBuffer.clear();

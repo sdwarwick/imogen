@@ -7,6 +7,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
     juce::NormalisableRange<float> gainRange (-60.0f, 0.0f, 0.01f);
+    juce::NormalisableRange<float> zeroToOneRange (0.0f, 1.0f, 0.01f);
+    juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
     
     // main bypass
     params.push_back(std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
@@ -19,11 +21,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("dryPan", "Dry vox pan", 0, 127, 64));
     
     // ADSR
-    juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack", msRange, 0.035f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrDecay", "ADSR Decay", msRange, 0.06f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrSustain", "ADSR Sustain",
-                                                                 juce::NormalisableRange<float> (0.01f, 1.0f, 0.01f), 0.8f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrRelease", "ADSR Release", msRange, 0.1f));
     params.push_back(std::make_unique<juce::AudioParameterBool> ("adsrOnOff", "ADSR on/off", true));
     
@@ -56,10 +56,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     // noise gate
     params.push_back(std::make_unique<juce::AudioParameterBool> ("noiseGateIsOn", "Noise gate toggle", true));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
+    // de-esser
+    params.push_back(std::make_unique<juce::AudioParameterBool> ("deEsserIsOn", "De-esser toggle", true));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("deEsserThresh", "De-esser thresh", gainRange, -6.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f));
     // compressor
     params.push_back(std::make_unique<juce::AudioParameterBool> ("compressorToggle", "Compressor on/off", false));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount",
-                                                                 juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.35f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
+    
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
     params.push_back(std::make_unique<juce::AudioParameterChoice>("vocalRangeType", "Input vocal range",
@@ -91,34 +95,37 @@ void ImogenAudioProcessor::initializeParameterPointers()
     mainBypass         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("mainBypass"));                 jassert (mainBypass);
     leadBypass         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("leadBypass"));                 jassert (leadBypass);
     harmonyBypass      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("harmonyBypass"));              jassert (harmonyBypass);
-    dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                     jassert(dryPan);
-    dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));               jassert(dryWet);
-    adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                 jassert(adsrAttack);
-    adsrDecay          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrDecay"));                  jassert(adsrDecay);
-    adsrSustain        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrSustain"));                jassert(adsrSustain);
-    adsrRelease        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrRelease"));                jassert(adsrRelease);
-    adsrToggle         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("adsrOnOff"));                  jassert(adsrToggle);
-    stereoWidth        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("stereoWidth"));                jassert(stereoWidth);
-    lowestPanned       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("lowestPan"));                  jassert(lowestPanned);
-    velocitySens       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity"));    jassert(velocitySens);
-    pitchBendRange     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendRange"));             jassert(pitchBendRange);
-    pedalPitchIsOn     = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("pedalPitchToggle"));           jassert(pedalPitchIsOn);
-    pedalPitchThresh   = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchThresh"));           jassert(pedalPitchThresh);
-    pedalPitchInterval = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchInterval"));         jassert(pedalPitchInterval);
-    descantIsOn        = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("descantToggle"));              jassert(descantIsOn);
-    descantThresh      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantThresh"));              jassert(descantThresh);
-    descantInterval    = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantInterval"));            jassert(descantInterval);
-    concertPitchHz     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("concertPitch"));               jassert(concertPitchHz);
-    voiceStealing      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("voiceStealing"));              jassert(voiceStealing);
-    inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert(inputGain);
-    outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert(outputGain);
-    limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert(limiterToggle);
-    noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("noiseGateThresh"));            jassert(noiseGateThreshold);
-    noiseGateToggle    = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("noiseGateIsOn"));              jassert(noiseGateToggle);
-    compressorToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("compressorToggle"));           jassert(compressorToggle);
+    dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                     jassert (dryPan);
+    dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));               jassert (dryWet);
+    adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                 jassert (adsrAttack);
+    adsrDecay          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrDecay"));                  jassert (adsrDecay);
+    adsrSustain        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrSustain"));                jassert (adsrSustain);
+    adsrRelease        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrRelease"));                jassert (adsrRelease);
+    adsrToggle         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("adsrOnOff"));                  jassert (adsrToggle);
+    stereoWidth        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("stereoWidth"));                jassert (stereoWidth);
+    lowestPanned       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("lowestPan"));                  jassert (lowestPanned);
+    velocitySens       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity"));    jassert (velocitySens);
+    pitchBendRange     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendRange"));             jassert (pitchBendRange);
+    pedalPitchIsOn     = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("pedalPitchToggle"));           jassert (pedalPitchIsOn);
+    pedalPitchThresh   = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchThresh"));           jassert (pedalPitchThresh);
+    pedalPitchInterval = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchInterval"));         jassert (pedalPitchInterval);
+    descantIsOn        = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("descantToggle"));              jassert (descantIsOn);
+    descantThresh      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantThresh"));              jassert (descantThresh);
+    descantInterval    = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantInterval"));            jassert (descantInterval);
+    concertPitchHz     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("concertPitch"));               jassert (concertPitchHz);
+    voiceStealing      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("voiceStealing"));              jassert (voiceStealing);
+    inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert (inputGain);
+    outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert (outputGain);
+    limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert (limiterToggle);
+    noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("noiseGateThresh"));            jassert (noiseGateThreshold);
+    noiseGateToggle    = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("noiseGateIsOn"));              jassert (noiseGateToggle);
+    compressorToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("compressorToggle"));           jassert (compressorToggle);
     compressorAmount   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("compressorAmount"));           jassert (compressorAmount);
     vocalRangeType     = dynamic_cast<juce::AudioParameterChoice*>(tree.getParameter("vocalRangeType"));            jassert (vocalRangeType);
-    aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*>(tree.getParameter("aftertouchGainToggle"));       jassert(aftertouchGainToggle);
+    aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*>(tree.getParameter("aftertouchGainToggle"));      jassert (aftertouchGainToggle);
+    deEsserToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("deEsserIsOn"));                jassert (deEsserToggle);
+    deEsserThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserThresh"));              jassert (deEsserThresh);
+    deEsserAmount      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserAmount"));              jassert (deEsserAmount);
 }
 
 
@@ -155,6 +162,9 @@ void ImogenAudioProcessor::initializeParameterListeners()
     addParameterMessenger ("compressorAmount", compressorAmountID);
     addParameterMessenger ("vocalRangeType", vocalRangeTypeID);
     addParameterMessenger ("aftertouchGainToggle", aftertouchGainToggleID);
+    addParameterMessenger ("deEsserIsOn", deEsserToggleID);
+    addParameterMessenger ("deEsserThresh", deEsserThreshID);
+    addParameterMessenger ("deEsserAmount", deEsserAmountID);
 }
 
 void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int paramID)
@@ -185,6 +195,8 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultOutputGain.store (outputGain->get());
     defaultNoiseGateThresh.store (noiseGateThreshold->get());
     defaultCompressorAmount.store (compressorAmount->get());
+    defaultDeEsserThresh.store (deEsserThresh->get());
+    defaultDeEsserAmount.store (deEsserAmount->get());
     
     parameterDefaultsAreDirty.store (true);
 }
@@ -221,6 +233,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateLimiter (limiterToggle->get());
     activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
+    activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
     
     updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
 }
@@ -299,6 +312,14 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
                 updateVocalRangeType (vocalRangeType->getIndex());
             case (aftertouchGainToggleID):
                 activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
+#define bviap_UPDATE_DE_ESSER activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get())
+            case (deEsserToggleID):
+                bviap_UPDATE_DE_ESSER;
+            case (deEsserThreshID):
+                bviap_UPDATE_DE_ESSER;
+            case (deEsserAmountID):
+                bviap_UPDATE_DE_ESSER;
+#undef bviap_UPDATE_DE_ESSER
                 
             default:
                 break;
