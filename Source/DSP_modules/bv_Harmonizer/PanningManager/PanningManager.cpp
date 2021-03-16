@@ -33,8 +33,6 @@ void PanningManager::prepare (const int numVoices, bool clearArrays)
 {
     jassert (numVoices > 0);
     
-    //const ScopedLock sl (lock);
-    
     panValsInAssigningOrder.ensureStorageAllocated(numVoices);
     arrayIndexesMapped.ensureStorageAllocated(numVoices);
     unsentPanVals.ensureStorageAllocated(numVoices);
@@ -79,21 +77,23 @@ void PanningManager::updateStereoWidth (const int newWidth)
     
     lastRecievedStereoWidth = newWidth;
     
-    const auto rangeMultiplier = newWidth/100.0f;
-    const auto maxPan = 63.5f + (63.5f * rangeMultiplier);
-    const auto minPan = 63.5f - (63.5f * rangeMultiplier);
+    const auto rangeMultiplier = newWidth * 0.01f;
+    const auto range_extent = 63.5f * rangeMultiplier;
+    const auto maxPan = 63.5f + range_extent;
+    const auto minPan = 63.5f - range_extent;
+    jassert (maxPan <= 127.0f && minPan >= 0.0f);
     const auto increment = (maxPan - minPan) / currentNumVoices;
+    const auto halfIncrement = increment * 0.5f;
     
     possiblePanVals.clearQuick();
     
     for (int i = 0; i < currentNumVoices; ++i)
-        possiblePanVals.add (roundToInt (minPan + (i * increment) + (increment/2.0f)));
+        possiblePanVals.add (roundToInt (minPan + (i * increment) + halfIncrement));
     
-    // then reorder them into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
+    // reorder pan values into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
     panValsInAssigningOrder.clearQuick();
     
     mapArrayIndexes();
-    jassert (! arrayIndexesMapped.isEmpty());
     
     for (int index : arrayIndexesMapped)
         panValsInAssigningOrder.add (possiblePanVals.getUnchecked(index));

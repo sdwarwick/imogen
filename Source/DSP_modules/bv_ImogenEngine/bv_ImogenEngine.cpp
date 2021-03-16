@@ -282,6 +282,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     juce::dsp::AudioBlock<SampleType> inblock (monoBuffer);
     juce::dsp::ProcessContextReplacing<SampleType> inputContext (inblock);
+    
     // initial hi-pass filter (hidden from the user)
     initialHiddenLoCut.process (inputContext);
     
@@ -298,6 +299,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
 
     // write to dry buffer & apply panning
     dryBuffer.clear();
+    
     if (! leadIsBypassed)
         for (int chan = 0; chan < 2; ++chan)
             dryBuffer.copyFromWithRamp (chan, 0, monoBuffer.getReadPointer(0), blockSize,

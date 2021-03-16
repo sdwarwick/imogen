@@ -160,7 +160,7 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
             analysisIndex = targetArray.getUnchecked(targetArraySize - 2) + grainSize;
         
         if (analysisIndex == prevAnalysisIndex)
-            analysisIndex = prevAnalysisIndex + halfPeriod;
+            analysisIndex = prevAnalysisIndex + period;
         else
             jassert (analysisIndex > prevAnalysisIndex);
     }
@@ -303,12 +303,9 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
     
     for (int candidate : candidates)
     {
-        // deltaTarget1 = this peak's expected location based on the last peak found (ie, the neighboring OVERLAPPING output OLA grain)
-        // deltatarget2 = this peak's expected location based on the second to last peak found (the neighboring CONSECUTIVE OLA grain)
-        const int   delta1 = abs (candidate - deltaTarget1);
-        const float delta2 = abs (candidate - deltaTarget2) * 1.5f; // weight this delta, this value is of more consequence
-        
-        candidateDeltas.add ((delta1 + delta2) * 0.5f); // average the two delta values
+        candidateDeltas.add ((abs (candidate - deltaTarget1)
+                           + (abs (candidate - deltaTarget2) * 1.5f))
+                             * 0.5f);
     }
     
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
@@ -336,10 +333,8 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
     
     const float deltaRange = bav::vecops::findRangeOfExtrema (finalHandfulDeltas.getRawDataPointer(), finalHandfulDeltas.size());
     
-#define bvhge_MIN_DELTA_RANGE 2.0f
-    if (deltaRange < bvhge_MIN_DELTA_RANGE)
+    if (deltaRange < 0.05f)  // prevent dividing by 0 in the next step...
         return finalHandful.getUnchecked(0);
-#undef bvhge_MIN_DELTA_RANGE
     
 #define bvhge_DELTA_WEIGHT(delta, deltaRange) 1.0f - ((delta / deltaRange) * 0.75f)
     
