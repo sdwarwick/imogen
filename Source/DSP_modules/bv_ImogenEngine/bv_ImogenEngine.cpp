@@ -131,7 +131,7 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     
     deEsser.prepare (newInternalBlocksize, samplerate);
     
-    reverb.prepare (newInternalBlocksize, samplerate);
+    reverb.prepare (newInternalBlocksize, samplerate, 2);
     
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
 }
@@ -183,7 +183,7 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     
     deEsser.prepare (blocksize, samplerate);
     
-    reverb.prepare (blocksize, samplerate);
+    reverb.prepare (blocksize, samplerate, 2);
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -243,8 +243,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     if (leadIsBypassed && harmoniesAreBypassed)
     {
-        for (int chan = 0; chan < 2; ++chan)
-            output.copyFrom (chan, 0, input, chan, 0, blockSize);
+        harmonizer.processMidi (midiMessages);
         return;
     }
     

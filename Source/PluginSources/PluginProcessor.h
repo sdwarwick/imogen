@@ -128,6 +128,11 @@ public:
     float getDeEsserThresh() const { return deEsserThresh->get(); }
     float getDeEsserAmount() const { return deEsserAmount->get(); }
     bool getIsReverbOn() const { return reverbToggle->get(); }
+    int getReverbDryWet() const { return reverbDryWet->get(); }
+    float getReverbDecay() const { return reverbDecay->get(); }
+    float getReverbDuck() const { return reverbDuck->get(); }
+    float getReverbLoCut() const { return reverbLoCut->get(); }
+    float getReverbHiCut() const { return reverbHiCut->get(); }
     
     
     // these functions return the default values for each parameter, according to the most recently loaded state from the host, or user-selected preset.
@@ -150,6 +155,11 @@ public:
     float getDefaultCompressorAmount() const { return defaultCompressorAmount.load(); }
     float getDefaultDeEsserThresh() const { return defaultDeEsserThresh.load(); }
     float getDefaultDeEsserAmount() const { return defaultDeEsserAmount.load(); }
+    int getDefaultReverbDryWet() const { return defaultReverbDryWet.load(); }
+    float getDefaultReverbDecay() const { return defaultReverbDecay.load(); }
+    float getDefaultReverbDuck() const { return defaultReverbDuck.load(); }
+    float getDefaultReverbLoCut() const { return defaultReverbLoCut.load(); }
+    float getDefaultReverbHiCut() const { return defaultReverbHiCut.load(); }
     
     bool hasUpdatedParamDefaults()
     {
@@ -197,7 +207,12 @@ public:
         deEsserToggleID,
         deEsserThreshID,
         deEsserAmountID,
-        reverbToggleID
+        reverbToggleID,
+        reverbDryWetID,
+        reverbDecayID,
+        reverbDuckID,
+        reverbLoCutID,
+        reverbHiCutID
     };
     
     
@@ -293,13 +308,18 @@ private:
     juce::AudioParameterFloat* deEsserThresh;
     juce::AudioParameterFloat* deEsserAmount;
     juce::AudioParameterBool*  reverbToggle;
+    juce::AudioParameterInt*   reverbDryWet;
+    juce::AudioParameterFloat* reverbDecay;
+    juce::AudioParameterFloat* reverbDuck;
+    juce::AudioParameterFloat* reverbLoCut;
+    juce::AudioParameterFloat* reverbHiCut;
     
     void updateParameterDefaults();
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount;
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
     
     int prevRangeTypeIndex;
     

@@ -58,7 +58,7 @@ public:
     void updateNoiseGate (const float newThreshDB, const bool isOn);
     void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
     void updateCompressor (const float threshDB, const float ratio, const bool isOn);
-    void updateReverb (const float roomSize, const float damping, const int wetPcnt, const bool isOn);
+    void updateReverb (int wetPcnt, float decay, float duckAmount, float loCutFreq, float hiCutFreq, bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
@@ -112,7 +112,7 @@ private:
     bav::dsp::SidechainedCompressor<SampleType> compressor;
     std::atomic<bool> compressorIsOn;
     
-    bav::dsp::Reverb<SampleType> reverb;
+    bav::dsp::Reverb reverb;
     std::atomic<bool> reverbIsOn;
     
     bav::dsp::SidechainedLimiter<SampleType> limiter;

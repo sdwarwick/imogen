@@ -167,12 +167,15 @@ bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB, const bool isOn)
 }
     
 
-bvie_VOID_TEMPLATE::updateReverb (const float roomSize, const float damping, const int wetPcnt, const bool isOn)
+bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, float loCutFreq, float hiCutFreq, bool isOn)
 {
     reverbIsOn.store (isOn);
     reverb.setDryWet (wetPcnt);
-    reverb.setDamping (damping);
-    reverb.setRoomSize (roomSize);
+    reverb.setDamping (juce::jmap(decay, 1.0f, 0.0f));
+    reverb.setRoomSize (decay);
+    reverb.setDuckAmount (duckAmount);
+    reverb.setLoCutFrequency (loCutFreq);
+    reverb.setHiCutFrequency (hiCutFreq);
 }
 
 

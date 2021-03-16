@@ -9,6 +9,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     juce::NormalisableRange<float> gainRange (-60.0f, 0.0f, 0.01f);
     juce::NormalisableRange<float> zeroToOneRange (0.0f, 1.0f, 0.01f);
     juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
+    juce::NormalisableRange<float> hzRange (40.0f, 10000.0f, 1.0f);
     
     // main bypass
     params.push_back(std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
@@ -65,6 +66,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
     // reverb
     params.push_back(std::make_unique<juce::AudioParameterBool> ("reverbIsOn", "Reverb toggle", false));
+    params.push_back(std::make_unique<juce::AudioParameterInt>  ("reverbDryWet", "Reverb dry/wet", 0, 100, 35));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
     
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
@@ -129,6 +135,11 @@ void ImogenAudioProcessor::initializeParameterPointers()
     deEsserThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserThresh"));              jassert (deEsserThresh);
     deEsserAmount      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserAmount"));              jassert (deEsserAmount);
     reverbToggle       = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("reverbIsOn"));                 jassert (reverbToggle);
+    reverbDryWet       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("reverbDryWet"));               jassert (reverbDryWet);
+    reverbDecay        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbDecay"));                jassert (reverbDecay);
+    reverbDuck         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbDuck"));                 jassert (reverbDuck);
+    reverbLoCut        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbLoCut"));                jassert (reverbLoCut);
+    reverbHiCut        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbHiCut"));                jassert (reverbHiCut);
 }
 
 
@@ -169,6 +180,11 @@ void ImogenAudioProcessor::initializeParameterListeners()
     addParameterMessenger ("deEsserThresh", deEsserThreshID);
     addParameterMessenger ("deEsserAmount", deEsserAmountID);
     addParameterMessenger ("reverbIsOn", reverbToggleID);
+    addParameterMessenger ("reverbDryWet", reverbDryWetID);
+    addParameterMessenger ("reverbDecay", reverbDecayID);
+    addParameterMessenger ("reverbDuck", reverbDuckID);
+    addParameterMessenger ("reverbLoCut", reverbLoCutID);
+    addParameterMessenger ("reverbHiCut", reverbHiCutID);
 }
 
 void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int paramID)
@@ -201,6 +217,11 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultCompressorAmount.store (compressorAmount->get());
     defaultDeEsserThresh.store (deEsserThresh->get());
     defaultDeEsserAmount.store (deEsserAmount->get());
+    defaultReverbDryWet.store (reverbDryWet->get());
+    defaultReverbDecay.store (reverbDecay->get());
+    defaultReverbDuck.store (reverbDuck->get());
+    defaultReverbLoCut.store (reverbLoCut->get());
+    defaultReverbHiCut.store (reverbHiCut->get());
     
     parameterDefaultsAreDirty.store (true);
 }
@@ -241,7 +262,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     
     updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
     
-    activeEngine.updateReverb (0.35f, 0.5f, 35, reverbToggle->get());
+    activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                               reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
 }
 
 
@@ -323,13 +345,31 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (deEsserAmountID):
                 activeEngine.updateDeEsser (msg.value(), deEsserThresh->get(), deEsserToggle->get());
             case (reverbToggleID):
-                activeEngine.updateReverb (0.35f, 0.5f, 35, _BOOL_MSG_);
+                activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                                           reverbLoCut->get(), reverbHiCut->get(), _BOOL_MSG_);
+            case (reverbDryWetID):
+                activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                                           reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+            case (reverbDecayID):
+                activeEngine.updateReverb (reverbDryWet->get(), msg.value(), reverbDuck->get(),
+                                           reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+            case (reverbDuckID):
+                activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), msg.value(),
+                                           reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+            case (reverbLoCutID):
+                activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                                           reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+            case (reverbHiCutID):
+                activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                                           reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
                 
             default:
                 break;
         }
     }
 }
+
+#undef _BOOL_MSG_
 
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<float>& activeEngine);
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<double>& activeEngine);
