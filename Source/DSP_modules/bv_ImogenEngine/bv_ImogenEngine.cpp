@@ -223,6 +223,16 @@ bvie_VOID_TEMPLATE::release()
     deEsser.reset();
     reverb.reset();
 }
+    
+
+bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages)
+{
+    harmonizer.processMidi (midiMessages);
+    
+    const int numSamples = input.getNumSamples();
+    
+    jassert (numSamples == FIFOEngine::getLatency());
+}
 
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
@@ -335,8 +345,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
 }
-
     
+
 #undef bvie_VOID_TEMPLATE
     
 template class ImogenEngine<float>;

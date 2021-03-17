@@ -81,6 +81,8 @@ private:
     
     void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages) override;
     
+    void bypassedBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages) override;
+    
     void initialized (int newInternalBlocksize, double samplerate) override;
     
     void prepareToPlay (double samplerate) override;
