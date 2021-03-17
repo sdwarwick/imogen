@@ -77,7 +77,7 @@ public:
     void updateModulatorInputSource (const int newSource);
     int getCurrentModulatorInputSource() const;
     
-    void returnActivePitches(juce::Array<int>& outputArray) const;
+    void returnActivePitches (juce::Array<int>& outputArray) const;
     
     void killAllMidi();
     
@@ -93,83 +93,9 @@ public:
     
     void setMidiLatch (const bool isOn);
     
-    // these functions return parameters' current state/value
-    int getDryPan() const { return dryPan->get(); }
-    int getDryWet() const { return dryWet->get(); }
-    float getInputGain() const { return inputGain->get(); }
-    float getOutputGain() const { return outputGain->get(); }
-    bool getIsLimiterOn() const { return limiterToggle->get(); }
-    bool getIsNoiseGateOn() const { return noiseGateToggle->get(); }
-    float getNoiseGateThresh() const { return noiseGateThreshold->get(); }
-    bool getIsCompressorOn() const { return compressorToggle->get(); }
-    float getCompressorAmount() const { return compressorAmount->get(); }
-    float getAdsrAttack() const { return adsrAttack->get(); }
-    float getAdsrDecay() const { return adsrDecay->get(); }
-    float getAdsrSustain() const { return adsrSustain->get(); }
-    float getAdsrRelease() const { return adsrRelease->get(); }
-    bool getIsAdsrOn() const { return adsrToggle->get(); }
-    bool getIsMidiLatchOn() const { return latchIsOn.load(); }
-    bool getIsIntervalLockOn() const { return intervalLockIsOn.load(); }
-    int getStereoWidth() const { return stereoWidth->get(); }
-    int getLowestPannedNote() const { return lowestPanned->get(); }
-    int getMidiVelocitySensitivity() const { return velocitySens->get(); }
-    int getPitchbendRange() const { return pitchBendRange->get(); }
-    bool getIsVoiceStealingEnabled() const { return voiceStealing->get(); }
-    int getConcertPitchHz() const { return concertPitchHz->get(); }
-    bool getIsPedalPitchOn() const { return pedalPitchIsOn->get(); }
-    int getPedalPitchThresh() const { return pedalPitchThresh->get(); }
-    int getPedalPitchInterval() const { return pedalPitchInterval->get(); }
-    bool getIsDescantOn() const { return descantIsOn->get(); }
-    int getDescantThresh() const { return descantThresh->get(); }
-    int getDescantInterval() const { return descantInterval->get(); }
-    bool getIsLeadBypassed() const { return leadBypass->get(); }
-    bool getIsHarmonyBypassed() const { return harmonyBypass->get(); }
-    bool getIsDeEsserOn() const { return deEsserToggle->get(); }
-    float getDeEsserThresh() const { return deEsserThresh->get(); }
-    float getDeEsserAmount() const { return deEsserAmount->get(); }
-    bool getIsReverbOn() const { return reverbToggle->get(); }
-    int getReverbDryWet() const { return reverbDryWet->get(); }
-    float getReverbDecay() const { return reverbDecay->get(); }
-    float getReverbDuck() const { return reverbDuck->get(); }
-    float getReverbLoCut() const { return reverbLoCut->get(); }
-    float getReverbHiCut() const { return reverbHiCut->get(); }
-    
-    
-    // these functions return the default values for each parameter, according to the most recently loaded state from the host, or user-selected preset.
-    int getDefaultDryPan() const { return defaultDryPan.load(); }
-    int getDefaultDryWet() const { return defaultDryWet.load(); }
-    float getDefaultInputGain() const { return defaultInputGain.load(); }
-    float getDefaultOutputGain() const { return defaultOutputGain.load(); }
-    float getDefaultAdsrAttack() const { return defaultAdsrAttack.load(); }
-    float getDefaultAdsrDecay() const { return defaultAdsrDecay.load(); }
-    float getDefaultAdsrSustain() const { return defaultAdsrSustain.load(); }
-    float getDefaultAdsrRelease() const { return defaultAdsrRelease.load(); }
-    int getDefaultStereoWidth() const { return defaultStereoWidth.load(); }
-    int getDefaultLowestPannedNote() const { return defaultLowestPannedNote.load(); }
-    int getDefaultMidiVelocitySensitivity() const { return defaultVelocitySensitivity.load(); }
-    int getDefaultConcertPitchHz() const { return defaultConcertPitchHz.load(); }
-    int getDefaultPedalPitchThresh() const { return defaultPedalPitchThresh.load(); }
-    int getDefaultDescantThresh() const { return defaultDescantThresh.load(); }
-    float getDefaultNoiseGateThresh() const { return defaultNoiseGateThresh.load(); }
-    int getDefaultPitchbendRange() const { return defaultPitchbendRange.load(); }
-    float getDefaultCompressorAmount() const { return defaultCompressorAmount.load(); }
-    float getDefaultDeEsserThresh() const { return defaultDeEsserThresh.load(); }
-    float getDefaultDeEsserAmount() const { return defaultDeEsserAmount.load(); }
-    int getDefaultReverbDryWet() const { return defaultReverbDryWet.load(); }
-    float getDefaultReverbDecay() const { return defaultReverbDecay.load(); }
-    float getDefaultReverbDuck() const { return defaultReverbDuck.load(); }
-    float getDefaultReverbLoCut() const { return defaultReverbLoCut.load(); }
-    float getDefaultReverbHiCut() const { return defaultReverbHiCut.load(); }
-    
-    bool hasUpdatedParamDefaults()
-    {
-        const bool hasUpdated = parameterDefaultsAreDirty.load();
-        parameterDefaultsAreDirty.store (false);
-        return hasUpdated;
-    }
-    
     
     bav::MessageQueue paramChangesForEditor;
+    
     
     enum parameterIDs
     {
@@ -214,6 +140,21 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
+    
+    
+    template<typename ValueType>
+    ValueType getCurrentParameterValue (const parameterIDs paramID) const;
+    
+    
+    template<typename ValueType>
+    ValueType getDefaultParameterValue (const parameterIDs paramID) const;
+    
+    bool hasUpdatedParamDefaults()
+    {
+        const bool hasUpdated = parameterDefaultsAreDirty.load();
+        parameterDefaultsAreDirty.store (false);
+        return hasUpdated;
+    }
     
     
 private:
@@ -320,6 +261,8 @@ private:
     
     std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet;
     std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
+    std::atomic<bool> defaultLeadBypass, defaultHarmonyBypass, defaultAdsrToggle, defaultPedalPitchToggle, defaultDescantToggle, defaultVoiceStealingToggle, defaultLimiterToggle, defaultNoiseGateToggle, defaultCompressorToggle, defaultAftertouchGainToggle, defaultDeEsserToggle, defaultReverbToggle;
+    std::atomic<int> defaultVocalRangeIndex;
     
     int prevRangeTypeIndex;
     

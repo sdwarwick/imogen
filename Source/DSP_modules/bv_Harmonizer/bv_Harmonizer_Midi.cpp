@@ -366,13 +366,13 @@ bvh_INLINE_VOID_TEMPLATE::handleAftertouch (int midiNoteNumber, int aftertouchVa
                                   ++lastMidiTimeStamp);
     
     for (auto* voice : voices)
+    {
         if (voice->isVoiceActive() && voice->getCurrentlyPlayingNote() == midiNoteNumber)
         {
             voice->aftertouchChanged (aftertouchValue);
             break;
         }
-    
-    updateChannelPressure (aftertouchValue);
+    }
 }
 
 
@@ -486,6 +486,9 @@ bvh_INLINE_VOID_TEMPLATE::handleSoftPedal (const int value)
     
     aggregateMidiBuffer.addEvent (MidiMessage::controllerEvent (lastMidiChannel, 0x43, value),
                                   ++lastMidiTimeStamp);
+    
+    for (auto* voice : voices)
+        voice->softPedalChanged (isDown);
 }
 
 

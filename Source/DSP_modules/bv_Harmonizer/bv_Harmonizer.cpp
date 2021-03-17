@@ -29,7 +29,7 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    latchIsOn(false), currentInputFreq(0.0f), currentInputPeriod(0), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
+    latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
     velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
     adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
 {
@@ -130,11 +130,6 @@ bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
     
     pitchDetector.setSamplerate (newRate);
     
-    const float currentFreq = currentInputFreq;
-    
-    if (currentFreq > 0)
-        setCurrentInputFreq (currentFreq);
-    
     for (auto* voice : voices)
         voice->updateSampleRate (newRate);
 }
@@ -159,14 +154,6 @@ bvh_VOID_TEMPLATE::releaseResources()
 }
     
 
-bvh_VOID_TEMPLATE::setCurrentInputFreq (const float newInputFreq)
-{
-    jassert (newInputFreq > 0);
-    
-    currentInputFreq = newInputFreq;
-    
-    currentInputPeriod = roundToInt (sampleRate / newInputFreq);
-}
 
 
 /***********************************************************************************************************************************************
@@ -193,25 +180,19 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     
     if (frameIsPitched)
     {
-        if (currentInputFreq != inputFrequency)
-            setCurrentInputFreq (inputFrequency);
-        
-        periodThisFrame = currentInputPeriod;
+        currentInputFreq = inputFrequency;
+        periodThisFrame = roundToInt (sampleRate / inputFrequency);
     }
     else
     {
         // for unpitched frames, an arbitrary "period" is imposed on the signal for analysis grain extraction; this arbitrary period is randomized within a certain range
+        periodThisFrame = Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
         
-        Random& rand = Random::getSystemRandom();
-        
-        periodThisFrame = rand.nextInt (unpitchedArbitraryPeriodRange);
-        
-        if ((rand.nextInt (100) % 2) == 0)  // reverse the polarity approx 50% of the time
+        if (bav::probability (50))  // reverse the polarity approx 50% of the time
         {
             FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
                                            inputAudio.getReadPointer(0),
                                            inputAudio.getNumSamples());
-            
             polarityReversed = true;
         }
     }

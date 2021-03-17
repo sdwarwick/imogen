@@ -22,7 +22,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.push_back(std::make_unique<juce::AudioParameterInt>  ("dryPan", "Dry vox pan", 0, 127, 64));
     
     // ADSR
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack", msRange, 0.035f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack", msRange, 0.35f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrDecay", "ADSR Decay", msRange, 0.06f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrRelease", "ADSR Release", msRange, 0.1f));
@@ -196,17 +196,22 @@ void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int par
 
 void ImogenAudioProcessor::updateParameterDefaults()
 {
+    defaultLeadBypass.store (leadBypass->get());
+    defaultHarmonyBypass.store (harmonyBypass->get());
     defaultDryPan.store (dryPan->get());
     defaultDryWet.store (dryWet->get());
     defaultStereoWidth.store (stereoWidth->get());
     defaultLowestPannedNote.store (lowestPanned->get());
     defaultVelocitySensitivity.store (velocitySens->get());
     defaultPitchbendRange.store (pitchBendRange->get());
+    defaultPedalPitchToggle.store (pedalPitchIsOn->get());
     defaultPedalPitchThresh.store (pedalPitchThresh->get());
     defaultPedalPitchInterval.store (pedalPitchInterval->get());
+    defaultDescantToggle.store (descantIsOn->get());
     defaultDescantThresh.store (descantThresh->get());
     defaultDescantInterval.store (descantInterval->get());
     defaultConcertPitchHz.store (concertPitchHz->get());
+    defaultAdsrToggle.store (adsrToggle->get());
     defaultAdsrAttack.store (adsrAttack->get());
     defaultAdsrDecay.store (adsrDecay->get());
     defaultAdsrSustain.store (adsrSustain->get());
@@ -214,14 +219,22 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultInputGain.store (inputGain->get());
     defaultOutputGain.store (outputGain->get());
     defaultNoiseGateThresh.store (noiseGateThreshold->get());
+    defaultNoiseGateToggle.store (noiseGateToggle->get());
     defaultCompressorAmount.store (compressorAmount->get());
+    defaultCompressorToggle.store (compressorToggle->get());
     defaultDeEsserThresh.store (deEsserThresh->get());
     defaultDeEsserAmount.store (deEsserAmount->get());
+    defaultDeEsserToggle.store (deEsserToggle->get());
+    defaultReverbToggle.store (reverbToggle->get());
     defaultReverbDryWet.store (reverbDryWet->get());
     defaultReverbDecay.store (reverbDecay->get());
     defaultReverbDuck.store (reverbDuck->get());
     defaultReverbLoCut.store (reverbLoCut->get());
     defaultReverbHiCut.store (reverbHiCut->get());
+    defaultLimiterToggle.store (limiterToggle->get());
+    defaultVoiceStealingToggle.store (voiceStealing->get());
+    defaultAftertouchGainToggle.store (aftertouchGainToggle->get());
+    defaultVocalRangeIndex.store (vocalRangeType->getIndex());
     
     parameterDefaultsAreDirty.store (true);
 }
@@ -373,6 +386,105 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
 
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<float>& activeEngine);
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<double>& activeEngine);
+
+
+
+template<typename ValueType>
+ValueType ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID) const
+{
+    switch (paramID)
+    {
+        case (mainBypassID):            return mainBypass->get();
+        case (leadBypassID):            return leadBypass->get();
+        case (harmonyBypassID):         return harmonyBypass->get();
+        case (dryPanID):                return dryPan->get();
+        case (dryWetID):                return dryWet->get();
+        case (adsrAttackID):            return adsrAttack->get();
+        case (adsrDecayID):             return adsrDecay->get();
+        case (adsrSustainID):           return adsrSustain->get();
+        case (adsrReleaseID):           return adsrRelease->get();
+        case (adsrToggleID):            return adsrToggle->get();
+        case (stereoWidthID):           return stereoWidth->get();
+        case (lowestPannedID):          return lowestPanned->get();
+        case (velocitySensID):          return velocitySens->get();
+        case (pitchBendRangeID):        return pitchBendRange->get();
+        case (pedalPitchIsOnID):        return pedalPitchIsOn->get();
+        case (pedalPitchThreshID):      return pedalPitchThresh->get();
+        case (pedalPitchIntervalID):    return pedalPitchInterval->get();
+        case (descantIsOnID):           return descantIsOn->get();
+        case (descantThreshID):         return descantThresh->get();
+        case (descantIntervalID):       return descantInterval->get();
+        case (concertPitchHzID):        return concertPitchHz->get();
+        case (voiceStealingID):         return voiceStealing->get();
+        case (inputGainID):             return inputGain->get();
+        case (outputGainID):            return outputGain->get();
+        case (limiterToggleID):         return limiterToggle->get();
+        case (noiseGateToggleID):       return noiseGateToggle->get();
+        case (noiseGateThresholdID):    return noiseGateThreshold->get();
+        case (compressorToggleID):      return compressorToggle->get();
+        case (compressorAmountID):      return compressorAmount->get();
+        case (aftertouchGainToggleID):  return aftertouchGainToggle->get();
+        case (deEsserToggleID):         return deEsserToggle->get();
+        case (deEsserThreshID):         return deEsserThresh->get();
+        case (deEsserAmountID):         return deEsserAmount->get();
+        case (reverbToggleID):          return reverbToggle->get();
+        case (reverbDryWetID):          return reverbDryWet->get();
+        case (reverbDecayID):           return reverbDecay->get();
+        case (reverbDuckID):            return reverbDuck->get();
+        case (reverbLoCutID):           return reverbLoCut->get();
+        case (reverbHiCutID):           return reverbHiCut->get();
+        case (vocalRangeTypeID):        return vocalRangeType->getCurrentChoiceName();  // this one returns the name of the currently selected vocal range as a juce::String
+    }
+}
+
+
+template<typename ValueType>
+ValueType ImogenAudioProcessor::getDefaultParameterValue (const parameterIDs paramID) const
+{
+    switch (paramID)
+    {
+        case (mainBypassID):            return false; // from the plugin's point of view, the default state for the main bypass is false
+        case (leadBypassID):            return defaultLeadBypass.load();
+        case (harmonyBypassID):         return defaultHarmonyBypass.load();
+        case (dryPanID):                return defaultDryPan.load();
+        case (dryWetID):                return defaultDryWet.load();
+        case (adsrAttackID):            return defaultAdsrAttack.load();
+        case (adsrDecayID):             return defaultAdsrDecay.load();
+        case (adsrSustainID):           return defaultAdsrSustain.load();
+        case (adsrReleaseID):           return defaultAdsrRelease.load();
+        case (adsrToggleID):            return defaultAdsrToggle.load();
+        case (stereoWidthID):           return defaultStereoWidth.load();
+        case (lowestPannedID):          return defaultLowestPannedNote.load();
+        case (velocitySensID):          return defaultVelocitySensitivity.load();
+        case (pitchBendRangeID):        return defaultPitchbendRange.load();
+        case (pedalPitchIsOnID):        return defaultPedalPitchToggle.load();
+        case (pedalPitchThreshID):      return defaultPedalPitchThresh.load();
+        case (pedalPitchIntervalID):    return defaultPedalPitchInterval.load();
+        case (descantIsOnID):           return defaultDescantToggle.load();
+        case (descantThreshID):         return defaultDescantThresh.load();
+        case (descantIntervalID):       return defaultDescantInterval.load();
+        case (concertPitchHzID):        return defaultConcertPitchHz.load();
+        case (voiceStealingID):         return defaultVoiceStealingToggle.load();
+        case (inputGainID):             return defaultInputGain.load();
+        case (outputGainID):            return defaultOutputGain.load();
+        case (limiterToggleID):         return defaultLimiterToggle.load();
+        case (noiseGateToggleID):       return defaultNoiseGateToggle.load();
+        case (noiseGateThresholdID):    return defaultNoiseGateThresh.load();
+        case (compressorToggleID):      return defaultCompressorToggle.load();
+        case (compressorAmountID):      return defaultCompressorAmount.load();
+        case (aftertouchGainToggleID):  return defaultAftertouchGainToggle.load();
+        case (deEsserToggleID):         return defaultDeEsserToggle.load();
+        case (deEsserThreshID):         return defaultDeEsserThresh.load();
+        case (deEsserAmountID):         return defaultDeEsserAmount.load();
+        case (reverbToggleID):          return defaultReverbToggle.load();
+        case (reverbDryWetID):          return defaultReverbDryWet.load();
+        case (reverbDecayID):           return defaultReverbDecay.load();
+        case (reverbDuckID):            return defaultReverbDuck.load();
+        case (reverbLoCutID):           return defaultReverbLoCut.load();
+        case (reverbHiCutID):           return defaultReverbHiCut.load();
+        case (vocalRangeTypeID):        return vocalRangeTypes[defaultVocalRangeIndex.load()]; // this one returns the name of the default vocal range as a juce::String
+    }
+}
 
 
 void ImogenAudioProcessor::updateVocalRangeType (int rangeTypeIndex)

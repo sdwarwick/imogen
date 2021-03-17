@@ -98,13 +98,15 @@ protected:
     
     void setCurrentOutputFreq (const float newFreq) { currentOutputFreq = newFreq; }
     
-    void setKeyDown (bool isNowDown) noexcept;
+    void setKeyDown (bool isNowDown);
     
     void setPan (int newPan);
     
     void setAdsrParameters (const ADSR::Parameters newParams) { adsr.setParameters(newParams); }
     void setQuickReleaseParameters (const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
     void setQuickAttackParameters  (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
+    
+    void softPedalChanged (bool isDown);
     
     
 private:
@@ -146,8 +148,9 @@ private:
     float currentOutputFreq;
     float lastRecievedVelocity;
     
-    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> midiVelocityGain, softPedalGain, playingButReleasedGain,
-                                                                          outputLeftGain, outputRightGain;
+    juce::SmoothedValue<SampleType, juce::ValueSmoothingTypes::Multiplicative> midiVelocityGain, softPedalGain, playingButReleasedGain, aftertouchGain, outputLeftGain, outputRightGain;
+    
+    void resetRampedValues (int blocksize);
     
     bav::dsp::Panner panner;
     
@@ -287,8 +290,6 @@ protected:
     
 private:
     
-    void setCurrentInputFreq (const float newInputFreq);
-    
     // adds a specified # of voices
     void addNumVoices (const int voicesToAdd);
     
@@ -366,7 +367,6 @@ private:
     ADSR::Parameters quickAttackParams;
     
     float currentInputFreq;
-    int currentInputPeriod;
     
     double sampleRate;
     uint32 lastNoteOnCounter;

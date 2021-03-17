@@ -8,6 +8,11 @@
 #include "bv_Harmonizer.h"
 
 
+// multiplicative smoothing cannot ever actually reach 0
+#define bvhv_MIN_SMOOTHED_GAIN 0.0000001
+#define _SMOOTHING_ZERO_CHECK(inputGain) std::max(SampleType(bvhv_MIN_SMOOTHED_GAIN), SampleType (inputGain))
+
+
 namespace bav
 
 {
@@ -59,6 +64,16 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     
     synthesisIndex = 0;
     
+    resetRampedValues (blocksize);
+}
+    
+
+bvhv_VOID_TEMPLATE::resetRampedValues (int blocksize)
+{
+    midiVelocityGain.reset (blocksize);
+    softPedalGain.reset (blocksize);
+    playingButReleasedGain.reset (blocksize);
+    aftertouchGain.reset (blocksize);
     outputLeftGain.reset (blocksize);
     outputRightGain.reset (blocksize);
 }
@@ -77,18 +92,18 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
                                      const Array<int>& indicesOfGrainOnsets,
                                      const AudioBuffer<SampleType>& windowToUse)
 {
-    // determine if the voice is currently active
-    
     jassert (inputAudio.getNumSamples() == outputBuffer.getNumSamples());
     
+    // determine if the voice is currently active
     const bool voiceIsOnRightNow = isQuickFading ? quickRelease.isActive()
-                                                 : (parent->isADSRon() ? adsr.isActive() : ! noteTurnedOff);
-    
+                                                 : ( parent->isADSRon() ? adsr.isActive() : ! noteTurnedOff );
     if (! voiceIsOnRightNow)
     {
         clearCurrentNote();
         return;
     }
+    
+    jassert (currentOutputFreq > 0);
     
     const int numSamples = inputAudio.getNumSamples();
     
@@ -103,18 +118,13 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     
     for (int s = 0; s < numSamples; ++s)
     {
-        // midi velocity gain
         *(synthesisSamples + s) = synthesisSamples[s] * midiVelocityGain.getNextValue()
                                                       * softPedalGain.getNextValue()
-                                                      * playingButReleasedGain.getNextValue();
-        
-        // aftertouch gain
+                                                      * playingButReleasedGain.getNextValue()
+                                                      * aftertouchGain.getNextValue();
     }
     
-    
-    //  *****************************************************************************************************
     //  ADSR
-
     if (parent->isADSRon())
         adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // midi-triggered adsr envelope
     else
@@ -123,7 +133,6 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     if (isQuickFading)  // quick fade out for stopNote w/ no tail off, to prevent clicks from jumping to 0
         quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
 
-    //  *****************************************************************************************************
     //  write to output (and apply panning)
     const auto* reading = synthesisBuffer.getReadPointer(0);
     auto* leftOutput  = outputBuffer.getWritePointer(0);
@@ -250,12 +259,7 @@ bvbv_INLINE_VOID_TEMPLATE::clearCurrentNote()
     
     synthesisBuffer.clear();
     
-    const int blocksize = roundToInt (floor (synthesisBuffer.getNumSamples() * 0.5f));
-    midiVelocityGain.reset (blocksize);
-    softPedalGain.reset (blocksize);
-    playingButReleasedGain.reset (blocksize);
-    outputLeftGain.reset (blocksize);
-    outputRightGain.reset (blocksize);
+    resetRampedValues (roundToInt (floor (synthesisBuffer.getNumSamples() * 0.5f)));
 }
 
 
@@ -268,7 +272,6 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
     noteOnTime = noteOnTimestamp;
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
-    midiVelocityGain.setTargetValue (parent->getWeightedVelocity (velocity));
     currentOutputFreq = parent->getOutputFrequency (midiPitch);
     isQuickFading = false;
     noteTurnedOff = false;
@@ -283,28 +286,46 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
     isDescantVoice = isDescant;
     
     setKeyDown (keyboardKeyIsDown);
+    
+    midiVelocityGain.setTargetValue (_SMOOTHING_ZERO_CHECK (parent->getWeightedVelocity (velocity)));
 }
     
     
-bvhv_VOID_TEMPLATE::setKeyDown (bool isNowDown) noexcept
+bvhv_VOID_TEMPLATE::setKeyDown (bool isNowDown)
 {
     keyIsDown = isNowDown;
     
     if (isNowDown)
         playingButReleased = false;
     else
+    {
         if (isPedalPitchVoice || isDescantVoice)
             playingButReleased = false;
         else if (parent->isLatched())
             playingButReleased = false;
         else
             playingButReleased = isVoiceActive();
+    }
+    
+    if (playingButReleased)
+        playingButReleasedGain.setTargetValue (_SMOOTHING_ZERO_CHECK (parent->getPlayingButReleasedMultiplier()));
+    else
+        playingButReleasedGain.setTargetValue (SampleType(1.0));
+}
+    
+
+bvhv_VOID_TEMPLATE::softPedalChanged (bool isDown)
+{
+    if (isDown)
+        softPedalGain.setTargetValue (_SMOOTHING_ZERO_CHECK (parent->getSoftPedalMultiplier()));
+    else
+        softPedalGain.setTargetValue (SampleType(1.0));
 }
 
 
 bvhv_VOID_TEMPLATE::stopNote (const float velocity, const bool allowTailOff)
 {
-    ignoreUnused (velocity);
+    midiVelocityGain.setTargetValue (_SMOOTHING_ZERO_CHECK (parent->getWeightedVelocity (lastRecievedVelocity - velocity)));
     
     if (allowTailOff)
     {
@@ -330,6 +351,13 @@ bvhv_VOID_TEMPLATE::stopNote (const float velocity, const bool allowTailOff)
 bvhv_VOID_TEMPLATE::aftertouchChanged (const int newAftertouchValue)
 {
     currentAftertouch = newAftertouchValue;
+    
+    constexpr auto inv127 = SampleType (1.0 / 127.0);
+    
+    if (parent->isAftertouchGainOn())
+        aftertouchGain.setTargetValue (_SMOOTHING_ZERO_CHECK (newAftertouchValue * inv127));
+    else
+        aftertouchGain.setTargetValue (SampleType(1.0));
 }
 
 
@@ -344,8 +372,8 @@ bvhv_VOID_TEMPLATE::setPan (int newPan)
     
     panner.setMidiPan (newPan, leftGain, rightGain);
     
-    outputLeftGain.setTargetValue (leftGain);
-    outputRightGain.setTargetValue (rightGain);
+    outputLeftGain.setTargetValue (_SMOOTHING_ZERO_CHECK (leftGain));
+    outputRightGain.setTargetValue (_SMOOTHING_ZERO_CHECK (rightGain));
 }
 
 
@@ -373,6 +401,8 @@ bvhv_VOID_TEMPLATE::increaseBufferSizes(const int newMaxBlocksize)
 
 #undef bvhv_VOID_TEMPLATE
 #undef bvbv_INLINE_VOID_TEMPLATE
+#undef bvhv_MIN_SMOOTHED_GAIN
+#undef _SMOOTHING_ZERO_CHECK
     
     
 template class HarmonizerVoice<float>;
