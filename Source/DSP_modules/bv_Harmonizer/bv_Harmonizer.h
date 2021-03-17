@@ -94,7 +94,7 @@ protected:
     
     void aftertouchChanged (const int newAftertouchValue);
     
-    void setVelocityMultiplier (const float newMultiplier) { currentVelocityMultiplier = newMultiplier; }
+    void setVelocityMultiplier (const float newMultiplier) { midiVelocityGain.setTargetValue (newMultiplier); }
     
     void setCurrentOutputFreq (const float newFreq) { currentOutputFreq = newFreq; }
     
@@ -144,7 +144,10 @@ private:
     
     int currentlyPlayingNote;
     float currentOutputFreq;
-    float lastRecievedVelocity, currentVelocityMultiplier, prevVelocityMultiplier, prevSoftPedalMultiplier;
+    float lastRecievedVelocity;
+    
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> midiVelocityGain, softPedalGain, playingButReleasedGain,
+                                                                          outputLeftGain, outputRightGain;
     
     bav::dsp::Panner panner;
     

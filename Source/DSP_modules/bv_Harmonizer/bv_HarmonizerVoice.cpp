@@ -14,7 +14,7 @@ namespace bav
     
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(h), noteOnTime(0), isQuickFading(false), noteTurnedOff(false), keyIsDown(false), currentAftertouch(0), sustainingFromSostenutoPedal(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), lastRecievedVelocity(0.0f), currentVelocityMultiplier(0.0f), prevVelocityMultiplier(0.0f), prevSoftPedalMultiplier(1.0f), isPedalPitchVoice(false), isDescantVoice(false), playingButReleased(false), lastPBRmult(1.0f), synthesisIndex(0)
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): parent(h), noteOnTime(0), isQuickFading(false), noteTurnedOff(false), keyIsDown(false), currentAftertouch(0), sustainingFromSostenutoPedal(false), currentlyPlayingNote(-1), currentOutputFreq(-1.0f), lastRecievedVelocity(0.0f), isPedalPitchVoice(false), isDescantVoice(false), playingButReleased(false), lastPBRmult(1.0f), synthesisIndex(0)
 {
     const double initSamplerate = 44100.0;
     
@@ -57,11 +57,10 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     copyingBuffer.setSize (1, doubleSize);
     FloatVectorOperations::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
     
-    prevVelocityMultiplier = currentVelocityMultiplier;
-    
-    prevSoftPedalMultiplier = parent->getSoftPedalMultiplier();
-    
     synthesisIndex = 0;
+    
+    outputLeftGain.reset (blocksize);
+    outputRightGain.reset (blocksize);
 }
     
 
@@ -100,30 +99,19 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
           indicesOfGrainOnsets,
           windowToUse.getReadPointer(0));  // precomputed window length must be input period * 2
     
-    //  *****************************************************************************************************
-    //  midi velocity gain (aftertouch is applied here as well)
-    constexpr float inv127 = 1.0f / 127.0f;
-    const float currentmult = currentVelocityMultiplier;
-    const float velocityMultNow = parent->isAftertouchGainOn() ? currentmult + ((currentAftertouch * inv127) * (1.0f - currentmult))
-                                                               : currentmult;
-
-    synthesisBuffer.applyGainRamp (0, numSamples, prevVelocityMultiplier, velocityMultNow);
-    prevVelocityMultiplier = velocityMultNow;
-
-    //  *****************************************************************************************************
-    //  soft pedal gain
-
-    const float softPedalMult = parent->isSoftPedalDown() ? parent->getSoftPedalMultiplier() : 1.0f; // soft pedal gain
-    synthesisBuffer.applyGainRamp (0, numSamples, prevSoftPedalMultiplier, softPedalMult);
-    prevSoftPedalMultiplier = softPedalMult;
-
-    //  *****************************************************************************************************
-    //  playing-but-released gain
-
-    const float newPBRmult = playingButReleased ? parent->getPlayingButReleasedMultiplier() : 1.0f;
-    synthesisBuffer.applyGainRamp (0, numSamples, lastPBRmult, newPBRmult);
-    lastPBRmult = newPBRmult;
-
+    auto* synthesisSamples = synthesisBuffer.getWritePointer(0);
+    
+    for (int s = 0; s < numSamples; ++s)
+    {
+        // midi velocity gain
+        *(synthesisSamples + s) = synthesisSamples[s] * midiVelocityGain.getNextValue()
+                                                      * softPedalGain.getNextValue()
+                                                      * playingButReleasedGain.getNextValue();
+        
+        // aftertouch gain
+    }
+    
+    
     //  *****************************************************************************************************
     //  ADSR
 
@@ -137,10 +125,16 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
 
     //  *****************************************************************************************************
     //  write to output (and apply panning)
+    const auto* reading = synthesisBuffer.getReadPointer(0);
+    auto* leftOutput  = outputBuffer.getWritePointer(0);
+    auto* rightOutput = outputBuffer.getWritePointer(1);
     
-    for (int chan = 0; chan < 2; ++chan)
-//        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
-//                                      panner.getPrevGain(chan), panner.getGainMult(chan));
+    for (int s = 0; s < numSamples; ++s)
+    {
+        const auto sample = reading[s];
+        *(leftOutput + s)  = sample * outputLeftGain.getNextValue();
+        *(rightOutput + s) = sample * outputRightGain.getNextValue();
+    }
     
     moveUpSamples (numSamples);
 }
@@ -229,7 +223,6 @@ bvbv_INLINE_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 bvbv_INLINE_VOID_TEMPLATE::clearCurrentNote()
 {
-    currentVelocityMultiplier = 0.0f;
     lastRecievedVelocity = 0.0f;
     currentAftertouch = 0;
     currentlyPlayingNote = -1;
@@ -256,6 +249,13 @@ bvbv_INLINE_VOID_TEMPLATE::clearCurrentNote()
         quickAttack.reset();
     
     synthesisBuffer.clear();
+    
+    const int blocksize = roundToInt (floor (synthesisBuffer.getNumSamples() * 0.5f));
+    midiVelocityGain.reset (blocksize);
+    softPedalGain.reset (blocksize);
+    playingButReleasedGain.reset (blocksize);
+    outputLeftGain.reset (blocksize);
+    outputRightGain.reset (blocksize);
 }
 
 
@@ -268,7 +268,7 @@ bvhv_VOID_TEMPLATE::startNote (const int midiPitch, const float velocity,
     noteOnTime = noteOnTimestamp;
     currentlyPlayingNote = midiPitch;
     lastRecievedVelocity = velocity;
-    currentVelocityMultiplier = parent->getWeightedVelocity (velocity);
+    midiVelocityGain.setTargetValue (parent->getWeightedVelocity (velocity));
     currentOutputFreq = parent->getOutputFrequency (midiPitch);
     isQuickFading = false;
     noteTurnedOff = false;
@@ -337,8 +337,15 @@ bvhv_VOID_TEMPLATE::setPan (int newPan)
 {
     newPan = jlimit(0, 127, newPan);
     
-    if (panner.getLastMidiPan() != newPan)
-        panner.setMidiPan (newPan);
+    if (panner.getLastMidiPan() == newPan)
+        return;
+    
+    float leftGain = 0.5f, rightGain = 0.5f;
+    
+    panner.setMidiPan (newPan, leftGain, rightGain);
+    
+    outputLeftGain.setTargetValue (leftGain);
+    outputRightGain.setTargetValue (rightGain);
 }
 
 

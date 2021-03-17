@@ -295,17 +295,20 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
         }
     }
     
-    // master input gain
-    const float currentInGain = inputGain.load();
-    monoBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
-    prevInputGain.store(currentInGain);
+    auto* inputSamples = monoBuffer.getWritePointer(0);
     
-    // initial hi-pass filter (hidden from the user)
-    juce::dsp::AudioBlock<SampleType> inblock (monoBuffer);
-    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType> (inblock) );
+    for (int s = 0; s < blockSize; ++s)
+    {
+        // apply master input gain
+//        const float currentInGain = inputGain.load();
+//        monoBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
+//        prevInputGain.store(currentInGain);
+        
+        *(inputSamples + s) = initialHiddenLoCut.processSample(inputSamples[s]);  //  initial lo cut
+    }
     
     if (noiseGateIsOn.load())
-        gate.process (monoBuffer, nullptr);
+        gate.process (monoBuffer);
     
     if (deEsserIsOn.load())
         deEsser.process (monoBuffer);
