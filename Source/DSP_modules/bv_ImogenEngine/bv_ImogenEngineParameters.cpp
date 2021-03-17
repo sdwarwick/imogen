@@ -2,6 +2,11 @@
 #include "bv_ImogenEngine.h"
 
 
+// multiplicative smoothing cannot ever actually reach 0
+#define bvie_MIN_SMOOTHED_GAIN 0.0000001
+#define _SMOOTHING_ZERO_CHECK(inputGain) std::max(SampleType(bvie_MIN_SMOOTHED_GAIN), SampleType (inputGain))
+
+
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
 
@@ -35,27 +40,26 @@ bvie_VOID_TEMPLATE::setModulatorSource (const int newSource)
 
 bvie_VOID_TEMPLATE::updateInputGain (const float newInGain)
 {
-    prevInputGain.store(inputGain.load());
-    inputGain.store(newInGain);
+    inputGain.setTargetValue (_SMOOTHING_ZERO_CHECK (newInGain));
 }
 
 bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
 {
-    prevOutputGain.store(outputGain.load());
-    outputGain.store(newOutGain);
+    outputGain.setTargetValue (_SMOOTHING_ZERO_CHECK (newOutGain));
 }
 
 
 bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
 {
     dryPanner.setMidiPan (newMidiPan);
+    dryLgain.setTargetValue (_SMOOTHING_ZERO_CHECK (dryPanner.getLeftGain()));
+    dryRgain.setTargetValue (_SMOOTHING_ZERO_CHECK (dryPanner.getRightGain()));
 }
 
 
 bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 {
-    constexpr SampleType pointOne = SampleType(0.01);
-    dryWetMixer.setWetMixProportion (percentWet * pointOne);
+    dryWetMixer.setWetMixProportion (percentWet * SampleType(0.01));
 }
 
 
@@ -180,6 +184,8 @@ bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, fl
 
 
 #undef bvie_VOID_TEMPLATE
+#undef bvie_MIN_SMOOTHED_GAIN
+#undef _SMOOTHING_ZERO_CHECK
 
 
 }  // namespace

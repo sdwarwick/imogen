@@ -52,6 +52,8 @@ public:
                           const int origPeriod, const Array<int>& indicesOfGrainOnsets,
                           const AudioBuffer<SampleType>& windowToUse);
     
+    void bypassedBlock (const int numSamples);
+    
     void prepare (const int blocksize);
     
     void releaseResources();
@@ -194,6 +196,9 @@ public:
     void renderVoices (const AudioBuffer<SampleType>& inputAudio,
                        AudioBuffer<SampleType>& outputBuffer,
                        MidiBuffer& midiMessages);
+    
+    void bypassedBlock (const AudioBuffer<SampleType>& inputAudio,
+                        MidiBuffer& midiMessages);
     
     void processMidi (MidiBuffer& midiMessages);
     

@@ -85,6 +85,17 @@ bvhv_VOID_TEMPLATE::releaseResources()
     windowingBuffer.setSize (0, 0, false, false, false);
     copyingBuffer.setSize (0, 0, false, false, false);
 }
+    
+
+bvhv_VOID_TEMPLATE::bypassedBlock (const int numSamples)
+{
+    midiVelocityGain.skip (numSamples);
+    softPedalGain.skip (numSamples);
+    playingButReleasedGain.skip (numSamples);
+    aftertouchGain.skip (numSamples);
+    outputLeftGain.skip (numSamples);
+    outputRightGain.skip (numSamples);
+}
 
 
 bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
@@ -107,12 +118,11 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     
     const int numSamples = inputAudio.getNumSamples();
     
-    // puts shifted samples into the synthesisBuffer, from sample indices starting to starting + numSamples - 1
-    sola (inputAudio.getReadPointer(0), numSamples,
-          origPeriod,
+    // puts shifted samples into the synthesisBuffer
+    sola (inputAudio.getReadPointer(0), numSamples, origPeriod,
           roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
-          indicesOfGrainOnsets,
-          windowToUse.getReadPointer(0));  // precomputed window length must be input period * 2
+          indicesOfGrainOnsets, // analysis grains are length origPeriod * 2, approx 50% overlap, centred on points of maximum energy in input signal
+          windowToUse.getReadPointer(0));  // precomputed window length must be length origPeriod * 2
     
     auto* synthesisSamples = synthesisBuffer.getWritePointer(0);
     
@@ -133,7 +143,7 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     if (isQuickFading)  // quick fade out for stopNote w/ no tail off, to prevent clicks from jumping to 0
         quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
 
-    //  write to output (and apply panning)
+    //  write to output and apply panning
     const auto* reading = synthesisBuffer.getReadPointer(0);
     auto* leftOutput  = outputBuffer.getWritePointer(0);
     auto* rightOutput = outputBuffer.getWritePointer(1);
@@ -368,12 +378,10 @@ bvhv_VOID_TEMPLATE::setPan (int newPan)
     if (panner.getLastMidiPan() == newPan)
         return;
     
-    float leftGain = 0.5f, rightGain = 0.5f;
+    panner.setMidiPan (newPan);
     
-    panner.setMidiPan (newPan, leftGain, rightGain);
-    
-    outputLeftGain.setTargetValue (_SMOOTHING_ZERO_CHECK (leftGain));
-    outputRightGain.setTargetValue (_SMOOTHING_ZERO_CHECK (rightGain));
+    outputLeftGain.setTargetValue (_SMOOTHING_ZERO_CHECK (panner.getLeftGain()));
+    outputRightGain.setTargetValue (_SMOOTHING_ZERO_CHECK (panner.getRightGain()));
 }
 
 

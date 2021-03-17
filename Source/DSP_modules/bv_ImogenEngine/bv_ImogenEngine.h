@@ -121,12 +121,13 @@ private:
     std::atomic<bool> limiterIsOn;
     std::atomic<float> limiterThresh, limiterRelease;
     
-    std::atomic<float> inputGain, outputGain;
-    std::atomic<float> prevInputGain, prevOutputGain;
-    
     bav::dsp::Panner dryPanner;
     
     std::atomic<bool> leadBypass, harmonyBypass;
+    
+    juce::SmoothedValue<SampleType, juce::ValueSmoothingTypes::Multiplicative> inputGain, outputGain, dryLgain, dryRgain;
+    
+    void resetSmoothedValues (int blocksize);
     
     CriticalSection lock;
     

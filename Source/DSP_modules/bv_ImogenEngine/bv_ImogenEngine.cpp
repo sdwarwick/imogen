@@ -38,12 +38,6 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
     
     limiterIsOn.store(false);
     
-    inputGain.store(1.0f);
-    prevInputGain.store(1.0f);
-    
-    outputGain.store(1.0f);
-    prevOutputGain.store(1.0f);
-    
     dspSpec.numChannels = 2;
     dspSpec.sampleRate = 44100.0;
     dspSpec.maximumBlockSize = 512;
@@ -71,8 +65,16 @@ bvie_VOID_TEMPLATE::resetTriggered()
     
     monoBuffer.clear();
     
-    prevOutputGain.store(outputGain.load());
-    prevInputGain.store(inputGain.load());
+    resetSmoothedValues (FIFOEngine::getLatency());
+}
+    
+
+bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
+{
+    inputGain.reset (blocksize);
+    outputGain.reset (blocksize);
+    dryLgain.reset (blocksize);
+    dryRgain.reset (blocksize);
 }
     
 
@@ -133,6 +135,8 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     
     reverb.prepare (newInternalBlocksize, samplerate, 2);
     
+    resetSmoothedValues (newInternalBlocksize);
+    
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
 }
     
@@ -174,9 +178,6 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     
     compressor.prepare (blocksize, samplerate, 1);
     
-    prevOutputGain.store(outputGain.load());
-    prevInputGain.store (inputGain.load());
-    
     initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate,
                                                                                              SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
     initialHiddenLoCut.reset();
@@ -200,6 +201,8 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
     monoBuffer.setSize (1, newInternalBlocksize, true, true, true);
     
     dspSpec.maximumBlockSize = uint32(newInternalBlocksize);
+    
+    resetSmoothedValues (newInternalBlocksize);
 }
     
 #undef bvie_LIMITER_RELEASE_MS
@@ -232,6 +235,13 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer<SampleType>& input, MidiBuf
     const int numSamples = input.getNumSamples();
     
     jassert (numSamples == FIFOEngine::getLatency());
+    
+    inputGain.skip (numSamples);
+    outputGain.skip (numSamples);
+    dryLgain.skip (numSamples);
+    dryRgain.skip (numSamples);
+    
+    harmonizer.bypassedBlock (input, midiMessages);
 }
 
     
@@ -299,12 +309,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     for (int s = 0; s < blockSize; ++s)
     {
-        // apply master input gain
-//        const float currentInGain = inputGain.load();
-//        monoBuffer.applyGainRamp (0, blockSize, prevInputGain.load(), currentInGain);
-//        prevInputGain.store(currentInGain);
-        
-        *(inputSamples + s) = initialHiddenLoCut.processSample(inputSamples[s]);  //  initial lo cut
+        *(inputSamples + s) = inputSamples[s] * inputGain.getNextValue(); // master input gain
+        *(inputSamples + s) = initialHiddenLoCut.processSample (inputSamples[s]);  //  initial lo cut
     }
     
     if (noiseGateIsOn.load())
@@ -319,16 +325,25 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     dryBuffer.clear();
     
     if (! leadIsBypassed)  // write to dry buffer & apply panning
-        for (int chan = 0; chan < 2; ++chan)
-//            dryBuffer.copyFromWithRamp (chan, 0, monoBuffer.getReadPointer(0), blockSize,
-//                                        dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
+    {
+        auto* writingL = dryBuffer.getWritePointer(0);
+        auto* writingR = dryBuffer.getWritePointer(1);
+        const auto* inputSamps = monoBuffer.getReadPointer(0);
+        
+        for (int s = 0; s < blockSize; ++s)
+        {
+            const auto sample = inputSamps[s];
+            *(writingL + s) = sample * dryLgain.getNextValue();
+            *(writingR + s) = sample * dryRgain.getNextValue();
+        }
+    }
     
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
     wetBuffer.clear();
     
     if (harmoniesAreBypassed)
-        harmonizer.processMidi (midiMessages);
+        harmonizer.bypassedBlock (monoBuffer, midiMessages);
     else
         harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages);
     
@@ -336,11 +351,12 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     if (reverbIsOn.load())
         reverb.process (wetBuffer);
-
+    
+    auto* samples = monoBuffer.getWritePointer(0);
+    
     // master output gain
-    const float currentOutGain = outputGain.load();
-    wetBuffer.applyGainRamp (0, blockSize, prevOutputGain.load(), currentOutGain);
-    prevOutputGain.store(currentOutGain);
+    for (int s = 0; s < blockSize; ++s)
+        *(samples + s) = samples[s] * outputGain.getNextValue();
 
     if (limiterIsOn.load())
         limiter.process (wetBuffer);

@@ -171,6 +171,8 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     if (getNumActiveVoices() == 0)
         return;
     
+    const int numSamples = inputAudio.getNumSamples();
+    
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
     
     const bool frameIsPitched = (inputFrequency > 0.0f);
@@ -192,24 +194,39 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
         {
             FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
                                            inputAudio.getReadPointer(0),
-                                           inputAudio.getNumSamples());
+                                           numSamples);
             polarityReversed = true;
         }
     }
     
     fillWindowBuffer (periodThisFrame * 2);
     
-    AudioBuffer<SampleType> inverted (polarityReversalBuffer.getArrayOfWritePointers(), 1, 0, inputAudio.getNumSamples());
+    AudioBuffer<SampleType> inverted (polarityReversalBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
 
     const AudioBuffer<SampleType>& actualInput = polarityReversed ? inverted : inputAudio;
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
     
     for (auto* voice : voices)
+    {
         if (voice->isVoiceActive())
             voice->renderNextBlock (actualInput, outputBuffer, periodThisFrame, indicesOfGrainOnsets, windowBuffer);
+        else
+            voice->bypassedBlock (numSamples);
+    }
 }
 
+
+bvh_VOID_TEMPLATE::bypassedBlock (const AudioBuffer<SampleType>& inputAudio,
+                                  MidiBuffer& midiMessages)
+{
+    processMidi (midiMessages);
+    
+    const int numSamples = inputAudio.getNumSamples();
+    
+    for (auto* voice : voices)
+        voice->bypassedBlock (numSamples);
+}
 
 
 // calculate Hanning window ------------------------------------------------------
