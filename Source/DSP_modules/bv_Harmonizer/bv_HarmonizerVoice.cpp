@@ -139,8 +139,8 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, 
     //  write to output (and apply panning)
     
     for (int chan = 0; chan < 2; ++chan)
-        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
-                                      panner.getPrevGain(chan), panner.getGainMult(chan));
+//        outputBuffer.addFromWithRamp (chan, 0, synthesisBuffer.getReadPointer(0), numSamples,
+//                                      panner.getPrevGain(chan), panner.getGainMult(chan));
     
     moveUpSamples (numSamples);
 }

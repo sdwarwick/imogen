@@ -295,20 +295,20 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType> (inblock) );
     
     if (noiseGateIsOn.load())
-        gate.process (0, nullptr, monoBuffer.getWritePointer(0), blockSize);
+        gate.process (monoBuffer, nullptr);
     
     if (deEsserIsOn.load())
         deEsser.process (monoBuffer);
 
     if (compressorIsOn.load())
-        compressor.process (0, nullptr, monoBuffer.getWritePointer(0), blockSize);
+        compressor.process (monoBuffer, nullptr);
 
     dryBuffer.clear();
     
     if (! leadIsBypassed)  // write to dry buffer & apply panning
         for (int chan = 0; chan < 2; ++chan)
-            dryBuffer.copyFromWithRamp (chan, 0, monoBuffer.getReadPointer(0), blockSize,
-                                        dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
+//            dryBuffer.copyFromWithRamp (chan, 0, monoBuffer.getReadPointer(0), blockSize,
+//                                        dryPanner.getPrevGain(chan), dryPanner.getGainMult(chan));
     
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
@@ -330,8 +330,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     prevOutputGain.store(currentOutGain);
 
     if (limiterIsOn.load())
-        for (int chan = 0; chan < 2; ++chan)
-            limiter.process (chan, nullptr, wetBuffer.getWritePointer(chan), blockSize);
+        limiter.process (wetBuffer);
     
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);

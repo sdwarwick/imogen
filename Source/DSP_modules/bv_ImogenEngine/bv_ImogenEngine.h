@@ -99,23 +99,23 @@ private:
     
     juce::dsp::ProcessSpec dspSpec;
     
-    bav::dsp::SidechainedNoiseGate<SampleType> gate;
+    bav::dsp::FX::NoiseGate<SampleType> gate;
     std::atomic<bool> noiseGateIsOn;
     
-    bav::dsp::DeEsser<SampleType> deEsser;
+    bav::dsp::FX::DeEsser<SampleType> deEsser;
     std::atomic<bool> deEsserIsOn;
     
     juce::dsp::DryWetMixer<SampleType> dryWetMixer;
     
     juce::dsp::IIR::Filter<SampleType> initialHiddenLoCut;
     
-    bav::dsp::SidechainedCompressor<SampleType> compressor;
+    bav::dsp::FX::Compressor<SampleType> compressor;
     std::atomic<bool> compressorIsOn;
     
-    bav::dsp::Reverb reverb;
+    bav::dsp::FX::Reverb reverb;
     std::atomic<bool> reverbIsOn;
     
-    bav::dsp::SidechainedLimiter<SampleType> limiter;
+    bav::dsp::FX::Limiter<SampleType> limiter;
     std::atomic<bool> limiterIsOn;
     std::atomic<float> limiterThresh, limiterRelease;
     
