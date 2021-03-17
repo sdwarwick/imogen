@@ -171,7 +171,7 @@ bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, fl
 {
     reverbIsOn.store (isOn);
     reverb.setDryWet (wetPcnt);
-    reverb.setDamping (juce::jmap(decay, 1.0f, 0.0f));
+    reverb.setDamping (1.0f - decay);
     reverb.setRoomSize (decay);
     reverb.setDuckAmount (duckAmount);
     reverb.setLoCutFrequency (loCutFreq);
