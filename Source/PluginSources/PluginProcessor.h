@@ -137,12 +137,12 @@ public:
     };
     
     
-    template<typename ValueType>
-    ValueType getCurrentParameterValue (const parameterIDs paramID) const;
+    // returns any parameter's current value as a float in the range 0.0 to 1.0
+    float getCurrentParameterValue (const parameterIDs paramID) const;
     
     
-    template<typename ValueType>
-    ValueType getDefaultParameterValue (const parameterIDs paramID) const;
+    // returns any parameter's default value as a float in the normalised range 0.0 to 1.0
+    float getDefaultParameterValue (const parameterIDs paramID) const;
     
     
     bool hasUpdatedParamDefaults()
@@ -156,13 +156,11 @@ public:
     
     inline float modulatorSourceToFloatParam (int newModSource) const
     {
-        jassert (newModSource == 1 || newModSource == 2 || newModSource == 3);
-        
         switch (newModSource)
         {
-            case (1):  return 0.3f;
             case (2):  return 0.6f;
-            default:   return 0.9f;
+            case (3):  return 0.9f;
+            default:   return 0.3f;
         }
     }
     
@@ -188,6 +186,22 @@ public:
         return juce::roundToInt (juce::jmap (numVoicesFloatParam, 1.0f, float(bvie_MAX_POSSIBLE_NUM_VOICES)));
     }
     
+    inline float vocalRangeTypeToFloatParam (juce::String name) const
+    {
+        if (name.equalsIgnoreCase ("Soprano")) return 0.0f;
+        if (name.equalsIgnoreCase ("Alto")) return 0.25f;
+        if (name.equalsIgnoreCase ("Tenor")) return 0.5f;
+        jassert (name.equalsIgnoreCase ("Bass")); return 0.75f;
+    }
+    
+    inline juce::String floatParamToVocalRangeType (float vocalRangeParam) const
+    {
+        if (vocalRangeParam == 0.0f) return juce::String ("Soprano");
+        if (vocalRangeParam == 0.25f) return juce::String ("Alto");
+        if (vocalRangeParam == 0.5f) return juce::String ("Tenor");
+        jassert (vocalRangeParam == 0.75f); return juce::String ("Bass");
+    }
+    
     
 private:
     
@@ -199,9 +213,7 @@ private:
     template<typename SampleType>
     void processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine);
     
-    void updateVocalRangeType (int rangeTypeIndex);
-    
-    void updatePitchDetectionHzRange (int minHz, int maxHz);
+    void updateVocalRangeType (juce::String newRangeType);
     
     void updateNumVoices (const int newNumVoices);
     
@@ -292,12 +304,10 @@ private:
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet, defaultNumVoices;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultModulatorSource, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet, defaultNumVoices, defaultModulatorSource;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
     std::atomic<bool> defaultLeadBypass, defaultHarmonyBypass, defaultAdsrToggle, defaultPedalPitchToggle, defaultDescantToggle, defaultVoiceStealingToggle, defaultLimiterToggle, defaultNoiseGateToggle, defaultCompressorToggle, defaultAftertouchGainToggle, defaultDeEsserToggle, defaultReverbToggle;
     std::atomic<int> defaultVocalRangeIndex;
-    
-    int prevRangeTypeIndex;
     
     
     /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */

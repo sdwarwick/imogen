@@ -9,11 +9,10 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    needsSidechain(false),
+    , needsSidechain(false)
 #endif
-    prevRangeTypeIndex(0)
 {
     initializeParameterPointers();
     updateParameterDefaults();
