@@ -499,23 +499,23 @@ void ImogenAudioProcessor::updateVocalRangeType (int rangeTypeIndex)
     
     if (rangeType.equalsIgnoreCase ("Soprano"))
     {
-        minHz = bav::dsp::midiToFreq (57);
-        maxHz = bav::dsp::midiToFreq (88);
+        minHz = bav::math::midiToFreq (57);
+        maxHz = bav::math::midiToFreq (88);
     }
     else if (rangeType.equalsIgnoreCase ("Alto"))
     {
-        minHz = bav::dsp::midiToFreq (50);
-        maxHz = bav::dsp::midiToFreq (81);
+        minHz = bav::math::midiToFreq (50);
+        maxHz = bav::math::midiToFreq (81);
     }
     else if (rangeType.equalsIgnoreCase ("Tenor"))
     {
-        minHz = bav::dsp::midiToFreq (43);
-        maxHz = bav::dsp::midiToFreq (76);
+        minHz = bav::math::midiToFreq (43);
+        maxHz = bav::math::midiToFreq (76);
     }
     else if (rangeType.equalsIgnoreCase ("Bass"))
     {
-        minHz = bav::dsp::midiToFreq (36);
-        maxHz = bav::dsp::midiToFreq (67);
+        minHz = bav::math::midiToFreq (36);
+        maxHz = bav::math::midiToFreq (67);
     }
     
     updatePitchDetectionHzRange (minHz, maxHz);

@@ -154,6 +154,11 @@ bvh_VOID_TEMPLATE::releaseResources()
 }
     
 
+bvh_VOID_TEMPLATE::resetRampedValues (int blocksize)
+{
+    for (auto* voice : voices)
+        voice->resetRampedValues (blocksize);
+}
 
 
 /***********************************************************************************************************************************************
@@ -190,7 +195,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
         // for unpitched frames, an arbitrary "period" is imposed on the signal for analysis grain extraction; this arbitrary period is randomized within a certain range
         periodThisFrame = Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
         
-        if (bav::probability (50))  // reverse the polarity approx 50% of the time
+        if (bav::math::probability (50))  // reverse the polarity approx 50% of the time
         {
             FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
                                            inputAudio.getReadPointer(0),

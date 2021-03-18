@@ -75,6 +75,7 @@ bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
     outputGain.reset (blocksize);
     dryLgain.reset (blocksize);
     dryRgain.reset (blocksize);
+    harmonizer.resetRampedValues (blocksize);
 }
     
 

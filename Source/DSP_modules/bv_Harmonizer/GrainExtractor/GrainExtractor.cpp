@@ -268,17 +268,15 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
     
 #undef bvhge_WEIGHT
     
-    constexpr SampleType zero = SampleType(0.0);
-    
     if (indexOfLocalMax == indexOfLocalMin)
     {
         candidates.add (indexOfLocalMax);
     }
-    else if (localMax < zero)
+    else if (localMax < SampleType(0.0))
     {
         candidates.add (indexOfLocalMin);
     }
-    else if (localMin > zero)
+    else if (localMin > SampleType(0.0))
     {
         candidates.add (indexOfLocalMax);
     }

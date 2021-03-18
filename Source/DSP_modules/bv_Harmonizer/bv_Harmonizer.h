@@ -261,6 +261,8 @@ public:
     
     void handlePitchWheel (int wheelValue);
     
+    void resetRampedValues (int blocksize);
+    
     
 protected:
     
