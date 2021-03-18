@@ -78,7 +78,7 @@ public:
     
     juce::AudioProcessorValueTreeState tree;
     
-    juce::AudioProcessorParameter* getBypassParameter() const override;
+    juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
