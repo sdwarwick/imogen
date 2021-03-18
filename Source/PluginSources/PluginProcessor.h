@@ -12,6 +12,8 @@
 #endif
 
 
+#define bvie_MAX_POSSIBLE_NUM_VOICES 20
+
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
@@ -72,16 +74,7 @@ public:
     void savePreset  (juce::String presetName);
     bool loadPreset  (juce::String presetName);
     void deletePreset(juce::String presetName);
-    juce::File getPresetsFolder() const;
-    
-    void updateModulatorInputSource (const int newSource);
-    int getCurrentModulatorInputSource() const;
-    
-    void returnActivePitches (juce::Array<int>& outputArray) const;
-    
-    void killAllMidi();
-    
-    void pitchbendFromEditor (const int pitchbend);
+    juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
     
     juce::AudioProcessorValueTreeState tree;
     
@@ -89,16 +82,18 @@ public:
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
-    void updateNumVoices (const int newNumVoices);
-    
-    void setMidiLatch (const bool isOn);
-    
     
     bav::MessageQueue paramChangesForEditor;
+    bav::MessageQueue paramChangesForProcessor;
     
     
     enum parameterIDs
     {
+        midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that evenrs in the message FIFO can represent latch on/off
+        modulatorSourceID,  // this is also not automatable
+        killAllMidiID,  // not automatable
+        pitchbendFromEditorID, // not automatable
+        numVoicesID,  // definitely not automatable!!
         mainBypassID,
         leadBypassID,
         harmonyBypassID,
@@ -149,6 +144,7 @@ public:
     template<typename ValueType>
     ValueType getDefaultParameterValue (const parameterIDs paramID) const;
     
+    
     bool hasUpdatedParamDefaults()
     {
         const bool hasUpdated = parameterDefaultsAreDirty.load();
@@ -157,9 +153,45 @@ public:
     }
     
     
+    
+    inline float modulatorSourceToFloatParam (int newModSource) const
+    {
+        jassert (newModSource == 1 || newModSource == 2 || newModSource == 3);
+        
+        switch (newModSource)
+        {
+            case (1):  return 0.3f;
+            case (2):  return 0.6f;
+            default:   return 0.9f;
+        }
+    }
+    
+    inline int floatParamToModulatorSource (float modSourceFloatParam) const
+    {
+        if (modSourceFloatParam == 0.3f)
+            return 1;
+        
+        if (modSourceFloatParam == 0.6f)
+            return 2;
+        
+        return 3;
+    }
+    
+    inline float numVoicesToFloatParam (int newNumVoices) const
+    {
+        jassert (newNumVoices > 0 && newNumVoices <= bvie_MAX_POSSIBLE_NUM_VOICES);
+        return float(newNumVoices / bvie_MAX_POSSIBLE_NUM_VOICES);
+    }
+    
+    inline int floatParamToNumVoices (float numVoicesFloatParam) const
+    {
+        return juce::roundToInt (juce::jmap (numVoicesFloatParam, 1.0f, float(bvie_MAX_POSSIBLE_NUM_VOICES)));
+    }
+    
+    
 private:
     
-    bav::MessageQueue paramChangesForProcessor;
+    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the queue
     
     template<typename SampleType>
     void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
@@ -170,6 +202,8 @@ private:
     void updateVocalRangeType (int rangeTypeIndex);
     
     void updatePitchDetectionHzRange (int minHz, int maxHz);
+    
+    void updateNumVoices (const int newNumVoices);
     
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
@@ -211,7 +245,6 @@ private:
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
-    std::atomic<bool> latchIsOn, intervalLockIsOn;
     
     // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterBool*  mainBypass;
@@ -259,8 +292,8 @@ private:
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
+    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet, defaultNumVoices;
+    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultModulatorSource, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
     std::atomic<bool> defaultLeadBypass, defaultHarmonyBypass, defaultAdsrToggle, defaultPedalPitchToggle, defaultDescantToggle, defaultVoiceStealingToggle, defaultLimiterToggle, defaultNoiseGateToggle, defaultCompressorToggle, defaultAftertouchGainToggle, defaultDeEsserToggle, defaultReverbToggle;
     std::atomic<int> defaultVocalRangeIndex;
     

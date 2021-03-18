@@ -52,8 +52,6 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
 
 bvie_VOID_TEMPLATE::resetTriggered()
 {
-    const ScopedLock sl (lock);
-    
     harmonizer.allNotesOff(false);
     
     initialHiddenLoCut.reset();
@@ -81,28 +79,24 @@ bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
 
 bvie_VOID_TEMPLATE::killAllMidi()
 {
-    const ScopedLock sl (lock);
     harmonizer.allNotesOff(false);
 }
 
 
 bvie_VOID_TEMPLATE::playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld)
 {
-    const ScopedLock sl (lock);
     harmonizer.playChord (desiredNotes, velocity, allowTailOffOfOld);
 }
 
 
 bvie_VOID_TEMPLATE::returnActivePitches (Array<int>& outputArray) const
 {
-    const ScopedLock sl (lock);
     harmonizer.reportActiveNotes(outputArray);
 }
     
     
 bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
 {
-    const ScopedLock sl (lock);
     harmonizer.handlePitchWheel (bend);
 }
     
@@ -111,8 +105,6 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 {
     jassert (samplerate > 0 && newInternalBlocksize > 0);
 
-    const ScopedLock sl (lock);
-    
     harmonizer.initialize (12, samplerate, newInternalBlocksize);
     
     monoBuffer.setSize (1, newInternalBlocksize);
@@ -155,8 +147,6 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
 {
     jassert (samplerate > 0);
-    
-    const ScopedLock sl (lock);
     
     dspSpec.sampleRate = samplerate;
     dspSpec.numChannels = 2;
@@ -212,8 +202,6 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
     
 bvie_VOID_TEMPLATE::release()
 {
-    const ScopedLock sl (lock);
-    
     harmonizer.releaseResources();
     
     wetBuffer.setSize (0, 0, false, false, false);
@@ -250,8 +238,6 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
                                  AudioBuffer<SampleType>& output,
                                  MidiBuffer& midiMessages)
 {
-    const ScopedLock sl (lock);
-    
     const int blockSize = input.getNumSamples();
     
     jassert (blockSize == FIFOEngine::getLatency());

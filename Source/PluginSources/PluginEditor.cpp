@@ -22,9 +22,13 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     modulatorInputSource.addItem ("Left",  1);
     modulatorInputSource.addItem ("Right", 2);
     modulatorInputSource.addItem ("Mix to mono", 3);
-    modulatorInputSource.setSelectedId (audioProcessor.getCurrentModulatorInputSource(),
-                                        juce::NotificationType::dontSendNotification);
-    modulatorInputSource.onChange = [this] { audioProcessor.updateModulatorInputSource (modulatorInputSource.getSelectedId()); };
+//    modulatorInputSource.setSelectedId (audioProcessor.getCurrentParameterValue<int>(ids::modulatorSourceID),
+//                                        juce::NotificationType::dontSendNotification);
+    modulatorInputSource.onChange = [this] {
+                                        audioProcessor.paramChangesForProcessor.pushMessage
+                                                (ids::modulatorSourceID,
+                                                 audioProcessor.modulatorSourceToFloatParam (modulatorInputSource.getSelectedId()));
+                                    };
     
     //addAndMakeVisible(selectPreset);
     //addAndMakeVisible(modulatorInputSource);
@@ -64,75 +68,71 @@ void ImogenAudioProcessorEditor::timerCallback()
     if (audioProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
     
+    currentMessages.clearQuick();
+    
+    // retrieve all the messages available
     while (! audioProcessor.paramChangesForEditor.isEmpty())
+        currentMessages.add (audioProcessor.paramChangesForEditor.popMessage());
+    
+    // we're going to process only the most recent message of each type
+    bav::MessageQueue::flushRepeatedMessages (currentMessages);
+    
+    for (const auto msg : currentMessages)
     {
-        switch (audioProcessor.paramChangesForEditor.popMessage().type())
+#define _BOOL_MSG_ msg.value() >= 0.5f   // converts a message's float value to a boolean true/false
+#define _INT_0_100 juce::roundToInt (msg.value() * 100.0f)  // converts a message's float value to an integer in the range 0 to 100
+        switch (msg.type())
         {
-            case (ids::leadBypassID):
-                break;
-            case (ids::harmonyBypassID):
-                break;
-            case (ids::dryPanID):
-                break;
-            case (ids::dryWetID):
-                break;
-            case (ids::adsrAttackID):
-                break;
-            case (ids::adsrDecayID):
-                break;
-            case (ids::adsrSustainID):
-                break;
-            case (ids::adsrReleaseID):
-                break;
-            case (ids::adsrToggleID):
-                break;
-            case (ids::stereoWidthID):
-                break;
-            case (ids::lowestPannedID):
-                break;
-            case (ids::velocitySensID):
-                break;
-            case (ids::pitchBendRangeID):
-                break;
-            case (ids::pedalPitchIsOnID):
-                break;
-            case (ids::pedalPitchThreshID):
-                break;
-            case (ids::pedalPitchIntervalID):
-                break;
-            case (ids::descantIsOnID):
-                break;
-            case (ids::descantThreshID):
-                break;
-            case (ids::descantIntervalID):
-                break;
-            case (ids::concertPitchHzID):
-                break;
-            case (ids::voiceStealingID):
-                break;
-            case (ids::inputGainID):
-                break;
-            case (ids::outputGainID):
-                break;
-            case (ids::limiterToggleID):
-                break;
-            case (ids::noiseGateToggleID):
-                break;
-            case (ids::noiseGateThresholdID):
-                break;
-            case (ids::compressorToggleID):
-                break;
-            case (ids::compressorAmountID):
-                break;
-            case (ids::vocalRangeTypeID):
-                break;
-            case (ids::aftertouchGainToggleID):
-                break;
+            case (ids::leadBypassID):           continue;
+            case (ids::harmonyBypassID):        continue;
+            case (ids::dryPanID):               continue;
+            case (ids::dryWetID):               continue;
+            case (ids::adsrAttackID):           continue;
+            case (ids::adsrDecayID):            continue;
+            case (ids::adsrSustainID):          continue;
+            case (ids::adsrReleaseID):          continue;
+            case (ids::adsrToggleID):           continue;
+            case (ids::stereoWidthID):          continue;
+            case (ids::lowestPannedID):         continue;
+            case (ids::velocitySensID):         continue;
+            case (ids::pitchBendRangeID):       continue;
+            case (ids::pedalPitchIsOnID):       continue;
+            case (ids::pedalPitchThreshID):     continue;
+            case (ids::pedalPitchIntervalID):   continue;
+            case (ids::descantIsOnID):          continue;
+            case (ids::descantThreshID):        continue;
+            case (ids::descantIntervalID):      continue;
+            case (ids::concertPitchHzID):       continue;
+            case (ids::voiceStealingID):        continue;
+            case (ids::inputGainID):            continue;
+            case (ids::outputGainID):           continue;
+            case (ids::limiterToggleID):        continue;
+            case (ids::noiseGateToggleID):      continue;
+            case (ids::noiseGateThresholdID):   continue;
+            case (ids::compressorToggleID):     continue;
+            case (ids::compressorAmountID):     continue;
+            case (ids::vocalRangeTypeID):       continue;
+            case (ids::aftertouchGainToggleID): continue;
+            case (ids::deEsserToggleID):        continue;
+            case (ids::deEsserThreshID):        continue;
+            case (ids::deEsserAmountID):        continue;
+            case (ids::reverbToggleID):         continue;
+            case (ids::reverbDryWetID):         continue;
+            case (ids::reverbDecayID):          continue;
+            case (ids::reverbDuckID):           continue;
+            case (ids::reverbLoCutID):          continue;
+            case (ids::reverbHiCutID):          continue;
+            case (ids::midiLatchID):            continue;
+            case (ids::modulatorSourceID):      continue;
+            case (ids::killAllMidiID):          continue;
+            case (ids::pitchbendFromEditorID):  continue;
+            case (ids::numVoicesID):            continue;
                 
-            default:
-                break;
+            default: jassertfalse;  // an unknown parameter ID results in an error
         }
     }
+#undef _BOOL_MSG_
+#undef _INT_0_100
 }
 
 

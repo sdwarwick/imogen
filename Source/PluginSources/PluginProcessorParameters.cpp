@@ -236,6 +236,17 @@ void ImogenAudioProcessor::updateParameterDefaults()
     defaultAftertouchGainToggle.store (aftertouchGainToggle->get());
     defaultVocalRangeIndex.store (vocalRangeType->getIndex());
     
+    if (isUsingDoublePrecision())
+    {
+        defaultModulatorSource.store (doubleEngine.getModulatorSource());
+        defaultNumVoices.store (doubleEngine.getCurrentNumVoices());
+    }
+    else
+    {
+        defaultModulatorSource.store (floatEngine.getModulatorSource());
+        defaultNumVoices.store (floatEngine.getCurrentNumVoices());
+    }
+    
     parameterDefaultsAreDirty.store (true);
 }
 
@@ -283,12 +294,19 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
 {
+    currentMessages.clearQuick();
+    
+    // retrieve all the messages available
     while (! paramChangesForProcessor.isEmpty())
+        currentMessages.add (paramChangesForProcessor.popMessage());
+    
+    // we're going to process only the most recent message of each type
+    bav::MessageQueue::flushRepeatedMessages (currentMessages);
+    
+    for (const auto msg : currentMessages)
     {
-        auto msg = paramChangesForProcessor.popMessage();
-        
-#define _BOOL_MSG_ msg.value() >= 0.5f
-        
+#define _BOOL_MSG_ msg.value() >= 0.5f   // converts a message's float value to a boolean true/false
+#define _INT_0_100 juce::roundToInt (msg.value() * 100.0f)  // converts a message's float value to an integer in the range 0 to 100
         switch (msg.type())
         {
             case (leadBypassID):
@@ -298,7 +316,7 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (dryPanID):
                 activeEngine.updateDryVoxPan (dryPan->get());
             case (dryWetID):
-                activeEngine.updateDryWet (dryWet->get());
+                activeEngine.updateDryWet (_INT_0_100);
             case (adsrAttackID):
                 activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
             case (adsrDecayID):
@@ -310,11 +328,11 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (adsrToggleID):
                 activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), _BOOL_MSG_);
             case (stereoWidthID):
-                activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
+                activeEngine.updateStereoWidth (_INT_0_100, lowestPanned->get());
             case (lowestPannedID):
                 activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
             case (velocitySensID):
-                activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
+                activeEngine.updateMidiVelocitySensitivity (_INT_0_100);
             case (pitchBendRangeID):
                 activeEngine.updatePitchbendRange (pitchBendRange->get());
             case (pedalPitchIsOnID):
@@ -361,7 +379,7 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
                 activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
                                            reverbLoCut->get(), reverbHiCut->get(), _BOOL_MSG_);
             case (reverbDryWetID):
-                activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                activeEngine.updateReverb (_INT_0_100, reverbDecay->get(), reverbDuck->get(),
                                            reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
             case (reverbDecayID):
                 activeEngine.updateReverb (reverbDryWet->get(), msg.value(), reverbDuck->get(),
@@ -375,18 +393,26 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (reverbHiCutID):
                 activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
                                            reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+            case (midiLatchID):
+                activeEngine.updateMidiLatch (_BOOL_MSG_);
+            case (modulatorSourceID):
+                activeEngine.setModulatorSource (floatParamToModulatorSource (msg.value()));
+            case (killAllMidiID):
+                activeEngine.killAllMidi();
+            case (pitchbendFromEditorID):
+                activeEngine.recieveExternalPitchbend (juce::roundToInt (juce::jmap (msg.value(), 0.0f, 127.0f)));
+            case (numVoicesID):
+                updateNumVoices (floatParamToNumVoices (msg.value()));
                 
-            default:
-                break;
+            default: jassertfalse;  // an unknown parameter ID results in an error
         }
     }
-}
-
 #undef _BOOL_MSG_
-
+#undef _INT_0_100
+}
+///function template instantiations...
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<float>& activeEngine);
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<double>& activeEngine);
-
 
 
 template<typename ValueType>
@@ -434,8 +460,23 @@ ValueType ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs par
         case (reverbLoCutID):           return reverbLoCut->get();
         case (reverbHiCutID):           return reverbHiCut->get();
         case (vocalRangeTypeID):        return vocalRangeType->getCurrentChoiceName();  // this one returns the name of the currently selected vocal range as a juce::String
+        case (midiLatchID):
+            if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched();
+            else return floatEngine.isMidiLatched();
+        case (modulatorSourceID):
+            if (isUsingDoublePrecision()) return doubleEngine.getModulatorSource();
+            else return floatEngine.getModulatorSource();
+        case (killAllMidiID): return 0.0f;
+        case (pitchbendFromEditorID): return 64;
+        case (numVoicesID):
+            if (isUsingDoublePrecision()) return doubleEngine.getCurrentNumVoices();
+            else return floatEngine.getCurrentNumVoices();
     }
 }
+///function template instantiations...
+//template float ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID) const;
+//template int ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID) const;
+//template bool ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID) const;
 
 
 template<typename ValueType>
@@ -482,7 +523,14 @@ ValueType ImogenAudioProcessor::getDefaultParameterValue (const parameterIDs par
         case (reverbDuckID):            return defaultReverbDuck.load();
         case (reverbLoCutID):           return defaultReverbLoCut.load();
         case (reverbHiCutID):           return defaultReverbHiCut.load();
+        case (modulatorSourceID):       return defaultModulatorSource.load();
         case (vocalRangeTypeID):        return vocalRangeTypes[defaultVocalRangeIndex.load()]; // this one returns the name of the default vocal range as a juce::String
+        case (midiLatchID):  // for midi latch, its state should never be changed by a query for a "default"
+            if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched();
+            else return floatEngine.isMidiLatched();
+        case (killAllMidiID): return 0.0f;
+        case (pitchbendFromEditorID): return 64;
+        case (numVoicesID): return defaultNumVoices.load();
     }
 }
 
@@ -530,7 +578,7 @@ void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& acti
     jassert (knobValue >= 0.0f && knobValue <= 1.0f);
     
     activeEngine.updateCompressor (juce::jmap (knobValue, 0.0f, 1.0f, 0.0f, -60.0f),  // threshold (dB)
-                                   juce::jmap (knobValue, 0.0f, 1.0f, 2.0f, 10.0f),   // ratio
+                                   knobValue * 10.0f,  // ratio
                                    compressorIsOn);
 }
 
@@ -577,45 +625,8 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 }
 
 
-void ImogenAudioProcessor::updateModulatorInputSource (const int newSource)
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.setModulatorSource (newSource);
-    else
-        floatEngine.setModulatorSource (newSource);
-}
-
 
 // functions for preset & state management system ---------------------------------------------------------------------------------------------------
-
-inline juce::File ImogenAudioProcessor::getPresetsFolder() const
-{
-    juce::File rootFolder;
-    
-#if JUCE_MAC
-    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
-                    .getChildFile ("Audio")
-                    .getChildFile ("Presets")
-                    .getChildFile ("Ben Vining Music Software")
-                    .getChildFile ("Imogen");
-#elif JUCE_LINUX
-    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
-                    .getChildFile ("Ben Vining Music Software")
-                    .getChildFile ("Imogen");
-#elif JUCE_WINDOWS
-    rootFolder = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDocumentsDirectory)
-                    .getChildFile ("Ben Vining Music Software")
-                    .getChildFile ("Imogen");
-#else
-  #error Unsupported operating system!
-#endif
-    
-    if (! rootFolder.isDirectory())
-        rootFolder.createDirectory(); // creates the presets folder if it doesn't already exist
-    
-    return rootFolder;
-}
-
 
 void ImogenAudioProcessor::deletePreset (juce::String presetName)
 {
@@ -669,11 +680,8 @@ inline std::unique_ptr<juce::XmlElement> ImogenAudioProcessor::pluginStateToXml 
 {
     std::unique_ptr<juce::XmlElement> xml = tree.copyState().createXml();
     
-    const int numVoices = activeEngine.getCurrentNumVoices();
-    const int inputSource = activeEngine.getModulatorSource();
-    
-    xml->setAttribute ("numberOfVoices", numVoices);
-    xml->setAttribute ("modulatorInputSource", inputSource);
+    xml->setAttribute ("numberOfVoices", activeEngine.getCurrentNumVoices());
+    xml->setAttribute ("modulatorInputSource", activeEngine.getModulatorSource());
     
     return xml;
 }
@@ -730,5 +738,5 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
     suspendProcessing (false);
     
     updateHostDisplay();
-    return true;  // TODO: how to check if replacing tree state was successful...?
+    return true;
 }

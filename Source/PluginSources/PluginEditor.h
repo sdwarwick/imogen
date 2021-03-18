@@ -36,6 +36,8 @@ private:
     
     ImogenAudioProcessor& audioProcessor;
     
+    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the queue
+    
     inline void newPresetSelected();
     
     inline void makePresetMenu (juce::ComboBox& box);

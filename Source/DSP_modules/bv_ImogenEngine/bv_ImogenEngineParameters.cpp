@@ -18,8 +18,6 @@ bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
     if (harmonizer.getNumVoices() == newNumVoices)
         return;
         
-    const ScopedLock sl (lock);
-    
     harmonizer.changeNumVoices (newNumVoices);
 }
     
@@ -148,8 +146,6 @@ bvie_VOID_TEMPLATE::updateDeEsser (const float deEssAmount, const float thresh_d
 
 bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
-    const ScopedLock sl (lock);
-    
     jassert (harmonizer.getSamplerate() > 0);
     
     harmonizer.updatePitchDetectionHzRange (minHz, maxHz);

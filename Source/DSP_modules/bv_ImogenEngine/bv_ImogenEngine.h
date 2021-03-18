@@ -53,7 +53,6 @@ public:
     void updateDescant     (const bool isOn, const int lowerThresh, const int interval);
     void updateConcertPitch(const int newConcertPitchHz);
     void updateNoteStealing(const bool shouldSteal);
-    void updateMidiLatch   (const bool isLatched);
     void updateLimiter     (const bool isOn);
     void updateNoiseGate (const float newThreshDB, const bool isOn);
     void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
@@ -69,6 +68,9 @@ public:
     void setModulatorSource (const int newSource);
     
     void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
+    
+    bool isMidiLatched() const { return harmonizer.isLatched(); }
+    void updateMidiLatch (const bool isLatched);
     
     
 private:
@@ -128,8 +130,6 @@ private:
     juce::SmoothedValue<SampleType, juce::ValueSmoothingTypes::Multiplicative> inputGain, outputGain, dryLgain, dryRgain;
     
     void resetSmoothedValues (int blocksize);
-    
-    CriticalSection lock;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };

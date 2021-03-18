@@ -247,6 +247,7 @@ public:
     void updateLowestPannedNote (int newPitchThresh);
     
     void setMidiLatch (const bool shouldBeOn, const bool allowTailOff);
+    bool isLatched()  const noexcept { return latchIsOn; }
     
     void updateADSRsettings (const float attack, const float decay, const float sustain, const float release);
     void setADSRonOff (const bool shouldBeOn) noexcept { adsrIsOn = shouldBeOn; }
@@ -291,8 +292,6 @@ protected:
     ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
     ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
     ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
-    
-    bool isLatched()  const noexcept { return latchIsOn; }
     
     
 private:

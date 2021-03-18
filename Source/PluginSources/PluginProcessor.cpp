@@ -18,15 +18,10 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     initializeParameterPointers();
     updateParameterDefaults();
     
-    parameterDefaultsAreDirty.store (false);
-    
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-    
-    latchIsOn.store(false);
-    intervalLockIsOn.store(false);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -50,8 +45,6 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
     setLatencySamples (activeEngine.reportLatency());
 }
 
-#undef imogen_DEFAULT_NUM_VOICES
-
 
 void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
 {
@@ -62,6 +55,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
     
     paramChangesForProcessor.reserveSize (samplesPerBlock);
     paramChangesForEditor.reserveSize (samplesPerBlock);
+    
+    currentMessages.ensureStorageAllocated (samplesPerBlock);
 }
 
 
@@ -104,45 +99,6 @@ void ImogenAudioProcessor::reset()
     else
         floatEngine.reset();
 }
-
-
-void ImogenAudioProcessor::killAllMidi()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.killAllMidi();
-    else
-        floatEngine.killAllMidi();
-}
-
-
-void ImogenAudioProcessor::pitchbendFromEditor (const int pitchbend)
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.recieveExternalPitchbend (pitchbend);
-    else
-        floatEngine.recieveExternalPitchbend (pitchbend);
-}
-
-
-void ImogenAudioProcessor::setMidiLatch (const bool isOn)
-{
-    latchIsOn.store (isOn);
-    
-    if (isUsingDoublePrecision())
-        doubleEngine.updateMidiLatch (isOn);
-    else
-        floatEngine.updateMidiLatch (isOn);
-}
-
-
-int ImogenAudioProcessor::getCurrentModulatorInputSource() const
-{
-    if (isUsingDoublePrecision())
-        return doubleEngine.getModulatorSource();
-    else
-        return floatEngine.getModulatorSource();
-}
-
 
 /*
  These four functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
@@ -214,19 +170,6 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 
 /*===========================================================================================================================
  ============================================================================================================================*/
-
-
-void ImogenAudioProcessor::returnActivePitches (juce::Array<int>& outputArray) const
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.returnActivePitches (outputArray);
-    else
-        floatEngine.returnActivePitches (outputArray);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
