@@ -20,8 +20,16 @@ class ImogenAudioProcessorEditor; // forward declaration...
 ///////////
 
 class ImogenAudioProcessor    : public juce::AudioProcessor
-
 {
+    
+    using FloatParameter = bav::FloatParameter;
+    using IntParameter   = bav::IntParameter;
+    using BoolParameter  = bav::BoolParameter;
+    
+    using FloatParamPtr = FloatParameter*;
+    using IntParamPtr   = IntParameter*;
+    using BoolParamPtr  = BoolParameter*;
+    
     
 public:
     
@@ -258,56 +266,18 @@ private:
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
     
-    // listener variables linked to AudioProcessorValueTreeState parameters:
     juce::AudioParameterBool*  mainBypass;
-    juce::AudioParameterBool*  leadBypass;
-    juce::AudioParameterBool*  harmonyBypass;
-    juce::AudioParameterInt*   dryPan;
-    juce::AudioParameterInt*   dryWet;
-    juce::AudioParameterFloat* adsrAttack;
-    juce::AudioParameterFloat* adsrDecay;
-    juce::AudioParameterFloat* adsrSustain;
-    juce::AudioParameterFloat* adsrRelease;
-    juce::AudioParameterBool*  adsrToggle;
-    juce::AudioParameterInt*   stereoWidth;
-    juce::AudioParameterInt*   lowestPanned;
-    juce::AudioParameterInt*   velocitySens;
-    juce::AudioParameterInt*   pitchBendRange;
-    juce::AudioParameterBool*  pedalPitchIsOn;
-    juce::AudioParameterInt*   pedalPitchThresh;
-    juce::AudioParameterInt*   pedalPitchInterval;
-    juce::AudioParameterBool*  descantIsOn;
-    juce::AudioParameterInt*   descantThresh;
-    juce::AudioParameterInt*   descantInterval;
-    juce::AudioParameterInt*   concertPitchHz;
-    juce::AudioParameterBool*  voiceStealing;
-    juce::AudioParameterFloat* inputGain;
-    juce::AudioParameterFloat* outputGain;
-    juce::AudioParameterBool*  limiterToggle;
-    juce::AudioParameterBool*  noiseGateToggle;
-    juce::AudioParameterFloat* noiseGateThreshold;
-    juce::AudioParameterBool*  compressorToggle;
-    juce::AudioParameterFloat* compressorAmount;
     juce::AudioParameterChoice* vocalRangeType;
-    juce::AudioParameterBool*  aftertouchGainToggle;
-    juce::AudioParameterBool* deEsserToggle;
-    juce::AudioParameterFloat* deEsserThresh;
-    juce::AudioParameterFloat* deEsserAmount;
-    juce::AudioParameterBool*  reverbToggle;
-    juce::AudioParameterInt*   reverbDryWet;
-    juce::AudioParameterFloat* reverbDecay;
-    juce::AudioParameterFloat* reverbDuck;
-    juce::AudioParameterFloat* reverbLoCut;
-    juce::AudioParameterFloat* reverbHiCut;
+    BoolParamPtr  leadBypass, harmonyBypass, adsrToggle, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
+    IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet;
+    FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
+    
     
     void updateParameterDefaults();
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultDryPan, defaultDryWet, defaultStereoWidth, defaultLowestPannedNote, defaultVelocitySensitivity, defaultPitchbendRange, defaultPedalPitchThresh, defaultPedalPitchInterval, defaultDescantThresh, defaultDescantInterval, defaultConcertPitchHz, defaultReverbDryWet, defaultNumVoices, defaultModulatorSource;
-    std::atomic<float> defaultAdsrAttack, defaultAdsrDecay, defaultAdsrSustain, defaultAdsrRelease, defaultInputGain, defaultOutputGain, defaultNoiseGateThresh, defaultCompressorAmount, defaultDeEsserThresh, defaultDeEsserAmount, defaultReverbDecay, defaultReverbDuck, defaultReverbLoCut, defaultReverbHiCut;
-    std::atomic<bool> defaultLeadBypass, defaultHarmonyBypass, defaultAdsrToggle, defaultPedalPitchToggle, defaultDescantToggle, defaultVoiceStealingToggle, defaultLimiterToggle, defaultNoiseGateToggle, defaultCompressorToggle, defaultAftertouchGainToggle, defaultDeEsserToggle, defaultReverbToggle;
-    std::atomic<int> defaultVocalRangeIndex;
+    std::atomic<int> defaultNumVoices, defaultModulatorSource, defaultVocalRangeIndex;
     
     
     /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */

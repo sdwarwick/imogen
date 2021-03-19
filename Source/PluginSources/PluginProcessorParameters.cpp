@@ -11,66 +11,45 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
     juce::NormalisableRange<float> hzRange (40.0f, 10000.0f, 1.0f);
     
-    // main bypass
     params.push_back(std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
-    // lead bypass
-    params.push_back(std::make_unique<juce::AudioParameterBool>("leadBypass", "Lead bypass", false));
-    // harmony bypass
-    params.push_back(std::make_unique<juce::AudioParameterBool>("harmonyBypass", "Harmony bypass", false));
-    
-    // lead vox pan
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("dryPan", "Dry vox pan", 0, 127, 64));
-    
-    // ADSR
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrAttack", "ADSR Attack", msRange, 0.35f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrDecay", "ADSR Decay", msRange, 0.06f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("adsrRelease", "ADSR Release", msRange, 0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("adsrOnOff", "ADSR on/off", true));
-    
-    // stereo width
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("stereoWidth", "Stereo Width", 0, 100, 100));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
-    
-    // midi settings
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("voiceStealing", "Voice stealing", false));
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("aftertouchGainToggle", "Aftertouch gain on/off", true));
-    // midi pedal pitch
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("pedalPitchToggle", "Pedal pitch on/off", false));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
-    // midi descant
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("descantToggle", "Descant on/off", false));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("descantThresh", "Descant lower threshold", 0, 127, 127));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("descantInterval", "Descant interval", 1, 12, 12));
-    
-    // mixer settings
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("masterDryWet", "% wet", 0, 100, 100));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("inputGain", "Input gain",   gainRange, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("outputGain", "Output gain", gainRange, -4.0f));
-    
-    // limiter toggle
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("limiterIsOn", "Limiter on/off", true));
-    // noise gate
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("noiseGateIsOn", "Noise gate toggle", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
-    // de-esser
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("deEsserIsOn", "De-esser toggle", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("deEsserThresh", "De-esser thresh", gainRange, -6.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f));
-    // compressor
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("compressorToggle", "Compressor on/off", false));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
-    // reverb
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("reverbIsOn", "Reverb toggle", false));
-    params.push_back(std::make_unique<juce::AudioParameterInt>  ("reverbDryWet", "Reverb dry/wet", 0, 100, 35));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
+    params.push_back(std::make_unique<BoolParameter>  ("leadBypass", "Lead bypass", false));
+    params.push_back(std::make_unique<BoolParameter>  ("harmonyBypass", "Harmony bypass", false));
+    params.push_back(std::make_unique<IntParameter>   ("dryPan", "Dry vox pan", 0, 127, 64));
+    params.push_back(std::make_unique<FloatParameter> ("adsrAttack", "ADSR Attack", msRange, 0.35f));
+    params.push_back(std::make_unique<FloatParameter> ("adsrDecay", "ADSR Decay", msRange, 0.06f));
+    params.push_back(std::make_unique<FloatParameter> ("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
+    params.push_back(std::make_unique<FloatParameter> ("adsrRelease", "ADSR Release", msRange, 0.1f));
+    params.push_back(std::make_unique<BoolParameter>  ("adsrOnOff", "ADSR on/off", true));
+    params.push_back(std::make_unique<IntParameter>   ("stereoWidth", "Stereo Width", 0, 100, 100));
+    params.push_back(std::make_unique<IntParameter>   ("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
+    params.push_back(std::make_unique<IntParameter>   ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
+    params.push_back(std::make_unique<IntParameter>   ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2));
+    params.push_back(std::make_unique<IntParameter>   ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
+    params.push_back(std::make_unique<BoolParameter>  ("voiceStealing", "Voice stealing", false));
+    params.push_back(std::make_unique<BoolParameter>  ("aftertouchGainToggle", "Aftertouch gain on/off", true));
+    params.push_back(std::make_unique<BoolParameter>  ("pedalPitchToggle", "Pedal pitch on/off", false));
+    params.push_back(std::make_unique<IntParameter>   ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
+    params.push_back(std::make_unique<IntParameter>   ("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
+    params.push_back(std::make_unique<BoolParameter>  ("descantToggle", "Descant on/off", false));
+    params.push_back(std::make_unique<IntParameter>   ("descantThresh", "Descant lower threshold", 0, 127, 127));
+    params.push_back(std::make_unique<IntParameter>   ("descantInterval", "Descant interval", 1, 12, 12));
+    params.push_back(std::make_unique<IntParameter>   ("masterDryWet", "% wet", 0, 100, 100));
+    params.push_back(std::make_unique<FloatParameter> ("inputGain", "Input gain",   gainRange, 0.0f));
+    params.push_back(std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRange, -4.0f));
+    params.push_back(std::make_unique<BoolParameter>  ("limiterIsOn", "Limiter on/off", true));
+    params.push_back(std::make_unique<BoolParameter>  ("noiseGateIsOn", "Noise gate toggle", true));
+    params.push_back(std::make_unique<FloatParameter> ("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
+    params.push_back(std::make_unique<BoolParameter>  ("deEsserIsOn", "De-esser toggle", true));
+    params.push_back(std::make_unique<FloatParameter> ("deEsserThresh", "De-esser thresh", gainRange, -6.0f));
+    params.push_back(std::make_unique<FloatParameter> ("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f));
+    params.push_back(std::make_unique<BoolParameter>  ("compressorToggle", "Compressor on/off", false));
+    params.push_back(std::make_unique<FloatParameter> ("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
+    params.push_back(std::make_unique<BoolParameter>  ("reverbIsOn", "Reverb toggle", false));
+    params.push_back(std::make_unique<IntParameter>   ("reverbDryWet", "Reverb dry/wet", 0, 100, 35));
+    params.push_back(std::make_unique<FloatParameter> ("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f));
+    params.push_back(std::make_unique<FloatParameter> ("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
+    params.push_back(std::make_unique<FloatParameter> ("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
+    params.push_back(std::make_unique<FloatParameter> ("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
     
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
@@ -100,91 +79,91 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
-    mainBypass         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("mainBypass"));                 jassert (mainBypass);
-    leadBypass         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("leadBypass"));                 jassert (leadBypass);
-    harmonyBypass      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("harmonyBypass"));              jassert (harmonyBypass);
-    dryPan             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("dryPan"));                     jassert (dryPan);
-    dryWet             = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("masterDryWet"));               jassert (dryWet);
-    adsrAttack         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrAttack"));                 jassert (adsrAttack);
-    adsrDecay          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrDecay"));                  jassert (adsrDecay);
-    adsrSustain        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrSustain"));                jassert (adsrSustain);
-    adsrRelease        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("adsrRelease"));                jassert (adsrRelease);
-    adsrToggle         = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("adsrOnOff"));                  jassert (adsrToggle);
-    stereoWidth        = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("stereoWidth"));                jassert (stereoWidth);
-    lowestPanned       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("lowestPan"));                  jassert (lowestPanned);
-    velocitySens       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("midiVelocitySensitivity"));    jassert (velocitySens);
-    pitchBendRange     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("PitchBendRange"));             jassert (pitchBendRange);
-    pedalPitchIsOn     = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("pedalPitchToggle"));           jassert (pedalPitchIsOn);
-    pedalPitchThresh   = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchThresh"));           jassert (pedalPitchThresh);
-    pedalPitchInterval = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("pedalPitchInterval"));         jassert (pedalPitchInterval);
-    descantIsOn        = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("descantToggle"));              jassert (descantIsOn);
-    descantThresh      = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantThresh"));              jassert (descantThresh);
-    descantInterval    = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("descantInterval"));            jassert (descantInterval);
-    concertPitchHz     = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("concertPitch"));               jassert (concertPitchHz);
-    voiceStealing      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("voiceStealing"));              jassert (voiceStealing);
-    inputGain          = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("inputGain"));                  jassert (inputGain);
-    outputGain         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("outputGain"));                 jassert (outputGain);
-    limiterToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("limiterIsOn"));                jassert (limiterToggle);
-    noiseGateThreshold = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("noiseGateThresh"));            jassert (noiseGateThreshold);
-    noiseGateToggle    = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("noiseGateIsOn"));              jassert (noiseGateToggle);
-    compressorToggle   = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("compressorToggle"));           jassert (compressorToggle);
-    compressorAmount   = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("compressorAmount"));           jassert (compressorAmount);
-    vocalRangeType     = dynamic_cast<juce::AudioParameterChoice*>(tree.getParameter("vocalRangeType"));            jassert (vocalRangeType);
-    aftertouchGainToggle = dynamic_cast<juce::AudioParameterBool*>(tree.getParameter("aftertouchGainToggle"));      jassert (aftertouchGainToggle);
-    deEsserToggle      = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("deEsserIsOn"));                jassert (deEsserToggle);
-    deEsserThresh      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserThresh"));              jassert (deEsserThresh);
-    deEsserAmount      = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("deEsserAmount"));              jassert (deEsserAmount);
-    reverbToggle       = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter("reverbIsOn"));                 jassert (reverbToggle);
-    reverbDryWet       = dynamic_cast<juce::AudioParameterInt*>  (tree.getParameter("reverbDryWet"));               jassert (reverbDryWet);
-    reverbDecay        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbDecay"));                jassert (reverbDecay);
-    reverbDuck         = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbDuck"));                 jassert (reverbDuck);
-    reverbLoCut        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbLoCut"));                jassert (reverbLoCut);
-    reverbHiCut        = dynamic_cast<juce::AudioParameterFloat*>(tree.getParameter("reverbHiCut"));                jassert (reverbHiCut);
+    mainBypass           = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter ("mainBypass"));       jassert (mainBypass);
+    leadBypass           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("leadBypass"));                   jassert (leadBypass);
+    harmonyBypass        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("harmonyBypass"));                jassert (harmonyBypass);
+    dryPan               = dynamic_cast<IntParamPtr>   (tree.getParameter ("dryPan"));                       jassert (dryPan);
+    dryWet               = dynamic_cast<IntParamPtr>   (tree.getParameter ("masterDryWet"));                 jassert (dryWet);
+    adsrAttack           = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrAttack"));                   jassert (adsrAttack);
+    adsrDecay            = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrDecay"));                    jassert (adsrDecay);
+    adsrSustain          = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrSustain"));                  jassert (adsrSustain);
+    adsrRelease          = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrRelease"));                  jassert (adsrRelease);
+    adsrToggle           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("adsrOnOff"));                    jassert (adsrToggle);
+    stereoWidth          = dynamic_cast<IntParamPtr>   (tree.getParameter ("stereoWidth"));                  jassert (stereoWidth);
+    lowestPanned         = dynamic_cast<IntParamPtr>   (tree.getParameter ("lowestPan"));                    jassert (lowestPanned);
+    velocitySens         = dynamic_cast<IntParamPtr>   (tree.getParameter ("midiVelocitySensitivity"));      jassert (velocitySens);
+    pitchBendRange       = dynamic_cast<IntParamPtr>   (tree.getParameter ("PitchBendRange"));               jassert (pitchBendRange);
+    pedalPitchIsOn       = dynamic_cast<BoolParamPtr>  (tree.getParameter ("pedalPitchToggle"));             jassert (pedalPitchIsOn);
+    pedalPitchThresh     = dynamic_cast<IntParamPtr>   (tree.getParameter ("pedalPitchThresh"));             jassert (pedalPitchThresh);
+    pedalPitchInterval   = dynamic_cast<IntParamPtr>   (tree.getParameter ("pedalPitchInterval"));           jassert (pedalPitchInterval);
+    descantIsOn          = dynamic_cast<BoolParamPtr>  (tree.getParameter ("descantToggle"));                jassert (descantIsOn);
+    descantThresh        = dynamic_cast<IntParamPtr>   (tree.getParameter ("descantThresh"));                jassert (descantThresh);
+    descantInterval      = dynamic_cast<IntParamPtr>   (tree.getParameter ("descantInterval"));              jassert (descantInterval);
+    concertPitchHz       = dynamic_cast<IntParamPtr>   (tree.getParameter ("concertPitch"));                 jassert (concertPitchHz);
+    voiceStealing        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("voiceStealing"));                jassert (voiceStealing);
+    inputGain            = dynamic_cast<FloatParamPtr> (tree.getParameter ("inputGain"));                    jassert (inputGain);
+    outputGain           = dynamic_cast<FloatParamPtr> (tree.getParameter ("outputGain"));                   jassert (outputGain);
+    limiterToggle        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("limiterIsOn"));                  jassert (limiterToggle);
+    noiseGateThreshold   = dynamic_cast<FloatParamPtr> (tree.getParameter ("noiseGateThresh"));              jassert (noiseGateThreshold);
+    noiseGateToggle      = dynamic_cast<BoolParamPtr>  (tree.getParameter ("noiseGateIsOn"));                jassert (noiseGateToggle);
+    compressorToggle     = dynamic_cast<BoolParamPtr>  (tree.getParameter ("compressorToggle"));             jassert (compressorToggle);
+    compressorAmount     = dynamic_cast<FloatParamPtr> (tree.getParameter ("compressorAmount"));             jassert (compressorAmount);
+    aftertouchGainToggle = dynamic_cast<BoolParamPtr>  (tree.getParameter ("aftertouchGainToggle"));         jassert (aftertouchGainToggle);
+    deEsserToggle        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("deEsserIsOn"));                  jassert (deEsserToggle);
+    deEsserThresh        = dynamic_cast<FloatParamPtr> (tree.getParameter ("deEsserThresh"));                jassert (deEsserThresh);
+    deEsserAmount        = dynamic_cast<FloatParamPtr> (tree.getParameter ("deEsserAmount"));                jassert (deEsserAmount);
+    reverbToggle         = dynamic_cast<BoolParamPtr>  (tree.getParameter ("reverbIsOn"));                   jassert (reverbToggle);
+    reverbDryWet         = dynamic_cast<IntParamPtr>   (tree.getParameter ("reverbDryWet"));                 jassert (reverbDryWet);
+    reverbDecay          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbDecay"));                  jassert (reverbDecay);
+    reverbDuck           = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbDuck"));                   jassert (reverbDuck);
+    reverbLoCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbLoCut"));                  jassert (reverbLoCut);
+    reverbHiCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbHiCut"));                  jassert (reverbHiCut);
+    vocalRangeType       = dynamic_cast<juce::AudioParameterChoice*> (tree.getParameter ("vocalRangeType")); jassert (vocalRangeType);
 }
 
 
 void ImogenAudioProcessor::initializeParameterListeners()
 {
-    addParameterMessenger ("mainBypass", mainBypassID);
-    addParameterMessenger ("leadBypass", leadBypassID);
-    addParameterMessenger ("harmonyBypass", harmonyBypassID);
-    addParameterMessenger ("dryPan", dryPanID);
-    addParameterMessenger ("masterDryWet", dryWetID);
-    addParameterMessenger ("adsrAttack", adsrAttackID);
-    addParameterMessenger ("adsrDecay", adsrDecayID);
-    addParameterMessenger ("adsrSustain", adsrSustainID);
-    addParameterMessenger ("adsrRelease", adsrReleaseID);
-    addParameterMessenger ("adsrOnOff", adsrToggleID);
-    addParameterMessenger ("stereoWidth", stereoWidthID);
-    addParameterMessenger ("lowestPan", lowestPannedID);
-    addParameterMessenger ("midiVelocitySensitivity", velocitySensID);
-    addParameterMessenger ("PitchBendRange", pitchBendRangeID);
-    addParameterMessenger ("pedalPitchToggle", pedalPitchIsOnID);
-    addParameterMessenger ("pedalPitchThresh", pedalPitchThreshID);
-    addParameterMessenger ("pedalPitchInterval", pedalPitchIntervalID);
-    addParameterMessenger ("descantToggle", descantIsOnID);
-    addParameterMessenger ("descantThresh", descantThreshID);
-    addParameterMessenger ("descantInterval", descantIntervalID);
-    addParameterMessenger ("concertPitch", concertPitchHzID);
-    addParameterMessenger ("voiceStealing", voiceStealingID);
-    addParameterMessenger ("inputGain", inputGainID);
-    addParameterMessenger ("outputGain", outputGainID);
-    addParameterMessenger ("limiterIsOn", limiterToggleID);
-    addParameterMessenger ("noiseGateIsOn", noiseGateToggleID);
-    addParameterMessenger ("noiseGateThresh", noiseGateThresholdID);
-    addParameterMessenger ("compressorToggle", compressorToggleID);
-    addParameterMessenger ("compressorAmount", compressorAmountID);
-    addParameterMessenger ("vocalRangeType", vocalRangeTypeID);
-    addParameterMessenger ("aftertouchGainToggle", aftertouchGainToggleID);
-    addParameterMessenger ("deEsserIsOn", deEsserToggleID);
-    addParameterMessenger ("deEsserThresh", deEsserThreshID);
-    addParameterMessenger ("deEsserAmount", deEsserAmountID);
-    addParameterMessenger ("reverbIsOn", reverbToggleID);
-    addParameterMessenger ("reverbDryWet", reverbDryWetID);
-    addParameterMessenger ("reverbDecay", reverbDecayID);
-    addParameterMessenger ("reverbDuck", reverbDuckID);
-    addParameterMessenger ("reverbLoCut", reverbLoCutID);
-    addParameterMessenger ("reverbHiCut", reverbHiCutID);
+    addParameterMessenger ("mainBypass",                mainBypassID);
+    addParameterMessenger ("leadBypass",                leadBypassID);
+    addParameterMessenger ("harmonyBypass",             harmonyBypassID);
+    addParameterMessenger ("dryPan",                    dryPanID);
+    addParameterMessenger ("masterDryWet",              dryWetID);
+    addParameterMessenger ("adsrAttack",                adsrAttackID);
+    addParameterMessenger ("adsrDecay",                 adsrDecayID);
+    addParameterMessenger ("adsrSustain",               adsrSustainID);
+    addParameterMessenger ("adsrRelease",               adsrReleaseID);
+    addParameterMessenger ("adsrOnOff",                 adsrToggleID);
+    addParameterMessenger ("stereoWidth",               stereoWidthID);
+    addParameterMessenger ("lowestPan",                 lowestPannedID);
+    addParameterMessenger ("midiVelocitySensitivity",   velocitySensID);
+    addParameterMessenger ("PitchBendRange",            pitchBendRangeID);
+    addParameterMessenger ("pedalPitchToggle",          pedalPitchIsOnID);
+    addParameterMessenger ("pedalPitchThresh",          pedalPitchThreshID);
+    addParameterMessenger ("pedalPitchInterval",        pedalPitchIntervalID);
+    addParameterMessenger ("descantToggle",             descantIsOnID);
+    addParameterMessenger ("descantThresh",             descantThreshID);
+    addParameterMessenger ("descantInterval",           descantIntervalID);
+    addParameterMessenger ("concertPitch",              concertPitchHzID);
+    addParameterMessenger ("voiceStealing",             voiceStealingID);
+    addParameterMessenger ("inputGain",                 inputGainID);
+    addParameterMessenger ("outputGain",                outputGainID);
+    addParameterMessenger ("limiterIsOn",               limiterToggleID);
+    addParameterMessenger ("noiseGateIsOn",             noiseGateToggleID);
+    addParameterMessenger ("noiseGateThresh",           noiseGateThresholdID);
+    addParameterMessenger ("compressorToggle",          compressorToggleID);
+    addParameterMessenger ("compressorAmount",          compressorAmountID);
+    addParameterMessenger ("vocalRangeType",            vocalRangeTypeID);
+    addParameterMessenger ("aftertouchGainToggle",      aftertouchGainToggleID);
+    addParameterMessenger ("deEsserIsOn",               deEsserToggleID);
+    addParameterMessenger ("deEsserThresh",             deEsserThreshID);
+    addParameterMessenger ("deEsserAmount",             deEsserAmountID);
+    addParameterMessenger ("reverbIsOn",                reverbToggleID);
+    addParameterMessenger ("reverbDryWet",              reverbDryWetID);
+    addParameterMessenger ("reverbDecay",               reverbDecayID);
+    addParameterMessenger ("reverbDuck",                reverbDuckID);
+    addParameterMessenger ("reverbLoCut",               reverbLoCutID);
+    addParameterMessenger ("reverbHiCut",               reverbHiCutID);
 }
 
 void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int paramID)
@@ -196,44 +175,44 @@ void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int par
 
 void ImogenAudioProcessor::updateParameterDefaults()
 {
-    defaultLeadBypass.store (leadBypass->get());
-    defaultHarmonyBypass.store (harmonyBypass->get());
-    defaultDryPan.store (dryPan->get());
-    defaultDryWet.store (dryWet->get());
-    defaultStereoWidth.store (stereoWidth->get());
-    defaultLowestPannedNote.store (lowestPanned->get());
-    defaultVelocitySensitivity.store (velocitySens->get());
-    defaultPitchbendRange.store (pitchBendRange->get());
-    defaultPedalPitchToggle.store (pedalPitchIsOn->get());
-    defaultPedalPitchThresh.store (pedalPitchThresh->get());
-    defaultPedalPitchInterval.store (pedalPitchInterval->get());
-    defaultDescantToggle.store (descantIsOn->get());
-    defaultDescantThresh.store (descantThresh->get());
-    defaultDescantInterval.store (descantInterval->get());
-    defaultConcertPitchHz.store (concertPitchHz->get());
-    defaultAdsrToggle.store (adsrToggle->get());
-    defaultAdsrAttack.store (adsrAttack->get());
-    defaultAdsrDecay.store (adsrDecay->get());
-    defaultAdsrSustain.store (adsrSustain->get());
-    defaultAdsrRelease.store (adsrRelease->get());
-    defaultInputGain.store (inputGain->get());
-    defaultOutputGain.store (outputGain->get());
-    defaultNoiseGateThresh.store (noiseGateThreshold->get());
-    defaultNoiseGateToggle.store (noiseGateToggle->get());
-    defaultCompressorAmount.store (compressorAmount->get());
-    defaultCompressorToggle.store (compressorToggle->get());
-    defaultDeEsserThresh.store (deEsserThresh->get());
-    defaultDeEsserAmount.store (deEsserAmount->get());
-    defaultDeEsserToggle.store (deEsserToggle->get());
-    defaultReverbToggle.store (reverbToggle->get());
-    defaultReverbDryWet.store (reverbDryWet->get());
-    defaultReverbDecay.store (reverbDecay->get());
-    defaultReverbDuck.store (reverbDuck->get());
-    defaultReverbLoCut.store (reverbLoCut->get());
-    defaultReverbHiCut.store (reverbHiCut->get());
-    defaultLimiterToggle.store (limiterToggle->get());
-    defaultVoiceStealingToggle.store (voiceStealing->get());
-    defaultAftertouchGainToggle.store (aftertouchGainToggle->get());
+    leadBypass->refreshDefault();
+    harmonyBypass->refreshDefault();
+    dryPan->refreshDefault();
+    dryWet->refreshDefault();
+    stereoWidth->refreshDefault();
+    lowestPanned->refreshDefault();
+    velocitySens->refreshDefault();
+    pitchBendRange->refreshDefault();
+    pedalPitchIsOn->refreshDefault();
+    pedalPitchThresh->refreshDefault();
+    pedalPitchInterval->refreshDefault();
+    descantIsOn->refreshDefault();
+    descantThresh->refreshDefault();
+    descantInterval->refreshDefault();
+    concertPitchHz->refreshDefault();
+    adsrToggle->refreshDefault();
+    adsrAttack->refreshDefault();
+    adsrDecay->refreshDefault();
+    adsrSustain->refreshDefault();
+    adsrRelease->refreshDefault();
+    inputGain->refreshDefault();
+    outputGain->refreshDefault();
+    noiseGateToggle->refreshDefault();
+    noiseGateThreshold->refreshDefault();
+    compressorToggle->refreshDefault();
+    compressorAmount->refreshDefault();
+    deEsserToggle->refreshDefault();
+    deEsserThresh->refreshDefault();
+    deEsserAmount->refreshDefault();
+    reverbToggle->refreshDefault();
+    reverbDecay->refreshDefault();
+    reverbDuck->refreshDefault();
+    reverbLoCut->refreshDefault();
+    reverbHiCut->refreshDefault();
+    reverbDryWet->refreshDefault();
+    limiterToggle->refreshDefault();
+    voiceStealing->refreshDefault();
+    aftertouchGainToggle->refreshDefault();
     defaultVocalRangeIndex.store (vocalRangeType->getIndex());
     
     if (isUsingDoublePrecision())
@@ -427,44 +406,44 @@ float ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID
     switch (paramID)
     {
         case (mainBypassID):            return mainBypass->get() ? 1.0f : 0.0f;
-        case (leadBypassID):            return leadBypass->get() ? 1.0f : 0.0f;
-        case (harmonyBypassID):         return harmonyBypass->get() ? 1.0f : 0.0f;
-        case (dryPanID):                return dryPan->getNormalisableRange().convertTo0to1 (dryPan->get());
-        case (dryWetID):                return dryWet->getNormalisableRange().convertTo0to1 (dryWet->get());
-        case (adsrAttackID):            return adsrAttack->getNormalisableRange().convertTo0to1 (adsrAttack->get());
-        case (adsrDecayID):             return adsrDecay->getNormalisableRange().convertTo0to1 (adsrDecay->get());
-        case (adsrSustainID):           return adsrSustain->getNormalisableRange().convertTo0to1 (adsrSustain->get());
-        case (adsrReleaseID):           return adsrRelease->getNormalisableRange().convertTo0to1 (adsrRelease->get());
-        case (adsrToggleID):            return adsrToggle->get() ? 1.0f : 0.0f;
-        case (stereoWidthID):           return stereoWidth->getNormalisableRange().convertTo0to1 (stereoWidth->get());
-        case (lowestPannedID):          return lowestPanned->getNormalisableRange().convertTo0to1 (lowestPanned->get());
-        case (velocitySensID):          return velocitySens->getNormalisableRange().convertTo0to1 (velocitySens->get());
-        case (pitchBendRangeID):        return pitchBendRange->getNormalisableRange().convertTo0to1 (pitchBendRange->get());
-        case (pedalPitchIsOnID):        return pedalPitchIsOn->get() ? 1.0f : 0.0f;
-        case (pedalPitchThreshID):      return pedalPitchThresh->getNormalisableRange().convertTo0to1 (pedalPitchThresh->get());
-        case (pedalPitchIntervalID):    return pedalPitchInterval->getNormalisableRange().convertTo0to1 (pedalPitchInterval->get());
-        case (descantIsOnID):           return descantIsOn->get() ? 1.0f : 0.0f;
-        case (descantThreshID):         return descantThresh->getNormalisableRange().convertTo0to1 (descantThresh->get());
-        case (descantIntervalID):       return descantInterval->getNormalisableRange().convertTo0to1 (descantInterval->get());
-        case (concertPitchHzID):        return concertPitchHz->getNormalisableRange().convertTo0to1 (concertPitchHz->get());
-        case (voiceStealingID):         return voiceStealing->get() ? 1.0f : 0.0f;
-        case (inputGainID):             return inputGain->getNormalisableRange().convertTo0to1 (inputGain->get());
-        case (outputGainID):            return outputGain->getNormalisableRange().convertTo0to1 (outputGain->get());
-        case (limiterToggleID):         return limiterToggle->get() ? 1.0f : 0.0f;
-        case (noiseGateToggleID):       return noiseGateToggle->get() ? 1.0f : 0.0f;
-        case (noiseGateThresholdID):    return noiseGateThreshold->getNormalisableRange().convertTo0to1 (noiseGateThreshold->get());
-        case (compressorToggleID):      return compressorToggle->get() ? 1.0f : 0.0f;
-        case (compressorAmountID):      return compressorAmount->getNormalisableRange().convertTo0to1 (compressorAmount->get());
-        case (aftertouchGainToggleID):  return aftertouchGainToggle->get() ? 1.0f : 0.0f;
-        case (deEsserToggleID):         return deEsserToggle->get() ? 1.0f : 0.0f;
-        case (deEsserThreshID):         return deEsserThresh->getNormalisableRange().convertTo0to1 (deEsserThresh->get());
-        case (deEsserAmountID):         return deEsserAmount->getNormalisableRange().convertTo0to1 (deEsserAmount->get());
-        case (reverbToggleID):          return reverbToggle->get() ? 1.0f : 0.0f;
-        case (reverbDryWetID):          return reverbDryWet->getNormalisableRange().convertTo0to1 (reverbDryWet->get());
-        case (reverbDecayID):           return reverbDecay->getNormalisableRange().convertTo0to1 (reverbDecay->get());
-        case (reverbDuckID):            return reverbDuck->getNormalisableRange().convertTo0to1 (reverbDuck->get());
-        case (reverbLoCutID):           return reverbLoCut->getNormalisableRange().convertTo0to1 (reverbLoCut->get());
-        case (reverbHiCutID):           return reverbHiCut->getNormalisableRange().convertTo0to1 (reverbHiCut->get());
+        case (leadBypassID):            return leadBypass->getCurrentNormalizedValue();
+        case (harmonyBypassID):         return harmonyBypass->getCurrentNormalizedValue();
+        case (dryPanID):                return dryPan->getCurrentNormalizedValue();
+        case (dryWetID):                return dryWet->getCurrentNormalizedValue();
+        case (adsrAttackID):            return adsrAttack->getCurrentNormalizedValue();
+        case (adsrDecayID):             return adsrDecay->getCurrentNormalizedValue();
+        case (adsrSustainID):           return adsrSustain->getCurrentNormalizedValue();
+        case (adsrReleaseID):           return adsrRelease->getCurrentNormalizedValue();
+        case (adsrToggleID):            return adsrToggle->getCurrentNormalizedValue();
+        case (stereoWidthID):           return stereoWidth->getCurrentNormalizedValue();
+        case (lowestPannedID):          return lowestPanned->getCurrentNormalizedValue();
+        case (velocitySensID):          return velocitySens->getCurrentNormalizedValue();
+        case (pitchBendRangeID):        return pitchBendRange->getCurrentNormalizedValue();
+        case (pedalPitchIsOnID):        return pedalPitchIsOn->getCurrentNormalizedValue();
+        case (pedalPitchThreshID):      return pedalPitchThresh->getCurrentNormalizedValue();
+        case (pedalPitchIntervalID):    return pedalPitchInterval->getCurrentNormalizedValue();
+        case (descantIsOnID):           return descantIsOn->getCurrentNormalizedValue();
+        case (descantThreshID):         return descantThresh->getCurrentNormalizedValue();
+        case (descantIntervalID):       return descantInterval->getCurrentNormalizedValue();
+        case (concertPitchHzID):        return concertPitchHz->getCurrentNormalizedValue();
+        case (voiceStealingID):         return voiceStealing->getCurrentNormalizedValue();
+        case (inputGainID):             return inputGain->getCurrentNormalizedValue();
+        case (outputGainID):            return outputGain->getCurrentNormalizedValue();
+        case (limiterToggleID):         return limiterToggle->getCurrentNormalizedValue();
+        case (noiseGateToggleID):       return noiseGateToggle->getCurrentNormalizedValue();
+        case (noiseGateThresholdID):    return noiseGateThreshold->getCurrentNormalizedValue();
+        case (compressorToggleID):      return compressorToggle->getCurrentNormalizedValue();
+        case (compressorAmountID):      return compressorAmount->getCurrentNormalizedValue();
+        case (aftertouchGainToggleID):  return aftertouchGainToggle->getCurrentNormalizedValue();
+        case (deEsserToggleID):         return deEsserToggle->getCurrentNormalizedValue();
+        case (deEsserThreshID):         return deEsserThresh->getCurrentNormalizedValue();
+        case (deEsserAmountID):         return deEsserAmount->getCurrentNormalizedValue();
+        case (reverbToggleID):          return reverbToggle->getCurrentNormalizedValue();
+        case (reverbDryWetID):          return reverbDryWet->getCurrentNormalizedValue();
+        case (reverbDecayID):           return reverbDecay->getCurrentNormalizedValue();
+        case (reverbDuckID):            return reverbDuck->getCurrentNormalizedValue();
+        case (reverbLoCutID):           return reverbLoCut->getCurrentNormalizedValue();
+        case (reverbHiCutID):           return reverbHiCut->getCurrentNormalizedValue();
         case (vocalRangeTypeID):        return vocalRangeTypeToFloatParam (vocalRangeType->getCurrentChoiceName());
             
         // message types that aren't actually automated parameters
@@ -494,44 +473,44 @@ float ImogenAudioProcessor::getDefaultParameterValue (const parameterIDs paramID
     switch (paramID)
     {
         case (mainBypassID):            return 0.0f; // from the plugin's point of view, the default state for the main bypass is false (not bypassed)
-        case (leadBypassID):            return defaultLeadBypass.load() ? 1.0f : 0.0f;
-        case (harmonyBypassID):         return defaultHarmonyBypass.load() ? 1.0f : 0.0f;
-        case (dryPanID):                return dryPan->getNormalisableRange().convertTo0to1 (defaultDryPan.load());
-        case (dryWetID):                return dryWet->getNormalisableRange().convertTo0to1 (defaultDryWet.load());
-        case (adsrAttackID):            return adsrAttack->getNormalisableRange().convertTo0to1 (defaultAdsrAttack.load());
-        case (adsrDecayID):             return adsrDecay->getNormalisableRange().convertTo0to1 (defaultAdsrDecay.load());
-        case (adsrSustainID):           return adsrSustain->getNormalisableRange().convertTo0to1 (defaultAdsrSustain.load());
-        case (adsrReleaseID):           return adsrRelease->getNormalisableRange().convertTo0to1 (defaultAdsrRelease.load());
-        case (adsrToggleID):            return defaultAdsrToggle.load() ? 1.0f : 0.0f;
-        case (stereoWidthID):           return stereoWidth->getNormalisableRange().convertTo0to1 (defaultStereoWidth.load());
-        case (lowestPannedID):          return lowestPanned->getNormalisableRange().convertTo0to1 (defaultLowestPannedNote.load());
-        case (velocitySensID):          return velocitySens->getNormalisableRange().convertTo0to1 (defaultVelocitySensitivity.load());
-        case (pitchBendRangeID):        return pitchBendRange->getNormalisableRange().convertTo0to1 (defaultPitchbendRange.load());
-        case (pedalPitchIsOnID):        return defaultPedalPitchToggle.load() ? 1.0f : 0.0f;
-        case (pedalPitchThreshID):      return pedalPitchThresh->getNormalisableRange().convertTo0to1 (defaultPedalPitchThresh.load());
-        case (pedalPitchIntervalID):    return pedalPitchInterval->getNormalisableRange().convertTo0to1 (defaultPedalPitchInterval.load());
-        case (descantIsOnID):           return defaultDescantToggle.load() ? 1.0f : 0.0f;
-        case (descantThreshID):         return descantThresh->getNormalisableRange().convertTo0to1 (defaultDescantThresh.load());
-        case (descantIntervalID):       return descantInterval->getNormalisableRange().convertTo0to1 (defaultDescantInterval.load());
-        case (concertPitchHzID):        return defaultConcertPitchHz.load();
-        case (voiceStealingID):         return defaultVoiceStealingToggle.load() ? 1.0f : 0.0f;
-        case (inputGainID):             return inputGain->getNormalisableRange().convertTo0to1 (defaultInputGain.load());
-        case (outputGainID):            return outputGain->getNormalisableRange().convertTo0to1 (defaultOutputGain.load());
-        case (limiterToggleID):         return defaultLimiterToggle.load() ? 1.0f : 0.0f;
-        case (noiseGateToggleID):       return defaultNoiseGateToggle.load() ? 1.0f : 0.0f;
-        case (noiseGateThresholdID):    return noiseGateThreshold->getNormalisableRange().convertTo0to1 (defaultNoiseGateThresh.load());
-        case (compressorToggleID):      return defaultCompressorToggle.load() ? 1.0f : 0.0f;
-        case (compressorAmountID):      return compressorAmount->getNormalisableRange().convertTo0to1 (defaultCompressorAmount.load());
-        case (aftertouchGainToggleID):  return defaultAftertouchGainToggle.load() ? 1.0f : 0.0f;
-        case (deEsserToggleID):         return defaultDeEsserToggle.load() ? 1.0f : 0.0f;
-        case (deEsserThreshID):         return deEsserThresh->getNormalisableRange().convertTo0to1 (defaultDeEsserThresh.load());
-        case (deEsserAmountID):         return deEsserAmount->getNormalisableRange().convertTo0to1 (defaultDeEsserAmount.load());
-        case (reverbToggleID):          return defaultReverbToggle.load() ? 1.0f : 0.0f;
-        case (reverbDryWetID):          return reverbDryWet->getNormalisableRange().convertTo0to1 (defaultReverbDryWet.load());
-        case (reverbDecayID):           return reverbDecay->getNormalisableRange().convertTo0to1 (defaultReverbDecay);
-        case (reverbDuckID):            return reverbDuck->getNormalisableRange().convertTo0to1 (defaultReverbDuck.load());
-        case (reverbLoCutID):           return reverbLoCut->getNormalisableRange().convertTo0to1 (defaultReverbLoCut.load());
-        case (reverbHiCutID):           return reverbHiCut->getNormalisableRange().convertTo0to1 (defaultReverbHiCut.load());
+        case (leadBypassID):            return leadBypass->getNormalizedDefault();
+        case (harmonyBypassID):         return harmonyBypass->getNormalizedDefault();
+        case (dryPanID):                return dryPan->getNormalizedDefault();
+        case (dryWetID):                return dryWet->getNormalizedDefault();
+        case (adsrAttackID):            return adsrAttack->getNormalizedDefault();
+        case (adsrDecayID):             return adsrDecay->getNormalizedDefault();
+        case (adsrSustainID):           return adsrSustain->getNormalizedDefault();
+        case (adsrReleaseID):           return adsrRelease->getNormalizedDefault();
+        case (adsrToggleID):            return adsrToggle->getNormalizedDefault();
+        case (stereoWidthID):           return stereoWidth->getNormalizedDefault();
+        case (lowestPannedID):          return lowestPanned->getNormalizedDefault();
+        case (velocitySensID):          return velocitySens->getNormalizedDefault();
+        case (pitchBendRangeID):        return pitchBendRange->getNormalizedDefault();
+        case (pedalPitchIsOnID):        return pedalPitchIsOn->getNormalizedDefault();
+        case (pedalPitchThreshID):      return pedalPitchThresh->getNormalizedDefault();
+        case (pedalPitchIntervalID):    return pedalPitchInterval->getNormalizedDefault();
+        case (descantIsOnID):           return descantIsOn->getNormalizedDefault();
+        case (descantThreshID):         return descantThresh->getNormalizedDefault();
+        case (descantIntervalID):       return descantInterval->getNormalizedDefault();
+        case (concertPitchHzID):        return concertPitchHz->getNormalizedDefault();
+        case (voiceStealingID):         return voiceStealing->getNormalizedDefault();
+        case (inputGainID):             return inputGain->getNormalizedDefault();
+        case (outputGainID):            return outputGain->getNormalizedDefault();
+        case (limiterToggleID):         return limiterToggle->getNormalizedDefault();
+        case (noiseGateToggleID):       return noiseGateToggle->getNormalizedDefault();
+        case (noiseGateThresholdID):    return noiseGateThreshold->getNormalizedDefault();
+        case (compressorToggleID):      return compressorToggle->getNormalizedDefault();
+        case (compressorAmountID):      return compressorAmount->getNormalizedDefault();
+        case (aftertouchGainToggleID):  return aftertouchGainToggle->getNormalizedDefault();
+        case (deEsserToggleID):         return deEsserToggle->getCurrentNormalizedValue();
+        case (deEsserThreshID):         return deEsserThresh->getNormalizedDefault();
+        case (deEsserAmountID):         return deEsserAmount->getNormalizedDefault();
+        case (reverbToggleID):          return reverbToggle->getNormalizedDefault();
+        case (reverbDryWetID):          return reverbDryWet->getNormalizedDefault();
+        case (reverbDecayID):           return reverbDecay->getNormalizedDefault();
+        case (reverbDuckID):            return reverbDuck->getNormalizedDefault();
+        case (reverbLoCutID):           return reverbLoCut->getNormalizedDefault();
+        case (reverbHiCutID):           return reverbHiCut->getNormalizedDefault();
         case (vocalRangeTypeID):        return vocalRangeTypeToFloatParam (vocalRangeTypes[defaultVocalRangeIndex.load()]);
         case (numVoicesID):             return numVoicesToFloatParam (defaultNumVoices.load());
         case (modulatorSourceID):       return modulatorSourceToFloatParam (defaultModulatorSource.load());
