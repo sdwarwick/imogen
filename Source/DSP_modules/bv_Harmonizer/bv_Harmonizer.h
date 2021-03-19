@@ -5,7 +5,7 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       juce_audio_utils, juce_dsp, bv_PitchDetector
+ dependencies:       bv_PitchDetector
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -112,7 +112,6 @@ protected:
     
     
 private:
-    
     friend class Harmonizer<SampleType>;
     
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
@@ -295,6 +294,7 @@ protected:
     
     
 private:
+    friend class HarmonizerVoice<SampleType>;
     
     // adds a specified # of voices
     void addNumVoices (const int voicesToAdd);
@@ -346,11 +346,6 @@ private:
     HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
     
     void fillWindowBuffer (const int numSamples);
-    
-    
-    // *** //
-    
-    friend class HarmonizerVoice<SampleType>;
     
     OwnedArray< HarmonizerVoice<SampleType> > voices;
     

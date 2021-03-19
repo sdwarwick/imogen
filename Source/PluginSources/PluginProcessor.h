@@ -32,8 +32,6 @@ class ImogenAudioProcessor    : public juce::AudioProcessor
     
     
 public:
-    
-    // standard & general-purpose functions ---------------------------------------------------------------------------------------------------------
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
 
@@ -53,46 +51,11 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    bool shouldWarnUserToEnableSidechain() const;
+    bool shouldWarnUserToEnableSidechain() const;  // warns the user to enable sidechain, if it's disabled (only needed for Logic & Garageband)
 #endif
     
-    bool hasEditor() const override { return true; }
-    juce::AudioProcessorEditor* createEditor() override;
-    
-    const juce::String getName() const override { return JucePlugin_Name; }
-    
-    bool acceptsMidi()  const override { return true;  }
-    bool producesMidi() const override { return true;  }
-    bool supportsMPE()  const override { return false; }
-    bool isMidiEffect() const override { return false; }
-    
-    double getTailLengthSeconds() const override;
-    
-    int getNumPrograms() override;
-    int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
-    
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
-    
-    void savePreset  (juce::String presetName);
-    bool loadPreset  (juce::String presetName);
-    void deletePreset(juce::String presetName);
-    juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
-    
-    
-    juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
-    
-    bool supportsDoublePrecisionProcessing() const override { return true; }
-    
-    
-    bav::MessageQueue paramChangesForEditor;
-    bav::MessageQueue paramChangesForProcessor;
-    
-    
-    enum parameterIDs
+    // key values by which parameters are accessed from the editor:
+    enum parameterID
     {
         midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that evenrs in the message FIFO can represent latch on/off
         killAllMidiID,  // not automatable
@@ -141,60 +104,60 @@ public:
         reverbHiCutID
     };
     
-    
     // returns any parameter's current value as a float in the range 0.0 to 1.0
-    float getCurrentParameterValue (const parameterIDs paramID) const;
-    
+    float getCurrentParameterValue (const parameterID paramID) const;
     
     // returns any parameter's default value as a float in the normalised range 0.0 to 1.0
-    float getDefaultParameterValue (const parameterIDs paramID) const;
+    float getDefaultParameterValue (const parameterID paramID) const;
     
-    
-    bool hasUpdatedParamDefaults()
-    {
-        const bool hasUpdated = parameterDefaultsAreDirty.load();
-        parameterDefaultsAreDirty.store (false);
-        return hasUpdated;
-    }
-    
+    // tracks whether the processor has updated its parameter defaults since the last time this function was called
+    bool hasUpdatedParamDefaults();
     
     // returns the normalisable range associated with the given parameter.
-    const juce::NormalisableRange<float>& getParameterRange (const parameterIDs paramID) const;
+    const juce::NormalisableRange<float>& getParameterRange (const parameterID paramID) const;
     
+    // converts a given vocal range type as a string to a float key value
+    inline float vocalRangeTypeToFloatParam (juce::String name) const;
     
-    inline float vocalRangeTypeToFloatParam (juce::String name) const
-    {
-        if (name.equalsIgnoreCase ("Soprano")) return 0.0f;
-        if (name.equalsIgnoreCase ("Alto")) return 0.25f;
-        if (name.equalsIgnoreCase ("Tenor")) return 0.5f;
-        jassert (name.equalsIgnoreCase ("Bass")); return 0.75f;
-    }
+    // converts a float key value to a string vocal range type
+    inline juce::String floatParamToVocalRangeType (float vocalRangeParam) const;
     
-    inline juce::String floatParamToVocalRangeType (float vocalRangeParam) const
-    {
-        if (vocalRangeParam == 0.0f) return juce::String ("Soprano");
-        if (vocalRangeParam == 0.25f) return juce::String ("Alto");
-        if (vocalRangeParam == 0.5f) return juce::String ("Tenor");
-        jassert (vocalRangeParam == 0.75f); return juce::String ("Bass");
-    }
+    double getTailLengthSeconds() const override;
+    
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    void savePreset  (juce::String presetName);
+    bool loadPreset  (juce::String presetName);
+    void deletePreset(juce::String presetName);
+    juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
+    
+    juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
+    
+    int getNumPrograms() override;
+    int getCurrentProgram() override;
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int index, const juce::String& newName) override;
+    
+    bool acceptsMidi()  const override { return true;  }
+    bool producesMidi() const override { return true;  }
+    bool supportsMPE()  const override { return false; }
+    bool isMidiEffect() const override { return false; }
+    
+    const juce::String getName() const override { return JucePlugin_Name; }
+    
+    bool hasEditor() const override { return true; }
+    juce::AudioProcessorEditor* createEditor() override;
+    
+    bool supportsDoublePrecisionProcessing() const override { return true; }
+    
+    // these queues are public because the editor needs to read from paramChangesForEditor and write to paramChangesForProcessor
+    bav::MessageQueue paramChangesForEditor;
+    bav::MessageQueue paramChangesForProcessor;
     
     
 private:
-    
-    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the queue
-    
-    juce::AudioProcessorValueTreeState tree;
-    
-    template<typename SampleType>
-    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template<typename SampleType>
-    void processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    void updateVocalRangeType (juce::String newRangeType);
-    
-    void updateNumVoices (const int newNumVoices);
-    
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
@@ -208,16 +171,17 @@ private:
     inline void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                      juce::MidiBuffer& midiMessages,
                                      bav::ImogenEngine<SampleType>& engine,
-                                     const bool masterBypass);
+                                     const bool isBypassedThisCallback);
     
+    template<typename SampleType>
+    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
     
-    bav::ImogenEngine<float>  floatEngine;
-    bav::ImogenEngine<double> doubleEngine;
+    template<typename SampleType>
+    void processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine);
     
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    juce::PluginHostType host;
-    bool needsSidechain;
-#endif
+    void updateVocalRangeType (juce::String newRangeType);
+    
+    void updateNumVoices (const int newNumVoices);
     
     template<typename SampleType>
     void updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
@@ -226,28 +190,39 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     void initializeParameterListeners();
+    void addParameterMessenger (juce::String stringID, int paramID);
+    void updateParameterDefaults();
     
     juce::AudioProcessor::BusesProperties makeBusProperties() const;
     
     template<typename SampleType>
-    std::unique_ptr<juce::XmlElement> pluginStateToXml (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
+    // one engine of each type. The idle one isn't destroyed, but takes up few resources.
+    bav::ImogenEngine<float>  floatEngine;
+    bav::ImogenEngine<double> doubleEngine;
     
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+    juce::PluginHostType host;
+    bool needsSidechain;
+#endif
+    
+    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the message FIFO
+    
+    juce::AudioProcessorValueTreeState tree;
+    
+    // pointers to all the parameter objects
     juce::AudioParameterBool*  mainBypass;
     juce::AudioParameterChoice* vocalRangeType;
     BoolParamPtr  leadBypass, harmonyBypass, adsrToggle, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
     IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet, numVoices, inputSource;
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
-    
-    void updateParameterDefaults();
-    
     std::atomic<bool> parameterDefaultsAreDirty;
     
     std::atomic<int> defaultVocalRangeIndex;
+    
+    juce::NormalisableRange<float> pitchBendNormRange { 0, 127 };  // because there's a parameterID for this, I need a dummy NormalisableRange for it
     
     
     /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */
@@ -273,15 +248,10 @@ private:
     
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
     
-    void addParameterMessenger (juce::String stringID, int paramID);
-    
-    
     
 #define imgn_VOCAL_RANGE_TYPES juce::StringArray { "Soprano","Alto","Tenor","Bass" }
     
     juce::StringArray vocalRangeTypes = imgn_VOCAL_RANGE_TYPES;
-    
-    juce::NormalisableRange<float> pitchBendNormRange { 0, 127 };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

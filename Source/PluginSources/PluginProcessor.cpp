@@ -9,10 +9,10 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    , needsSidechain(false)
+    needsSidechain(false),
 #endif
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
 {
     initializeParameterPointers();
     updateParameterDefaults();
@@ -32,7 +32,7 @@ template <typename SampleType>
 inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
 {
     double initSamplerate = getSampleRate();
-    if (initSamplerate <= 0) initSamplerate = 44100.0;
+    if (initSamplerate <= 0.0) initSamplerate = 44100.0;
     
     int initBlockSize = getBlockSize();
     if (initBlockSize <= 0) initBlockSize = 512;
@@ -140,10 +140,9 @@ template <typename SampleType>
 inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                        juce::MidiBuffer& midiMessages,
                                                        bav::ImogenEngine<SampleType>& engine,
-                                                       const bool masterBypass)
+                                                       const bool isBypassedThisCallback)
 {
-    jassert (! engine.hasBeenReleased());
-    jassert (engine.hasBeenInitialized());
+    jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
@@ -163,7 +162,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     
     juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
     
-    engine.process (inBus, outBus, midiMessages, masterBypass);
+    engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 }
 
 
@@ -181,44 +180,18 @@ double ImogenAudioProcessor::getTailLengthSeconds() const
     return 0.005;  // "quick kill" time in seconds -- must be the same as the ms value defined in the macro in bv_Harmonizer.cpp !!
 }
 
-int ImogenAudioProcessor::getNumPrograms()
-{
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs, so this should be at least 1, even if you're not really implementing programs.
-}
-
-int ImogenAudioProcessor::getCurrentProgram()
-{
-    return 1;
-}
-
-void ImogenAudioProcessor::setCurrentProgram (int index)
-{
-    juce::ignoreUnused (index);
-}
-
-const juce::String ImogenAudioProcessor::getProgramName (int index)
-{
-    juce::ignoreUnused(index);
-    return {};
-}
-
-void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
-{
-    ignoreUnused (index, newName);
-}
-
 
 inline juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     if (host.isLogic() || host.isGarageBand())
-        return BusesProperties().withInput ("Input", juce::AudioChannelSet::stereo(), true)
+        return BusesProperties().withInput ("Input",     juce::AudioChannelSet::stereo(), true)
                                 .withInput ("Sidechain", juce::AudioChannelSet::mono(),   true)
                                 .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
 #endif
 
-    return BusesProperties().withInput ("Input",     juce::AudioChannelSet::stereo(), true)
-                            .withOutput("Output",    juce::AudioChannelSet::stereo(), true);
+    return BusesProperties().withInput ("Input",  juce::AudioChannelSet::stereo(), true)
+                            .withOutput("Output", juce::AudioChannelSet::stereo(), true);
 }
 
 

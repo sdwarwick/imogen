@@ -6,7 +6,7 @@
 
 class ImogenParameterFetcher
 {
-    using ids = ImogenAudioProcessor::parameterIDs;
+    using ids = ImogenAudioProcessor::parameterID;
     
 public:
     ImogenParameterFetcher(ImogenAudioProcessor& p): processor(p)

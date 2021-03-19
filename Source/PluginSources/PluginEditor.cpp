@@ -12,28 +12,14 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), audioProcessor (p), params(p)
+    AudioProcessorEditor (&p), imgnProcessor(p), params(p)
 {
     this->setBufferedToImage (true);
     
     makePresetMenu(selectPreset);
     selectPreset.onChange = [this] { newPresetSelected(); };
     
-    modulatorInputSource.addItem ("Left",  1);
-    modulatorInputSource.addItem ("Right", 2);
-    modulatorInputSource.addItem ("Mix to mono", 3);
-    
-    modulatorInputSource.setSelectedId (params.getInt(ids::inputSourceID), juce::NotificationType::dontSendNotification);
-    
-    modulatorInputSource.onChange = [this] {
-                                        audioProcessor.paramChangesForProcessor.pushMessage
-                                                (ids::inputSourceID,
-                                                 audioProcessor.getParameterRange (ids::inputSourceID)
-                                                    .convertTo0to1 (modulatorInputSource.getSelectedId()));
-                                    };
-    
     //addAndMakeVisible(selectPreset);
-    //addAndMakeVisible(modulatorInputSource);
     
     setSize (940, 435);
     
@@ -59,22 +45,20 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 void ImogenAudioProcessorEditor::resized()
 {
     //selectPreset.setBounds(x, y, w, h);
-    
-    //modulatorInputSource.setBounds(x, y, w, h);
 }
 
 
 
 void ImogenAudioProcessorEditor::timerCallback()
 {
-    if (audioProcessor.hasUpdatedParamDefaults())
+    if (imgnProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
     
     currentMessages.clearQuick();
     
     // retrieve all the messages available
-    while (! audioProcessor.paramChangesForEditor.isEmpty())
-        currentMessages.add (audioProcessor.paramChangesForEditor.popMessage());
+    while (! imgnProcessor.paramChangesForEditor.isEmpty())
+        currentMessages.add (imgnProcessor.paramChangesForEditor.popMessage());
     
     // we're going to process only the most recent message of each type
     bav::MessageQueue::flushRepeatedMessages (currentMessages);
@@ -135,15 +119,9 @@ void ImogenAudioProcessorEditor::timerCallback()
 }
 
 
-void ImogenAudioProcessorEditor::updateNumVoicesCombobox (const int newNumVoices)
-{
-    juce::ignoreUnused (newNumVoices);
-}
-
-
 inline void ImogenAudioProcessorEditor::newPresetSelected()
 {
-    audioProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
+    imgnProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
 }
 
 
@@ -151,9 +129,9 @@ inline void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
 {
     int id = 1;
     
-    for (juce::DirectoryEntry entry : juce::RangedDirectoryIterator(audioProcessor.getPresetsFolder(), false))
+    for  (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (imgnProcessor.getPresetsFolder(), false))
     {
-        box.addItem(entry.getFile().getFileName(), id);
+        box.addItem (entry.getFile().getFileName(), id);
         ++id;
     }
 }

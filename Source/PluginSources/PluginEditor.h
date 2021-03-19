@@ -15,8 +15,7 @@
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public juce::Timer
 {
-    
-    using ids = ImogenAudioProcessor::parameterIDs;
+    using ids = ImogenAudioProcessor::parameterID;
     
     
 public:
@@ -30,33 +29,24 @@ public:
     
     void timerCallback() override;
     
-    void updateNumVoicesCombobox (const int newNumVoices);
-    
     
 private:
-    
-    ImogenAudioProcessor& audioProcessor;
-    
-    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the queue
     
     inline void newPresetSelected();
     
     inline void makePresetMenu (juce::ComboBox& box);
     
-    bav::ImogenLookAndFeel lookAndFeel;
+    void updateParameterDefaults();
     
     juce::ComboBox selectPreset;
     
-    juce::ComboBox modulatorInputSource;
-
-    void updateParameterDefaults();
+    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
+    bav::ImogenLookAndFeel lookAndFeel;
     
-    /*
-        This class attaches to the audio processor and reports current or default parameter values, either as their raw normalized versions, or as their native float, int, or boolean types.
-    */
+    ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor
     
-    ImogenParameterFetcher params;
+    ImogenParameterFetcher params;  // helper object to fetch & convert various parameter values with respect to their normalizable ranges
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

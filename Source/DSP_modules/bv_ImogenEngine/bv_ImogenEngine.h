@@ -29,6 +29,7 @@ class ImogenEngine  :   public bav::dsp::FIFOWrappedEngine<SampleType>
     
     using FIFOEngine = bav::dsp::FIFOWrappedEngine<SampleType>;
     
+    
 public:
     ImogenEngine();
     
