@@ -119,7 +119,7 @@ bvh_INLINE_VOID_TEMPLATE::handleMidiEvent (const MidiMessage& m, const int sampl
     else if (m.isAllNotesOff() || m.isAllSoundOff())
         allNotesOff (false);
     else if (m.isPitchWheel())
-        handlePitchWheel (jmap (m.getPitchWheelValue(), 0, 16383, 0, 127));
+        handlePitchWheel (juce::jmap (m.getPitchWheelValue(), 0, 16383, 0, 127));
     else if (m.isAftertouch())
         handleAftertouch (m.getNoteNumber(), m.getAfterTouchValue());
     else if (m.isChannelPressure())
@@ -199,8 +199,8 @@ bvh_INLINE_VOID_TEMPLATE::startVoice (Voice* voice, const int midiPitch, const f
     }
     else if (aftertouchGainIsOn)  // same note retriggered: output aftertouch / channel pressure
     {
-        const int aftertouch = jlimit (0, 127,
-                                       roundToInt((velocity - voice->getLastRecievedVelocity()) * 127.0f));
+        const int aftertouch = juce::jlimit (0, 127,
+                                             juce::roundToInt ((velocity - voice->getLastRecievedVelocity()) * 127.0f));
         
         if (aftertouch != voice->currentAftertouch)
         {

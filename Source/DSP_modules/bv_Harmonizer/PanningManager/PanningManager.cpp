@@ -87,7 +87,7 @@ void PanningManager::updateStereoWidth (const int newWidth)
     possiblePanVals.clearQuick();
     
     for (int i = 0; i < currentNumVoices; ++i)
-        possiblePanVals.add (roundToInt (minPan + (i * increment) + halfIncrement));
+        possiblePanVals.add (juce::roundToInt (minPan + (i * increment) + halfIncrement));
     
     // reorder pan values into "assigning order" -- center out, by writing from the possiblePanVals array to the panValsInAssigningOrder array in the array index order held in arrayIndexesMapped
     panValsInAssigningOrder.clearQuick();
@@ -234,7 +234,7 @@ inline void PanningManager::mapArrayIndexes()
     
     arrayIndexesMapped.clearQuick();
     
-    const int middleIndex = currentNumVoices > 1 ? roundToInt (floor (currentNumVoices * 0.5f)) : 0;
+    const int middleIndex = currentNumVoices > 1 ? juce::roundToInt (floor (currentNumVoices * 0.5f)) : 0;
     
     arrayIndexesMapped.add (middleIndex);
     

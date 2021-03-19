@@ -39,6 +39,12 @@ class HarmonizerVoice
     
     using AudioBuffer = juce::AudioBuffer<SampleType>;
     
+    using ADSR = juce::ADSR;
+    using ADSRParams = juce::ADSR::Parameters;
+    
+    using FVO = juce::FloatVectorOperations;
+    
+    
 public:
     
     // NB. I play a bit fast and loose with private vs public functions here, because really, you should never interface directly with any non-const methods of HarmonizerVoice from outside the Harmonizer class that owns it...
@@ -103,9 +109,9 @@ protected:
     
     void setPan (int newPan);
     
-    void setAdsrParameters (const ADSR::Parameters newParams) { adsr.setParameters(newParams); }
-    void setQuickReleaseParameters (const ADSR::Parameters newParams) { quickRelease.setParameters(newParams); }
-    void setQuickAttackParameters  (const ADSR::Parameters newParams) { quickAttack.setParameters(newParams); }
+    void setAdsrParameters (const ADSRParams newParams) { adsr.setParameters(newParams); }
+    void setQuickReleaseParameters (const ADSRParams newParams) { quickRelease.setParameters(newParams); }
+    void setQuickAttackParameters  (const ADSRParams newParams) { quickAttack.setParameters(newParams); }
     
     void softPedalChanged (bool isDown);
     
@@ -116,7 +122,7 @@ private:
     void clearCurrentNote(); // this function resets the voice's internal state & marks it as avaiable to accept a new note
     
     void sola (const SampleType* input, const int totalNumInputSamples,
-               const int origPeriod, const int newPeriod, const Array<int>& indicesOfGrainOnsets,
+               const int origPeriod, const int newPeriod, const juce::Array<int>& indicesOfGrainOnsets,
                const SampleType* window);
     
     void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample, const int frameSize, 
@@ -331,8 +337,8 @@ private:
     void startVoice (Voice* voice, const int midiPitch, const float velocity, const bool isKeyboard);
     void stopVoice  (Voice* voice, const float velocity, const bool allowTailOff);
     
-    void turnOnList  (const Array<int>& toTurnOn,  const float velocity, const bool partOfChord = false);
-    void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord = false);
+    void turnOnList  (const juce::Array<int>& toTurnOn,  const float velocity, const bool partOfChord = false);
+    void turnOffList (const juce::Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord = false);
     
     void updateQuickReleaseMs (const int newMs);
     void updateQuickAttackMs  (const int newMs);

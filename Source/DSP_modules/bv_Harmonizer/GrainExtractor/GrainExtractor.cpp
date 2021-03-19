@@ -77,7 +77,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
     
     const int grainLength = period * 2;
     const int numSamples = inputAudio.getNumSamples();
-    const int halfPeriod = roundToInt (period / 2.0f);
+    const int halfPeriod = juce::roundToInt (period / 2.0f);
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
@@ -101,7 +101,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
             if (i < peakIndices.size() - 2 || targetArray.size() > 1)
                 continue;
             
-            const int quarterPeriod = roundToInt (halfPeriod * 0.5f);
+            const int quarterPeriod = juce::roundToInt (halfPeriod * 0.5f);
             
             while (grainStart + grainLength > numSamples)
                 grainStart -= quarterPeriod;
@@ -131,7 +131,7 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (IArray& targetArray,
     targetArray.clearQuick();
     
     const int grainSize = 2 * period; // output grains are 2 periods long w/ 50% overlap
-    const int halfPeriod = roundToInt (period * 0.5f);
+    const int halfPeriod = juce::roundToInt (period * 0.5f);
     
     jassert (totalNumSamples >= grainSize);
     

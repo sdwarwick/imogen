@@ -14,7 +14,6 @@
 
 
 namespace bav
-
 {
     
 
@@ -54,13 +53,13 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     constexpr SampleType zero = SampleType(0.0);
     
     synthesisBuffer.setSize (1, doubleSize);
-    FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0), zero, doubleSize);
+    FVO::fill (synthesisBuffer.getWritePointer(0), zero, doubleSize);
     
     windowingBuffer.setSize (1, doubleSize);
-    FloatVectorOperations::fill (windowingBuffer.getWritePointer(0), zero, doubleSize);
+    FVO::fill (windowingBuffer.getWritePointer(0), zero, doubleSize);
     
     copyingBuffer.setSize (1, doubleSize);
-    FloatVectorOperations::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
+    FVO::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
     
     synthesisIndex = 0;
     
@@ -100,7 +99,7 @@ bvhv_VOID_TEMPLATE::bypassedBlock (const int numSamples)
 
 bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer,
                                      const int origPeriod,
-                                     const Array<int>& indicesOfGrainOnsets,
+                                     const juce::Array<int>& indicesOfGrainOnsets,
                                      const AudioBuffer& windowToUse)
 {
     jassert (inputAudio.getNumSamples() == outputBuffer.getNumSamples());
@@ -120,7 +119,7 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer&
     
     // puts shifted samples into the synthesisBuffer
     sola (inputAudio.getReadPointer(0), numSamples, origPeriod,
-          roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
+          juce::roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
           indicesOfGrainOnsets, // analysis grains are length origPeriod * 2, approx 50% overlap, centred on points of maximum energy in input signal
           windowToUse.getReadPointer(0));  // precomputed window length must be length origPeriod * 2
     
@@ -162,7 +161,7 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer&
 bvbv_INLINE_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSamples,
                                  const int origPeriod, // size of analysis grains = origPeriod * 2
                                  const int newPeriod,  // OLA hop size
-                                 const Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
+                                 const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
                                  const SampleType* window) // Hanning window, length origPeriod * 2
 {
     if (synthesisIndex > totalNumInputSamples)
@@ -189,8 +188,8 @@ bvbv_INLINE_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInpu
     if (sampsLeft > 0)
     {
         constexpr SampleType zero = SampleType(0.0);
-        FloatVectorOperations::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
-                                     zero, sampsLeft);
+        FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
+                   zero, sampsLeft);
     }
 }
 
@@ -201,10 +200,8 @@ bvbv_INLINE_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
                                      const int newPeriod)
 {
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
-    FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0),
-                                     window,
-                                     inputAudio + frameStartSample,
-                                     frameSize);
+    FVO::multiply (windowingBuffer.getWritePointer(0), window,
+                   inputAudio + frameStartSample, frameSize);
     
     const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
     SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
@@ -212,9 +209,8 @@ bvbv_INLINE_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
     do {
         jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
         
-        FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex,
-                                    windowBufferReading,
-                                    frameSize);
+        FVO::add (synthesisBufferWriting + synthesisIndex,
+                  windowBufferReading, frameSize);
         
         synthesisIndex += newPeriod;
     }
@@ -269,7 +265,7 @@ bvbv_INLINE_VOID_TEMPLATE::clearCurrentNote()
     
     synthesisBuffer.clear();
     
-    resetRampedValues (roundToInt (floor (synthesisBuffer.getNumSamples() * 0.5f)));
+    resetRampedValues (juce::roundToInt (floor (synthesisBuffer.getNumSamples() * 0.5f)));
 }
 
 
@@ -373,7 +369,7 @@ bvhv_VOID_TEMPLATE::aftertouchChanged (const int newAftertouchValue)
 
 bvhv_VOID_TEMPLATE::setPan (int newPan)
 {
-    newPan = jlimit(0, 127, newPan);
+    newPan = juce::jlimit(0, 127, newPan);
     
     if (panner.getLastMidiPan() == newPan)
         return;

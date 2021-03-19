@@ -185,7 +185,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& out
     if (frameIsPitched)
     {
         currentInputFreq = inputFrequency;
-        periodThisFrame = roundToInt (sampleRate / inputFrequency);
+        periodThisFrame = juce::roundToInt (sampleRate / inputFrequency);
     }
     else
     {
@@ -194,9 +194,9 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& out
         
         if (bav::math::probability (50))  // reverse the polarity approx 50% of the time
         {
-            FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
-                                           inputAudio.getReadPointer(0),
-                                           numSamples);
+            juce::FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
+                                                 inputAudio.getReadPointer(0),
+                                                 numSamples);
             polarityReversed = true;
         }
     }
