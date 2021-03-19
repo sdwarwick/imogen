@@ -17,17 +17,16 @@
 
 
 namespace bav
-
 {
-    
-using namespace juce;
 
 
 template<typename SampleType>
 class ImogenEngine  :   public bav::dsp::FIFOWrappedEngine<SampleType>
 {
     
-    using FIFOEngine = bav::dsp::FIFOWrappedEngine<SampleType>;
+    using FIFOEngine  = bav::dsp::FIFOWrappedEngine<SampleType>;
+    using AudioBuffer = juce::AudioBuffer<SampleType>;
+    using MidiBuffer  = juce::MidiBuffer;
     
     
 public:
@@ -40,7 +39,7 @@ public:
     void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     int getCurrentNumVoices() const { return harmonizer.getNumVoices(); }
     
-    void returnActivePitches (Array<int>& outputArray) const;
+    void returnActivePitches (juce::Array<int>& outputArray) const;
     
     void recieveExternalPitchbend (const int bend);
     
@@ -68,7 +67,7 @@ public:
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource);
     
-    void playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
+    void playChord (const juce::Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
     
     bool isMidiLatched() const { return harmonizer.isLatched(); }
     void updateMidiLatch (const bool isLatched);
@@ -82,9 +81,9 @@ private:
     // 2 - mix all input channels to mono
     std::atomic<int> modulatorInput;
     
-    void renderBlock (const AudioBuffer<SampleType>& input, AudioBuffer<SampleType>& output, MidiBuffer& midiMessages) override;
+    void renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages) override;
     
-    void bypassedBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages) override;
+    void bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages) override;
     
     void initialized (int newInternalBlocksize, double samplerate) override;
     
@@ -98,9 +97,9 @@ private:
     
     Harmonizer<SampleType> harmonizer;
     
-    AudioBuffer<SampleType> monoBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
-    AudioBuffer<SampleType> wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-    AudioBuffer<SampleType> dryBuffer; // this buffer is used for panning & delaying the dry signal
+    AudioBuffer monoBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
+    AudioBuffer wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
+    AudioBuffer dryBuffer; // this buffer is used for panning & delaying the dry signal
     
     juce::dsp::ProcessSpec dspSpec;
     

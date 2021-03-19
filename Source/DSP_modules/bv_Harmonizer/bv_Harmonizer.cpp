@@ -165,9 +165,7 @@ bvh_VOID_TEMPLATE::resetRampedValues (int blocksize)
 // audio rendering------------------------------------------------------------------------------------------------------------------------------
  **********************************************************************************************************************************************/
 
-bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
-                                 AudioBuffer<SampleType>& outputBuffer,
-                                 MidiBuffer& midiMessages)
+bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer, MidiBuffer& midiMessages)
 {
     jassert (! voices.isEmpty());
     
@@ -192,7 +190,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     else
     {
         // for unpitched frames, an arbitrary "period" is imposed on the signal for analysis grain extraction; this arbitrary period is randomized within a certain range
-        periodThisFrame = Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
+        periodThisFrame = juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
         
         if (bav::math::probability (50))  // reverse the polarity approx 50% of the time
         {
@@ -205,7 +203,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     
     fillWindowBuffer (periodThisFrame * 2);
     
-    const AudioBuffer<SampleType>& actualInput = polarityReversed ? polarityReversalBuffer : inputAudio;
+    const AudioBuffer& actualInput = polarityReversed ? polarityReversalBuffer : inputAudio;
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
     
@@ -219,12 +217,9 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
 }
 
 
-bvh_VOID_TEMPLATE::bypassedBlock (const AudioBuffer<SampleType>& inputAudio,
-                                  MidiBuffer& midiMessages)
+bvh_VOID_TEMPLATE::bypassedBlock (const int numSamples, MidiBuffer& midiMessages)
 {
     processMidi (midiMessages);
-    
-    const int numSamples = inputAudio.getNumSamples();
     
     for (auto* voice : voices)
         voice->bypassedBlock (numSamples);
@@ -242,7 +237,7 @@ inline void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
         return;
     
     constexpr SampleType zero = SampleType(0.0);
-    FloatVectorOperations::fill (windowBuffer.getWritePointer(0), zero, windowBuffer.getNumSamples());
+    juce::FloatVectorOperations::fill (windowBuffer.getWritePointer(0), zero, windowBuffer.getNumSamples());
     
     jassert (numSamples <= windowBuffer.getNumSamples());
     

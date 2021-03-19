@@ -12,7 +12,6 @@
 
 
 namespace bav
-
 {
     
     
@@ -61,8 +60,8 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
 
 
 template<typename SampleType>
-void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
-                                                       const AudioBuffer<SampleType>& inputAudio,
+void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
+                                                       const juce::AudioBuffer<SampleType>& inputAudio,
                                                        const int period)
 {
     targetArray.clearQuick();
@@ -124,7 +123,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (Array<int>& targetArray,
     
     
 template<typename SampleType>
-inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
+inline void GrainExtractor<SampleType>::findPsolaPeaks (IArray& targetArray,
                                                         const SampleType* reading,
                                                         const int totalNumSamples,
                                                         const int period)
@@ -171,7 +170,7 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (Array<int>& targetArray,
 template<typename SampleType>
 inline int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const int frameEnd, int predictedPeak,
                                                      const SampleType* reading,
-                                                     const Array<int>& targetArray,
+                                                     const IArray& targetArray,
                                                      const int period, const int grainSize)
 {
     jassert (frameEnd > frameStart);
@@ -213,9 +212,9 @@ inline int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const
     
 
 template<typename SampleType>
-inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
+inline void GrainExtractor<SampleType>::getPeakCandidateInRange (IArray& candidates, const SampleType* input,
                                                                  const int startSample, const int endSample, const int predictedPeak,
-                                                                 const Array<int>& searchingOrder)
+                                                                 const IArray& searchingOrder)
 {
     jassert (! searchingOrder.isEmpty());
     
@@ -289,7 +288,7 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (Array<int>& can
 
 
 template<typename SampleType>
-inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
+inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& candidates, const SampleType* reading,
                                                                  const int deltaTarget1, const int deltaTarget2)
 {
     candidateDeltas.clearQuick();
@@ -362,7 +361,7 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const Array<int
 
 
 template<typename SampleType>
-inline int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const Array<int>& candidates, const SampleType* reading)
+inline int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const IArray& candidates, const SampleType* reading)
 {
     int strongestPeakIndex = candidates.getUnchecked (0);
     SampleType strongestPeak = abs(reading[strongestPeakIndex]);
@@ -383,7 +382,7 @@ inline int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const Array<
 
 
 template<typename SampleType>
-inline void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (Array<int>& output, // array to write the sorted sample indices to
+inline void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (IArray& output, // array to write the sorted sample indices to
                                                                            const int startSample, const int endSample,
                                                                            const int predictedPeak)
 {

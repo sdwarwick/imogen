@@ -8,17 +8,16 @@
 
 
 namespace bav
-
 {
 
-    
-using namespace juce;
-    
     
 template<typename SampleType>
 class GrainExtractor
-
 {
+    
+    using IArray = juce::Array<int>;
+    using FArray = juce::Array<float>;
+    
     
 public:
     
@@ -32,43 +31,44 @@ public:
     void releaseResources();
     
     
-    void getGrainOnsetIndices (Array<int>& targetArray,
-                               const AudioBuffer<SampleType>& inputAudio,
+    void getGrainOnsetIndices (IArray& targetArray,
+                               const juce::AudioBuffer<SampleType>& inputAudio,
                                const int period);
     
     
 private:
     
-    Array<int> peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
+    IArray peakIndices; // used by all the kinds of peak picking algorithms to store their output for transformation to grains
     
-    Array<int> peakCandidates;
-    Array<int> peakSearchingOrder;
+    IArray peakCandidates;
+    IArray peakSearchingOrder;
     
-    Array<float> candidateDeltas;
-    Array<int>   finalHandful;
-    Array<float> finalHandfulDeltas;
+    FArray candidateDeltas;
+    IArray   finalHandful;
+    FArray finalHandfulDeltas;
     
     // functions used for finding of PSOLA peaks
     
-    void findPsolaPeaks (Array<int>& targetArray,
+    void findPsolaPeaks (IArray& targetArray,
                          const SampleType* reading,
                          const int totalNumSamples,
                          const int period);
     
-    int findNextPeak (const int frameStart, const int frameEnd, int predictedPeak, const SampleType* reading, const Array<int>& targetArray,
+    int findNextPeak (const int frameStart, const int frameEnd, int predictedPeak, const SampleType* reading, const IArray& targetArray,
                       const int period, const int grainSize);
     
-    void sortSampleIndicesForPeakSearching (Array<int>& output, const int startSample, const int endSample, const int predictedPeak);
+    void sortSampleIndicesForPeakSearching (IArray& output, const int startSample, const int endSample, const int predictedPeak);
     
-    void getPeakCandidateInRange (Array<int>& candidates, const SampleType* input,
+    void getPeakCandidateInRange (IArray& candidates, const SampleType* input,
                                   const int startSample, const int endSample, const int predictedPeak,
-                                  const Array<int>& searchingOrder);
+                                  const IArray& searchingOrder);
     
-    int chooseIdealPeakCandidate (const Array<int>& candidates, const SampleType* reading,
+    int chooseIdealPeakCandidate (const IArray& candidates, const SampleType* reading,
                                   const int deltaTarget1, const int deltaTarget2);
     
-    int choosePeakWithGreatestPower (const Array<int>& candidates, const SampleType* reading);
+    int choosePeakWithGreatestPower (const IArray& candidates, const SampleType* reading);
     
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrainExtractor)
 };
 
 

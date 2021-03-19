@@ -9,7 +9,6 @@
 
 
 namespace bav
-
 {
     
 
@@ -190,7 +189,7 @@ int PanningManager::getClosestNewPanValFromOld (int oldPan)
 }
     
     
-inline int PanningManager::findClosestValueInNewArray (int targetValue, Array<int>& newArray)
+inline int PanningManager::findClosestValueInNewArray (int targetValue, Array& newArray)
 {
     if (newArray.isEmpty())
         return -1;
@@ -235,7 +234,7 @@ inline void PanningManager::mapArrayIndexes()
     
     arrayIndexesMapped.clearQuick();
     
-    const int middleIndex = currentNumVoices > 1 ? roundToInt (floor (currentNumVoices / 2)) : 0;
+    const int middleIndex = currentNumVoices > 1 ? roundToInt (floor (currentNumVoices * 0.5f)) : 0;
     
     arrayIndexesMapped.add (middleIndex);
     

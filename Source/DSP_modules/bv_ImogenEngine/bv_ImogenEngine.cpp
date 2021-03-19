@@ -83,13 +83,13 @@ bvie_VOID_TEMPLATE::killAllMidi()
 }
 
 
-bvie_VOID_TEMPLATE::playChord (const Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld)
+bvie_VOID_TEMPLATE::playChord (const juce::Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld)
 {
     harmonizer.playChord (desiredNotes, velocity, allowTailOffOfOld);
 }
 
 
-bvie_VOID_TEMPLATE::returnActivePitches (Array<int>& outputArray) const
+bvie_VOID_TEMPLATE::returnActivePitches (juce::Array<int>& outputArray) const
 {
     harmonizer.reportActiveNotes(outputArray);
 }
@@ -217,7 +217,7 @@ bvie_VOID_TEMPLATE::release()
 }
     
 
-bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer<SampleType>& input, MidiBuffer& midiMessages)
+bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages)
 {
     harmonizer.processMidi (midiMessages);
     
@@ -230,13 +230,11 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer<SampleType>& input, MidiBuf
     dryLgain.skip (numSamples);
     dryRgain.skip (numSamples);
     
-    harmonizer.bypassedBlock (input, midiMessages);
+    harmonizer.bypassedBlock (numSamples, midiMessages);
 }
 
     
-bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
-                                 AudioBuffer<SampleType>& output,
-                                 MidiBuffer& midiMessages)
+bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
 {
     const int blockSize = input.getNumSamples();
     
@@ -249,7 +247,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     if (leadIsBypassed && harmoniesAreBypassed)
     {
-        harmonizer.bypassedBlock (input, midiMessages);
+        harmonizer.bypassedBlock (blockSize, midiMessages);
         return;
     }
     
@@ -319,7 +317,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     wetBuffer.clear();
     
     if (harmoniesAreBypassed)
-        harmonizer.bypassedBlock (monoBuffer, midiMessages);
+        harmonizer.bypassedBlock (blockSize, midiMessages);
     else
         harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages); // renders the stereo output into wetBuffer
     

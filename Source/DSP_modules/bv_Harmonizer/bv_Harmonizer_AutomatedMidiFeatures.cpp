@@ -20,7 +20,7 @@ namespace bav
  ***********************************************************************************************************************************************/
 
 // play chord: send an array of midi pitches into this function and it will ensure that only those desired pitches are being played.
-bvh_VOID_TEMPLATE::playChord (const Array<int>& desiredPitches,
+bvh_VOID_TEMPLATE::playChord (const juce::Array<int>& desiredPitches,
                               const float velocity,
                               const bool allowTailOffOfOld)
 {
@@ -65,7 +65,7 @@ bvh_VOID_TEMPLATE::playChord (const Array<int>& desiredPitches,
 }
 
 
-bvh_VOID_TEMPLATE::turnOnList (const Array<int>& toTurnOn, const float velocity, const bool partOfChord)
+bvh_VOID_TEMPLATE::turnOnList (const juce::Array<int>& toTurnOn, const float velocity, const bool partOfChord)
 {
     if (toTurnOn.isEmpty())
         return;
@@ -78,7 +78,7 @@ bvh_VOID_TEMPLATE::turnOnList (const Array<int>& toTurnOn, const float velocity,
 }
 
 
-bvh_VOID_TEMPLATE::turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
+bvh_VOID_TEMPLATE::turnOffList (const juce::Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord)
 {
     if (toTurnOff.isEmpty())
         return;
@@ -98,7 +98,7 @@ bvh_VOID_TEMPLATE::applyPedalPitch()
         return;
     
     int currentLowest = 128;
-    HarmonizerVoice<SampleType>* lowestVoice = nullptr;
+    Voice* lowestVoice = nullptr;
     
     for (auto* voice : voices) // find the current lowest note being played by a keyboard key
     {
@@ -170,7 +170,7 @@ bvh_VOID_TEMPLATE::applyDescant()
         return;
     
     int currentHighest = -1;
-    HarmonizerVoice<SampleType>* highestVoice = nullptr;
+    Voice* highestVoice = nullptr;
     
     for (auto* voice : voices)  // find the current highest note being played by a keyboard key
     {

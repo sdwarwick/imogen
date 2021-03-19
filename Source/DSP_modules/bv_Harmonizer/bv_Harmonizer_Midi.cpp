@@ -50,7 +50,7 @@ bool Harmonizer<SampleType>::isPitchActive (const int midiPitch,
 }
 
 
-bvh_VOID_TEMPLATE::reportActiveNotes (Array<int>& outputArray,
+bvh_VOID_TEMPLATE::reportActiveNotes (juce::Array<int>& outputArray,
                                       const bool includePlayingButReleased,
                                       const bool includeKeyUpNotes) const
 {
@@ -85,7 +85,7 @@ bvh_VOID_TEMPLATE::processMidi (MidiBuffer& midiMessages)
     
     std::for_each (midiIterator,
                    midiMessages.cend(),
-                   [&] (const MidiMessageMetadata& meta)
+                   [&] (const juce::MidiMessageMetadata& meta)
                    {
                        handleMidiEvent (meta.getMessage(), meta.samplePosition);
                    } );
@@ -148,7 +148,7 @@ bvh_INLINE_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, con
 {
     // N.B. the `isKeyboard` flag should be true if this note on event was triggered directly from the plugin's midi input; this flag should be false if this note event was automatically triggered by any internal function of Imogen (descant, pedal pitch, etc)
     
-    HarmonizerVoice<SampleType>* voice = nullptr;
+    Voice* voice = nullptr;
     
     if (auto* prevVoice = getVoicePlayingNote (midiPitch))
     {
@@ -178,7 +178,7 @@ bvh_INLINE_VOID_TEMPLATE::noteOn (const int midiPitch, const float velocity, con
 }
 
 
-bvh_INLINE_VOID_TEMPLATE::startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard)
+bvh_INLINE_VOID_TEMPLATE::startVoice (Voice* voice, const int midiPitch, const float velocity, const bool isKeyboard)
 {
     if (voice == nullptr)
         return;
@@ -301,7 +301,7 @@ bvh_INLINE_VOID_TEMPLATE::noteOff (const int midiNoteNumber, const float velocit
 }
 
 
-bvh_INLINE_VOID_TEMPLATE::stopVoice (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff)
+bvh_INLINE_VOID_TEMPLATE::stopVoice (Voice* voice, const float velocity, const bool allowTailOff)
 {
     if (voice == nullptr)
         return;
@@ -494,32 +494,32 @@ bvh_INLINE_VOID_TEMPLATE::handleSoftPedal (const int value)
 
 bvh_INLINE_VOID_TEMPLATE::handleModWheel (const int wheelValue)
 {
-    ignoreUnused(wheelValue);
+    juce::ignoreUnused (wheelValue);
 }
 
 bvh_INLINE_VOID_TEMPLATE::handleBreathController (const int controlValue)
 {
-    ignoreUnused(controlValue);
+    juce::ignoreUnused (controlValue);
 }
 
 bvh_INLINE_VOID_TEMPLATE::handleFootController (const int controlValue)
 {
-    ignoreUnused(controlValue);
+    juce::ignoreUnused (controlValue);
 }
 
 bvh_INLINE_VOID_TEMPLATE::handlePortamentoTime (const int controlValue)
 {
-    ignoreUnused(controlValue);
+    juce::ignoreUnused (controlValue);
 }
 
 bvh_INLINE_VOID_TEMPLATE::handleBalance (const int controlValue)
 {
-    ignoreUnused(controlValue);
+    juce::ignoreUnused (controlValue);
 }
 
 bvh_INLINE_VOID_TEMPLATE::handleLegato (const bool isOn)
 {
-    ignoreUnused(isOn);
+    juce::ignoreUnused (isOn);
 }
 
 

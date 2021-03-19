@@ -98,10 +98,10 @@ bvhv_VOID_TEMPLATE::bypassedBlock (const int numSamples)
 }
 
 
-bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
+bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer,
                                      const int origPeriod,
                                      const Array<int>& indicesOfGrainOnsets,
-                                     const AudioBuffer<SampleType>& windowToUse)
+                                     const AudioBuffer& windowToUse)
 {
     jassert (inputAudio.getNumSamples() == outputBuffer.getNumSamples());
     

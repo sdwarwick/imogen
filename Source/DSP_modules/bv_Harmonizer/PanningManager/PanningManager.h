@@ -8,16 +8,16 @@
 
 
 namespace bav
-
 {
-    
-
-using namespace juce;
     
 /* PanningManager: helper class to keep track of possible midi panning values within a given stero width, evenly spaced for the current number of harmony voices.
 */
 class PanningManager
 {
+    
+    using Array = juce::Array<int>;
+    
+    
 public:
     
     PanningManager();
@@ -54,11 +54,11 @@ public:
     
 private:
     
-    Array<int> panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
+    Array panValsInAssigningOrder; // this array stores the pan values in the order they will be sent out, ie "middle out". Index 0 contains 64, and the highest two indices will contain 0 and 127 [if the stereo width is 100]
     
-    Array<int> arrayIndexesMapped; // this array is used to facilitate the transfer of values from possiblePanVals to panValsInAssigningOrder
+    Array arrayIndexesMapped; // this array is used to facilitate the transfer of values from possiblePanVals to panValsInAssigningOrder
     
-    Array<int> unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting.
+    Array unsentPanVals; // this is the array we will actually be reading pan vals from! the others are for sorting.
     
     
     int lastRecievedStereoWidth;
@@ -66,14 +66,14 @@ private:
     
     void mapArrayIndexes();
     
-    int findClosestValueInNewArray (int targetValue, Array<int>& newArray);
+    int findClosestValueInNewArray (int targetValue, Array& newArray);
     
-    Array<int> possiblePanVals;
+    Array possiblePanVals;
     
-    Array<int> newPanVals;
-    Array<int> newUnsentVals;
+    Array newPanVals;
+    Array newUnsentVals;
     
-    Array<int> distances;
+    Array distances;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningManager)
 };

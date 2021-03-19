@@ -21,11 +21,7 @@
 
 
 namespace bav
-
 {
-    
-using namespace juce;
-    
     
 
 template<typename SampleType>
@@ -40,6 +36,9 @@ class Harmonizer; // forward declaration...
 template<typename SampleType>
 class HarmonizerVoice
 {
+    
+    using AudioBuffer = juce::AudioBuffer<SampleType>;
+    
 public:
     
     // NB. I play a bit fast and loose with private vs public functions here, because really, you should never interface directly with any non-const methods of HarmonizerVoice from outside the Harmonizer class that owns it...
@@ -48,9 +47,9 @@ public:
     
     ~HarmonizerVoice();
     
-    void renderNextBlock (const AudioBuffer<SampleType>& inputAudio, AudioBuffer<SampleType>& outputBuffer,
-                          const int origPeriod, const Array<int>& indicesOfGrainOnsets,
-                          const AudioBuffer<SampleType>& windowToUse);
+    void renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer,
+                          const int origPeriod, const juce::Array<int>& indicesOfGrainOnsets,
+                          const AudioBuffer& windowToUse);
     
     void bypassedBlock (const int numSamples);
     
@@ -141,9 +140,9 @@ private:
     
     bool sustainingFromSostenutoPedal;
     
-    AudioBuffer<SampleType> synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
-    AudioBuffer<SampleType> copyingBuffer;
-    AudioBuffer<SampleType> windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
+    AudioBuffer synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
+    AudioBuffer copyingBuffer;
+    AudioBuffer windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
     
     int currentlyPlayingNote;
     float currentOutputFreq;
@@ -177,6 +176,15 @@ private:
 template<typename SampleType>
 class Harmonizer
 {
+    using AudioBuffer = juce::AudioBuffer<SampleType>;
+    using MidiBuffer  = juce::MidiBuffer;
+    using MidiMessage = juce::MidiMessage;
+    
+    using Voice = HarmonizerVoice<SampleType>;
+    
+    using ADSRParams = juce::ADSR::Parameters;
+    
+    
 public:
     Harmonizer();
     
@@ -192,18 +200,15 @@ public:
     
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
     
-    void renderVoices (const AudioBuffer<SampleType>& inputAudio,
-                       AudioBuffer<SampleType>& outputBuffer,
-                       MidiBuffer& midiMessages);
+    void renderVoices (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer, MidiBuffer& midiMessages);
     
-    void bypassedBlock (const AudioBuffer<SampleType>& inputAudio,
-                        MidiBuffer& midiMessages);
+    void bypassedBlock (const int numSamples,  MidiBuffer& midiMessages);
     
     void processMidi (MidiBuffer& midiMessages);
     
     void processMidiEvent (const MidiMessage& m);
     
-    void playChord (const Array<int>& desiredPitches,
+    void playChord (const juce::Array<int>& desiredPitches,
                     const float velocity = 1.0f,
                     const bool allowTailOffOfOld = false);
     
@@ -216,7 +221,7 @@ public:
     
     bool isPitchActive (const int midiPitch, const bool countRingingButReleased = false, const bool countKeyUpNotes = false) const;
     
-    void reportActiveNotes (Array<int>& outputArray,
+    void reportActiveNotes (juce::Array<int>& outputArray,
                             const bool includePlayingButReleased = false,
                             const bool includeKeyUpNotes = true) const;
     
@@ -288,9 +293,9 @@ protected:
     bool isAftertouchGainOn() const noexcept { return aftertouchGainIsOn; }
     
     bool isADSRon() const noexcept { return adsrIsOn; }
-    ADSR::Parameters getCurrentAdsrParams() const noexcept { return adsrParams; }
-    ADSR::Parameters getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
-    ADSR::Parameters getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
+    ADSRParams getCurrentAdsrParams() const noexcept { return adsrParams; }
+    ADSRParams getCurrentQuickReleaseParams() const noexcept { return quickReleaseParams; }
+    ADSRParams getCurrentQuickAttackParams()  const noexcept { return quickAttackParams; }
     
     
 private:
@@ -323,8 +328,8 @@ private:
     void handleBalance (const int controlValue);
     void handleLegato (const bool isOn);
     
-    void startVoice (HarmonizerVoice<SampleType>* voice, const int midiPitch, const float velocity, const bool isKeyboard);
-    void stopVoice  (HarmonizerVoice<SampleType>* voice, const float velocity, const bool allowTailOff);
+    void startVoice (Voice* voice, const int midiPitch, const float velocity, const bool isKeyboard);
+    void stopVoice  (Voice* voice, const float velocity, const bool allowTailOff);
     
     void turnOnList  (const Array<int>& toTurnOn,  const float velocity, const bool partOfChord = false);
     void turnOffList (const Array<int>& toTurnOff, const float velocity, const bool allowTailOff, const bool partOfChord = false);
@@ -339,33 +344,33 @@ private:
     void applyDescant();
     
     // voice allocation
-    HarmonizerVoice<SampleType>* findFreeVoice (const bool stealIfNoneAvailable);
-    HarmonizerVoice<SampleType>* findVoiceToSteal();
-    HarmonizerVoice<SampleType>* getVoicePlayingNote (const int midiPitch) const;
-    HarmonizerVoice<SampleType>* getCurrentDescantVoice() const;
-    HarmonizerVoice<SampleType>* getCurrentPedalPitchVoice() const;
+    Voice* findFreeVoice (const bool stealIfNoneAvailable);
+    Voice* findVoiceToSteal();
+    Voice* getVoicePlayingNote (const int midiPitch) const;
+    Voice* getCurrentDescantVoice() const;
+    Voice* getCurrentPedalPitchVoice() const;
     
     void fillWindowBuffer (const int numSamples);
     
-    OwnedArray< HarmonizerVoice<SampleType> > voices;
+    juce::OwnedArray< HarmonizerVoice<SampleType> > voices;
     
     PitchDetector<SampleType> pitchDetector;
     
     GrainExtractor<SampleType> grains;
-    Array<int> indicesOfGrainOnsets;
+    juce::Array<int> indicesOfGrainOnsets;
     
     // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio will be randomized within this range
     // NB max value should be 1 greater than the largest possible generated number 
-    const Range<int> unpitchedArbitraryPeriodRange = Range<int> (50, 201);
+    const juce::Range<int> unpitchedArbitraryPeriodRange { 50, 201 };
     
     bool latchIsOn;
     
-    Array<int> currentNotes;
-    Array<int> desiredNotes;
+    juce::Array<int> currentNotes;
+    juce::Array<int> desiredNotes;
     
-    ADSR::Parameters adsrParams;
-    ADSR::Parameters quickReleaseParams;
-    ADSR::Parameters quickAttackParams;
+    ADSRParams adsrParams;
+    ADSRParams quickReleaseParams;
+    ADSRParams quickAttackParams;
     
     float currentInputFreq;
     
@@ -421,12 +426,12 @@ private:
     
     float softPedalMultiplier; // the multiplier by which each voice's output will be multiplied when the soft pedal is down
     
-    AudioBuffer<SampleType> windowBuffer;
+    AudioBuffer windowBuffer;
     int windowSize;
     
-    AudioBuffer<SampleType> polarityReversalBuffer;
+    AudioBuffer polarityReversalBuffer;
     
-    Array< HarmonizerVoice<SampleType>* > usableVoices; // this array is used to sort the voices when a 'steal' is requested
+    juce::Array< Voice* > usableVoices; // this array is used to sort the voices when a 'steal' is requested
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

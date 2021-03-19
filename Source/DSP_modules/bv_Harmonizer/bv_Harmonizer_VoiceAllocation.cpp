@@ -51,12 +51,12 @@ inline HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal()
     jassert (! voices.isEmpty());
     
     // These are the voices we want to protect
-    HarmonizerVoice<SampleType>* low = nullptr; // Lowest sounding note, might be sustained, but NOT in release phase
-    HarmonizerVoice<SampleType>* top = nullptr; // Highest sounding note, might be sustained, but NOT in release phase
+    Voice* low = nullptr; // Lowest sounding note, might be sustained, but NOT in release phase
+    Voice* top = nullptr; // Highest sounding note, might be sustained, but NOT in release phase
     
     // protect these, only use if necessary. These will be nullptrs if pedal / descant is currently off
-    HarmonizerVoice<SampleType>* descantVoice = getCurrentDescantVoice();
-    HarmonizerVoice<SampleType>* pedalVoice = getCurrentPedalPitchVoice();
+    Voice* descantVoice = getCurrentDescantVoice();
+    Voice* pedalVoice = getCurrentPedalPitchVoice();
     
     usableVoices.clearQuick(); // this is a list of voices we can steal, sorted by how long they've been on
     
@@ -70,8 +70,7 @@ inline HarmonizerVoice<SampleType>* Harmonizer<SampleType>::findVoiceToSteal()
         // NB: Using a functor rather than a lambda here due to scare-stories about compilers generating code containing heap allocations...
         struct Sorter
         {
-            bool operator() (const HarmonizerVoice<SampleType>* a, const HarmonizerVoice<SampleType>* b) const noexcept
-                { return a->wasStartedBefore (*b); }
+            bool operator() (const Voice* a, const Voice* b) const noexcept { return a->wasStartedBefore (*b); }
         };
         
         std::sort (usableVoices.begin(), usableVoices.end(), Sorter());
@@ -174,7 +173,7 @@ inline void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
         return;
     
     for (int i = 0; i < voicesToAdd; ++i)
-        voices.add (new HarmonizerVoice<SampleType>(this));
+        voices.add (new Voice(this));
     
     jassert (voices.size() >= voicesToAdd);
 }
@@ -197,7 +196,7 @@ inline void Harmonizer<SampleType>::removeNumVoices (const int voicesToRemove)
         if (voices.isEmpty())
             break;
         
-        HarmonizerVoice<SampleType>* removing = nullptr;
+        Voice* removing = nullptr;
         
         for (auto* voice : voices)
         {

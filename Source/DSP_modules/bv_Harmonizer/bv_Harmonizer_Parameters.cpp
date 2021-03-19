@@ -253,7 +253,6 @@ bvh_VOID_TEMPLATE::updateQuickReleaseMs (const int newMs)
 
 bvh_VOID_TEMPLATE::updateQuickAttackMs (const int newMs)
 {
-    
     const float desiredA = newMs * 0.001f;
     
     quickAttackParams .attack = desiredA;
