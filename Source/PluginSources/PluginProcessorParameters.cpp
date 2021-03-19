@@ -11,45 +11,47 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
     juce::NormalisableRange<float> hzRange (40.0f, 10000.0f, 1.0f);
     
-    params.push_back(std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
-    params.push_back(std::make_unique<BoolParameter>  ("leadBypass", "Lead bypass", false));
-    params.push_back(std::make_unique<BoolParameter>  ("harmonyBypass", "Harmony bypass", false));
-    params.push_back(std::make_unique<IntParameter>   ("dryPan", "Dry vox pan", 0, 127, 64));
-    params.push_back(std::make_unique<FloatParameter> ("adsrAttack", "ADSR Attack", msRange, 0.35f));
-    params.push_back(std::make_unique<FloatParameter> ("adsrDecay", "ADSR Decay", msRange, 0.06f));
-    params.push_back(std::make_unique<FloatParameter> ("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
-    params.push_back(std::make_unique<FloatParameter> ("adsrRelease", "ADSR Release", msRange, 0.1f));
-    params.push_back(std::make_unique<BoolParameter>  ("adsrOnOff", "ADSR on/off", true));
-    params.push_back(std::make_unique<IntParameter>   ("stereoWidth", "Stereo Width", 0, 100, 100));
-    params.push_back(std::make_unique<IntParameter>   ("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
-    params.push_back(std::make_unique<IntParameter>   ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
-    params.push_back(std::make_unique<IntParameter>   ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2));
-    params.push_back(std::make_unique<IntParameter>   ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
-    params.push_back(std::make_unique<BoolParameter>  ("voiceStealing", "Voice stealing", false));
-    params.push_back(std::make_unique<BoolParameter>  ("aftertouchGainToggle", "Aftertouch gain on/off", true));
-    params.push_back(std::make_unique<BoolParameter>  ("pedalPitchToggle", "Pedal pitch on/off", false));
-    params.push_back(std::make_unique<IntParameter>   ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
-    params.push_back(std::make_unique<IntParameter>   ("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
-    params.push_back(std::make_unique<BoolParameter>  ("descantToggle", "Descant on/off", false));
-    params.push_back(std::make_unique<IntParameter>   ("descantThresh", "Descant lower threshold", 0, 127, 127));
-    params.push_back(std::make_unique<IntParameter>   ("descantInterval", "Descant interval", 1, 12, 12));
-    params.push_back(std::make_unique<IntParameter>   ("masterDryWet", "% wet", 0, 100, 100));
-    params.push_back(std::make_unique<FloatParameter> ("inputGain", "Input gain",   gainRange, 0.0f));
-    params.push_back(std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRange, -4.0f));
-    params.push_back(std::make_unique<BoolParameter>  ("limiterIsOn", "Limiter on/off", true));
-    params.push_back(std::make_unique<BoolParameter>  ("noiseGateIsOn", "Noise gate toggle", true));
-    params.push_back(std::make_unique<FloatParameter> ("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
-    params.push_back(std::make_unique<BoolParameter>  ("deEsserIsOn", "De-esser toggle", true));
-    params.push_back(std::make_unique<FloatParameter> ("deEsserThresh", "De-esser thresh", gainRange, -6.0f));
-    params.push_back(std::make_unique<FloatParameter> ("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f));
-    params.push_back(std::make_unique<BoolParameter>  ("compressorToggle", "Compressor on/off", false));
-    params.push_back(std::make_unique<FloatParameter> ("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
-    params.push_back(std::make_unique<BoolParameter>  ("reverbIsOn", "Reverb toggle", false));
-    params.push_back(std::make_unique<IntParameter>   ("reverbDryWet", "Reverb dry/wet", 0, 100, 35));
-    params.push_back(std::make_unique<FloatParameter> ("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f));
-    params.push_back(std::make_unique<FloatParameter> ("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
-    params.push_back(std::make_unique<FloatParameter> ("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
-    params.push_back(std::make_unique<FloatParameter> ("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
+    params.push_back (std::make_unique<juce::AudioParameterBool> ("mainBypass", "Bypass", false));
+    params.push_back (std::make_unique<BoolParameter>  ("leadBypass", "Lead bypass", false));
+    params.push_back (std::make_unique<BoolParameter>  ("harmonyBypass", "Harmony bypass", false));
+    params.push_back (std::make_unique<IntParameter>   ("numVoices", "Number of voices", 1, 20, 12));
+    params.push_back (std::make_unique<IntParameter>   ("inputSource", "Input source", 1, 3, 1));
+    params.push_back (std::make_unique<IntParameter>   ("dryPan", "Dry vox pan", 0, 127, 64));
+    params.push_back (std::make_unique<FloatParameter> ("adsrAttack", "ADSR Attack", msRange, 0.35f));
+    params.push_back (std::make_unique<FloatParameter> ("adsrDecay", "ADSR Decay", msRange, 0.06f));
+    params.push_back (std::make_unique<FloatParameter> ("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
+    params.push_back (std::make_unique<FloatParameter> ("adsrRelease", "ADSR Release", msRange, 0.1f));
+    params.push_back (std::make_unique<BoolParameter>  ("adsrOnOff", "ADSR on/off", true));
+    params.push_back (std::make_unique<IntParameter>   ("stereoWidth", "Stereo Width", 0, 100, 100));
+    params.push_back (std::make_unique<IntParameter>   ("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
+    params.push_back (std::make_unique<IntParameter>   ("midiVelocitySensitivity", "MIDI Velocity Sensitivity", 0, 100, 100));
+    params.push_back (std::make_unique<IntParameter>   ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2));
+    params.push_back (std::make_unique<IntParameter>   ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
+    params.push_back (std::make_unique<BoolParameter>  ("voiceStealing", "Voice stealing", false));
+    params.push_back (std::make_unique<BoolParameter>  ("aftertouchGainToggle", "Aftertouch gain on/off", true));
+    params.push_back (std::make_unique<BoolParameter>  ("pedalPitchToggle", "Pedal pitch on/off", false));
+    params.push_back (std::make_unique<IntParameter>   ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
+    params.push_back (std::make_unique<IntParameter>   ("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
+    params.push_back (std::make_unique<BoolParameter>  ("descantToggle", "Descant on/off", false));
+    params.push_back (std::make_unique<IntParameter>   ("descantThresh", "Descant lower threshold", 0, 127, 127));
+    params.push_back (std::make_unique<IntParameter>   ("descantInterval", "Descant interval", 1, 12, 12));
+    params.push_back (std::make_unique<IntParameter>   ("masterDryWet", "% wet", 0, 100, 100));
+    params.push_back (std::make_unique<FloatParameter> ("inputGain", "Input gain",   gainRange, 0.0f));
+    params.push_back (std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRange, -4.0f));
+    params.push_back (std::make_unique<BoolParameter>  ("limiterIsOn", "Limiter on/off", true));
+    params.push_back (std::make_unique<BoolParameter>  ("noiseGateIsOn", "Noise gate toggle", true));
+    params.push_back (std::make_unique<FloatParameter> ("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
+    params.push_back (std::make_unique<BoolParameter>  ("deEsserIsOn", "De-esser toggle", true));
+    params.push_back (std::make_unique<FloatParameter> ("deEsserThresh", "De-esser thresh", gainRange, -6.0f));
+    params.push_back (std::make_unique<FloatParameter> ("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f));
+    params.push_back (std::make_unique<BoolParameter>  ("compressorToggle", "Compressor on/off", false));
+    params.push_back (std::make_unique<FloatParameter> ("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
+    params.push_back (std::make_unique<BoolParameter>  ("reverbIsOn", "Reverb toggle", false));
+    params.push_back (std::make_unique<IntParameter>   ("reverbDryWet", "Reverb dry/wet", 0, 100, 35));
+    params.push_back (std::make_unique<FloatParameter> ("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f));
+    params.push_back (std::make_unique<FloatParameter> ("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
+    params.push_back (std::make_unique<FloatParameter> ("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
+    params.push_back (std::make_unique<FloatParameter> ("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
     
     // pitch detection vocal range
 #define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
@@ -82,6 +84,8 @@ void ImogenAudioProcessor::initializeParameterPointers()
     mainBypass           = dynamic_cast<juce::AudioParameterBool*> (tree.getParameter ("mainBypass"));       jassert (mainBypass);
     leadBypass           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("leadBypass"));                   jassert (leadBypass);
     harmonyBypass        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("harmonyBypass"));                jassert (harmonyBypass);
+    numVoices            = dynamic_cast<IntParamPtr>   (tree.getParameter ("numVoices"));                    jassert (numVoices);
+    inputSource          = dynamic_cast<IntParamPtr>   (tree.getParameter ("inputSource"));                  jassert (inputSource);
     dryPan               = dynamic_cast<IntParamPtr>   (tree.getParameter ("dryPan"));                       jassert (dryPan);
     dryWet               = dynamic_cast<IntParamPtr>   (tree.getParameter ("masterDryWet"));                 jassert (dryWet);
     adsrAttack           = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrAttack"));                   jassert (adsrAttack);
@@ -127,6 +131,8 @@ void ImogenAudioProcessor::initializeParameterListeners()
     addParameterMessenger ("mainBypass",                mainBypassID);
     addParameterMessenger ("leadBypass",                leadBypassID);
     addParameterMessenger ("harmonyBypass",             harmonyBypassID);
+    addParameterMessenger ("numVoices",                 numVoicesID);
+    addParameterMessenger ("inputSource",               inputSourceID);
     addParameterMessenger ("dryPan",                    dryPanID);
     addParameterMessenger ("masterDryWet",              dryWetID);
     addParameterMessenger ("adsrAttack",                adsrAttackID);
@@ -177,6 +183,8 @@ void ImogenAudioProcessor::updateParameterDefaults()
 {
     leadBypass->refreshDefault();
     harmonyBypass->refreshDefault();
+    numVoices->refreshDefault();
+    inputSource->refreshDefault();
     dryPan->refreshDefault();
     dryWet->refreshDefault();
     stereoWidth->refreshDefault();
@@ -215,17 +223,6 @@ void ImogenAudioProcessor::updateParameterDefaults()
     aftertouchGainToggle->refreshDefault();
     defaultVocalRangeIndex.store (vocalRangeType->getIndex());
     
-    if (isUsingDoublePrecision())
-    {
-        defaultModulatorSource.store (doubleEngine.getModulatorSource());
-        defaultNumVoices.store (doubleEngine.getCurrentNumVoices());
-    }
-    else
-    {
-        defaultModulatorSource.store (floatEngine.getModulatorSource());
-        defaultNumVoices.store (floatEngine.getCurrentNumVoices());
-    }
-    
     parameterDefaultsAreDirty.store (true);
 }
 
@@ -260,6 +257,10 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     
     activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
                                reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+    
+    updateNumVoices (numVoices->get());
+    
+    activeEngine.setModulatorSource (inputSource->get());
 }
 
 
@@ -379,16 +380,15 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
                                            reverbLoCut->get(), _FLOAT_MSG_(reverbHiCut), reverbToggle->get());
             case (midiLatchID):
                 activeEngine.updateMidiLatch (_BOOL_MSG_);
-            case (modulatorSourceID):
-                activeEngine.setModulatorSource (floatParamToModulatorSource (msg.value()));
+            case (inputSourceID):
+                activeEngine.setModulatorSource (_INT_MSG_(inputSource));
             case (killAllMidiID):
                 if (msg.value() > 0.0f) activeEngine.killAllMidi();
             case (pitchbendFromEditorID):
-                activeEngine.recieveExternalPitchbend (juce::roundToInt (juce::jmap (msg.value(), 0.0f, 127.0f)));
-            case (numVoicesID):
-                updateNumVoices (floatParamToNumVoices (msg.value()));
+                activeEngine.recieveExternalPitchbend (juce::roundToInt (pitchBendNormRange.convertFrom0to1 (msg.value())));
                 
-            default: jassertfalse;  // an unknown parameter ID results in an error
+            case (numVoicesID):
+                updateNumVoices (_INT_MSG_(numVoices));
         }
     }
 #undef _BOOL_MSG_
@@ -444,6 +444,8 @@ float ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID
         case (reverbDuckID):            return reverbDuck->getCurrentNormalizedValue();
         case (reverbLoCutID):           return reverbLoCut->getCurrentNormalizedValue();
         case (reverbHiCutID):           return reverbHiCut->getCurrentNormalizedValue();
+        case (numVoicesID):             return numVoices->getCurrentNormalizedValue();
+        case (inputSourceID):           return inputSource->getCurrentNormalizedValue();
         case (vocalRangeTypeID):        return vocalRangeTypeToFloatParam (vocalRangeType->getCurrentChoiceName());
             
         // message types that aren't actually automated parameters
@@ -454,16 +456,6 @@ float ImogenAudioProcessor::getCurrentParameterValue (const parameterIDs paramID
         case (midiLatchID):
             if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched() ? 1.0f : 0.0f;
             else return floatEngine.isMidiLatched() ? 1.0f : 0.0f;
-            
-        case (modulatorSourceID):
-            if (isUsingDoublePrecision()) return modulatorSourceToFloatParam (doubleEngine.getModulatorSource());
-            else return modulatorSourceToFloatParam (floatEngine.getModulatorSource());
-            
-        case (numVoicesID):
-            if (isUsingDoublePrecision()) return numVoicesToFloatParam (doubleEngine.getCurrentNumVoices());
-            else return numVoicesToFloatParam (floatEngine.getCurrentNumVoices());
-            
-        default: jassertfalse;  // an unknown parameter ID results in an error
     }
 }
 
@@ -512,16 +504,69 @@ float ImogenAudioProcessor::getDefaultParameterValue (const parameterIDs paramID
         case (reverbLoCutID):           return reverbLoCut->getNormalizedDefault();
         case (reverbHiCutID):           return reverbHiCut->getNormalizedDefault();
         case (vocalRangeTypeID):        return vocalRangeTypeToFloatParam (vocalRangeTypes[defaultVocalRangeIndex.load()]);
-        case (numVoicesID):             return numVoicesToFloatParam (defaultNumVoices.load());
-        case (modulatorSourceID):       return modulatorSourceToFloatParam (defaultModulatorSource.load());
+        case (numVoicesID):             return numVoices->getNormalizedDefault();
+        case (inputSourceID):           return inputSource->getNormalizedDefault();
         case (killAllMidiID):           return 0.0f;
         case (pitchbendFromEditorID):   return 0.5f;
         
         case (midiLatchID):  // for midi latch, its state should never be changed by a query for a "default"
             if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched() ? 1.0f : 0.0f;
             else return floatEngine.isMidiLatched() ? 1.0f : 0.0f;
+    }
+}
+
+
+const juce::NormalisableRange<float>& ImogenAudioProcessor::getParameterRange (const parameterIDs paramID) const
+{
+    switch (paramID)
+    {
+        case (mainBypassID):            return mainBypass->getNormalisableRange();
+        case (leadBypassID):            return leadBypass->getNormalisableRange();
+        case (harmonyBypassID):         return harmonyBypass->getNormalisableRange();
+        case (dryPanID):                return dryPan->getNormalisableRange();
+        case (dryWetID):                return dryWet->getNormalisableRange();
+        case (adsrAttackID):            return adsrAttack->getNormalisableRange();
+        case (adsrDecayID):             return adsrDecay->getNormalisableRange();
+        case (adsrSustainID):           return adsrSustain->getNormalisableRange();
+        case (adsrReleaseID):           return adsrRelease->getNormalisableRange();
+        case (adsrToggleID):            return adsrToggle->getNormalisableRange();
+        case (stereoWidthID):           return stereoWidth->getNormalisableRange();
+        case (lowestPannedID):          return lowestPanned->getNormalisableRange();
+        case (velocitySensID):          return velocitySens->getNormalisableRange();
+        case (pitchBendRangeID):        return pitchBendRange->getNormalisableRange();
+        case (pedalPitchIsOnID):        return pedalPitchIsOn->getNormalisableRange();
+        case (pedalPitchThreshID):      return pedalPitchThresh->getNormalisableRange();
+        case (pedalPitchIntervalID):    return pedalPitchInterval->getNormalisableRange();
+        case (descantIsOnID):           return descantIsOn->getNormalisableRange();
+        case (descantThreshID):         return descantThresh->getNormalisableRange();
+        case (descantIntervalID):       return descantInterval->getNormalisableRange();
+        case (concertPitchHzID):        return concertPitchHz->getNormalisableRange();
+        case (voiceStealingID):         return voiceStealing->getNormalisableRange();
+        case (inputGainID):             return inputGain->getNormalisableRange();
+        case (outputGainID):            return outputGain->getNormalisableRange();
+        case (limiterToggleID):         return limiterToggle->getNormalisableRange();
+        case (noiseGateToggleID):       return noiseGateToggle->getNormalisableRange();
+        case (noiseGateThresholdID):    return noiseGateThreshold->getNormalisableRange();
+        case (compressorToggleID):      return compressorToggle->getNormalisableRange();
+        case (compressorAmountID):      return compressorAmount->getNormalisableRange();
+        case (aftertouchGainToggleID):  return aftertouchGainToggle->getNormalisableRange();
+        case (deEsserToggleID):         return deEsserToggle->getNormalisableRange();
+        case (deEsserThreshID):         return deEsserThresh->getNormalisableRange();
+        case (deEsserAmountID):         return deEsserAmount->getNormalisableRange();
+        case (reverbToggleID):          return reverbToggle->getNormalisableRange();
+        case (reverbDryWetID):          return reverbDryWet->getNormalisableRange();
+        case (reverbDecayID):           return reverbDecay->getNormalisableRange();
+        case (reverbDuckID):            return reverbDuck->getNormalisableRange();
+        case (reverbLoCutID):           return reverbLoCut->getNormalisableRange();
+        case (reverbHiCutID):           return reverbHiCut->getNormalisableRange();
+        case (vocalRangeTypeID):        return vocalRangeType->getNormalisableRange();
+        case (numVoicesID):             return numVoices->getNormalisableRange();
+        case (inputSourceID):           return inputSource->getNormalisableRange();
+        case (pitchbendFromEditorID):   return pitchBendNormRange;
             
-        default: jassertfalse;  // an unknown parameter ID results in an error
+        // these are both non-automatable boolean triggers, so:
+        case (midiLatchID):             return leadBypass->getNormalisableRange();
+        case (killAllMidiID):           return leadBypass->getNormalisableRange();
     }
 }
 

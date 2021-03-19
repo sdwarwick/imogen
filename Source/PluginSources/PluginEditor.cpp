@@ -12,7 +12,7 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), audioProcessor (p)
+    AudioProcessorEditor (&p), audioProcessor (p), params(p)
 {
     this->setBufferedToImage (true);
     
@@ -23,13 +23,13 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     modulatorInputSource.addItem ("Right", 2);
     modulatorInputSource.addItem ("Mix to mono", 3);
     
-    modulatorInputSource.setSelectedId (audioProcessor.floatParamToModulatorSource (audioProcessor.getCurrentParameterValue(ids::modulatorSourceID)),
-                                        juce::NotificationType::dontSendNotification);
+    modulatorInputSource.setSelectedId (params.getInt(ids::inputSourceID), juce::NotificationType::dontSendNotification);
     
     modulatorInputSource.onChange = [this] {
                                         audioProcessor.paramChangesForProcessor.pushMessage
-                                                (ids::modulatorSourceID,
-                                                 audioProcessor.modulatorSourceToFloatParam (modulatorInputSource.getSelectedId()));
+                                                (ids::inputSourceID,
+                                                 audioProcessor.getParameterRange (ids::inputSourceID)
+                                                    .convertTo0to1 (modulatorInputSource.getSelectedId()));
                                     };
     
     //addAndMakeVisible(selectPreset);
@@ -84,8 +84,6 @@ void ImogenAudioProcessorEditor::timerCallback()
         if (! msg.isValid())
             continue;
         
-#define _BOOL_MSG_ msg.value() >= 0.5f   // converts a message's float value to a boolean true/false
-#define _INT_0_100 juce::roundToInt (msg.value() * 100.0f)  // converts a message's float value to an integer in the range 0 to 100
         switch (msg.type())
         {
             case (ids::leadBypassID):           continue;
@@ -128,16 +126,12 @@ void ImogenAudioProcessorEditor::timerCallback()
             case (ids::reverbLoCutID):          continue;
             case (ids::reverbHiCutID):          continue;
             case (ids::midiLatchID):            continue;
-            case (ids::modulatorSourceID):      continue;
+            case (ids::inputSourceID):          continue;
             case (ids::killAllMidiID):          continue;
             case (ids::pitchbendFromEditorID):  continue;
             case (ids::numVoicesID):            continue;
-                
-            default: jassertfalse;  // an unknown parameter ID results in an error
         }
     }
-#undef _BOOL_MSG_
-#undef _INT_0_100
 }
 
 

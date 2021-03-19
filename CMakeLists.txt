@@ -37,6 +37,7 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
+    ${guiSourcePath}/ParameterFetcher.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp)
 

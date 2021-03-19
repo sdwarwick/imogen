@@ -44,11 +44,9 @@ public:
     void reset() override;
     
     void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
-    
     void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
     
     void processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
-    
     void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
     
     bool canAddBus (bool isInput) const override;
@@ -84,7 +82,6 @@ public:
     void deletePreset(juce::String presetName);
     juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
     
-    juce::AudioProcessorValueTreeState tree;
     
     juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
     
@@ -98,10 +95,10 @@ public:
     enum parameterIDs
     {
         midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that evenrs in the message FIFO can represent latch on/off
-        modulatorSourceID,  // this is also not automatable
         killAllMidiID,  // not automatable
         pitchbendFromEditorID, // not automatable
-        numVoicesID,  // definitely not automatable!!
+        numVoicesID,
+        inputSourceID,
         mainBypassID,
         leadBypassID,
         harmonyBypassID,
@@ -161,38 +158,9 @@ public:
     }
     
     
+    // returns the normalisable range associated with the given parameter.
+    const juce::NormalisableRange<float>& getParameterRange (const parameterIDs paramID) const;
     
-    inline float modulatorSourceToFloatParam (int newModSource) const
-    {
-        switch (newModSource)
-        {
-            case (2):  return 0.6f;
-            case (3):  return 0.9f;
-            default:   return 0.3f;
-        }
-    }
-    
-    inline int floatParamToModulatorSource (float modSourceFloatParam) const
-    {
-        if (modSourceFloatParam == 0.3f)
-            return 1;
-        
-        if (modSourceFloatParam == 0.6f)
-            return 2;
-        
-        return 3;
-    }
-    
-    inline float numVoicesToFloatParam (int newNumVoices) const
-    {
-        jassert (newNumVoices > 0 && newNumVoices <= bvie_MAX_POSSIBLE_NUM_VOICES);
-        return float(newNumVoices / bvie_MAX_POSSIBLE_NUM_VOICES);
-    }
-    
-    inline int floatParamToNumVoices (float numVoicesFloatParam) const
-    {
-        return juce::roundToInt (juce::jmap (numVoicesFloatParam, 1.0f, float(bvie_MAX_POSSIBLE_NUM_VOICES)));
-    }
     
     inline float vocalRangeTypeToFloatParam (juce::String name) const
     {
@@ -214,6 +182,8 @@ public:
 private:
     
     juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the queue
+    
+    juce::AudioProcessorValueTreeState tree;
     
     template<typename SampleType>
     void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
@@ -269,7 +239,7 @@ private:
     juce::AudioParameterBool*  mainBypass;
     juce::AudioParameterChoice* vocalRangeType;
     BoolParamPtr  leadBypass, harmonyBypass, adsrToggle, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
-    IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet;
+    IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet, numVoices, inputSource;
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     
@@ -277,7 +247,7 @@ private:
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    std::atomic<int> defaultNumVoices, defaultModulatorSource, defaultVocalRangeIndex;
+    std::atomic<int> defaultVocalRangeIndex;
     
     
     /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */
@@ -310,6 +280,8 @@ private:
 #define imgn_VOCAL_RANGE_TYPES juce::StringArray { "Soprano","Alto","Tenor","Bass" }
     
     juce::StringArray vocalRangeTypes = imgn_VOCAL_RANGE_TYPES;
+    
+    juce::NormalisableRange<float> pitchBendNormRange { 0, 127 };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

@@ -9,6 +9,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "GUI/LookAndFeel/ImogenLookAndFeel.h"
 #include "PluginProcessor.h"
+#include "GUI/ParameterFetcher.h"
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
@@ -49,6 +50,13 @@ private:
     juce::ComboBox modulatorInputSource;
 
     void updateParameterDefaults();
+    
+    
+    /*
+        This class attaches to the audio processor and reports current or default parameter values, either as their raw normalized versions, or as their native float, int, or boolean types.
+    */
+    
+    ImogenParameterFetcher params;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
