@@ -523,17 +523,13 @@ float ImogenAudioProcessor::getCurrentParameterValue (const parameterID paramID)
         case (numVoicesID):             return numVoices->getCurrentNormalizedValue();
         case (inputSourceID):           return inputSource->getCurrentNormalizedValue();
         case (vocalRangeTypeID):        return vocalRangeTypeToFloatParam (vocalRangeType->getCurrentChoiceName());
+        case (midiLatchID):             return isMidiLatched() ? 1.0f : 0.0f;
             
-            // message types that aren't actually automated parameters
+        // message types that aren't actually automated parameters
         case (pitchbendFromEditorID):   return 0.5f;
         case (killAllMidiID):           return 0.0f;
             
-            // specially keyed/converted values
-        case (midiLatchID):
-            if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched() ? 1.0f : 0.0f;
-            else return floatEngine.isMidiLatched() ? 1.0f : 0.0f;
-            
-        default: jassertfalse; // an unknown parameterID results in an error
+        default: return 0.0f;
     }
 }
 
@@ -585,14 +581,11 @@ float ImogenAudioProcessor::getDefaultParameterValue (const parameterID paramID)
         case (vocalRangeTypeID):        return vocalRangeTypeToFloatParam (vocalRangeTypes[defaultVocalRangeIndex.load()]);
         case (numVoicesID):             return numVoices->getNormalizedDefault();
         case (inputSourceID):           return inputSource->getNormalizedDefault();
+        case (midiLatchID):             return isMidiLatched() ? 1.0f : 0.0f;
         case (killAllMidiID):           return 0.0f;
         case (pitchbendFromEditorID):   return 0.5f;
             
-        case (midiLatchID):  // for midi latch, its state should never be changed by a query for a "default"
-            if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched() ? 1.0f : 0.0f;
-            else return floatEngine.isMidiLatched() ? 1.0f : 0.0f;
-            
-        default: jassertfalse; // an unknown parameterID results in an error
+        default: return 0.0f;
     }
 }
 
@@ -654,11 +647,11 @@ const juce::NormalisableRange<float>& ImogenAudioProcessor::getParameterRange (c
         case (inputSourceID):           return inputSource->getNormalisableRange();
         case (pitchbendFromEditorID):   return pitchBendNormRange;
             
-            // these are both non-automatable boolean triggers, so:
+        // these are both non-automatable boolean triggers, so:
         case (midiLatchID):             return leadBypass->getNormalisableRange();
         case (killAllMidiID):           return leadBypass->getNormalisableRange();
             
-        default: jassertfalse; // an unknown parameterID results in an error
+        default: return leadBypass->getNormalisableRange();
     }
 }
 

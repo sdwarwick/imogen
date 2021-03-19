@@ -198,6 +198,15 @@ private:
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
+    
+    inline bool isMidiLatched() const
+    {
+        if (isUsingDoublePrecision())
+            return doubleEngine.isMidiLatched();
+        
+        return floatEngine.isMidiLatched();
+    }
+    
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
