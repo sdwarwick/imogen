@@ -240,8 +240,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
 {
     const int blockSize = input.getNumSamples();
     
-    jassert (blockSize == FIFOEngine::getLatency());
-    jassert (blockSize == output.getNumSamples());
+    jassert (blockSize == FIFOEngine::getLatency() && blockSize == output.getNumSamples());
     
     const bool leadIsBypassed = leadBypass.load();
     const bool harmoniesAreBypassed = harmonyBypass.load();
@@ -250,22 +249,15 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     if (leadIsBypassed && harmoniesAreBypassed)
     {
-        harmonizer.processMidi (midiMessages);
+        harmonizer.bypassedBlock (input, midiMessages);
         return;
     }
     
     switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
-        case (1): // take only the left channel
-        {
-            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-            break;
-        }
-
         case (2):  // take only the right channel
         {
             monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
-            break;
         }
 
         case (3):  // mix all input channels to mono
@@ -281,14 +273,11 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
                 monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
 
             monoBuffer.applyGain (1.0f / totalNumChannels);
-            break;
         }
             
-        default:
+        default:  // take only the left channel
         {
             monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-            modulatorInput.store (1);
-            break;
         }
     }
     
@@ -296,8 +285,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     
     for (int s = 0; s < blockSize; ++s)
     {
-        *(inputSamples + s) = inputSamples[s] * inputGain.getNextValue(); // master input gain
-        *(inputSamples + s) = initialHiddenLoCut.processSample (inputSamples[s]);  //  initial lo cut
+        *(inputSamples + s) = inputSamples[s] * inputGain.getNextValue();   //  master input gain
+        *(inputSamples + s) = initialHiddenLoCut.processSample (inputSamples[s]);   //  initial lo cut
     }
     
     if (noiseGateIsOn.load())
@@ -307,7 +296,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
         deEsser.process (monoBuffer);
 
     if (compressorIsOn.load())
-        compressor.process (monoBuffer, nullptr);
+        compressor.process (monoBuffer);
 
     dryBuffer.clear();
     
@@ -332,7 +321,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer<SampleType>& input,
     if (harmoniesAreBypassed)
         harmonizer.bypassedBlock (monoBuffer, midiMessages);
     else
-        harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages);
+        harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages); // renders the stereo output into wetBuffer
     
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
     

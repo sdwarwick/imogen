@@ -176,11 +176,10 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     if (getNumActiveVoices() == 0)
         return;
     
-    const int numSamples = inputAudio.getNumSamples();
-    
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
+    const bool frameIsPitched  = inputFrequency > 0.0f;
     
-    const bool frameIsPitched = (inputFrequency > 0.0f);
+    const int numSamples = inputAudio.getNumSamples();
     
     int periodThisFrame;
     bool polarityReversed = false;
@@ -206,9 +205,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer<SampleType>& inputAudio,
     
     fillWindowBuffer (periodThisFrame * 2);
     
-    AudioBuffer<SampleType> inverted (polarityReversalBuffer.getArrayOfWritePointers(), 1, 0, numSamples);
-
-    const AudioBuffer<SampleType>& actualInput = polarityReversed ? inverted : inputAudio;
+    const AudioBuffer<SampleType>& actualInput = polarityReversed ? polarityReversalBuffer : inputAudio;
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
     
