@@ -532,6 +532,8 @@ float ImogenAudioProcessor::getCurrentParameterValue (const parameterID paramID)
         case (midiLatchID):
             if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched() ? 1.0f : 0.0f;
             else return floatEngine.isMidiLatched() ? 1.0f : 0.0f;
+            
+        default: jassertfalse; // an unknown parameterID results in an error
     }
 }
 
@@ -589,6 +591,8 @@ float ImogenAudioProcessor::getDefaultParameterValue (const parameterID paramID)
         case (midiLatchID):  // for midi latch, its state should never be changed by a query for a "default"
             if (isUsingDoublePrecision()) return doubleEngine.isMidiLatched() ? 1.0f : 0.0f;
             else return floatEngine.isMidiLatched() ? 1.0f : 0.0f;
+            
+        default: jassertfalse; // an unknown parameterID results in an error
     }
 }
 
@@ -653,6 +657,8 @@ const juce::NormalisableRange<float>& ImogenAudioProcessor::getParameterRange (c
             // these are both non-automatable boolean triggers, so:
         case (midiLatchID):             return leadBypass->getNormalisableRange();
         case (killAllMidiID):           return leadBypass->getNormalisableRange();
+            
+        default: jassertfalse; // an unknown parameterID results in an error
     }
 }
 

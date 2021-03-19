@@ -57,7 +57,7 @@ public:
     // key values by which parameters are accessed from the editor:
     enum parameterID
     {
-        midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that evenrs in the message FIFO can represent latch on/off
+        midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that events in the message FIFO can represent latch on/off
         killAllMidiID,  // not automatable
         pitchbendFromEditorID, // not automatable
         numVoicesID,
