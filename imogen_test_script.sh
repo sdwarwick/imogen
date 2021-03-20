@@ -8,9 +8,6 @@
 
 IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
 
-# set up execute permissions
-chmod 755 "$IMOGEN_DIR"/imogen_test_script.sh
-
 
 CONFIG_TO_TEST="Debug"; # the build configuration to test
 

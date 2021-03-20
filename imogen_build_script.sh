@@ -13,10 +13,6 @@
 # After executing this script, the built Imogen executables will be located at /imogen/Builds/Imogen_artefacts/Release/.
 
 
-# set up execute permissions
-chmod 755 "$IMOGEN_DIR"/imogen_build_script.sh
-
-
 IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
 
 ZIPPING=0;
@@ -102,12 +98,12 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -B Builds --config Release -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
+cmake -DCMAKE_BUILD_TYPE=release -B Builds -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
 
 
 # execute build
 printf "\n \t \v Building Imogen... \n \n"
-cmake --build Builds --config Release
+cmake --build Builds --target Imogen_All --config Release
 
 
 # zip artifacts (if requested by user)
