@@ -186,11 +186,7 @@ bvbv_INLINE_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInpu
     const int sampsLeft = synthesisBuffer.getNumSamples() - synthesisIndex;
     
     if (sampsLeft > 0)
-    {
-        constexpr SampleType zero = SampleType(0.0);
-        FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex,
-                   zero, sampsLeft);
-    }
+        FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex, SampleType(0.0), sampsLeft);
 }
 
 
@@ -209,8 +205,7 @@ bvbv_INLINE_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
     do {
         jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
         
-        FVO::add (synthesisBufferWriting + synthesisIndex,
-                  windowBufferReading, frameSize);
+        FVO::add (synthesisBufferWriting + synthesisIndex, windowBufferReading, frameSize);
         
         synthesisIndex += newPeriod;
     }
