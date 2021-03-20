@@ -1,6 +1,8 @@
 
 #include "PluginProcessor.h"
 
+///  This file contains Imogen's parameter management and event handling system.  ///
+
 
 /*
     Functions for state saving and loading
@@ -133,30 +135,26 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
 
 
 // updates the vocal input range type. This controls the pitch detection Hz range, and, thus, the latency of the pitch detector and the latency of the entire plugin. The lower the min possible Hz for the pitch detector, the higher the plugin's latency.
-void ImogenAudioProcessor::updateVocalRangeType (juce::String newRangeType)
+void ImogenAudioProcessor::updateVocalRangeType (int newRangeType)
 {
+    jassert (newRangeType >= 0 && newRangeType <= 3);
+    
     int minHz, maxHz;
     
-    if (newRangeType.equalsIgnoreCase ("Soprano"))
+    switch (newRangeType)
     {
-        minHz = bav::math::midiToFreq (57);
-        maxHz = bav::math::midiToFreq (88);
-    }
-    else if (newRangeType.equalsIgnoreCase ("Alto"))
-    {
-        minHz = bav::math::midiToFreq (50);
-        maxHz = bav::math::midiToFreq (81);
-    }
-    else if (newRangeType.equalsIgnoreCase ("Tenor"))
-    {
-        minHz = bav::math::midiToFreq (43);
-        maxHz = bav::math::midiToFreq (76);
-    }
-    else
-    {
-        jassert (newRangeType.equalsIgnoreCase ("Bass"));
-        minHz = bav::math::midiToFreq (36);
-        maxHz = bav::math::midiToFreq (67);
+        default:
+            minHz = bav::math::midiToFreq (57);
+            maxHz = bav::math::midiToFreq (88);
+        case (1):
+            minHz = bav::math::midiToFreq (50);
+            maxHz = bav::math::midiToFreq (81);
+        case (2):
+            minHz = bav::math::midiToFreq (43);
+            maxHz = bav::math::midiToFreq (76);
+        case (3):
+            minHz = bav::math::midiToFreq (36);
+            maxHz = bav::math::midiToFreq (67);
     }
     
     suspendProcessing (true);
@@ -173,6 +171,18 @@ void ImogenAudioProcessor::updateVocalRangeType (juce::String newRangeType)
     }
     
     suspendProcessing (false);
+}
+
+
+juce::String ImogenAudioProcessor::getCurrentVocalRange() const
+{
+    switch (vocalRangeType->get())
+    {
+        default:  return { "Soprano" };
+        case (1): return { "Alto" };
+        case (2): return { "Tenor" };
+        case (3): return { "Bass" };
+    }
 }
 
 
@@ -213,29 +223,6 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 }
 
 
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-/*
-    Conversion functions for specially keyed values
-*/
-
-inline float ImogenAudioProcessor::vocalRangeTypeToFloatParam (juce::String name) const
-{
-    if (name.equalsIgnoreCase ("Soprano")) return 0.0f;
-    if (name.equalsIgnoreCase ("Alto")) return 0.25f;
-    if (name.equalsIgnoreCase ("Tenor")) return 0.5f;
-    jassert (name.equalsIgnoreCase ("Bass")); return 0.75f;
-}
-
-inline juce::String ImogenAudioProcessor::floatParamToVocalRangeType (float vocalRangeParam) const
-{
-    if (vocalRangeParam == 0.0f) return juce::String ("Soprano");
-    if (vocalRangeParam == 0.25f) return juce::String ("Alto");
-    if (vocalRangeParam == 0.5f) return juce::String ("Tenor");
-    jassert (vocalRangeParam == 0.75f); return juce::String ("Bass");
-}
-
 
 /*===========================================================================================================================
  ============================================================================================================================*/
@@ -249,7 +236,7 @@ inline juce::String ImogenAudioProcessor::floatParamToVocalRangeType (float voca
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    updateVocalRangeType (vocalRangeType->getCurrentChoiceName());
+    updateVocalRangeType (vocalRangeType->get());
     updateNumVoices (numVoices->get());
     
     activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
@@ -320,6 +307,7 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
         
         switch (msg.type())
         {
+            default:             continue;
             case (mainBypassID): continue;
 
             case (adsrAttackID):  adsrA = _FLOAT_MSG_(adsrAttack);  adsr = true;
@@ -354,7 +342,7 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (noiseGateThresholdID):    activeEngine.updateNoiseGate (_FLOAT_MSG_(noiseGateThreshold), noiseGateToggle->get());
             case (compressorToggleID):      updateCompressor (activeEngine, _BOOL_MSG_, compressorAmount->get());
             case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), _FLOAT_MSG_(compressorAmount));
-            case (vocalRangeTypeID):        updateVocalRangeType (floatParamToVocalRangeType (msg.value()));
+            case (vocalRangeTypeID):        updateVocalRangeType (_INT_MSG_(vocalRangeType));
             case (aftertouchGainToggleID):  activeEngine.updateAftertouchGainOnOff (_BOOL_MSG_);
             case (deEsserToggleID):         activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), _BOOL_MSG_);
             case (deEsserThreshID):         activeEngine.updateDeEsser (deEsserAmount->get(), _FLOAT_MSG_(deEsserThresh), deEsserToggle->get());
@@ -366,11 +354,9 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (reverbDuckID):   rDuck   = _FLOAT_MSG_(reverbDuck);  reverb = true;
             case (reverbLoCutID):  rLoCut  = _FLOAT_MSG_(reverbLoCut); reverb = true;
             case (reverbHiCutID):  rHiCut  = _FLOAT_MSG_(reverbHiCut); reverb = true;
-            case (midiLatchID): activeEngine.updateMidiLatch (_BOOL_MSG_);
-            case (inputSourceID): activeEngine.setModulatorSource (_INT_MSG_(inputSource));
-            case (killAllMidiID): if (msg.value() > 0.0f) activeEngine.killAllMidi();
-            
-            case (numVoicesID): updateNumVoices (_INT_MSG_(numVoices));
+                
+            case (inputSourceID):  activeEngine.setModulatorSource (_INT_MSG_(inputSource));
+            case (numVoicesID):    updateNumVoices (_INT_MSG_(numVoices));
         }
     }
     
@@ -389,7 +375,86 @@ template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEn
 #undef _FLOAT_MSG_
 
 
+template<typename SampleType>
+void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
+{
+    currentMessages.clearQuick();
+    
+    // retrieve all the messages available
+    while (! nonParamEvents.isEmpty())
+        currentMessages.add (nonParamEvents.popMessage());
+    
+    // we're going to process only the most recent message of each type
+    bav::MessageQueue::flushRepeatedMessages (currentMessages);
+    
+    for (const auto msg : currentMessages)
+    {
+        if (! msg.isValid())
+            continue;
+        
+        jassert (msg.value() >= 0.0f && msg.value() <= 1.0f);
+        
+        switch (msg.type())
+        {
+            default: continue;
+            case (killAllMidi): activeEngine.killAllMidi();
+            case (midiLatch):   activeEngine.updateMidiLatch (msg.value() >= 0.5f);
+            case (pitchBendFromEditor): activeEngine.recieveExternalPitchbend (juce::roundToInt (juce::jmap (msg.value(), 0.0f, 127.0f)));
+        }
+    }
+}
+///function template instantiations...
+template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<float>& activeEngine);
+template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<double>& activeEngine);
 
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+/*
+    Functions for retrieving parameter values and other attributes.
+    These functions may be called by the processor or by the editor.
+*/
+
+
+// Returns the requested parameter's current value, in the noramlized range 0.0f to 1.0f
+float ImogenAudioProcessor::getCurrentParameterValue (const parameterID paramID) const
+{
+    return getParameterPntr(paramID)->getCurrentNormalizedValue();
+}
+
+
+// Returns the requested parameter's default value, in the normalized range 0.0f to 1.0f
+float ImogenAudioProcessor::getDefaultParameterValue (const parameterID paramID) const
+{
+    return getParameterPntr(paramID)->getNormalizedDefault();
+}
+
+
+// Returns a const reference to the requested parameter's NormalisableRange object
+const juce::NormalisableRange<float>& ImogenAudioProcessor::getParameterRange (const parameterID paramID) const
+{
+    return getParameterPntr(paramID)->getRange();
+}
+
+
+// This function reassigns each parameter's internally stored default value to the parameter's current value. Run this function after loading a preset, etc.
+void ImogenAudioProcessor::updateParameterDefaults()
+{
+    for (int paramID = IMGN_FIRST_PARAM; paramID <= IMGN_LAST_PARAM; ++paramID)
+        getParameterPntr(parameterID(paramID))->refreshDefault();
+    
+    parameterDefaultsAreDirty.store (true);
+}
+
+
+// Tracks whether or not the processor has updated its default parameter values since the last call to this function.
+bool ImogenAudioProcessor::hasUpdatedParamDefaults()
+{
+    const bool hasUpdated = parameterDefaultsAreDirty.load();
+    parameterDefaultsAreDirty.store (false);
+    return hasUpdated;
+}
 
 
 /*===========================================================================================================================
@@ -451,26 +516,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.emplace_back (std::make_unique<FloatParameter> ("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
     params.emplace_back (std::make_unique<FloatParameter> ("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
     params.emplace_back (std::make_unique<FloatParameter> ("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
+    params.emplace_back (std::make_unique<IntParameter>   ("vocalRangeType", "Input vocal range", 0, 3, 0));
     
-    // pitch detection vocal range
-#define imogen_DEFAULT_VOCAL_RANGE_TYPE 0
-    params.emplace_back (std::make_unique<juce::AudioParameterChoice> ("vocalRangeType", "Input vocal range",
-                                                                      imgn_VOCAL_RANGE_TYPES,
-                                                                      imogen_DEFAULT_VOCAL_RANGE_TYPE, "Input vocal range",
-                                                                      [this] (int index, int maximumStringLength)
-                                                                      {
-                                                                          juce::String name = vocalRangeTypes[index];
-                                                                          if (name.length() > maximumStringLength)
-                                                                              name = name.substring (0, maximumStringLength);
-                                                                          return name;
-                                                                      },
-                                                                      [this] (const juce::String& text)
-                                                                      {
-                                                                          for (int i = 0; i < 4; ++i)
-                                                                              if (text.equalsIgnoreCase(vocalRangeTypes[i]))
-                                                                                  return i;
-                                                                          return imogen_DEFAULT_VOCAL_RANGE_TYPE;
-                                                                      } ));
     return { params.begin(), params.end() };
 }
 #undef imogen_DEFAULT_VOCAL_RANGE_TYPE
@@ -521,7 +568,7 @@ void ImogenAudioProcessor::initializeParameterPointers()
     reverbDuck           = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbDuck"));                   jassert (reverbDuck);
     reverbLoCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbLoCut"));                  jassert (reverbLoCut);
     reverbHiCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbHiCut"));                  jassert (reverbHiCut);
-    vocalRangeType       = dynamic_cast<juce::AudioParameterChoice*> (tree.getParameter ("vocalRangeType")); jassert (vocalRangeType);
+    vocalRangeType       = dynamic_cast<IntParamPtr>   (tree.getParameter ("vocalRangeType"));               jassert (vocalRangeType);
 }
 
 
@@ -633,59 +680,8 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (reverbHiCutID):           return reverbHiCut;
         case (numVoicesID):             return numVoices;
         case (inputSourceID):           return inputSource;
-        
-        //case (midiLatchID):             return leadBypass->getNormalisableRange();
-        //case (killAllMidiID):           return leadBypass->getNormalisableRange();
-        //case (vocalRangeTypeID):        return vocalRangeType;
+        case (vocalRangeTypeID):        return vocalRangeType;
     }
 }
 
 
-/*
-    Returns the requested parameter's current value, in the noramlized range 0.0f to 1.0f
-*/
-float ImogenAudioProcessor::getCurrentParameterValue (const parameterID paramID) const
-{
-    return getParameterPntr(paramID)->getCurrentNormalizedValue();
-}
-
-
-/*
-    Returns the requested parameter's default value, in the normalized range 0.0f to 1.0f
-*/
-float ImogenAudioProcessor::getDefaultParameterValue (const parameterID paramID) const
-{
-    return getParameterPntr(paramID)->getNormalizedDefault();
-}
-
-
-/*
-    Returns a const reference to the requested parameter's NormalisableRange object
-*/
-const juce::NormalisableRange<float>& ImogenAudioProcessor::getParameterRange (const parameterID paramID) const
-{
-    return getParameterPntr(paramID)->getRange();
-}
-
-
-/*
-    This function reassigns each parameter's internally stored default value to the parameter's current value. Run this function after loading a preset, etc.
-*/
-void ImogenAudioProcessor::updateParameterDefaults()
-{
-    for (int paramID = midiLatchID; paramID <= IMGN_LAST_PARAM; ++paramID)
-        getParameterPntr(parameterID(paramID))->refreshDefault();
-    
-    parameterDefaultsAreDirty.store (true);
-}
-
-
-/*
-    Tracks whether or not the processor has updated its default parameter values since the last call to this function.
-*/
-bool ImogenAudioProcessor::hasUpdatedParamDefaults()
-{
-    const bool hasUpdated = parameterDefaultsAreDirty.load();
-    parameterDefaultsAreDirty.store (false);
-    return hasUpdated;
-}

@@ -109,9 +109,7 @@ void ImogenAudioProcessorEditor::timerCallback()
             case (ids::reverbDuckID):           continue;
             case (ids::reverbLoCutID):          continue;
             case (ids::reverbHiCutID):          continue;
-            case (ids::midiLatchID):            continue;
             case (ids::inputSourceID):          continue;
-            case (ids::killAllMidiID):          continue;
             case (ids::numVoicesID):            continue;
         }
     }

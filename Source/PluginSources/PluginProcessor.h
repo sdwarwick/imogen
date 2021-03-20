@@ -57,8 +57,6 @@ public:
     // key values by which parameters are accessed from the editor:
     enum parameterID
     {
-        midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that events in the message FIFO can represent latch on/off
-        killAllMidiID,  // not automatable
         numVoicesID,
         inputSourceID,
         mainBypassID,
@@ -102,7 +100,15 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
+#define IMGN_FIRST_PARAM numVoicesID
 #define IMGN_LAST_PARAM reverbHiCutID
+    
+    enum eventID  // IDs for events that are not parameters
+    {
+        killAllMidi,
+        midiLatch,
+        pitchBendFromEditor
+    };
     
     // returns any parameter's current value as a float in the range 0.0 to 1.0
     float getCurrentParameterValue (const parameterID paramID) const;
@@ -116,11 +122,8 @@ public:
     // returns the normalisable range associated with the given parameter.
     const juce::NormalisableRange<float>& getParameterRange (const parameterID paramID) const;
     
-    // converts a given vocal range type as a string to a float key value
-    inline float vocalRangeTypeToFloatParam (juce::String name) const;
-    
-    // converts a float key value to a string vocal range type
-    inline juce::String floatParamToVocalRangeType (float vocalRangeParam) const;
+    // returns a string descripttion of the currently selected vocal range type
+    juce::String getCurrentVocalRange() const;
     
     double getTailLengthSeconds() const override;
     
@@ -156,6 +159,9 @@ public:
     bav::MessageQueue paramChangesForEditor;
     bav::MessageQueue paramChangesForProcessor;
     
+    // this queue is SPSC; this is only for events flowing from the editor into the processor
+    bav::MessageQueue nonParamEvents;
+    
     
 private:
     template <typename SampleType>
@@ -179,7 +185,10 @@ private:
     template<typename SampleType>
     void processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine);
     
-    void updateVocalRangeType (juce::String newRangeType);
+    template<typename SampleType>
+    void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    void updateVocalRangeType (int newRangeType);
     
     void updateNumVoices (const int newNumVoices);
     
@@ -221,9 +230,8 @@ private:
     juce::AudioProcessorValueTreeState tree;
     
     // pointers to all the parameter objects
-    juce::AudioParameterChoice* vocalRangeType;
     BoolParamPtr  mainBypass, leadBypass, harmonyBypass, adsrToggle, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
-    IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet, numVoices, inputSource;
+    IntParamPtr   vocalRangeType, dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet, numVoices, inputSource;
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;

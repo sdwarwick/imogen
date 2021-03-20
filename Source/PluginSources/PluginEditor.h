@@ -16,6 +16,7 @@ class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public juce::Timer
 {
     using ids = ImogenAudioProcessor::parameterID;
+    using event = ImogenAudioProcessor::eventID;
     
     
 public:
