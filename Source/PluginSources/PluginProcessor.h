@@ -59,7 +59,6 @@ public:
     {
         midiLatchID,  // midi latch is not an automatable parameter, but needs an ID here so that events in the message FIFO can represent latch on/off
         killAllMidiID,  // not automatable
-        pitchbendFromEditorID, // not automatable
         numVoicesID,
         inputSourceID,
         mainBypassID,
@@ -103,6 +102,7 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
+#define IMGN_LAST_PARAM reverbHiCutID
     
     // returns any parameter's current value as a float in the range 0.0 to 1.0
     float getCurrentParameterValue (const parameterID paramID) const;
@@ -221,9 +221,8 @@ private:
     juce::AudioProcessorValueTreeState tree;
     
     // pointers to all the parameter objects
-    juce::AudioParameterBool*  mainBypass;
     juce::AudioParameterChoice* vocalRangeType;
-    BoolParamPtr  leadBypass, harmonyBypass, adsrToggle, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
+    BoolParamPtr  mainBypass, leadBypass, harmonyBypass, adsrToggle, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
     IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet, numVoices, inputSource;
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
@@ -265,6 +264,8 @@ private:
 #if IMOGEN_ONLY_BUILDING_STANDALONE
     const bool denormalsWereDisabledWhenTheAppStarted;  // simpe hacky way to attempt to leave the CPU as we found it in standalone app mode
 #endif
+    
+    bav::Parameter* getParameterPntr (const parameterID paramID) const;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

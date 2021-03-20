@@ -5,7 +5,7 @@
 
 
 #include "PluginEditor.h"
-#include "BinaryData.h"
+#include "bv_SharedCode/misc/BinaryDataHelpers.h"
 
 
 #define bvi_GRAPHICS_FRAMERATE_HZ 60
@@ -112,7 +112,6 @@ void ImogenAudioProcessorEditor::timerCallback()
             case (ids::midiLatchID):            continue;
             case (ids::inputSourceID):          continue;
             case (ids::killAllMidiID):          continue;
-            case (ids::pitchbendFromEditorID):  continue;
             case (ids::numVoicesID):            continue;
         }
     }
