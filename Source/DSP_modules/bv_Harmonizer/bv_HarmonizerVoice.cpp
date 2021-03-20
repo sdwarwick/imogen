@@ -120,18 +120,13 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer&
     // puts shifted samples into the synthesisBuffer
     sola (inputAudio.getReadPointer(0), numSamples, origPeriod,
           juce::roundToInt (parent->getSamplerate() / currentOutputFreq),  // new desired period, in samples
-          indicesOfGrainOnsets, // analysis grains are length origPeriod * 2, approx 50% overlap, centred on points of maximum energy in input signal
-          windowToUse.getReadPointer(0));  // precomputed window length must be length origPeriod * 2
+          indicesOfGrainOnsets, windowToUse.getReadPointer(0));
     
-    auto* synthesisSamples = synthesisBuffer.getWritePointer(0);
-    
-    for (int s = 0; s < numSamples; ++s)
-    {
-        *(synthesisSamples + s) = synthesisSamples[s] * midiVelocityGain.getNextValue()
-                                                      * softPedalGain.getNextValue()
-                                                      * playingButReleasedGain.getNextValue()
-                                                      * aftertouchGain.getNextValue();
-    }
+    //  smoothed gain modulations
+    midiVelocityGain.applyGain (synthesisBuffer, numSamples);
+    softPedalGain.applyGain (synthesisBuffer, numSamples);
+    playingButReleasedGain.applyGain (synthesisBuffer, numSamples);
+    aftertouchGain.applyGain (synthesisBuffer, numSamples);
     
     //  ADSR
     if (parent->isADSRon())
@@ -143,16 +138,10 @@ bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer&
         quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
 
     //  write to output and apply panning
-    const auto* reading = synthesisBuffer.getReadPointer(0);
-    auto* leftOutput  = outputBuffer.getWritePointer(0);
-    auto* rightOutput = outputBuffer.getWritePointer(1);
-    
-    for (int s = 0; s < numSamples; ++s)
-    {
-        const auto sample = reading[s];
-        *(leftOutput + s)  = sample * outputLeftGain.getNextValue();
-        *(rightOutput + s) = sample * outputRightGain.getNextValue();
-    }
+    outputBuffer.copyFrom (0, 0, synthesisBuffer, 0, 0, numSamples);
+    outputBuffer.copyFrom (1, 0, synthesisBuffer, 0, 0, numSamples);
+    outputLeftGain.applyGain (outputBuffer.getWritePointer(0), numSamples);
+    outputRightGain.applyGain (outputBuffer.getWritePointer(1), numSamples);
     
     moveUpSamples (numSamples);
 }

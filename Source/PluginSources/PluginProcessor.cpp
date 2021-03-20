@@ -21,10 +21,22 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (doubleEngine);
     else
         initialize (floatEngine);
+    
+#if IMOGEN_ONLY_BUILDING_STANDALONE
+    //  if running as a standalone app, denormals are disabled for the lifetime of the app (instead of scoped within the processBlock).
+    denormalsWereDisabledWhenTheAppStarted = juce::FloatVectorOperations::areDenormalsDisabled();
+    juce::FloatVectorOperations::disableDenormalisedNumberSupport (true);
+    juce::FloatVectorOperations::enableFlushToZeroMode (true);
+#endif
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
-{ }
+{
+#if IMOGEN_ONLY_BUILDING_STANDALONE
+    juce::FloatVectorOperations::disableDenormalisedNumberSupport (denormalsWereDisabledWhenTheAppStarted);
+    juce::FloatVectorOperations::enableFlushToZeroMode (denormalsWereDisabledWhenTheAppStarted);
+#endif
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -145,6 +157,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
+    juce::ScopedNoDenormals nodenorms;  // when running as a plugin, we disable denormals for the duration of the audio callback, then reset the behavior to the way it was before once nodenorms goes out of scope
+    
     if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
         return;   // our audio input is disabled! can't do processing
 #endif

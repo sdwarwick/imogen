@@ -262,5 +262,9 @@ private:
     
     juce::StringArray vocalRangeTypes = imgn_VOCAL_RANGE_TYPES;
     
+#if IMOGEN_ONLY_BUILDING_STANDALONE
+    const bool denormalsWereDisabledWhenTheAppStarted;  // simpe hacky way to attempt to leave the CPU as we found it in standalone app mode
+#endif
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

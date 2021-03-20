@@ -296,21 +296,12 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     if (compressorIsOn.load())
         compressor.process (monoBuffer);
 
+    //  write to dry buffer & apply panning
     dryBuffer.clear();
-    
-    if (! leadIsBypassed)  // write to dry buffer & apply panning
-    {
-        auto* writingL = dryBuffer.getWritePointer(0);
-        auto* writingR = dryBuffer.getWritePointer(1);
-        const auto* inputSamps = monoBuffer.getReadPointer(0);
-        
-        for (int s = 0; s < blockSize; ++s)
-        {
-            const auto sample = inputSamps[s];
-            *(writingL + s) = sample * dryLgain.getNextValue();
-            *(writingR + s) = sample * dryRgain.getNextValue();
-        }
-    }
+    dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
+    dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
+    dryLgain.applyGain (dryBuffer.getWritePointer(0), blockSize);
+    dryRgain.applyGain (dryBuffer.getWritePointer(1), blockSize);
     
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
@@ -326,12 +317,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     if (reverbIsOn.load())
         reverb.process (wetBuffer);
     
-    auto* samples = monoBuffer.getWritePointer(0);
+    outputGain.applyGain (wetBuffer, blockSize);
     
-    // master output gain
-    for (int s = 0; s < blockSize; ++s)
-        *(samples + s) = samples[s] * outputGain.getNextValue();
-
     if (limiterIsOn.load())
         limiter.process (wetBuffer);
     
