@@ -10,8 +10,6 @@
  *******************************************************************************/
 
 
-// class templates defined in this file: Harmonizer<SampleType>, HarmonizerVoice<SampleType>
-
 #pragma once
 
 #include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
@@ -22,6 +20,8 @@
 
 namespace bav
 {
+    
+    using uint32 = juce::uint32;
     
 
 template<typename SampleType>
