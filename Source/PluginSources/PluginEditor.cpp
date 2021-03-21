@@ -106,11 +106,6 @@ void ImogenAudioProcessorEditor::timerCallback()
             case (ids::numVoicesID):            continue;
         }
     }
-    
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    const bool shouldWarn = imgnProcessor.shouldWarnUserToEnableSidechain();
-    juce::ignoreUnused (shouldWarn);
-#endif
 }
 
 

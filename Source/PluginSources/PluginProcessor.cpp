@@ -17,8 +17,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     initializeParameterPointers();
     updateParameterDefaults();
     
-    needsSidechain = (host.isLogic() || host.isGarageBand());
-    
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
@@ -87,12 +85,6 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     activeEngine.prepare (sampleRate);
     
     setLatencySamples (activeEngine.reportLatency());
-    
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-    needsSidechain = false;
-#else
-    needsSidechain = (host.isLogic() || host.isGarageBand());
-#endif
 }
 
 
@@ -160,25 +152,22 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    juce::ScopedNoDenormals nodenorms;  // when running as a plugin, we disable denormals for the duration of the audio callback, then reset the behavior to the way it was before once nodenorms goes out of scope
-
-    if (needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled()))
-        return;   // our audio input is disabled! can't do processing
+    juce::ScopedNoDenormals nodenorms;
 #endif
 
-    processQueuedParameterChanges (engine);
+    updateAllParameters (engine);
+    //processQueuedParameterChanges (engine);
     processQueuedNonParamEvents (engine);
 
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
    
-    juce::AudioBuffer<SampleType> inBus  = AudioProcessor::getBusBuffer (buffer, true, 0);
-    juce::AudioBuffer<SampleType> outBus = AudioProcessor::getBusBuffer (buffer, false, 0);
+    juce::AudioBuffer<SampleType> inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
+    juce::AudioBuffer<SampleType> outBus = getBusBuffer (buffer, false, 0);
     
     outBus.makeCopyOf (inBus);
     
-    //engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
-    //engine.process (inBus, outBus, midiMessages, false);
+    engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 }
 
 
@@ -216,18 +205,6 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
         return false;
     
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
-}
-
-
-bool ImogenAudioProcessor::canAddBus (bool isInput) const
-{
-    return needsSidechain ? isInput : false;
-}
-
-
-bool ImogenAudioProcessor::shouldWarnUserToEnableSidechain() const
-{
-    return needsSidechain && (getBusesLayout().getChannelSet(true, 1) == juce::AudioChannelSet::disabled());
 }
 
 

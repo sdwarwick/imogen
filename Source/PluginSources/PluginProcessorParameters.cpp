@@ -271,7 +271,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    paramChangesForProcessor.getReadyMessages (currentMessages, true);
+    paramChangesForProcessor.getReadyMessages (currentMessages, false);
     
     // converts a message's value to a boolean true/false
 #define _BOOL_MSG_ msg.value() >= 0.5f

@@ -171,6 +171,8 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& out
     
     processMidi (midiMessages);
     
+    outputBuffer.clear();
+    
     if (getNumActiveVoices() == 0)
         return;
     

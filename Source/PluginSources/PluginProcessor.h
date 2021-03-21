@@ -47,10 +47,9 @@ public:
     void processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
     void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
     
-    bool canAddBus (bool isInput) const override;
+    bool canAddBus (bool isInput) const override { return isInput; }
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
-    bool shouldWarnUserToEnableSidechain() const;  // warns the user to enable sidechain, if it's disabled (only needed for Logic & Garageband)
     
     // key values by which parameters are accessed from the editor:
     enum parameterID
@@ -220,11 +219,6 @@ private:
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
     
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
-    juce::PluginHostType host;
-#endif
-    bool needsSidechain;
-    
     juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
     juce::AudioProcessorValueTreeState tree;
@@ -258,11 +252,7 @@ private:
     };
     
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
-    
-    
-#define imgn_VOCAL_RANGE_TYPES juce::StringArray { "Soprano","Alto","Tenor","Bass" }
-    
-    juce::StringArray vocalRangeTypes = imgn_VOCAL_RANGE_TYPES;
+
     
 #if IMOGEN_ONLY_BUILDING_STANDALONE
     const bool denormalsWereDisabledWhenTheAppStarted;  // simpe hacky way to attempt to leave the CPU as we found it in standalone app mode

@@ -47,6 +47,9 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
     
     deEsserIsOn.store (false);
     reverbIsOn.store (false);
+    
+    dryWetMixer.setMixingRule (juce::dsp::DryWetMixingRule::balanced);
+    dryWetMixer.setWetLatency (SampleType(0.0));
 }
     
 
@@ -162,7 +165,6 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     
     gate.prepare (1, blocksize, samplerate);
     
-    dryWetMixer.setWetLatency(0);
     dryWetMixer.prepare (dspSpec);
     
     limiter.prepare (blocksize, samplerate, 2);
@@ -236,97 +238,88 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMes
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
 {
+    const int blockSize = input.getNumSamples();
+
+    jassert (blockSize == FIFOEngine::getLatency() && blockSize == output.getNumSamples());
+
+    const bool leadIsBypassed = leadBypass.load();
+    const bool harmoniesAreBypassed = harmonyBypass.load();
+
+    output.clear();
+    
+    if (leadIsBypassed && harmoniesAreBypassed)
+    {
+        harmonizer.bypassedBlock (blockSize, midiMessages);
+        return;
+    }
+    
+    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
+    {
+        case (2):  // take only the right channel
+        {
+            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
+        }
+
+        case (3):  // mix all input channels to mono
+        {
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+
+            const int totalNumChannels = input.getNumChannels();
+
+            if (totalNumChannels == 1)
+                break;
+
+            for (int channel = 1; channel < totalNumChannels; ++channel)
+                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
+
+            monoBuffer.applyGain (1.0f / totalNumChannels);
+        }
+
+        default:  // take only the left channel
+        {
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+        }
+    }
+    
+    inputGain.applyGain (monoBuffer, blockSize);
+
+//    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
+//    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
+
+    if (noiseGateIsOn.load())
+        gate.process (monoBuffer);
+    
+    if (deEsserIsOn.load())
+        deEsser.process (monoBuffer);
+    
+    if (compressorIsOn.load())
+        compressor.process (monoBuffer);
+
+    //  write to dry buffer & apply panning
+    dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
+    dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
+    dryLgain.applyGain (dryBuffer.getWritePointer(0), blockSize);
+    dryRgain.applyGain (dryBuffer.getWritePointer(1), blockSize);
+    
+    dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
+    
+    if (harmoniesAreBypassed)
+        harmonizer.bypassedBlock (blockSize, midiMessages);
+    else
+        harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages);  // renders the stereo output into wetBuffer
+
+    dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
+    
+    if (reverbIsOn.load())
+        reverb.process (wetBuffer);
+
+    outputGain.applyGain (wetBuffer, blockSize);
+
+    if (limiterIsOn.load())
+        limiter.process (wetBuffer);
+
     for (int chan = 0; chan < 2; ++chan)
-        output.copyFrom (chan, 0, input, chan, 0, input.getNumSamples());
-    
-//    const int blockSize = input.getNumSamples();
-//
-//    jassert (blockSize == FIFOEngine::getLatency() && blockSize == output.getNumSamples());
-//
-//    const bool leadIsBypassed = leadBypass.load();
-//    const bool harmoniesAreBypassed = harmonyBypass.load();
-//
-//    output.clear();
-    
-//    if (leadIsBypassed && harmoniesAreBypassed)
-//    {
-//        harmonizer.bypassedBlock (blockSize, midiMessages);
-//        return;
-//    }
-    
-//    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
-//    {
-//        case (2):  // take only the right channel
-//        {
-//            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
-//        }
-//
-//        case (3):  // mix all input channels to mono
-//        {
-//            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-//
-//            const int totalNumChannels = input.getNumChannels();
-//
-//            if (totalNumChannels == 1)
-//                break;
-//
-//            for (int channel = 1; channel < totalNumChannels; ++channel)
-//                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
-//
-//            monoBuffer.applyGain (1.0f / totalNumChannels);
-//        }
-//
-//        default:  // take only the left channel
-//        {
-//            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-//        }
-//    }
-    
-//    auto* inputSamples = monoBuffer.getWritePointer(0);
-//
-//    for (int s = 0; s < blockSize; ++s)
-//    {
-//        *(inputSamples + s) = inputSamples[s] * inputGain.getNextValue();   //  master input gain
-//        *(inputSamples + s) = initialHiddenLoCut.processSample (inputSamples[s]);   //  initial lo cut
-//    }
-//
-//    if (noiseGateIsOn.load())
-//        gate.process (monoBuffer);
-//
-//    if (deEsserIsOn.load())
-//        deEsser.process (monoBuffer);
-//
-//    if (compressorIsOn.load())
-//        compressor.process (monoBuffer);
-//
-//    //  write to dry buffer & apply panning
-//    dryBuffer.clear();
-//    dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
-//    dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
-//    dryLgain.applyGain (dryBuffer.getWritePointer(0), blockSize);
-//    dryRgain.applyGain (dryBuffer.getWritePointer(1), blockSize);
-//
-//    dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
-//
-//    wetBuffer.clear();
-//
-//    if (harmoniesAreBypassed)
-//        harmonizer.bypassedBlock (blockSize, midiMessages);
-//    else
-//        harmonizer.renderVoices (monoBuffer, wetBuffer, midiMessages); // renders the stereo output into wetBuffer
-//
-//    dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
-//
-//    if (reverbIsOn.load())
-//        reverb.process (wetBuffer);
-//
-//    outputGain.applyGain (wetBuffer, blockSize);
-//
-//    if (limiterIsOn.load())
-//        limiter.process (wetBuffer);
-    
-//    for (int chan = 0; chan < 2; ++chan)
-//        output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
+        output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
 }
     
 
