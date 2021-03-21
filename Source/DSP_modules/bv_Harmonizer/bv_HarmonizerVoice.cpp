@@ -18,21 +18,14 @@ namespace bav
     
 
 template<typename SampleType>
-    HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), synthesisIndex(0)
+    HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h), synthesisIndex(0)
 {
     
 }
 
 
-    
-#undef bvhv_VOID_TEMPLATE
-#define bvhv_VOID_TEMPLATE template<typename SampleType> void HarmonizerVoice<SampleType>
-    
-#undef bvbv_INLINE_VOID_TEMPLATE
-#define bvbv_INLINE_VOID_TEMPLATE template<typename SampleType> inline void HarmonizerVoice<SampleType>
-    
-    
-bvhv_VOID_TEMPLATE::prepare (const int blocksize)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
     // blocksize = maximum period
     
@@ -40,16 +33,14 @@ bvhv_VOID_TEMPLATE::prepare (const int blocksize)
     
     const int doubleSize = blocksize * 2;
     
-    constexpr SampleType zero = SampleType(0.0);
-    
     synthesisBuffer.setSize (1, doubleSize);
-    FVO::fill (synthesisBuffer.getWritePointer(0), zero, doubleSize);
+    FVO::fill (synthesisBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
     
     windowingBuffer.setSize (1, doubleSize);
-    FVO::fill (windowingBuffer.getWritePointer(0), zero, doubleSize);
+    FVO::fill (windowingBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
     
     copyingBuffer.setSize (1, doubleSize);
-    FVO::fill (copyingBuffer.getWritePointer(0), zero, doubleSize);
+    FVO::fill (copyingBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
     
     synthesisIndex = 0;
     
@@ -65,66 +56,42 @@ void HarmonizerVoice<SampleType>::released()
     windowingBuffer.setSize (0, 0, false, false, false);
     copyingBuffer.setSize (0, 0, false, false, false);
 }
+    
 
-
-bvhv_VOID_TEMPLATE::renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer,
-                                     const int origPeriod,
-                                     const juce::Array<int>& indicesOfGrainOnsets,
-                                     const AudioBuffer& windowToUse)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
 {
-    jassert (inputAudio.getNumSamples() == outputBuffer.getNumSamples());
+    jassert (currentSamplerate > 0 && desiredFrequency > 0);
     
-    // determine if the voice is currently active
-    const bool voiceIsOnRightNow = Base::isQuickFading ? Base::quickRelease.isActive()
-                                                       : ( Base::parent->isADSRon() ? Base::adsr.isActive() : ! Base::noteTurnedOff );
-    if (! voiceIsOnRightNow)
-    {
-        Base::clearCurrentNote();
-        return;
-    }
+    const int numSamples = output.getNumSamples();
     
-    jassert (Base::currentOutputFreq > 0);
+    // writes shifted samples to synthesisBuffer
+    sola (parent->thisFramesInput.getReadPointer(0), numSamples, parent->nextFramesPeriod,
+          juce::roundToInt (currentSamplerate / desiredFrequency),
+          parent->indicesOfGrainOnsets, parent->windowBuffer.getReadPointer(0));
     
-    const int numSamples = inputAudio.getNumSamples();
-    
-    // puts shifted samples into the synthesisBuffer
-    sola (inputAudio.getReadPointer(0), numSamples, origPeriod,
-          juce::roundToInt (Base::parent->getSamplerate() / Base::currentOutputFreq),  // new desired period, in samples
-          indicesOfGrainOnsets, windowToUse.getReadPointer(0));
-    
-    //  smoothed gain modulations
-    Base::midiVelocityGain.applyGain (synthesisBuffer, numSamples);
-    Base::softPedalGain.applyGain (synthesisBuffer, numSamples);
-    Base::playingButReleasedGain.applyGain (synthesisBuffer, numSamples);
-    Base::aftertouchGain.applyGain (synthesisBuffer, numSamples);
-    
-    //  ADSR
-    if (Base::parent->isADSRon())
-        Base::adsr.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // midi-triggered adsr envelope
-    else
-        Base::quickAttack.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples); // to prevent pops at start of notes if adsr is off
-
-    if (Base::isQuickFading)  // quick fade out for stopNote w/ no tail off, to prevent clicks from jumping to 0
-        Base::quickRelease.applyEnvelopeToBuffer (synthesisBuffer, 0, numSamples);
-
-    //  write to output and apply panning
-    outputBuffer.copyFrom (0, 0, synthesisBuffer, 0, 0, numSamples);
-    outputBuffer.copyFrom (1, 0, synthesisBuffer, 0, 0, numSamples);
-    Base::outputLeftGain.applyGain (outputBuffer.getWritePointer(0), numSamples);
-    Base::outputRightGain.applyGain (outputBuffer.getWritePointer(1), numSamples);
+    FVO::copy (output.getWritePointer(0), synthesisBuffer.getReadPointer(0), numSamples);
     
     moveUpSamples (numSamples);
 }
 
 
-bvbv_INLINE_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInputSamples,
-                                 const int origPeriod, // size of analysis grains = origPeriod * 2
-                                 const int newPeriod,  // OLA hop size
-                                 const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the beginning of each analysis grain
-                                 const SampleType* window) // Hanning window, length origPeriod * 2
+
+template<typename SampleType>
+inline void HarmonizerVoice<SampleType>::sola (const SampleType* input,
+                                               const int totalNumInputSamples,
+                                               const int origPeriod, // size of analysis grains = origPeriod * 2
+                                               const int newPeriod,  // OLA hop size
+                                               const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the start of each analysis grain
+                                               const SampleType* window) // Hanning window, length origPeriod * 2
 {
     if (synthesisIndex > totalNumInputSamples)
         return;
+    
+    jassert (origPeriod > 0);
+    jassert (newPeriod > 0);
+    jassert (! indicesOfGrainOnsets.isEmpty());
+    jassert (window != nullptr);
     
     const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
@@ -149,10 +116,11 @@ bvbv_INLINE_VOID_TEMPLATE::sola (const SampleType* input, const int totalNumInpu
 }
 
 
-bvbv_INLINE_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
-                                     const int frameStartSample, const int frameEndSample, const int frameSize,
-                                     const SampleType* window,
-                                     const int newPeriod)
+template<typename SampleType>
+inline void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
+                                                   const int frameStartSample, const int frameEndSample, const int frameSize,
+                                                   const SampleType* window,
+                                                   const int newPeriod)
 {
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FVO::multiply (windowingBuffer.getWritePointer(0), window,
@@ -172,7 +140,8 @@ bvbv_INLINE_VOID_TEMPLATE::olaFrame (const SampleType* inputAudio,
 }
 
 
-bvbv_INLINE_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
+template<typename SampleType>
+inline void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
 {
     synthesisIndex -= numSamplesUsed;
     
@@ -190,9 +159,12 @@ bvbv_INLINE_VOID_TEMPLATE::moveUpSamples (const int numSamplesUsed)
 
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
-bvbv_INLINE_VOID_TEMPLATE::noteCleared()
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::noteCleared()
 {
+    synthesisIndex = 0;
     synthesisBuffer.clear();
+    copyingBuffer.clear();
 }
 
     
@@ -200,14 +172,14 @@ bvbv_INLINE_VOID_TEMPLATE::noteCleared()
  DANGER!!!
  FOR NON REAL TIME ONLY!!!!!!!!
  ++++++++++++++++++++++++++++++++++++++*/
-bvhv_VOID_TEMPLATE::increaseBufferSizes(const int newMaxBlocksize)
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
 {
-    synthesisBuffer.setSize(1, newMaxBlocksize, true, true, true);
+    synthesisBuffer.setSize (1, newMaxBlocksize, true, true, true);
+    copyingBuffer.setSize (1, newMaxBlocksize, true, true, true);
 }
 
 
-#undef bvhv_VOID_TEMPLATE
-#undef bvbv_INLINE_VOID_TEMPLATE
 #undef bvhv_MIN_SMOOTHED_GAIN
 #undef _SMOOTHING_ZERO_CHECK
     

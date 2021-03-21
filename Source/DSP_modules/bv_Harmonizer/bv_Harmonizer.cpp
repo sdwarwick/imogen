@@ -18,7 +18,6 @@
 
 
 namespace bav
-
 {
 
 
@@ -27,7 +26,7 @@ Harmonizer<SampleType>::Harmonizer():
     windowSize(0),
     currentInputFreq(0.0f)
 {
-    setConcertPitchHz(440);
+    Base::setConcertPitchHz(440);
     
     pitchDetector.setConfidenceThresh (SampleType(bvh_PITCH_DETECTION_CONFIDENCE_THRESH));
     
@@ -44,10 +43,6 @@ Harmonizer<SampleType>::Harmonizer():
 #undef bvh_SOFT_PEDAL_GAIN_MULTIPLIER
 
     
-#undef bvh_VOID_TEMPLATE
-#define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
-    
-    
 template<typename SampleType>
 void Harmonizer<SampleType>::initialized (const double initSamplerate, const int initBlocksize)
 {
@@ -60,7 +55,7 @@ template<typename SampleType>
 void Harmonizer<SampleType>::prepared (int blocksize)
 {
     windowBuffer.setSize (1, blocksize, true, true, true);
-    polarityReversalBuffer.setSize (1, blocksize);
+    inputStorage.setSize (1, blocksize);
 
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
 
@@ -74,10 +69,21 @@ void Harmonizer<SampleType>::samplerateChanged (double newSamplerate)
     pitchDetector.setSamplerate (newSamplerate);
 }
     
-    
-bvh_VOID_TEMPLATE::release()
+
+template<typename SampleType>
+void Harmonizer<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
-    polarityReversalBuffer.clear();
+    pitchDetector.setHzRange (minHz, maxHz);
+    
+    if (Base::sampleRate > 0)
+        pitchDetector.setSamplerate (Base::sampleRate);
+}
+
+    
+template<typename SampleType>
+void Harmonizer<SampleType>::release()
+{
+    inputStorage.clear();
     windowBuffer.clear();
     indicesOfGrainOnsets.clear();
     grains.releaseResources();
@@ -85,22 +91,10 @@ bvh_VOID_TEMPLATE::release()
 }
 
     
-
-/***********************************************************************************************************************************************
-// audio rendering------------------------------------------------------------------------------------------------------------------------------
- **********************************************************************************************************************************************/
-
-bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer, MidiBuffer& midiMessages)
+template<typename SampleType>
+void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 {
-    jassert (! Base::voices.isEmpty());
     jassert (Base::sampleRate > 0);
-    
-    Base::processMidi (midiMessages);
-    
-    outputBuffer.clear();
-    
-    if (Base::getNumActiveVoices() == 0)
-        return;
     
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
     const bool frameIsPitched  = inputFrequency > 0.0f;
@@ -120,32 +114,23 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& out
         // for unpitched frames, an arbitrary "period" is imposed on the signal for analysis grain extraction; this arbitrary period is randomized within a certain range
         periodThisFrame = juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
         
-        if (bav::math::probability (50))  // reverse the polarity approx 50% of the time
+        if (bav::math::probability (50))  // for unpitched frames, also reverse the polarity approx 50% of the time
         {
-            juce::FloatVectorOperations::negate (polarityReversalBuffer.getWritePointer(0),
-                                                 inputAudio.getReadPointer(0),
-                                                 numSamples);
+            FVO::negate (inputStorage.getWritePointer(0), inputAudio.getReadPointer(0), numSamples);
             polarityReversed = true;
         }
     }
     
+    if (! polarityReversed)
+        FVO::copy (inputStorage.getWritePointer(0), inputAudio.getReadPointer(0), numSamples);
+    
     fillWindowBuffer (periodThisFrame * 2);
     
-    const AudioBuffer& actualInput = polarityReversed ? polarityReversalBuffer : inputAudio;
+    thisFramesInput = polarityReversed ? inputStorage : inputAudio;
+    nextFramesPeriod = periodThisFrame;
     
-    grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
-    
-    for (auto* voice : Base::voices)
-    {
-        if (voice->isVoiceActive())
-            dynamic_cast<HarmonizerVoice<SampleType>*>(voice)->renderNextBlock (actualInput, outputBuffer,
-                                                                                periodThisFrame, indicesOfGrainOnsets, windowBuffer);
-        else
-            voice->bypassedBlock (numSamples);
-    }
+    grains.getGrainOnsetIndices (indicesOfGrainOnsets, thisFramesInput, periodThisFrame);
 }
-
-
 
 
 // calculate Hanning window ------------------------------------------------------
@@ -186,25 +171,6 @@ void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
     Base::numVoicesChanged();
 }
 
-
-template<typename SampleType>
-void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
-{
-    jassert (newConcertPitchhz > 0);
-    
-    if (Base::pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
-        return;
-    
-    Base::pitchConverter.setConcertPitchHz (newConcertPitchhz);
-    
-    for (auto* voice : Base::voices)
-        if (voice->isVoiceActive())
-            voice->setCurrentOutputFreq (Base::getOutputFrequency (voice->getCurrentlyPlayingNote()));
-}
-
-
-
-#undef bvh_VOID_TEMPLATE
 
 template class Harmonizer<float>;
 template class Harmonizer<double>;

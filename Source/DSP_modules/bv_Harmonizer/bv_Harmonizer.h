@@ -52,6 +52,8 @@ public:
                           const juce::Array<int>& indicesOfGrainOnsets,
                           const AudioBuffer& windowToUse);
     
+    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
+    
     
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes (const int newMaxBlocksize);
@@ -60,6 +62,8 @@ public:
     
 private:
     friend class Harmonizer<SampleType>;
+    
+    Harmonizer<SampleType>* parent;
     
     void prepare (const int blocksize) override;
     
@@ -107,23 +111,20 @@ class Harmonizer  :     public dsp::SynthBase<SampleType>
     
     using Base = dsp::SynthBase<SampleType>;
     
+    using FVO = juce::FloatVectorOperations;
+    
     
 public:
     Harmonizer();
     
     void release() override;
     
+    void analyzeInput (const AudioBuffer& inputAudio);
+    
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
     
-    void renderVoices (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer, MidiBuffer& midiMessages);
+    void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     
-    void setConcertPitchHz (const int newConcertPitchhz);
-    
-    void updatePitchDetectionHzRange (const int minHz, const int maxHz)
-    {
-        pitchDetector.setHzRange (minHz, maxHz);
-        if (Base::sampleRate > 0) pitchDetector.setSamplerate (Base::sampleRate);
-    }
     
     
 private:
@@ -153,9 +154,13 @@ private:
     AudioBuffer windowBuffer;
     int windowSize;
     
-    AudioBuffer polarityReversalBuffer;
+    AudioBuffer inputStorage;
+    
+    AudioBuffer& thisFramesInput = inputStorage;
     
     float currentInputFreq;
+    
+    int nextFramesPeriod = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
