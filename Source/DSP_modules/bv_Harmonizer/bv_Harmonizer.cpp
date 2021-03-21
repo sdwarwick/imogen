@@ -5,11 +5,6 @@
 */
 
 #include "bv_HarmonizerVoice.cpp"
-#include "bv_Harmonizer_VoiceAllocation.cpp"
-#include "bv_Harmonizer_Midi.cpp"
-#include "bv_Harmonizer_AutomatedMidiFeatures.cpp"
-#include "bv_Harmonizer_Parameters.cpp"
-#include "PanningManager/PanningManager.cpp"
 #include "GrainExtractor/GrainExtractor.cpp"
 
 
@@ -29,137 +24,67 @@ namespace bav
 
 template<typename SampleType>
 Harmonizer<SampleType>::Harmonizer():
-    latchIsOn(false), currentInputFreq(0.0f), sampleRate(44100.0), lastNoteOnCounter(0), lastPitchWheelValue(64), shouldStealNotes(true), lowestPannedNote(0),
-    velocityConverter(100), pitchConverter(440, 69, 12), bendTracker(2, 2),
-    adsrIsOn(true), lastMidiTimeStamp(0), lastMidiChannel(1), playingButReleasedMultiplier(1.0f), sustainPedalDown(false), sostenutoPedalDown(false), softPedalDown(false), windowSize(0)
+    windowSize(0),
+    currentInputFreq(0.0f)
 {
-    adsrParams.attack  = 0.035f;
-    adsrParams.decay   = 0.06f;
-    adsrParams.sustain = 0.8f;
-    adsrParams.release = 0.01f;
-    
-    quickReleaseParams.attack  = 0.01f;
-    quickReleaseParams.decay   = 0.005f;
-    quickReleaseParams.sustain = 1.0f;
-    quickReleaseParams.release = 0.015f;
-    
-    quickAttackParams.attack  = 0.015f;
-    quickAttackParams.decay   = 0.01f;
-    quickAttackParams.sustain = 1.0f;
-    quickAttackParams.release = 0.015f;
-    
     setConcertPitchHz(440);
-    setCurrentPlaybackSampleRate(44100.0);
-    
-    pedal.isOn = false;
-    pedal.lastPitch = -1;
-    pedal.upperThresh = 0;
-    pedal.interval = 12;
-    
-    descant.isOn = false;
-    descant.lastPitch = -1;
-    descant.lowerThresh = 127;
-    descant.interval = 12;
-    
-    updateQuickAttackMs (bvh_ADSR_QUICK_ATTACK_MS);
-    updateQuickReleaseMs (bvh_ADSR_QUICK_RELEASE_MS);
-    
-    playingButReleasedMultiplier = float(bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER);
-    softPedalMultiplier = float(bvh_SOFT_PEDAL_GAIN_MULTIPLIER);
     
     pitchDetector.setConfidenceThresh (SampleType(bvh_PITCH_DETECTION_CONFIDENCE_THRESH));
+    
+    Base::updateQuickAttackMs (bvh_ADSR_QUICK_ATTACK_MS);
+    Base::updateQuickReleaseMs (bvh_ADSR_QUICK_RELEASE_MS);
+    
+    Base::playingButReleasedMultiplier = float(bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER);
+    Base::softPedalMultiplier = float(bvh_SOFT_PEDAL_GAIN_MULTIPLIER);
 }
     
 #undef bvh_ADSR_QUICK_ATTACK_MS
 #undef bvh_ADSR_QUICK_RELEASE_MS
-
-
-template<typename SampleType>
-Harmonizer<SampleType>::~Harmonizer()
-{
-    voices.clear();
-}
+#undef bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER
+#undef bvh_SOFT_PEDAL_GAIN_MULTIPLIER
 
     
 #undef bvh_VOID_TEMPLATE
 #define bvh_VOID_TEMPLATE template<typename SampleType> void Harmonizer<SampleType>
     
     
-bvh_VOID_TEMPLATE::initialize (const int initNumVoices, const double initSamplerate, const int initBlocksize)
+template<typename SampleType>
+void Harmonizer<SampleType>::initialized (const double initSamplerate, const int initBlocksize)
 {
-    jassert (initNumVoices > 0 && initSamplerate > 0 && initBlocksize > 0);
-    
-    changeNumVoices (initNumVoices);
-    
     pitchDetector.initialize();
-    
-    setCurrentPlaybackSampleRate (initSamplerate);
-    
-    prepare (initBlocksize);
+    juce::ignoreUnused (initSamplerate, initBlocksize);
 }
 
- 
-bvh_VOID_TEMPLATE::prepare (const int blocksize)  
+
+template<typename SampleType>
+void Harmonizer<SampleType>::prepared (int blocksize)
 {
-    jassert (blocksize > 0);
-    jassert (! voices.isEmpty());
-    
-    aggregateMidiBuffer.ensureSize (size_t(blocksize * 2));
-    aggregateMidiBuffer.clear();
-    
-    for (auto* voice : voices)
-        voice->prepare (blocksize);
-    
     windowBuffer.setSize (1, blocksize, true, true, true);
     polarityReversalBuffer.setSize (1, blocksize);
-    
+
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
-    
+
     grains.prepare (blocksize);
-    panner.prepare (voices.size(), false);
-    
-    lastNoteOnCounter = 0;
 }
 
 
-bvh_VOID_TEMPLATE::setCurrentPlaybackSampleRate (const double newRate)
+template<typename SampleType>
+void Harmonizer<SampleType>::samplerateChanged (double newSamplerate)
 {
-    jassert (newRate > 0);
-    
-    sampleRate = newRate;
-    
-    pitchDetector.setSamplerate (newRate);
-    
-    for (auto* voice : voices)
-        voice->updateSampleRate (newRate);
+    pitchDetector.setSamplerate (newSamplerate);
 }
-
-
-bvh_VOID_TEMPLATE::releaseResources()
+    
+    
+bvh_VOID_TEMPLATE::release()
 {
-    aggregateMidiBuffer.clear();
-    usableVoices.clear();
     polarityReversalBuffer.clear();
     windowBuffer.clear();
     indicesOfGrainOnsets.clear();
-    currentNotes.clear();
-    desiredNotes.clear();
-    
-    for (auto* voice : voices)
-        voice->releaseResources();
-    
-    panner.releaseResources();
     grains.releaseResources();
     pitchDetector.releaseResources();
 }
+
     
-
-bvh_VOID_TEMPLATE::resetRampedValues (int blocksize)
-{
-    for (auto* voice : voices)
-        voice->resetRampedValues (blocksize);
-}
-
 
 /***********************************************************************************************************************************************
 // audio rendering------------------------------------------------------------------------------------------------------------------------------
@@ -167,13 +92,14 @@ bvh_VOID_TEMPLATE::resetRampedValues (int blocksize)
 
 bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer, MidiBuffer& midiMessages)
 {
-    jassert (! voices.isEmpty());
+    jassert (! Base::voices.isEmpty());
+    jassert (Base::sampleRate > 0);
     
-    processMidi (midiMessages);
+    Base::processMidi (midiMessages);
     
     outputBuffer.clear();
     
-    if (getNumActiveVoices() == 0)
+    if (Base::getNumActiveVoices() == 0)
         return;
     
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
@@ -187,7 +113,7 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& out
     if (frameIsPitched)
     {
         currentInputFreq = inputFrequency;
-        periodThisFrame = juce::roundToInt (sampleRate / inputFrequency);
+        periodThisFrame = juce::roundToInt (Base::sampleRate / inputFrequency);
     }
     else
     {
@@ -209,23 +135,17 @@ bvh_VOID_TEMPLATE::renderVoices (const AudioBuffer& inputAudio, AudioBuffer& out
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, actualInput, periodThisFrame);
     
-    for (auto* voice : voices)
+    for (auto* voice : Base::voices)
     {
         if (voice->isVoiceActive())
-            voice->renderNextBlock (actualInput, outputBuffer, periodThisFrame, indicesOfGrainOnsets, windowBuffer);
+            dynamic_cast<HarmonizerVoice<SampleType>*>(voice)->renderNextBlock (actualInput, outputBuffer,
+                                                                                periodThisFrame, indicesOfGrainOnsets, windowBuffer);
         else
             voice->bypassedBlock (numSamples);
     }
 }
 
 
-bvh_VOID_TEMPLATE::bypassedBlock (const int numSamples, MidiBuffer& midiMessages)
-{
-    processMidi (midiMessages);
-    
-    for (auto* voice : voices)
-        voice->bypassedBlock (numSamples);
-}
 
 
 // calculate Hanning window ------------------------------------------------------
@@ -248,6 +168,38 @@ inline void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
                                                                    juce::dsp::WindowingFunction<SampleType>::hann,
                                                                    true);
     windowSize = numSamples;
+}
+    
+    
+// adds a specified # of voices
+template<typename SampleType>
+void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
+{
+    if (voicesToAdd == 0)
+        return;
+    
+    for (int i = 0; i < voicesToAdd; ++i)
+        Base::voices.add (new Voice(this));
+    
+    jassert (Base::voices.size() >= voicesToAdd);
+    
+    Base::numVoicesChanged();
+}
+
+
+template<typename SampleType>
+void Harmonizer<SampleType>::setConcertPitchHz (const int newConcertPitchhz)
+{
+    jassert (newConcertPitchhz > 0);
+    
+    if (Base::pitchConverter.getCurrentConcertPitchHz() == newConcertPitchhz)
+        return;
+    
+    Base::pitchConverter.setConcertPitchHz (newConcertPitchhz);
+    
+    for (auto* voice : Base::voices)
+        if (voice->isVoiceActive())
+            voice->setCurrentOutputFreq (Base::getOutputFrequency (voice->getCurrentlyPlayingNote()));
 }
 
 
