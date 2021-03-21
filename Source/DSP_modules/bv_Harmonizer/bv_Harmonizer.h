@@ -35,33 +35,24 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
 {
     
     using AudioBuffer = juce::AudioBuffer<SampleType>;
-    
     using FVO = juce::FloatVectorOperations;
-    
     using Base = dsp::SynthVoiceBase<SampleType>;
     
     
 public:
     
-    // NB. I play a bit fast and loose with private vs public functions here, because really, you should never interface directly with any non-const methods of HarmonizerVoice from outside the Harmonizer class that owns it...
-    
     HarmonizerVoice (Harmonizer<SampleType>* h);
-    
-    void renderNextBlock (const AudioBuffer& inputAudio, AudioBuffer& outputBuffer,
-                          const int origPeriod,
-                          const juce::Array<int>& indicesOfGrainOnsets,
-                          const AudioBuffer& windowToUse);
-    
-    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
-    
     
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes (const int newMaxBlocksize);
     
     
-    
 private:
     friend class Harmonizer<SampleType>;
+    
+    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
+    
+    void bypassedBlockRecieved (int numSamples) override { moveUpSamples (numSamples); }
     
     Harmonizer<SampleType>* parent;
     
@@ -103,14 +94,8 @@ class Harmonizer  :     public dsp::SynthBase<SampleType>
 {
     using AudioBuffer = juce::AudioBuffer<SampleType>;
     using MidiBuffer  = juce::MidiBuffer;
-    using MidiMessage = juce::MidiMessage;
-    
     using Voice = HarmonizerVoice<SampleType>;
-    
-    using ADSRParams = juce::ADSR::Parameters;
-    
     using Base = dsp::SynthBase<SampleType>;
-    
     using FVO = juce::FloatVectorOperations;
     
     
@@ -121,8 +106,6 @@ public:
     
     void release() override;
     
-    void analyzeInput (const AudioBuffer& inputAudio);
-    
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
     
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
@@ -131,6 +114,8 @@ public:
     
 private:
     friend class HarmonizerVoice<SampleType>;
+    
+    void analyzeInput (const AudioBuffer& inputAudio);
     
     void initialized (const double initSamplerate, const int initBlocksize) override;
     

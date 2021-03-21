@@ -156,6 +156,7 @@ inline void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed
     synthesisBuffer.clear();
     synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, synthesisIndex);
 }
+    
 
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial

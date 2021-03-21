@@ -119,7 +119,7 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     {
         nextFramesPeriod = juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
         
-        if (bav::math::probability (50))  // for unpitched frames, also reverse the polarity approx 50% of the time
+        if (bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
         {
             FVO::negate (inputStorage.getWritePointer(0), inputAudio.getReadPointer(0), numSamples);
             polarityReversed = true;
@@ -134,7 +134,6 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     fillWindowBuffer (nextFramesPeriod * 2);
     
     auto thisFramesInput = AudioBuffer (inputStorage.getArrayOfWritePointers(), 1, 0, numSamples);
-    
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, thisFramesInput, nextFramesPeriod);
 }
 
