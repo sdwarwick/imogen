@@ -22,9 +22,7 @@ namespace bav
 
 
 template<typename SampleType>
-Harmonizer<SampleType>::Harmonizer():
-    windowSize(0),
-    currentInputFreq(0.0f)
+Harmonizer<SampleType>::Harmonizer():   windowSize(0)
 {
     Base::setConcertPitchHz(440);
     
@@ -56,7 +54,7 @@ void Harmonizer<SampleType>::prepared (int blocksize)
 {
     windowBuffer.setSize (1, blocksize, true, true, true);
     inputStorage.setSize (1, blocksize);
-
+    
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
 
     grains.prepare (blocksize);
@@ -74,7 +72,7 @@ template<typename SampleType>
 void Harmonizer<SampleType>::updatePitchDetectionHzRange (const int minHz, const int maxHz)
 {
     pitchDetector.setHzRange (minHz, maxHz);
-    
+
     if (Base::sampleRate > 0)
         pitchDetector.setSamplerate (Base::sampleRate);
 }
@@ -92,27 +90,34 @@ void Harmonizer<SampleType>::release()
 
     
 template<typename SampleType>
+void Harmonizer<SampleType>::render (const AudioBuffer& input, AudioBuffer& output, juce::MidiBuffer& midiMessages)
+{
+    jassert (input.getNumSamples() == output.getNumSamples());
+    jassert (output.getNumChannels() == 2);
+    analyzeInput (input);
+    Base::renderVoices (midiMessages, output);
+}
+
+    
+template<typename SampleType>
 void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 {
     jassert (Base::sampleRate > 0);
     
     const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
-    const bool frameIsPitched  = inputFrequency > 0.0f;
+    const bool  frameIsPitched = inputFrequency > 0.0f;
     
     const int numSamples = inputAudio.getNumSamples();
     
-    int periodThisFrame;
     bool polarityReversed = false;
     
     if (frameIsPitched)
     {
-        currentInputFreq = inputFrequency;
-        periodThisFrame = juce::roundToInt (Base::sampleRate / inputFrequency);
+        nextFramesPeriod = juce::roundToInt (Base::sampleRate / inputFrequency);
     }
     else
     {
-        // for unpitched frames, an arbitrary "period" is imposed on the signal for analysis grain extraction; this arbitrary period is randomized within a certain range
-        periodThisFrame = juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
+        nextFramesPeriod = juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
         
         if (bav::math::probability (50))  // for unpitched frames, also reverse the polarity approx 50% of the time
         {
@@ -124,12 +129,13 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     if (! polarityReversed)
         FVO::copy (inputStorage.getWritePointer(0), inputAudio.getReadPointer(0), numSamples);
     
-    fillWindowBuffer (periodThisFrame * 2);
+    jassert (nextFramesPeriod > 0);
     
-    thisFramesInput = polarityReversed ? inputStorage : inputAudio;
-    nextFramesPeriod = periodThisFrame;
+    fillWindowBuffer (nextFramesPeriod * 2);
     
-    grains.getGrainOnsetIndices (indicesOfGrainOnsets, thisFramesInput, periodThisFrame);
+    auto thisFramesInput = AudioBuffer (inputStorage.getArrayOfWritePointers(), 1, 0, numSamples);
+    
+    grains.getGrainOnsetIndices (indicesOfGrainOnsets, thisFramesInput, nextFramesPeriod);
 }
 
 
@@ -143,15 +149,14 @@ inline void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
     if (windowSize == numSamples)
         return;
     
-    constexpr SampleType zero = SampleType(0.0);
-    juce::FloatVectorOperations::fill (windowBuffer.getWritePointer(0), zero, windowBuffer.getNumSamples());
+    FVO::fill (windowBuffer.getWritePointer(0), SampleType(0.0), windowBuffer.getNumSamples());
     
     jassert (numSamples <= windowBuffer.getNumSamples());
     
-    juce::dsp::WindowingFunction<SampleType>::fillWindowingTables (windowBuffer.getWritePointer(0),
-                                                                   size_t(numSamples),
-                                                                   juce::dsp::WindowingFunction<SampleType>::hann,
-                                                                   true);
+    using Func = juce::dsp::WindowingFunction<SampleType>;
+    
+    Func::fillWindowingTables (windowBuffer.getWritePointer(0), size_t(numSamples), Func::hann, true);
+    
     windowSize = numSamples;
 }
     

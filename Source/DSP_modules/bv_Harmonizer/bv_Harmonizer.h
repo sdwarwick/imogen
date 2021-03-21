@@ -117,6 +117,8 @@ class Harmonizer  :     public dsp::SynthBase<SampleType>
 public:
     Harmonizer();
     
+    void render (const AudioBuffer& input, AudioBuffer& output, juce::MidiBuffer& midiMessages);
+    
     void release() override;
     
     void analyzeInput (const AudioBuffer& inputAudio);
@@ -155,10 +157,6 @@ private:
     int windowSize;
     
     AudioBuffer inputStorage;
-    
-    AudioBuffer& thisFramesInput = inputStorage;
-    
-    float currentInputFreq;
     
     int nextFramesPeriod = 0;
     

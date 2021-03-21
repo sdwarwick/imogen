@@ -306,10 +306,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     if (harmoniesAreBypassed)
         harmonizer.bypassedBlock (blockSize, midiMessages);
     else
-    {
-        harmonizer.analyzeInput (monoBuffer);
-        harmonizer.renderVoices (midiMessages, wetBuffer);  // renders the stereo output into wetBuffer
-    }
+        harmonizer.render (monoBuffer, wetBuffer, midiMessages);  // renders the stereo output into wetBuffer
 
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
     

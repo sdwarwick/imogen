@@ -157,7 +157,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 
     updateAllParameters (engine);
     //processQueuedParameterChanges (engine);
-    processQueuedNonParamEvents (engine);
+    //processQueuedNonParamEvents (engine);
 
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;

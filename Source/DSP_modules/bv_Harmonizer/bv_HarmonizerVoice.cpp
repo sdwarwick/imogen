@@ -66,7 +66,7 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     const int numSamples = output.getNumSamples();
     
     // writes shifted samples to synthesisBuffer
-    sola (parent->thisFramesInput.getReadPointer(0), numSamples, parent->nextFramesPeriod,
+    sola (parent->inputStorage.getReadPointer(0), numSamples, parent->nextFramesPeriod,
           juce::roundToInt (currentSamplerate / desiredFrequency),
           parent->indicesOfGrainOnsets, parent->windowBuffer.getReadPointer(0));
     
@@ -91,7 +91,7 @@ inline void HarmonizerVoice<SampleType>::sola (const SampleType* input,
     jassert (origPeriod > 0);
     jassert (newPeriod > 0);
     jassert (! indicesOfGrainOnsets.isEmpty());
-    jassert (window != nullptr);
+    jassert (window != nullptr && input != nullptr);
     
     const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
     
