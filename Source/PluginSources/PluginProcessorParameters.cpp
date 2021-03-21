@@ -271,14 +271,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    currentMessages.clearQuick();
-    
-    // retrieve all the messages available
-    while (! paramChangesForProcessor.isEmpty())
-        currentMessages.add (paramChangesForProcessor.popMessage());
-    
-    // we're going to process only the most recent message of each type
-    bav::MessageQueue::flushRepeatedMessages (currentMessages);
+    paramChangesForProcessor.getReadyMessages (currentMessages, true);
     
     // converts a message's value to a boolean true/false
 #define _BOOL_MSG_ msg.value() >= 0.5f
@@ -378,14 +371,7 @@ template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEn
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    currentMessages.clearQuick();
-    
-    // retrieve all the messages available
-    while (! nonParamEvents.isEmpty())
-        currentMessages.add (nonParamEvents.popMessage());
-    
-    // we're going to process only the most recent message of each type
-    bav::MessageQueue::flushRepeatedMessages (currentMessages);
+    nonParamEvents.getReadyMessages (currentMessages, true);
     
     for (const auto msg : currentMessages)
     {

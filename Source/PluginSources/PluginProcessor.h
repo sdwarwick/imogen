@@ -50,9 +50,7 @@ public:
     bool canAddBus (bool isInput) const override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     bool shouldWarnUserToEnableSidechain() const;  // warns the user to enable sidechain, if it's disabled (only needed for Logic & Garageband)
-#endif
     
     // key values by which parameters are accessed from the editor:
     enum parameterID
@@ -157,7 +155,7 @@ public:
     
     // these queues are public because the editor needs to read from paramChangesForEditor and write to paramChangesForProcessor
     bav::MessageQueue paramChangesForEditor;
-    bav::MessageQueue paramChangesForProcessor;
+    
     
     // this queue is SPSC; this is only for events flowing from the editor into the processor
     bav::MessageQueue nonParamEvents;
@@ -166,6 +164,8 @@ public:
 private:
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
+    
+    juce::AudioProcessor::BusesProperties makeBusProperties() const;
     
     template <typename SampleType1, typename SampleType2>
     void prepareToPlayWrapped (const double sampleRate,
@@ -202,7 +202,7 @@ private:
     void addParameterMessenger (juce::String stringID, int paramID);
     void updateParameterDefaults();
     
-    juce::AudioProcessor::BusesProperties makeBusProperties() const;
+    bav::MessageQueue paramChangesForProcessor;
     
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
@@ -222,8 +222,8 @@ private:
     
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     juce::PluginHostType host;
-    bool needsSidechain;
 #endif
+    bool needsSidechain;
     
     juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
@@ -235,11 +235,6 @@ private:
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;
-    
-    std::atomic<int> defaultVocalRangeIndex;
-    
-    juce::NormalisableRange<float> pitchBendNormRange { 0, 127 };  // because there's a parameterID for this, I need a dummy NormalisableRange for it
-    
     
     /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */
     class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener

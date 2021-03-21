@@ -54,14 +54,7 @@ void ImogenAudioProcessorEditor::timerCallback()
     if (imgnProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
     
-    currentMessages.clearQuick();
-    
-    // retrieve all the messages available
-    while (! imgnProcessor.paramChangesForEditor.isEmpty())
-        currentMessages.add (imgnProcessor.paramChangesForEditor.popMessage());
-    
-    // we're going to process only the most recent message of each type
-    bav::MessageQueue::flushRepeatedMessages (currentMessages);
+    imgnProcessor.paramChangesForEditor.getReadyMessages (currentMessages, true);
     
     for (const auto msg : currentMessages)
     {
@@ -113,6 +106,11 @@ void ImogenAudioProcessorEditor::timerCallback()
             case (ids::numVoicesID):            continue;
         }
     }
+    
+#if ! IMOGEN_ONLY_BUILDING_STANDALONE
+    const bool shouldWarn = imgnProcessor.shouldWarnUserToEnableSidechain();
+    juce::ignoreUnused (shouldWarn);
+#endif
 }
 
 
