@@ -5,14 +5,15 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       bv_PitchDetector
+ dependencies:       bv_SynthBase, bv_PitchDetector
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
 
 #pragma once
 
-#include "bv_PitchDetector/bv_PitchDetector.h"  // this file includes the bv_SharedCode header
+#include "bv_SynthBase/bv_SynthBase.h"
+#include "bv_PitchDetector/bv_PitchDetector.h"
 #include "GrainExtractor/GrainExtractor.h"
 
 
