@@ -667,6 +667,7 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (numVoicesID):             return numVoices;
         case (inputSourceID):           return inputSource;
         case (vocalRangeTypeID):        return vocalRangeType;
+        default:                        return nullptr;
     }
 }
 

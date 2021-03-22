@@ -27,6 +27,7 @@ class ImogenEngine  :   public bav::dsp::FIFOWrappedEngine<SampleType>
     using FIFOEngine  = bav::dsp::FIFOWrappedEngine<SampleType>;
     using AudioBuffer = juce::AudioBuffer<SampleType>;
     using MidiBuffer  = juce::MidiBuffer;
+    using uint32 = juce::uint32;
     
     
 public:
