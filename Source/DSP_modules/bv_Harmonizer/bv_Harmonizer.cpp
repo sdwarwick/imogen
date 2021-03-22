@@ -133,8 +133,7 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     fillWindowBuffer (nextFramesPeriod * 2);
     
-    auto thisFramesInput = AudioBuffer (inputStorage.getArrayOfWritePointers(), 1, 0, numSamples);
-    grains.getGrainOnsetIndices (indicesOfGrainOnsets, thisFramesInput, nextFramesPeriod);
+    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
 }
 
 

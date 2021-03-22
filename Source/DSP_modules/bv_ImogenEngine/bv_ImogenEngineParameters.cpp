@@ -174,8 +174,8 @@ bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, fl
     reverb.setDamping (1.0f - decay);
     reverb.setRoomSize (decay);
     reverb.setDuckAmount (duckAmount);
-    reverb.setLoCutFrequency (loCutFreq);
-    reverb.setHiCutFrequency (hiCutFreq);
+    //reverb.setLoCutFrequency (loCutFreq);
+    //reverb.setHiCutFrequency (hiCutFreq);
 }
 
 

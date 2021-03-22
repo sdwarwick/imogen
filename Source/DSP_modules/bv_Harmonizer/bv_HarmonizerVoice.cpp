@@ -62,16 +62,17 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
 {
     jassert (currentSamplerate > 0 && desiredFrequency > 0);
-    
+
     const int numSamples = output.getNumSamples();
-    
+
     // writes shifted samples to synthesisBuffer
     sola (parent->inputStorage.getReadPointer(0), numSamples, parent->nextFramesPeriod,
-          juce::roundToInt (currentSamplerate / desiredFrequency),
+          juce::roundToInt (currentSamplerate / desiredFrequency),  // new desired period, in samples
           parent->indicesOfGrainOnsets, parent->windowBuffer.getReadPointer(0));
-    
+
+    // copy to output
     FVO::copy (output.getWritePointer(0), synthesisBuffer.getReadPointer(0), numSamples);
-    
+
     moveUpSamples (numSamples);
 }
 
@@ -108,10 +109,9 @@ inline void HarmonizerVoice<SampleType>::sola (const SampleType* input,
         olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
     }
     
-    // fill from the last written sample to the end of the buffer with zeroes
     const int sampsLeft = synthesisBuffer.getNumSamples() - synthesisIndex;
     
-    if (sampsLeft > 0)
+    if (sampsLeft > 0)  // fill from the last written sample to the end of the buffer with zeroes
         FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex, SampleType(0.0), sampsLeft);
 }
 

@@ -14,7 +14,9 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     , denormalsWereDisabledWhenTheAppStarted(juce::FloatVectorOperations::areDenormalsDisabled())
 #endif
 {
+    jassert (AudioProcessor::getParameters().size() == IMGN_NUM_PARAMS);
     initializeParameterPointers();
+    initializeParameterListeners();
     updateParameterDefaults();
     
     if (isUsingDoublePrecision())
@@ -124,19 +126,19 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, floatEngine, true);
-    
     if (! mainBypass->get())
         mainBypass->setValueNotifyingHost (1.0f);
+    
+    processBlockWrapped (buffer, midiMessages, floatEngine, true);
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, doubleEngine, true);
-    
     if (! mainBypass->get())
         mainBypass->setValueNotifyingHost (1.0f);
+    
+    processBlockWrapped (buffer, midiMessages, doubleEngine, true);
 }
 
 
@@ -155,8 +157,9 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 #endif
 
     updateAllParameters (engine);
+    
     //processQueuedParameterChanges (engine);
-    //processQueuedNonParamEvents (engine);
+    processQueuedNonParamEvents (engine);
 
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;

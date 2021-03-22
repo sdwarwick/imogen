@@ -97,8 +97,7 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
-#define IMGN_FIRST_PARAM numVoicesID
-#define IMGN_LAST_PARAM reverbHiCutID
+#define IMGN_NUM_PARAMS reverbHiCutID + 1
     
     enum eventID  // IDs for events that are not parameters
     {
@@ -226,6 +225,7 @@ private:
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;
+    
     
     /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */
     class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
