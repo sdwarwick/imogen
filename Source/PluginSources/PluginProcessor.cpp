@@ -63,8 +63,7 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
     else
         prepareToPlayWrapped (sampleRate, floatEngine,  doubleEngine);
     
-    paramChangesForProcessor.reserveSize (samplesPerBlock);
-    paramChangesForEditor.reserveSize (samplesPerBlock);
+    paramChanges.reserveSize (samplesPerBlock);
     
     currentMessages.ensureStorageAllocated (samplesPerBlock);
 }

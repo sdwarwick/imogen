@@ -152,9 +152,6 @@ public:
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
-    // these queues are public because the editor needs to read from paramChangesForEditor and write to paramChangesForProcessor
-    bav::MessageQueue paramChangesForEditor;
-    
     
     // this queue is SPSC; this is only for events flowing from the editor into the processor
     bav::MessageQueue nonParamEvents;
@@ -201,7 +198,7 @@ private:
     void addParameterMessenger (juce::String stringID, int paramID);
     void updateParameterDefaults();
     
-    bav::MessageQueue paramChangesForProcessor;
+    bav::MessageQueue paramChanges;
     
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
@@ -234,20 +231,18 @@ private:
     class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
     {
     public:
-        ParameterMessenger(bav::MessageQueue& queue1, bav::MessageQueue& queue2, int paramIDtoListen):
-            q1(queue1), q2(queue2), paramID(paramIDtoListen)
+        ParameterMessenger(bav::MessageQueue& queue, int paramIDtoListen):
+            q(queue), paramID(paramIDtoListen)
         { }
         
         void parameterChanged (const juce::String& s, float value) override
         {
             juce::ignoreUnused (s);
-            q1.pushMessage (paramID, value);
-            q2.pushMessage (paramID, value);
+            q.pushMessage (paramID, value);
         }
         
     private:
-        bav::MessageQueue& q1;
-        bav::MessageQueue& q2;
+        bav::MessageQueue& q;
         const int paramID;
     };
     

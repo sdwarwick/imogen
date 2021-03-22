@@ -53,59 +53,6 @@ void ImogenAudioProcessorEditor::timerCallback()
 {
     if (imgnProcessor.hasUpdatedParamDefaults())
         updateParameterDefaults();
-    
-    imgnProcessor.paramChangesForEditor.getReadyMessages (currentMessages, true);
-    
-    for (const auto msg : currentMessages)
-    {
-        if (! msg.isValid())
-            continue;
-        
-        switch (msg.type())
-        {
-            case (ids::leadBypassID):           continue;
-            case (ids::harmonyBypassID):        continue;
-            case (ids::dryPanID):               continue;
-            case (ids::dryWetID):               continue;
-            case (ids::adsrAttackID):           continue;
-            case (ids::adsrDecayID):            continue;
-            case (ids::adsrSustainID):          continue;
-            case (ids::adsrReleaseID):          continue;
-            case (ids::adsrToggleID):           continue;
-            case (ids::stereoWidthID):          continue;
-            case (ids::lowestPannedID):         continue;
-            case (ids::velocitySensID):         continue;
-            case (ids::pitchBendRangeID):       continue;
-            case (ids::pedalPitchIsOnID):       continue;
-            case (ids::pedalPitchThreshID):     continue;
-            case (ids::pedalPitchIntervalID):   continue;
-            case (ids::descantIsOnID):          continue;
-            case (ids::descantThreshID):        continue;
-            case (ids::descantIntervalID):      continue;
-            case (ids::concertPitchHzID):       continue;
-            case (ids::voiceStealingID):        continue;
-            case (ids::inputGainID):            continue;
-            case (ids::outputGainID):           continue;
-            case (ids::limiterToggleID):        continue;
-            case (ids::noiseGateToggleID):      continue;
-            case (ids::noiseGateThresholdID):   continue;
-            case (ids::compressorToggleID):     continue;
-            case (ids::compressorAmountID):     continue;
-            case (ids::vocalRangeTypeID):       continue;
-            case (ids::aftertouchGainToggleID): continue;
-            case (ids::deEsserToggleID):        continue;
-            case (ids::deEsserThreshID):        continue;
-            case (ids::deEsserAmountID):        continue;
-            case (ids::reverbToggleID):         continue;
-            case (ids::reverbDryWetID):         continue;
-            case (ids::reverbDecayID):          continue;
-            case (ids::reverbDuckID):           continue;
-            case (ids::reverbLoCutID):          continue;
-            case (ids::reverbHiCutID):          continue;
-            case (ids::inputSourceID):          continue;
-            case (ids::numVoicesID):            continue;
-        }
-    }
 }
 
 

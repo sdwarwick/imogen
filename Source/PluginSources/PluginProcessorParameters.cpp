@@ -271,7 +271,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    paramChangesForProcessor.getReadyMessages (currentMessages, false);
+    paramChanges.getReadyMessages (currentMessages, false);
     
     // converts a message's value to a boolean true/false
 #define _BOOL_MSG_ msg.value() >= 0.5f
@@ -609,7 +609,7 @@ void ImogenAudioProcessor::initializeParameterListeners()
 // creates a single parameter listener & messenger for a requested parameter
 void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, int paramID)
 {
-    auto& messenger { parameterMessengers.emplace_back (paramChangesForProcessor, paramChangesForEditor, paramID) };
+    auto& messenger { parameterMessengers.emplace_back (paramChanges, paramID) };
     tree.addParameterListener (stringID, &messenger);
 }
 

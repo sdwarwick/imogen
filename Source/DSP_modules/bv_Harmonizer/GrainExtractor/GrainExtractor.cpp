@@ -77,7 +77,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
     
     const int grainLength = period * 2;
     const int numSamples = inputAudio.getNumSamples();
-    const int halfPeriod = juce::roundToInt (period / 2.0f);
+    const int halfPeriod = juce::roundToInt (period * 0.5f);
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     

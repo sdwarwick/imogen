@@ -294,14 +294,21 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     
     if (compressorIsOn.load())
         compressor.process (monoBuffer);
+    
+    dryBuffer.clear();
 
     //  write to dry buffer & apply panning
-    dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
-    dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
-    dryLgain.applyGain (dryBuffer.getWritePointer(0), blockSize);
-    dryRgain.applyGain (dryBuffer.getWritePointer(1), blockSize);
+    if (! leadIsBypassed)
+    {
+        dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
+        dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
+        dryLgain.applyGain (dryBuffer.getWritePointer(0), blockSize);
+        dryRgain.applyGain (dryBuffer.getWritePointer(1), blockSize);
+    }
     
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
+    
+    wetBuffer.clear();
     
     if (harmoniesAreBypassed)
         harmonizer.bypassedBlock (blockSize, midiMessages);
