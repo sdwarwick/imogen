@@ -15,6 +15,8 @@ namespace bav
 
 bvie_VOID_TEMPLATE::updateNumVoices (const int newNumVoices)
 {
+    jassert (newNumVoices > 0);
+    
     if (harmonizer.getNumVoices() == newNumVoices)
         return;
         

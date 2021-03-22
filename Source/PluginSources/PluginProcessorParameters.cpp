@@ -272,15 +272,6 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
 {
     paramChanges.getReadyMessages (currentMessages, false);
     
-    // converts a message's value to a boolean true/false
-#define _BOOL_MSG_ msg.value() >= 0.5f
-    
-    // converts a message's value to a float using the normalisable range of the specified parameter
-#define _FLOAT_MSG_(p) p->getNormalisableRange().convertFrom0to1(msg.value())
-    
-    // converts a message's value to an integer using the normalisable range of the specified parameter
-#define _INT_MSG_ juce::roundToInt (msg.value())
-    
     bool adsr = false;
     float adsrA = adsrAttack->get(), adsrD = adsrDecay->get(), adsrS = adsrSustain->get(), adsrR = adsrRelease->get();
     bool adsrT = adsrToggle->get();
@@ -295,60 +286,57 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
         if (! msg.isValid())
             continue;
         
-        const auto val = float(msg.value());
-        
-        //jassert (msg.value() >= 0.0f && msg.value() <= 1.0f);
-        
         switch (msg.type())
         {
             default:             continue;
             case (mainBypassID): continue;
-            case (leadBypassID):     activeEngine.updateBypassStates (_BOOL_MSG_, harmonyBypass->get());
-            case (harmonyBypassID):  activeEngine.updateBypassStates (leadBypass->get(), _BOOL_MSG_);
-            case (inputSourceID):    activeEngine.setModulatorSource (_INT_MSG_);
-            case (numVoicesID):      updateNumVoices (_INT_MSG_);
-            case (dryPanID):         activeEngine.updateDryVoxPan (_INT_MSG_);
-            case (dryWetID):         activeEngine.updateDryWet (_INT_MSG_);
-            case (stereoWidthID):    activeEngine.updateStereoWidth (_INT_MSG_, lowestPanned->get());
+            case (leadBypassID):     activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
+            case (harmonyBypassID):  activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
+            case (inputSourceID):    activeEngine.setModulatorSource (inputSource->get());
+            case (numVoicesID):      updateNumVoices (numVoices->get());
+            case (dryPanID):         activeEngine.updateDryVoxPan (dryPan->get());
+            case (dryWetID):         activeEngine.updateDryWet (dryWet->get());
+            case (stereoWidthID):    activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
             case (lowestPannedID):   activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
-            case (velocitySensID):   activeEngine.updateMidiVelocitySensitivity (_INT_MSG_);
-            case (pitchBendRangeID): activeEngine.updatePitchbendRange (_INT_MSG_);
+            case (velocitySensID):   activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
+            case (pitchBendRangeID): activeEngine.updatePitchbendRange (pitchBendRange->get());
                 
-            case (pedalPitchIsOnID):     activeEngine.updatePedalPitch (_BOOL_MSG_, pedalPitchThresh->get(), pedalPitchInterval->get());
-            case (pedalPitchThreshID):   activeEngine.updatePedalPitch (pedalPitchIsOn->get(), _INT_MSG_, pedalPitchInterval->get());
-            case (pedalPitchIntervalID): activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), _INT_MSG_);
+            case (pedalPitchIsOnID):     activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+            case (pedalPitchThreshID):   activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+            case (pedalPitchIntervalID): activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
                 
-            case (descantIsOnID):     activeEngine.updateDescant (_BOOL_MSG_, descantThresh->get(), descantInterval->get());
-            case (descantThreshID):   activeEngine.updateDescant (descantIsOn->get(), _INT_MSG_, descantInterval->get());
-            case (descantIntervalID): activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), _INT_MSG_);
+            case (descantIsOnID):     activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+            case (descantThreshID):   activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+            case (descantIntervalID): activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
                 
-            case (concertPitchHzID):        activeEngine.updateConcertPitch (_INT_MSG_);
-            case (voiceStealingID):         activeEngine.updateNoteStealing (_BOOL_MSG_);
-            case (inputGainID):             activeEngine.updateInputGain (juce::Decibels::decibelsToGain (msg.value()));
-            case (outputGainID):            activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (msg.value()));
-            case (limiterToggleID):         activeEngine.updateLimiter (_BOOL_MSG_);
-            case (noiseGateToggleID):       activeEngine.updateNoiseGate (noiseGateThreshold->get(), _BOOL_MSG_);
-            case (noiseGateThresholdID):    activeEngine.updateNoiseGate (msg.value(), noiseGateToggle->get());
-            case (compressorToggleID):      updateCompressor (activeEngine, _BOOL_MSG_, compressorAmount->get());
-            case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), msg.value());
-            case (vocalRangeTypeID):        updateVocalRangeType (_INT_MSG_);
-            case (aftertouchGainToggleID):  activeEngine.updateAftertouchGainOnOff (_BOOL_MSG_);
-            case (deEsserToggleID):         activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), _BOOL_MSG_);
-            case (deEsserThreshID):         activeEngine.updateDeEsser (deEsserAmount->get(), msg.value(), deEsserToggle->get());
-            case (deEsserAmountID):         activeEngine.updateDeEsser (msg.value(), deEsserThresh->get(), deEsserToggle->get());
+            case (concertPitchHzID):        activeEngine.updateConcertPitch (concertPitchHz->get());
+            case (voiceStealingID):         activeEngine.updateNoteStealing (voiceStealing->get());
+            case (inputGainID):             activeEngine.updateInputGain (juce::Decibels::decibelsToGain (inputGain->get()));
+            case (outputGainID):            activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (outputGain->get()));
+            case (limiterToggleID):         activeEngine.updateLimiter (limiterToggle->get());
+            case (noiseGateToggleID):       activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
+            case (noiseGateThresholdID):    activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
+            case (compressorToggleID):      updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+            case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+            case (vocalRangeTypeID):        updateVocalRangeType (vocalRangeType->get());
+            case (aftertouchGainToggleID):  activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
                 
-            case (reverbToggleID): rToggle = _BOOL_MSG_;   reverb = true;
-            case (reverbDryWetID): rDryWet = _INT_MSG_;    reverb = true;
-            case (reverbDecayID):  rDecay  = msg.value();  reverb = true;
-            case (reverbDuckID):   rDuck   = msg.value();  reverb = true;
-            case (reverbLoCutID):  rLoCut  = msg.value();  reverb = true;
-            case (reverbHiCutID):  rHiCut  = msg.value();  reverb = true;
+            case (deEsserToggleID):         activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
+            case (deEsserThreshID):         activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
+            case (deEsserAmountID):         activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
                 
-            case (adsrAttackID):  adsrA = msg.value(); adsr = true;
-            case (adsrDecayID):   adsrD = msg.value(); adsr = true;
-            case (adsrSustainID): adsrS = msg.value(); adsr = true;
-            case (adsrReleaseID): adsrR = msg.value(); adsr = true;
-            case (adsrToggleID):  adsrT = _BOOL_MSG_;  adsr = true;
+            case (reverbToggleID): rToggle = reverbToggle->get();   reverb = true;
+            case (reverbDryWetID): rDryWet = reverbDryWet->get();   reverb = true;
+            case (reverbDecayID):  rDecay  = reverbDecay->get();    reverb = true;
+            case (reverbDuckID):   rDuck   = reverbDuck->get();     reverb = true;
+            case (reverbLoCutID):  rLoCut  = reverbLoCut->get();    reverb = true;
+            case (reverbHiCutID):  rHiCut  = reverbHiCut->get();    reverb = true;
+                
+            case (adsrAttackID):  adsrA = adsrAttack->get();    adsr = true;
+            case (adsrDecayID):   adsrD = adsrDecay->get();     adsr = true;
+            case (adsrSustainID): adsrS = adsrSustain->get();   adsr = true;
+            case (adsrReleaseID): adsrR = adsrRelease->get();   adsr = true;
+            case (adsrToggleID):  adsrT = adsrToggle->get();    adsr = true;
         }
     }
     
@@ -361,10 +349,6 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
 ///function template instantiations...
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<float>& activeEngine);
 template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<double>& activeEngine);
-
-#undef _BOOL_MSG_
-#undef _INT_MSG_
-#undef _FLOAT_MSG_
 
 
 template<typename SampleType>
