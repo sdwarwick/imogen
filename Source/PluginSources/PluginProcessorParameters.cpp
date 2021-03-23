@@ -303,10 +303,10 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
     bool rToggle = reverbToggle->get();
     
     // converts a message's raw normalized value to its actual float value using the normalisable range of the selected parameter p
-#define _FLOAT_MSG(p) p->denormalize (value)
+#define _FLOAT_MSG getParameterPntr(parameterID(type))->denormalize (value)
     
     // converts a message's raw normalized value to its actual integer value using the normalisable range of the selected parameter p
-#define _INT_MSG(p) juce::roundToInt (_FLOAT_MSG(p))
+#define _INT_MSG juce::roundToInt (_FLOAT_MSG)
     
     // converts a message's raw normalized value to its actual boolean true/false value
 #define _BOOL_MSG value >= 0.5f
@@ -320,57 +320,58 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
         
         jassert (value >= 0.0f && value <= 1.0f);
         
-        switch (msg.type())
+        const int type = msg.type();
+        
+        switch (type)
         {
             default:             continue;
             case (mainBypassID): continue;
             case (leadBypassID):     activeEngine.updateBypassStates (_BOOL_MSG, harmonyBypass->get());
             case (harmonyBypassID):  activeEngine.updateBypassStates (leadBypass->get(), _BOOL_MSG);
-            case (inputSourceID):    activeEngine.setModulatorSource (_INT_MSG(inputSource));
-            case (numVoicesID):      updateNumVoices (_INT_MSG(numVoices));
-            case (dryPanID):         activeEngine.updateDryVoxPan (_INT_MSG(dryPan));
-            case (dryWetID):         activeEngine.updateDryWet (_INT_MSG(dryWet));
-            case (stereoWidthID):    activeEngine.updateStereoWidth (_INT_MSG(stereoWidth), lowestPanned->get());
-            case (lowestPannedID):   activeEngine.updateStereoWidth (stereoWidth->get(), _INT_MSG(lowestPanned));
-            case (velocitySensID):   activeEngine.updateMidiVelocitySensitivity (_INT_MSG(velocitySens));
-            case (pitchBendRangeID): activeEngine.updatePitchbendRange (_INT_MSG(pitchBendRange));
-                
-            case (pedalPitchIsOnID):     activeEngine.updatePedalPitch (_BOOL_MSG, pedalPitchThresh->get(), pedalPitchInterval->get());
-            case (pedalPitchThreshID):   activeEngine.updatePedalPitch (pedalPitchIsOn->get(), _INT_MSG(pedalPitchThresh), pedalPitchInterval->get());
-            case (pedalPitchIntervalID): activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), _INT_MSG(pedalPitchInterval));
-                
-            case (descantIsOnID):     activeEngine.updateDescant (_BOOL_MSG, descantThresh->get(), descantInterval->get());
-            case (descantThreshID):   activeEngine.updateDescant (descantIsOn->get(), _INT_MSG(descantThresh), descantInterval->get());
-            case (descantIntervalID): activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), _INT_MSG(descantInterval));
-                
-            case (concertPitchHzID):        activeEngine.updateConcertPitch (_INT_MSG(concertPitchHz));
+            case (inputSourceID):    activeEngine.setModulatorSource (_INT_MSG);
+            case (numVoicesID):      updateNumVoices (_INT_MSG);
+            case (dryPanID):         activeEngine.updateDryVoxPan (_INT_MSG);
+            case (dryWetID):         activeEngine.updateDryWet (_INT_MSG);
+            case (stereoWidthID):    activeEngine.updateStereoWidth (_INT_MSG, lowestPanned->get());
+            case (lowestPannedID):   activeEngine.updateStereoWidth (stereoWidth->get(), _INT_MSG);
+            case (velocitySensID):   activeEngine.updateMidiVelocitySensitivity (_INT_MSG);
+            case (pitchBendRangeID): activeEngine.updatePitchbendRange (_INT_MSG);
+            case (concertPitchHzID):        activeEngine.updateConcertPitch (_INT_MSG);
             case (voiceStealingID):         activeEngine.updateNoteStealing (_BOOL_MSG);
-            case (inputGainID):             activeEngine.updateInputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG(inputGain)));
-            case (outputGainID):            activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG(outputGain)));
+            case (inputGainID):             activeEngine.updateInputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG));
+            case (outputGainID):            activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG));
             case (limiterToggleID):         activeEngine.updateLimiter (_BOOL_MSG);
             case (noiseGateToggleID):       activeEngine.updateNoiseGate (noiseGateThreshold->get(), _BOOL_MSG);
-            case (noiseGateThresholdID):    activeEngine.updateNoiseGate (_FLOAT_MSG(noiseGateThreshold), noiseGateToggle->get());
+            case (noiseGateThresholdID):    activeEngine.updateNoiseGate (_FLOAT_MSG, noiseGateToggle->get());
             case (compressorToggleID):      updateCompressor (activeEngine, _BOOL_MSG, compressorAmount->get());
-            case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), _FLOAT_MSG(compressorAmount));
-            case (vocalRangeTypeID):        updateVocalRangeType (_INT_MSG(vocalRangeType));
+            case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), _FLOAT_MSG);
+            case (vocalRangeTypeID):        updateVocalRangeType (_INT_MSG);
             case (aftertouchGainToggleID):  activeEngine.updateAftertouchGainOnOff (_BOOL_MSG);
                 
-            case (deEsserToggleID):         activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), _BOOL_MSG);
-            case (deEsserThreshID):         activeEngine.updateDeEsser (deEsserAmount->get(), _FLOAT_MSG(deEsserThresh), deEsserToggle->get());
-            case (deEsserAmountID):         activeEngine.updateDeEsser (_FLOAT_MSG(deEsserAmount), deEsserThresh->get(), deEsserToggle->get());
+            case (pedalPitchIsOnID):     activeEngine.updatePedalPitch (_BOOL_MSG, pedalPitchThresh->get(), pedalPitchInterval->get());
+            case (pedalPitchThreshID):   activeEngine.updatePedalPitch (pedalPitchIsOn->get(), _INT_MSG, pedalPitchInterval->get());
+            case (pedalPitchIntervalID): activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), _INT_MSG);
                 
-            case (reverbToggleID): rToggle = _BOOL_MSG;                 reverb = true;
-            case (reverbDryWetID): rDryWet = _INT_MSG(reverbDryWet);    reverb = true;
-            case (reverbDecayID):  rDecay  = _FLOAT_MSG(reverbDecay);   reverb = true;
-            case (reverbDuckID):   rDuck   = _FLOAT_MSG(reverbDuck);    reverb = true;
-            case (reverbLoCutID):  rLoCut  = _FLOAT_MSG(reverbLoCut);   reverb = true;
-            case (reverbHiCutID):  rHiCut  = _FLOAT_MSG(reverbHiCut);   reverb = true;
+            case (descantIsOnID):     activeEngine.updateDescant (_BOOL_MSG, descantThresh->get(), descantInterval->get());
+            case (descantThreshID):   activeEngine.updateDescant (descantIsOn->get(), _INT_MSG, descantInterval->get());
+            case (descantIntervalID): activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), _INT_MSG);
                 
-            case (adsrAttackID):  adsrA = _FLOAT_MSG(adsrAttack);    adsr = true;
-            case (adsrDecayID):   adsrD = _FLOAT_MSG(adsrDecay);     adsr = true;
-            case (adsrSustainID): adsrS = _FLOAT_MSG(adsrSustain);   adsr = true;
-            case (adsrReleaseID): adsrR = _FLOAT_MSG(adsrRelease);   adsr = true;
-            case (adsrToggleID):  adsrT = _BOOL_MSG;                 adsr = true;
+            case (deEsserToggleID):   activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), _BOOL_MSG);
+            case (deEsserThreshID):   activeEngine.updateDeEsser (deEsserAmount->get(), _FLOAT_MSG, deEsserToggle->get());
+            case (deEsserAmountID):   activeEngine.updateDeEsser (_FLOAT_MSG, deEsserThresh->get(), deEsserToggle->get());
+                
+            case (reverbToggleID): rToggle = _BOOL_MSG;   reverb = true;
+            case (reverbDryWetID): rDryWet = _INT_MSG;    reverb = true;
+            case (reverbDecayID):  rDecay  = _FLOAT_MSG;  reverb = true;
+            case (reverbDuckID):   rDuck   = _FLOAT_MSG;  reverb = true;
+            case (reverbLoCutID):  rLoCut  = _FLOAT_MSG;  reverb = true;
+            case (reverbHiCutID):  rHiCut  = _FLOAT_MSG;  reverb = true;
+                
+            case (adsrAttackID):  adsrA = _FLOAT_MSG;     adsr = true;
+            case (adsrDecayID):   adsrD = _FLOAT_MSG;     adsr = true;
+            case (adsrSustainID): adsrS = _FLOAT_MSG;     adsr = true;
+            case (adsrReleaseID): adsrR = _FLOAT_MSG;     adsr = true;
+            case (adsrToggleID):  adsrT = _BOOL_MSG;      adsr = true;
         }
     }
     
