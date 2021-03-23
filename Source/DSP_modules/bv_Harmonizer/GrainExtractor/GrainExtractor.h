@@ -1,8 +1,29 @@
-/*
-    Part of module: bv_Harmonizer
-    Direct parent file: bv_Harmonizer.h
-    Classes: GrainExtractor
- */
+
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ GrainExtractor.h: The GrainExtractor class takes in audio input and its detected pitch, and identifies a series of grains, attempting to satisfy all of the following conditions:
+        - grains' length in samples is 2 * period of the input signal
+        - consecutive grains have approx. 50% overlap
+        - grains are approximately centred on the points of maximum magnitude in the signal for each period's worth of samples
+ 
+======================================================================================================================================================*/
+
 
 #pragma once
 

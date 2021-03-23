@@ -1,7 +1,25 @@
-/*
-    This file defines the interactive GUI widow generated & linked to the audio processor when Imogen is built as a plugin
-    Parent file: PluginProcessor.h
-*/
+
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ PluginEditor.h: This file defines the interface for Imogen's top-level GUI component.
+ 
+======================================================================================================================================================*/
 
 
 #pragma once
@@ -9,7 +27,6 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "GUI/LookAndFeel/ImogenLookAndFeel.h"
 #include "PluginProcessor.h"
-#include "GUI/ParameterFetcher.h"
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
@@ -46,8 +63,6 @@ private:
     bav::ImogenLookAndFeel lookAndFeel;
     
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor
-    
-    ImogenParameterFetcher params;  // helper object to fetch & convert various parameter values with respect to their normalizable ranges
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

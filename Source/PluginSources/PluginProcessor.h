@@ -1,6 +1,26 @@
-/*
-    This file defines Imogen's internal audio processor as a whole, when Imogen is built as a plugin target
-*/
+
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ PluginProcessor.h: This file defines the core interface for Imogen's AudioProcessor as a whole. The class ImogenAudioProcessor is the top-level object that represents an instance of Imogen.
+ 
+======================================================================================================================================================*/
+
 
 #pragma once
 
@@ -21,7 +41,7 @@ class ImogenAudioProcessorEditor; // forward declaration...
 
 class ImogenAudioProcessor    : public juce::AudioProcessor
 {
-    
+    using Parameter      = bav::Parameter;
     using FloatParameter = bav::FloatParameter;
     using IntParameter   = bav::IntParameter;
     using BoolParameter  = bav::BoolParameter;
@@ -29,6 +49,8 @@ class ImogenAudioProcessor    : public juce::AudioProcessor
     using FloatParamPtr = FloatParameter*;
     using IntParamPtr   = IntParameter*;
     using BoolParamPtr  = BoolParameter*;
+    
+    using ParameterMessenger = bav::ParameterMessenger;
     
     
 public:
@@ -99,15 +121,27 @@ public:
     };
 #define IMGN_NUM_PARAMS reverbHiCutID + 1
     
-    enum eventID  // IDs for events that are not parameters
+    // IDs for events from the editor that are not parameters
+    enum eventID
     {
         killAllMidi,
         midiLatch,
         pitchBendFromEditor
     };
     
-    // returns any parameter's current value as a float in the range 0.0 to 1.0
-    float getCurrentParameterValue (const parameterID paramID) const;
+    // returns any parameter's current value as a normalized float in the range 0.0 to 1.0
+    float getNormalizedCurrentParameterValue (const parameterID paramID) const;
+    
+    // returns any parameter's actual value, as a float, in the natural range of the parameter.
+    float getFloatParameterValue (const parameterID paramID) const;
+    
+    // returns any parameter's actual value, as an integer, in the natural range of the parameter.
+    // this function can technically be called with any parameterID, but will produce strange and possibly crash-inducing output when used with a parameter that is not an integer type.
+    int getIntParameterValue (const parameterID paramID) const;
+    
+    // returns any parameter's actual value as a boolean true/false
+    // this function can technically be called with any parameterID, but will produce strange and possibly crash-inducing output when used with a parameter that is not a boolean type.
+    bool getBoolParameterValue (const parameterID paramID) const;
     
     // returns any parameter's default value as a float in the normalised range 0.0 to 1.0
     float getDefaultParameterValue (const parameterID paramID) const;
@@ -150,6 +184,8 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
+    
+    void editorPitchbend (int wheelValue);
     
     
     // this queue is SPSC; this is only for events flowing from the editor into the processor
@@ -194,7 +230,7 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     void initializeParameterListeners();
-    void addParameterMessenger (juce::String stringID, int paramID);
+    void addParameterMessenger (juce::String stringID, parameterID paramID);
     void updateParameterDefaults();
     
     bav::MessageQueue paramChanges;
@@ -226,34 +262,17 @@ private:
     
     std::atomic<bool> parameterDefaultsAreDirty;
     
-    
-    /* attachment class that listens for changes in one specific parameter and pushes appropriate messages for each value change to both message FIFOs */
-    class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
-    {
-    public:
-        ParameterMessenger(bav::MessageQueue& queue, int paramIDtoListen):
-            q(queue), paramID(paramIDtoListen)
-        { }
-        
-        void parameterChanged (const juce::String& s, float value) override
-        {
-            juce::ignoreUnused (s);
-            q.pushMessage (paramID, value);
-        }
-        
-    private:
-        bav::MessageQueue& q;
-        const int paramID;
-    };
-    
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
 
     
 #if IMOGEN_ONLY_BUILDING_STANDALONE
-    const bool denormalsWereDisabledWhenTheAppStarted;  // simpe hacky way to attempt to leave the CPU as we found it in standalone app mode
+    const bool denormalsWereDisabledWhenTheAppStarted;  // simple hacky way to attempt to leave the CPU as we found it in standalone app mode
 #endif
     
-    bav::Parameter* getParameterPntr (const parameterID paramID) const;
+    Parameter* getParameterPntr (const parameterID paramID) const;
+    
+    // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
+    juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

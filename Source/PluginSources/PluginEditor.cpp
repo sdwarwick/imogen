@@ -1,7 +1,25 @@
-/*
-    This file defines the interactive GUI widow generated & linked to the audio processor when Imogen is built as a plugin
-    Parent file: PluginEditor.h
-*/
+
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ PluginEditor.cpp: This file defines implementation details for Imogen's top-level GUI component
+
+======================================================================================================================================================*/
 
 
 #include "PluginEditor.h"
@@ -12,7 +30,7 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), imgnProcessor(p), params(p)
+    AudioProcessorEditor (&p), imgnProcessor(p)
 {
     this->setBufferedToImage (true);
     

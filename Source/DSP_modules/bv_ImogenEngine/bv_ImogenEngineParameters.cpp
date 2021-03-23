@@ -1,4 +1,27 @@
 
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ bv_ImogenEngineParameters.cpp: This file includes functions dealing with updating the ImogenEngine's parameters.
+ 
+======================================================================================================================================================*/
+
+
 #include "bv_ImogenEngine.h"
 
 
@@ -176,8 +199,8 @@ bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, fl
     reverb.setDamping (1.0f - decay);
     reverb.setRoomSize (decay);
     reverb.setDuckAmount (duckAmount);
-    //reverb.setLoCutFrequency (loCutFreq);
-    //reverb.setHiCutFrequency (hiCutFreq);
+    reverb.setLoCutFrequency (loCutFreq);
+    reverb.setHiCutFrequency (hiCutFreq);
 }
 
 

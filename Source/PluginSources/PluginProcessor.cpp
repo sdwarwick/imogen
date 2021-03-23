@@ -1,7 +1,26 @@
-/*
-    This file defines Imogen's internal audio processor as a whole, when Imogen is built as a plugin target
-    Parent file: PluginProcessor.h
-*/
+
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ PluginProcessor.cpp: This file contains the guts of Imogen's AudioProcessor code.
+ 
+======================================================================================================================================================*/
+
 
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
@@ -107,6 +126,13 @@ void ImogenAudioProcessor::reset()
         floatEngine.reset();
 }
 
+
+void ImogenAudioProcessor::editorPitchbend (int wheelValue)
+{
+    nonParamEvents.pushMessage (pitchBendFromEditor, pitchbendNormalizedRange.convertTo0to1(float(wheelValue)));
+}
+
+
 /*
  These four functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
  The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
@@ -155,7 +181,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 #if ! IMOGEN_ONLY_BUILDING_STANDALONE
     juce::ScopedNoDenormals nodenorms;
 #endif
-
+    
     processQueuedParameterChanges (engine);
     processQueuedNonParamEvents (engine);
 
