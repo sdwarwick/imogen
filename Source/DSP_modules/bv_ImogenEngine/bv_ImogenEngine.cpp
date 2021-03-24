@@ -240,8 +240,6 @@ bvie_VOID_TEMPLATE::release()
 
 bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages)
 {
-    harmonizer.processMidi (midiMessages);
-    
     const int numSamples = input.getNumSamples();
     
     jassert (numSamples == FIFOEngine::getLatency());

@@ -76,7 +76,7 @@ void HarmonizerVoice<SampleType>::released()
     
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
+void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample)
 {
     jassert (currentSamplerate > 0 && desiredFrequency > 0);
 
@@ -139,6 +139,8 @@ inline void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
                                                    const SampleType* window,
                                                    const int newPeriod)
 {
+    jassert (frameEndSample - frameStartSample == frameSize);
+    
     // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
     FVO::multiply (windowingBuffer.getWritePointer(0), window,
                    inputAudio + frameStartSample, frameSize);

@@ -49,8 +49,14 @@ printf "\n \v Testing AU version... \n"
 "$PLUGINVAL_PATH" --strictness-level "$PLUGINVAL_INTENSITY_LEVEL" --validate "$ARTEFACTS_DIR/AU/Imogen.component"
 
 
+
 # AUVAL
+
+  #  to be added....
+
 
 
 # STEINBERG VALIDATOR
+
+  #  to be added....
 
