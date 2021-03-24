@@ -1,16 +1,23 @@
 #!/bin/bash
 
+#            _             _   _                _                _                 _               _
+#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+#  This file is part of the Imogen codebase.
+ 
+#  @2021 by Ben Vining. All rights reserved.
 
-# IMOGEN BUILD SCRIPT
-
-# This shell script will build a default release configuration of Imogen. 
-# Imogen's build options can be customized using CMake. This script is essentially a wrapper around Imogen's CMake scripts that selects the appropriate default options for you.
-
-# When this script is run, if CMake cannot be found, it will be downloaded and installed.
-# Running this script will create a directory "Builds" and execute the entire CMake configuration and build process. 
-# The JUCE library code will be downloaded from GitHub into /imogen/Builds/_deps. If you are on Linux, this script will also use apt to download/update JUCE's Linux dependencies, as necessary.
-
-# After executing this script, the built Imogen executables will be located at /imogen/Builds/Imogen_artefacts/Release/.
+#  imogen_build_script.sh :	  This file provides a simple, cross-platform build configuration for Imogen. Simply pull the git repo and run this script to build Imogen in its default Release configuration for your platform; no other configuration is necessary and this script will automatically resolve all dependencies for you.
 
 
 IMOGEN_DIR="$(dirname $0)"; # save the directory of the script

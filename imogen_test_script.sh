@@ -1,9 +1,23 @@
 #!/bin/bash
 
-# IMOGEN TESTING SCRIPT
+#            _             _   _                _                _                 _               _
+#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+#  This file is part of the Imogen codebase.
+ 
+#  @2021 by Ben Vining. All rights reserved.
 
-# This script can automatically run various tests on the built Imogen executables. This script must be run after the build is completed. 
-# Note that this script is not meant to be as robust as the build script or the included CMake modules. This script must be edited to provide the path to various tester apps on your system, and does not attempt to install them if they cannot be found. Imogen's CMake scripts can automatically download pluginval for you, so use CMake to configure your build system if you want that functionality.
+#  imogen_test_script.sh :	This script provides an automated way to run all tests on Imogen after the build has completed. Note that this script is not designed to be nearly as robust as the build script; this script will not automatically install pluginval, etc.
 
 
 IMOGEN_DIR="$(dirname $0)"; # save the directory of the script

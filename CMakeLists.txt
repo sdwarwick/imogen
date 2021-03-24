@@ -1,6 +1,22 @@
-#  IMOGEN 
+#            _             _   _                _                _                 _               _
+#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+#  This file is part of the Imogen codebase.
+ 
+#  @2021 by Ben Vining. All rights reserved.
 
-#  AUTHOR: BEN VINING
+#  CMakeLists.txt :	This file defines the build configuration for Imogen. This CMake script takes care of finding or downloading JUCE. This CMake script uses my JUCE-CmakeWrapper package as its core API.
+ 
 
 cmake_minimum_required (VERSION 3.18) 
 
