@@ -182,7 +182,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     juce::ScopedNoDenormals nodenorms;
 #endif
     
-    processQueuedParameterChanges (engine);
+    updateAllParameters (engine);
+    //processQueuedParameterChanges (engine);
     processQueuedNonParamEvents (engine);
 
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
@@ -190,8 +191,6 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
    
     juce::AudioBuffer<SampleType> inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
     juce::AudioBuffer<SampleType> outBus = getBusBuffer (buffer, false, 0);
-    
-    outBus.makeCopyOf (inBus);
     
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 }
