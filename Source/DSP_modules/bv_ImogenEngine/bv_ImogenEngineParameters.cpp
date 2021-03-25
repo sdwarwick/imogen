@@ -201,6 +201,7 @@ bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, fl
     reverb.setDuckAmount (duckAmount);
     //reverb.setLoCutFrequency (loCutFreq);
     //reverb.setHiCutFrequency (hiCutFreq);
+    juce::ignoreUnused (loCutFreq, hiCutFreq);
 }
 
 
