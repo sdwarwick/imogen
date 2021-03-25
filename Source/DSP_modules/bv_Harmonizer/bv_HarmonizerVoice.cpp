@@ -53,15 +53,14 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     synthesisBuffer.setSize (1, doubleSize);
     FVO::fill (synthesisBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
     
-    windowingBuffer.setSize (1, doubleSize);
-    FVO::fill (windowingBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
-    
     copyingBuffer.setSize (1, doubleSize);
     FVO::fill (copyingBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
     
     synthesisIndex = 0;
+    lastUsedGrainInArray = -1;
     
-    Base::resetRampedValues (blocksize);
+    grain1.clear();
+    grain2.clear();
 }
 
     
@@ -70,93 +69,141 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
     synthesisBuffer.setSize (0, 0, false, false, false);
-    windowingBuffer.setSize (0, 0, false, false, false);
     copyingBuffer.setSize (0, 0, false, false, false);
+    grain1.clear();
+    grain2.clear();
+}
+    
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
+{
+    jassert (period > 0);
+    nextFramesPeriod = period;
+    
+    lastUsedGrainInArray = -1;
+    
+    const int grainSize = period * 2;
+    const auto* input = parent->inputStorage.getReadPointer(0);
+    const auto* window = parent->windowBuffer.getReadPointer(0);
+    
+    if (grain1.isDone())
+    {
+        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
+        grain1.storeNewGrain (input, newStart, newStart + grainSize, window);
+    }
+    
+    if (grain2.isDone())
+    {
+        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
+        grain2.storeNewGrain (input, newStart, newStart + grainSize, window);
+    }
 }
     
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample)
 {
-    jassert (currentSamplerate > 0 && desiredFrequency > 0);
-
-    const int numSamples = output.getNumSamples();
-
-    // writes shifted samples to synthesisBuffer
-    sola (parent->inputStorage.getReadPointer(0), numSamples, parent->nextFramesPeriod,
-          juce::roundToInt (currentSamplerate / desiredFrequency),  // new desired period, in samples
-          parent->indicesOfGrainOnsets, parent->windowBuffer.getReadPointer(0));
-
-    // copy to output
-    FVO::copy (output.getWritePointer(0), synthesisBuffer.getReadPointer(0), numSamples);
-
-    moveUpSamples (numSamples);
-}
-
-
-
-template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::sola (const SampleType* input,
-                                               const int totalNumInputSamples,
-                                               const int origPeriod, // size of analysis grains = origPeriod * 2
-                                               const int newPeriod,  // OLA hop size
-                                               const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the start of each analysis grain
-                                               const SampleType* window) // Hanning window, length origPeriod * 2
-{
-    if (synthesisIndex > totalNumInputSamples)
-        return;
+    const auto* reading = parent->inputStorage.getReadPointer(0);
+    auto* writing = output.getWritePointer(0);
+    const auto* window = parent->windowBuffer.getReadPointer(0);
     
-    jassert (origPeriod > 0);
-    jassert (newPeriod > 0);
-    jassert (! indicesOfGrainOnsets.isEmpty());
-    jassert (window != nullptr && input != nullptr);
+    const int newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
+    const int grainSize = nextFramesPeriod * 2;
     
-    const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
-    
-    for (int grainStart : indicesOfGrainOnsets)
+    for (int s = 0; s < output.getNumSamples(); ++s)
     {
-        const int grainEnd = grainStart + analysisGrainLength;
-        
-        if (grainEnd >= totalNumInputSamples)
-            break;
-        
-        if (synthesisIndex > grainEnd)
-            continue;
-        
-        olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
+        writing[s] = getNextSample (reading, s + origStartSample, grainSize, newPeriod, window);
     }
-    
-    const int sampsLeft = synthesisBuffer.getNumSamples() - synthesisIndex;
-    
-    if (sampsLeft > 0)  // fill from the last written sample to the end of the buffer with zeroes
-        FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex, SampleType(0.0), sampsLeft);
 }
-
+    
 
 template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
-                                                   const int frameStartSample, const int frameEndSample, const int frameSize,
-                                                   const SampleType* window,
-                                                   const int newPeriod)
+inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* inputSamples, const int outputIndex,
+                                                              const int grainSize, const int newPeriod, const SampleType* window)
 {
-    jassert (frameEndSample - frameStartSample == frameSize);
+    jassert (inputSamples != nullptr);
     
-    // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
-    FVO::multiply (windowingBuffer.getWritePointer(0), window,
-                   inputAudio + frameStartSample, frameSize);
-    
-    const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
-    SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
-    
-    do {
-        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
-        
-        FVO::add (synthesisBufferWriting + synthesisIndex, windowBufferReading, frameSize);
-        
-        synthesisIndex += newPeriod;
+    const auto outputSample = inputSamples[outputIndex] + grain1.getNextSample() + grain2.getNextSample();
+
+    if (grain1.isDone())
+    {
+        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
+        grain1.storeNewGrain (inputSamples, newStart, newStart + grainSize, window);
     }
-    while (synthesisIndex < frameEndSample);
+    
+    if (grain2.isDone())
+    {
+        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
+        grain2.storeNewGrain (inputSamples, newStart, newStart + grainSize, window);
+    }
+    
+    return outputSample;
 }
+
+
+//template<typename SampleType>
+//inline void HarmonizerVoice<SampleType>::sola (const SampleType* input,
+//                                               const int totalNumInputSamples,
+//                                               const int origPeriod, // size of analysis grains = origPeriod * 2
+//                                               const int newPeriod,  // OLA hop size
+//                                               const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the start of each analysis grain
+//                                               const SampleType* window) // Hanning window, length origPeriod * 2
+//{
+//    if (synthesisIndex > totalNumInputSamples)
+//        return;
+//
+//    jassert (origPeriod > 0);
+//    jassert (newPeriod > 0);
+//    jassert (! indicesOfGrainOnsets.isEmpty());
+//    jassert (window != nullptr && input != nullptr);
+//
+//    const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
+//
+//    for (int grainStart : indicesOfGrainOnsets)
+//    {
+//        const int grainEnd = grainStart + analysisGrainLength;
+//
+//        if (grainEnd >= totalNumInputSamples)
+//            break;
+//
+//        if (synthesisIndex > grainEnd)
+//            continue;
+//
+//        olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
+//    }
+//
+//    const int sampsLeft = synthesisBuffer.getNumSamples() - synthesisIndex;
+//
+//    if (sampsLeft > 0)  // fill from the last written sample to the end of the buffer with zeroes
+//        FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex, SampleType(0.0), sampsLeft);
+//}
+//
+//
+//template<typename SampleType>
+//inline void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
+//                                                   const int frameStartSample, const int frameEndSample, const int frameSize,
+//                                                   const SampleType* window,
+//                                                   const int newPeriod)
+//{
+//    jassert (frameEndSample - frameStartSample == frameSize);
+//
+//    // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
+////    FVO::multiply (windowingBuffer.getWritePointer(0), window,
+////                   inputAudio + frameStartSample, frameSize);
+//
+////    const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
+////    SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
+////
+////    do {
+////        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
+////
+////        FVO::add (synthesisBufferWriting + synthesisIndex, windowBufferReading, frameSize);
+////
+////        synthesisIndex += newPeriod;
+////    }
+////    while (synthesisIndex < frameEndSample);
+//}
 
 
 template<typename SampleType>
@@ -185,6 +232,9 @@ void HarmonizerVoice<SampleType>::noteCleared()
     synthesisIndex = 0;
     synthesisBuffer.clear();
     copyingBuffer.clear();
+    grain1.clear();
+    grain2.clear();
+    lastUsedGrainInArray = -1;
 }
 
     

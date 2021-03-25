@@ -129,6 +129,8 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     bool polarityReversed = false;
     
+    int nextFramesPeriod;
+    
     if (frameIsPitched)
     {
         nextFramesPeriod = juce::roundToInt (Base::sampleRate / inputFrequency);
@@ -152,6 +154,9 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     fillWindowBuffer (nextFramesPeriod * 2);
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+    
+    for (auto* voice : Base::voices)
+        dynamic_cast<HarmonizerVoice<SampleType>*>(voice)->dataAnalyzed (nextFramesPeriod);
 }
 
 

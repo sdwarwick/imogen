@@ -50,7 +50,7 @@ template<typename SampleType>
 class Harmonizer; // forward declaration...
 
 
-
+    
 /*
  HarmonizerVoice : represents a "voice" that the Harmonizer can use to generate one monophonic note. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
 */
@@ -63,6 +63,62 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
     using FVO = juce::FloatVectorOperations;
     using Base = dsp::SynthVoiceBase<SampleType>;
     
+    /*
+        This class represents one analysis grain that is being resynthesized by the voice.
+        The voice always has two active grains: one fading out, and one fading in.
+    */
+    class Grain
+    {
+    public:
+        Grain() { }
+        
+        ~Grain() { }
+        
+        void storeNewGrain (const SampleType* inputSamples, const int newStartSample, const int newEndSample, const SampleType* window)
+        {
+            startSample = newStartSample;
+            endSample   = newEndSample;
+            size = endSample - startSample + 1;
+            nextSample = 0;
+            
+            jassert (size > 1);
+            
+            FVO::multiply (samples.getWritePointer(0), inputSamples + startSample, window, size);
+        }
+        
+        SampleType getNextSample()
+        {
+            jassert (size > 0);
+            return samples.getSample (0, nextSample++);
+        }
+        
+        bool isDone()
+        {
+            return size == 0 || nextSample >= size;
+        }
+        
+        void clear()
+        {
+            startSample = 0;
+            endSample = 0;
+            nextSample = 0;
+            size = 0;
+            samples.clear();
+        }
+        
+    private:
+        int startSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        int endSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        
+        int nextSample = 0; // the next sample index to be read from the buffer
+        
+        int size = 0;
+        
+        AudioBuffer samples; // this buffer stores the input samples with the window applied
+        
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Grain)
+    };
+    
     
 public:
     
@@ -70,6 +126,9 @@ public:
     
     // DANGER!!! FOR NON REALTIME USE ONLY!
     void increaseBufferSizes (const int newMaxBlocksize);
+    
+    
+    void dataAnalyzed (const int period);
     
     
 private:
@@ -87,21 +146,30 @@ private:
     
     void noteCleared() override;
     
-    void sola (const SampleType* input, const int totalNumInputSamples,
-               const int origPeriod, const int newPeriod, const juce::Array<int>& indicesOfGrainOnsets,
-               const SampleType* window);
-    
-    void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample, const int frameSize, 
-                   const SampleType* window, const int newPeriod);
+//    void sola (const SampleType* input, const int totalNumInputSamples,
+//               const int origPeriod, const int newPeriod, const juce::Array<int>& indicesOfGrainOnsets,
+//               const SampleType* window);
+//
+//    void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample, const int frameSize,
+//                   const SampleType* window, const int newPeriod);
     
     void moveUpSamples (const int numSamplesUsed);
     
     
+    inline SampleType getNextSample (const SampleType* inputSamples, const int outputIndex, const int grainSize, const int newPeriod,
+                                     const SampleType* window);
+    
+    
     AudioBuffer synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     AudioBuffer copyingBuffer;
-    AudioBuffer windowingBuffer; // used to apply the window to the analysis grains before OLA, so windowing only needs to be done once per analysis grain
     
     int synthesisIndex;
+    
+    int nextFramesPeriod = 0;
+    
+    Grain grain1, grain2;
+    
+    int lastUsedGrainInArray = -1;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
@@ -167,8 +235,6 @@ private:
     int windowSize;
     
     AudioBuffer inputStorage;
-    
-    int nextFramesPeriod = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
