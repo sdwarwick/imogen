@@ -57,7 +57,7 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
     FVO::fill (copyingBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
     
     synthesisIndex = 0;
-    lastUsedGrainInArray = -1;
+    lastUsedGrainInArray = 0;
     
     grain1.clear();
     grain2.clear();
@@ -81,65 +81,76 @@ void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
     jassert (period > 0);
     nextFramesPeriod = period;
     
-    lastUsedGrainInArray = -1;
-    
-    const int grainSize = period * 2;
-    const auto* input = parent->inputStorage.getReadPointer(0);
-    const auto* window = parent->windowBuffer.getReadPointer(0);
-    
-    if (grain1.isDone())
-    {
-        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
-        grain1.storeNewGrain (input, newStart, newStart + grainSize, window);
-    }
-    
-    if (grain2.isDone())
-    {
-        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
-        grain2.storeNewGrain (input, newStart, newStart + grainSize, window);
-    }
+    lastUsedGrainInArray = 0;
 }
     
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample)
 {
+    juce::ignoreUnused(origStartSample);
+    
     const auto* reading = parent->inputStorage.getReadPointer(0);
     auto* writing = output.getWritePointer(0);
     const auto* window = parent->windowBuffer.getReadPointer(0);
     
+    jassert (desiredFrequency > 0 && currentSamplerate > 0);
     const int newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
+    const float scaleFactor = newPeriod / nextFramesPeriod;
+    const int origPeriodTimesScaleFactor = juce::roundToInt (scaleFactor * nextFramesPeriod);
+    
     const int grainSize = nextFramesPeriod * 2;
     
     for (int s = 0; s < output.getNumSamples(); ++s)
     {
-        writing[s] = getNextSample (reading, s + origStartSample, grainSize, newPeriod, window);
+        writing[s] = getNextSample (reading, window, grainSize, origPeriodTimesScaleFactor);
     }
 }
     
 
 template<typename SampleType>
-inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* inputSamples, const int outputIndex,
-                                                              const int grainSize, const int newPeriod, const SampleType* window)
+inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* inputSamples,
+                                                              const SampleType* window,
+                                                              const int grainSize, const int origPeriodTimesScaleFactor)
 {
-    jassert (inputSamples != nullptr);
+    updateGrains (inputSamples, window, grainSize, origPeriodTimesScaleFactor);
     
-    const auto outputSample = inputSamples[outputIndex] + grain1.getNextSample() + grain2.getNextSample();
+    const auto outputSample = grain1.getNextSample() + grain2.getNextSample();
+    
+    updateGrains (inputSamples, window, grainSize, origPeriodTimesScaleFactor);
 
-    if (grain1.isDone())
-    {
-        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
-        grain1.storeNewGrain (inputSamples, newStart, newStart + grainSize, window);
-    }
-    
-    if (grain2.isDone())
-    {
-        const int newStart = parent->indicesOfGrainOnsets.getUnchecked (++lastUsedGrainInArray);
-        grain2.storeNewGrain (inputSamples, newStart, newStart + grainSize, window);
-    }
-    
     return outputSample;
 }
+    
+
+template<typename SampleType>
+inline void HarmonizerVoice<SampleType>::updateGrains (const SampleType* inputSamples, const SampleType* window,
+                                                       const int grainSize, const int origPeriodTimesScaleFactor)
+{
+    if (grain1.isDone())
+        storeNewGrain (grain1, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
+    
+    if (grain2.isDone())
+        storeNewGrain (grain2, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
+}
+    
+
+template<typename SampleType>
+inline void HarmonizerVoice<SampleType>::storeNewGrain (Grain& grain,
+                                                        const SampleType* inputSamples,
+                                                        const int grainSize,
+                                                        const SampleType* window,
+                                                        const int origPeriodTimesScaleFactor)
+{
+    const int outputStart = std::max(grain1.getLastStartIndex(), grain2.getLastStartIndex()) + origPeriodTimesScaleFactor;
+    
+    const int thisGrainStart = outputStart >= grain.getLastEndIndex() && lastUsedGrainInArray < parent->indicesOfGrainOnsets.size()
+                                    ? parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray++)
+                                    : grain.getLastStartIndex();
+    
+    grain.storeNewGrain (inputSamples, thisGrainStart, thisGrainStart + grainSize, window, outputStart);
+}
+
 
 
 //template<typename SampleType>

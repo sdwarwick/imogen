@@ -74,42 +74,60 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         ~Grain() { }
         
-        void storeNewGrain (const SampleType* inputSamples, const int newStartSample, const int newEndSample, const SampleType* window)
+        void storeNewGrain (const SampleType* inputSamples, const int startSample, const int endSample, const SampleType* window,
+                            const int outputStart)
         {
-            startSample = newStartSample;
-            endSample   = newEndSample;
-            size = endSample - startSample + 1;
-            nextSample = 0;
+            outStartSample = outputStart;
+            nextSample     = inEndSample;
+            
+            inStartSample = startSample;
+            inEndSample   = endSample;
+            size = endSample - startSample;
             
             jassert (size > 1);
             
+            samples.clear();
             FVO::multiply (samples.getWritePointer(0), inputSamples + startSample, window, size);
         }
         
         SampleType getNextSample()
         {
             jassert (size > 0);
-            return samples.getSample (0, nextSample++);
+            
+            if (nextSample < outStartSample)
+                return SampleType(0.0);
+            
+            const auto sample = samples.getSample (0, nextSample - outStartSample);
+            ++nextSample;
+            return sample;
         }
         
-        bool isDone()
+        bool isDone() const noexcept
         {
-            return size == 0 || nextSample >= size;
+            return size == 0 || nextSample >= size + outStartSample;
         }
         
         void clear()
         {
-            startSample = 0;
-            endSample = 0;
+            inStartSample = 0;
+            inEndSample = 0;
             nextSample = 0;
+            outStartSample = 0;
             size = 0;
             samples.clear();
         }
         
-    private:
-        int startSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
-        int endSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        int getLastStartIndex() const noexcept { return inStartSample; }
         
+        int getLastEndIndex() const noexcept { return inEndSample; }
+        
+    private:
+        int inStartSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        int inEndSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        
+        // the scaled sample index at which the output will begin. The grain will output zeroes while nextSample < outStartSample
+        int outStartSample = 0;
+
         int nextSample = 0; // the next sample index to be read from the buffer
         
         int size = 0;
@@ -156,9 +174,16 @@ private:
     void moveUpSamples (const int numSamplesUsed);
     
     
-    inline SampleType getNextSample (const SampleType* inputSamples, const int outputIndex, const int grainSize, const int newPeriod,
-                                     const SampleType* window);
+    inline SampleType getNextSample (const SampleType* inputSamples,
+                                     const SampleType* window,
+                                     const int grainSize, const int origPeriodTimesScaleFactor);
     
+    
+    inline void updateGrains (const SampleType* inputSamples, const SampleType* window,
+                              const int grainSize, const int origPeriodTimesScaleFactor);
+    
+    inline void storeNewGrain (Grain& grain, const SampleType* inputSamples, const int grainSize, const SampleType* window,
+                               const int origPeriodTimesScaleFactor);
     
     AudioBuffer synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
     AudioBuffer copyingBuffer;
