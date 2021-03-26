@@ -96,7 +96,7 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     const int newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
-    const float scaleFactor = newPeriod / nextFramesPeriod;
+    const auto scaleFactor = float (newPeriod / nextFramesPeriod);
     const int origPeriodTimesScaleFactor = juce::roundToInt (scaleFactor * nextFramesPeriod);
     
     const int grainSize = nextFramesPeriod * 2;
