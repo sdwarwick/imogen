@@ -23,7 +23,7 @@
 
 
 #include "PluginEditor.h"
-#include "bv_SharedCode/misc/BinaryDataHelpers.h"
+#include "bv_SharedCode/data/BinaryDataHelpers.h"
 
 
 #define bvi_GRAPHICS_FRAMERATE_HZ 60
