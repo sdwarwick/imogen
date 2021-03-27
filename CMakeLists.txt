@@ -94,7 +94,7 @@ set (bv_useSynthBaseModule TRUE)
 set (bv_SynthBaseModule_Path ${CMAKE_CURRENT_SOURCE_DIR}/Source/DSP_modules/SynthBase)
 
 #
-set (bv_useFFTmodule TRUE)
+
 include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #

@@ -25,7 +25,6 @@
 #pragma once
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
-#include "bv_FFT/bv_FFT.h"
 
 
 #ifndef IMOGEN_ONLY_BUILDING_STANDALONE
@@ -274,8 +273,6 @@ private:
     
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
-    
-    bav::dsp::FFT fft;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

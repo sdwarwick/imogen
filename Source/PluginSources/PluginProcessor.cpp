@@ -28,7 +28,7 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()), fft(512)
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
 #if IMOGEN_ONLY_BUILDING_STANDALONE
     , denormalsWereDisabledWhenTheAppStarted(juce::FloatVectorOperations::areDenormalsDisabled())
 #endif
