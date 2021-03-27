@@ -87,17 +87,15 @@ set (Imogen_UseRecommendedWarningFlags TRUE)
 
 set (bv_generatePreprocessorDefinitions TRUE)
 
+set (bv_useSharedCodeModule TRUE)
+set (bv_usePitchDetectorModule TRUE)
+
+set (bv_useSynthBaseModule TRUE)
+set (bv_SynthBaseModule_Path ${CMAKE_CURRENT_SOURCE_DIR}/Source/DSP_modules/SynthBase)
+
 #
 
 include (JUCE-CmakeWrapper/CMakeLists.txt)
-
-#
-
-juce_add_modules (${Imogen_sourceDir}/Shared-code/bv_SharedCode 
-                  ${Imogen_sourceDir}/Shared-code/bv_PitchDetector
-                  ${Imogen_customModulesPath}/SynthBase/bv_SynthBase)
-
-target_link_libraries (Imogen PRIVATE bv_SharedCode bv_PitchDetector bv_SynthBase)
 
 #
 
