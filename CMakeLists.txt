@@ -95,9 +95,10 @@ include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 juce_add_modules (${Imogen_sourceDir}/Shared-code/bv_SharedCode 
                   ${Imogen_customModulesPath}/Pitch-detector/bv_PitchDetector
-                  ${Imogen_customModulesPath}/SynthBase/bv_SynthBase)
+                  ${Imogen_customModulesPath}/SynthBase/bv_SynthBase
+                  ${Imogen_sourceDir}/Shared-code/bv_FFT)
 
-target_link_libraries (Imogen PRIVATE bv_SharedCode bv_PitchDetector bv_SynthBase)
+target_link_libraries (Imogen PRIVATE bv_SharedCode bv_PitchDetector bv_SynthBase bv_FFT)
 
 #
 
