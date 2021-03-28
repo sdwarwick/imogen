@@ -33,6 +33,10 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     , denormalsWereDisabledWhenTheAppStarted(juce::FloatVectorOperations::areDenormalsDisabled())
 #endif
 {
+#if BV_USE_NE10
+    ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!
+#endif
+    
     jassert (AudioProcessor::getParameters().size() == IMGN_NUM_PARAMS);
     initializeParameterPointers();
     initializeParameterListeners();
