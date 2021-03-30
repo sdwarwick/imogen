@@ -127,6 +127,8 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     const int numSamples = inputAudio.getNumSamples();
     
+    vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
+    
     bool polarityReversed = false;
     
     int nextFramesPeriod;
@@ -141,13 +143,10 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
         
         if (bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
         {
-            FVO::negate (inputStorage.getWritePointer(0), inputAudio.getReadPointer(0), numSamples);
+            vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
             polarityReversed = true;
         }
     }
-    
-    if (! polarityReversed)
-        FVO::copy (inputStorage.getWritePointer(0), inputAudio.getReadPointer(0), numSamples);
     
     jassert (nextFramesPeriod > 0);
     

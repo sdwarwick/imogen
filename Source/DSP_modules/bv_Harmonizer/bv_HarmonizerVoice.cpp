@@ -84,6 +84,15 @@ void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
     lastUsedGrainInArray = 0;
 }
     
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
+{
+    moveUpSamples (numSamples);
+    grain1.skipSamples (numSamples);
+    grain2.skipSamples (numSamples);
+}
+        
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample)
@@ -113,25 +122,13 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
                                                               const SampleType* window,
                                                               const int grainSize, const int origPeriodTimesScaleFactor)
 {
-    updateGrains (inputSamples, window, grainSize, origPeriodTimesScaleFactor);
-    
-    const auto outputSample = grain1.getNextSample() + grain2.getNextSample();
-    
-    updateGrains (inputSamples, window, grainSize, origPeriodTimesScaleFactor);
-
-    return outputSample;
-}
-    
-
-template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::updateGrains (const SampleType* inputSamples, const SampleType* window,
-                                                       const int grainSize, const int origPeriodTimesScaleFactor)
-{
     if (grain1.isDone())
         storeNewGrain (grain1, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
     
     if (grain2.isDone())
         storeNewGrain (grain2, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
+    
+    return grain1.getNextSample() + grain2.getNextSample();
 }
     
 
@@ -142,13 +139,22 @@ inline void HarmonizerVoice<SampleType>::storeNewGrain (Grain& grain,
                                                         const SampleType* window,
                                                         const int origPeriodTimesScaleFactor)
 {
-    const int outputStart = std::max(grain1.getLastStartIndex(), grain2.getLastStartIndex()) + origPeriodTimesScaleFactor;
+    const int outputStart = std::max(grain1.getLastSynthesisMark(), grain2.getLastSynthesisMark())
+                            + origPeriodTimesScaleFactor;
     
-    const int thisGrainStart = outputStart >= grain.getLastEndIndex() && lastUsedGrainInArray < parent->indicesOfGrainOnsets.size()
-                                    ? parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray++)
-                                    : grain.getLastStartIndex();
+    int thisGrainStart;
     
-    grain.storeNewGrain (inputSamples, thisGrainStart, thisGrainStart + grainSize, window, outputStart);
+    if (outputStart >= grain.getLastEndIndex() && lastUsedGrainInArray < parent->indicesOfGrainOnsets.size())
+    {
+        thisGrainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray++);
+    }
+    else
+    {
+        thisGrainStart = grain.getLastStartIndex();
+        lastUsedGrainInArray = 0;
+    }
+    
+    grain.storeNewGrain (inputSamples, thisGrainStart, grainSize, window, outputStart);
 }
 
 

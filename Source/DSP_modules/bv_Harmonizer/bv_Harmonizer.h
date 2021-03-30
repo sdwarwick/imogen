@@ -74,45 +74,68 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         ~Grain() { }
         
-        void storeNewGrain (const SampleType* inputSamples, const int startSample, const int endSample, const SampleType* window,
-                            const int outputStart)
+        void storeNewGrain (const SampleType* inputSamples, const int startSample, const int numSamples, const SampleType* window,
+                            const int synthesisMarker)
         {
-            outStartSample = outputStart;
-            nextSample     = inEndSample;
-            
+            nextSample    = 0;
             inStartSample = startSample;
-            inEndSample   = endSample;
-            size = endSample - startSample;
+            inEndSample   = startSample + numSamples;
+            size          = numSamples;
+            zeroesLeft    = std::max (0, synthesisMarker - startSample);
+            synthesisMark = synthesisMarker;
             
             jassert (size > 1);
             
             samples.clear();
-            FVO::multiply (samples.getWritePointer(0), inputSamples + startSample, window, size);
+            vecops::copy (inputSamples + startSample, samples.getWritePointer(0), numSamples);
+            vecops::multiplyV (samples.getWritePointer(0), window, numSamples);
         }
         
         SampleType getNextSample()
         {
             jassert (size > 0);
             
-            if (nextSample < outStartSample)
-                return SampleType(0.0);
+            if (zeroesLeft > 0)
+            {
+                --zeroesLeft;
+                return SampleType(0);
+            }
             
-            const auto sample = samples.getSample (0, nextSample - outStartSample);
-            ++nextSample;
-            return sample;
+            return samples.getSample (0, nextSample++);
+        }
+        
+        void skipSamples (const int numSamples)
+        {
+            for (int i = 0; i < numSamples; ++i) {
+                skipSample();
+            }
+        }
+        
+        void skipSample()
+        {
+            if (zeroesLeft > 0)
+            {
+                --zeroesLeft;
+            }
+            else
+            {
+                ++nextSample;
+                if (nextSample >= size) nextSample = 0;
+            }
         }
         
         bool isDone() const noexcept
         {
-            return size == 0 || nextSample >= size + outStartSample;
+            return size == 0 || nextSample >= size;
         }
         
         void clear()
         {
             inStartSample = 0;
             inEndSample = 0;
+            synthesisMark = 0;
             nextSample = 0;
-            outStartSample = 0;
+            zeroesLeft = 0;
             size = 0;
             samples.clear();
         }
@@ -121,14 +144,17 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         int getLastEndIndex() const noexcept { return inEndSample; }
         
+        int getLastSynthesisMark() const noexcept { return synthesisMark; }
+        
     private:
         int inStartSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
         int inEndSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
         
-        // the scaled sample index at which the output will begin. The grain will output zeroes while nextSample < outStartSample
-        int outStartSample = 0;
+        int zeroesLeft = 0; // the number of zeroes the grain should output before outputting its next stored samples
 
         int nextSample = 0; // the next sample index to be read from the buffer
+        
+        int synthesisMark = 0; /// the scaled placement of the grain in the output signal
         
         int size = 0;
         
@@ -154,7 +180,7 @@ private:
     
     void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample) override;
     
-    void bypassedBlockRecieved (int numSamples) override { moveUpSamples (numSamples); }
+    void bypassedBlockRecieved (int numSamples) override;
     
     Harmonizer<SampleType>* parent;
     
@@ -177,10 +203,6 @@ private:
     inline SampleType getNextSample (const SampleType* inputSamples,
                                      const SampleType* window,
                                      const int grainSize, const int origPeriodTimesScaleFactor);
-    
-    
-    inline void updateGrains (const SampleType* inputSamples, const SampleType* window,
-                              const int grainSize, const int origPeriodTimesScaleFactor);
     
     inline void storeNewGrain (Grain& grain, const SampleType* inputSamples, const int grainSize, const SampleType* window,
                                const int origPeriodTimesScaleFactor);
