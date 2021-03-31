@@ -206,20 +206,20 @@ inline void HarmonizerVoice<SampleType>::storeNewGrain (Grain& grain,
 //    jassert (frameEndSample - frameStartSample == frameSize);
 //
 //    // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
-////    FVO::multiply (windowingBuffer.getWritePointer(0), window,
-////                   inputAudio + frameStartSample, frameSize);
+//    juce::FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0), window,
+//                                           inputAudio + frameStartSample, frameSize);
 //
-////    const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
-////    SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
-////
-////    do {
-////        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
-////
-////        FVO::add (synthesisBufferWriting + synthesisIndex, windowBufferReading, frameSize);
-////
-////        synthesisIndex += newPeriod;
-////    }
-////    while (synthesisIndex < frameEndSample);
+//    const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
+//    SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
+//
+//    do {
+//        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
+//
+//        juce::FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex, windowBufferReading, frameSize);
+//
+//        synthesisIndex += newPeriod;
+//    }
+//    while (synthesisIndex < frameEndSample);
 //}
 
 

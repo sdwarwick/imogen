@@ -29,15 +29,14 @@
  version:            0.0.1
  name:               Harmonizer
  description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       bv_SynthBase, bv_PitchDetector
+ dependencies:       bv_SynthBase
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
 
 #pragma once
 
-#include "bv_SynthBase/bv_SynthBase.h"
-#include "bv_PitchDetector/bv_PitchDetector.h"
+#include "bv_SynthBase/bv_SynthBase.h"  // this file includes the bv_SharedCode header
 #include "GrainExtractor/GrainExtractor.h"
 
 
@@ -81,7 +80,7 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
             inStartSample = startSample;
             inEndSample   = startSample + numSamples;
             size          = numSamples;
-            zeroesLeft    = std::max (0, synthesisMarker - startSample);
+            zeroesLeft    = synthesisMarker - startSample;
             synthesisMark = synthesisMarker;
             
             jassert (size > 1);
@@ -98,6 +97,11 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
             if (zeroesLeft > 0)
             {
                 --zeroesLeft;
+                return SampleType(0);
+            }
+            else if (zeroesLeft < 0)
+            {
+                ++zeroesLeft;
                 return SampleType(0);
             }
             
@@ -269,7 +273,7 @@ private:
     
     
     
-    PitchDetector<SampleType> pitchDetector;
+    dsp::PitchDetector<SampleType> pitchDetector;
     
     GrainExtractor<SampleType> grains;
     juce::Array<int> indicesOfGrainOnsets;

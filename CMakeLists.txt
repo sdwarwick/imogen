@@ -88,7 +88,6 @@ set (Imogen_UseRecommendedWarningFlags TRUE)
 set (bv_generatePreprocessorDefinitions TRUE)
 
 set (bv_useSharedCodeModule TRUE)
-set (bv_usePitchDetectorModule TRUE)
 
 set (bv_useSynthBaseModule TRUE)
 set (bv_SynthBaseModule_Path ${CMAKE_CURRENT_SOURCE_DIR}/Source/DSP_modules/SynthBase)
