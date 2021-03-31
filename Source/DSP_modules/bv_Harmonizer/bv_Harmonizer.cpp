@@ -40,7 +40,7 @@ namespace bav
 
 
 template<typename SampleType>
-Harmonizer<SampleType>::Harmonizer():   windowSize(0)
+Harmonizer<SampleType>::Harmonizer()
 {
     Base::setConcertPitchHz(440);
     
@@ -70,7 +70,6 @@ void Harmonizer<SampleType>::initialized (const double initSamplerate, const int
 template<typename SampleType>
 void Harmonizer<SampleType>::prepared (int blocksize)
 {
-    windowBuffer.setSize (1, blocksize, true, true, true);
     inputStorage.setSize (1, blocksize);
     
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
@@ -100,7 +99,6 @@ template<typename SampleType>
 void Harmonizer<SampleType>::release()
 {
     inputStorage.clear();
-    windowBuffer.clear();
     indicesOfGrainOnsets.clear();
     grains.releaseResources();
     pitchDetector.releaseResources();
@@ -150,8 +148,6 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     jassert (nextFramesPeriod > 0);
     
-    fillWindowBuffer (nextFramesPeriod * 2);
-    
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
     
     for (auto* voice : Base::voices)
@@ -159,28 +155,6 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 }
 
 
-// calculate Hanning window ------------------------------------------------------
-
-template<typename SampleType>
-inline void Harmonizer<SampleType>::fillWindowBuffer (const int numSamples)
-{
-    jassert (numSamples > 1);
-    
-    if (windowSize == numSamples)
-        return;
-    
-    FVO::fill (windowBuffer.getWritePointer(0), SampleType(0.0), windowBuffer.getNumSamples());
-    
-    jassert (numSamples <= windowBuffer.getNumSamples());
-    
-    using Func = juce::dsp::WindowingFunction<SampleType>;
-    
-    Func::fillWindowingTables (windowBuffer.getWritePointer(0), size_t(numSamples), Func::hann, true);
-    
-    windowSize = numSamples;
-}
-    
-    
 // adds a specified # of voices
 template<typename SampleType>
 void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)

@@ -89,9 +89,6 @@ private:
     
     void addNumVoices (const int voicesToAdd) override;
     
-    void fillWindowBuffer (const int numSamples);
-    
-    
     
     dsp::PitchDetector<SampleType> pitchDetector;
     
@@ -101,9 +98,6 @@ private:
     // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio will be randomized within this range
     // NB max value should be 1 greater than the largest possible generated number 
     const juce::Range<int> unpitchedArbitraryPeriodRange { 50, 201 };
-    
-    AudioBuffer windowBuffer;
-    int windowSize;
     
     AudioBuffer inputStorage;
     

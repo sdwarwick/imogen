@@ -37,7 +37,7 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         bool isActive() { return currentlyActive; }
         
         /* returns true if this sample advancement in this grain should trigger a new grain to begin */
-        bool getNextSampleIndex (int& origSampleIndex, int& windowIndex);
+        bool getNextSampleIndex (int& origSampleIndex, SampleType& windowValue);
         
         void skipSamples (int numSamples);
         
@@ -50,6 +50,9 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         int getLastEndIndex() const noexcept { return origEndSample; }
         
     private:
+        /* computes a single Hann window value based on a given window size and place in the window */
+        inline SampleType getWindowValue (int windowSize, int index);
+        
         bool currentlyActive = false;
         
         int origStartSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
@@ -59,6 +62,8 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         int readingIndex = 0;
         
         int zeroesLeft = 0;
+        
+        int grainSize = 0;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Grain)
     };
@@ -88,9 +93,7 @@ private:
     
     void noteCleared() override;
     
-    inline SampleType getNextSample (const SampleType* inputSamples,
-                                     const SampleType* window,
-                                     const int grainSize, const int synthesisHopSize);
+    inline SampleType getNextSample (const SampleType* inputSamples, const int grainSize, const int synthesisHopSize);
     
     inline Grain* getAvailableGrain()
     {
