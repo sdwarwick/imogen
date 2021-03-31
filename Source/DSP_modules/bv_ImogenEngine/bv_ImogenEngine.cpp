@@ -180,6 +180,8 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     
     const int blocksize = FIFOEngine::getLatency();
     
+    harmonizer.prepare (blocksize);
+    
     initialHiddenLoCut.prepare(dspSpec);
     
     gate.prepare (1, blocksize, samplerate);

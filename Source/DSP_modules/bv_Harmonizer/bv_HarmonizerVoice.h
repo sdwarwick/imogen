@@ -32,13 +32,16 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         ~Grain() { }
         
-        void storeNewGrain (const int startSample, const int endSample);
+        void storeNewGrain (const int startSample, const int endSample, const int synthesisMarker);
         
         bool isActive() { return currentlyActive; }
         
+        /* returns true if this sample advancement in this grain should trigger a new grain to begin */
         bool getNextSampleIndex (int& origSampleIndex, int& windowIndex);
         
-        void skipSamples (const int numSamples);
+        void skipSamples (int numSamples);
+        
+        void skipSample();
         
         void clear();
         
@@ -54,6 +57,8 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         int halfwayIndex    = 0;
         
         int readingIndex = 0;
+        
+        int zeroesLeft = 0;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Grain)
     };
@@ -77,7 +82,7 @@ private:
     
     Harmonizer<SampleType>* parent;
     
-    void prepare (const int blocksize) override;
+    void prepared (const int blocksize) override;
     
     void released() override;
     
@@ -85,7 +90,7 @@ private:
     
     inline SampleType getNextSample (const SampleType* inputSamples,
                                      const SampleType* window,
-                                     const int grainSize, const int origPeriodTimesScaleFactor);
+                                     const int grainSize, const int synthesisHopSize);
     
     inline Grain* getAvailableGrain()
     {
@@ -96,11 +101,24 @@ private:
         return nullptr;
     }
     
+    inline bool anyGrainsAreActive()
+    {
+        for (auto* grain : grains)
+            if (grain->isActive())
+                return true;
+        
+        return false;
+    }
+    
+    inline void startNewGrain (const int grainSize, const int synthesisHopSize);
+    
     int nextFramesPeriod = 0;
     
     int lastUsedGrainInArray = -1;
     
     juce::OwnedArray<Grain> grains;
+    
+    int nextSynthesisIndex = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
