@@ -33,9 +33,86 @@
 namespace bav
 {
     
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const SampleType* inputSamples,
+                                                        const int startSample, const int numSamples,
+                                                        const SampleType* window,
+                                                        const int synthesisMarker)
+{
+    nextSample    = 0;
+    inStartSample = startSample;
+    inEndSample   = startSample + numSamples;
+    size          = numSamples;
+    zeroesLeft    = synthesisMarker - startSample;
+    synthesisMark = synthesisMarker;
+    
+    jassert (size > 1);
+    
+    samples.clear();
+    vecops::copy (inputSamples + startSample, samples.getWritePointer(0), numSamples);
+    vecops::multiplyV (samples.getWritePointer(0), window, numSamples);
+}
+    
+    
+template<typename SampleType>
+SampleType HarmonizerVoice<SampleType>::Grain::getNextSample()
+{
+    jassert (size > 0);
+    
+    if (zeroesLeft > 0)
+    {
+        --zeroesLeft;
+        return SampleType(0);
+    }
+    else if (zeroesLeft < 0)
+    {
+        ++zeroesLeft;
+        return SampleType(0);
+    }
+    
+    return samples.getSample (0, nextSample++);
+}
+   
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::Grain::skipSamples (const int numSamples)
+{
+    for (int i = 0; i < numSamples; ++i)
+    {
+        if (zeroesLeft > 0)
+        {
+            --zeroesLeft;
+        }
+        else
+        {
+            ++nextSample;
+            if (nextSample >= size) nextSample = 0;
+        }
+    }
+}
+    
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::Grain::clear()
+{
+    inStartSample = 0;
+    inEndSample = 0;
+    synthesisMark = 0;
+    nextSample = 0;
+    zeroesLeft = 0;
+    size = 0;
+    samples.clear();
+}
+    
+    
+
+/*
+*/
+
 
 template<typename SampleType>
-    HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h), synthesisIndex(0)
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h), synthesisIndex(0)
 {
     
 }
@@ -122,11 +199,11 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
                                                               const SampleType* window,
                                                               const int grainSize, const int origPeriodTimesScaleFactor)
 {
-    if (grain1.isDone())
-        storeNewGrain (grain1, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
-    
-    if (grain2.isDone())
-        storeNewGrain (grain2, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
+//    if (grain1.isDone())
+//        storeNewGrain (grain1, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
+//
+//    if (grain2.isDone())
+//        storeNewGrain (grain2, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
     
     return grain1.getNextSample() + grain2.getNextSample();
 }
@@ -255,18 +332,6 @@ void HarmonizerVoice<SampleType>::noteCleared()
 }
 
     
-/*+++++++++++++++++++++++++++++++++++++
- DANGER!!!
- FOR NON REAL TIME ONLY!!!!!!!!
- ++++++++++++++++++++++++++++++++++++++*/
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::increaseBufferSizes(const int newMaxBlocksize)
-{
-    synthesisBuffer.setSize (1, newMaxBlocksize, true, true, true);
-    copyingBuffer.setSize (1, newMaxBlocksize, true, true, true);
-}
-
-
 #undef bvhv_MIN_SMOOTHED_GAIN
 #undef _SMOOTHING_ZERO_CHECK
     
