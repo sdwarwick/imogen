@@ -32,36 +32,28 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         ~Grain() { }
         
-        void prepare (int blocksize) { samples.setSize(1, blocksize); }
+        void storeNewGrain (const int startSample, const int endSample);
         
-        void storeNewGrain (const SampleType* inputSamples, const int startSample, const int numSamples, const SampleType* window,
-                            const int synthesisMarker);
+        bool isActive() { return currentlyActive; }
         
-        SampleType getNextSample();
+        bool getNextSampleIndex (int& origSampleIndex, int& windowIndex);
         
         void skipSamples (const int numSamples);
         
         void clear();
         
-        int getLastStartIndex() const noexcept { return inStartSample; }
+        int getLastStartIndex() const noexcept { return origStartSample; }
         
-        int getLastEndIndex() const noexcept { return inEndSample; }
-        
-        int getLastSynthesisMark() const noexcept { return synthesisMark; }
+        int getLastEndIndex() const noexcept { return origEndSample; }
         
     private:
-        int inStartSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
-        int inEndSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        bool currentlyActive = false;
         
-        int zeroesLeft = 0; // the number of zeroes the grain should output before outputting its next stored samples
+        int origStartSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        int origEndSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
+        int halfwayIndex    = 0;
         
-        int nextSample = 0; // the next sample index to be read from the buffer
-        
-        int synthesisMark = 0; /// the scaled placement of the grain in the output signal
-        
-        int size = 0;
-        
-        AudioBuffer samples; // this buffer stores the input samples with the window applied
+        int readingIndex = 0;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Grain)
     };
@@ -91,33 +83,24 @@ private:
     
     void noteCleared() override;
     
-    //    void sola (const SampleType* input, const int totalNumInputSamples,
-    //               const int origPeriod, const int newPeriod, const juce::Array<int>& indicesOfGrainOnsets,
-    //               const SampleType* window);
-    //
-    //    void olaFrame (const SampleType* inputAudio, const int frameStartSample, const int frameEndSample, const int frameSize,
-    //                   const SampleType* window, const int newPeriod);
-    
-    void moveUpSamples (const int numSamplesUsed);
-    
-    
     inline SampleType getNextSample (const SampleType* inputSamples,
                                      const SampleType* window,
                                      const int grainSize, const int origPeriodTimesScaleFactor);
     
-    inline void storeNewGrain (Grain& grain, const SampleType* inputSamples, const int grainSize, const SampleType* window,
-                               const int origPeriodTimesScaleFactor);
-    
-    AudioBuffer synthesisBuffer; // mono buffer that this voice's synthesized samples are written to
-    AudioBuffer copyingBuffer;
-    
-    int synthesisIndex;
+    inline Grain* getAvailableGrain()
+    {
+        for (auto* grain : grains)
+            if (! grain->isActive())
+                return grain;
+        
+        return nullptr;
+    }
     
     int nextFramesPeriod = 0;
     
-    Grain grain1, grain2;
-    
     int lastUsedGrainInArray = -1;
+    
+    juce::OwnedArray<Grain> grains;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };

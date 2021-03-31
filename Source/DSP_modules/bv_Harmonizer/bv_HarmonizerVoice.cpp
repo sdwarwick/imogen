@@ -25,6 +25,9 @@
 #include "bv_Harmonizer.h"
 
 
+#define bvh_NUM_SYNTHESIS_GRAINS 16
+
+
 // multiplicative smoothing cannot ever actually reach 0
 #define bvhv_MIN_SMOOTHED_GAIN 0.0000001
 #define _SMOOTHING_ZERO_CHECK(inputGain) std::max(SampleType(bvhv_MIN_SMOOTHED_GAIN), SampleType (inputGain))
@@ -35,74 +38,54 @@ namespace bav
     
     
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const SampleType* inputSamples,
-                                                        const int startSample, const int numSamples,
-                                                        const SampleType* window,
-                                                        const int synthesisMarker)
+void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const int startSample, const int endSample)
 {
-    nextSample    = 0;
-    inStartSample = startSample;
-    inEndSample   = startSample + numSamples;
-    size          = numSamples;
-    zeroesLeft    = synthesisMarker - startSample;
-    synthesisMark = synthesisMarker;
+    currentlyActive = true;
+    origStartSample = startSample;
+    origEndSample = endSample;
+    readingIndex = startSample;
     
-    jassert (size > 1);
-    
-    samples.clear();
-    vecops::copy (inputSamples + startSample, samples.getWritePointer(0), numSamples);
-    vecops::multiplyV (samples.getWritePointer(0), window, numSamples);
+    halfwayIndex = juce::roundToInt (floor (origStartSample + ((origEndSample - origStartSample) * 0.5f)));
 }
     
     
+/* returns true if this sample is the halfway-point for this grain, and should trigger another grain being activated. */
 template<typename SampleType>
-SampleType HarmonizerVoice<SampleType>::Grain::getNextSample()
+bool HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleIndex, int& windowIndex)
 {
-    jassert (size > 0);
+    origSampleIndex = readingIndex;
+    windowIndex = readingIndex - origStartSample;
     
-    if (zeroesLeft > 0)
-    {
-        --zeroesLeft;
-        return SampleType(0);
-    }
-    else if (zeroesLeft < 0)
-    {
-        ++zeroesLeft;
-        return SampleType(0);
-    }
+    const bool triggerNewGrain = readingIndex == halfwayIndex;
     
-    return samples.getSample (0, nextSample++);
+    ++readingIndex;
+    
+    if (readingIndex >= origEndSample)
+    {
+        clear();
+        return false;
+    }
+    else
+    {
+        return triggerNewGrain;
+    }
 }
-   
+
     
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::Grain::skipSamples (const int numSamples)
 {
-    for (int i = 0; i < numSamples; ++i)
-    {
-        if (zeroesLeft > 0)
-        {
-            --zeroesLeft;
-        }
-        else
-        {
-            ++nextSample;
-            if (nextSample >= size) nextSample = 0;
-        }
-    }
+    
 }
     
     
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::Grain::clear()
 {
-    inStartSample = 0;
-    inEndSample = 0;
-    synthesisMark = 0;
-    nextSample = 0;
-    zeroesLeft = 0;
-    size = 0;
-    samples.clear();
+    currentlyActive = false;
+    origStartSample = 0;
+    origEndSample = 0;
+    readingIndex = 0;
 }
     
     
@@ -112,7 +95,7 @@ void HarmonizerVoice<SampleType>::Grain::clear()
 
 
 template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h), synthesisIndex(0)
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h)
 {
     
 }
@@ -121,23 +104,12 @@ HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h)
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 {
-    // blocksize = maximum period
-    
     jassert (blocksize > 0);
     
     const int doubleSize = blocksize * 2;
     
-    synthesisBuffer.setSize (1, doubleSize);
-    FVO::fill (synthesisBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
-    
-    copyingBuffer.setSize (1, doubleSize);
-    FVO::fill (copyingBuffer.getWritePointer(0), SampleType(0.0), doubleSize);
-    
-    synthesisIndex = 0;
-    lastUsedGrainInArray = 0;
-    
-    grain1.clear();
-    grain2.clear();
+    while (grains.size() < bvh_NUM_SYNTHESIS_GRAINS)
+        grains.add (new Grain());
 }
 
     
@@ -145,10 +117,8 @@ void HarmonizerVoice<SampleType>::prepare (const int blocksize)
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
-    synthesisBuffer.setSize (0, 0, false, false, false);
-    copyingBuffer.setSize (0, 0, false, false, false);
-    grain1.clear();
-    grain2.clear();
+    for (auto* grain : grains)
+        grain->clear();
 }
     
 
@@ -165,9 +135,8 @@ void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
 {
-    moveUpSamples (numSamples);
-    grain1.skipSamples (numSamples);
-    grain2.skipSamples (numSamples);
+    for (auto* grain : grains)
+        grain->skipSamples (numSamples);
 }
         
 
@@ -199,141 +168,54 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
                                                               const SampleType* window,
                                                               const int grainSize, const int origPeriodTimesScaleFactor)
 {
-//    if (grain1.isDone())
-//        storeNewGrain (grain1, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
-//
-//    if (grain2.isDone())
-//        storeNewGrain (grain2, inputSamples, grainSize, window, origPeriodTimesScaleFactor);
+    SampleType sample = 0;
     
-    return grain1.getNextSample() + grain2.getNextSample();
-}
-    
-
-template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::storeNewGrain (Grain& grain,
-                                                        const SampleType* inputSamples,
-                                                        const int grainSize,
-                                                        const SampleType* window,
-                                                        const int origPeriodTimesScaleFactor)
-{
-    const int outputStart = std::max(grain1.getLastSynthesisMark(), grain2.getLastSynthesisMark())
-                            + origPeriodTimesScaleFactor;
-    
-    int thisGrainStart;
-    
-    if (outputStart >= grain.getLastEndIndex() && lastUsedGrainInArray < parent->indicesOfGrainOnsets.size())
+    for (auto* grain : grains)
     {
-        thisGrainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray++);
-    }
-    else
-    {
-        thisGrainStart = grain.getLastStartIndex();
-        lastUsedGrainInArray = 0;
+        if (! grain->isActive())
+            continue;
+        
+        int sIdx = -1, wIdx = -1;
+        
+        bool startNewGrain = grain->getNextSampleIndex (sIdx, wIdx);
+        
+        jassert (sIdx >= 0 && wIdx >= 0 && wIdx < grainSize);
+        
+        sample += inputSamples[sIdx] * window[wIdx];
+        
+        if (startNewGrain)
+        {
+            if (auto* newGrain = getAvailableGrain())
+            {
+                const int grainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray);
+                
+                ++lastUsedGrainInArray;
+                if (lastUsedGrainInArray >= parent->indicesOfGrainOnsets.size())
+                    lastUsedGrainInArray = 0;
+                
+                newGrain->storeNewGrain (grainStart, grainStart + grainSize);
+            }
+        }
     }
     
-    grain.storeNewGrain (inputSamples, thisGrainStart, grainSize, window, outputStart);
-}
-
-
-
-//template<typename SampleType>
-//inline void HarmonizerVoice<SampleType>::sola (const SampleType* input,
-//                                               const int totalNumInputSamples,
-//                                               const int origPeriod, // size of analysis grains = origPeriod * 2
-//                                               const int newPeriod,  // OLA hop size
-//                                               const juce::Array<int>& indicesOfGrainOnsets, // sample indices marking the start of each analysis grain
-//                                               const SampleType* window) // Hanning window, length origPeriod * 2
-//{
-//    if (synthesisIndex > totalNumInputSamples)
-//        return;
-//
-//    jassert (origPeriod > 0);
-//    jassert (newPeriod > 0);
-//    jassert (! indicesOfGrainOnsets.isEmpty());
-//    jassert (window != nullptr && input != nullptr);
-//
-//    const int analysisGrainLength = 2 * origPeriod; // length of the analysis grains & the pre-computed Hanning window
-//
-//    for (int grainStart : indicesOfGrainOnsets)
-//    {
-//        const int grainEnd = grainStart + analysisGrainLength;
-//
-//        if (grainEnd >= totalNumInputSamples)
-//            break;
-//
-//        if (synthesisIndex > grainEnd)
-//            continue;
-//
-//        olaFrame (input, grainStart, grainEnd, analysisGrainLength, window, newPeriod);
-//    }
-//
-//    const int sampsLeft = synthesisBuffer.getNumSamples() - synthesisIndex;
-//
-//    if (sampsLeft > 0)  // fill from the last written sample to the end of the buffer with zeroes
-//        FVO::fill (synthesisBuffer.getWritePointer(0) + synthesisIndex, SampleType(0.0), sampsLeft);
-//}
-//
-//
-//template<typename SampleType>
-//inline void HarmonizerVoice<SampleType>::olaFrame (const SampleType* inputAudio,
-//                                                   const int frameStartSample, const int frameEndSample, const int frameSize,
-//                                                   const SampleType* window,
-//                                                   const int newPeriod)
-//{
-//    jassert (frameEndSample - frameStartSample == frameSize);
-//
-//    // apply the window before OLAing. Writes windowed input samples into the windowingBuffer
-//    juce::FloatVectorOperations::multiply (windowingBuffer.getWritePointer(0), window,
-//                                           inputAudio + frameStartSample, frameSize);
-//
-//    const SampleType* windowBufferReading = windowingBuffer.getReadPointer(0);
-//    SampleType* synthesisBufferWriting = synthesisBuffer.getWritePointer(0);
-//
-//    do {
-//        jassert (synthesisIndex + frameSize < synthesisBuffer.getNumSamples());
-//
-//        juce::FloatVectorOperations::add (synthesisBufferWriting + synthesisIndex, windowBufferReading, frameSize);
-//
-//        synthesisIndex += newPeriod;
-//    }
-//    while (synthesisIndex < frameEndSample);
-//}
-
-
-template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::moveUpSamples (const int numSamplesUsed)
-{
-    synthesisIndex -= numSamplesUsed;
-    
-    if (synthesisIndex < 1)
-    {
-        synthesisBuffer.clear();
-        synthesisIndex = 0;
-        return;
-    }
-    
-    copyingBuffer.copyFrom (0, 0, synthesisBuffer, 0, numSamplesUsed, synthesisIndex);
-    synthesisBuffer.clear();
-    synthesisBuffer.copyFrom (0, 0, copyingBuffer, 0, 0, synthesisIndex);
+    return sample;
 }
     
-
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
-    synthesisIndex = 0;
-    synthesisBuffer.clear();
-    copyingBuffer.clear();
-    grain1.clear();
-    grain2.clear();
-    lastUsedGrainInArray = -1;
+    lastUsedGrainInArray = 0;
+    
+    for (auto* grain : grains)
+        grain->clear();
 }
 
     
 #undef bvhv_MIN_SMOOTHED_GAIN
 #undef _SMOOTHING_ZERO_CHECK
+#undef bvh_NUM_SYNTHESIS_GRAINS
     
     
 template class HarmonizerVoice<float>;
