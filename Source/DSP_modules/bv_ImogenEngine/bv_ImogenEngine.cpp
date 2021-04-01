@@ -178,7 +178,7 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     if (harmonizer.getLatencySamples() != FIFOEngine::getLatency())
         FIFOEngine::changeLatency (harmonizer.getLatencySamples());
     
-    const int blocksize = FIFOEngine::getLatency();
+    const auto blocksize = FIFOEngine::getLatency();
     
     harmonizer.prepare (blocksize);
     
@@ -242,7 +242,7 @@ bvie_VOID_TEMPLATE::release()
 
 bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages)
 {
-    const int numSamples = input.getNumSamples();
+    const auto numSamples = input.getNumSamples();
     
     jassert (numSamples == FIFOEngine::getLatency());
     
@@ -257,7 +257,7 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMes
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
 {
-    const int blockSize = input.getNumSamples();
+    const auto blockSize = input.getNumSamples();
 
     jassert (blockSize == FIFOEngine::getLatency() && blockSize == output.getNumSamples());
 

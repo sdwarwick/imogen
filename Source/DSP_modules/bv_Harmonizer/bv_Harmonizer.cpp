@@ -120,10 +120,10 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 {
     jassert (Base::sampleRate > 0);
     
-    const float inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
-    const bool  frameIsPitched = inputFrequency > 0.0f;
+    const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
+    const bool  frameIsPitched = inputFrequency > 0;
     
-    const int numSamples = inputAudio.getNumSamples();
+    const auto numSamples = inputAudio.getNumSamples();
     
     vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
     

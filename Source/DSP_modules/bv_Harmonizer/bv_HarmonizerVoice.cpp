@@ -72,7 +72,7 @@ bool HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleInde
     
     origSampleIndex = readingIndex;
     
-    const int windowIndex = readingIndex - origStartSample;
+    const auto windowIndex = readingIndex - origStartSample;
     jassert (windowIndex >= 0 && windowIndex < grainSize);
     windowValue = getWindowValue (grainSize, windowIndex);
     
@@ -193,18 +193,18 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     juce::ignoreUnused (origStartSample);
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    const int origPeriod = nextFramesPeriod;
+    const auto origPeriod = nextFramesPeriod;
     jassert (origPeriod > 0);
     
-    const int grainSize = origPeriod * 2;
+    const auto grainSize = origPeriod * 2;
     
     const auto* reading = parent->inputStorage.getReadPointer(0);
     auto* writing = output.getWritePointer(0);
     
-    const int newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
+    const auto newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
     jassert (newPeriod > 0);
     const auto scaleFactor = (float(newPeriod) / float(origPeriod));
-    const int synthesisHopSize = juce::roundToInt (scaleFactor * origPeriod);
+    const auto synthesisHopSize = juce::roundToInt (scaleFactor * origPeriod);
     
     for (int s = 0; s < output.getNumSamples(); ++s)
     {
@@ -240,7 +240,7 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
         
         sample += inputSamples[sIdx] * window;
         
-        if (shouldStartNewGrain || ! grain->isActive())
+        if (shouldStartNewGrain)
             startNewGrain (grainSize, synthesisHopSize);
     }
     
@@ -253,11 +253,11 @@ inline void HarmonizerVoice<SampleType>::startNewGrain (const int grainSize, con
 {
     if (auto* newGrain = getAvailableGrain())
     {
-        const int arraySize = parent->indicesOfGrainOnsets.size();
+        const auto arraySize = parent->indicesOfGrainOnsets.size();
         
         jassert (lastUsedGrainInArray >= 0 && lastUsedGrainInArray < arraySize);
         
-        const int grainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray);
+        const auto grainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray);
         
         ++lastUsedGrainInArray;
         

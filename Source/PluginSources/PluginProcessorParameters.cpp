@@ -400,7 +400,7 @@ void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<Sample
         if (! msg.isValid())
             continue;
         
-        const float value = msg.value();
+        const auto value = msg.value();
         
         jassert (value >= 0.0f && value <= 1.0f);
         

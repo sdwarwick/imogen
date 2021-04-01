@@ -85,8 +85,8 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
 {
     targetArray.clearQuick();
     
-    const int totalNumSamples = inputAudio.getNumSamples();
-    const SampleType* reading = inputAudio.getReadPointer(0);
+    const auto totalNumSamples = inputAudio.getNumSamples();
+    const auto* reading = inputAudio.getReadPointer(0);
     
     // identify  peak indices for each pitch period & places them in the peakIndices array
     
@@ -94,17 +94,17 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
     
     jassert (! peakIndices.isEmpty());
     
-    const int grainLength = period * 2;
-    const int numSamples = inputAudio.getNumSamples();
-    const int halfPeriod = juce::roundToInt (period * 0.5f);
+    const auto grainLength = period * 2;
+    const auto numSamples = inputAudio.getNumSamples();
+    const auto halfPeriod = juce::roundToInt (period * 0.5f);
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
     for (int i = 0; i < peakIndices.size(); ++i)
     {
-        const int peakIndex = peakIndices.getUnchecked(i);
+        const auto peakIndex = peakIndices.getUnchecked(i);
         
-        int grainStart = peakIndex - period; // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
+        auto grainStart = peakIndex - period; // offset the peak index by the period so that the peak index will be in the center of the grain (if grain is 2 periods long)
         
         if (grainStart < 0)
         {
@@ -120,7 +120,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
             if (i < peakIndices.size() - 2 || targetArray.size() > 1)
                 continue;
             
-            const int quarterPeriod = juce::roundToInt (halfPeriod * 0.5f);
+            const auto quarterPeriod = juce::roundToInt (halfPeriod * 0.5f);
             
             while (grainStart + grainLength > numSamples)
                 grainStart -= quarterPeriod;
@@ -149,16 +149,16 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (IArray& targetArray,
 {
     targetArray.clearQuick();
     
-    const int grainSize = 2 * period; // output grains are 2 periods long w/ 50% overlap
-    const int halfPeriod = juce::roundToInt (period * 0.5f);
+    const auto grainSize = 2 * period; // output grains are 2 periods long w/ 50% overlap
+    const auto halfPeriod = juce::roundToInt (period * 0.5f);
     
     jassert (totalNumSamples >= grainSize);
     
     int analysisIndex = halfPeriod; // marks the center of the analysis windows, which are 1 period long
     
     do {
-        const int frameStart = analysisIndex - halfPeriod;
-        const int frameEnd = std::min (totalNumSamples, frameStart + period); // analysis grains are 1 period long
+        const auto frameStart = analysisIndex - halfPeriod;
+        const auto frameEnd = std::min (totalNumSamples, frameStart + period); // analysis grains are 1 period long
         
         jassert (frameStart >= 0 && frameEnd <= totalNumSamples);
         
@@ -168,8 +168,8 @@ inline void GrainExtractor<SampleType>::findPsolaPeaks (IArray& targetArray,
         
         jassert (! targetArray.isEmpty());
         
-        const int prevAnalysisIndex = analysisIndex;
-        const int targetArraySize = targetArray.size();
+        const auto prevAnalysisIndex = analysisIndex;
+        const auto targetArraySize = targetArray.size();
         
         // analysisIndex marks the middle of our next analysis window, so it's where our next predicted peak should be:
         if (targetArraySize == 1)
@@ -255,12 +255,12 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (IArray& candida
     
     jassert (starting >= startSample && starting <= endSample);
     
-    const int numSamples = endSample - startSample;
+    const auto numSamples = endSample - startSample;
     
-    SampleType localMin = input[starting] * bvhge_WEIGHT(starting, predictedPeak, numSamples);
-    SampleType localMax = localMin;
-    int indexOfLocalMin = starting;
-    int indexOfLocalMax = starting;
+    auto localMin = input[starting] * bvhge_WEIGHT(starting, predictedPeak, numSamples);
+    auto localMax = localMin;
+    auto indexOfLocalMin = starting;
+    auto indexOfLocalMax = starting;
     
     for (int index : searchingOrder)
     {
@@ -269,7 +269,7 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (IArray& candida
         
         jassert (index >= startSample && index <= endSample);
         
-        const SampleType currentSample = input[index] * bvhge_WEIGHT(index, predictedPeak, numSamples);
+        const auto currentSample = input[index] * bvhge_WEIGHT(index, predictedPeak, numSamples);
         
         if (currentSample < localMin)
         {
@@ -326,12 +326,12 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
     
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
-    const int finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
+    const auto finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
 #undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
     
     float minimum = 0.0f;
     int minimumIndex = 0;
-    const int dataSize = candidateDeltas.size();
+    const auto dataSize = candidateDeltas.size();
     
     for (int i = 0; i < finalHandfulSize; ++i)
     {
@@ -347,24 +347,24 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
     
     // 3. choose the strongest overall peak from these final candidates, with peaks weighted by their delta values
     
-    const float deltaRange = bav::vecops::findRangeOfExtrema (finalHandfulDeltas.getRawDataPointer(), finalHandfulDeltas.size());
+    const auto deltaRange = bav::vecops::findRangeOfExtrema (finalHandfulDeltas.getRawDataPointer(), finalHandfulDeltas.size());
     
     if (deltaRange < 0.05f)  // prevent dividing by 0 in the next step...
         return finalHandful.getUnchecked(0);
     
 #define bvhge_DELTA_WEIGHT(delta, deltaRange) 1.0f - ((delta / deltaRange) * 0.75f)
     
-    int chosenPeak = finalHandful.getUnchecked (0);
-    SampleType strongestPeak = abs(reading[chosenPeak]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(0), deltaRange);
+    auto chosenPeak = finalHandful.getUnchecked (0);
+    auto strongestPeak = abs(reading[chosenPeak]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(0), deltaRange);
     
     for (int i = 1; i < finalHandfulSize; ++i)
     {
-        const int candidate = finalHandful.getUnchecked(i);
+        const auto candidate = finalHandful.getUnchecked(i);
         
         if (candidate == chosenPeak)
             continue;
         
-        SampleType testingPeak = abs(reading[candidate]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(i), deltaRange);
+        auto testingPeak = abs(reading[candidate]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(i), deltaRange);
         
         if (testingPeak > strongestPeak)
         {
@@ -382,12 +382,12 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
 template<typename SampleType>
 inline int GrainExtractor<SampleType>::choosePeakWithGreatestPower (const IArray& candidates, const SampleType* reading)
 {
-    int strongestPeakIndex = candidates.getUnchecked (0);
-    SampleType strongestPeak = abs(reading[strongestPeakIndex]);
+    auto strongestPeakIndex = candidates.getUnchecked (0);
+    auto strongestPeak = abs(reading[strongestPeakIndex]);
     
     for (int candidate : candidates)
     {
-        const SampleType current = abs(reading[candidate]);
+        const auto current = abs(reading[candidate]);
         
         if (current > strongestPeak)
         {
@@ -417,8 +417,8 @@ inline void GrainExtractor<SampleType>::sortSampleIndicesForPeakSearching (IArra
          n < (endSample - startSample);
          ++n)
     {
-        const int pos = predictedPeak + p;
-        const int neg = predictedPeak + m;
+        const auto pos = predictedPeak + p;
+        const auto neg = predictedPeak + m;
         
         if (n % 2 == 0) // n is even
         {
