@@ -41,8 +41,6 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         void skipSamples (int numSamples);
         
-        void skipSample();
-        
         void clear();
         
         int getLastStartIndex() const noexcept { return origStartSample; }

@@ -121,7 +121,7 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     jassert (Base::sampleRate > 0);
     
     const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
-    const bool  frameIsPitched = inputFrequency > 0;
+    const bool frameIsPitched = inputFrequency > 0;
     
     const auto numSamples = inputAudio.getNumSamples();
     
