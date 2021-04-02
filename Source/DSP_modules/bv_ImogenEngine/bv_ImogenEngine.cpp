@@ -86,6 +86,8 @@ bvie_VOID_TEMPLATE::resetTriggered()
     monoBuffer.clear();
     
     resetSmoothedValues (FIFOEngine::getLatency());
+    
+    testGenerator.resetPhase();
 }
     
 
@@ -96,6 +98,7 @@ bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
     dryLgain.reset (blocksize);
     dryRgain.reset (blocksize);
     harmonizer.resetRampedValues (blocksize);
+    testGenerator.resetPhase();
 }
     
 
@@ -153,6 +156,8 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     resetSmoothedValues (newInternalBlocksize);
     
     updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+    
+    testGenerator.setFrequency (SampleType(440), SampleType(samplerate));
 }
     
 #undef bvie_LIMITER_RELEASE_MS
@@ -199,6 +204,8 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     deEsser.prepare (blocksize, samplerate);
     
     reverb.prepare (blocksize, samplerate, 2);
+    
+    testGenerator.setFrequency (SampleType(440), SampleType(samplerate));
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -272,33 +279,35 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         return;
     }
     
-    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
-    {
-        case (2):  // take only the right channel
-        {
-            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
-        }
-
-        case (3):  // mix all input channels to mono
-        {
-            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-
-            const int totalNumChannels = input.getNumChannels();
-
-            if (totalNumChannels == 1)
-                break;
-
-            for (int channel = 1; channel < totalNumChannels; ++channel)
-                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
-
-            monoBuffer.applyGain (1.0f / totalNumChannels);
-        }
-
-        default:  // take only the left channel
-        {
-            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-        }
-    }
+//    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
+//    {
+//        case (2):  // take only the right channel
+//        {
+//            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
+//        }
+//
+//        case (3):  // mix all input channels to mono
+//        {
+//            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+//
+//            const int totalNumChannels = input.getNumChannels();
+//
+//            if (totalNumChannels == 1)
+//                break;
+//
+//            for (int channel = 1; channel < totalNumChannels; ++channel)
+//                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
+//
+//            monoBuffer.applyGain (1.0f / totalNumChannels);
+//        }
+//
+//        default:  // take only the left channel
+//        {
+//            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+//        }
+//    }
+    
+    testGenerator.getSamples (monoBuffer.getWritePointer(0), blockSize);
     
     inputGain.applyGain (monoBuffer, blockSize);
 

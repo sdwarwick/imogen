@@ -100,7 +100,7 @@ inline SampleType HarmonizerVoice<SampleType>::Grain::getWindowValue (int window
 {
     auto cos2 = std::cos (static_cast<SampleType> (2 * index)
                 * juce::MathConstants<SampleType>::pi / static_cast<SampleType> (windowSize - 1));
-    
+
     return static_cast<SampleType> (0.5 - 0.5 * cos2);
 }
     
@@ -178,7 +178,6 @@ void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
     nextFramesPeriod = period;
     
     lastUsedGrainInArray = 0;
-    nextSynthesisIndex = 0;
 }
     
     
@@ -280,12 +279,12 @@ inline void HarmonizerVoice<SampleType>::startNewGrain (const int grainSize, con
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
-    lastUsedGrainInArray = 0;
-    nextSynthesisIndex = 0;
-    nextFramesPeriod = 0;
-    
-    for (auto* grain : grains)
-        grain->clear();
+//    lastUsedGrainInArray = 0;
+//    nextSynthesisIndex = 0;
+//    nextFramesPeriod = 0;
+//
+//    for (auto* grain : grains)
+//        grain->clear();
 }
 
     

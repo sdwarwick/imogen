@@ -156,6 +156,8 @@ private:
     
     void resetSmoothedValues (int blocksize);
     
+    bav::dsp::osc::Sine<SampleType> testGenerator;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
 

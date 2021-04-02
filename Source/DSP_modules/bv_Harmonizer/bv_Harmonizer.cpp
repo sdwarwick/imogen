@@ -120,30 +120,23 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 {
     jassert (Base::sampleRate > 0);
     
-    const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
+//    const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
+    const auto inputFrequency = 440.0;
     const bool frameIsPitched = inputFrequency > 0;
     
     const auto numSamples = inputAudio.getNumSamples();
     
     vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
     
-    int nextFramesPeriod;
-    
-    if (frameIsPitched)
-    {
-        nextFramesPeriod = juce::roundToInt (Base::sampleRate / inputFrequency);
-    }
-    else
-    {
-        nextFramesPeriod = juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
-        
-        if (bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
-        {
-            vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
-        }
-    }
+    const int nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
+                                                : juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
     
     jassert (nextFramesPeriod > 0);
+    
+    if (! frameIsPitched && (bav::math::probability (50))) // for unpitched frames, reverse the polarity approx 50% of the time
+    {
+        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
+    }
     
     grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
     
