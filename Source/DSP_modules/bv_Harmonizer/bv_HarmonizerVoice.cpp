@@ -57,15 +57,15 @@ void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const int startSample, c
     
 /* returns true if this sample is the halfway-point for this grain, and should trigger another grain being activated. */
 template<typename SampleType>
-bool HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleIndex, SampleType& windowValue)
+void HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleIndex, SampleType& windowValue, int& samplesLeftInGrain)
 {
     if (zeroesLeft > 0 || grainSize < 1)
     {
         origSampleIndex = -1;
         windowValue = 0;
         --zeroesLeft;
+        samplesLeftInGrain = grainSize + std::max(zeroesLeft, 0);
         if (grainSize < 1) currentlyActive = false;
-        return false;
     }
     
     jassert (readingIndex >= origStartSample && readingIndex <= origEndSample);
@@ -76,17 +76,15 @@ bool HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleInde
     jassert (windowIndex >= 0 && windowIndex < grainSize);
     windowValue = getWindowValue (grainSize, windowIndex);
     
-    const bool triggerNewGrain = readingIndex == halfwayIndex;
-    
     ++readingIndex;
     
-    if (readingIndex >= origEndSample)
+    samplesLeftInGrain = origEndSample - readingIndex;
+    
+    if (samplesLeftInGrain <= 0)
     {
         clear();
-        return false;
+        samplesLeftInGrain = 0;
     }
-    
-    return triggerNewGrain;
 }
     
     
@@ -111,9 +109,9 @@ void HarmonizerVoice<SampleType>::Grain::skipSamples (int numSamples)
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::Grain::skipSample()
 {
-    int o;
+    int o, l;
     SampleType w;
-    getNextSampleIndex (o, w);
+    getNextSampleIndex (o, w, l);
 }
     
     
@@ -208,18 +206,20 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     
     for (int s = 0; s < output.getNumSamples(); ++s)
     {
-        writing[s] = getNextSample (reading, grainSize, synthesisHopSize);
+        writing[s] = getNextSample (reading, grainSize, origPeriod, synthesisHopSize);
     }
 }
     
 
 template<typename SampleType>
-inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* inputSamples,
-                                                              const int grainSize,
-                                                              const int synthesisHopSize)  // synthesisHopSize = scale factor * orig period
+    inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* inputSamples,
+                                                                  const int grainSize, const int halfGrainSize,
+                                                                  const int synthesisHopSize)  // synthesisHopSize = scale factor * orig period
 {
     if (! anyGrainsAreActive())
         startNewGrain (grainSize, synthesisHopSize);
+    
+    jassert (grainSize > 0 && halfGrainSize > 0 && synthesisHopSize > 0);
     
     SampleType sample = 0;
     
@@ -230,17 +230,18 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
         
         int sIdx = -1;
         SampleType window = 0;
+        int sampsLeft = 0;
         
-        bool shouldStartNewGrain = grain->getNextSampleIndex (sIdx, window);
+        grain->getNextSampleIndex (sIdx, window, sampsLeft);
         
         if (sIdx == -1)
             continue;
         
         jassert (window >= SampleType(-1) && window <= SampleType(1));
         
-        sample += inputSamples[sIdx] * window;
+        sample += (inputSamples[sIdx] * window);
         
-        if (shouldStartNewGrain)
+        if (sampsLeft == halfGrainSize)
             startNewGrain (grainSize, synthesisHopSize);
     }
     

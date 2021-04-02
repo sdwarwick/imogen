@@ -37,7 +37,7 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         bool isActive() { return currentlyActive; }
         
         /* returns true if this sample advancement in this grain should trigger a new grain to begin */
-        bool getNextSampleIndex (int& origSampleIndex, SampleType& windowValue);
+        void getNextSampleIndex (int& origSampleIndex, SampleType& windowValue, int& samplesLeftInGrain);
         
         void skipSamples (int numSamples);
         
@@ -93,7 +93,8 @@ private:
     
     void noteCleared() override;
     
-    inline SampleType getNextSample (const SampleType* inputSamples, const int grainSize, const int synthesisHopSize);
+    inline SampleType getNextSample (const SampleType* inputSamples, const int grainSize, const int halfGrainSize,
+                                     const int synthesisHopSize);
     
     inline Grain* getAvailableGrain()
     {
