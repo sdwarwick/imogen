@@ -57,7 +57,6 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
         
         int origStartSample = 0; // the start sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
         int origEndSample   = 0; // the end sample for this grain in the original input audo fed to the parent Harmonizer's analyzeInput().
-        int halfwayIndex    = 0;
         
         int readingIndex = 0;
         

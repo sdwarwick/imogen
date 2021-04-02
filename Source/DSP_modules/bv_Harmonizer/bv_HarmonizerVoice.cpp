@@ -47,8 +47,6 @@ void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const int startSample, c
     
     grainSize = endSample - startSample;
     
-    halfwayIndex = juce::roundToInt (floor (startSample + (grainSize * 0.5f)));
-    
     zeroesLeft = synthesisMarker - startSample;  // grains can only be respaced by being "placed" into the future...
     
     jassert (grainSize > 0);
@@ -64,8 +62,16 @@ void HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleInde
         origSampleIndex = -1;
         windowValue = 0;
         --zeroesLeft;
-        samplesLeftInGrain = grainSize + std::max(zeroesLeft, 0);
-        if (grainSize < 1) currentlyActive = false;
+        
+        if (grainSize < 1)
+        {
+            clear();
+            samplesLeftInGrain = 0;
+        }
+        else
+        {
+            samplesLeftInGrain = grainSize + std::max(zeroesLeft, 0);
+        }
     }
     
     jassert (readingIndex >= origStartSample && readingIndex <= origEndSample);
@@ -136,6 +142,8 @@ template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h)
 {
     nextFramesPeriod = 0;
+    nextSynthesisIndex = 0;
+    lastUsedGrainInArray = 0;
 }
 
 
@@ -146,6 +154,9 @@ void HarmonizerVoice<SampleType>::prepared (const int blocksize)
     
     while (grains.size() < bvh_NUM_SYNTHESIS_GRAINS)
         grains.add (new Grain());
+    
+    for (auto* grain : grains)
+        grain->clear();
     
     nextSynthesisIndex = 0;
     lastUsedGrainInArray = 0;
@@ -191,6 +202,8 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     juce::ignoreUnused (origStartSample);
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
+    jassert (grains.size() == bvh_NUM_SYNTHESIS_GRAINS);
+    
     const auto origPeriod = nextFramesPeriod;
     jassert (origPeriod > 0);
     
@@ -234,12 +247,8 @@ template<typename SampleType>
         
         grain->getNextSampleIndex (sIdx, window, sampsLeft);
         
-        if (sIdx == -1)
-            continue;
-        
-        jassert (window >= SampleType(-1) && window <= SampleType(1));
-        
-        sample += (inputSamples[sIdx] * window);
+        if (sIdx != -1)
+            sample += (inputSamples[sIdx] * window);
         
         if (sampsLeft == halfGrainSize)
             startNewGrain (grainSize, synthesisHopSize);
@@ -258,9 +267,7 @@ inline void HarmonizerVoice<SampleType>::startNewGrain (const int grainSize, con
         
         jassert (lastUsedGrainInArray >= 0 && lastUsedGrainInArray < arraySize);
         
-        const auto grainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray);
-        
-        ++lastUsedGrainInArray;
+        const auto grainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray++);
         
         if (lastUsedGrainInArray >= arraySize)
             lastUsedGrainInArray = 0;
