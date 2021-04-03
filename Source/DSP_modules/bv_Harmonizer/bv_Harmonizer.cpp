@@ -121,15 +121,17 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     jassert (Base::sampleRate > 0);
     
 //    const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
-    const auto inputFrequency = 440.0;
-    const bool frameIsPitched = inputFrequency > 0;
+//    const bool frameIsPitched = inputFrequency > 0;
+    
+    const float inputFrequency = 440.0f;
+    const bool frameIsPitched = true;
     
     const auto numSamples = inputAudio.getNumSamples();
     
     vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
     
-    const int nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
-                                                : juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
+    const auto nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
+                                                 : juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
     
     jassert (nextFramesPeriod > 0);
     
@@ -138,7 +140,19 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
         vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
     }
     
-    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+//    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+    
+    indicesOfGrainOnsets.clear();
+    
+    indicesOfGrainOnsets.add (0);
+    
+    int grainStart = nextFramesPeriod;
+    
+    while (grainStart + nextFramesPeriod <= numSamples)
+    {
+        indicesOfGrainOnsets.add (grainStart);
+        grainStart += nextFramesPeriod;
+    }
     
     for (auto* voice : Base::voices)
         dynamic_cast<HarmonizerVoice<SampleType>*>(voice)->dataAnalyzed (nextFramesPeriod);

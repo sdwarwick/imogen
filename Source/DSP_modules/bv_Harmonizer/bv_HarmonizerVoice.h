@@ -121,6 +121,8 @@ private:
     
     int nextSynthesisIndex = 0;
     
+    dsp::osc::Sine<SampleType> sanityTest;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };
 
