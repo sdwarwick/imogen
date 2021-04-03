@@ -38,6 +38,7 @@
 
 #include "bv_SynthBase/bv_SynthBase.h"  // this file includes the bv_SharedCode header
 #include "GrainExtractor/GrainExtractor.h"
+#include "psola_resynthesis.h"
 #include "bv_HarmonizerVoice.h"
 
 
@@ -61,6 +62,7 @@ class Harmonizer  :     public dsp::SynthBase<SampleType>
     using Voice = HarmonizerVoice<SampleType>;
     using Base = dsp::SynthBase<SampleType>;
     using FVO = juce::FloatVectorOperations;
+    using AnalysisGrain = AnalysisGrain<SampleType>;
     
     
 public:
@@ -73,6 +75,28 @@ public:
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
     
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
+    
+    AnalysisGrain* findClosestGrain (int synthesisMarker)
+    {
+        AnalysisGrain* closestGrain = nullptr;
+        int distance = INT_MAX;
+        
+        for (auto* grain : analysisGrains)
+        {
+            if (grain->isEmpty())
+                continue;
+            
+            const auto newDist = abs(synthesisMarker - grain->getStartSample());
+            
+            if (closestGrain == nullptr || newDist < distance)
+            {
+                closestGrain = grain;
+                distance = newDist;
+            }
+        }
+        
+        return closestGrain;
+    }
     
     
     
@@ -100,6 +124,17 @@ private:
     const juce::Range<int> unpitchedArbitraryPeriodRange { 50, 201 };
     
     AudioBuffer inputStorage;
+    
+    juce::OwnedArray<AnalysisGrain> analysisGrains;
+    
+    AnalysisGrain* getEmptyGrain()
+    {
+        for (auto* grain : analysisGrains)
+            if (grain->isEmpty())
+                return grain;
+        
+        return nullptr;
+    }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

@@ -34,6 +34,8 @@
 
 #define bvh_PITCH_DETECTION_CONFIDENCE_THRESH 0.15
 
+#define bvh_NUM_ANALYSIS_GRAINS 32
+
 
 namespace bav
 {
@@ -75,6 +77,12 @@ void Harmonizer<SampleType>::prepared (int blocksize)
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
 
     grains.prepare (blocksize);
+    
+    while (analysisGrains.size() < bvh_NUM_ANALYSIS_GRAINS)
+        analysisGrains.add (new AnalysisGrain());
+    
+    for (auto* grain : analysisGrains)
+        grain->reserveSize (blocksize);
 }
 
 
@@ -102,6 +110,7 @@ void Harmonizer<SampleType>::release()
     indicesOfGrainOnsets.clear();
     grains.releaseResources();
     pitchDetector.releaseResources();
+    analysisGrains.clear();
 }
 
     
@@ -154,6 +163,13 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
         grainStart += nextFramesPeriod;
     }
     
+    const auto grainSize = nextFramesPeriod * 2;
+    
+    // write to analysis grains
+    for (int index : indicesOfGrainOnsets)
+        if (auto* grain = getEmptyGrain())
+            grain->storeNewGrain (inputStorage.getReadPointer(0), index, index + grainSize);
+    
     for (auto* voice : Base::voices)
         dynamic_cast<HarmonizerVoice<SampleType>*>(voice)->dataAnalyzed (nextFramesPeriod);
 }
@@ -178,5 +194,7 @@ void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
 template class Harmonizer<float>;
 template class Harmonizer<double>;
 
+    
+#undef bvh_NUM_ANALYSIS_GRAINS
 
 } // namespace
