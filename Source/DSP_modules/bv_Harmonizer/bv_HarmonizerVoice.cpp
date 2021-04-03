@@ -25,7 +25,7 @@
 #include "bv_Harmonizer.h"
 
 
-#define bvh_NUM_SYNTHESIS_GRAINS 32  // these are cheap, no reason not to have a lot
+#define bvh_NUM_SYNTHESIS_GRAINS 8
 
 
 // multiplicative smoothing cannot ever actually reach 0
@@ -38,50 +38,49 @@ namespace bav
     
     
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const int startSample, const int endSample, const int synthesisMarker)
+void HarmonizerVoice<SampleType>::Grain::storeNewGrain (const SampleType* inputSamples,
+                                                        const int startSample, const int endSample, const int synthesisMarker)
 {
     jassert (endSample > startSample);
     
     currentlyActive = true;
     origStartSample = startSample;
     origEndSample = endSample;
-    readingIndex = startSample;
+    readingIndex = 0;
     
     grainSize = endSample - startSample;
     
     zeroesLeft = synthesisMarker - startSample;  // grains can only be respaced by being "placed" into the future...
     
     jassert (grainSize > 0);
+    
+    vecops::copy (inputSamples + startSample, samples.getWritePointer(0), grainSize);
 }
     
     
-/* returns true if this sample is the halfway-point for this grain, and should trigger another grain being activated. */
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::Grain::getNextSampleIndex (int& origSampleIndex, SampleType& windowValue, int& samplesLeftInGrain)
+SampleType HarmonizerVoice<SampleType>::Grain::getNextSample (int& samplesLeftInGrain)
 {
     jassert (currentlyActive && grainSize > 0);
     
     if (zeroesLeft > 0)
     {
-        origSampleIndex = -1;
-        windowValue = 0;
         --zeroesLeft;
         samplesLeftInGrain = grainSize + std::max(zeroesLeft, 0);
-        return;
+        return SampleType(0);
     }
-
-    jassert (readingIndex >= origStartSample && readingIndex <= origEndSample);
     
-    const auto windowIndex = readingIndex - origStartSample;
-    jassert (windowIndex >= 0 && windowIndex < grainSize);
-    windowValue = getWindowValue (grainSize, windowIndex);
+    jassert (readingIndex >= 0 && readingIndex < grainSize);
     
-    origSampleIndex = readingIndex++;
+    const auto sample = samples.getSample(0, readingIndex) * getWindowValue (grainSize, readingIndex);
     
-    samplesLeftInGrain = origEndSample - readingIndex;
+    ++readingIndex;
+    samplesLeftInGrain = grainSize - readingIndex;
     
     if (samplesLeftInGrain <= 0)
         clear();
+    
+    return sample;
 }
     
     
@@ -98,15 +97,22 @@ inline SampleType HarmonizerVoice<SampleType>::Grain::getWindowValue (int window
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::Grain::skipSamples (int numSamples)
 {
-    int o, l;
-    SampleType w;
+    if (! currentlyActive)
+        return;
     
     for (int i = 0; i < numSamples; ++i)
     {
-        if (! currentlyActive)
-            return;
-        
-        getNextSampleIndex (o, w, l);
+        if (zeroesLeft > 0)
+            --zeroesLeft;
+        else
+        {
+            ++readingIndex;
+            if (readingIndex > origEndSample)
+            {
+                clear();
+                return;
+            }
+        }
     }
 }
 
@@ -120,6 +126,7 @@ void HarmonizerVoice<SampleType>::Grain::clear()
     readingIndex = 0;
     zeroesLeft = 0;
     grainSize = 0;
+    samples.clear();
 }
     
     
@@ -133,7 +140,6 @@ HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h)
 {
     nextFramesPeriod = 0;
     nextSynthesisIndex = 0;
-    lastUsedGrainInArray = 0;
 }
 
 
@@ -144,6 +150,11 @@ void HarmonizerVoice<SampleType>::prepared (const int blocksize)
     
     while (grains.size() < bvh_NUM_SYNTHESIS_GRAINS)
         grains.add (new Grain());
+    
+    for (auto* grain : grains)
+        grain->reserveSize (blocksize);
+    
+    newGrainDistances.ensureStorageAllocated (blocksize);
 }
 
     
@@ -155,8 +166,8 @@ void HarmonizerVoice<SampleType>::released()
         grain->clear();
     
     nextSynthesisIndex = 0;
-    lastUsedGrainInArray = 0;
     nextFramesPeriod = 0;
+    newGrainDistances.clear();
 }
     
 
@@ -165,9 +176,6 @@ void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
 {
     jassert (period > 0);
     nextFramesPeriod = period;
-    
-    lastUsedGrainInArray = 0;
-    nextSynthesisIndex = 0;
 }
     
     
@@ -193,18 +201,17 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
 
     const auto grainSize = origPeriod * 2;
 
-    const auto* reading = parent->inputStorage.getReadPointer(0);
     auto* writing = output.getWritePointer(0);
 
     const auto newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
-    const auto scaleFactor = (float(newPeriod) / float(origPeriod));
-    const auto synthesisHopSize = juce::roundToInt (scaleFactor * origPeriod);
-
+//    const auto scaleFactor = (float(newPeriod) / float(origPeriod));
+//    const auto synthesisHopSize = juce::roundToInt (scaleFactor * origPeriod);
+    
     const auto numSamples = output.getNumSamples();
-
+    
     for (int s = 0; s < numSamples; ++s)
     {
-        writing[s] = getNextSample (reading, grainSize, origPeriod, synthesisHopSize);
+        writing[s] = getNextSample (grainSize, origPeriod, newPeriod);
     }
     
     nextSynthesisIndex = std::max (0, nextSynthesisIndex - numSamples);
@@ -212,15 +219,13 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     
 
 template<typename SampleType>
-inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* inputSamples,
-                                                              const int grainSize, const int halfGrainSize,
-                                                              const int synthesisHopSize)  // synthesisHopSize = scale factor * orig period
+inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int grainSize, const int halfGrainSize, const int newPeriod)
 {
     if (! anyGrainsAreActive())
-        startNewGrain (grainSize, synthesisHopSize);
+        startNewGrain (grainSize, newPeriod);
     
     jassert (anyGrainsAreActive());
-    jassert (grainSize > 0 && halfGrainSize > 0 && synthesisHopSize > 0);
+    jassert (grainSize > 0 && halfGrainSize > 0 && newPeriod > 0);
     
     SampleType sample = 0;
     
@@ -229,17 +234,12 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
         if (! grain->isActive())
             continue;
         
-        int sIdx = -1;
-        SampleType window = 0;
         int sampsLeft = 0;
         
-        grain->getNextSampleIndex (sIdx, window, sampsLeft);
-        
-        if (sIdx >= 0)
-            sample += inputSamples[sIdx] * window;
+        sample += grain->getNextSample (sampsLeft);
         
         if (sampsLeft == halfGrainSize)
-            startNewGrain (grainSize, synthesisHopSize);
+            startNewGrain (grainSize, newPeriod);
     }
     
     return sample;
@@ -247,22 +247,23 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const SampleType* 
     
     
 template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::startNewGrain (const int grainSize, const int synthesisHopSize) // synthesisHopSize = scale factor * orig period
+inline void HarmonizerVoice<SampleType>::startNewGrain (const int grainSize, const int newPeriod)
 {
     if (auto* newGrain = getAvailableGrain())
     {
-        const auto arraySize = parent->indicesOfGrainOnsets.size();
+        newGrainDistances.clearQuick();
         
-        jassert (lastUsedGrainInArray >= 0 && lastUsedGrainInArray < arraySize);
+        for (auto index : parent->indicesOfGrainOnsets)
+            newGrainDistances.add (abs (nextSynthesisIndex - index));
         
-        const auto grainStart = parent->indicesOfGrainOnsets.getUnchecked (lastUsedGrainInArray++);
+        jassert (! newGrainDistances.isEmpty());
         
-        if (lastUsedGrainInArray >= arraySize)
-            lastUsedGrainInArray = 0;
+        const auto grainStart = parent->indicesOfGrainOnsets.getUnchecked (intops::findIndexOfMinElement (newGrainDistances.getRawDataPointer(),
+                                                                                                          newGrainDistances.size()));
         
-        newGrain->storeNewGrain (grainStart, grainStart + grainSize, nextSynthesisIndex);
+        newGrain->storeNewGrain (parent->inputStorage.getReadPointer(0), grainStart, grainStart + grainSize, nextSynthesisIndex);
         
-        nextSynthesisIndex += synthesisHopSize;
+        nextSynthesisIndex += newPeriod;
     }
 }
     
@@ -275,6 +276,7 @@ void HarmonizerVoice<SampleType>::noteCleared()
         grain->clear();
     
     nextSynthesisIndex = 0;
+    newGrainDistances.clearQuick();
 }
 
     
