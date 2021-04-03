@@ -200,7 +200,6 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     
     reverb.prepare (blocksize, samplerate, 2);
     
-    tone.resetPhase();
     tone.setFrequency(SampleType(440.0), SampleType(samplerate));
 }
     
@@ -276,6 +275,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     }
     
     // write test tone samples to mono buffer
+    tone.setFrequency (SampleType(440.0), SampleType(FIFOEngine::getSamplerate()));
     tone.getSamples (monoBuffer.getWritePointer(0), blockSize);
     
 //    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
@@ -308,8 +308,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     
     inputGain.applyGain (monoBuffer, blockSize);
 
-    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
-    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
+//    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
+//    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
 
     if (noiseGateIsOn.load())
         gate.process (monoBuffer);

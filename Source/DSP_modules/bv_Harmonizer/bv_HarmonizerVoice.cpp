@@ -157,7 +157,6 @@ void HarmonizerVoice<SampleType>::released()
     nextSynthesisIndex = 0;
     lastUsedGrainInArray = 0;
     nextFramesPeriod = 0;
-    sanityTest.resetPhase();
 }
     
 
@@ -168,6 +167,7 @@ void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
     nextFramesPeriod = period;
     
     lastUsedGrainInArray = 0;
+    nextSynthesisIndex = 0;
 }
     
     
@@ -176,6 +176,8 @@ void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
 {
     for (auto* grain : grains)
         grain->skipSamples (numSamples);
+    
+    nextSynthesisIndex = std::max (0, nextSynthesisIndex - numSamples);
 }
         
 
@@ -204,9 +206,6 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     {
         writing[s] = getNextSample (reading, grainSize, origPeriod, synthesisHopSize);
     }
-    
-//    sanityTest.setFrequency (SampleType(desiredFrequency), SampleType(currentSamplerate));
-//    sanityTest.getSamples (output.getWritePointer(0), output.getNumSamples());
     
     nextSynthesisIndex = std::max (0, nextSynthesisIndex - numSamples);
 }
@@ -275,7 +274,7 @@ void HarmonizerVoice<SampleType>::noteCleared()
     for (auto* grain : grains)
         grain->clear();
     
-    sanityTest.resetPhase();
+    nextSynthesisIndex = 0;
 }
 
     

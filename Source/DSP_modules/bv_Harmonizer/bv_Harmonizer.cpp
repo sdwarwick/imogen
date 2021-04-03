@@ -140,14 +140,14 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
         vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
     }
     
-//    grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+    //grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
     
     indicesOfGrainOnsets.clear();
-    
+
     indicesOfGrainOnsets.add (0);
-    
+
     int grainStart = nextFramesPeriod;
-    
+
     while (grainStart + nextFramesPeriod <= numSamples)
     {
         indicesOfGrainOnsets.add (grainStart);
