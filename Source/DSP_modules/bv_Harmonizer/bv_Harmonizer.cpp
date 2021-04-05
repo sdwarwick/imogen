@@ -139,8 +139,8 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
     
-    const auto nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
-                                                 : juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
+    nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
+                                      : juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
     
     jassert (nextFramesPeriod > 0);
     
@@ -165,13 +165,10 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     const auto grainSize = nextFramesPeriod * 2;
     
-    // write to analysis grains
+    //  write to analysis grains...
     for (int index : indicesOfGrainOnsets)
         if (auto* grain = getEmptyGrain())
             grain->storeNewGrain (inputStorage.getReadPointer(0), index, index + grainSize);
-    
-    for (auto* voice : Base::voices)
-        dynamic_cast<HarmonizerVoice<SampleType>*>(voice)->dataAnalyzed (nextFramesPeriod);
 }
 
 

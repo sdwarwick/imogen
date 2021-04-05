@@ -27,8 +27,6 @@ public:
     
     HarmonizerVoice (Harmonizer<SampleType>* h);
     
-    void dataAnalyzed (const int period);
-    
     
 private:
     friend class Harmonizer<SampleType>;
@@ -66,8 +64,6 @@ private:
     }
     
     inline void startNewGrain (const int newPeriod);
-    
-    int nextFramesPeriod = 0;
     
     int nextSynthesisIndex = 0;
     

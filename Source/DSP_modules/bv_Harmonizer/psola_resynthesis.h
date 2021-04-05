@@ -56,9 +56,8 @@ public:
         vecops::copy (inputSamples + startSample, writing, size);
         
         //  apply Hann window to input samples
-        for (int s = 0; s < size; ++s) {
+        for (int s = 0; s < size; ++s)
             writing[s] *= getWindowValue (size, s);
-        }
     }
     
     SampleType getSample (int index) const
@@ -128,13 +127,14 @@ public:
         grain = newGrain;
         newGrain->incNumActive();
         readingIndex = 0;
-        zeroesLeft = synthesisMarker - newGrain->getStartSample();
+        zeroesLeft = synthesisMarker;
     }
     
     SampleType getNextSample()
     {
         if (zeroesLeft > 0)
         {
+            jassert (readingIndex == 0);
             --zeroesLeft;
             return 0;
         }

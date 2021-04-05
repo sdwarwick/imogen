@@ -40,7 +40,6 @@ namespace bav
 template<typename SampleType>
 HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h)
 {
-    nextFramesPeriod = 0;
     nextSynthesisIndex = 0;
 }
 
@@ -60,22 +59,13 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
     nextSynthesisIndex = 0;
-    nextFramesPeriod = 0;
 }
-    
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::dataAnalyzed (const int period)
-{
-    jassert (period > 0);
-    nextFramesPeriod = period;
-}
-    
     
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
 {
-    nextSynthesisIndex = std::max (0, nextSynthesisIndex - numSamples);
+    juce::ignoreUnused (numSamples);
 }
         
 
@@ -85,7 +75,7 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     juce::ignoreUnused (origStartSample);
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    const auto origPeriod = nextFramesPeriod;
+    const auto origPeriod = parent->getCurrentPeriod();
     jassert (origPeriod > 0);
 
     auto* writing = output.getWritePointer(0);
@@ -100,8 +90,6 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     {
         writing[s] = getNextSample (origPeriod, newPeriod);
     }
-    
-    nextSynthesisIndex = std::max (0, nextSynthesisIndex - numSamples);
 }
     
 
@@ -109,12 +97,15 @@ template<typename SampleType>
 inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int halfGrainSize, const int newPeriod)
 {
     if (! anyGrainsAreActive())
+    {
+        nextSynthesisIndex = 0;
         startNewGrain (newPeriod);
+    }
     
     jassert (anyGrainsAreActive());
     jassert (halfGrainSize > 0 && newPeriod > 0);
     
-    SampleType sample = 0;
+    auto sample = SampleType(0);
     
     for (auto* grain : synthesisGrains)
     {
@@ -126,6 +117,9 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int halfGrai
         if (grain->samplesLeft() == halfGrainSize)
             startNewGrain (newPeriod);
     }
+    
+    if (nextSynthesisIndex > 0)
+        --nextSynthesisIndex;
     
     return sample;
 }
