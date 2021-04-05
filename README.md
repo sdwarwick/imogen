@@ -1,4 +1,4 @@
-# Imogen: a 12-voice, low-latency vocal harmonizer VST
+# Imogen: a 12-voice, low-latency vocal harmonizer
 
 [![AutoBuild](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml/badge.svg?branch=master)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/benthevining/imogen/badge)](https://www.codefactor.io/repository/github/benthevining/imogen)
