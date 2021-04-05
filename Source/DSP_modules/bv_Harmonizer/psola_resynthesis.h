@@ -104,6 +104,8 @@ private:
     juce::AudioBuffer<SampleType> samples;
 };
 
+template class AnalysisGrain<float>;
+template class AnalysisGrain<double>;
     
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,14 +115,14 @@ SynthesisGrain :   This class holds a pointer to a specific AnalysisGrain, and i
 template<typename SampleType>
 class SynthesisGrain
 {
-    using AnalysisGrain = AnalysisGrain<SampleType>;
+    using Grain = AnalysisGrain<SampleType>;
     
 public:
     SynthesisGrain(): active(false), readingIndex(0), grain(nullptr), zeroesLeft(0) { }
     
     bool isActive() const noexcept { return active; }
     
-    void startNewGrain (AnalysisGrain* newGrain, int synthesisMarker)
+    void startNewGrain (Grain* newGrain, int synthesisMarker)
     {
         jassert (newGrain != nullptr);
         active = true;
@@ -179,7 +181,7 @@ public:
 private:
     bool active;
     int readingIndex;
-    AnalysisGrain* grain;
+    Grain* grain;
     int zeroesLeft;
     
     void stop()
@@ -191,6 +193,9 @@ private:
         grain = nullptr;
     }
 };
+    
+template class SynthesisGrain<float>;
+template class SynthesisGrain<double>;
 
 
 }  // namespace

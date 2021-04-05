@@ -36,6 +36,8 @@
 
 #pragma once
 
+#include <climits>  // for INT_MAX
+
 #include "bv_SynthBase/bv_SynthBase.h"  // this file includes the bv_SharedCode header
 #include "GrainExtractor/GrainExtractor.h"
 #include "psola_resynthesis.h"
@@ -62,7 +64,7 @@ class Harmonizer  :     public dsp::SynthBase<SampleType>
     using Voice = HarmonizerVoice<SampleType>;
     using Base = dsp::SynthBase<SampleType>;
     using FVO = juce::FloatVectorOperations;
-    using AnalysisGrain = AnalysisGrain<SampleType>;
+    using Analysis_Grain = AnalysisGrain<SampleType>;
     
     
 public:
@@ -78,9 +80,9 @@ public:
     
     int getCurrentPeriod() const noexcept { return nextFramesPeriod; }
     
-    AnalysisGrain* findClosestGrain (int synthesisMarker)
+    Analysis_Grain* findClosestGrain (int synthesisMarker)
     {
-        AnalysisGrain* closestGrain = nullptr;
+        Analysis_Grain* closestGrain = nullptr;
         int distance = INT_MAX;
         
         for (auto* grain : analysisGrains)
@@ -127,9 +129,9 @@ private:
     
     AudioBuffer inputStorage;
     
-    juce::OwnedArray<AnalysisGrain> analysisGrains;
+    juce::OwnedArray<Analysis_Grain> analysisGrains;
     
-    AnalysisGrain* getEmptyGrain()
+    Analysis_Grain* getEmptyGrain()
     {
         for (auto* grain : analysisGrains)
             if (grain->isEmpty())

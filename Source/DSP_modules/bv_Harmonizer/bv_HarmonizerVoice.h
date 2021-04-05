@@ -20,7 +20,7 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
     using AudioBuffer = juce::AudioBuffer<SampleType>;
     using FVO = juce::FloatVectorOperations;
     using Base = dsp::SynthVoiceBase<SampleType>;
-    using SynthesisGrain = SynthesisGrain<SampleType>;
+    using Synthesis_Grain = SynthesisGrain<SampleType>;
     
     
 public:
@@ -54,7 +54,7 @@ private:
         return false;
     }
     
-    inline SynthesisGrain* getAvailableGrain()
+    inline Synthesis_Grain* getAvailableGrain()
     {
         for (auto* grain : synthesisGrains)
             if (! grain->isActive())
@@ -67,7 +67,7 @@ private:
     
     int nextSynthesisIndex = 0;
     
-    juce::OwnedArray<SynthesisGrain> synthesisGrains;
+    juce::OwnedArray<Synthesis_Grain> synthesisGrains;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };

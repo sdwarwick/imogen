@@ -50,7 +50,7 @@ void HarmonizerVoice<SampleType>::prepared (const int blocksize)
     jassert (blocksize > 0);
 
     while (synthesisGrains.size() < bvh_NUM_SYNTHESIS_GRAINS)
-        synthesisGrains.add (new SynthesisGrain());
+        synthesisGrains.add (new Synthesis_Grain());
 }
 
     

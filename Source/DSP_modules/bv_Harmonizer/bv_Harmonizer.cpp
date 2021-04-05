@@ -79,7 +79,7 @@ void Harmonizer<SampleType>::prepared (int blocksize)
     grains.prepare (blocksize);
     
     while (analysisGrains.size() < bvh_NUM_ANALYSIS_GRAINS)
-        analysisGrains.add (new AnalysisGrain());
+        analysisGrains.add (new Analysis_Grain());
     
     for (auto* grain : analysisGrains)
         grain->reserveSize (blocksize);
@@ -144,7 +144,7 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     jassert (nextFramesPeriod > 0);
     
-    if (! frameIsPitched && (bav::math::probability (50))) // for unpitched frames, reverse the polarity approx 50% of the time
+    if (! frameIsPitched && bav::math::probability (50)) // for unpitched frames, reverse the polarity approx 50% of the time
     {
         vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
     }
