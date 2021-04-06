@@ -176,11 +176,6 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     jassert (! indicesOfGrainOnsets.isEmpty());
     jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);
     
-    //  write to analysis grains
-    
-    for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
-        clearUnusedGrain();
-    
     jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
     
     auto* reading = inputStorage.getReadPointer(0);
@@ -189,9 +184,43 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
         if (auto* grain = getEmptyGrain())
             grain->storeNewGrain (reading, index, index + grainSize);
     
+    if (indicesOfGrainOnsets.getUnchecked(0) > 0)  // bit @ beginning
+        if (auto* grain = getEmptyGrain())
+            grain->storeNewGrain (reading, 0, indicesOfGrainOnsets.getUnchecked(0));
+    
+    if (indicesOfGrainOnsets.getLast() + grainSize < numSamples)  // bit @ end
+        if (auto* grain = getEmptyGrain())
+            grain->storeNewGrain (reading, indicesOfGrainOnsets.getLast(), numSamples);
+    
     jassert (numActiveGrains() > 0);
 }
 
+    
+template<typename SampleType>
+AnalysisGrain<SampleType>* Harmonizer<SampleType>::findClosestGrain (int synthesisMarker) const
+{
+    Analysis_Grain* closestGrain = nullptr;
+    int distance = INT_MAX;
+    
+    for (auto* grain : analysisGrains)
+    {
+        if (grain->isEmpty())
+            continue;
+        
+        const auto newDist = abs(synthesisMarker - grain->getStartSample());
+        
+        if (closestGrain == nullptr || newDist < distance)
+        {
+            closestGrain = grain;
+            distance = newDist;
+        }
+    }
+    
+    jassert (closestGrain != nullptr);
+    
+    return closestGrain;
+}
+    
 
 // adds a specified # of voices
 template<typename SampleType>

@@ -18,7 +18,6 @@ class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
 {
     
     using AudioBuffer = juce::AudioBuffer<SampleType>;
-    using FVO = juce::FloatVectorOperations;
     using Base = dsp::SynthVoiceBase<SampleType>;
     using Synthesis_Grain = SynthesisGrain<SampleType>;
     

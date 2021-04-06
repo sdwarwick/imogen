@@ -63,7 +63,6 @@ class Harmonizer  :     public dsp::SynthBase<SampleType>
     using MidiBuffer  = juce::MidiBuffer;
     using Voice = HarmonizerVoice<SampleType>;
     using Base = dsp::SynthBase<SampleType>;
-    using FVO = juce::FloatVectorOperations;
     using Analysis_Grain = AnalysisGrain<SampleType>;
     
     
@@ -78,29 +77,7 @@ public:
     
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     
-    Analysis_Grain* findClosestGrain (int synthesisMarker) const
-    {
-        Analysis_Grain* closestGrain = nullptr;
-        int distance = INT_MAX;
-        
-        for (auto* grain : analysisGrains)
-        {
-            if (grain->isEmpty())
-                continue;
-            
-            const auto newDist = abs(synthesisMarker - grain->getStartSample());
-            
-            if (closestGrain == nullptr || newDist < distance)
-            {
-                closestGrain = grain;
-                distance = newDist;
-            }
-        }
-        
-        jassert (closestGrain != nullptr);
-        
-        return closestGrain;
-    }
+    Analysis_Grain* findClosestGrain (int synthesisMarker) const;
     
     
 private:
@@ -124,10 +101,6 @@ private:
     GrainExtractor<SampleType> grainExtractor;
     juce::Array<int> indicesOfGrainOnsets;
     
-    // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio will be randomized within this range
-    // NB max value should be 1 greater than the largest possible generated number 
-    const juce::Range<int> unpitchedArbitraryPeriodRange { 100, 501 };
-    
     AudioBuffer inputStorage;
     
     juce::OwnedArray<Analysis_Grain> analysisGrains;
@@ -135,7 +108,7 @@ private:
     Analysis_Grain* getEmptyGrain() const
     {
         for (auto* grain : analysisGrains)
-            if (grain->isEmpty())
+            if (grain->isEmpty() || grain->numReferences() <= 0)
                 return grain;
         
         return nullptr;
@@ -150,18 +123,6 @@ private:
                 ++actives;
         
         return actives;
-    }
-    
-    inline void clearUnusedGrain()
-    {
-        for (auto* grain : analysisGrains)
-        {
-            if (grain->numReferences() <= 0)
-            {
-                grain->clear();
-                return;
-            }
-        }
     }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
