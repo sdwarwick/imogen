@@ -25,7 +25,7 @@
 #include "bv_Harmonizer.h"
 
 
-#define bvh_NUM_SYNTHESIS_GRAINS 48  // these are cheap, no reason not to have a lot
+#define bvh_NUM_SYNTHESIS_GRAINS 32  // these are cheap, no reason not to have a lot
 
 
 // multiplicative smoothing cannot ever actually reach 0
@@ -123,9 +123,7 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPerio
             continue;
         }
         
-        const auto numLeft = grain->samplesLeft();
-        
-        if (numLeft == newPeriod || numLeft == grain->halfwayIndex())
+        if (grain->samplesLeft() == grain->halfwayIndex())
             startNewGrain (newPeriod);
     }
     
