@@ -31,7 +31,7 @@ public:
 private:
     friend class Harmonizer<SampleType>;
     
-    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample) override;
+    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
     
     void bypassedBlockRecieved (int numSamples) override;
     
@@ -78,8 +78,6 @@ private:
     
     
     int nextSynthesisIndex = 0;
-    
-    int lastPeriod = 0;
     
     juce::OwnedArray<Synthesis_Grain> synthesisGrains;
     

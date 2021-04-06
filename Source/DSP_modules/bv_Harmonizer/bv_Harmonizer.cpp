@@ -119,6 +119,8 @@ void Harmonizer<SampleType>::render (const AudioBuffer& input, AudioBuffer& outp
 {
     jassert (input.getNumSamples() == output.getNumSamples());
     jassert (output.getNumChannels() == 2);
+    jassert (analysisGrains.size() == bvh_NUM_ANALYSIS_GRAINS);
+    
     analyzeInput (input);
     Base::renderVoices (midiMessages, output);
 }
@@ -146,24 +148,16 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
         vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);  // negate the samples -- reverse polarity
     }
     
-//    grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+    grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
 
-    indicesOfGrainOnsets.clearQuick();
-    indicesOfGrainOnsets.add (0);
-
-    int nextGrainStart = nextFramesPeriod;
-
-    while (nextGrainStart + nextFramesPeriod <= numSamples)
-    {
-        indicesOfGrainOnsets.add (nextGrainStart);
-        nextGrainStart += nextFramesPeriod;
-    }
+    jassert (! indicesOfGrainOnsets.isEmpty());
     
     const auto grainSize = nextFramesPeriod * 2;
+    auto* reading = inputStorage.getReadPointer(0);
     
     for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
         if (auto* grain = getEmptyGrain())
-            grain->storeNewGrain (inputStorage.getReadPointer(0), index, index + grainSize);
+            grain->storeNewGrain (reading, index, index + grainSize);
 }
 
 

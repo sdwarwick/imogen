@@ -59,7 +59,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
     nextSynthesisIndex = 0;
-    lastPeriod = 0;
     
     synthesisGrains.clear();
 }
@@ -68,18 +67,15 @@ void HarmonizerVoice<SampleType>::released()
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
 {
-    const auto period = lastPeriod > 0 ? lastPeriod : 250;
-    
-    for (int i = 0; i < numSamples; ++i)
-        getNextSample (period);
+    juce::ignoreUnused (numSamples);
 }
         
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int origStartSample)
+void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
 {
-    juce::ignoreUnused (origStartSample);
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
+    jassert (synthesisGrains.size() == bvh_NUM_SYNTHESIS_GRAINS);
     
     auto* writing = output.getWritePointer(0);
 
@@ -96,8 +92,6 @@ template<typename SampleType>
 inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPeriod)
 {
     jassert (newPeriod > 0);
-    
-    lastPeriod = newPeriod;
     
     if (! anyGrainsAreActive())
     {
@@ -116,12 +110,8 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPerio
 
         sample += grain->getNextSample();
         
-        if (! anyGrainsAreActive())
-        {
-            nextSynthesisIndex = 0;
-            startNewGrain (newPeriod);
-            continue;
-        }
+//        if (! anyGrainsAreActive())
+//            nextSynthesisIndex = 0;
         
         if (grain->samplesLeft() == grain->halfwayIndex())
             startNewGrain (newPeriod);
@@ -139,7 +129,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
     nextSynthesisIndex = 0;
-    lastPeriod = 0;
     
     for (auto* grain : synthesisGrains)
         if (grain->isActive())

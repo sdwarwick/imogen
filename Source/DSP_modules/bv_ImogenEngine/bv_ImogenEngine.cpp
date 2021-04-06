@@ -272,7 +272,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         return;
     }
     
-    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
+    switch (modulatorInput.load())  //  isolate a mono input buffer from the input bus, mixing to mono if necessary
     {
         case (2):  // take only the right channel
         {
@@ -316,8 +316,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
 
     dryBuffer.clear();
 
-    //  write to dry buffer & apply panning
-    if (! leadIsBypassed)
+    if (! leadIsBypassed)  //  write to dry buffer & apply panning
     {
         dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
         dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
