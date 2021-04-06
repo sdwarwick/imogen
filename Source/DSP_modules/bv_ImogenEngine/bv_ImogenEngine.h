@@ -156,8 +156,6 @@ private:
     
     void resetSmoothedValues (int blocksize);
     
-    dsp::osc::Sine<SampleType> tone;
-    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
 

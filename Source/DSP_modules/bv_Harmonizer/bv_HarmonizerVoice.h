@@ -45,7 +45,7 @@ private:
     
     inline SampleType getNextSample (const int newPeriod);
     
-    inline bool anyGrainsAreActive()
+    inline bool anyGrainsAreActive() const
     {
         for (auto* grain : synthesisGrains)
             if (grain->isActive())
@@ -54,7 +54,7 @@ private:
         return false;
     }
     
-    inline Synthesis_Grain* getAvailableGrain()
+    inline Synthesis_Grain* getAvailableGrain() const
     {
         for (auto* grain : synthesisGrains)
             if (! grain->isActive())

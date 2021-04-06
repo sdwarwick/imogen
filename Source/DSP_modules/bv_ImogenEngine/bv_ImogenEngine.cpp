@@ -199,8 +199,6 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     deEsser.prepare (blocksize, samplerate);
     
     reverb.prepare (blocksize, samplerate, 2);
-    
-    tone.setFrequency(SampleType(440.0), SampleType(samplerate));
 }
     
 #undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
@@ -274,37 +272,33 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         return;
     }
     
-    // write test tone samples to mono buffer
-    tone.setFrequency (SampleType(440.0), SampleType(FIFOEngine::getSamplerate()));
-    tone.getSamples (monoBuffer.getWritePointer(0), blockSize);
-    
-//    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
-//    {
-//        case (2):  // take only the right channel
-//        {
-//            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
-//        }
-//
-//        case (3):  // mix all input channels to mono
-//        {
-//            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-//
-//            const int totalNumChannels = input.getNumChannels();
-//
-//            if (totalNumChannels == 1)
-//                break;
-//
-//            for (int channel = 1; channel < totalNumChannels; ++channel)
-//                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
-//
-//            monoBuffer.applyGain (1.0f / totalNumChannels);
-//        }
-//
-//        default:  // take only the left channel
-//        {
-//            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-//        }
-//    }
+    switch (modulatorInput.load()) // isolate a mono input buffer from the input bus, mixing to mono if necessary
+    {
+        case (2):  // take only the right channel
+        {
+            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
+        }
+
+        case (3):  // mix all input channels to mono
+        {
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+
+            const int totalNumChannels = input.getNumChannels();
+
+            if (totalNumChannels == 1)
+                break;
+
+            for (int channel = 1; channel < totalNumChannels; ++channel)
+                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
+
+            monoBuffer.applyGain (1.0f / totalNumChannels);
+        }
+
+        default:  // take only the left channel
+        {
+            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
+        }
+    }
     
     inputGain.applyGain (monoBuffer, blockSize);
 

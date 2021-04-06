@@ -34,7 +34,7 @@
 
 #define bvh_PITCH_DETECTION_CONFIDENCE_THRESH 0.15
 
-#define bvh_NUM_ANALYSIS_GRAINS 32
+#define bvh_NUM_ANALYSIS_GRAINS 48
 
 
 namespace bav

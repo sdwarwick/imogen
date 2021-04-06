@@ -117,7 +117,16 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPerio
 
         sample += grain->getNextSample();
         
-        if (grain->samplesLeft() == grain->halfwayIndex())
+        if (! anyGrainsAreActive())
+        {
+            nextSynthesisIndex = 0;
+            startNewGrain (newPeriod);
+            continue;
+        }
+        
+        const auto numLeft = grain->samplesLeft();
+        
+        if (numLeft == newPeriod || numLeft == grain->halfwayIndex())
             startNewGrain (newPeriod);
     }
     
