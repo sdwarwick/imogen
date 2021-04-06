@@ -43,7 +43,7 @@ private:
     
     void noteCleared() override;
     
-    inline SampleType getNextSample (const int halfGrainSize, const int newPeriod);
+    inline SampleType getNextSample (const int newPeriod);
     
     inline bool anyGrainsAreActive()
     {
@@ -63,7 +63,19 @@ private:
         return nullptr;
     }
     
-    inline void startNewGrain (const int newPeriod);
+    
+    inline void startNewGrain (const int newPeriod)
+    {
+        if (auto* newGrain = getAvailableGrain())
+        {
+            if (auto* analysisGrain = parent->findClosestGrain (nextSynthesisIndex))
+            {
+                newGrain->startNewGrain (analysisGrain, nextSynthesisIndex);
+                nextSynthesisIndex += newPeriod;
+            }
+        }
+    }
+    
     
     int nextSynthesisIndex = 0;
     

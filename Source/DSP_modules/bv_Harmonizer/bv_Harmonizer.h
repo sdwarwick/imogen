@@ -120,7 +120,7 @@ private:
     
     dsp::PitchDetector<SampleType> pitchDetector;
     
-    GrainExtractor<SampleType> grains;
+    GrainExtractor<SampleType> grainExtractor;
     juce::Array<int> indicesOfGrainOnsets;
     
     // the arbitrary "period" imposed on the signal for analysis for unpitched frames of audio will be randomized within this range

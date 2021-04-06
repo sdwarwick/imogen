@@ -97,6 +97,7 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
     const auto grainLength = period * 2;
     const auto numSamples = inputAudio.getNumSamples();
     const auto halfPeriod = juce::roundToInt (period * 0.5f);
+    const auto quarterPeriod = juce::roundToInt (halfPeriod * 0.5f);
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified
     
@@ -120,24 +121,22 @@ void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
             if (i < peakIndices.size() - 2 || targetArray.size() > 1)
                 continue;
             
-            const auto quarterPeriod = juce::roundToInt (halfPeriod * 0.5f);
-            
             while (grainStart + grainLength > numSamples)
                 grainStart -= quarterPeriod;
             
             if (grainStart < 0)
+            {
+                if (! targetArray.isEmpty())
+                    continue;
+                
                 grainStart = 0;
+            }
         }
         
         targetArray.add (grainStart);
     }
     
     jassert (! targetArray.isEmpty());
-    
-#if JUCE_DEBUG
-    for (int i = 2; i < targetArray.size(); ++i)
-        jassert (targetArray.getUnchecked(i) > targetArray.getUnchecked(i - 2));
-#endif
 }
     
     

@@ -41,7 +41,9 @@ public:
     
     void decNumActive() {
         --numActive;
-        if (numActive == 0) clear();
+        
+        if (numActive <= 0)
+            clear();
     }
     
     void storeNewGrain (const SampleType* inputSamples, int startSample, int endSample)
@@ -52,6 +54,7 @@ public:
         origEnd = endSample;
         size = endSample - startSample;
         jassert (size > 0);
+        
         auto* writing = samples.getWritePointer(0);
         vecops::copy (inputSamples + startSample, writing, size);
         
@@ -62,7 +65,7 @@ public:
     
     SampleType getSample (int index) const
     {
-        jassert (index < size);
+        jassert (! empty && index < size);
         return samples.getSample (0, index);
     }
     
@@ -91,6 +94,7 @@ private:
         empty = true;
         origStart = 0;
         origEnd = 0;
+        numActive = 0;
     }
     
     int numActive; // this counts the number of SynthesisGrains that are referring to this AnalysisGrain
@@ -118,27 +122,35 @@ class SynthesisGrain
     using Grain = AnalysisGrain<SampleType>;
     
 public:
-    SynthesisGrain(): active(false), readingIndex(0), grain(nullptr), zeroesLeft(0) { }
+    SynthesisGrain(): active(false), readingIndex(0), grain(nullptr), zeroesLeft(0), halfIndex(0) { }
     
     bool isActive() const noexcept { return active; }
+    
+    int size() const noexcept { return grain->getSize(); }
+    
+    int halfwayIndex() const noexcept { return halfIndex; }
     
     void startNewGrain (Grain* newGrain, int synthesisMarker)
     {
         jassert (newGrain != nullptr);
-        active = true;
-        grain = newGrain;
         newGrain->incNumActive();
+        grain = newGrain;
+        
+        active = true;
         readingIndex = 0;
         zeroesLeft = synthesisMarker;
+        halfIndex = juce::roundToInt (grain->getSize() * 0.5f);
     }
     
     SampleType getNextSample()
     {
+        jassert (active);
+        
         if (zeroesLeft > 0)
         {
             jassert (readingIndex == 0);
             --zeroesLeft;
-            return 0;
+            return SampleType(0);
         }
         
         const auto sample = grain->getSample (readingIndex++);
@@ -153,19 +165,10 @@ public:
     {
         for (int i = 0; i < numSamples; ++i)
         {
-            if (zeroesLeft > 0)
-            {
-                --zeroesLeft;
-                continue;
-            }
-            
-            ++readingIndex;
-            
-            if (readingIndex >= grain->getSize())
-            {
-                stop();
+            if (! active)
                 return;
-            }
+            
+            getNextSample();
         }
     }
     
@@ -177,21 +180,24 @@ public:
         return 0;
     }
     
+    void stop()
+    {
+        jassert (active);
+        active = false;
+        readingIndex = 0;
+        zeroesLeft = 0;
+        grain->decNumActive();
+        grain = nullptr;
+        halfIndex = 0;
+    }
+    
     
 private:
     bool active;
     int readingIndex;
     Grain* grain;
     int zeroesLeft;
-    
-    void stop()
-    {
-        active = false;
-        readingIndex = 0;
-        zeroesLeft = 0;
-        grain->decNumActive();
-        grain = nullptr;
-    }
+    int halfIndex;
 };
     
 template class SynthesisGrain<float>;

@@ -76,7 +76,7 @@ void Harmonizer<SampleType>::prepared (int blocksize)
     
     indicesOfGrainOnsets.ensureStorageAllocated (blocksize);
 
-    grains.prepare (blocksize);
+    grainExtractor.prepare (blocksize);
     
     while (analysisGrains.size() < bvh_NUM_ANALYSIS_GRAINS)
         analysisGrains.add (new Analysis_Grain());
@@ -108,7 +108,7 @@ void Harmonizer<SampleType>::release()
 {
     inputStorage.clear();
     indicesOfGrainOnsets.clear();
-    grains.releaseResources();
+    grainExtractor.releaseResources();
     pitchDetector.releaseResources();
     analysisGrains.clear();
 }
@@ -129,11 +129,8 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 {
     jassert (Base::sampleRate > 0);
     
-//    const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
-//    const bool frameIsPitched = inputFrequency > 0;
-    
-    const float inputFrequency = 440.0f;
-    const bool frameIsPitched = true;
+    const auto inputFrequency = pitchDetector.detectPitch (inputAudio);  // outputs 0.0 if frame is unpitched
+    const bool frameIsPitched = inputFrequency > 0;
     
     const auto numSamples = inputAudio.getNumSamples();
     
@@ -144,29 +141,16 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     jassert (nextFramesPeriod > 0);
     
-    if (! frameIsPitched && bav::math::probability (50)) // for unpitched frames, reverse the polarity approx 50% of the time
+    if (! frameIsPitched && bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
     {
-        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples); // negate the samples -- reverse polarity
+        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);  // negate the samples -- reverse polarity
     }
     
-    //grains.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
-    
-    indicesOfGrainOnsets.clear();
-
-    indicesOfGrainOnsets.add (0);
-
-    int grainStart = nextFramesPeriod;
-
-    while (grainStart + nextFramesPeriod <= numSamples)
-    {
-        indicesOfGrainOnsets.add (grainStart);
-        grainStart += nextFramesPeriod;
-    }
+    grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
     
     const auto grainSize = nextFramesPeriod * 2;
     
-    //  write to analysis grains...
-    for (int index : indicesOfGrainOnsets)
+    for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
         if (auto* grain = getEmptyGrain())
             grain->storeNewGrain (inputStorage.getReadPointer(0), index, index + grainSize);
 }

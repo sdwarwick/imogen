@@ -25,7 +25,7 @@
 #include "bv_Harmonizer.h"
 
 
-#define bvh_NUM_SYNTHESIS_GRAINS 12
+#define bvh_NUM_SYNTHESIS_GRAINS 48  // these are cheap, no reason not to have a lot
 
 
 // multiplicative smoothing cannot ever actually reach 0
@@ -59,6 +59,10 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
     nextSynthesisIndex = 0;
+    
+    for (auto* grain : synthesisGrains)
+        if (grain->isActive())
+            grain->stop();
 }
 
     
@@ -81,21 +85,21 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     auto* writing = output.getWritePointer(0);
 
     const auto newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
-//    const auto scaleFactor = (float(newPeriod) / float(origPeriod));
-//    const auto synthesisHopSize = juce::roundToInt (scaleFactor * origPeriod);
     
     const auto numSamples = output.getNumSamples();
     
     for (int s = 0; s < numSamples; ++s)
     {
-        writing[s] = getNextSample (origPeriod, newPeriod);
+        writing[s] = getNextSample (newPeriod);
     }
 }
     
 
 template<typename SampleType>
-inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int halfGrainSize, const int newPeriod)
+inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPeriod)
 {
+    jassert (newPeriod > 0);
+    
     if (! anyGrainsAreActive())
     {
         nextSynthesisIndex = 0;
@@ -103,7 +107,6 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int halfGrai
     }
     
     jassert (anyGrainsAreActive());
-    jassert (halfGrainSize > 0 && newPeriod > 0);
     
     auto sample = SampleType(0);
     
@@ -114,7 +117,7 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int halfGrai
 
         sample += grain->getNextSample();
         
-        if (grain->samplesLeft() == halfGrainSize)
+        if (grain->samplesLeft() == grain->halfwayIndex())
             startNewGrain (newPeriod);
     }
     
@@ -124,26 +127,16 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int halfGrai
     return sample;
 }
     
-    
-template<typename SampleType>
-inline void HarmonizerVoice<SampleType>::startNewGrain (const int newPeriod)
-{
-    if (auto* newGrain = getAvailableGrain())
-    {
-        if (auto* analysisGrain = parent->findClosestGrain (nextSynthesisIndex))
-        {
-            newGrain->startNewGrain (analysisGrain, nextSynthesisIndex);
-            nextSynthesisIndex += newPeriod;
-        }
-    }
-}
-    
 
 // this function is called to reset the HarmonizerVoice's internal state to neutral / initial
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
     nextSynthesisIndex = 0;
+    
+    for (auto* grain : synthesisGrains)
+        if (grain->isActive())
+            grain->stop();
 }
 
     
