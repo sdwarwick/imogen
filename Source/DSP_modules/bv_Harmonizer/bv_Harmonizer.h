@@ -103,7 +103,6 @@ public:
     }
     
     
-    
 private:
     friend class HarmonizerVoice<SampleType>;
     
@@ -151,6 +150,18 @@ private:
                 ++actives;
         
         return actives;
+    }
+    
+    inline void clearUnusedGrain()
+    {
+        for (auto* grain : analysisGrains)
+        {
+            if (grain->numReferences() <= 0)
+            {
+                grain->clear();
+                return;
+            }
+        }
     }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)

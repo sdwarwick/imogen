@@ -33,8 +33,6 @@ private:
     
     void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
     
-    void bypassedBlockRecieved (int numSamples) override;
-    
     Harmonizer<SampleType>* parent;
     
     void prepared (const int blocksize) override;
@@ -66,6 +64,9 @@ private:
     
     inline void startNewGrain (const int newPeriod)
     {
+        if (! anyGrainsAreActive())
+            nextSynthesisIndex = 0;
+        
         if (auto* newGrain = getAvailableGrain())
         {
             newGrain->startNewGrain (parent->findClosestGrain (nextSynthesisIndex), nextSynthesisIndex);

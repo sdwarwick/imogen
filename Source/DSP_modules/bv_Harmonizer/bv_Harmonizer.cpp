@@ -140,6 +140,10 @@ void Harmonizer<SampleType>::render (const AudioBuffer& input, AudioBuffer& outp
     
     analyzeInput (input);
     Base::renderVoices (midiMessages, output);
+    
+    for (auto* grain : analysisGrains)
+        if (grain->numReferences() <= 0)
+            grain->clear();
 }
 
     
@@ -166,19 +170,20 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     }
     
     grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
-
+    
+    const auto grainSize = nextFramesPeriod * 2;
+    
     jassert (! indicesOfGrainOnsets.isEmpty());
+    jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);
     
     //  write to analysis grains
-    const auto grainSize = nextFramesPeriod * 2;
-    auto* reading = inputStorage.getReadPointer(0);
     
-    if (getEmptyGrain() == nullptr)  // if no analysis grains are available, then flush out unused ones
-        for (auto* grain : analysisGrains)
-            if (grain->numReferences() <= 0)
-                grain->clear();
+    for (int i = 0; i < indicesOfGrainOnsets.size(); ++i)
+        clearUnusedGrain();
     
     jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
+    
+    auto* reading = inputStorage.getReadPointer(0);
     
     for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
         if (auto* grain = getEmptyGrain())

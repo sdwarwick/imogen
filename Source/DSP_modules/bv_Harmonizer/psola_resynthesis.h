@@ -157,17 +157,6 @@ public:
         return sample;
     }
     
-    void skipSamples (int numSamples)
-    {
-        for (int i = 0; i < numSamples; ++i)
-        {
-            if (! active)
-                return;
-            
-            getNextSample();
-        }
-    }
-    
     int samplesLeft() const
     {
         if (active)

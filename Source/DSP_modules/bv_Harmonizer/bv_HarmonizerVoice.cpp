@@ -54,7 +54,6 @@ void HarmonizerVoice<SampleType>::prepared (const int blocksize)
 }
 
     
-
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
@@ -63,13 +62,6 @@ void HarmonizerVoice<SampleType>::released()
     synthesisGrains.clear();
 }
 
-    
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
-{
-    juce::ignoreUnused (numSamples);
-}
-        
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
@@ -94,10 +86,7 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPerio
     jassert (newPeriod > 0);
     
     if (! anyGrainsAreActive())
-    {
-        nextSynthesisIndex = 0;
         startNewGrain (newPeriod);
-    }
     
     jassert (anyGrainsAreActive());
     
@@ -109,9 +98,6 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPerio
             continue;
 
         sample += grain->getNextSample();
-        
-//        if (! anyGrainsAreActive())
-//            nextSynthesisIndex = 0;
         
         if (grain->samplesLeft() == grain->halfwayIndex())
             startNewGrain (newPeriod);
