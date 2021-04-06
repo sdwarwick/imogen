@@ -32,7 +32,7 @@
 #define bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER 0.4
 #define bvh_SOFT_PEDAL_GAIN_MULTIPLIER 0.65
 
-#define bvh_PITCH_DETECTION_CONFIDENCE_THRESH 0.15
+#define bvh_PITCH_DETECTION_CONFIDENCE_THRESH 0.3
 
 #define bvh_NUM_ANALYSIS_GRAINS 48
 
@@ -66,6 +66,15 @@ void Harmonizer<SampleType>::initialized (const double initSamplerate, const int
 {
     pitchDetector.initialize();
     juce::ignoreUnused (initSamplerate, initBlocksize);
+    
+    while (analysisGrains.size() < bvh_NUM_ANALYSIS_GRAINS)
+        analysisGrains.add (new Analysis_Grain());
+    
+    for (auto* grain : analysisGrains)
+    {
+        grain->reserveSize (initBlocksize);
+        grain->clear();
+    }
 }
     
 
@@ -83,6 +92,14 @@ void Harmonizer<SampleType>::prepared (int blocksize)
     
     for (auto* grain : analysisGrains)
         grain->reserveSize (blocksize);
+}
+    
+
+template<typename SampleType>
+void Harmonizer<SampleType>::resetTriggered()
+{
+    for (auto* grain : analysisGrains)
+        grain->clear();
 }
 
 
@@ -121,20 +138,6 @@ void Harmonizer<SampleType>::render (const AudioBuffer& input, AudioBuffer& outp
     jassert (output.getNumChannels() == 2);
     jassert (analysisGrains.size() == bvh_NUM_ANALYSIS_GRAINS);
     
-    // clear out unused analysis grains from previous frames
-    int actives = numActiveGrains();
-    for (auto* grain : analysisGrains)
-    {
-        if (actives <= 1)
-            break;
-        
-        if (grain->numReferences() == 0)
-        {
-            grain->clear();
-            --actives;
-        }
-    }
-    
     analyzeInput (input);
     Base::renderVoices (midiMessages, output);
 }
@@ -152,8 +155,8 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
     
-    nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
-                                      : juce::Random::getSystemRandom().nextInt (unpitchedArbitraryPeriodRange);
+    const auto nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
+                                                 : juce::Random::getSystemRandom().nextInt (pitchDetector.getCurrentLegalPeriodRange());
     
     jassert (nextFramesPeriod > 0);
     
@@ -166,8 +169,14 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 
     jassert (! indicesOfGrainOnsets.isEmpty());
     
+    //  write to analysis grains
     const auto grainSize = nextFramesPeriod * 2;
     auto* reading = inputStorage.getReadPointer(0);
+    
+    if (getEmptyGrain() == nullptr)  // if no analysis grains are available, then flush out unused ones
+        for (auto* grain : analysisGrains)
+            if (grain->numReferences() <= 0)
+                grain->clear();
     
     jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
     

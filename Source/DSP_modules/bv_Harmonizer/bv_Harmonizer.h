@@ -78,8 +78,6 @@ public:
     
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     
-    int getCurrentPeriod() const noexcept { return nextFramesPeriod; }
-    
     Analysis_Grain* findClosestGrain (int synthesisMarker) const
     {
         Analysis_Grain* closestGrain = nullptr;
@@ -114,6 +112,8 @@ private:
     void initialized (const double initSamplerate, const int initBlocksize) override;
     
     void prepared (int blocksize) override;
+    
+    void resetTriggered() override;
     
     void samplerateChanged (double newSamplerate) override;
     
@@ -152,8 +152,6 @@ private:
         
         return actives;
     }
-    
-    int nextFramesPeriod = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
