@@ -40,43 +40,7 @@ private:
     
     void noteCleared() override;
     
-    inline SampleType getNextSample (const int newPeriod);
-    
-    inline bool anyGrainsAreActive() const
-    {
-        for (auto* grain : synthesisGrains)
-            if (grain->isActive())
-                return true;
-        
-        return false;
-    }
-    
-    inline Synthesis_Grain* getAvailableGrain() const
-    {
-        for (auto* grain : synthesisGrains)
-            if (! grain->isActive())
-                return grain;
-        
-        return nullptr;
-    }
-    
-    
-    inline void startNewGrain (const int newPeriod)
-    {
-        if (! anyGrainsAreActive())
-            nextSynthesisIndex = 0;
-        
-        if (auto* newGrain = getAvailableGrain())
-        {
-            newGrain->startNewGrain (parent->findClosestGrain (nextSynthesisIndex), nextSynthesisIndex);
-            nextSynthesisIndex += newPeriod;
-        }
-    }
-    
-    
-    int nextSynthesisIndex = 0;
-    
-    juce::OwnedArray<Synthesis_Grain> synthesisGrains;
+    PsolaShifter<SampleType> shifter;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };

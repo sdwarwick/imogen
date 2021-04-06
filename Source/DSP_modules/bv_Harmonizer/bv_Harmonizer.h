@@ -39,8 +39,9 @@
 #include <climits>  // for INT_MAX
 
 #include "bv_SynthBase/bv_SynthBase.h"  // this file includes the bv_SharedCode header
-#include "GrainExtractor/GrainExtractor.h"
-#include "psola_resynthesis.h"
+#include "PSOLA/granular_resynthesis.h"
+#include "PSOLA/psola_analyzer.h"
+#include "PSOLA/psola_shifter.h"
 #include "bv_HarmonizerVoice.h"
 
 
@@ -77,8 +78,6 @@ public:
     
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     
-    Analysis_Grain* findClosestGrain (int synthesisMarker) const;
-    
     
 private:
     friend class HarmonizerVoice<SampleType>;
@@ -98,32 +97,9 @@ private:
     
     dsp::PitchDetector<SampleType> pitchDetector;
     
-    GrainExtractor<SampleType> grainExtractor;
-    juce::Array<int> indicesOfGrainOnsets;
-    
     AudioBuffer inputStorage;
     
-    juce::OwnedArray<Analysis_Grain> analysisGrains;
-    
-    Analysis_Grain* getEmptyGrain() const
-    {
-        for (auto* grain : analysisGrains)
-            if (grain->isEmpty() || grain->numReferences() <= 0)
-                return grain;
-        
-        return nullptr;
-    }
-    
-    int numActiveGrains() const
-    {
-        int actives = 0;
-        
-        for (auto* grain : analysisGrains)
-            if (! grain->isEmpty())
-                ++actives;
-        
-        return actives;
-    }
+    PsolaAnalyzer<SampleType> analyzer;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

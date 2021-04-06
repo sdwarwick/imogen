@@ -80,22 +80,18 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
 
 template<typename SampleType>
 void GrainExtractor<SampleType>::getGrainOnsetIndices (IArray& targetArray,
-                                                       const juce::AudioBuffer<SampleType>& inputAudio,
+                                                       const SampleType* inputSamples, const int numSamples,
                                                        const int period)
 {
     targetArray.clearQuick();
     
-    const auto totalNumSamples = inputAudio.getNumSamples();
-    const auto* reading = inputAudio.getReadPointer(0);
-    
     // identify  peak indices for each pitch period & places them in the peakIndices array
     
-    findPsolaPeaks (peakIndices, reading, totalNumSamples, period);
+    findPsolaPeaks (peakIndices, inputSamples, numSamples, period);
     
     jassert (! peakIndices.isEmpty());
     
     const auto grainLength = period * 2;
-    const auto numSamples = inputAudio.getNumSamples();
     const auto halfPeriod = juce::roundToInt (period * 0.5f);
     
     // create array of grain start indices, such that grains are 2 pitch periods long, CENTERED on points of synchronicity previously identified

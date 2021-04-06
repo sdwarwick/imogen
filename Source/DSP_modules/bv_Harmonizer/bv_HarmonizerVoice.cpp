@@ -25,9 +25,6 @@
 #include "bv_Harmonizer.h"
 
 
-#define bvh_NUM_SYNTHESIS_GRAINS 32  // these are cheap, no reason not to have a lot
-
-
 // multiplicative smoothing cannot ever actually reach 0
 #define bvhv_MIN_SMOOTHED_GAIN 0.0000001
 #define _SMOOTHING_ZERO_CHECK(inputGain) std::max(SampleType(bvhv_MIN_SMOOTHED_GAIN), SampleType (inputGain))
@@ -38,28 +35,22 @@ namespace bav
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h)
-{
-    nextSynthesisIndex = 0;
-}
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h), shifter(&parent->analyzer)
+{ }
 
 
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::prepared (const int blocksize)
 {
-    jassert (blocksize > 0);
-
-    while (synthesisGrains.size() < bvh_NUM_SYNTHESIS_GRAINS)
-        synthesisGrains.add (new Synthesis_Grain());
+    juce::ignoreUnused (blocksize);
+    shifter.prepare();
 }
 
     
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
-    nextSynthesisIndex = 0;
-    
-    synthesisGrains.clear();
+    shifter.releaseResources();
 }
 
 
@@ -67,7 +58,6 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
-    jassert (synthesisGrains.size() == bvh_NUM_SYNTHESIS_GRAINS);
     
     auto* writing = output.getWritePointer(0);
 
@@ -75,38 +65,8 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     
     for (int s = 0; s < output.getNumSamples(); ++s)
     {
-        writing[s] = getNextSample (newPeriod);
+        writing[s] = shifter.getNextSample (newPeriod);
     }
-}
-    
-
-template<typename SampleType>
-inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPeriod)
-{
-    jassert (newPeriod > 0);
-    
-    if (! anyGrainsAreActive())
-        startNewGrain (newPeriod);
-    
-    jassert (anyGrainsAreActive());
-    
-    auto sample = SampleType(0);
-    
-    for (auto* grain : synthesisGrains)
-    {
-        if (! grain->isActive())
-            continue;
-
-        sample += grain->getNextSample();
-        
-        if (grain->samplesLeft() == grain->halfwayIndex())
-            startNewGrain (newPeriod);
-    }
-    
-    if (nextSynthesisIndex > 0)
-        --nextSynthesisIndex;
-    
-    return sample;
 }
     
 
@@ -114,11 +74,7 @@ inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPerio
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
-    nextSynthesisIndex = 0;
-    
-    for (auto* grain : synthesisGrains)
-        if (grain->isActive())
-            grain->stop();
+    shifter.reset();
 }
 
     

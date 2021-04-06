@@ -52,9 +52,7 @@ public:
     void releaseResources();
     
     
-    void getGrainOnsetIndices (IArray& targetArray,
-                               const juce::AudioBuffer<SampleType>& inputAudio,
-                               const int period);
+    void getGrainOnsetIndices (IArray& targetArray, const SampleType* inputSamples, const int numSamples, const int period);
     
     
 private:

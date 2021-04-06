@@ -16,7 +16,7 @@
  
  @2021 by Ben Vining. All rights reserved.
  
- psola_resynthesis.h:   This file defines AnalysisGrain and SynthesisGrain classes, which are used in the HarmonizerVoice's pitch shifting.
+ granular_resynthesis.h:   This file defines AnalysisGrain and SynthesisGrain classes, which are used in the PSOLA process.
  
 ======================================================================================================================================================*/
 
