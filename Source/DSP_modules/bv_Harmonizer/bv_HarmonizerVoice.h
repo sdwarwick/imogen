@@ -32,6 +32,8 @@ private:
     
     void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
     
+    void bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples) override;
+    
     Harmonizer<SampleType>* parent;
     
     void prepared (const int blocksize) override;

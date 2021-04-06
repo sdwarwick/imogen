@@ -24,7 +24,7 @@
 namespace bav
 {
     
-#define bvh_NUM_SYNTHESIS_GRAINS 32  // these are cheap, no reason not to have a lot
+#define bvh_NUM_SYNTHESIS_GRAINS 36  // these are cheap, no reason not to have a lot
     
     
 template<typename SampleType>
@@ -37,6 +37,13 @@ public:
     PsolaShifter (Analyzer* parentAnalyzer): analyzer(parentAnalyzer)
     {
         jassert (analyzer != nullptr);
+    }
+    
+    
+    void getSamples (SampleType* outputSamples, const int numSamples, const int newPeriod)
+    {
+        for (int i = 0; i < numSamples; ++i)
+            outputSamples[i] = getNextSample (newPeriod);
     }
     
     
@@ -89,10 +96,8 @@ public:
     void releaseResources()
     {
         nextSynthesisIndex = 0;
-        
         synthesisGrains.clear();
     }
-    
     
     
 private:

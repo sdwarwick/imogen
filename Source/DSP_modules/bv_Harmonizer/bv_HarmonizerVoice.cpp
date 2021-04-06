@@ -59,18 +59,19 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    auto* writing = output.getWritePointer(0);
-
     const auto newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
     
-    for (int s = 0; s < output.getNumSamples(); ++s)
-    {
-        writing[s] = shifter.getNextSample (newPeriod);
-    }
+    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(), newPeriod);
 }
     
-
-// this function is called to reset the HarmonizerVoice's internal state to neutral / initial
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples)
+{
+    juce::ignoreUnused (voicesLastOutputFreq, currentSamplerate, numSamples);
+    shifter.reset();
+}
+    
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {

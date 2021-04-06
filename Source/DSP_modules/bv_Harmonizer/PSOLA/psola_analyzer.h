@@ -60,14 +60,14 @@ public:
     }
     
     
-    void analyzeInput (const SampleType* inputSamples, const int numSamples, const int thisPeriodsFrame)
+    void analyzeInput (const SampleType* inputSamples, const int numSamples, const int periodThisFrame)
     {
         jassert (analysisGrains.size() == bvh_NUM_ANALYSIS_GRAINS);
-        jassert (thisPeriodsFrame > 0 && numSamples >= thisPeriodsFrame * 2);
+        jassert (periodThisFrame > 0 && numSamples >= periodThisFrame * 2);
         
-        grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputSamples, numSamples, thisPeriodsFrame);
+        grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputSamples, numSamples, periodThisFrame);
         
-        const auto grainSize = thisPeriodsFrame * 2;
+        const auto grainSize = periodThisFrame * 2;
         
         jassert (! indicesOfGrainOnsets.isEmpty());
         jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);

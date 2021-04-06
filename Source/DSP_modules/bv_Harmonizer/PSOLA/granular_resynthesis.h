@@ -46,7 +46,7 @@ public:
         samples.clear();
         origStart = startSample;
         origEnd = endSample;
-        size = endSample - startSample;
+        size = endSample - startSample + 1;
         jassert (size > 0);
         
         auto* writing = samples.getWritePointer(0);
