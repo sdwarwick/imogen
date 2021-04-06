@@ -59,17 +59,19 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::released()
 {
     nextSynthesisIndex = 0;
+    lastPeriod = 0;
     
-    for (auto* grain : synthesisGrains)
-        if (grain->isActive())
-            grain->stop();
+    synthesisGrains.clear();
 }
 
     
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::bypassedBlockRecieved (int numSamples)
 {
-    juce::ignoreUnused (numSamples);
+    const auto period = lastPeriod > 0 ? lastPeriod : 250;
+    
+    for (int i = 0; i < numSamples; ++i)
+        getNextSample (period);
 }
         
 
@@ -79,16 +81,11 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
     juce::ignoreUnused (origStartSample);
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    const auto origPeriod = parent->getCurrentPeriod();
-    jassert (origPeriod > 0);
-
     auto* writing = output.getWritePointer(0);
 
     const auto newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
     
-    const auto numSamples = output.getNumSamples();
-    
-    for (int s = 0; s < numSamples; ++s)
+    for (int s = 0; s < output.getNumSamples(); ++s)
     {
         writing[s] = getNextSample (newPeriod);
     }
@@ -99,6 +96,8 @@ template<typename SampleType>
 inline SampleType HarmonizerVoice<SampleType>::getNextSample (const int newPeriod)
 {
     jassert (newPeriod > 0);
+    
+    lastPeriod = newPeriod;
     
     if (! anyGrainsAreActive())
     {
@@ -142,6 +141,7 @@ template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
     nextSynthesisIndex = 0;
+    lastPeriod = 0;
     
     for (auto* grain : synthesisGrains)
         if (grain->isActive())

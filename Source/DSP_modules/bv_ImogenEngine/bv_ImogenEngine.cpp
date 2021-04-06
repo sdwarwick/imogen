@@ -74,7 +74,7 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
 
 bvie_VOID_TEMPLATE::resetTriggered()
 {
-    harmonizer.allNotesOff(false);
+    harmonizer.reset();
     
     initialHiddenLoCut.reset();
     gate.reset();

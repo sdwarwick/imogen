@@ -79,6 +79,8 @@ private:
     
     int nextSynthesisIndex = 0;
     
+    int lastPeriod = 0;
+    
     juce::OwnedArray<Synthesis_Grain> synthesisGrains;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)

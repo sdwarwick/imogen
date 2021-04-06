@@ -67,7 +67,7 @@ void Harmonizer<SampleType>::initialized (const double initSamplerate, const int
     pitchDetector.initialize();
     juce::ignoreUnused (initSamplerate, initBlocksize);
 }
-
+    
 
 template<typename SampleType>
 void Harmonizer<SampleType>::prepared (int blocksize)
@@ -141,12 +141,23 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     jassert (nextFramesPeriod > 0);
     
-    if (! frameIsPitched && bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
-    {
-        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);  // negate the samples -- reverse polarity
-    }
+//    if (! frameIsPitched && bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
+//    {
+//        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);  // negate the samples -- reverse polarity
+//    }
     
-    grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+ //   grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputStorage, nextFramesPeriod);
+    
+    indicesOfGrainOnsets.clearQuick();
+    indicesOfGrainOnsets.add (0);
+    
+    int nextGrainStart = nextFramesPeriod;
+    
+    while (nextGrainStart + nextFramesPeriod <= numSamples)
+    {
+        indicesOfGrainOnsets.add (nextGrainStart);
+        nextGrainStart += nextFramesPeriod;
+    }
     
     const auto grainSize = nextFramesPeriod * 2;
     
