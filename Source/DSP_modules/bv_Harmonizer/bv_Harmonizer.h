@@ -80,7 +80,7 @@ public:
     
     int getCurrentPeriod() const noexcept { return nextFramesPeriod; }
     
-    Analysis_Grain* findClosestGrain (int synthesisMarker)
+    Analysis_Grain* findClosestGrain (int synthesisMarker) const
     {
         Analysis_Grain* closestGrain = nullptr;
         int distance = INT_MAX;
@@ -98,6 +98,8 @@ public:
                 distance = newDist;
             }
         }
+        
+        jassert (closestGrain != nullptr);
         
         return closestGrain;
     }
@@ -131,13 +133,24 @@ private:
     
     juce::OwnedArray<Analysis_Grain> analysisGrains;
     
-    Analysis_Grain* getEmptyGrain()
+    Analysis_Grain* getEmptyGrain() const
     {
         for (auto* grain : analysisGrains)
             if (grain->isEmpty())
                 return grain;
         
         return nullptr;
+    }
+    
+    int numActiveGrains() const
+    {
+        int actives = 0;
+        
+        for (auto* grain : analysisGrains)
+            if (! grain->isEmpty())
+                ++actives;
+        
+        return actives;
     }
     
     int nextFramesPeriod = 0;

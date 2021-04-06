@@ -68,11 +68,8 @@ private:
     {
         if (auto* newGrain = getAvailableGrain())
         {
-            if (auto* analysisGrain = parent->findClosestGrain (nextSynthesisIndex))
-            {
-                newGrain->startNewGrain (analysisGrain, nextSynthesisIndex);
-                nextSynthesisIndex += newPeriod;
-            }
+            newGrain->startNewGrain (parent->findClosestGrain (nextSynthesisIndex), nextSynthesisIndex);
+            nextSynthesisIndex += newPeriod;
         }
     }
     

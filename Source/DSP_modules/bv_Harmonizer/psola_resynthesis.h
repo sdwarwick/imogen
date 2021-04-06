@@ -21,7 +21,6 @@
 ======================================================================================================================================================*/
 
 
-
 namespace bav
 {
 
@@ -39,12 +38,7 @@ public:
     
     void incNumActive() noexcept { ++numActive; }
     
-    void decNumActive() {
-        --numActive;
-        
-        if (numActive <= 0)
-            clear();
-    }
+    void decNumActive() noexcept { --numActive; }
     
     void storeNewGrain (const SampleType* inputSamples, int startSample, int endSample)
     {
@@ -63,9 +57,21 @@ public:
             writing[s] *= getWindowValue (size, s);
     }
     
+    void clear()
+    {
+        samples.clear();
+        size = 0;
+        empty = true;
+        origStart = 0;
+        origEnd = 0;
+        numActive = 0;
+    }
+    
+    int numReferences() const noexcept { return numActive; }
+    
     SampleType getSample (int index) const
     {
-        jassert (! empty && index < size);
+        jassert (index < size);
         return samples.getSample (0, index);
     }
     
@@ -75,7 +81,7 @@ public:
     
     int getEndSample() const noexcept { return origEnd; }
     
-    bool isEmpty() const noexcept { return empty; }
+    bool isEmpty() const noexcept { return empty || size == 0; }
     
     
 private:
@@ -85,16 +91,6 @@ private:
                                     * juce::MathConstants<SampleType>::pi / static_cast<SampleType> (windowSize - 1));
         
         return static_cast<SampleType> (0.5 - 0.5 * cos2);
-    }
-    
-    void clear()
-    {
-        samples.clear();
-        size = 0;
-        empty = true;
-        origStart = 0;
-        origEnd = 0;
-        numActive = 0;
     }
     
     int numActive; // this counts the number of SynthesisGrains that are referring to this AnalysisGrain

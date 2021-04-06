@@ -121,6 +121,20 @@ void Harmonizer<SampleType>::render (const AudioBuffer& input, AudioBuffer& outp
     jassert (output.getNumChannels() == 2);
     jassert (analysisGrains.size() == bvh_NUM_ANALYSIS_GRAINS);
     
+    // clear out unused analysis grains from previous frames
+    int actives = numActiveGrains();
+    for (auto* grain : analysisGrains)
+    {
+        if (actives <= 1)
+            break;
+        
+        if (grain->numReferences() == 0)
+        {
+            grain->clear();
+            --actives;
+        }
+    }
+    
     analyzeInput (input);
     Base::renderVoices (midiMessages, output);
 }
@@ -155,9 +169,13 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     const auto grainSize = nextFramesPeriod * 2;
     auto* reading = inputStorage.getReadPointer(0);
     
+    jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
+    
     for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
         if (auto* grain = getEmptyGrain())
             grain->storeNewGrain (reading, index, index + grainSize);
+    
+    jassert (numActiveGrains() > 0);
 }
 
 
