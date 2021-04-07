@@ -141,6 +141,14 @@ public:
     
     bool isHalfwayThrough() const noexcept { return samplesLeft() == juce::roundToInt(getSize() * 0.5f); }
     
+    int startSample() const noexcept
+    {
+        if (grain != nullptr)
+            return grain->getStartSample();
+        
+        return 0;
+    }
+    
     void startNewGrain (Grain* newGrain, int samplesInFuture)
     {
         jassert (newGrain != nullptr && ! newGrain->isEmpty());

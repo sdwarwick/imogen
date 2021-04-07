@@ -53,7 +53,7 @@ public:
         jassert (newPeriod > 0);
         
         if (! anyGrainsAreActive())
-            startNewGrain (newPeriod, bufferPos);
+            startNewGrain (newPeriod, bufferPos, 0);
         
         auto sample = SampleType(0);
         
@@ -62,10 +62,12 @@ public:
             if (! grain->isActive())
                 continue;
             
+            const auto start = grain->startSample();
+            
             sample += grain->getNextSample();
             
             if (grain->isHalfwayThrough())
-                startNewGrain (newPeriod, bufferPos);
+                startNewGrain (newPeriod, bufferPos, start);
         }
         
         if (nextSynthesisIndex > 0)
@@ -108,7 +110,7 @@ public:
     
 private:
     
-    inline void startNewGrain (const int newPeriod, const int idealBufferPos)
+    inline void startNewGrain (const int newPeriod, const int idealBufferPos, const int lastGrainStart)
     {
         if (auto* newGrain = getAvailableGrain())
         {
@@ -117,8 +119,6 @@ private:
             const auto samplesInFuture = anyGrainsAreActive()
                                        ? nextSynthesisIndex - juce::roundToInt( analysisGrain->percentOfExpectedSize() * analysisGrain->getStartSample() )
                                        : 0;
-            
-            //orig nextSynthesisIndex - juce::roundToInt( analysisGrain->percentOfExpectedSize() * analysisGrain->getStartSample() )
             
             newGrain->startNewGrain (analysisGrain, samplesInFuture);
             
