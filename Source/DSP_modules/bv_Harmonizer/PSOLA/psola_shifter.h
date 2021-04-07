@@ -54,7 +54,7 @@ public:
         
         if (! anyGrainsAreActive())
         {
-            nextSynthesisIndex = 0;
+//            nextSynthesisIndex = 0;
             startNewGrain (newPeriod, 0);
         }
         
@@ -65,12 +65,7 @@ public:
             if (! grain->isActive())
                 continue;
             
-            auto* analysisGrain = grain->getReferencedAnalysisGrain();
-        
             sample += grain->getNextSample();
-            
-            if (analysisGrain->numReferences() <= 0)
-                analysisGrain->clear();
             
             if (grain->samplesLeft() == grain->halfwayIndex())
                 startNewGrain (newPeriod, bufferPos);
@@ -120,18 +115,18 @@ private:
     {
         if (auto* newGrain = getAvailableGrain())
         {
-            auto* analysisGrain = analyzer->findClosestGrain (idealBufferPos);
+            auto* analysisGrain = analyzer->findClosestGrain (idealBufferPos - nextSynthesisIndex);
             
-            const auto samplesInFuture = anyGrainsAreActive()
-                                       ? nextSynthesisIndex - (analysisGrain->percentOfExpectedSize() * analysisGrain->getEndSample())
-                                       : 0;
+            const auto scaledStart = anyGrainsAreActive()
+                                   ? nextSynthesisIndex - ( analysisGrain->percentOfExpectedSize() * analysisGrain->getStartSample() )
+                                   : 0;
             
-            newGrain->startNewGrain (analysisGrain, juce::roundToInt(samplesInFuture));
+            const auto samplesInFuture = juce::jlimit (0, nextSynthesisIndex, juce::roundToInt (scaledStart));
+            
+            newGrain->startNewGrain (analysisGrain, samplesInFuture);
             
             nextSynthesisIndex += newPeriod;
         }
-        
-        jassert (anyGrainsAreActive());
     }
     
     inline bool anyGrainsAreActive() const

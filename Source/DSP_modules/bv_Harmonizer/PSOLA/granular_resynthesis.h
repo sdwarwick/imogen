@@ -42,8 +42,8 @@ public:
     {
         --numActive;
         
-//        if (numActive <= 0)
-//            clear();
+        if (numActive <= 0)
+            clear();
     }
     
     float percentOfExpectedSize() const noexcept { return percentOfExpectedGrainSize; }
@@ -135,7 +135,7 @@ public:
     
     int halfwayIndex() const noexcept { return halfIndex; }
     
-    Grain* getReferencedAnalysisGrain() const noexcept { return grain; }
+//    Grain* getReferencedAnalysisGrain() const noexcept { return grain; }
     
     void startNewGrain (Grain* newGrain, int samplesInFuture)
     {

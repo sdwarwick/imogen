@@ -41,7 +41,7 @@
 #include "PSOLA/psola_analyzer.h"
 #include "PSOLA/psola_shifter.h"
 #include "bv_HarmonizerVoice.h"
-#include "AutoPitchCorrector.h"
+//#include "AutoPitchCorrector.h"
 
 
 

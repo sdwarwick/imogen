@@ -48,7 +48,7 @@ namespace bav
                 legalNotes.add (note);
             }
         }
-//
+
 //        void getSamples (SampleType* outputSamples, const int numSamples,
 //                         const float currentInputFreq, const double currentSamplerate,
 //                         float* correctionAmount)  // correction amount in Hz
@@ -93,7 +93,7 @@ namespace bav
 //            shifter.getSamples (outputSamples, numSamples,
 //                                juce::roundToInt (currentSamplerate / desiredFrequency));  // new desired period
 //        }
-//
+
         
     private:
         PsolaAnalyzer<SampleType>* analyzer;

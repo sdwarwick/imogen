@@ -70,15 +70,6 @@ public:
         
         const auto grainSize = periodThisFrame * 2;
         
-//        indicesOfGrainOnsets.clearQuick();
-//        indicesOfGrainOnsets.add(0);
-//        int next = periodThisFrame;
-//        while (next + grainSize <= numSamples)
-//        {
-//            indicesOfGrainOnsets.add (next);
-//            next += periodThisFrame;
-//        }
-        
         jassert (! indicesOfGrainOnsets.isEmpty());
         jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);
         
@@ -111,8 +102,9 @@ public:
             
             const auto newDist = abs(idealBufferPos - grain->getStartSample());
             
-            if (closestGrain == nullptr || newDist < distance
-                || (closestGrain->percentOfExpectedSize() < 1.0f && grain->percentOfExpectedSize() == 1.0f))
+            if ( closestGrain == nullptr
+                || newDist < distance
+                || grain->percentOfExpectedSize() > closestGrain->percentOfExpectedSize() )
             {
                 closestGrain = grain;
                 distance = newDist;
