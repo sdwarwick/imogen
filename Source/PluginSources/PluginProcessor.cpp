@@ -208,10 +208,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-    if (adsrToggle->get())
-        return double(adsrRelease->get()); // ADSR release time in seconds
-    
-    return 0.005;  // "quick kill" time in seconds -- must be the same as the ms value defined in the macro in bv_Harmonizer.cpp !!
+    return double(adsrRelease->get());
 }
 
 

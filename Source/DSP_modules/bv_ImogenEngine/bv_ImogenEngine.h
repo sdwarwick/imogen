@@ -70,7 +70,7 @@ public:
     
     void updateDryWet     (const int percentWet);
     void updateDryVoxPan  (const int newMidiPan);
-    void updateAdsr       (const float attack, const float decay, const float sustain, const float release, const bool isOn);
+    void updateAdsr       (const float attack, const float decay, const float sustain, const float release);
     void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
     void updateMidiVelocitySensitivity(const int newSensitivity);
     void updatePitchbendRange (const int rangeST);

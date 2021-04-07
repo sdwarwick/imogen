@@ -266,7 +266,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (outputGain->get()));
     activeEngine.updateDryVoxPan (dryPan->get());
     activeEngine.updateDryWet (dryWet->get());
-    activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get(), adsrToggle->get());
+    activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
     activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
     activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
     activeEngine.updatePitchbendRange (pitchBendRange->get());
@@ -295,7 +295,6 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
     
     bool adsr = false;
     float adsrA = adsrAttack->get(), adsrD = adsrDecay->get(), adsrS = adsrSustain->get(), adsrR = adsrRelease->get();
-    bool adsrT = adsrToggle->get();
     
     bool reverb = false;
     int rDryWet = reverbDryWet->get();
@@ -371,12 +370,11 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (adsrDecayID):   adsrD = _FLOAT_MSG;     adsr = true;
             case (adsrSustainID): adsrS = _FLOAT_MSG;     adsr = true;
             case (adsrReleaseID): adsrR = _FLOAT_MSG;     adsr = true;
-            case (adsrToggleID):  adsrT = _BOOL_MSG;      adsr = true;
         }
     }
     
     if (adsr)
-        activeEngine.updateAdsr (adsrA, adsrD, adsrS, adsrR, adsrT);
+        activeEngine.updateAdsr (adsrA, adsrD, adsrS, adsrR);
     
     if (reverb)
         activeEngine.updateReverb (rDryWet, rDecay, rDuck, rLoCut, rHiCut, rToggle);
@@ -516,7 +514,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     params.emplace_back (std::make_unique<FloatParameter> ("adsrDecay", "ADSR Decay", msRange, 0.06f));
     params.emplace_back (std::make_unique<FloatParameter> ("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
     params.emplace_back (std::make_unique<FloatParameter> ("adsrRelease", "ADSR Release", msRange, 0.1f));
-    params.emplace_back (std::make_unique<BoolParameter>  ("adsrOnOff", "ADSR on/off", true));
     params.emplace_back (std::make_unique<IntParameter>   ("stereoWidth", "Stereo Width", 0, 100, 100));
     params.emplace_back (std::make_unique<IntParameter>   ("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
     params.emplace_back (std::make_unique<IntParameter>   ("midiVelocitySens", "MIDI Velocity Sensitivity", 0, 100, 100));
@@ -567,7 +564,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     adsrDecay            = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrDecay"));                    jassert (adsrDecay);
     adsrSustain          = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrSustain"));                  jassert (adsrSustain);
     adsrRelease          = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrRelease"));                  jassert (adsrRelease);
-    adsrToggle           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("adsrOnOff"));                    jassert (adsrToggle);
     stereoWidth          = dynamic_cast<IntParamPtr>   (tree.getParameter ("stereoWidth"));                  jassert (stereoWidth);
     lowestPanned         = dynamic_cast<IntParamPtr>   (tree.getParameter ("lowestPan"));                    jassert (lowestPanned);
     velocitySens         = dynamic_cast<IntParamPtr>   (tree.getParameter ("midiVelocitySens"));             jassert (velocitySens);
@@ -617,7 +613,6 @@ void ImogenAudioProcessor::initializeParameterListeners()
     addParameterMessenger ("adsrDecay",             adsrDecayID);
     addParameterMessenger ("adsrSustain",           adsrSustainID);
     addParameterMessenger ("adsrRelease",           adsrReleaseID);
-    addParameterMessenger ("adsrOnOff",             adsrToggleID);
     addParameterMessenger ("stereoWidth",           stereoWidthID);
     addParameterMessenger ("lowestPan",             lowestPannedID);
     addParameterMessenger ("midiVelocitySens",      velocitySensID);
@@ -679,7 +674,6 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (adsrDecayID):             return adsrDecay;
         case (adsrSustainID):           return adsrSustain;
         case (adsrReleaseID):           return adsrRelease;
-        case (adsrToggleID):            return adsrToggle;
         case (stereoWidthID):           return stereoWidth;
         case (lowestPannedID):          return lowestPanned;
         case (velocitySensID):          return velocitySens;

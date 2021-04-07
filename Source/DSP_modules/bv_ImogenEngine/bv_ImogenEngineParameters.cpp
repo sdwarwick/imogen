@@ -86,10 +86,9 @@ bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
 }
 
 
-bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const float sustain, const float release, const bool isOn)
+bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const float sustain, const float release)
 {
     harmonizer.updateADSRsettings (attack, decay, sustain, release);
-    harmonizer.setADSRonOff (isOn);
 }
     
 
