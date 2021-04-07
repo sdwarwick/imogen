@@ -314,7 +314,7 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
     for (int candidate : candidates)
     {
         candidateDeltas.add ((abs (candidate - deltaTarget1)
-                           + (abs (candidate - deltaTarget2) * 1.5f))
+                           + abs (candidate - deltaTarget2))
                              * 0.5f);
     }
     
@@ -334,7 +334,7 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
         finalHandfulDeltas.add (minimum);
         finalHandful.add (candidates.getUnchecked (minimumIndex));
         
-        candidateDeltas.set (minimumIndex, 1000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
+        candidateDeltas.set (minimumIndex, 10000.0f); // make sure this value won't be chosen again, w/o deleting it from the candidateDeltas array
     }
     
     jassert (finalHandful.size() == finalHandfulSize && finalHandfulDeltas.size() == finalHandfulSize);
@@ -346,7 +346,7 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
     if (deltaRange < 0.05f)  // prevent dividing by 0 in the next step...
         return finalHandful.getUnchecked(0);
     
-#define bvhge_DELTA_WEIGHT(delta, deltaRange) 1.0f - ((delta / deltaRange) * 0.75f)
+#define bvhge_DELTA_WEIGHT(delta, deltaRange) 1.0f - (delta / deltaRange)
     
     auto chosenPeak = finalHandful.getUnchecked (0);
     auto strongestPeak = abs(reading[chosenPeak]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(0), deltaRange);

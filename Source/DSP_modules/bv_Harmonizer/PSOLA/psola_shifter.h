@@ -47,16 +47,13 @@ public:
     }
     
     
-    SampleType getNextSample (const int newPeriod, const int bufferPos)
+    SampleType getNextSample (const int newPeriod, int bufferPos)
     {
         jassert (synthesisGrains.size() == bvh_NUM_SYNTHESIS_GRAINS);
         jassert (newPeriod > 0);
         
         if (! anyGrainsAreActive())
-        {
-//            nextSynthesisIndex = 0;
-            startNewGrain (newPeriod, 0);
-        }
+            startNewGrain (newPeriod, bufferPos);
         
         auto sample = SampleType(0);
         
@@ -67,7 +64,7 @@ public:
             
             sample += grain->getNextSample();
             
-            if (grain->samplesLeft() == grain->halfwayIndex())
+            if (grain->isHalfwayThrough())
                 startNewGrain (newPeriod, bufferPos);
         }
         
@@ -83,7 +80,7 @@ public:
         for (auto* grain : synthesisGrains)
             grain->stop();
         
-        nextSynthesisIndex = std::max(0, nextSynthesisIndex - numSamples);
+        nextSynthesisIndex = std::max (0, nextSynthesisIndex - numSamples);
     }
     
     
@@ -115,13 +112,13 @@ private:
     {
         if (auto* newGrain = getAvailableGrain())
         {
-            auto* analysisGrain = analyzer->findClosestGrain (idealBufferPos - nextSynthesisIndex);
+            auto* analysisGrain = analyzer->findClosestGrain (idealBufferPos);
             
-            const auto scaledStart = anyGrainsAreActive()
-                                   ? nextSynthesisIndex - ( analysisGrain->percentOfExpectedSize() * analysisGrain->getStartSample() )
-                                   : 0;
+            const auto samplesInFuture = anyGrainsAreActive()
+                                       ? nextSynthesisIndex - juce::roundToInt( analysisGrain->percentOfExpectedSize() * analysisGrain->getStartSample() )
+                                       : 0;
             
-            const auto samplesInFuture = juce::jlimit (0, nextSynthesisIndex, juce::roundToInt (scaledStart));
+            //orig nextSynthesisIndex - juce::roundToInt( analysisGrain->percentOfExpectedSize() * analysisGrain->getStartSample() )
             
             newGrain->startNewGrain (analysisGrain, samplesInFuture);
             

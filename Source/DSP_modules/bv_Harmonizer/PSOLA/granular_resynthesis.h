@@ -129,13 +129,17 @@ class SynthesisGrain
     using Grain = AnalysisGrain<SampleType>;
     
 public:
-    SynthesisGrain(): readingIndex(0), grain(nullptr), zeroesLeft(0), halfIndex(0) { }
+    SynthesisGrain(): readingIndex(0), grain(nullptr), zeroesLeft(0) { }
     
-    bool isActive() const noexcept { return size > 0; }
+    bool isActive() const noexcept
+    {
+        if (grain == nullptr)
+            return false;
+        
+        return grain->getSize() > 0;
+    }
     
-    int halfwayIndex() const noexcept { return halfIndex; }
-    
-//    Grain* getReferencedAnalysisGrain() const noexcept { return grain; }
+    bool isHalfwayThrough() const noexcept { return samplesLeft() == juce::roundToInt(getSize() * 0.5f); }
     
     void startNewGrain (Grain* newGrain, int samplesInFuture)
     {
@@ -146,10 +150,6 @@ public:
         readingIndex = 0;
         
         zeroesLeft = samplesInFuture;
-        
-        size = grain->getSize();
-        jassert (size > 0);
-        halfIndex = juce::roundToInt (size * 0.5f);
     }
     
     SampleType getNextSample()
@@ -165,7 +165,7 @@ public:
         
         const auto sample = grain->getSample (readingIndex++);
         
-        if (readingIndex >= size)
+        if (readingIndex >= grain->getSize())
             stop();
 
         return sample;
@@ -179,12 +179,19 @@ public:
         return 0;
     }
     
+    int getSize() const noexcept
+    {
+        if (grain != nullptr)
+            return grain->getSize();
+        
+        return 0;
+    }
+    
     void stop() noexcept
     {
         readingIndex = 0;
         zeroesLeft = 0;
         halfIndex = 0;
-        size = 0;
         
         if (grain != nullptr)
         {
@@ -199,7 +206,6 @@ private:
     Grain* grain;
     int zeroesLeft;  // the number of zeroes this grain will output before actually outputting its samples. This allows grains to be respaced into the future.
     int halfIndex;  // marks the halfway point for this grain
-    int size;
 };
     
 template class SynthesisGrain<float>;

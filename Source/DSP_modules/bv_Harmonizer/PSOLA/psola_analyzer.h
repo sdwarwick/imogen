@@ -103,7 +103,7 @@ public:
             const auto newDist = abs(idealBufferPos - grain->getStartSample());
             
             if ( closestGrain == nullptr
-                || newDist < distance
+                || newDist <= distance
                 || grain->percentOfExpectedSize() > closestGrain->percentOfExpectedSize() )
             {
                 closestGrain = grain;
