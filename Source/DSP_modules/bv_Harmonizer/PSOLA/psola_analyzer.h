@@ -70,6 +70,15 @@ public:
         
         const auto grainSize = periodThisFrame * 2;
         
+//        indicesOfGrainOnsets.clearQuick();
+//        indicesOfGrainOnsets.add(0);
+//        int next = periodThisFrame;
+//        while (next + grainSize <= numSamples)
+//        {
+//            indicesOfGrainOnsets.add (next);
+//            next += periodThisFrame;
+//        }
+        
         jassert (! indicesOfGrainOnsets.isEmpty());
         jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);
         
@@ -77,16 +86,16 @@ public:
         {
             auto* grain = getEmptyGrain();
             jassert (grain != nullptr);
-            grain->storeNewGrain (inputSamples, index, index + grainSize);
+            grain->storeNewGrain (inputSamples, index, index + grainSize, grainSize);
         }
         
         if (indicesOfGrainOnsets.getUnchecked(0) > 0)  // bit @ beginning
             if (auto* grain = getEmptyGrain())
-                grain->storeNewGrain (inputSamples, 0, indicesOfGrainOnsets.getUnchecked(0));
-        
+                grain->storeNewGrain (inputSamples, 0, indicesOfGrainOnsets.getUnchecked(0), grainSize);
+
         if (indicesOfGrainOnsets.getLast() + grainSize < numSamples)  // bit @ end
             if (auto* grain = getEmptyGrain())
-                grain->storeNewGrain (inputSamples, indicesOfGrainOnsets.getLast() + grainSize, numSamples);
+                grain->storeNewGrain (inputSamples, indicesOfGrainOnsets.getLast() + grainSize, numSamples, grainSize);
     }
     
     
@@ -102,7 +111,8 @@ public:
             
             const auto newDist = abs(idealBufferPos - grain->getStartSample());
             
-            if (closestGrain == nullptr || newDist < distance)
+            if (closestGrain == nullptr || newDist < distance
+                || (closestGrain->percentOfExpectedSize() < 1.0f && grain->percentOfExpectedSize() == 1.0f))
             {
                 closestGrain = grain;
                 distance = newDist;

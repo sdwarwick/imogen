@@ -32,15 +32,23 @@ template<typename SampleType>
 class AnalysisGrain
 {
 public:
-    AnalysisGrain(): numActive(0), origStart(0), origEnd(0), size(0) { }
+    AnalysisGrain(): numActive(0), origStart(0), origEnd(0), size(0), percentOfExpectedGrainSize(0) { }
     
     void reserveSize (int numSamples) { samples.setSize(1, numSamples); }
     
     void incNumActive() noexcept { ++numActive; }
     
-    void decNumActive() noexcept { --numActive; }
+    void decNumActive() noexcept
+    {
+        --numActive;
+        
+//        if (numActive <= 0)
+//            clear();
+    }
     
-    void storeNewGrain (const SampleType* inputSamples, int startSample, int endSample)
+    float percentOfExpectedSize() const noexcept { return percentOfExpectedGrainSize; }
+    
+    void storeNewGrain (const SampleType* inputSamples, int startSample, int endSample, int expectedGrainSize)
     {
         samples.clear();
         origStart = startSample;
@@ -48,6 +56,8 @@ public:
         size = endSample - startSample + 1;
         jassert (size > 0);
         jassert (samples.getNumSamples() >= size);
+        jassert (expectedGrainSize > 0);
+        percentOfExpectedGrainSize = float(size) / float(expectedGrainSize);
         
         auto* writing = samples.getWritePointer(0);
         vecops::copy (inputSamples + startSample, writing, size);
@@ -57,13 +67,14 @@ public:
             writing[s] *= getWindowValue (size, s);
     }
     
-    void clear()
+    void clear() noexcept
     {
         samples.clear();
         size = 0;
         origStart = 0;
         origEnd = 0;
         numActive = 0;
+        percentOfExpectedGrainSize = 0.0f;
     }
     
     int numReferences() const noexcept { return numActive; }
@@ -84,7 +95,7 @@ public:
     
     
 private:
-    inline SampleType getWindowValue (int windowSize, int index)
+    inline SampleType getWindowValue (int windowSize, int index) const
     {
         const auto cos2 = std::cos (static_cast<SampleType> (2 * index)
                                     * juce::MathConstants<SampleType>::pi / static_cast<SampleType> (windowSize - 1));
@@ -97,6 +108,8 @@ private:
     int origStart, origEnd;  // the original start & end sample indices of this grain
     
     int size;
+    
+    float percentOfExpectedGrainSize;
     
     juce::AudioBuffer<SampleType> samples;
 };
@@ -122,13 +135,7 @@ public:
     
     int halfwayIndex() const noexcept { return halfIndex; }
     
-    int origStartIndex() const noexcept
-    {
-        if (grain != nullptr)
-            return grain->getStartSample();
-        
-        return 0;
-    }
+    Grain* getReferencedAnalysisGrain() const noexcept { return grain; }
     
     void startNewGrain (Grain* newGrain, int samplesInFuture)
     {
@@ -137,7 +144,9 @@ public:
         grain = newGrain;
         
         readingIndex = 0;
+        
         zeroesLeft = samplesInFuture;
+        
         size = grain->getSize();
         jassert (size > 0);
         halfIndex = juce::roundToInt (size * 0.5f);
@@ -162,7 +171,7 @@ public:
         return sample;
     }
     
-    int samplesLeft() const
+    int samplesLeft() const noexcept
     {
         if (isActive())
             return grain->getSize() - readingIndex + std::max(0, zeroesLeft);
@@ -170,7 +179,7 @@ public:
         return 0;
     }
     
-    void stop()
+    void stop() noexcept
     {
         readingIndex = 0;
         zeroesLeft = 0;

@@ -45,7 +45,7 @@ public:
 private:
     friend class Harmonizer<SampleType>;
     
-    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) override;
+    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer) override;
     
     void bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples) override;
     

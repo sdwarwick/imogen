@@ -48,52 +48,52 @@ namespace bav
                 legalNotes.add (note);
             }
         }
-        
-        void getSamples (SampleType* outputSamples, const int numSamples,
-                         const float currentInputFreq, const double currentSamplerate,
-                         float* correctionAmount)  // correction amount in Hz
-        {
-            auto currentMidiPitch = math::freqToMidi (currentInputFreq);
-            
-            int octaves = 0;
-            
-            while (currentMidiPitch >= 12)
-            {
-                currentMidiPitch -= 12;
-                ++octaves;
-            }
-            
-            jassert (! legalNotes.isEmpty());
-            
-            int closestLegalNote = legalNotes.getUnchecked(0);
-            auto distance = abs(currentMidiPitch - closestLegalNote);
-            
-            for (auto note : legalNotes)
-            {
-                const auto newDist = abs(currentMidiPitch - note);
-                
-                if (newDist < distance)
-                {
-                    closestLegalNote = note;
-                    distance = newDist;
-                }
-            }
-            
-            while (octaves > 0)
-            {
-                closestLegalNote += 12;
-                --octaves;
-            }
-            
-            const auto desiredFrequency = math::midiToFreq (closestLegalNote);
-            
-            if (correctionAmount != nullptr)
-                *correctionAmount = desiredFrequency - currentInputFreq;
-
-            shifter.getSamples (outputSamples, numSamples,
-                                juce::roundToInt (currentSamplerate / desiredFrequency));  // new desired period
-        }
-        
+//
+//        void getSamples (SampleType* outputSamples, const int numSamples,
+//                         const float currentInputFreq, const double currentSamplerate,
+//                         float* correctionAmount)  // correction amount in Hz
+//        {
+//            auto currentMidiPitch = math::freqToMidi (currentInputFreq);
+//
+//            int octaves = 0;
+//
+//            while (currentMidiPitch >= 12)
+//            {
+//                currentMidiPitch -= 12;
+//                ++octaves;
+//            }
+//
+//            jassert (! legalNotes.isEmpty());
+//
+//            int closestLegalNote = legalNotes.getUnchecked(0);
+//            auto distance = abs(currentMidiPitch - closestLegalNote);
+//
+//            for (auto note : legalNotes)
+//            {
+//                const auto newDist = abs(currentMidiPitch - note);
+//
+//                if (newDist < distance)
+//                {
+//                    closestLegalNote = note;
+//                    distance = newDist;
+//                }
+//            }
+//
+//            while (octaves > 0)
+//            {
+//                closestLegalNote += 12;
+//                --octaves;
+//            }
+//
+//            const auto desiredFrequency = math::midiToFreq (closestLegalNote);
+//
+//            if (correctionAmount != nullptr)
+//                *correctionAmount = desiredFrequency - currentInputFreq;
+//
+//            shifter.getSamples (outputSamples, numSamples,
+//                                juce::roundToInt (currentSamplerate / desiredFrequency));  // new desired period
+//        }
+//
         
     private:
         PsolaAnalyzer<SampleType>* analyzer;

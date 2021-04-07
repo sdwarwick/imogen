@@ -40,37 +40,40 @@ public:
     }
     
     
-    void getSamples (SampleType* outputSamples, const int numSamples, const int newPeriod)
+    void getSamples (SampleType* outputSamples, const int numSamples, const int newPeriod, const int origStartSample)
     {
         for (int i = 0; i < numSamples; ++i)
-            outputSamples[i] = getNextSample (newPeriod);
+            outputSamples[i] = getNextSample (newPeriod, origStartSample);
     }
     
     
-    SampleType getNextSample (const int newPeriod)
+    SampleType getNextSample (const int newPeriod, const int bufferPos)
     {
         jassert (synthesisGrains.size() == bvh_NUM_SYNTHESIS_GRAINS);
         jassert (newPeriod > 0);
         
         if (! anyGrainsAreActive())
+        {
+            nextSynthesisIndex = 0;
             startNewGrain (newPeriod, 0);
+        }
         
         auto sample = SampleType(0);
         
         for (auto* grain : synthesisGrains)
         {
             if (! grain->isActive())
-            {
-                grain->stop();
                 continue;
-            }
             
-            const auto origStart = grain->origStartIndex();
+            auto* analysisGrain = grain->getReferencedAnalysisGrain();
         
             sample += grain->getNextSample();
             
+            if (analysisGrain->numReferences() <= 0)
+                analysisGrain->clear();
+            
             if (grain->samplesLeft() == grain->halfwayIndex())
-                startNewGrain (newPeriod, origStart);
+                startNewGrain (newPeriod, bufferPos);
         }
         
         if (nextSynthesisIndex > 0)
@@ -113,18 +116,18 @@ public:
     
 private:
     
-    inline void startNewGrain (const int newPeriod, const int lastGrainStart)
+    inline void startNewGrain (const int newPeriod, const int idealBufferPos)
     {
-//        if (! anyGrainsAreActive())
-//            nextSynthesisIndex = 0;
-        
         if (auto* newGrain = getAvailableGrain())
         {
-            auto* analysisGrain = analyzer->findClosestGrain (nextSynthesisIndex);
+            auto* analysisGrain = analyzer->findClosestGrain (idealBufferPos);
             
-            const auto samplesInFuture = anyGrainsAreActive() ? nextSynthesisIndex - lastGrainStart : 0;
+            const auto samplesInFuture = anyGrainsAreActive()
+                                       ? nextSynthesisIndex - (analysisGrain->percentOfExpectedSize() * analysisGrain->getEndSample())
+                                       : 0;
             
-            newGrain->startNewGrain (analysisGrain, samplesInFuture);
+            newGrain->startNewGrain (analysisGrain, juce::roundToInt(samplesInFuture));
+            
             nextSynthesisIndex += newPeriod;
         }
         

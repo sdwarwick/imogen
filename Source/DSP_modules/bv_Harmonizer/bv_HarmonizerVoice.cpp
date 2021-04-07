@@ -51,13 +51,13 @@ void HarmonizerVoice<SampleType>::released()
 
 
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
+void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer)
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    const auto desiredPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
-    
-    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(), desiredPeriod);
+    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(),
+                        juce::roundToInt (currentSamplerate / desiredFrequency),  // desired period
+                        startSampleOfOrigBuffer);
 }
     
     
