@@ -62,11 +62,14 @@ public:
         for (auto* grain : synthesisGrains)
         {
             if (! grain->isActive())
+            {
+                grain->stop();
                 continue;
-            
+            }
+        
             sample += grain->getNextSample();
             
-            if (! grain->isActive() || grain->samplesLeft() == grain->halfwayIndex())
+            if (grain->samplesLeft() == grain->halfwayIndex())
                 ++grainsToStart;
         }
         

@@ -74,7 +74,7 @@ public:
         jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);
         
         jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
-        
+         
         for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
         {
             auto* grain = getEmptyGrain();

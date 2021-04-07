@@ -32,7 +32,7 @@ template<typename SampleType>
 class AnalysisGrain
 {
 public:
-    AnalysisGrain(): numActive(0), size(0), empty(true) { }
+    AnalysisGrain(): numActive(0), origStart(0), origEnd(0), size(0) { }
     
     void reserveSize (int numSamples) { samples.setSize(1, numSamples); }
     
@@ -42,12 +42,12 @@ public:
     
     void storeNewGrain (const SampleType* inputSamples, int startSample, int endSample)
     {
-        empty = false;
         samples.clear();
         origStart = startSample;
         origEnd = endSample;
         size = endSample - startSample + 1;
         jassert (size > 0);
+        jassert (samples.getNumSamples() >= size);
         
         auto* writing = samples.getWritePointer(0);
         vecops::copy (inputSamples + startSample, writing, size);
@@ -61,7 +61,6 @@ public:
     {
         samples.clear();
         size = 0;
-        empty = true;
         origStart = 0;
         origEnd = 0;
         numActive = 0;
@@ -81,7 +80,7 @@ public:
     
     int getEndSample() const noexcept { return origEnd; }
     
-    bool isEmpty() const noexcept { return empty; }
+    bool isEmpty() const noexcept { return size < 1; }
     
     
 private:
@@ -98,8 +97,6 @@ private:
     int origStart, origEnd;  // the original start & end sample indices of this grain
     
     int size;
-    
-    bool empty;
     
     juce::AudioBuffer<SampleType> samples;
 };
@@ -119,31 +116,28 @@ class SynthesisGrain
     using Grain = AnalysisGrain<SampleType>;
     
 public:
-    SynthesisGrain(): active(false), readingIndex(0), grain(nullptr), zeroesLeft(0), halfIndex(0) { }
+    SynthesisGrain(): readingIndex(0), grain(nullptr), zeroesLeft(0), halfIndex(0) { }
     
-    bool isActive() const noexcept { return active; }
-    
-    int size() const noexcept { return grain->getSize(); }
+    bool isActive() const noexcept { return size > 0; }
     
     int halfwayIndex() const noexcept { return halfIndex; }
     
-    int silentSamplesLeft() const noexcept { return zeroesLeft; }
-    
     void startNewGrain (Grain* newGrain, int synthesisMarker)
     {
-        jassert (newGrain != nullptr);
+        jassert (newGrain != nullptr && ! newGrain->isEmpty());
         newGrain->incNumActive();
         grain = newGrain;
         
-        active = true;
         readingIndex = 0;
         zeroesLeft = synthesisMarker;
-        halfIndex = juce::roundToInt (grain->getSize() * 0.5f);
+        size = grain->getSize();
+        jassert (size > 0);
+        halfIndex = juce::roundToInt (size * 0.5f);
     }
     
     SampleType getNextSample()
     {
-        jassert (active && ! grain->isEmpty());
+        jassert (isActive() && ! grain->isEmpty());
         
         if (zeroesLeft > 0)
         {
@@ -152,9 +146,11 @@ public:
             return SampleType(0);
         }
         
-        const auto sample = grain->getSample (readingIndex++);
+        const auto sample = grain->getSample (readingIndex);
+        
+        ++readingIndex;
 
-        if (readingIndex >= grain->getSize())
+        if (readingIndex >= size)
             stop();
 
         return sample;
@@ -162,7 +158,7 @@ public:
     
     int samplesLeft() const
     {
-        if (active)
+        if (isActive())
             return grain->getSize() - readingIndex + std::max(0, zeroesLeft);
         
         return 0;
@@ -170,10 +166,10 @@ public:
     
     void stop()
     {
-        active = false;
         readingIndex = 0;
         zeroesLeft = 0;
         halfIndex = 0;
+        size = 0;
         
         if (grain != nullptr)
         {
@@ -184,11 +180,11 @@ public:
     
     
 private:
-    bool active;
-    int readingIndex;
+    int readingIndex;  // the next index to be read from the AnalysisGrain's buffer
     Grain* grain;
-    int zeroesLeft;
-    int halfIndex;
+    int zeroesLeft;  // the number of zeroes this grain will output before actually outputting its samples. This allows grains to be respaced into the future.
+    int halfIndex;  // marks the halfway point for this grain
+    int size;
 };
     
 template class SynthesisGrain<float>;
