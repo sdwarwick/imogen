@@ -25,17 +25,13 @@
 #include "bv_Harmonizer.h"
 
 
-// multiplicative smoothing cannot ever actually reach 0
-#define bvhv_MIN_SMOOTHED_GAIN 0.0000001
-#define _SMOOTHING_ZERO_CHECK(inputGain) std::max(SampleType(bvhv_MIN_SMOOTHED_GAIN), SampleType (inputGain))
-
-
 namespace bav
 {
     
     
 template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h): Base(h), parent(h), shifter(&parent->analyzer)
+HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
+    dsp::SynthVoiceBase<SampleType>(h), parent(h), shifter(&parent->analyzer)
 { }
 
 
@@ -59,9 +55,8 @@ void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desir
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    const auto newPeriod = juce::roundToInt (currentSamplerate / desiredFrequency);
-    
-    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(), newPeriod);
+    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(),
+                        juce::roundToInt (currentSamplerate / desiredFrequency));  // new desired period
 }
     
     
@@ -79,8 +74,6 @@ void HarmonizerVoice<SampleType>::noteCleared()
 }
 
     
-#undef bvhv_MIN_SMOOTHED_GAIN
-#undef _SMOOTHING_ZERO_CHECK
 #undef bvh_NUM_SYNTHESIS_GRAINS
     
     

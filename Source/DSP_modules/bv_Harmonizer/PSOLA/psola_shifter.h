@@ -55,8 +55,6 @@ public:
         if (! anyGrainsAreActive())
             startNewGrain (newPeriod);
         
-        jassert (anyGrainsAreActive());
-        
         auto sample = SampleType(0);
         
         for (auto* grain : synthesisGrains)
@@ -66,7 +64,7 @@ public:
             
             sample += grain->getNextSample();
             
-            if (grain->samplesLeft() == grain->halfwayIndex())
+            if (! grain->isActive() || grain->samplesLeft() == grain->halfwayIndex())
                 startNewGrain (newPeriod);
         }
         
@@ -112,6 +110,8 @@ private:
             newGrain->startNewGrain (analyzer->findClosestGrain (nextSynthesisIndex), nextSynthesisIndex);
             nextSynthesisIndex += newPeriod;
         }
+        
+        jassert (anyGrainsAreActive());
     }
     
     inline bool anyGrainsAreActive() const

@@ -40,7 +40,7 @@ namespace bav
 
 
 template<typename SampleType>
-Harmonizer<SampleType>::Harmonizer()
+Harmonizer<SampleType>::Harmonizer(): autoPitch(&analyzer)
 {
     Base::setConcertPitchHz(440);
     
@@ -64,6 +64,7 @@ void Harmonizer<SampleType>::initialized (const double initSamplerate, const int
 {
     pitchDetector.initialize();
     juce::ignoreUnused (initSamplerate, initBlocksize);
+    autoPitch.initialize();
 }
     
 
@@ -71,7 +72,6 @@ template<typename SampleType>
 void Harmonizer<SampleType>::prepared (int blocksize)
 {
     inputStorage.setSize (1, blocksize);
-    
     analyzer.prepare (blocksize);
 }
     
@@ -80,6 +80,7 @@ template<typename SampleType>
 void Harmonizer<SampleType>::resetTriggered()
 {
     analyzer.reset();
+    autoPitch.reset();
 }
 
 
@@ -106,6 +107,7 @@ void Harmonizer<SampleType>::release()
     inputStorage.clear();
     pitchDetector.releaseResources();
     analyzer.releaseResources();
+    autoPitch.releaseResources();
 }
 
     
@@ -135,17 +137,15 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     
     vecops::copy (inputAudio.getReadPointer(0), inputStorage.getWritePointer(0), numSamples);
     
-    const auto nextFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
+    if (! frameIsPitched && bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
+        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);
+    
+    const auto thisFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
                                                  : juce::Random::getSystemRandom().nextInt (pitchDetector.getCurrentLegalPeriodRange());
     
-    jassert (nextFramesPeriod > 0);
+    jassert (thisFramesPeriod > 0);
     
-    if (! frameIsPitched && bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
-    {
-        vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);  // negate the samples -- reverse polarity
-    }
-    
-    analyzer.analyzeInput (inputStorage.getReadPointer(0), numSamples, nextFramesPeriod);
+    analyzer.analyzeInput (inputStorage.getReadPointer(0), numSamples, thisFramesPeriod);
 }
     
 

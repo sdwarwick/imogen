@@ -21,8 +21,9 @@
 ======================================================================================================================================================*/
 
 
-
 #include "GrainExtractor/GrainExtractor.h"
+#include <climits>  // for INT_MAX
+
 
 #define bvh_NUM_ANALYSIS_GRAINS 48
 
@@ -75,8 +76,11 @@ public:
         jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
         
         for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
-            if (auto* grain = getEmptyGrain())
-                grain->storeNewGrain (inputSamples, index, index + grainSize);
+        {
+            auto* grain = getEmptyGrain();
+            jassert (grain != nullptr);
+            grain->storeNewGrain (inputSamples, index, index + grainSize);
+        }
         
         if (indicesOfGrainOnsets.getUnchecked(0) > 0)  // bit @ beginning
             if (auto* grain = getEmptyGrain())
@@ -129,9 +133,10 @@ public:
     }
     
     
+    
 private:
     
-    Analysis_Grain* getEmptyGrain() const
+    inline Analysis_Grain* getEmptyGrain() const
     {
         for (auto* grain : analysisGrains)
             if (grain->isEmpty() || grain->numReferences() <= 0)

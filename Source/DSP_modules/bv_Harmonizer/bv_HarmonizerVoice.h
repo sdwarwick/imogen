@@ -1,3 +1,25 @@
+/*======================================================================================================================================================
+           _             _   _                _                _                 _               _
+          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
+       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
+      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
+  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
+ /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
+ \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
+ 
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ bv_HarmonizerVoice.h: This file defines the interface for the HarmonizerVoice class. The Harmonizer owns and manages a collection of HarmonizerVoices; a single Voice plays a single repitched note at a time.
+ 
+======================================================================================================================================================*/
+
 
 
 namespace bav
@@ -7,23 +29,16 @@ namespace bav
 template<typename SampleType>
 class Harmonizer; // forward declaration...
 
-
-
-/*
- HarmonizerVoice : represents a "voice" that the Harmonizer can use to generate one monophonic note. A voice plays a single note/sound at a time; the Harmonizer holds an array of voices so that it can play polyphonically.
- */
+    
 
 template<typename SampleType>
 class HarmonizerVoice  :    public dsp::SynthVoiceBase<SampleType>
 {
-    
     using AudioBuffer = juce::AudioBuffer<SampleType>;
-    using Base = dsp::SynthVoiceBase<SampleType>;
     using Synthesis_Grain = SynthesisGrain<SampleType>;
     
     
 public:
-    
     HarmonizerVoice (Harmonizer<SampleType>* h);
     
     
@@ -34,13 +49,15 @@ private:
     
     void bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples) override;
     
-    Harmonizer<SampleType>* parent;
-    
     void prepared (const int blocksize) override;
     
     void released() override;
     
     void noteCleared() override;
+    
+    /**/
+    
+    Harmonizer<SampleType>* parent;
     
     PsolaShifter<SampleType> shifter;
     

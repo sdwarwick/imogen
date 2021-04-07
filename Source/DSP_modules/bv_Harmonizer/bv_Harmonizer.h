@@ -17,7 +17,7 @@
  
  @2021 by Ben Vining. All rights reserved.
  
- bv_Harmonizer.h: This file defines the interfaces for the Harmonizer and HarmonizerVoice classes. The Harmonizer class is essentially a synthesizer that makes sound by pitch shifting an input audio signal. The Harmonizer class owns and manages a collection of harmonizerVoice objects to play sound; a single HarmonizerVoice plays one note at a time.
+ bv_Harmonizer.h: This file defines the interfaces for the Harmonizer class. The Harmonizer class is essentially a synthesizer that makes sound by pitch shifting an input audio signal. The Harmonizer class owns and manages a collection of harmonizerVoice objects to play sound; a single HarmonizerVoice plays one note at a time.
  
 ======================================================================================================================================================*/
 
@@ -36,13 +36,12 @@
 
 #pragma once
 
-#include <climits>  // for INT_MAX
-
 #include "bv_SynthBase/bv_SynthBase.h"  // this file includes the bv_SharedCode header
 #include "PSOLA/granular_resynthesis.h"
 #include "PSOLA/psola_analyzer.h"
 #include "PSOLA/psola_shifter.h"
 #include "bv_HarmonizerVoice.h"
+#include "AutoPitchCorrector.h"
 
 
 
@@ -100,6 +99,8 @@ private:
     AudioBuffer inputStorage;
     
     PsolaAnalyzer<SampleType> analyzer;
+    
+    AutoPitch<SampleType> autoPitch;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

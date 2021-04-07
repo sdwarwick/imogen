@@ -25,7 +25,7 @@ namespace bav
 {
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------
- AnalysisGrain :    This class stores the actual audio samples that comprise a single audio grain, with a Hann window applied. The parent Harmonizer object owns a collection of these grains.
+ AnalysisGrain :    This class stores the actual audio samples that comprise a single audio grain, with a Hann window applied.
 ------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 template<typename SampleType>
@@ -107,9 +107,10 @@ private:
 template class AnalysisGrain<float>;
 template class AnalysisGrain<double>;
     
+    
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------
-SynthesisGrain :   This class holds a pointer to a specific AnalysisGrain, and its respacing information. Each HarmonizerVoice owns a colllection of these grains, and calls getNextSample() on these directly to generate its audio stream.
+SynthesisGrain :   This class holds a pointer to a specific AnalysisGrain, and its respacing information so it can be used to create a stream of repitched audio.
 ------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 template<typename SampleType>
