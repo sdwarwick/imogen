@@ -89,7 +89,7 @@ namespace bav
             
             if (correctionAmount != nullptr)
                 *correctionAmount = desiredFrequency - currentInputFreq;
-            
+
             shifter.getSamples (outputSamples, numSamples,
                                 juce::roundToInt (currentSamplerate / desiredFrequency));  // new desired period
         }

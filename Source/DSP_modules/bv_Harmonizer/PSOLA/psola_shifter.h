@@ -53,9 +53,7 @@ public:
         jassert (newPeriod > 0);
         
         if (! anyGrainsAreActive())
-            startNewGrain (newPeriod);
-        
-        int grainsToStart = 0;
+            startNewGrain (newPeriod, 0);
         
         auto sample = SampleType(0);
         
@@ -66,20 +64,28 @@ public:
                 grain->stop();
                 continue;
             }
+            
+            const auto origStart = grain->origStartIndex();
         
             sample += grain->getNextSample();
             
             if (grain->samplesLeft() == grain->halfwayIndex())
-                ++grainsToStart;
+                startNewGrain (newPeriod, origStart);
         }
-        
-        for (int i = 0; i < grainsToStart; ++i)
-            startNewGrain (newPeriod);
         
         if (nextSynthesisIndex > 0)
             --nextSynthesisIndex;
         
         return sample;
+    }
+    
+    
+    void skipSamples (const int numSamples)
+    {
+        for (auto* grain : synthesisGrains)
+            grain->stop();
+        
+        nextSynthesisIndex = std::max(0, nextSynthesisIndex - numSamples);
     }
     
     
@@ -107,14 +113,18 @@ public:
     
 private:
     
-    inline void startNewGrain (const int newPeriod)
+    inline void startNewGrain (const int newPeriod, const int lastGrainStart)
     {
-        if (! anyGrainsAreActive())
-            nextSynthesisIndex = 0;
+//        if (! anyGrainsAreActive())
+//            nextSynthesisIndex = 0;
         
         if (auto* newGrain = getAvailableGrain())
         {
-            newGrain->startNewGrain (analyzer->findClosestGrain (nextSynthesisIndex), nextSynthesisIndex);
+            auto* analysisGrain = analyzer->findClosestGrain (nextSynthesisIndex);
+            
+            const auto samplesInFuture = anyGrainsAreActive() ? nextSynthesisIndex - lastGrainStart : 0;
+            
+            newGrain->startNewGrain (analysisGrain, samplesInFuture);
             nextSynthesisIndex += newPeriod;
         }
         

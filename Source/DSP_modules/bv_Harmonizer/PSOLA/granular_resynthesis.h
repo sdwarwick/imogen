@@ -122,14 +122,22 @@ public:
     
     int halfwayIndex() const noexcept { return halfIndex; }
     
-    void startNewGrain (Grain* newGrain, int synthesisMarker)
+    int origStartIndex() const noexcept
+    {
+        if (grain != nullptr)
+            return grain->getStartSample();
+        
+        return 0;
+    }
+    
+    void startNewGrain (Grain* newGrain, int samplesInFuture)
     {
         jassert (newGrain != nullptr && ! newGrain->isEmpty());
         newGrain->incNumActive();
         grain = newGrain;
         
         readingIndex = 0;
-        zeroesLeft = synthesisMarker;
+        zeroesLeft = samplesInFuture;
         size = grain->getSize();
         jassert (size > 0);
         halfIndex = juce::roundToInt (size * 0.5f);
@@ -146,10 +154,8 @@ public:
             return SampleType(0);
         }
         
-        const auto sample = grain->getSample (readingIndex);
+        const auto sample = grain->getSample (readingIndex++);
         
-        ++readingIndex;
-
         if (readingIndex >= size)
             stop();
 

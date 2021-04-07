@@ -73,8 +73,6 @@ public:
         jassert (! indicesOfGrainOnsets.isEmpty());
         jassert (indicesOfGrainOnsets.getLast() + grainSize <= numSamples);
         
-        jassert (getEmptyGrain() != nullptr);  // there should be at least 1 grain slot available each analysis frame
-         
         for (int index : indicesOfGrainOnsets)  //  write to analysis grains...
         {
             auto* grain = getEmptyGrain();
@@ -88,11 +86,11 @@ public:
         
         if (indicesOfGrainOnsets.getLast() + grainSize < numSamples)  // bit @ end
             if (auto* grain = getEmptyGrain())
-                grain->storeNewGrain (inputSamples, indicesOfGrainOnsets.getLast(), numSamples);
+                grain->storeNewGrain (inputSamples, indicesOfGrainOnsets.getLast() + grainSize, numSamples);
     }
     
     
-    Analysis_Grain* findClosestGrain (int synthesisMarker) const
+    Analysis_Grain* findClosestGrain (int idealBufferPos) const
     {
         Analysis_Grain* closestGrain = nullptr;
         int distance = INT_MAX;
@@ -102,7 +100,7 @@ public:
             if (grain->isEmpty())
                 continue;
             
-            const auto newDist = abs(synthesisMarker - grain->getStartSample());
+            const auto newDist = abs(idealBufferPos - grain->getStartSample());
             
             if (closestGrain == nullptr || newDist < distance)
             {
