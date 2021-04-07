@@ -40,7 +40,7 @@ namespace bav
 
 
 template<typename SampleType>
-Harmonizer<SampleType>::Harmonizer(): autoPitch(&analyzer)
+Harmonizer<SampleType>::Harmonizer()//: autoPitch(&analyzer)
 {
     Base::setConcertPitchHz(440);
     
@@ -64,7 +64,7 @@ void Harmonizer<SampleType>::initialized (const double initSamplerate, const int
 {
     pitchDetector.initialize();
     juce::ignoreUnused (initSamplerate, initBlocksize);
-    autoPitch.initialize();
+//    autoPitch.initialize();
 }
     
 
@@ -80,7 +80,7 @@ template<typename SampleType>
 void Harmonizer<SampleType>::resetTriggered()
 {
     analyzer.reset();
-    autoPitch.reset();
+//    autoPitch.reset();
 }
 
 
@@ -107,7 +107,7 @@ void Harmonizer<SampleType>::release()
     inputStorage.clear();
     pitchDetector.releaseResources();
     analyzer.releaseResources();
-    autoPitch.releaseResources();
+//    autoPitch.releaseResources();
 }
 
     
@@ -117,11 +117,14 @@ void Harmonizer<SampleType>::render (const AudioBuffer& input, AudioBuffer& outp
     jassert (input.getNumSamples() == output.getNumSamples());
     jassert (output.getNumChannels() == 2);
     
+    if (Base::getNumActiveVoices() == 0)
+        analyzer.reset();
+    else
+        analyzer.clearUnusedGrains();
+    
     analyzeInput (input);
     
     Base::renderVoices (midiMessages, output);
-    
-    analyzer.clearUnusedGrains();
 }
 
     
@@ -149,7 +152,6 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
 }
     
 
-// adds a specified # of voices
 template<typename SampleType>
 void Harmonizer<SampleType>::addNumVoices (const int voicesToAdd)
 {

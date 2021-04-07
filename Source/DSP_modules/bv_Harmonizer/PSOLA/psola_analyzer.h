@@ -120,7 +120,7 @@ public:
     void clearUnusedGrains()
     {
         for (auto* grain : analysisGrains)
-            if (grain->numReferences() <= 0)
+            if (grain->numReferences() <= 0 || grain->isEmpty())
                 grain->clear();
     }
     
@@ -139,7 +139,7 @@ private:
     inline Analysis_Grain* getEmptyGrain() const
     {
         for (auto* grain : analysisGrains)
-            if (grain->isEmpty() || grain->numReferences() <= 0)
+            if (grain->isEmpty())
                 return grain;
         
         return nullptr;

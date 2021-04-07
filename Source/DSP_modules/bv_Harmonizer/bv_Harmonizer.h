@@ -100,7 +100,7 @@ private:
     
     PsolaAnalyzer<SampleType> analyzer;
     
-    AutoPitch<SampleType> autoPitch;
+//    AutoPitch<SampleType> autoPitch;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

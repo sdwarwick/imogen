@@ -81,7 +81,7 @@ public:
     
     int getEndSample() const noexcept { return origEnd; }
     
-    bool isEmpty() const noexcept { return empty || size == 0; }
+    bool isEmpty() const noexcept { return empty; }
     
     
 private:
@@ -127,6 +127,8 @@ public:
     
     int halfwayIndex() const noexcept { return halfIndex; }
     
+    int silentSamplesLeft() const noexcept { return zeroesLeft; }
+    
     void startNewGrain (Grain* newGrain, int synthesisMarker)
     {
         jassert (newGrain != nullptr);
@@ -141,7 +143,7 @@ public:
     
     SampleType getNextSample()
     {
-        jassert (active);
+        jassert (active && ! grain->isEmpty());
         
         if (zeroesLeft > 0)
         {
@@ -151,10 +153,10 @@ public:
         }
         
         const auto sample = grain->getSample (readingIndex++);
-        
+
         if (readingIndex >= grain->getSize())
             stop();
-        
+
         return sample;
     }
     
@@ -168,13 +170,16 @@ public:
     
     void stop()
     {
-        jassert (active);
         active = false;
         readingIndex = 0;
         zeroesLeft = 0;
-        grain->decNumActive();
-        grain = nullptr;
         halfIndex = 0;
+        
+        if (grain != nullptr)
+        {
+            grain->decNumActive();
+            grain = nullptr;
+        }
     }
     
     

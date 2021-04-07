@@ -24,7 +24,7 @@
 namespace bav
 {
     
-#define bvh_NUM_SYNTHESIS_GRAINS 36  // these are cheap, no reason not to have a lot
+#define bvh_NUM_SYNTHESIS_GRAINS 48  // these are cheap, no reason not to have a lot
     
     
 template<typename SampleType>
@@ -55,6 +55,8 @@ public:
         if (! anyGrainsAreActive())
             startNewGrain (newPeriod);
         
+        int grainsToStart = 0;
+        
         auto sample = SampleType(0);
         
         for (auto* grain : synthesisGrains)
@@ -65,8 +67,11 @@ public:
             sample += grain->getNextSample();
             
             if (! grain->isActive() || grain->samplesLeft() == grain->halfwayIndex())
-                startNewGrain (newPeriod);
+                ++grainsToStart;
         }
+        
+        for (int i = 0; i < grainsToStart; ++i)
+            startNewGrain (newPeriod);
         
         if (nextSynthesisIndex > 0)
             --nextSynthesisIndex;
@@ -87,8 +92,7 @@ public:
         nextSynthesisIndex = 0;
         
         for (auto* grain : synthesisGrains)
-            if (grain->isActive())
-                grain->stop();
+            grain->stop();
     }
     
     void releaseResources()
@@ -123,7 +127,7 @@ private:
         return false;
     }
     
-    inline Synthesis_Grain* getAvailableGrain() const
+    inline Synthesis_Grain* getAvailableGrain()
     {
         for (auto* grain : synthesisGrains)
             if (! grain->isActive())
