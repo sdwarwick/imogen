@@ -140,12 +140,12 @@ void Harmonizer<SampleType>::analyzeInput (const AudioBuffer& inputAudio)
     if (! frameIsPitched && bav::math::probability (50))  // for unpitched frames, reverse the polarity approx 50% of the time
         vecops::multiplyC (inputStorage.getWritePointer(0), SampleType(-1), numSamples);
     
-    const auto thisFramesPeriod = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
-                                                 : juce::Random::getSystemRandom().nextInt (pitchDetector.getCurrentLegalPeriodRange());
+    period = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
+                            : juce::Random::getSystemRandom().nextInt (pitchDetector.getCurrentLegalPeriodRange());
     
-    jassert (thisFramesPeriod > 0);
+    jassert (period > 0);
     
-    analyzer.analyzeInput (inputStorage.getReadPointer(0), numSamples, thisFramesPeriod);
+    analyzer.analyzeInput (inputStorage.getReadPointer(0), numSamples, period);
 }
     
 

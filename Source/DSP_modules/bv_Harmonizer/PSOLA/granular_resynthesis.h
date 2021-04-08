@@ -32,7 +32,7 @@ template<typename SampleType>
 class AnalysisGrain
 {
 public:
-    AnalysisGrain(): numActive(0), origStart(0), origEnd(0), size(0), percentOfExpectedGrainSize(0) { }
+    AnalysisGrain(): numActive(0), origStart(0), size(0), percentOfExpectedGrainSize(0) { }
     
     void reserveSize (int numSamples) { samples.setSize(1, numSamples); }
     
@@ -52,7 +52,6 @@ public:
     {
         samples.clear();
         origStart = startSample;
-        origEnd = endSample;
         size = endSample - startSample + 1;
         jassert (size > 0);
         jassert (samples.getNumSamples() >= size);
@@ -72,7 +71,6 @@ public:
         samples.clear();
         size = 0;
         origStart = 0;
-        origEnd = 0;
         numActive = 0;
         percentOfExpectedGrainSize = 0.0f;
     }
@@ -87,9 +85,7 @@ public:
     
     int getSize() const noexcept { return size; }
     
-    int getStartSample() const noexcept { return origStart; }
-    
-    int getEndSample() const noexcept { return origEnd; }
+    int pitchMark() const noexcept { return origStart; }
     
     bool isEmpty() const noexcept { return size < 1; }
     
@@ -105,7 +101,7 @@ private:
     
     int numActive; // this counts the number of SynthesisGrains that are referring to this AnalysisGrain
     
-    int origStart, origEnd;  // the original start & end sample indices of this grain
+    int origStart;  // the original start & end sample indices of this grain
     
     int size;
     
@@ -131,6 +127,8 @@ class SynthesisGrain
 public:
     SynthesisGrain(): readingIndex(0), grain(nullptr), zeroesLeft(0) { }
     
+    Grain* orig() const noexcept { return grain; }
+    
     bool isActive() const noexcept
     {
         if (grain == nullptr)
@@ -140,14 +138,6 @@ public:
     }
     
     bool isHalfwayThrough() const noexcept { return samplesLeft() == juce::roundToInt(getSize() * 0.5f); }
-    
-    int startSample() const noexcept
-    {
-        if (grain != nullptr)
-            return grain->getStartSample();
-        
-        return 0;
-    }
     
     void startNewGrain (Grain* newGrain, int samplesInFuture)
     {
@@ -186,6 +176,8 @@ public:
         
         return 0;
     }
+    
+    int silenceLeft() const noexcept { return std::max(0, zeroesLeft); }
     
     int getSize() const noexcept
     {

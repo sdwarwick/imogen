@@ -48,33 +48,42 @@ void HarmonizerVoice<SampleType>::released()
 {
     shifter.releaseResources();
 }
-
-
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer)
-{
-    jassert (desiredFrequency > 0 && currentSamplerate > 0);
     
-    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(),
-                        juce::roundToInt (currentSamplerate / desiredFrequency),  // desired period
-                        startSampleOfOrigBuffer);
-}
-    
-    
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples)
-{
-    juce::ignoreUnused (voicesLastOutputFreq, currentSamplerate);
-    shifter.skipSamples (numSamples);
-}
     
 template<typename SampleType>
 void HarmonizerVoice<SampleType>::noteCleared()
 {
     shifter.reset();
 }
-
     
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::newBlockComing()
+{
+    shifter.newBlockComing();
+}
+
+
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer)
+{
+    jassert (desiredFrequency > 0 && currentSamplerate > 0);
+    juce::ignoreUnused(startSampleOfOrigBuffer);
+    
+    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(),
+                        juce::roundToInt (currentSamplerate / desiredFrequency),  // desired period
+                        parent->getCurrentPeriod());
+}
+    
+    
+template<typename SampleType>
+void HarmonizerVoice<SampleType>::bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples)
+{
+    juce::ignoreUnused (voicesLastOutputFreq, currentSamplerate, numSamples);
+    shifter.bypassedBlockRecieved (numSamples);
+}
+    
+
 #undef bvh_NUM_SYNTHESIS_GRAINS
     
     

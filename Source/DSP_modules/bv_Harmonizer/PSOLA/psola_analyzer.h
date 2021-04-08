@@ -22,7 +22,6 @@
 
 
 #include "GrainExtractor/GrainExtractor.h"
-#include <climits>  // for INT_MAX
 
 
 #define bvh_NUM_ANALYSIS_GRAINS 48
@@ -100,11 +99,11 @@ public:
             if (grain->isEmpty())
                 continue;
             
-            const auto newDist = abs(idealBufferPos - grain->getStartSample());
+            const auto newDist = abs(idealBufferPos - grain->pitchMark());
             
             if ( closestGrain == nullptr
-                || newDist <= distance
-                || grain->percentOfExpectedSize() > closestGrain->percentOfExpectedSize() )
+                || newDist <= distance)
+             //   || grain->percentOfExpectedSize() >= closestGrain->percentOfExpectedSize() )
             {
                 closestGrain = grain;
                 distance = newDist;

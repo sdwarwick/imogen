@@ -77,6 +77,8 @@ public:
     
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     
+    int getCurrentPeriod() const noexcept { return period; }
+    
     
 private:
     friend class HarmonizerVoice<SampleType>;
@@ -95,6 +97,8 @@ private:
     
     
     dsp::PitchDetector<SampleType> pitchDetector;
+    
+    int period;
     
     AudioBuffer inputStorage;
     
