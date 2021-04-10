@@ -58,8 +58,6 @@ private:
     
     juce::ComboBox selectPreset;
     
-    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the message FIFO
-    
     bav::ImogenLookAndFeel lookAndFeel;
     
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor

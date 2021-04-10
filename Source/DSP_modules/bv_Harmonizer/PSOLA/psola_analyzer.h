@@ -101,9 +101,7 @@ public:
             
             const auto newDist = abs(idealBufferPos - grain->pitchMark());
             
-            if ( closestGrain == nullptr
-                || newDist <= distance)
-             //   || grain->percentOfExpectedSize() >= closestGrain->percentOfExpectedSize() )
+            if ( closestGrain == nullptr || newDist <= distance )
             {
                 closestGrain = grain;
                 distance = newDist;
@@ -113,6 +111,42 @@ public:
         jassert (closestGrain != nullptr);
         
         return closestGrain;
+    }
+    
+    
+    Analysis_Grain* findBestNewGrain (Analysis_Grain* prevGrain) const
+    {
+        jassert (prevGrain != nullptr);
+        
+        Analysis_Grain* newGrain = nullptr;
+        SampleType difference = 0;
+        
+        for (auto* grain : analysisGrains)
+        {
+            if (grain->isEmpty() || grain == prevGrain)
+                continue;
+            
+            SampleType currentDifference = 0;
+            
+            const auto numSamples = std::min (prevGrain->getSize(), grain->getSize());
+            jassert (numSamples > 0);
+            
+            for (int i = 0; i < numSamples; ++i)
+                currentDifference += abs(prevGrain->getSample(i) - grain->getSample(i));
+            
+            currentDifference /= numSamples;
+            
+            if ( newGrain == nullptr || currentDifference < difference )
+            {
+                difference = currentDifference;
+                newGrain = grain;
+            }
+        }
+        
+        if (newGrain == nullptr)
+            return prevGrain;
+        
+        return newGrain;
     }
     
     

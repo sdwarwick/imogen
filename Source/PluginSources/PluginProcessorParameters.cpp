@@ -291,7 +291,7 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    paramChanges.getReadyMessages (currentMessages, true);
+    paramChanges.getReadyMessages (currentMessages);
     
     bool adsr = false;
     float adsrA = adsrAttack->get(), adsrD = adsrDecay->get(), adsrS = adsrSustain->get(), adsrR = adsrRelease->get();
@@ -391,7 +391,7 @@ template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEn
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    nonParamEvents.getReadyMessages (currentMessages, true);
+    nonParamEvents.getReadyMessages (currentMessages);
     
     for (const auto msg : currentMessages)
     {

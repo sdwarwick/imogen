@@ -40,9 +40,14 @@ public:
     }
     
     
-    void newBlockComing() noexcept
+    void newBlockComing (int prevBlocksize) noexcept
     {
-        //nextSynthesisPitchMark = 0;
+    //    nextSynthesisPitchMark = std::max(0, nextSynthesisPitchMark - prevBlocksize);
+        
+        nextAnalysisPitchMark  = 0;
+        nextSynthesisPitchMark = 0;
+        
+        //nextSynthesisPitchMark -= prevBlocksize;
     }
     
     
@@ -51,7 +56,7 @@ public:
         for (auto* grain : synthesisGrains)
             grain->stop();
         
-        nextSynthesisPitchMark = std::max(0, nextSynthesisPitchMark - numSamples);
+ //       nextSynthesisPitchMark = std::max(0, nextSynthesisPitchMark - numSamples);
     }
     
     
@@ -68,7 +73,7 @@ public:
         jassert (newPeriod > 0 && origPeriod > 0);
         
         if (! anyGrainsAreActive())
-            startNewGrain (newPeriod, origPeriod, 0);
+            startNewGrain (newPeriod, origPeriod, nullptr);
         
         auto sample = SampleType(0);
         
@@ -77,16 +82,14 @@ public:
             if (! grain->isActive())
                 continue;
             
-            const auto lastAnalysisPitchMark  = grain->orig()->pitchMark();
-            
             sample += grain->getNextSample();
             
             if (! grain->isActive() || grain->isHalfwayThrough())
-                startNewGrain (newPeriod, origPeriod, lastAnalysisPitchMark);
+                startNewGrain (newPeriod, origPeriod, grain->orig());
         }
         
-        if (nextSynthesisPitchMark > 0)
-            --nextSynthesisPitchMark;
+//        if (nextSynthesisPitchMark > 0)
+//            --nextSynthesisPitchMark;
         
         return sample;
     }
@@ -101,7 +104,7 @@ public:
     
     void reset()
     {
-        nextSynthesisPitchMark = 0;
+ //       nextSynthesisPitchMark = 0;
         
         for (auto* grain : synthesisGrains)
             grain->stop();
@@ -116,20 +119,22 @@ public:
     
 private:
     
-    inline void startNewGrain (const int newPeriod, const int origPeriod, const int lastAnalysisPitchMark)
+    inline void startNewGrain (const int newPeriod, const int origPeriod, AnalysisGrain<SampleType>* lastGrain)
     {
         if (auto* newGrain = getAvailableGrain())
         {
-            const auto anyActive = anyGrainsAreActive();
+ //           auto* analysisGrain = lastGrain == nullptr ? analyzer->findClosestGrain (bufferPos) : analyzer->findBestNewGrain (lastGrain);
             
-            const auto bufferPos = anyActive ? lastAnalysisPitchMark + origPeriod : 0;
-            auto* analysisGrain  = analyzer->findClosestGrain (bufferPos);
+ //           const auto bufferPos = anyGrainsAreActive() ? lastAnalysisPitchMark + origPeriod : 0;
             
-            const auto samplesInFuture = anyActive ? nextSynthesisPitchMark - analysisGrain->pitchMark() : 0;
+            auto* analysisGrain = analyzer->findClosestGrain (nextAnalysisPitchMark);
+            
+            const auto samplesInFuture = juce::roundToInt (analysisGrain->percentOfExpectedSize() * (nextSynthesisPitchMark - nextAnalysisPitchMark));
             
             newGrain->startNewGrain (analysisGrain, samplesInFuture);
             
             nextSynthesisPitchMark += newPeriod;
+            nextAnalysisPitchMark  += origPeriod;
         }
     }
     
@@ -177,6 +182,8 @@ private:
     juce::OwnedArray<Synthesis_Grain> synthesisGrains;
     
     int nextSynthesisPitchMark = 0;
+    
+    int nextAnalysisPitchMark = 0;
 };
 
 

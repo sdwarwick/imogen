@@ -49,9 +49,7 @@ class ImogenAudioProcessor    : public juce::AudioProcessor
     using FloatParamPtr = FloatParameter*;
     using IntParamPtr   = IntParameter*;
     using BoolParamPtr  = BoolParameter*;
-    
-    using ParameterMessenger = bav::ParameterMessenger;
-    
+
     
 public:
     ImogenAudioProcessor();
@@ -187,11 +185,14 @@ public:
     void editorPitchbend (int wheelValue);
     
     
+    static constexpr auto msgQueueSize = size_t(100);
+    
     // this queue is SPSC; this is only for events flowing from the editor into the processor
-    bav::MessageQueue nonParamEvents;
+    bav::MessageQueue<msgQueueSize> nonParamEvents;
     
     
 private:
+    
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
@@ -232,7 +233,7 @@ private:
     void addParameterMessenger (juce::String stringID, parameterID paramID);
     void updateParameterDefaults();
     
-    bav::MessageQueue paramChanges;
+    bav::MessageQueue<msgQueueSize> paramChanges;
     
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
@@ -250,7 +251,7 @@ private:
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
     
-    juce::Array< bav::MessageQueue::Message >  currentMessages;  // this array stores the current messages from the message FIFO
+    juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
     juce::AudioProcessorValueTreeState tree;
     
@@ -260,8 +261,6 @@ private:
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;
-    
-    std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
 
     
 #if IMOGEN_ONLY_BUILDING_STANDALONE
@@ -272,6 +271,37 @@ private:
     
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
+    
+    
+    
+    /* simple attachment class that listens for chages in one specific parameter and pushes messages with the appropriate key value into the queue */
+    class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
+    {
+        using MsgQ = bav::MessageQueue<msgQueueSize>;
+        
+    public:
+        ParameterMessenger(MsgQ& queue, bav::Parameter* p, int paramIDtoListen)
+            : q(queue), param(p), paramID(paramIDtoListen)
+        {
+            jassert (param != nullptr);
+        }
+        
+        void parameterChanged (const juce::String& s, float value) override
+        {
+            juce::ignoreUnused (s);
+            value = param->normalize(value);
+            jassert (value >= 0.0f && value <= 1.0f);
+            q.pushMessage (paramID, value);  // the message will store a normalized value
+        }
+        
+    private:
+        MsgQ& q;
+        bav::Parameter* const param;
+        const int paramID;
+    };
+    
+    
+    std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

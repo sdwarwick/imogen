@@ -58,9 +58,10 @@ void HarmonizerVoice<SampleType>::noteCleared()
     
     
 template<typename SampleType>
-void HarmonizerVoice<SampleType>::newBlockComing()
+void HarmonizerVoice<SampleType>::newBlockComing (int previousBlocksize, int upcomingBlocksize)
 {
-    shifter.newBlockComing();
+    juce::ignoreUnused (upcomingBlocksize);
+    shifter.newBlockComing (previousBlocksize);
 }
 
 
