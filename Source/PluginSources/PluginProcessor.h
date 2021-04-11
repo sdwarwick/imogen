@@ -31,8 +31,13 @@
   #define IMOGEN_ONLY_BUILDING_STANDALONE 0
 #endif
 
+#if IMOGEN_ONLY_BUILDING_STANDALONE
+  #ifdef bvsb_USE_MTS_ESP
+    #undef bvsb_USE_MTS_ESP
+  #endif
+  #define bvsb_USE_MTS_ESP 0
+#endif
 
-#define bvie_MAX_POSSIBLE_NUM_VOICES 20
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
@@ -189,6 +194,9 @@ public:
     
     // this queue is SPSC; this is only for events flowing from the editor into the processor
     bav::MessageQueue<msgQueueSize> nonParamEvents;
+    
+    
+    static constexpr int maxPossibleNumVoices = 20;
     
     
 private:
