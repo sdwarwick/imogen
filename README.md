@@ -1,4 +1,4 @@
-# Imogen: a 12-voice, low-latency vocal harmonizer
+# Imogen: the ultimate real-time vocal harmonizer
 
 [![AutoBuild](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml/badge.svg?branch=master)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
 [![CodeFactor](https://www.codefactor.io/repository/github/benthevining/imogen/badge)](https://www.codefactor.io/repository/github/benthevining/imogen)
@@ -14,6 +14,9 @@ So I decided to create it myself.
 <p align="center">
  <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
  </p>
+ 
+ 
+NOTE: Imogen is currently under development and will mostly likely not function as intended if you download it and try to build it, though you are free to do so. Imogen's official release is upcoming and will be announced.
 
 ## Author
 **Ben Vining**: ben.the.vining@gmail.com | [Facebook](http://www.facebook.com/benviningofficial/) | [Twitter](http://twitter.com/benthevining) | [Gumroad](http://gumroad.com/benvining)
