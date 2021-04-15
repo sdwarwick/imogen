@@ -310,7 +310,7 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
     // converts a message's raw normalized value to its actual boolean true/false value
 #define _BOOL_MSG value >= 0.5f
     
-    for (const auto msg : currentMessages)
+    for (const auto& msg : currentMessages)
     {
         if (! msg.isValid())
             continue;
@@ -393,7 +393,7 @@ void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<Sample
 {
     nonParamEvents.getReadyMessages (currentMessages);
     
-    for (const auto msg : currentMessages)
+    for (const auto& msg : currentMessages)
     {
         if (! msg.isValid())
             continue;
@@ -714,7 +714,7 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
 /*
     Returns the corresponding parameter ID for the passed parameter pointer.
 */
-bav::Parameter* ImogenAudioProcessor::parameterID parameterPntrToID (const Parameter* const parameter) const
+ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
 {
     if      (parameter == mainBypass)           return mainBypassID;
     else if (parameter == leadBypass)           return leadBypassID;
