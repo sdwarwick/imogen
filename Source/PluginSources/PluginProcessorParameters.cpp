@@ -711,3 +711,52 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
 }
 
 
+/*
+    Returns the corresponding parameter ID for the passed parameter pointer.
+*/
+bav::Parameter* ImogenAudioProcessor::parameterID parameterPntrToID (const Parameter* const parameter) const
+{
+    if      (parameter == mainBypass)           return mainBypassID;
+    else if (parameter == leadBypass)           return leadBypassID;
+    else if (parameter == harmonyBypass)        return harmonyBypassID;
+    else if (parameter == dryPan)               return dryPanID;
+    else if (parameter == dryWet)               return dryWetID;
+    else if (parameter == adsrAttack)           return adsrAttackID;
+    else if (parameter == adsrDecay)            return adsrDecayID;
+    else if (parameter == adsrSustain)          return adsrSustainID;
+    else if (parameter == adsrRelease)          return adsrReleaseID;
+    else if (parameter == stereoWidth)          return stereoWidthID;
+    else if (parameter == lowestPanned)         return lowestPannedID;
+    else if (parameter == velocitySens)         return velocitySensID;
+    else if (parameter == pitchBendRange)       return pitchBendRangeID;
+    else if (parameter == pedalPitchIsOn)       return pedalPitchIsOnID;
+    else if (parameter == pedalPitchThresh)     return pedalPitchThreshID;
+    else if (parameter == pedalPitchInterval)   return pedalPitchIntervalID;
+    else if (parameter == descantIsOn)          return descantIsOnID;
+    else if (parameter == descantThresh)        return descantThreshID;
+    else if (parameter == descantInterval)      return descantIntervalID;
+    else if (parameter == concertPitchHz)       return concertPitchHzID;
+    else if (parameter == voiceStealing)        return voiceStealingID;
+    else if (parameter == inputGain)            return inputGainID;
+    else if (parameter == outputGain)           return outputGainID;
+    else if (parameter == limiterToggle)        return limiterToggleID;
+    else if (parameter == noiseGateToggle)      return noiseGateToggleID;
+    else if (parameter == noiseGateThreshold)   return noiseGateThresholdID;
+    else if (parameter == compressorToggle)     return compressorToggleID;
+    else if (parameter == compressorAmount)     return compressorAmountID;
+    else if (parameter == aftertouchGainToggle) return aftertouchGainToggleID;
+    else if (parameter == deEsserToggle)        return deEsserToggleID;
+    else if (parameter == deEsserThresh)        return deEsserThreshID;
+    else if (parameter == deEsserAmount)        return deEsserAmountID;
+    else if (parameter == reverbToggle)         return reverbToggleID;
+    else if (parameter == reverbDryWet)         return reverbDryWetID;
+    else if (parameter == reverbDecay)          return reverbDecayID;
+    else if (parameter == reverbDuck)           return reverbDuckID;
+    else if (parameter == reverbLoCut)          return reverbLoCutID;
+    else if (parameter == reverbHiCut)          return reverbHiCutID;
+    else if (parameter == numVoices)            return numVoicesID;
+    else if (parameter == inputSource)          return inputSourceID;
+    else if (parameter == vocalRangeType)       return vocalRangeTypeID;
+    else return mainBypassID;
+}
+
