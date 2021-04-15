@@ -277,6 +277,8 @@ private:
     
     Parameter* getParameterPntr (const parameterID paramID) const;
     
+    parameterID parameterPntrToID (const Parameter* const) const;
+    
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
     
