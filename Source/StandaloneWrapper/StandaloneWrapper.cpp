@@ -1,4 +1,4 @@
-#if JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
+#if JucePlugin_Build_Standalone && JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
 
 #include "StandaloneWrapper.h"
 
@@ -54,7 +54,7 @@ void StandaloneFilterApp::requestQuit() const
 JUCE_CREATE_APPLICATION_DEFINE(StandaloneFilterApp)
 
 
-#if JucePlugin_Build_Standalone && JUCE_IOS
+#if JUCE_IOS
 
 bool JUCE_CALLTYPE juce_isInterAppAudioConnected()
 {
@@ -78,7 +78,6 @@ juce::Image JUCE_CALLTYPE juce_getIAAHostIcon (int size)
     return juce::Image();
 }
 
-#endif  /* JucePlugin_Build_Standalone && JUCE_IOS */
+#endif  /* JUCE_IOS */
 
-
-#endif /* JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
+#endif /* JucePlugin_Build_Standalone && JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
