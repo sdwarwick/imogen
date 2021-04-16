@@ -5,6 +5,8 @@
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
+#include <juce_data_structures/app_properties/juce_PropertiesFile.h>
+
 
 extern juce::JUCEApplicationBase* juce_CreateApplication();
 
