@@ -95,7 +95,7 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -DCMAKE_BUILD_TYPE=release -B Builds/LV2_build -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE -Dbv_formats=LV2 -Dbv_juceGitRepoToUse="https://github.com/lv2-porting-project/JUCE.git" .
+cmake -DCMAKE_BUILD_TYPE=release -B Builds/LV2_build -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE -Dbv_formats=LV2 -Dbv_juceGitRepoToUse="https://github.com/DISTRHO/JUCE" .
 
 
 # execute build
