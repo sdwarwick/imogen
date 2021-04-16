@@ -35,8 +35,13 @@ jobs:
         submodules: recursive
         path: imogen
 
-    - name: Run build script
+    - name: Run main build script
       shell: bash
       run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_script.sh
+      
+    - name: Run iOS build script
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
 
 #
