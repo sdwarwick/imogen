@@ -196,6 +196,10 @@ public:
     bav::MessageQueue<msgQueueSize> nonParamEvents;
     
     
+    void setOscMessagesEnabled (bool shouldBeEnabled) { oscMapper.setEnabled (shouldBeEnabled); }
+    bool areOscMessagesEnabled() const noexcept { return oscMapper.areOscMessagesEnabled(); }
+    
+    
     static constexpr int maxPossibleNumVoices = 20;
     
     
