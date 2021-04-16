@@ -1,6 +1,5 @@
 #pragma once
 
-#include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
 extern juce::JUCEApplicationBase* juce_CreateApplication();
