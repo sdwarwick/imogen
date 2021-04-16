@@ -11,21 +11,19 @@ StandaloneFilterApp::StandaloneFilterApp()
 juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
 {
     return new juce:: StandaloneFilterWindow (getApplicationName(),
-                                              Helpers::getBackgroundColor(),
+                                              juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
                                               appProperties.getUserSettings(),
                                               false,
                                               {},
                                               nullptr,
-                                              Helpers::getChannelConfigurations(),
-                                              Helpers::shouldAutoOpenMidiDevices());
+                                              {},
+                                              true);
 }
 
 void StandaloneFilterApp::initialise (const juce::String&)
 {
     mainWindow.reset (createWindow());
-
-    if (! Helpers::shouldUseKioskMode())
-        mainWindow->setVisible (true);
+    mainWindow->setVisible (true);
 }
 
 void StandaloneFilterApp::shutdown()
