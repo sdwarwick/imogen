@@ -20,7 +20,8 @@
 #  imogen_build_script.sh :	  This file provides a simple, cross-platform build configuration for Imogen. Simply pull the git repo and run this script to build Imogen in its default Release configuration for your platform; no other configuration is necessary and this script will automatically resolve all dependencies for you.
 
 
-IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
+SCRIPT_DIR="$(dirname $0)"; # save the directory of the script
+IMOGEN_DIR="$SCRIPT_DIR/..";
 
 ZIPPING=0;
 TESTING=0;
