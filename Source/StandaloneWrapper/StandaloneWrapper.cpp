@@ -1,5 +1,4 @@
 #include "StandaloneWrapper.h"
-#include "ConfigurationHelpers.h"
 
 StandaloneFilterApp::StandaloneFilterApp()
 {
