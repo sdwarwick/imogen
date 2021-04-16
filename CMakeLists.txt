@@ -35,7 +35,6 @@ set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
 set (Imogen_graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
 
-set (Imogen_testFilesPath ${Imogen_sourceDir}/Tests)  # The location of the source files in which unit tests are defined
 
 #
 
@@ -58,10 +57,6 @@ set (Imogen_sourceFiles
 
 set (Imogen_graphicAssetFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
-
-set (Imogen_testFiles
-    ${Imogen_testFilesPath}/tests.cpp
-    ${Imogen_testFilesPath}/HarmonizerTests.cpp) 
 
 #
 
