@@ -43,7 +43,7 @@ struct PropertiesFileOptions : public PropertiesFile::Options
         folderName = getOptionsFolderName();
     }
 
-    static String getOptionsFolderName()
+    static juce::String getOptionsFolderName()
     {
 #if JUCE_LINUX
         return "~/.config";
