@@ -53,7 +53,9 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
-    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp)
+    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
+    ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.h
+    ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.cpp)
 
 set (Imogen_graphicAssetFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
