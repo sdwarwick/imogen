@@ -57,6 +57,9 @@ juce::JUCEApplicationBase* juce_CreateApplication()
 }
 
 
+JUCE_CREATE_APPLICATION_DEFINE(StandaloneFilterApp)
+
+
 #if JucePlugin_Build_Standalone && JUCE_IOS
 
 bool JUCE_CALLTYPE juce_isInterAppAudioConnected()
