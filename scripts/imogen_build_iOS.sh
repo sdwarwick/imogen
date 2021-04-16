@@ -17,14 +17,11 @@
  
 #  @2021 by Ben Vining. All rights reserved.
 
-#  imogen_build_iOS.sh :	  This script builds an iOS version of Imogen.
+#  imogen_build_iOS.sh :	  This script builds an iOS version of Imogen. When cross compiling for iOS, using MacOS is recommended, as is using CMake's XCode generator.
 
 
 SCRIPT_DIR="$(dirname $0)"; # save the directory of the script
 IMOGEN_DIR="$SCRIPT_DIR/..";
-
-ZIPPING=0;
-TESTING=0;
 
 
 ###  UTILITY FUNCTIONS  ###
@@ -42,10 +39,6 @@ windows_no_cmake () {
 	exit 1
 }
 
-enable_zip () {
-	ZIPPING=1;
-  	printf "A .zip containing all the Imogen artefacts will be created after the build is complete. \n"
-}
 
 unknown_argument () {
 	printf "\v Unknown argument '$1'. For usage, run this script with --help or -h. \n"
@@ -57,18 +50,15 @@ unknown_argument () {
 
 # check to see if the script was invoked with the --help or -h flags
 if [[ ${#@} -ne 0 ]] && ( [[ ${@#"--help"} = "" ]] || [[ ${@#"-h"} = "" ]] ); then
- 	printf "\n \t \v IMOGEN BUILD SCRIPT \n USAGE: \n \n"
-  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in VST, AU and Standalone formats. \n"
-  	printf "Invoke this script with the --zip or -z flags to zip the build artifacts together into one .zip file upon completion of the build. \n"
+ 	printf "\n \t \v IMOGEN IOS BUILD SCRIPT \n USAGE: \n \n"
+  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in its Standalone format, cross-compiled for iOS. \n"
   	exit 0;
 fi
 
 
 for flag in "$@" ; do
 	case "$flag" in
-		--zip*)  enable_zip ;;
-		-z*)	 enable_zip ;;
-		*)		 unknown_argument "$flag" ;;
+		*) unknown_argument "$flag" ;;
 	esac
 done
 
@@ -106,21 +96,12 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -DCMAKE_BUILD_TYPE=release -B Builds -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
+cmake -DCMAKE_BUILD_TYPE=release -B Builds/ios_Build -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE .
 
 
 # execute build
 printf "\n \t \v Building Imogen... \n \n"
-cmake --build Builds --target Imogen_All --config Release
-
-
-# zip artifacts (if requested by user)
-if [ "$ZIPPING" -eq "1" ] ; then
-	set +e;  # an error in zipping shouldn't be fatal
-	printf "\n \t \v Zipping artifacts... \n \n"
-	cd Builds
-	cmake -E tar cfv Imogen.zip --format=zip Imogen_artefacts/
-fi
+cmake --build Builds/ios_Build --target Imogen_Standalone --config Release
 
 
 printf "\n \t \v Imogen built successfully!"
