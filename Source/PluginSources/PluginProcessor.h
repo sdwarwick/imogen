@@ -241,6 +241,8 @@ private:
     void addParameterMessenger (juce::String stringID, parameterID paramID);
     void updateParameterDefaults();
     
+    void initializeParameterOscMappings();
+    
     bav::MessageQueue<msgQueueSize> paramChanges;
     
     template<typename SampleType>
