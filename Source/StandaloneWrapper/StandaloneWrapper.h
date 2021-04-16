@@ -1,6 +1,5 @@
 #pragma once
 
-#include "PropertiesFileOptions.h"
 #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
@@ -27,3 +26,5 @@ private:
     std::unique_ptr<juce::StandaloneFilterWindow> mainWindow;
     void requestQuit() const;
 };
+
+
