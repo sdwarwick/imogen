@@ -1,5 +1,7 @@
 #pragma once
 
+#include <juce_data_structures/juce_data_structures.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
@@ -17,7 +19,7 @@ public:
 
     virtual juce::StandaloneFilterWindow* createWindow();
 
-    void initialise(const String&) override;
+    void initialise(const juce::String&) override;
     void shutdown() override;
     void systemRequestedQuit() override;
 
