@@ -4,26 +4,26 @@
 #include <juce_audio_plugin_client/utility/juce_PluginHostType.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
-extern JUCEApplicationBase* juce_CreateApplication();
+extern juce::JUCEApplicationBase* juce_CreateApplication();
 
-class StandaloneFilterApp : public JUCEApplication
+class StandaloneFilterApp : public juce::JUCEApplication
 {
 public:
     StandaloneFilterApp();
 
-    const String getApplicationName() override { return JucePlugin_Name; }
-    const String getApplicationVersion() override { return JucePlugin_VersionString; }
+    const juce::String getApplicationName() override { return JucePlugin_Name; }
+    const juce::String getApplicationVersion() override { return JucePlugin_VersionString; }
     bool moreThanOneInstanceAllowed() override { return true; }
-    void anotherInstanceStarted(const String&) override {}
+    void anotherInstanceStarted(const juce::String&) override {}
 
-    virtual StandaloneFilterWindow* createWindow();
+    virtual juce::StandaloneFilterWindow* createWindow();
 
     void initialise(const String&) override;
     void shutdown() override;
     void systemRequestedQuit() override;
 
 private:
-    ApplicationProperties appProperties;
-    std::unique_ptr<StandaloneFilterWindow> mainWindow;
+    juce::ApplicationProperties appProperties;
+    std::unique_ptr<juce::StandaloneFilterWindow> mainWindow;
     void requestQuit() const;
 };
