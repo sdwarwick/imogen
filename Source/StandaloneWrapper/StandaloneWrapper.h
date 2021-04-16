@@ -1,3 +1,5 @@
+#if JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
+
 #pragma once
 
 #include <juce_data_structures/juce_data_structures.h>
@@ -51,4 +53,4 @@ struct PropertiesFileOptions : public PropertiesFile::Options
 };
 
 
-
+#endif /* JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
