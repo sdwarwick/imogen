@@ -111,5 +111,9 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
     )
+    
+if (TARGET Imogen_LV2)
+    set_target_properties (Imogen PROPERTIES JUCE_LV2_URI https://github.com/benthevining/imogen)
+endif()
 
 #
