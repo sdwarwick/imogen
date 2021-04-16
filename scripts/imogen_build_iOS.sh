@@ -101,7 +101,7 @@ cmake -DCMAKE_BUILD_TYPE=release -B Builds/ios_Build -GXcode -DCMAKE_SYSTEM_NAME
 
 # execute build
 printf "\n \t \v Building Imogen... \n \n"
-cmake --build Builds/ios_Build --target Imogen_Standalone --config Release -- -sdk iphonesimulator -allowProvisioningUpdates
+cmake --build Builds/ios_Build --target Imogen_All --config Release -- -sdk iphonesimulator -allowProvisioningUpdates
 
 
 printf "\n \t \v Imogen built successfully!"
