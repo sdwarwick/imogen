@@ -10,11 +10,11 @@ env:
 
 jobs:
 
-  build:
+  main-build:
 
     name: ${{ matrix.artifact }} build
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -38,10 +38,26 @@ jobs:
     - name: Run main build script
       shell: bash
       run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_script.sh
-      
-    - name: Run iOS build script
-      if: matrix.os == 'macos-latest'
-      shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
 
+
+  ios-build:
+ 
+     name: iOS build
+     runs-on: macos-latest
+     timeout-minutes: 30
+     
+     steps:
+     
+     - name: Checkout code
+       uses: actions/checkout@v2
+       with:
+        submodules: recursive
+        path: imogen
+      
+     - name: Run iOS build script
+       shell: bash
+       run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
+
+     
+   
 #
