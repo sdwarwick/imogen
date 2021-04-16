@@ -1,3 +1,5 @@
+#if JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
+
 #include "StandaloneWrapper.h"
 
 StandaloneFilterApp::StandaloneFilterApp()
@@ -53,3 +55,6 @@ juce::JUCEApplicationBase* juce_CreateApplication()
 {
     return new StandaloneFilterApp();
 }
+
+
+#endif /* JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
