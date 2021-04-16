@@ -313,5 +313,8 @@ private:
     
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
     
+    // this object manages all parameters' mappings to OSC messages
+    bav::OSCMappingManager oscMapper;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
