@@ -91,6 +91,12 @@ set (bv_SynthBaseModule_Path ${CMAKE_CURRENT_SOURCE_DIR}/Source/DSP_modules/Synt
 
 #
 
+if (NOT DEFINED bv_juceGitRepoToUse OR "${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
+        set (bv_juceGitRepo_TagToUse origin/develop)
+endif()
+
+#
+
 include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
