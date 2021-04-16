@@ -37,6 +37,6 @@ jobs:
 
     - name: Run build script
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/imogen_build_script.sh
+      run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_script.sh
 
 #
