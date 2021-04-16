@@ -42,6 +42,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     initializeParameterPointers();
     initializeParameterListeners();
     updateParameterDefaults();
+           
+    initializeParameterOscMappings();
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
