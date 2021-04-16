@@ -20,7 +20,8 @@
 #  imogen_test_script.sh :	This script provides an automated way to run all tests on Imogen after the build has completed. Note that this script is not designed to be nearly as robust as the build script; this script will not automatically install pluginval, etc.
 
 
-IMOGEN_DIR="$(dirname $0)"; # save the directory of the script
+SCRIPT_DIR="$(dirname $0)"; # save the directory of the script
+IMOGEN_DIR="$SCRIPT_DIR/..";
 
 
 CONFIG_TO_TEST="Debug"; # the build configuration to test
