@@ -1,4 +1,4 @@
-#if JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
+#if JucePlugin_Build_Standalone && JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
 
 #pragma once
 
@@ -50,4 +50,4 @@ struct PropertiesFileOptions : public juce::PropertiesFile::Options
 };
 
 
-#endif /* JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
+#endif /* JucePlugin_Build_Standalone && JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
