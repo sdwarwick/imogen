@@ -51,12 +51,6 @@ void StandaloneFilterApp::requestQuit() const
 }
 
 
-juce::JUCEApplicationBase* juce_CreateApplication()
-{
-    return new StandaloneFilterApp();
-}
-
-
 JUCE_CREATE_APPLICATION_DEFINE(StandaloneFilterApp)
 
 
