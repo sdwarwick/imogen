@@ -760,3 +760,53 @@ ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const
     else return mainBypassID;
 }
 
+
+/*
+    This function sets up default mappings of each parameter to a unique OSC address
+*/
+void ImogenAudioProcessor::initializeParameterOscMappings()
+{
+    oscMapper.addNewMapping (mainBypass,           "imogen/mainBypass");
+    oscMapper.addNewMapping (leadBypass,           "imogen/leadBypass");
+    oscMapper.addNewMapping (harmonyBypass,        "imogen/harmonyBypass");
+    oscMapper.addNewMapping (dryPan,               "imogen/dryPan");   
+    oscMapper.addNewMapping (dryWet,               "imogen/dryWet"); 
+    oscMapper.addNewMapping (adsrAttack,           "imogen/adsrAttack");            
+    oscMapper.addNewMapping (adsrDecay,            "imogen/adsrDecay");            
+    oscMapper.addNewMapping (adsrSustain,          "imogen/adsrSustain");            
+    oscMapper.addNewMapping (adsrRelease,          "imogen/adsrRelease");            
+    oscMapper.addNewMapping (stereoWidth,          "imogen/stereoWidth");            
+    oscMapper.addNewMapping (lowestPanned,         "imogen/lowestPanned");            
+    oscMapper.addNewMapping (velocitySens,         "imogen/velocitySens");         
+    oscMapper.addNewMapping (pitchBendRange,       "imogen/pitchBendRange");            
+    oscMapper.addNewMapping (pedalPitchIsOn,       "imogen/pedalPitchIsOn");           
+    oscMapper.addNewMapping (pedalPitchThresh,     "imogen/pedalPitchThresh");           
+    oscMapper.addNewMapping (pedalPitchInterval,   "imogen/pedalPitchInterval");           
+    oscMapper.addNewMapping (descantIsOn,          "imogen/descantIsOn");           
+    oscMapper.addNewMapping (descantThresh,        "imogen/descantThresh");           
+    oscMapper.addNewMapping (descantInterval,      "imogen/descantInterval");           
+    oscMapper.addNewMapping (concertPitchHz,       "imogen/concertPitchHz");           
+    oscMapper.addNewMapping (voiceStealing,        "imogen/voiceStealing");           
+    oscMapper.addNewMapping (inputGain,            "imogen/inputGain");           
+    oscMapper.addNewMapping (outputGain,           "imogen/outputGain");           
+    oscMapper.addNewMapping (limiterToggle,        "imogen/limiterToggle");           
+    oscMapper.addNewMapping (noiseGateToggle,      "imogen/noiseGateToggle");  
+    oscMapper.addNewMapping (noiseGateThreshold,   "imogen/noiseGateThreshold");           
+    oscMapper.addNewMapping (compressorToggle,     "imogen/compressorToggle");           
+    oscMapper.addNewMapping (compressorAmount,     "imogen/compressorAmount");           
+    oscMapper.addNewMapping (aftertouchGainToggle, "imogen/aftertouchGainToggle");           
+    oscMapper.addNewMapping (deEsserToggle,        "imogen/deEsserToggle");           
+    oscMapper.addNewMapping (deEsserThresh,        "imogen/deEsserThresh");           
+    oscMapper.addNewMapping (deEsserAmount,        "imogen/deEsserAmount");           
+    oscMapper.addNewMapping (reverbToggle,         "imogen/reverbToggle");           
+    oscMapper.addNewMapping (reverbDryWet,         "imogen/reverbDryWet");   
+    oscMapper.addNewMapping (reverbDecay,          "imogen/reverbDecay");           
+    oscMapper.addNewMapping (reverbDuck,           "imogen/reverbDuck");           
+    oscMapper.addNewMapping (reverbLoCut,          "imogen/reverbLoCut");           
+    oscMapper.addNewMapping (reverbHiCut,          "imogen/reverbHiCut");           
+    oscMapper.addNewMapping (numVoices,            "imogen/numVoices");           
+    oscMapper.addNewMapping (inputSource,          "imogen/inputSource");           
+    oscMapper.addNewMapping (vocalRangeType,       "imogen/vocalRangeType");           
+}
+
+
