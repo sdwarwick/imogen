@@ -57,4 +57,31 @@ juce::JUCEApplicationBase* juce_CreateApplication()
 }
 
 
+#if JucePlugin_Build_Standalone && JUCE_IOS
+
+bool JUCE_CALLTYPE juce_isInterAppAudioConnected()
+{
+    if (auto holder = juce::StandalonePluginHolder::getInstance())
+        return holder->isInterAppAudioConnected();
+
+    return false;
+}
+
+void JUCE_CALLTYPE juce_switchToHostApplication()
+{
+    if (auto holder = juce::StandalonePluginHolder::getInstance())
+        holder->switchToHostApplication();
+}
+
+juce::Image JUCE_CALLTYPE juce_getIAAHostIcon (int size)
+{
+    if (auto holder = juce::StandalonePluginHolder::getInstance())
+        return holder->getIAAHostIcon (size);
+
+    return juce::Image();
+}
+
+#endif  /* JucePlugin_Build_Standalone && JUCE_IOS */
+
+
 #endif /* JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
