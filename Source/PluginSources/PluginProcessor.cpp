@@ -32,7 +32,7 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 #if IMOGEN_ONLY_BUILDING_STANDALONE
     , denormalsWereDisabledWhenTheAppStarted(juce::FloatVectorOperations::areDenormalsDisabled())
 #endif
-    , oscMapper(false);
+    , oscMapper(false)
 {
 #if BV_USE_NE10
     ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!
