@@ -7,6 +7,3 @@
 [submodule "Source/DSP_modules/SynthBase"]
 	path = Source/DSP_modules/SynthBase
 	url = https://github.com/benthevining/JuceSynthBase.git
-[submodule "third-party/MTS-ESP"]
-        path = third-party/MTS-ESP
-	url = https://github.com/ODDSound/MTS-ESP.git
