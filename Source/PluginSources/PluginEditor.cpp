@@ -30,7 +30,7 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), imgnProcessor(p)
+    AudioProcessorEditor (&p), gui(this), imgnProcessor(p)
 {
     this->setBufferedToImage (true);
     
