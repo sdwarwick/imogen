@@ -27,8 +27,7 @@
 #include "GUI/LookAndFeel/ImogenLookAndFeel.h"
 
 
-class ImogenGUI  :     public juce::Component,
-                       public juce::Timer
+class ImogenGUI  :     public juce::Component
 {
 public:
     
@@ -38,8 +37,6 @@ public:
     
     void paint (juce::Graphics& g) override;
     void resized() override;
-    
-    void timerCallback() override;
     
     
 private:
