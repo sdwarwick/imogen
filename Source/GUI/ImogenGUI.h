@@ -45,6 +45,8 @@ private:
     
     inline void makePresetMenu (juce::ComboBox& box);
     
+    inline void newPresetSelected();
+    
     juce::ComboBox selectPreset;
     
     bav::ImogenLookAndFeel lookAndFeel;
