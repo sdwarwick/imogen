@@ -14,13 +14,15 @@ public:
     const juce::String getApplicationName() override { return JucePlugin_Name; }
     const juce::String getApplicationVersion() override { return JucePlugin_VersionString; }
     bool moreThanOneInstanceAllowed() override { return true; }
-    void anotherInstanceStarted(const juce::String&) override {}
+    void anotherInstanceStarted (const juce::String&) override { }
 
     virtual juce::StandaloneFilterWindow* createWindow();
 
-    void initialise(const juce::String&) override;
+    void initialise (const juce::String&) override;
     void shutdown() override;
     void systemRequestedQuit() override;
+    
+    virtual bool backButtonPressed() override;
 
 private:
     juce::ApplicationProperties appProperties;
