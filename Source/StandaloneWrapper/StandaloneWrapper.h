@@ -13,6 +13,12 @@ public:
 
     const juce::String getApplicationName() override { return JucePlugin_Name; }
     const juce::String getApplicationVersion() override { return JucePlugin_VersionString; }
+    
+    const juce::String getDefaultAudioDeviceName() const { return juce::String(); }
+    juce::AudioDeviceManager::AudioDeviceSetup* getDefaultAudioDeviceSetup() const { return nullptr; }
+    
+    juce::Colour getBackgroundColor() const { return juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId); } 
+    
     bool moreThanOneInstanceAllowed() override { return true; }
     void anotherInstanceStarted (const juce::String&) override { }
 
