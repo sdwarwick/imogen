@@ -67,11 +67,11 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
     int id = 1;
     
-    for  (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (imgnProcessor.getPresetsFolder(), false))
-    {
-        box.addItem (entry.getFile().getFileName(), id);
-        ++id;
-    }
+//    for  (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (imgnProcessor.getPresetsFolder(), false))
+//    {
+//        box.addItem (entry.getFile().getFileName(), id);
+//        ++id;
+//    }
 }
 
 
