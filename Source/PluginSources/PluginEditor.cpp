@@ -76,19 +76,7 @@ void ImogenAudioProcessorEditor::timerCallback()
 
 inline void ImogenAudioProcessorEditor::newPresetSelected()
 {
-    imgnProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
-}
-
-
-inline void ImogenAudioProcessorEditor::makePresetMenu (juce::ComboBox& box)
-{
-    int id = 1;
-    
-    for  (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (imgnProcessor.getPresetsFolder(), false))
-    {
-        box.addItem (entry.getFile().getFileName(), id);
-        ++id;
-    }
+    // imgnProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
 }
 
 
