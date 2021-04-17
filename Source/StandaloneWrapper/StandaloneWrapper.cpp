@@ -12,11 +12,11 @@ StandaloneFilterApp::StandaloneFilterApp()
 juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
 {
     return new juce::StandaloneFilterWindow (getApplicationName(),
-                                             juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
+                                             getBackgroundColor(),
                                              appProperties.getUserSettings(),
                                              false,  // take ownership of settings
-                                             juce::String(),  // preferred audio device name
-                                             nullptr,  // preferred audio device setup options
+                                             getDefaultAudioDeviceName(),  
+                                             getDefaultAudioDeviceSetup(),
                                              {},
                                              true); // auto open midi devices
 }
