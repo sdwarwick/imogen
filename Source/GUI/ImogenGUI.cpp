@@ -24,6 +24,8 @@
 
 #include "bv_SharedCode/BinaryDataHelpers.h"
 
+#include "ImogenGUI.h"
+
 
 #define bvi_GRAPHICS_FRAMERATE_HZ 60
 
