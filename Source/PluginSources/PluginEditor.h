@@ -48,6 +48,8 @@ public:
     
     void timerCallback() override;
     
+    void loadPreset (juce::String presetName) override { imgnProcessor.loadPreset (presetName); }
+    
     
 private:
     
