@@ -17,15 +17,13 @@
  
  @2021 by Ben Vining. All rights reserved.
  
- PluginEditor.h: This file defines the interface for Imogen's top-level GUI component.
+ PluginEditor.h: This file defines the binding between Imogen's top-level GUI component and an ImogenAudioProcessor.
  
 ======================================================================================================================================================*/
 
 
 #pragma once
 
-#include <juce_gui_extra/juce_gui_extra.h>
-#include "GUI/LookAndFeel/ImogenLookAndFeel.h"
 #include "PluginProcessor.h"
 
 
@@ -50,15 +48,7 @@ public:
     
 private:
     
-    inline void newPresetSelected();
-    
-    inline void makePresetMenu (juce::ComboBox& box);
-    
     void updateParameterDefaults();
-    
-    juce::ComboBox selectPreset;
-    
-    bav::ImogenLookAndFeel lookAndFeel;
     
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor
     
