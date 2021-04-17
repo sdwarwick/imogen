@@ -34,7 +34,7 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h)
     this->setBufferedToImage (true);
     
     makePresetMenu (selectPreset);
-    selectPreset.onChange = [this] { newPresetSelected(); };
+    selectPreset.onChange = [this] { newPresetSelected (selectPreset.getItemText()); };
     
     //addAndMakeVisible(selectPreset);
     
@@ -73,9 +73,9 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 }
 
 
-inline void ImogenGUI::newPresetSelected()
+inline void ImogenGUI::newPresetSelected (juce::String presetName)
 {
-           
+    handle->loadPreset (presetName);
 }
 
 
