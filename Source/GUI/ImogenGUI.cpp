@@ -27,9 +27,6 @@
 #include "ImogenGUI.h"
 
 
-#define bvi_GRAPHICS_FRAMERATE_HZ 60
-
-
 ImogenGUI::ImogenGUI()
 {
     this->setBufferedToImage (true);
@@ -40,8 +37,6 @@ ImogenGUI::ImogenGUI()
     //addAndMakeVisible(selectPreset);
     
     setSize (940, 435);
-    
-    Timer::startTimerHz (bvi_GRAPHICS_FRAMERATE_HZ);
 }
 
 #undef bvi_GRAPHICS_FRAMERATE_HZ
@@ -49,8 +44,7 @@ ImogenGUI::ImogenGUI()
 
 ImogenGUI::~ImogenGUI()
 {
-    this->setLookAndFeel(nullptr);
-    Timer::stopTimer();
+    this->setLookAndFeel (nullptr);
 }
 
 void ImogenGUI::paint (juce::Graphics& g)
@@ -67,7 +61,7 @@ void ImogenGUI::resized()
 
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
-    int id = 1;
+//    int id = 1;
     
 //    for  (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (imgnProcessor.getPresetsFolder(), false))
 //    {
