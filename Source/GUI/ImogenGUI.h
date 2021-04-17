@@ -52,5 +52,8 @@ private:
     
     ImogenGuiHandle* const handle;
     
+    juce::TooltipWindow tooltipWindow;
+    static constexpr int msBeforeTooltip = 700;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };
