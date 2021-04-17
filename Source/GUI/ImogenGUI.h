@@ -46,7 +46,7 @@ private:
     
     inline void makePresetMenu (juce::ComboBox& box);
     
-    inline void newPresetSelected();
+    inline void newPresetSelected (juce::String presetName);
     
     juce::ComboBox selectPreset;
     
