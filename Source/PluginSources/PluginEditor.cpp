@@ -34,11 +34,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 {
     this->setBufferedToImage (true);
     
-    makePresetMenu(selectPreset);
-    selectPreset.onChange = [this] { newPresetSelected(); };
-    
-    //addAndMakeVisible(selectPreset);
-    
     setSize (940, 435);
     
     Timer::startTimerHz (bvi_GRAPHICS_FRAMERATE_HZ);
