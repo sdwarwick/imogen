@@ -38,12 +38,12 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
+    void updateParameterDefaults();
+    
     
 private:
     
     inline void makePresetMenu (juce::ComboBox& box);
-    
-    void updateParameterDefaults();
     
     juce::ComboBox selectPreset;
     
