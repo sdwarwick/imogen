@@ -70,7 +70,7 @@ void ImogenAudioProcessorEditor::resized()
 void ImogenAudioProcessorEditor::timerCallback()
 {
     if (imgnProcessor.hasUpdatedParamDefaults())
-        updateParameterDefaults();
+        gui.updateParameterDefaults();
 }
 
 
