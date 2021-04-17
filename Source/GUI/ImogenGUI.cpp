@@ -27,7 +27,7 @@
 #include "ImogenGUI.h"
 
 
-ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h)
+ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h), tooltipWindow(this, msBeforeTooltip)
 {
     jassert (handle != nullptr);
            
