@@ -51,6 +51,8 @@ private:
     
     void updateParameterDefaults();
     
+    ImogenGUI gui;
+    
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
