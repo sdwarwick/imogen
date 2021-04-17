@@ -34,7 +34,7 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h), tooltipWindow(this, msBefo
     this->setBufferedToImage (true);
     
     makePresetMenu (selectPreset);
-    selectPreset.onChange = [this] { handle->loadPreset (selectPreset.getItemText()); };
+    selectPreset.onChange = [this] { handle->loadPreset (selectPreset.getText()); };
     
     //addAndMakeVisible(selectPreset);
     
