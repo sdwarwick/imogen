@@ -11,20 +11,46 @@ StandaloneFilterApp::StandaloneFilterApp()
 
 juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
 {
-    return new juce::StandaloneFilterWindow (getApplicationName(),
-                                             getBackgroundColor(),
-                                             appProperties.getUserSettings(),
-                                             false,  // take ownership of settings
-                                             getDefaultAudioDeviceName(),  
-                                             getDefaultAudioDeviceSetup(),
-                                             {},
-                                             true); // auto open midi devices
+    auto window = new juce::StandaloneFilterWindow (getApplicationName(),
+                                                    getBackgroundColor(),
+                                                    appProperties.getUserSettings(),
+                                                    false,  // take ownership of settings
+                                                    getDefaultAudioDeviceName(),  
+                                                    getDefaultAudioDeviceSetup(),
+                                                    {},
+                                                    true); // auto open midi devices
+    
+    window->setTitleBarTextCentred (true);
+    window->setDropShadowEnabled (true);
+    window->setUsingNativeTitleBar (false);
+    
+    window->setIcon (bav::Assets::getImage (juce::String("imogen_icon_png")));
+    
+    if (isMobileApp())
+    {
+        window->setTitleBarHeight(0);
+        window->setFullScreen (true);
+    }
+    
+    return window;
 }
 
 void StandaloneFilterApp::initialise (const juce::String&)
 {
     mainWindow.reset (createWindow());
+    mainWindow->setTitleBarTextCentred (true);
+    mainWindow->setDropShadowEnabled (true);
+    mainWindow->setUsingNativeTitleBar (false);
+    
+    mainWindow->setIcon (bav::Assets::getImage (juce::String("imogen_icon_png")));
+    
     mainWindow->setVisible (true);
+    
+    if (isMobileApp())
+    {
+        mainWindow->setTitleBarHeight(0);
+        mainWindow->setFullScreen (true);
+    }
 }
 
 void StandaloneFilterApp::shutdown()
