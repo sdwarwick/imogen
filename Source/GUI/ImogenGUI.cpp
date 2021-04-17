@@ -27,8 +27,10 @@
 #include "ImogenGUI.h"
 
 
-ImogenGUI::ImogenGUI()
+ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h)
 {
+    jassert (handle != nullptr);
+           
     this->setBufferedToImage (true);
     
     makePresetMenu (selectPreset);
