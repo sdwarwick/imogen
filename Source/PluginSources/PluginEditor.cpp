@@ -69,10 +69,10 @@ void ImogenAudioProcessorEditor::timerCallback()
 }
 
 
-inline void ImogenAudioProcessorEditor::newPresetSelected()
-{
+// inline void ImogenAudioProcessorEditor::newPresetSelected()
+// {
     // imgnProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
-}
+// }
 
 
 void ImogenAudioProcessorEditor::updateParameterDefaults()
