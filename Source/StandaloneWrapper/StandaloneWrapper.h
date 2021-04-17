@@ -6,6 +6,9 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
+#include "bv_SharedCode/BinaryDataHelpers.h"
+
+
 class StandaloneFilterApp : public juce::JUCEApplication
 {
 public:
