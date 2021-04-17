@@ -11,14 +11,14 @@ StandaloneFilterApp::StandaloneFilterApp()
 
 juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
 {
-    return new juce:: StandaloneFilterWindow (getApplicationName(),
-                                              juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
-                                              appProperties.getUserSettings(),
-                                              false,
-                                              {},
-                                              nullptr,
-                                              {},
-                                              true);
+    return new juce::StandaloneFilterWindow (getApplicationName(),
+                                             juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
+                                             appProperties.getUserSettings(),
+                                             false,  // take ownership of settings
+                                             juce::String(),  // preferred audio device name
+                                             nullptr,  // preferred audio device setup options
+                                             {},
+                                             true); // auto open midi devices
 }
 
 void StandaloneFilterApp::initialise (const juce::String&)
@@ -48,6 +48,11 @@ void StandaloneFilterApp::requestQuit() const
 {
     if (auto app = getInstance())
         app->systemRequestedQuit();
+}
+
+bool StandaloneFilterApp::backButtonPressed()
+{
+    return false;
 }
 
 
