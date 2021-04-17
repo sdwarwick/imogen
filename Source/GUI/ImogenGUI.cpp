@@ -71,6 +71,12 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 }
 
 
+inline void ImogenGUI::newPresetSelected()
+{
+           
+}
+
+
 void ImogenGUI::updateParameterDefaults()
 {
     
