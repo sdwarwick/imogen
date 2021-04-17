@@ -24,14 +24,15 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-#include "GUI/LookAndFeel/ImogenLookAndFeel.h"
+#include "GuiHandle.h"
+#include "LookAndFeel/ImogenLookAndFeel.h"
 
 
 class ImogenGUI  :     public juce::Component
 {
 public:
     
-    ImogenGUI();
+    ImogenGUI (ImogenGuiHandle* h);
     
     virtual ~ImogenGUI() override;
     
@@ -50,6 +51,8 @@ private:
     juce::ComboBox selectPreset;
     
     bav::ImogenLookAndFeel lookAndFeel;
+    
+    ImogenGuiHandle* const handle;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };
