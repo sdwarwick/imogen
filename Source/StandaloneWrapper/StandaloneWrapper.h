@@ -29,6 +29,18 @@ public:
     void systemRequestedQuit() override;
     
     virtual bool backButtonPressed() override;
+    
+    
+    static bool isDesktopStandaloneApp() 
+    {
+#if JUCE_IOS || JUCE_ANDROID
+        return false;
+#else  
+        return true;
+#endif
+    }
+    
+    static bool isMobileApp() { return ! isDesktopStandaloneApp(); }
 
 private:
     juce::ApplicationProperties appProperties;
