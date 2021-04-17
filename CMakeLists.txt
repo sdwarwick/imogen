@@ -52,6 +52,8 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
+    ${guiSourcePath}/ImogenGUI.h
+    ${guiSourcePath}/ImogenGUI.cpp
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.h
