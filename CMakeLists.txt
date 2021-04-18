@@ -98,6 +98,27 @@ endif()
 
 #
 
+set_property (GLOBAL PROPERTY USE_FOLDERS YES)
+set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
+
+set (CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")  # universal macOS binaries 
+set (CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version" FORCE)  # minimum MacOS version to build for
+
+set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")  # static linking on Windows
+set (CMAKE_WIN32_EXECUTABLE TRUE)
+
+set (CMAKE_XCODE_GENERATE_SCHEME OFF)  # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
+
+set (CMAKE_SUPPRESS_REGENERATION TRUE)  # no "zero-check" target
+set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
+set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
+option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
+option (JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
+option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
+
+#
+
 message (STATUS "Fetching the latest version of JUCE from GitHub repo: ${bv_juceGitRepoToUse}")
 
 include (FetchContent)
