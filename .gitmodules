@@ -10,3 +10,6 @@
 [submodule "third-party/ableton-link"]
 	path = third-party/ableton-link
 	url = https://github.com/Ableton/link
+[submodule "third-party/MTS-ESP"]
+	path = third-party/MTS-ESP
+	url = http://github.com/ODDSound/MTS-ESP
