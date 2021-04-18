@@ -73,6 +73,12 @@ endif()
 
 #
 
+if (NOT DEFINED bv_formats)
+    set (bv_formats "AU VST3 Standalone Unity")
+endif()
+
+#
+
 include (JUCE-CmakeWrapper/jcmw_Step1.cmake)
 
 #
@@ -90,7 +96,7 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_CODE                 Imgn
-    FORMATS                     ${formats}
+    FORMATS                     ${bv_formats}
     VST3_CATEGORIES             "Pitch Shift"
     AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
     ICON_BIG                    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png
@@ -98,7 +104,7 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
     COMPANY_WEBSITE             www.benvining.com
     COMPANY_EMAIL               ben.the.vining@gmail.com
     COPY_PLUGIN_AFTER_BUILD     TRUE
-    UNITY_COPY_DIR              ${CMAKE_CURRENT_SOURCE_DIR}/Builds/${CMAKE_PROJECT_NAME}_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
+    UNITY_COPY_DIR              ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
     COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
     )
 
