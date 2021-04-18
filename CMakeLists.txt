@@ -143,7 +143,7 @@ list (APPEND thingsToLinkTo "bv_SynthBase")
 
 #
 
-juce_add_plugin (${CMAKE_PROJECT_NAME}  
+juce_add_plugin (Imogen
     PRODUCT_NAME                Imogen
     VERSION                     ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
@@ -176,9 +176,17 @@ endif()
 
 #
 
-list (APPEND bv_formats "All")
+target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
 
-set (thisTargetName "")
+source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
+
+target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
+
+set_target_properties (Imogen PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
+
+#
+
+list (APPEND bv_formats "All")
 
 foreach (target ${bv_formats}) 
         set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
@@ -194,22 +202,10 @@ endforeach()
 
 #
 
-target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${${CMAKE_PROJECT_NAME}_sourceFiles})
-
-source_group (TREE ${${CMAKE_PROJECT_NAME}_sourceDir} PREFIX "" FILES ${${CMAKE_PROJECT_NAME}_sourceFiles})
-
-target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${${CMAKE_PROJECT_NAME}_sourceDir})
-
-set_target_properties (${CMAKE_PROJECT_NAME} PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
-
-#
-
-if (DEFINED ${CMAKE_PROJECT_NAME}_graphicAssetFiles)
-	file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_${CMAKE_PROJECT_NAME}GraphicAssets)
-	juce_add_binary_data (${CMAKE_PROJECT_NAME}GraphicAssets SOURCES ${${CMAKE_PROJECT_NAME}_graphicAssetFiles})
-	set_target_properties (${CMAKE_PROJECT_NAME}GraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
-	list (APPEND thingsToLinkTo ${CMAKE_PROJECT_NAME}GraphicAssets)
-endif()
+file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_ImogenGraphicAssets)
+juce_add_binary_data (ImogenGraphicAssets SOURCES ${Imogen_graphicAssetFiles})
+set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "Imogen")
+list (APPEND thingsToLinkTo ImogenGraphicAssets)
 
 #
 
@@ -222,7 +218,7 @@ if (ANDROID)
     set (cpufeatures_lib "cpufeatures")
     set (oboe_lib "oboe")
 
-    target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE
+    target_include_directories (Imogen PRIVATE
         "${ANDROID_NDK}/sources/android/cpufeatures"
         "${OBOE_DIR}/include"
     )
@@ -231,11 +227,11 @@ endif()
 #
 
 if (NOT "${thingsToLinkTo}" STREQUAL "")
-	target_link_libraries (${CMAKE_PROJECT_NAME} PRIVATE ${thingsToLinkTo})
+	target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
 endif()
 
 if (ANDROID)
-        target_link_libraries (${CMAKE_PROJECT_NAME} PUBLIC
+        target_link_libraries (Imogen PUBLIC
 	    ${log}
             ${android}
             ${glesv2}
@@ -248,30 +244,30 @@ endif()
 #
 
 if (DEFINED BV_IGNORE_VDSP)
-    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
+    target_compile_definitions (Imogen PUBLIC BV_IGNORE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
 else()
         if (APPLE)
-	    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
+	    target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
         else()
-	    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_USE_VDSP=0 JUCE_USE_VDSP_FRAMEWORK=0)
+	    target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=0 JUCE_USE_VDSP_FRAMEWORK=0)
         endif()
 endif()
 
 if (DEFINED BV_IGNORE_IPP)
-	target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_IPP=1 BV_USE_IPP=0)
+	target_compile_definitions (Imogen PUBLIC BV_IGNORE_IPP=1 BV_USE_IPP=0)
 endif()
 
 if (DEFINED BV_IGNORE_NE10)
-	target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_NE10=1 BV_USE_NE10=0)
+	target_compile_definitions (Imogen PUBLIC BV_IGNORE_NE10=1 BV_USE_NE10=0)
 endif()
 
 if (DEFINED BV_IGNORE_MIPP)
-	target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_MIPP=1 BV_USE_MIPP=0)
+	target_compile_definitions (Imogen PUBLIC BV_IGNORE_MIPP=1 BV_USE_MIPP=0)
 endif()
 
 #
 
-target_link_libraries (${CMAKE_PROJECT_NAME} PUBLIC
+target_link_libraries (Imogen PUBLIC
 	    juce::juce_recommended_config_flags
 	    juce::juce_recommended_lto_flags
 	    juce::juce_recommended_warning_flags
