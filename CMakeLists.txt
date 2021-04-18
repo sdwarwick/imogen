@@ -55,13 +55,6 @@ set (Imogen_graphicAssetFiles
 
 #
 
-set (bv_useSharedCodeModule TRUE)
-
-set (bv_useSynthBaseModule TRUE)
-set (bv_SynthBaseModule_Path ${CMAKE_CURRENT_SOURCE_DIR}/Source/DSP_modules/SynthBase)
-
-#
-
 if (NOT DEFINED bv_juceGitRepoToUse OR "${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
         set (bv_juceGitRepo_TagToUse origin/develop)
 endif()
@@ -169,7 +162,104 @@ juce_add_plugin (${CMAKE_PROJECT_NAME}
 
 #
 
-include (JUCE-CmakeWrapper/jcmw_Step2.cmake)
+if (TARGET ${CMAKE_PROJECT_NAME}_LV2)
+    set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
+endif()
+
+#
+
+list (APPEND bv_formats "All")
+
+set (thisTargetName "")
+
+foreach (target ${bv_formats}) 
+        set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
+
+        if (NOT TARGET ${thisTargetName})
+            continue()
+        endif()
+	
+	message (STATUS "Configuring ${thisTargetName}...")
+
+        set_target_properties (${thisTargetName} PROPERTIES FOLDER "Build Targets" XCODE_GENERATE_SCHEME ON)
+endforeach()
+
+#
+
+target_sources (${CMAKE_PROJECT_NAME} PRIVATE ${${CMAKE_PROJECT_NAME}_sourceFiles})
+
+source_group (TREE ${${CMAKE_PROJECT_NAME}_sourceDir} PREFIX "" FILES ${${CMAKE_PROJECT_NAME}_sourceFiles})
+
+target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE ${${CMAKE_PROJECT_NAME}_sourceDir})
+
+set_target_properties (${CMAKE_PROJECT_NAME} PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
+
+#
+
+if (DEFINED ${CMAKE_PROJECT_NAME}_graphicAssetFiles)
+	file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_${CMAKE_PROJECT_NAME}GraphicAssets)
+	juce_add_binary_data (${CMAKE_PROJECT_NAME}GraphicAssets SOURCES ${${CMAKE_PROJECT_NAME}_graphicAssetFiles})
+	set_target_properties (${CMAKE_PROJECT_NAME}GraphicAssets PROPERTIES FOLDER "${CMAKE_PROJECT_NAME}")
+	list (APPEND thingsToLinkTo ${CMAKE_PROJECT_NAME}GraphicAssets)
+endif()
+
+#
+
+if (ANDROID)
+
+    find_library (log "log")
+    find_library (android "android")
+    find_library (glesv2 "GLESv2")
+    find_library (egl "EGL")
+    set (cpufeatures_lib "cpufeatures")
+    set (oboe_lib "oboe")
+
+    target_include_directories (${CMAKE_PROJECT_NAME} PRIVATE
+        "${ANDROID_NDK}/sources/android/cpufeatures"
+        "${OBOE_DIR}/include"
+    )
+endif()
+
+#
+
+if (NOT "${thingsToLinkTo}" STREQUAL "")
+	target_link_libraries (${CMAKE_PROJECT_NAME} PRIVATE ${thingsToLinkTo})
+endif()
+
+if (ANDROID)
+        target_link_libraries (${CMAKE_PROJECT_NAME} PUBLIC
+	    ${log}
+            ${android}
+            ${glesv2}
+            ${egl}
+            ${cpufeatures_lib}
+            ${oboe_lib}
+       )
+endif()
+
+#
+
+if (DEFINED BV_IGNORE_VDSP)
+    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
+else()
+        if (APPLE)
+	    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
+        else()
+	    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_USE_VDSP=0 JUCE_USE_VDSP_FRAMEWORK=0)
+        endif()
+endif()
+
+if (DEFINED BV_IGNORE_IPP)
+	target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_IPP=1 BV_USE_IPP=0)
+endif()
+
+if (DEFINED BV_IGNORE_NE10)
+	target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_NE10=1 BV_USE_NE10=0)
+endif()
+
+if (DEFINED BV_IGNORE_MIPP)
+	target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC BV_IGNORE_MIPP=1 BV_USE_MIPP=0)
+endif()
 
 #
 
