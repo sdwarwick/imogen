@@ -103,6 +103,12 @@ include (JUCE-CmakeWrapper/CMakeLists.txt)
 
 #
 
+target_link_libraries (${CMAKE_PROJECT_NAME} PUBLIC
+	    juce::juce_recommended_config_flags
+	    juce::juce_recommended_lto_flags
+	    juce::juce_recommended_warning_flags
+)
+
 target_compile_features (Imogen PUBLIC cxx_std_17)
 
 target_compile_definitions (Imogen PUBLIC 
