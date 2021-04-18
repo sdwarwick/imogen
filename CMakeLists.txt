@@ -177,7 +177,7 @@ juce_add_plugin (Imogen
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_CODE                 Imgn
-    FORMATS                     "${bv_formats}"
+    FORMATS                     ${bv_formats}
     VST3_CATEGORIES             "Pitch Shift"
     AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
     ICON_BIG                    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png
