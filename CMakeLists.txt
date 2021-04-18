@@ -60,24 +60,6 @@ set (Imogen_graphicAssetFiles
 
 #
 
-set (Imogen_Bundle_ID com.BenViningMusicSoftware.Imogen)
-set (Imogen_Manufacturer_Code Benv)
-set (Imogen_Plugin_Code Imgn)
-set (Imogen_Description "Real-time vocal harmonizer instrument")
-set (Imogen_Is_Synth FALSE)
-set (Imogen_Needs_MIDI_Input TRUE)
-set (Imogen_Needs_MIDI_Output TRUE)
-set (Imogen_Is_MIDI_Effect FALSE)
-set (Imogen_Editor_Wants_Keyboard_Focus FALSE)
-set (Imogen_VST3_Categories "Pitch Shift")
-set (Imogen_AU_Main_Type "kAudioUnitType_MusicEffect")
-set (Imogen_Icon_Path ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
-set (Imogen_Company_Name BenViningMusicSoftware)
-set (Imogen_Company_Website "www.benvining.com")
-set (Imogen_Company_Email "ben.the.vining@gmail.com")
-set (Imogen_Company_Copyright "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
-set (Imogen_Copy_Plugin_After_Build TRUE)
-
 set (bv_useSharedCodeModule TRUE)
 
 set (bv_useSynthBaseModule TRUE)
@@ -91,7 +73,38 @@ endif()
 
 #
 
-include (JUCE-CmakeWrapper/CMakeLists.txt)
+include (JUCE-CmakeWrapper/jcmw_Step1.cmake)
+
+#
+
+juce_add_plugin (${CMAKE_PROJECT_NAME}  
+    PRODUCT_NAME                Imogen
+    VERSION                     ${CMAKE_PROJECT_VERSION}
+    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
+    PLUGIN_NAME                 Imogen
+    PLUGIN_MANUFACTURER_CODE    Benv
+    DESCRIPTION                 "Real-time vocal harmonizer instrument"
+    IS_SYNTH                    FALSE
+    NEEDS_MIDI_INPUT            TRUE
+    NEEDS_MIDI_OUTPUT           TRUE
+    IS_MIDI_EFFECT              FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    PLUGIN_CODE                 Imgn
+    FORMATS                     ${formats}
+    VST3_CATEGORIES             "Pitch Shift"
+    AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
+    ICON_BIG                    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png
+    COMPANY_NAME                BenViningMusicSoftware
+    COMPANY_WEBSITE             www.benvining.com
+    COMPANY_EMAIL               ben.the.vining@gmail.com
+    COPY_PLUGIN_AFTER_BUILD     TRUE
+    UNITY_COPY_DIR              ${CMAKE_CURRENT_SOURCE_DIR}/Builds/${CMAKE_PROJECT_NAME}_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
+    COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
+    )
+
+#
+
+include (JUCE-CmakeWrapper/jcmw_Step2.cmake)
 
 #
 
