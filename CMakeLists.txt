@@ -28,10 +28,6 @@ set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivabl
 
 set (pluginSourcesDir       ${Imogen_sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
 set (guiSourcePath          ${Imogen_sourceDir}/GUI)
-set (HelpScreenSourcePath   ${guiSourcePath}/HelpScreen)
-set (IOPanelSourcePath      ${guiSourcePath}/IOControlPanel)
-set (MidiControlSourcePath  ${guiSourcePath}/MidiControlPanel)
-set (StaffDisplaySourcePath ${guiSourcePath}/StaffDisplay)
 
 set (Imogen_graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
 
@@ -81,10 +77,6 @@ set (Imogen_Company_Website "www.benvining.com")
 set (Imogen_Company_Email "ben.the.vining@gmail.com")
 set (Imogen_Company_Copyright "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License.")
 set (Imogen_Copy_Plugin_After_Build TRUE)
-
-set (Imogen_UseRecommendedWarningFlags TRUE)
-
-set (bv_generatePreprocessorDefinitions TRUE)
 
 set (bv_useSharedCodeModule TRUE)
 
