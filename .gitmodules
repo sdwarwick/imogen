@@ -7,3 +7,6 @@
 [submodule "Source/DSP_modules/SynthBase"]
 	path = Source/DSP_modules/SynthBase
 	url = https://github.com/benthevining/JuceSynthBase.git
+[submodule "third-party/ableton-link"]
+	path = third-party/ableton-link
+	url = https://github.com/Ableton/link
