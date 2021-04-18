@@ -70,7 +70,7 @@ endif()
 #
 
 if (NOT DEFINED bv_formats)
-    set (bv_formats "AU VST3 Standalone Unity")
+    set (bv_formats AU VST3 Standalone Unity)
 endif()
 
 #
