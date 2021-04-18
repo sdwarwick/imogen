@@ -166,6 +166,7 @@ list (APPEND thingsToLinkTo "bv_SynthBase")
 
 juce_add_plugin (Imogen
     PRODUCT_NAME                Imogen
+    PLUGIN_CODE                 Imgn
     VERSION                     ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
     PLUGIN_NAME                 Imogen
@@ -176,7 +177,6 @@ juce_add_plugin (Imogen
     NEEDS_MIDI_OUTPUT           TRUE
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    PLUGIN_CODE                 Imgn
     FORMATS                     ${bv_formats}
     VST3_CATEGORIES             "Pitch Shift"
     AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
@@ -187,6 +187,16 @@ juce_add_plugin (Imogen
     COPY_PLUGIN_AFTER_BUILD     TRUE
     UNITY_COPY_DIR              ${CMAKE_CURRENT_SOURCE_DIR}/Builds/Imogen_artefacts  # unlike the other copy locations, Unity doesn't have a default copy location, so if you select Unity as a format and enable copy plugin on build, you must provide a Unity copy dir here
     COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
+    MICROPHONE_PERMISSION_ENABLED        TRUE
+    MICROPHONE_PERMISSION_TEXT           "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
+    SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
+    DOCUMENT_BROWSER_ENABLED             TRUE
+    STATUS_BAR_HIDDEN                    TRUE  # for iOS
+    REQUIRES_FULL_SCREEN                 TRUE  # for iOS
+    IPAD_SCREEN_ORIENTATIONS             UIInterfaceOrientationUnknown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight
+    TARGETED_DEVICE_FAMILY               2     # target iPad only
+    VST_NUM_MIDI_INS 1
+    VST_NUM_MIDI_OUTS 1
     )
 
 #
