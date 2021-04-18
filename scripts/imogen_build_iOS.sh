@@ -96,7 +96,7 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -DCMAKE_BUILD_TYPE=release -B Builds/ios_Build -GXcode -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=9.3 -DImogen_unitTesting=FALSE -Dbv_formats=Standalone -Dbv_alwaysForceCacheInits=TRUE .
+cmake -DCMAKE_BUILD_TYPE=release -B Builds/ios_Build -GXcode -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=9.3 -Dbv_formats=Standalone -Dbv_alwaysForceCacheInits=TRUE .
 
 
 # execute build
