@@ -24,21 +24,16 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
+message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
+
+#
+
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
 set (pluginSourcesDir       ${Imogen_sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
 set (guiSourcePath          ${Imogen_sourceDir}/GUI)
 
 set (Imogen_graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
-
-
-#
-
-set (Imogen_customModulesPath ${Imogen_sourceDir}/DSP_modules)
-
-set (Imogen_customModulesNeeded
-    bv_Harmonizer
-    bv_ImogenEngine)
 
 #
 
@@ -79,7 +74,71 @@ endif()
 
 #
 
-include (JUCE-CmakeWrapper/jcmw_Step1.cmake)
+if (UNIX AND NOT (APPLE OR WIN32))  # install JUCE's Linux dependencies 
+
+    message (STATUS "Updating JUCE's Linux dependencies...")
+
+    execute_process (COMMAND "sudo" "apt-get" "update" OUTPUT_QUIET)
+
+    foreach (pkg libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev)
+        execute_process (COMMAND "sudo" "apt" "install" "${pkg}" OUTPUT_QUIET)
+    endforeach()
+endif()
+
+#
+
+if (ANDROID)
+    add_definitions (
+    "-DJUCE_ANDROID=1" 
+    "-DJUCE_PUSH_NOTIFICATIONS=1" 
+    "-DJUCE_PUSH_NOTIFICATIONS_ACTIVITY=\"com/rmsl/juce/JuceActivity\"" 
+    )
+endif()
+
+#
+
+message (STATUS "Fetching the latest version of JUCE from GitHub repo: ${bv_juceGitRepoToUse}")
+
+include (FetchContent)
+
+FetchContent_Declare (juce
+GIT_REPOSITORY ${bv_juceGitRepoToUse}
+GIT_TAG        ${bv_juceGitRepo_TagToUse})
+
+FetchContent_MakeAvailable (juce)
+
+set (bv_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src CACHE FILEPATH "${ds_juceDir}" FORCE)
+
+#
+
+if (ANDROID)
+
+    set (OBOE_DIR "../JUCE/modules/juce_audio_devices/native/oboe")
+    add_subdirectory (${OBOE_DIR} ./oboe)
+
+    add_library ("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
+    set_source_files_properties ("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
+
+    enable_language (ASM)
+endif()
+
+#
+
+set (thingsToLinkTo "")
+
+#
+
+juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_Harmonizer")
+list (APPEND thingsToLinkTo bv_Harmonizer)
+
+juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_ImogenEngine")
+list (APPEND thingsToLinkTo bv_ImogenEngine)
+
+juce_add_module ("${Imogen_sourceDir}/Shared-code/bv_SharedCode")
+list (APPEND thingsToLinkTo "bv_SharedCode")
+
+juce_add_module ("${Imogen_sourceDir}/DSP_modules/SynthBase/bv_SynthBase")
+list (APPEND thingsToLinkTo "bv_SynthBase")
 
 #
 
