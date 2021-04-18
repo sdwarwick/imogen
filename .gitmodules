@@ -13,3 +13,6 @@
 [submodule "third-party/MTS-ESP"]
 	path = third-party/MTS-ESP
 	url = http://github.com/ODDSound/MTS-ESP
+[submodule "third-party/MIPP"]
+	path = third-party/MIPP
+	url = http://github.com/aff3ct/MIPP
