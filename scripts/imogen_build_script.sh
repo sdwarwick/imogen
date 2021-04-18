@@ -96,7 +96,7 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -DCMAKE_BUILD_TYPE=release -B Builds -DImogen_unitTesting=FALSE -Dbv_alwaysForceCacheInits=TRUE -Dbv_formats="AU VST3 Standalone" .
+cmake -DCMAKE_BUILD_TYPE=release -B Builds -Dbv_alwaysForceCacheInits=TRUE -Dbv_formats="AU VST3 Standalone" .
 
 
 # execute build
