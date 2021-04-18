@@ -274,6 +274,13 @@ endif()
 
 #
 
+message (STATUS "Configuring Ableton Link integration..."
+
+include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
+target_link_libraries ($YOUR_TARGET Ableton::Link)
+
+#
+
 if (DEFINED BV_IGNORE_VDSP)
     target_compile_definitions (Imogen PUBLIC BV_IGNORE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
 else()
