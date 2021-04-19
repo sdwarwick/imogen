@@ -205,6 +205,14 @@ public:
         return floatEngine.isConnectedToMtsEsp();
     }
     
+    juce::String getScaleName() const
+    {
+        if (isUsingDoublePrecision())
+            return doubleEngine.getScaleName();
+            
+        return floatEngine.getScaleName();
+    }
+    
     
 private:
     
