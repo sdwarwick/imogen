@@ -55,16 +55,16 @@ set (Imogen_graphicAssetFiles
 
 #
 
-if (NOT DEFINED bv_juceGitRepoToUse OR "${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
-        set (bv_juceGitRepo_TagToUse origin/develop)
-endif()
-
 if (NOT DEFINED bv_juceGitRepoToUse)
         set (bv_juceGitRepoToUse https://github.com/juce-framework/JUCE.git)
 endif()
 
 if (NOT DEFINED bv_juceGitRepo_TagToUse)
-        set (bv_juceGitRepo_TagToUse origin)
+        if ("${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
+	        set (bv_juceGitRepo_TagToUse origin/develop)
+	else()
+	        set (bv_juceGitRepo_TagToUse origin)
+	endif()
 endif()
 
 #
