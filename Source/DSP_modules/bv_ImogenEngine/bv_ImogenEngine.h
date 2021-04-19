@@ -99,6 +99,7 @@ public:
     
     
     bool isConnectedToMtsEsp() const noexcept { return harmonizer.isConnectedToMtsEsp(); }
+    juce::String getScaleName() const { return harmonizer.getScaleName(); }
     
     
 private:
