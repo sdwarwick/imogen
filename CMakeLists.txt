@@ -294,7 +294,8 @@ if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
     else()
         message (STATUS "Configuring MIPP...")
 	
-	
+	target_compile_definitions (Imogen PUBLIC MIPP_ENABLE_BACKTRACE)
+        target_include_directories (Imogen PUBLIC "third-party/MIPP/src" "MIPP")
     endif()
 else()
     target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
