@@ -38,8 +38,6 @@
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
-#include "../../../third-party/ableton-link/include/ableton/Link.hpp"
-
 
 namespace bav
 {
@@ -101,9 +99,6 @@ public:
     
     bool isConnectedToMtsEsp() const noexcept { return harmonizer.isConnectedToMtsEsp(); }
     juce::String getScaleName() const { return harmonizer.getScaleName(); }
-    
-    
-    void processNewAbletonLinkSessionState (ableton::BasicLink::SessionState& state);
     
     
 private:
