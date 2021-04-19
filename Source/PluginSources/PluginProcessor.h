@@ -33,14 +33,6 @@
   #define IMOGEN_ONLY_BUILDING_STANDALONE 0
 #endif
 
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-  #ifdef bvsb_USE_MTS_ESP
-    #undef bvsb_USE_MTS_ESP
-  #endif
-  #define bvsb_USE_MTS_ESP 0
-#endif
-
-
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
