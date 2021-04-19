@@ -191,9 +191,19 @@ public:
     
     static constexpr int maxPossibleNumVoices = 20;
     
+    
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
     
     int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
+    
+    
+    bool isConnectedToMtsEsp() const noexcept
+    {
+        if (isUsingDoublePrecision())
+            return doubleEngine.isConnectedToMtsEsp();
+            
+        return floatEngine.isConnectedToMtsEsp();
+    }
     
     
 private:
