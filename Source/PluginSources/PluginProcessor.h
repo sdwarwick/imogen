@@ -26,6 +26,8 @@
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
+#include "../../third-party/ableton-link/include/ableton/Link.hpp"
+
 
 #ifndef IMOGEN_ONLY_BUILDING_STANDALONE
   #define IMOGEN_ONLY_BUILDING_STANDALONE 0
