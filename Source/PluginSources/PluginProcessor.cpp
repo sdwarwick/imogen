@@ -182,6 +182,9 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
         return;
            
     auto link_sessionState = abletonLink.captureAudioSessionState();
+           
+    if (abletonLink.isEnabled())
+           engine.processNewAbletonLinkSessionState (link_sessionState);
    
     juce::AudioBuffer<SampleType> inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
     juce::AudioBuffer<SampleType> outBus = getBusBuffer (buffer, false, 0);
