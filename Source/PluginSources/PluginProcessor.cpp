@@ -28,11 +28,8 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-    , denormalsWereDisabledWhenTheAppStarted(juce::FloatVectorOperations::areDenormalsDisabled())
-#endif
-    , oscMapper(false)
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()), 
+    oscMapper(false)
 {
 #if BV_USE_NE10
     ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!
@@ -49,20 +46,11 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-    
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-    //  if running as a standalone app, denormals are disabled for the lifetime of the app (instead of scoped within the processBlock).
-    juce::FloatVectorOperations::disableDenormalisedNumberSupport (true);
-    juce::FloatVectorOperations::enableFlushToZeroMode (true);
-#endif
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-    juce::FloatVectorOperations::disableDenormalisedNumberSupport (denormalsWereDisabledWhenTheAppStarted);
-    juce::FloatVectorOperations::enableFlushToZeroMode (denormalsWereDisabledWhenTheAppStarted);
-#endif
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,9 +171,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 {
     jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
     
-#if ! IMOGEN_ONLY_BUILDING_STANDALONE
     juce::ScopedNoDenormals nodenorms;
-#endif
     
     updateAllParameters (engine);
     //processQueuedParameterChanges (engine);
