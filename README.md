@@ -15,10 +15,6 @@ So I decided to create it myself.
  <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
  </p>
  
-<p align="center">
- <img src="https://github.com/Ableton/link/blob/master/assets/Ableton_Link_Badge-Black.eps" alt="Ableton Link badge" />
- </p>
- 
  
 NOTE: Imogen is currently under development and will mostly likely not function as intended if you download it and try to build it, though you are free to do so. Imogen's official release is upcoming and will be announced.
 
