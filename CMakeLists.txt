@@ -134,7 +134,6 @@ set (bv_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src CACHE FILEPATH
 #
 
 if (ANDROID)
-
     set (OBOE_DIR "../JUCE/modules/juce_audio_devices/native/oboe")
     add_subdirectory (${OBOE_DIR} ./oboe)
 
@@ -241,7 +240,6 @@ list (APPEND thingsToLinkTo ImogenGraphicAssets)
 #
 
 if (ANDROID)
-
     find_library (log "log")
     find_library (android "android")
     find_library (glesv2 "GLESv2")
@@ -251,8 +249,7 @@ if (ANDROID)
 
     target_include_directories (Imogen PRIVATE
         "${ANDROID_NDK}/sources/android/cpufeatures"
-        "${OBOE_DIR}/include"
-    )
+        "${OBOE_DIR}/include")
 endif()
 
 #
@@ -262,26 +259,15 @@ if (NOT "${thingsToLinkTo}" STREQUAL "")
 endif()
 
 if (ANDROID)
-        target_link_libraries (Imogen PUBLIC
-	    ${log}
-            ${android}
-            ${glesv2}
-            ${egl}
-            ${cpufeatures_lib}
-            ${oboe_lib}
-       )
+        target_link_libraries (Imogen PUBLIC ${log} ${android} ${glesv2} ${egl} ${cpufeatures_lib} ${oboe_lib})
 endif()
 
 #
-
-message (STATUS "Configuring Ableton Link integration...")
 
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 target_link_libraries (Imogen PRIVATE Ableton::Link)
 
 #
-
-message (STATUS "Configuring MTS-ESP integration...")
 
 target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
 target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
@@ -293,7 +279,7 @@ if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
     target_compile_definitions (Imogen PUBLIC JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
     
     if (DEFINED BV_IGNORE_MIPP)
-        target_compile_definitions (Imogen PUBLIC BV_IGNORE_MIPP=1 BV_USE_MIPP=0)
+        target_compile_definitions (Imogen PUBLIC BV_USE_MIPP=0)
     else()
         message (STATUS "Configuring MIPP...")
 	
@@ -303,10 +289,6 @@ if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
 else()
     target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
 endif()
-
-#
-
-target_compile_definitions (Imogen PUBLIC BV_USE_IPP=0 BV_USE_NE10=0)
 
 #
 
