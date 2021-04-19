@@ -281,27 +281,28 @@ target_link_libraries (Imogen PRIVATE Ableton::Link)
 
 #
 
-if (DEFINED BV_IGNORE_VDSP)
-    target_compile_definitions (Imogen PUBLIC BV_IGNORE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
+if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
+
+    target_compile_definitions (Imogen PUBLIC JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
+    
+    if (DEFINED BV_IGNORE_VDSP)
+        target_compile_definitions (Imogen PUBLIC BV_IGNORE_VDSP=1)
+    endif()
+    
+    if (DEFINED BV_IGNORE_MIPP)
+        target_compile_definitions (Imogen PUBLIC BV_IGNORE_MIPP=1 BV_USE_MIPP=0)
+    else()
+        message (STATUS "Configuring MIPP...")
+	
+	
+    endif()
 else()
-        if (APPLE)
-	    target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
-        else()
-	    target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=0 JUCE_USE_VDSP_FRAMEWORK=0)
-        endif()
+    target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
 endif()
 
-if (DEFINED BV_IGNORE_IPP)
-	target_compile_definitions (Imogen PUBLIC BV_IGNORE_IPP=1 BV_USE_IPP=0)
-endif()
+#
 
-if (DEFINED BV_IGNORE_NE10)
-	target_compile_definitions (Imogen PUBLIC BV_IGNORE_NE10=1 BV_USE_NE10=0)
-endif()
-
-if (DEFINED BV_IGNORE_MIPP)
-	target_compile_definitions (Imogen PUBLIC BV_IGNORE_MIPP=1 BV_USE_MIPP=0)
-endif()
+target_compile_definitions (Imogen PUBLIC BV_USE_IPP=0 BV_USE_NE10=0)
 
 #
 
