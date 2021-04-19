@@ -96,7 +96,7 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -DCMAKE_BUILD_TYPE=release -B Builds -DBV_IGNORE_MIPP=1 .
+cmake -DCMAKE_BUILD_TYPE=release -B Builds .
 
 
 # execute build
