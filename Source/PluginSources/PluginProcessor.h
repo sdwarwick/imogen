@@ -306,5 +306,9 @@ private:
     // this object manages all parameters' mappings to OSC messages
     bav::OSCMappingManager oscMapper;
     
+    
+    // this object represents the plugin as a participant in an Ableton Link session.
+    ableton::Link abletonLink;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
