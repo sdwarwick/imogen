@@ -33,7 +33,7 @@ set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivabl
 set (pluginSourcesDir       ${Imogen_sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
 set (guiSourcePath          ${Imogen_sourceDir}/GUI)
 
-set (Imogen_graphicAssetsDir ${guiSourcePath}/GraphicAssets)  # The location of the graphical asset files (images, etc)
+set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/assets)  # The location of the graphical asset files (images, etc)
 
 #
 
@@ -51,7 +51,7 @@ set (Imogen_sourceFiles
     ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.cpp)
 
 set (Imogen_graphicAssetFiles
-    ${CMAKE_CURRENT_SOURCE_DIR}/imogen_icon.png)
+    ${Imogen_graphicAssetsDir}/imogen_icon.png)
 
 #
 
