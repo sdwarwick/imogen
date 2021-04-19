@@ -281,6 +281,13 @@ target_link_libraries (Imogen PRIVATE Ableton::Link)
 
 #
 
+message (STATUS "Configuring MTS-ESP integration...")
+
+target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
+target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
+
+#
+
 if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
 
     target_compile_definitions (Imogen PUBLIC JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
