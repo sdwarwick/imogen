@@ -253,6 +253,13 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMes
     
     harmonizer.bypassedBlock (numSamples, midiMessages);
 }
+           
+           
+
+bvie_VOID_TEMPLATE::processNewAbletonLinkSessionState (ableton::BasicLink::SessionState& state)
+{
+    juce::ignoreUnused (state);
+}
 
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
