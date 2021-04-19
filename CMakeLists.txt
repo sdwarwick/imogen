@@ -15,7 +15,7 @@
  
 #  @2021 by Ben Vining. All rights reserved.
 
-#  CMakeLists.txt :	This file defines the build configuration for Imogen. This CMake script takes care of finding or downloading JUCE. This CMake script uses my JUCE-CmakeWrapper package as its core API.
+#  CMakeLists.txt :	This file defines the build configuration for Imogen.
  
 
 cmake_minimum_required (VERSION 3.18) 
