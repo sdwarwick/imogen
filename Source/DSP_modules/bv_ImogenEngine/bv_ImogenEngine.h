@@ -38,6 +38,7 @@
 
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
+#include "../../../third-party/ableton-link/include/ableton/Link.hpp"
 
 
 namespace bav
