@@ -70,6 +70,8 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 //        box.addItem (entry.getFile().getFileName(), id);
 //        ++id;
 //    }
+           
+    juce::ignoreUnused (box);
 }
 
 
