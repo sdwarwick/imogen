@@ -26,8 +26,6 @@
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
-#include "../../third-party/ableton-link/include/ableton/Link.hpp"
-
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
