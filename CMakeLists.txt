@@ -274,7 +274,7 @@ endif()
 
 #
 
-message (STATUS "Configuring Ableton Link integration..."
+message (STATUS "Configuring Ableton Link integration...")
 
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 target_link_libraries (Imogen Ableton::Link)
