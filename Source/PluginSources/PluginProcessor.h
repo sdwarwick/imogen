@@ -29,11 +29,6 @@
 #include "../../third-party/ableton-link/include/ableton/Link.hpp"
 
 
-#ifndef IMOGEN_ONLY_BUILDING_STANDALONE
-  #define IMOGEN_ONLY_BUILDING_STANDALONE 0
-#endif
-
-
 class ImogenAudioProcessorEditor; // forward declaration...
 
 ///////////
@@ -269,11 +264,6 @@ private:
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;
-
-    
-#if IMOGEN_ONLY_BUILDING_STANDALONE
-    const bool denormalsWereDisabledWhenTheAppStarted;  // simple hacky way to attempt to leave the CPU as we found it in standalone app mode
-#endif
     
     Parameter* getParameterPntr (const parameterID paramID) const;
     
