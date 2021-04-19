@@ -12,7 +12,7 @@ As far as I know, there is no piece of software currently commercially available
 So I decided to create it myself.
 
 <p align="center">
- <img src="https://github.com/benthevining/imogen/blob/master/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
+ <img src="https://github.com/benthevining/imogen/blob/master/assets/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
  </p>
  
  
