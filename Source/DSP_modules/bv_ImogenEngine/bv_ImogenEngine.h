@@ -102,6 +102,9 @@ public:
     juce::String getScaleName() const { return harmonizer.getScaleName(); }
     
     
+    void processNewAbletonLinkSessionState (ableton::BasicLink::SessionState& state);
+    
+    
 private:
     
     // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
