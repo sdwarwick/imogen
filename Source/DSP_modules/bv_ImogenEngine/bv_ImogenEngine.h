@@ -98,6 +98,9 @@ public:
     void updateMidiLatch (const bool isLatched);
     
     
+    bool isConnectedToMtsEsp() const noexcept { return harmonizer.isConnectedToMtsEsp(); }
+    
+    
 private:
     
     // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
