@@ -45,31 +45,6 @@ void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& acti
 }
 
 
-// update the number of concurrently running instances of the harmony algorithm
-void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
-{
-    if (isUsingDoublePrecision())
-    {
-        if (doubleEngine.getCurrentNumVoices() == newNumVoices)
-            return;
-        
-        suspendProcessing (true);
-        doubleEngine.updateNumVoices (newNumVoices);
-    }
-    else
-    {
-        if (floatEngine.getCurrentNumVoices() == newNumVoices)
-            return;
-        
-        suspendProcessing (true);
-        floatEngine.updateNumVoices (newNumVoices);
-    }
-    
-    suspendProcessing (false);
-}
-
-
-
 /*===========================================================================================================================
  ============================================================================================================================*/
 
@@ -82,8 +57,6 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    updateNumVoices (numVoices->get());
-    
     activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
 
     activeEngine.updateInputGain (juce::Decibels::decibelsToGain (inputGain->get()));
@@ -154,7 +127,6 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (leadBypassID):     activeEngine.updateBypassStates (_BOOL_MSG, harmonyBypass->get());
             case (harmonyBypassID):  activeEngine.updateBypassStates (leadBypass->get(), _BOOL_MSG);
             case (inputSourceID):    activeEngine.setModulatorSource (_INT_MSG);
-            case (numVoicesID):      updateNumVoices (_INT_MSG);
             case (dryPanID):         activeEngine.updateDryVoxPan (_INT_MSG);
             case (dryWetID):         activeEngine.updateDryWet (_INT_MSG);
             case (stereoWidthID):    activeEngine.updateStereoWidth (_INT_MSG, lowestPanned->get());
@@ -362,8 +334,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", 
                                                       std::move (toggle), std::move (thresh), std::move (interval)));       
     }
-    {   //  midi settings
-        auto numVoices = std::make_unique<IntParameter>   ("numVoices", "Number of voices", 1, 20, 12);       
+    {   //  midi settings 
         auto velocitySens = std::make_unique<IntParameter>   ("midiVelocitySens", "MIDI Velocity Sensitivity", 0, 100, 100);   
         auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2);
         auto aftertouchToggle = std::make_unique<BoolParameter>  ("aftertouchGainToggle", "Aftertouch gain on/off", true);
@@ -393,7 +364,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     mainBypass           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("mainBypass"));                   jassert (mainBypass);
     leadBypass           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("leadBypass"));                   jassert (leadBypass);
     harmonyBypass        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("harmonyBypass"));                jassert (harmonyBypass);
-    numVoices            = dynamic_cast<IntParamPtr>   (tree.getParameter ("numVoices"));                    jassert (numVoices);
     inputSource          = dynamic_cast<IntParamPtr>   (tree.getParameter ("inputSource"));                  jassert (inputSource);
     dryPan               = dynamic_cast<IntParamPtr>   (tree.getParameter ("dryPan"));                       jassert (dryPan);
     dryWet               = dynamic_cast<IntParamPtr>   (tree.getParameter ("masterDryWet"));                 jassert (dryWet);
@@ -499,7 +469,6 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (reverbDuckID):            return reverbDuck;
         case (reverbLoCutID):           return reverbLoCut;
         case (reverbHiCutID):           return reverbHiCut;
-        case (numVoicesID):             return numVoices;
         case (inputSourceID):           return inputSource;
         default:                        return nullptr;
     }
@@ -548,7 +517,6 @@ ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const
     else if (parameter == reverbDuck)           return reverbDuckID;
     else if (parameter == reverbLoCut)          return reverbLoCutID;
     else if (parameter == reverbHiCut)          return reverbHiCutID;
-    else if (parameter == numVoices)            return numVoicesID;
     else if (parameter == inputSource)          return inputSourceID;
     else return mainBypassID;
 }
