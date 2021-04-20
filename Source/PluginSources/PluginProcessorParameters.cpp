@@ -601,48 +601,12 @@ void ImogenAudioProcessor::initializeParameterPointers()
 void ImogenAudioProcessor::initializeParameterListeners()
 {
     parameterMessengers.reserve (IMGN_NUM_PARAMS);
-    
-    addParameterMessenger ("mainBypass",            mainBypassID);
-    addParameterMessenger ("leadBypass",            leadBypassID);
-    addParameterMessenger ("harmonyBypass",         harmonyBypassID);
-    addParameterMessenger ("numVoices",             numVoicesID);
-    addParameterMessenger ("inputSource",           inputSourceID);
-    addParameterMessenger ("dryPan",                dryPanID);
-    addParameterMessenger ("masterDryWet",          dryWetID);
-    addParameterMessenger ("adsrAttack",            adsrAttackID);
-    addParameterMessenger ("adsrDecay",             adsrDecayID);
-    addParameterMessenger ("adsrSustain",           adsrSustainID);
-    addParameterMessenger ("adsrRelease",           adsrReleaseID);
-    addParameterMessenger ("stereoWidth",           stereoWidthID);
-    addParameterMessenger ("lowestPan",             lowestPannedID);
-    addParameterMessenger ("midiVelocitySens",      velocitySensID);
-    addParameterMessenger ("PitchBendRange",        pitchBendRangeID);
-    addParameterMessenger ("pedalPitchToggle",      pedalPitchIsOnID);
-    addParameterMessenger ("pedalPitchThresh",      pedalPitchThreshID);
-    addParameterMessenger ("pedalPitchInterval",    pedalPitchIntervalID);
-    addParameterMessenger ("descantToggle",         descantIsOnID);
-    addParameterMessenger ("descantThresh",         descantThreshID);
-    addParameterMessenger ("descantInterval",       descantIntervalID);
-    addParameterMessenger ("concertPitch",          concertPitchHzID);
-    addParameterMessenger ("voiceStealing",         voiceStealingID);
-    addParameterMessenger ("inputGain",             inputGainID);
-    addParameterMessenger ("outputGain",            outputGainID);
-    addParameterMessenger ("limiterIsOn",           limiterToggleID);
-    addParameterMessenger ("noiseGateIsOn",         noiseGateToggleID);
-    addParameterMessenger ("noiseGateThresh",       noiseGateThresholdID);
-    addParameterMessenger ("compressorToggle",      compressorToggleID);
-    addParameterMessenger ("compressorAmount",      compressorAmountID);
-    addParameterMessenger ("vocalRangeType",        vocalRangeTypeID);
-    addParameterMessenger ("aftertouchGainToggle",  aftertouchGainToggleID);
-    addParameterMessenger ("deEsserIsOn",           deEsserToggleID);
-    addParameterMessenger ("deEsserThresh",         deEsserThreshID);
-    addParameterMessenger ("deEsserAmount",         deEsserAmountID);
-    addParameterMessenger ("reverbIsOn",            reverbToggleID);
-    addParameterMessenger ("reverbDryWet",          reverbDryWetID);
-    addParameterMessenger ("reverbDecay",           reverbDecayID);
-    addParameterMessenger ("reverbDuck",            reverbDuckID);
-    addParameterMessenger ("reverbLoCut",           reverbLoCutID);
-    addParameterMessenger ("reverbHiCut",           reverbHiCutID);
+           
+    for (int i = 0; i < IMGN_NUM_PARAMS; ++i)
+    {
+        const auto id = parameterID(i);
+        addParameterMessenger (getParameterPntr(id)->orig()->paramID, id);
+    }
 }
 
 
@@ -766,47 +730,15 @@ ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const
 */
 void ImogenAudioProcessor::initializeParameterOscMappings()
 {
-    oscMapper.addNewMapping (mainBypass,           "imogen/mainBypass");
-    oscMapper.addNewMapping (leadBypass,           "imogen/leadBypass");
-    oscMapper.addNewMapping (harmonyBypass,        "imogen/harmonyBypass");
-    oscMapper.addNewMapping (dryPan,               "imogen/dryPan");   
-    oscMapper.addNewMapping (dryWet,               "imogen/dryWet"); 
-    oscMapper.addNewMapping (adsrAttack,           "imogen/adsrAttack");            
-    oscMapper.addNewMapping (adsrDecay,            "imogen/adsrDecay");            
-    oscMapper.addNewMapping (adsrSustain,          "imogen/adsrSustain");            
-    oscMapper.addNewMapping (adsrRelease,          "imogen/adsrRelease");            
-    oscMapper.addNewMapping (stereoWidth,          "imogen/stereoWidth");            
-    oscMapper.addNewMapping (lowestPanned,         "imogen/lowestPanned");            
-    oscMapper.addNewMapping (velocitySens,         "imogen/velocitySens");         
-    oscMapper.addNewMapping (pitchBendRange,       "imogen/pitchBendRange");            
-    oscMapper.addNewMapping (pedalPitchIsOn,       "imogen/pedalPitchIsOn");           
-    oscMapper.addNewMapping (pedalPitchThresh,     "imogen/pedalPitchThresh");           
-    oscMapper.addNewMapping (pedalPitchInterval,   "imogen/pedalPitchInterval");           
-    oscMapper.addNewMapping (descantIsOn,          "imogen/descantIsOn");           
-    oscMapper.addNewMapping (descantThresh,        "imogen/descantThresh");           
-    oscMapper.addNewMapping (descantInterval,      "imogen/descantInterval");           
-    oscMapper.addNewMapping (concertPitchHz,       "imogen/concertPitchHz");           
-    oscMapper.addNewMapping (voiceStealing,        "imogen/voiceStealing");           
-    oscMapper.addNewMapping (inputGain,            "imogen/inputGain");           
-    oscMapper.addNewMapping (outputGain,           "imogen/outputGain");           
-    oscMapper.addNewMapping (limiterToggle,        "imogen/limiterToggle");           
-    oscMapper.addNewMapping (noiseGateToggle,      "imogen/noiseGateToggle");  
-    oscMapper.addNewMapping (noiseGateThreshold,   "imogen/noiseGateThreshold");           
-    oscMapper.addNewMapping (compressorToggle,     "imogen/compressorToggle");           
-    oscMapper.addNewMapping (compressorAmount,     "imogen/compressorAmount");           
-    oscMapper.addNewMapping (aftertouchGainToggle, "imogen/aftertouchGainToggle");           
-    oscMapper.addNewMapping (deEsserToggle,        "imogen/deEsserToggle");           
-    oscMapper.addNewMapping (deEsserThresh,        "imogen/deEsserThresh");           
-    oscMapper.addNewMapping (deEsserAmount,        "imogen/deEsserAmount");           
-    oscMapper.addNewMapping (reverbToggle,         "imogen/reverbToggle");           
-    oscMapper.addNewMapping (reverbDryWet,         "imogen/reverbDryWet");   
-    oscMapper.addNewMapping (reverbDecay,          "imogen/reverbDecay");           
-    oscMapper.addNewMapping (reverbDuck,           "imogen/reverbDuck");           
-    oscMapper.addNewMapping (reverbLoCut,          "imogen/reverbLoCut");           
-    oscMapper.addNewMapping (reverbHiCut,          "imogen/reverbHiCut");           
-    oscMapper.addNewMapping (numVoices,            "imogen/numVoices");           
-    oscMapper.addNewMapping (inputSource,          "imogen/inputSource");           
-    oscMapper.addNewMapping (vocalRangeType,       "imogen/vocalRangeType");           
+    for (int i = 0; i < IMGN_NUM_PARAMS; ++i)
+    {
+        auto* param = getParameterPntr (parameterID(i));
+               
+        auto address = juce::String("imogen/");
+        address += param->orig()->paramID;
+               
+        oscMapper.addNewMapping (param, address);
+    }    
 }
 
 
