@@ -82,7 +82,6 @@ void ImogenAudioProcessor::updateNumVoices (const int newNumVoices)
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
 {
-    updateVocalRangeType (vocalRangeType->get());
     updateNumVoices (numVoices->get());
     
     activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
@@ -415,7 +414,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     descantIsOn          = dynamic_cast<BoolParamPtr>  (tree.getParameter ("descantToggle"));                jassert (descantIsOn);
     descantThresh        = dynamic_cast<IntParamPtr>   (tree.getParameter ("descantThresh"));                jassert (descantThresh);
     descantInterval      = dynamic_cast<IntParamPtr>   (tree.getParameter ("descantInterval"));              jassert (descantInterval);
-    concertPitchHz       = dynamic_cast<IntParamPtr>   (tree.getParameter ("concertPitch"));                 jassert (concertPitchHz);
     voiceStealing        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("voiceStealing"));                jassert (voiceStealing);
     inputGain            = dynamic_cast<FloatParamPtr> (tree.getParameter ("inputGain"));                    jassert (inputGain);
     outputGain           = dynamic_cast<FloatParamPtr> (tree.getParameter ("outputGain"));                   jassert (outputGain);
@@ -434,7 +432,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     reverbDuck           = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbDuck"));                   jassert (reverbDuck);
     reverbLoCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbLoCut"));                  jassert (reverbLoCut);
     reverbHiCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbHiCut"));                  jassert (reverbHiCut);
-    vocalRangeType       = dynamic_cast<IntParamPtr>   (tree.getParameter ("vocalRangeType"));               jassert (vocalRangeType);
 }
 
 
@@ -487,7 +484,6 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (descantIsOnID):           return descantIsOn;
         case (descantThreshID):         return descantThresh;
         case (descantIntervalID):       return descantInterval;
-        case (concertPitchHzID):        return concertPitchHz;
         case (voiceStealingID):         return voiceStealing;
         case (inputGainID):             return inputGain;
         case (outputGainID):            return outputGain;
@@ -508,7 +504,6 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (reverbHiCutID):           return reverbHiCut;
         case (numVoicesID):             return numVoices;
         case (inputSourceID):           return inputSource;
-        case (vocalRangeTypeID):        return vocalRangeType;
         default:                        return nullptr;
     }
 }
@@ -538,7 +533,6 @@ ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const
     else if (parameter == descantIsOn)          return descantIsOnID;
     else if (parameter == descantThresh)        return descantThreshID;
     else if (parameter == descantInterval)      return descantIntervalID;
-    else if (parameter == concertPitchHz)       return concertPitchHzID;
     else if (parameter == voiceStealing)        return voiceStealingID;
     else if (parameter == inputGain)            return inputGainID;
     else if (parameter == outputGain)           return outputGainID;
@@ -559,7 +553,6 @@ ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const
     else if (parameter == reverbHiCut)          return reverbHiCutID;
     else if (parameter == numVoices)            return numVoicesID;
     else if (parameter == inputSource)          return inputSourceID;
-    else if (parameter == vocalRangeType)       return vocalRangeTypeID;
     else return mainBypassID;
 }
 
