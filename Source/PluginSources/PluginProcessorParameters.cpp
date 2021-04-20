@@ -96,7 +96,6 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updatePitchbendRange (pitchBendRange->get());
     activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
     activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
-    activeEngine.updateConcertPitch (concertPitchHz->get());
     activeEngine.updateNoteStealing (voiceStealing->get());
     activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
     activeEngine.setModulatorSource (inputSource->get());
@@ -162,7 +161,6 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (lowestPannedID):   activeEngine.updateStereoWidth (stereoWidth->get(), _INT_MSG);
             case (velocitySensID):   activeEngine.updateMidiVelocitySensitivity (_INT_MSG);
             case (pitchBendRangeID): activeEngine.updatePitchbendRange (_INT_MSG);
-            case (concertPitchHzID):        activeEngine.updateConcertPitch (_INT_MSG);
             case (voiceStealingID):         activeEngine.updateNoteStealing (_BOOL_MSG);
             case (inputGainID):             activeEngine.updateInputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG));
             case (outputGainID):            activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG));
@@ -171,7 +169,6 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (noiseGateThresholdID):    activeEngine.updateNoiseGate (_FLOAT_MSG, noiseGateToggle->get());
             case (compressorToggleID):      updateCompressor (activeEngine, _BOOL_MSG, compressorAmount->get());
             case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), _FLOAT_MSG);
-            case (vocalRangeTypeID):        updateVocalRangeType (_INT_MSG);
             case (aftertouchGainToggleID):  activeEngine.updateAftertouchGainOnOff (_BOOL_MSG);
                 
             case (pedalPitchIsOnID):     activeEngine.updatePedalPitch (_BOOL_MSG, pedalPitchThresh->get(), pedalPitchInterval->get());
