@@ -151,8 +151,10 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     reverb.prepare (newInternalBlocksize, samplerate, 2);
     
     resetSmoothedValues (newInternalBlocksize);
-    
-    updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+           
+    harmonizer.updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+
+    FIFOEngine::changeLatency (harmonizer.getLatencySamples());       
 }
     
 #undef bvie_LIMITER_RELEASE_MS
