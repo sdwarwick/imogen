@@ -32,59 +32,6 @@
     Functions for controlling individual parameters (those that require their own functions in this class)
 */
 
-
-// updates the vocal input range type. This controls the pitch detection Hz range, and, thus, the latency of the pitch detector and the latency of the entire plugin. The lower the min possible Hz for the pitch detector, the higher the plugin's latency.
-void ImogenAudioProcessor::updateVocalRangeType (int newRangeType)
-{
-    jassert (newRangeType >= 0 && newRangeType <= 3);
-    
-    int minHz, maxHz;
-    
-    switch (newRangeType)
-    {
-        default:
-            minHz = bav::math::midiToFreq (57);
-            maxHz = bav::math::midiToFreq (88);
-        case (1):
-            minHz = bav::math::midiToFreq (50);
-            maxHz = bav::math::midiToFreq (81);
-        case (2):
-            minHz = bav::math::midiToFreq (43);
-            maxHz = bav::math::midiToFreq (76);
-        case (3):
-            minHz = bav::math::midiToFreq (36);
-            maxHz = bav::math::midiToFreq (67);
-    }
-    
-    suspendProcessing (true);
-    
-    if (isUsingDoublePrecision())
-    {
-        doubleEngine.updatePitchDetectionHzRange (minHz, maxHz);
-        setLatencySamples (doubleEngine.reportLatency());
-    }
-    else
-    {
-        floatEngine.updatePitchDetectionHzRange (minHz, maxHz);
-        setLatencySamples (floatEngine.reportLatency());
-    }
-    
-    suspendProcessing (false);
-}
-
-
-juce::String ImogenAudioProcessor::getCurrentVocalRange() const
-{
-    switch (vocalRangeType->get())
-    {
-        default:  return { "Soprano" };
-        case (1): return { "Alto" };
-        case (2): return { "Tenor" };
-        case (3): return { "Bass" };
-    }
-}
-
-
 // converts the "compressor-knob" value to threshold and ratio control values and passes these to the ImogenEngine
 template<typename SampleType>
 void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
