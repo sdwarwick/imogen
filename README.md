@@ -11,7 +11,7 @@ As far as I know, there is no piece of software currently commercially available
 
 So I decided to create it myself.
 
-Imogen is a low-latency pitch shifter designed to function as an instrument that is dynamic to play, and as a lead vocals mixing workstation: Imogen also includes pitch correction for the lead vocals, as well as a suite of built-in mixing effects. You can adjust the number of harmony voices running inside Imogen -- you can use only one for light CPU and guarunteed monophony, or you can add up to 12 (although theoretically infinite) polyphony voices.
+Imogen is a low-latency pitch shifter designed to function as an instrument that is dynamic to play, and as a lead vocals mixing workstation: Imogen also includes pitch correction for the lead vocals, as well as a suite of built-in mixing effects. 
 
 Imogen features integrations with Ableton Link and MTS-ESP. On non-Apple platforms, the MIPP library is used for portable SIMD intrinsics.
 
