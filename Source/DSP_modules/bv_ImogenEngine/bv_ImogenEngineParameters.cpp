@@ -168,16 +168,6 @@ bvie_VOID_TEMPLATE::updateDeEsser (const float deEssAmount, const float thresh_d
 }
 
 
-bvie_VOID_TEMPLATE::updatePitchDetectionHzRange (const int minHz, const int maxHz)
-{
-    jassert (harmonizer.getSamplerate() > 0);
-    
-    harmonizer.updatePitchDetectionHzRange (minHz, maxHz);
-
-    FIFOEngine::changeLatency (harmonizer.getLatencySamples());
-}
-
-
 bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 {
     harmonizer.setAftertouchGainOnOff (shouldBeOn);
