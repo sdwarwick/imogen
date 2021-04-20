@@ -163,6 +163,9 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
     activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
                                reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
 }
+///function template instantiations...
+template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<float>& activeEngine);
+template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<double>& activeEngine);
 
 
 // reads all available messages from the FIFO queue, and processes the most recent of each type.
