@@ -199,18 +199,12 @@ public:
     
     bool isConnectedToMtsEsp() const noexcept
     {
-        if (isUsingDoublePrecision())
-            return doubleEngine.isConnectedToMtsEsp();
-            
-        return floatEngine.isConnectedToMtsEsp();
+        return isUsingDoublePrecision() ? doubleEngine.isConnectedToMtsEsp() : floatEngine.isConnectedToMtsEsp();
     }
     
     juce::String getScaleName() const
     {
-        if (isUsingDoublePrecision())
-            return doubleEngine.getScaleName();
-            
-        return floatEngine.getScaleName();
+        return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
     }
     
     
