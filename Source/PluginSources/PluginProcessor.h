@@ -120,30 +120,10 @@ public:
         pitchBendFromEditor
     };
     
-    // returns any parameter's current value as a normalized float in the range 0.0 to 1.0
-    float getNormalizedCurrentParameterValue (const parameterID paramID) const;
-    
-    // returns any parameter's actual value, as a float, in the natural range of the parameter.
-    float getFloatParameterValue (const parameterID paramID) const;
-    
-    // returns any parameter's actual value, as an integer, in the natural range of the parameter.
-    // this function can technically be called with any parameterID, but will produce strange and possibly crash-inducing output when used with a parameter that is not an integer type.
-    int getIntParameterValue (const parameterID paramID) const;
-    
-    // returns any parameter's actual value as a boolean true/false
-    // this function can technically be called with any parameterID, but will produce strange and possibly crash-inducing output when used with a parameter that is not a boolean type.
-    bool getBoolParameterValue (const parameterID paramID) const;
-    
-    // returns any parameter's default value as a float in the normalised range 0.0 to 1.0
-    float getDefaultParameterValue (const parameterID paramID) const;
-    
     // tracks whether the processor has updated its parameter defaults since the last time this function was called
     bool hasUpdatedParamDefaults();
     
-    // returns the normalisable range associated with the given parameter.
-    const juce::NormalisableRange<float>& getParameterRange (const parameterID paramID) const;
-    
-    // returns a string descripttion of the currently selected vocal range type
+    // returns a string description of the currently selected vocal range type
     juce::String getCurrentVocalRange() const;
     
     double getTailLengthSeconds() const override;
@@ -179,6 +159,12 @@ public:
     void editorPitchbend (int wheelValue);
     
     
+    inline bool isMidiLatched() const
+    {
+        return isUsingDoublePrecision() ? doubleEngine.isMidiLatched() : floatEngine.isMidiLatched();
+    }
+    
+    
     static constexpr auto msgQueueSize = size_t(100);
     
     // this queue is SPSC; this is only for events flowing from the editor into the processor
@@ -206,6 +192,11 @@ public:
     {
         return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
     }
+    
+    
+    Parameter* getParameterPntr (const parameterID paramID) const;
+    
+    parameterID parameterPntrToID (const Parameter* const) const;
     
     
 private:
@@ -258,14 +249,6 @@ private:
     bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
     
     
-    inline bool isMidiLatched() const
-    {
-        if (isUsingDoublePrecision())
-            return doubleEngine.isMidiLatched();
-        
-        return floatEngine.isMidiLatched();
-    }
-    
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
@@ -280,10 +263,6 @@ private:
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;
-    
-    Parameter* getParameterPntr (const parameterID paramID) const;
-    
-    parameterID parameterPntrToID (const Parameter* const) const;
     
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
