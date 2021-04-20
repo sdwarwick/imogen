@@ -51,7 +51,7 @@ unknown_argument () {
 # check to see if the script was invoked with the --help or -h flags
 if [[ ${#@} -ne 0 ]] && ( [[ ${@#"--help"} = "" ]] || [[ ${@#"-h"} = "" ]] ); then
  	printf "\n \t \v IMOGEN BUILD SCRIPT \n USAGE: \n \n"
-  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in VST, AU and Standalone formats. \n"
+  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in VST3, AU, Standalone and Unity formats. \n"
   	exit 0;
 fi
 
