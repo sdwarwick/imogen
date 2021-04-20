@@ -60,7 +60,6 @@ public:
     
     int reportLatency() const noexcept { return FIFOEngine::getLatency(); }
     
-    void updateNumVoices (const int newNumVoices); // updates the # of cuncurrently running instances of the pitch shifting algorithm
     int getCurrentNumVoices() const { return harmonizer.getNumVoices(); }
     
     void returnActivePitches (juce::Array<int>& outputArray) const;
