@@ -89,7 +89,6 @@ public:
         descantIsOnID,
         descantThreshID,
         descantIntervalID,
-        concertPitchHzID,
         voiceStealingID,
         inputGainID,
         outputGainID,
@@ -122,9 +121,6 @@ public:
     
     // tracks whether the processor has updated its parameter defaults since the last time this function was called
     bool hasUpdatedParamDefaults();
-    
-    // returns a string description of the currently selected vocal range type
-    juce::String getCurrentVocalRange() const;
     
     double getTailLengthSeconds() const override;
     
@@ -226,8 +222,6 @@ private:
     
     template<typename SampleType>
     void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    void updateVocalRangeType (int newRangeType);
     
     void updateNumVoices (const int newNumVoices);
     
