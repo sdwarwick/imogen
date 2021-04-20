@@ -22,6 +22,9 @@ Imogen features integrations with Ableton Link and MTS-ESP. On non-Apple platfor
  
 NOTE: Imogen is currently under development and will mostly likely not function as intended if you download it and try to build it, though you are free to do so. Imogen's official release is upcoming and will be announced.
 
+When Imogen is released, it will be available on MacOSX, Windows, Linux, and iPad, in the following formats: VST3, Unity, AudioUnit (Mac only), and as a standalone application on all platforms. (Note: support for the LV2 format is being explored as well.)
+
+
 ## Author
 **Ben Vining**: ben.the.vining@gmail.com | [Facebook](http://www.facebook.com/benviningofficial/) | [Twitter](http://twitter.com/benthevining) | [Gumroad](http://gumroad.com/benvining)
  
