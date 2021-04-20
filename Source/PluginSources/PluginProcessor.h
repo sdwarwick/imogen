@@ -247,7 +247,7 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     void initializeParameterListeners();
-    void addParameterMessenger (juce::String stringID, parameterID paramID);
+    void addParameterMessenger (parameterID paramID);
     void updateParameterDefaults();
     
     void initializeParameterOscMappings();
