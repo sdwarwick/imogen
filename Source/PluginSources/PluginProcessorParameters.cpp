@@ -132,7 +132,7 @@ int ImogenAudioProcessor::getCurrentProgram()
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
 {
-    juce::ignoreUnused (index);
+    loadPreset (getProgramName (index));
 }
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
@@ -143,7 +143,11 @@ const juce::String ImogenAudioProcessor::getProgramName (int index)
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
-    ignoreUnused (index, newName);
+    if (index == getCurrentProgram())
+    {
+        deletePreset (getProgramName (index));
+        savePreset (newName);
+    }
 }
 
 
