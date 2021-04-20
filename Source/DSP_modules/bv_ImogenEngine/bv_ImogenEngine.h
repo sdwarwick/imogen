@@ -75,7 +75,6 @@ public:
     void updatePitchbendRange (const int rangeST);
     void updatePedalPitch  (const bool isOn, const int upperThresh, const int interval);
     void updateDescant     (const bool isOn, const int lowerThresh, const int interval);
-    void updateConcertPitch(const int newConcertPitchHz);
     void updateNoteStealing(const bool shouldSteal);
     void updateLimiter     (const bool isOn);
     void updateNoiseGate (const float newThreshDB, const bool isOn);
