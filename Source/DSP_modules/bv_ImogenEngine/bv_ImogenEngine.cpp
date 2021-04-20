@@ -127,7 +127,7 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 {
     jassert (samplerate > 0 && newInternalBlocksize > 0);
 
-    harmonizer.initialize (12, samplerate, newInternalBlocksize);
+    harmonizer.initialize (16, samplerate, newInternalBlocksize);
     
     monoBuffer.setSize (1, newInternalBlocksize);
     dryBuffer.setSize (2, newInternalBlocksize);
