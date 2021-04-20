@@ -128,12 +128,6 @@ bvie_VOID_TEMPLATE::updateDescant (const bool isOn, const int lowerThresh, const
 }
 
 
-bvie_VOID_TEMPLATE::updateConcertPitch (const int newConcertPitchHz)
-{
-    harmonizer.setConcertPitchHz (newConcertPitchHz);
-}
-
-
 bvie_VOID_TEMPLATE::updateNoteStealing (const bool shouldSteal)
 {
     harmonizer.setNoteStealingEnabled (shouldSteal);
