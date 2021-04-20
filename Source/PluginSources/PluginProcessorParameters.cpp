@@ -607,18 +607,16 @@ void ImogenAudioProcessor::initializeParameterListeners()
     parameterMessengers.reserve (IMGN_NUM_PARAMS);
            
     for (int i = 0; i < IMGN_NUM_PARAMS; ++i)
-    {
-        const auto id = parameterID(i);
-        addParameterMessenger (getParameterPntr(id)->orig()->paramID, id);
-    }
+        addParameterMessenger (parameterID(i));
 }
 
 
 // creates a single parameter listener & messenger for a requested parameter
-void ImogenAudioProcessor::addParameterMessenger (juce::String stringID, parameterID paramID)
+void ImogenAudioProcessor::addParameterMessenger (parameterID paramID)
 {
-    auto& messenger { parameterMessengers.emplace_back (ParameterMessenger(paramChanges, getParameterPntr(paramID), paramID)) };
-    tree.addParameterListener (stringID, &messenger);
+    auto* param = getParameterPntr (paramID);
+    auto& messenger { parameterMessengers.emplace_back (ParameterMessenger (paramChanges, param, paramID)) };
+    tree.addParameterListener (param->orig()->paramID, &messenger);
 }
 
 
