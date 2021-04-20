@@ -248,6 +248,9 @@ bool ImogenAudioProcessor::hasUpdatedParamDefaults()
 // creates all the needed parameter objects and returns them in a ParameterLayout
 juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
 {
+    // this is done here because this function makes use of translated strings, and is called from the processor's initialization list
+    // juce::LocalisedStrings::setCurrentMappings (juce::LocalisedStrings (juce::String(), true));       
+           
     using Group = juce::AudioProcessorParameterGroup;
 
     std::vector<std::unique_ptr<Group>> groups;
