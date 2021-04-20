@@ -341,7 +341,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         auto voiceStealing = std::make_unique<BoolParameter>  ("voiceStealing", "Voice stealing", false);
                
         groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
-                                                      std::move (numVoices), std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing)));       
+                                                      std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing)));       
     }
     {   //  mixing
         auto inputMode = std::make_unique<IntParameter>   ("inputSource", "Input source", 1, 3, 1);      
