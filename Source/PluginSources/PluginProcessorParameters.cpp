@@ -333,56 +333,114 @@ bool ImogenAudioProcessor::hasUpdatedParamDefaults()
 // creates all the needed parameter objects and returns them in a ParameterLayout
 juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
 {
-    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    using Group = juce::AudioProcessorParameterGroup;
+
+    std::vector<std::unique_ptr<Group>> groups;
     
     juce::NormalisableRange<float> gainRange (-60.0f, 0.0f, 0.01f);
     juce::NormalisableRange<float> zeroToOneRange (0.0f, 1.0f, 0.01f);
     juce::NormalisableRange<float> msRange (0.001f, 1.0f, 0.001f);
     juce::NormalisableRange<float> hzRange (40.0f, 10000.0f, 1.0f);
+   
+    {   //  bypasses
+        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", "Bypass", false);
+        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", "Lead bypass", false);
+        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", "Harmony bypass", false);
+                   
+        groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", 
+                                                      std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
+    }      
+    {   //  adsr
+        auto attack  = std::make_unique<FloatParameter> ("adsrAttack", "ADSR Attack", msRange, 0.35f);
+        auto decay   = std::make_unique<FloatParameter> ("adsrDecay", "ADSR Decay", msRange, 0.06f); 
+        auto sustain = std::make_unique<FloatParameter> ("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f);
+        auto release = std::make_unique<FloatParameter> ("adsrRelease", "ADSR Release", msRange, 0.1f);
+               
+        groups.emplace_back (std::make_unique<Group> ("ADSR", TRANS ("ADSR"), "|", 
+                                                      std::move (attack), std::move (decay), std::move (sustain), std::move (release)));       
+    }        
+    {   //  reverb
+        auto toggle = std::make_unique<BoolParameter>  ("reverbIsOn", "Reverb toggle", false);
+        auto dryWet = std::make_unique<IntParameter>   ("reverbDryWet", "Reverb dry/wet", 0, 100, 35);
+        auto decay  = std::make_unique<FloatParameter> ("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f);
+        auto duck   = std::make_unique<FloatParameter> ("reverbDuck", "Duck amount", zeroToOneRange, 0.3f);
+        auto loCut  = std::make_unique<FloatParameter> ("reverbLoCut", "Reverb low cut", hzRange, 80.0f);
+        auto hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", "Reverb high cut", hzRange, 5500.0f);
+        
+        groups.emplace_back (std::make_unique<Group> ("Reverb", TRANS ("Reverb"), "|", 
+                                                      std::move (toggle), std::move (dryWet), std::move (decay), std::move (duck), std::move (loCut), std::move (hiCut)));
+    }
+    {   //  compressor             
+        auto toggle = std::make_unique<BoolParameter>  ("compressorToggle", "Compressor on/off", false);    
+        auto amount = std::make_unique<FloatParameter> ("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f);
+        
+        groups.emplace_back (std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", 
+                                                      std::move (toggle), std::move (amount)));       
+    }
+    {   //  de-esser
+        auto toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", "De-esser toggle", true);
+        auto thresh = std::make_unique<FloatParameter> ("deEsserThresh", "De-esser thresh", gainRange, -6.0f);
+        auto amount = std::make_unique<FloatParameter> ("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f);       
+                   
+        groups.emplace_back (std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", 
+                                                      std::move (toggle), std::move (thresh), std::move (amount)));      
+    }
+    {   //  noise gate
+        auto toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", "Noise gate toggle", true);
+        auto thresh = std::make_unique<FloatParameter> ("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f);
+        
+        groups.emplace_back (std::make_unique<Group> ("Noise gate", TRANS ("Noise gate"), "|", 
+                                                      std::move (toggle), std::move (thresh)));           
+    }
+    {   //  limiter
+        groups.emplace_back (std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
+                                                      std::make_unique<BoolParameter>  ("limiterIsOn", "Limiter on/off", true)));       
+    }      
+    {   //  stereo image
+        auto width  = std::make_unique<IntParameter>   ("stereoWidth", "Stereo Width", 0, 100, 100); 
+        auto lowest = std::make_unique<IntParameter>   ("lowestPan", "Lowest panned midiPitch", 0, 127, 0);
+               
+        groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", 
+                                                      std::move (width), std::move (lowest)));        
+    }
+    {   //  descant 
+        auto toggle = std::make_unique<BoolParameter>  ("descantToggle", "Descant on/off", false);
+        auto thresh = std::make_unique<IntParameter>   ("descantThresh", "Descant lower threshold", 0, 127, 127);
+        auto interval = std::make_unique<IntParameter>   ("descantInterval", "Descant interval", 1, 12, 12);
+               
+        groups.emplace_back (std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", 
+                                                      std::move (toggle), std::move (thresh), std::move (interval)));        
+    }
+    {  //  pedal pitch
+        auto toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", "Pedal pitch on/off", false);
+        auto thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0);
+        auto interval = std::make_unique<IntParameter>   ("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12);
+               
+        groups.emplace_back (std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", 
+                                                      std::move (toggle), std::move (thresh), std::move (interval)));       
+    }
+    {   //  midi settings
+        auto numVoices = std::make_unique<IntParameter>   ("numVoices", "Number of voices", 1, 20, 12);       
+        auto velocitySens = std::make_unique<IntParameter>   ("midiVelocitySens", "MIDI Velocity Sensitivity", 0, 100, 100);   
+        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2);
+        auto aftertouchToggle = std::make_unique<BoolParameter>  ("aftertouchGainToggle", "Aftertouch gain on/off", true);
+        auto voiceStealing = std::make_unique<BoolParameter>  ("voiceStealing", "Voice stealing", false);
+               
+        groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
+                                                      std::move (numVoices), std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing)));       
+    }
+    {   //  mixing
+        auto inputMode = std::make_unique<IntParameter>   ("inputSource", "Input source", 1, 3, 1);      
+        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", "% wet", 0, 100, 100);    
+        auto inGain  = std::make_unique<FloatParameter> ("inputGain", "Input gain",   gainRange, 0.0f);
+        auto outGain = std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRainge, -4.0f);   
+        auto leadPan = std::make_unique<IntParameter>   ("dryPan", "Dry vox pan", 0, 127, 64);      
+               
+        groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
+                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (leadPan)));  
+    }
     
-    params.emplace_back (std::make_unique<BoolParameter>  ("mainBypass", "Bypass", false));
-    params.emplace_back (std::make_unique<BoolParameter>  ("leadBypass", "Lead bypass", false));
-    params.emplace_back (std::make_unique<BoolParameter>  ("harmonyBypass", "Harmony bypass", false));
-    params.emplace_back (std::make_unique<IntParameter>   ("numVoices", "Number of voices", 1, 20, 12));
-    params.emplace_back (std::make_unique<IntParameter>   ("inputSource", "Input source", 1, 3, 1));
-    params.emplace_back (std::make_unique<IntParameter>   ("dryPan", "Dry vox pan", 0, 127, 64));
-    params.emplace_back (std::make_unique<FloatParameter> ("adsrAttack", "ADSR Attack", msRange, 0.35f));
-    params.emplace_back (std::make_unique<FloatParameter> ("adsrDecay", "ADSR Decay", msRange, 0.06f));
-    params.emplace_back (std::make_unique<FloatParameter> ("adsrSustain", "ADSR Sustain", zeroToOneRange, 0.8f));
-    params.emplace_back (std::make_unique<FloatParameter> ("adsrRelease", "ADSR Release", msRange, 0.1f));
-    params.emplace_back (std::make_unique<IntParameter>   ("stereoWidth", "Stereo Width", 0, 100, 100));
-    params.emplace_back (std::make_unique<IntParameter>   ("lowestPan", "Lowest panned midiPitch", 0, 127, 0));
-    params.emplace_back (std::make_unique<IntParameter>   ("midiVelocitySens", "MIDI Velocity Sensitivity", 0, 100, 100));
-    params.emplace_back (std::make_unique<IntParameter>   ("PitchBendRange", "Pitch bend range (st)", 0, 12, 2));
-    params.emplace_back (std::make_unique<IntParameter>   ("concertPitch", "Concert pitch (Hz)", 392, 494, 440));
-    params.emplace_back (std::make_unique<BoolParameter>  ("voiceStealing", "Voice stealing", false));
-    params.emplace_back (std::make_unique<BoolParameter>  ("aftertouchGainToggle", "Aftertouch gain on/off", true));
-    params.emplace_back (std::make_unique<BoolParameter>  ("pedalPitchToggle", "Pedal pitch on/off", false));
-    params.emplace_back (std::make_unique<IntParameter>   ("pedalPitchThresh", "Pedal pitch upper threshold", 0, 127, 0));
-    params.emplace_back (std::make_unique<IntParameter>   ("pedalPitchInterval", "Pedal pitch interval", 1, 12, 12));
-    params.emplace_back (std::make_unique<BoolParameter>  ("descantToggle", "Descant on/off", false));
-    params.emplace_back (std::make_unique<IntParameter>   ("descantThresh", "Descant lower threshold", 0, 127, 127));
-    params.emplace_back (std::make_unique<IntParameter>   ("descantInterval", "Descant interval", 1, 12, 12));
-    params.emplace_back (std::make_unique<IntParameter>   ("masterDryWet", "% wet", 0, 100, 100));
-    params.emplace_back (std::make_unique<FloatParameter> ("inputGain", "Input gain",   gainRange, 0.0f));
-    params.emplace_back (std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRange, -4.0f));
-    params.emplace_back (std::make_unique<BoolParameter>  ("limiterIsOn", "Limiter on/off", true));
-    params.emplace_back (std::make_unique<BoolParameter>  ("noiseGateIsOn", "Noise gate toggle", true));
-    params.emplace_back (std::make_unique<FloatParameter> ("noiseGateThresh", "Noise gate threshold", gainRange, -20.0f));
-    params.emplace_back (std::make_unique<BoolParameter>  ("deEsserIsOn", "De-esser toggle", true));
-    params.emplace_back (std::make_unique<FloatParameter> ("deEsserThresh", "De-esser thresh", gainRange, -6.0f));
-    params.emplace_back (std::make_unique<FloatParameter> ("deEsserAmount", "De-esser amount", zeroToOneRange, 0.5f));
-    params.emplace_back (std::make_unique<BoolParameter>  ("compressorToggle", "Compressor on/off", false));
-    params.emplace_back (std::make_unique<FloatParameter> ("compressorAmount", "Compressor amount", zeroToOneRange, 0.35f));
-    params.emplace_back (std::make_unique<BoolParameter>  ("reverbIsOn", "Reverb toggle", false));
-    params.emplace_back (std::make_unique<IntParameter>   ("reverbDryWet", "Reverb dry/wet", 0, 100, 35));
-    params.emplace_back (std::make_unique<FloatParameter> ("reverbDecay", "Reverb decay", zeroToOneRange, 0.6f));
-    params.emplace_back (std::make_unique<FloatParameter> ("reverbDuck", "Duck amount", zeroToOneRange, 0.3f));
-    params.emplace_back (std::make_unique<FloatParameter> ("reverbLoCut", "Reverb low cut", hzRange, 80.0f));
-    params.emplace_back (std::make_unique<FloatParameter> ("reverbHiCut", "Reverb high cut", hzRange, 5500.0f));
-    params.emplace_back (std::make_unique<IntParameter>   ("vocalRangeType", "Input vocal range", 0, 3, 0));
-    
-    return { params.begin(), params.end() };
+    return { groups.begin(), groups.end() };                                             
 }
 
 
