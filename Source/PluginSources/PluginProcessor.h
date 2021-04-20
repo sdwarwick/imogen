@@ -68,7 +68,6 @@ public:
     // key values by which parameters are accessed from the editor:
     enum parameterID
     {
-        numVoicesID,
         inputSourceID,
         mainBypassID,
         leadBypassID,
@@ -169,10 +168,6 @@ public:
     void setOscMessagesEnabled (bool shouldBeEnabled) { oscMapper.setEnabled (shouldBeEnabled); }
     bool areOscMessagesEnabled() const noexcept { return oscMapper.areOscMessagesEnabled(); }
     
-    
-    static constexpr int maxPossibleNumVoices = 20;
-    
-    
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
     
     int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
@@ -221,8 +216,6 @@ private:
     
     template<typename SampleType>
     void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    void updateNumVoices (const int newNumVoices);
     
     template<typename SampleType>
     void updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
