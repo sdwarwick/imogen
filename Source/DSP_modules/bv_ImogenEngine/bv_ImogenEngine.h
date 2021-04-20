@@ -85,7 +85,6 @@ public:
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
-    void updatePitchDetectionHzRange (const int minHz, const int maxHz);
     void updateBypassStates (bool leadIsBypassed, bool harmoniesAreBypassed);
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
