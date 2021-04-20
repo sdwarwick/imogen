@@ -376,7 +376,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         auto inputMode = std::make_unique<IntParameter>   ("inputSource", "Input source", 1, 3, 1);      
         auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", "% wet", 0, 100, 100);    
         auto inGain  = std::make_unique<FloatParameter> ("inputGain", "Input gain",   gainRange, 0.0f);
-        auto outGain = std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRainge, -4.0f);   
+        auto outGain = std::make_unique<FloatParameter> ("outputGain", "Output gain", gainRange, -4.0f);   
         auto leadPan = std::make_unique<IntParameter>   ("dryPan", "Dry vox pan", 0, 127, 64);      
                
         groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
