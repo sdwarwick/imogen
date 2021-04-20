@@ -423,51 +423,6 @@ template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngi
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-/*
-    Functions for retrieving parameter values and other attributes.
-    These functions may be called by the processor or by the editor.
-*/
-
-
-// Returns the requested parameter's current value, in the noramlized range 0.0f to 1.0f
-float ImogenAudioProcessor::getNormalizedCurrentParameterValue (const parameterID paramID) const
-{
-    return getParameterPntr(paramID)->getCurrentNormalizedValue();
-}
-
-// returns any parameter's actual value, as a float, in the natural range of the parameter.
-float ImogenAudioProcessor::getFloatParameterValue (const parameterID paramID) const
-{
-    Parameter* param = getParameterPntr(paramID);
-    jassert (param != nullptr);
-    return param->denormalize (param->getCurrentNormalizedValue());
-}
-
-// returns any parameter's actual value, as an integer, in the natural range of the parameter.
-// this function can technically be called with any parameterID, but will produce strange and possibly crash-inducing output when used with a parameter that is not an integer type.
-int ImogenAudioProcessor::getIntParameterValue (const parameterID paramID) const
-{
-    return juce::roundToInt (getFloatParameterValue (paramID));
-}
-
-// returns any parameter's actual value as a boolean true/false
-// this function can technically be called with any parameterID, but will produce strange and possibly crash-inducing output when used with a parameter that is not a boolean type.
-bool ImogenAudioProcessor::getBoolParameterValue (const parameterID paramID) const
-{
-    return getFloatParameterValue(paramID) >= 0.5f;
-}
-
-// Returns the requested parameter's default value, in the normalized range 0.0f to 1.0f
-float ImogenAudioProcessor::getDefaultParameterValue (const parameterID paramID) const
-{
-    return getParameterPntr(paramID)->getNormalizedDefault();
-}
-
-// Returns a const reference to the requested parameter's NormalisableRange object
-const juce::NormalisableRange<float>& ImogenAudioProcessor::getParameterRange (const parameterID paramID) const
-{
-    return getParameterPntr(paramID)->getRange();
-}
 
 // This function reassigns each parameter's internally stored default value to the parameter's current value. Run this function after loading a preset, etc.
 void ImogenAudioProcessor::updateParameterDefaults()
