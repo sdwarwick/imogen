@@ -40,6 +40,7 @@ set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/assets)  # The location o
 set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
     ${pluginSourcesDir}/PluginProcessorParameters.cpp
+    ${pluginSourcesDir}/PluginProcessorState.cpp
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
