@@ -97,7 +97,6 @@ public:
         noiseGateThresholdID,
         compressorToggleID,
         compressorAmountID,
-        vocalRangeTypeID,
         aftertouchGainToggleID,
         deEsserToggleID,
         deEsserThreshID,
@@ -253,7 +252,7 @@ private:
     
     // pointers to all the parameter objects
     BoolParamPtr  mainBypass, leadBypass, harmonyBypass, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
-    IntParamPtr   vocalRangeType, dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, concertPitchHz, reverbDryWet, numVoices, inputSource;
+    IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, reverbDryWet, numVoices, inputSource;
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
     
     std::atomic<bool> parameterDefaultsAreDirty;
