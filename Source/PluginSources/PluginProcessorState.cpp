@@ -85,10 +85,15 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
 {
     if (! newState.hasTagName (tree.state.getType()))
         return false;
+           
+    auto newTree = juce::ValueTree::fromXml (newState);
+           
+    if (! newTree.isValid())
+        return false;
     
     suspendProcessing (true);
     
-    tree.replaceState (juce::ValueTree::fromXml (newState));
+    tree.replaceState (newTree);
     
     updateAllParameters (activeEngine);
     
