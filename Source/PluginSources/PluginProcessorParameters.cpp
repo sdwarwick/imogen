@@ -263,19 +263,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     const auto generic = juce::AudioProcessorParameter::genericParameter;
            
     const auto emptyString = juce::String();
+           
+    std::function< juce::String (bool value, int maximumStringLength) > toggle_stringFromBool = [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); };
+    std::function< bool (const juce::String &text) >                    toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; };
    
     {   //  bypasses
-        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, 
-                                                            [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                            [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; });
+        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
           
-        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString,
-                                                            [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                            [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; });
+        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                
-        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString,
-                                                               [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                               [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; });
+        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                    
         groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", 
                                                       std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
