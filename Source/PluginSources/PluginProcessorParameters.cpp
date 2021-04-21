@@ -268,10 +268,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< bool (const juce::String &text) >                    toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; };
    
     {   //  bypasses
-        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-          
-        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-               
+        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
+        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
         auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                    
         groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", 
