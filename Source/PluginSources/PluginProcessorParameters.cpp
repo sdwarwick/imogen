@@ -281,13 +281,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
      
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
-                                                         [](int value, int) 
+                                                         [](int value, int maxLength) 
                                                          { 
                                                              switch (value)
                                                              {
-                                                                 case (2): return juce::String ("Right");  
-                                                                 case (3): return juce::String ("Mix to mono");
-                                                                 default:  return juce::String ("Left");
+                                                                 case (2): return juce::String ("Right").substring(0, maxLength);  
+                                                                 case (3): return juce::String ("Mix to mono").substring(0, maxLength);
+                                                                 default:  return juce::String ("Left").substring(0, maxLength);
                                                              }      
                                                          },
                                                          [](const juce::String& text) 
@@ -313,7 +313,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
                
         auto stereo_leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
-                                                               [](int value, int) { return bav::midiPanIntToString (value); }, 
+                                                               [](int value, int maxLength) { return bav::midiPanIntToString (value).substring(0, maxLength); }, 
                                                                [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
                
         auto stereo = std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (stereo_width), std::move (stereo_lowest), std::move (stereo_leadPan));       
@@ -323,7 +323,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     }       
     {   /* MIDI */     
         auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
-                                                                [](int value, int) { return juce::String(value) + " st"; },
+                                                                [](int value, int maxLength) { auto string = juce::String(value) + " st"; return string.substring(0, maxLength); },
                                                                 [](const juce::String& text) { return text.endsWith(" st") ? text.dropLastCharacters(3).getIntValue() : text.getIntValue(); });
                
         auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);       
@@ -352,7 +352,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString); 
                
         auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic,
-                                                         [](float value, int) { return juce::String(value * 100.0f) + "%"; },
+                                                         [](float value, int maxLength) { auto string = juce::String(value * 100.0f) + "%"; return string.substring(0, maxLength); },
                                                          [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getFloatValue() * 0.01f : text.getFloatValue() * 0.01f; });
                
         auto release = std::make_unique<FloatParameter> ("adsrRelease", TRANS ("ADSR Release"), msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
