@@ -124,6 +124,17 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                };
 #undef imgn_USE_SHARPS_FOR_PITCHES
            
+    std::function< juce::String (int value, int maximumStringLength) >   normPcnt_stringFromInt = [](int value, int maxLength) { return (juce::String(value * 100.0f) + "%").substring(0, maxLength); };
+    std::function< int (const juce::String& text) >                      normPcnt_intFromString = [](const juce::String& text) 
+                                                                                                  { 
+                                                                                                      const auto token_location = text.indexOf ("%");
+               
+                                                                                                      if (token_location > -1)
+                                                                                                          return text.substring (0, token_location).trim().getFloatValue() * 0.01f;
+
+                                                                                                      return text.trim().getFloatValue();   
+                                                                                                  };
+           
      
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
@@ -192,20 +203,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     }           
     {   /* ADSR */
         auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
-        auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString); 
-               
-        auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic,
-                                                         [](float value, int maxLength) { auto string = juce::String(value * 100.0f) + "%"; return string.substring(0, maxLength); },
-                                                         [](const juce::String& text) 
-                                                         { 
-                                                             const auto token_location = text.indexOf ("%");
-               
-                                                             if (token_location > -1)
-                                                                 return text.substring (0, token_location).trim().getFloatValue() * 0.01f;
-
-                                                             return text.trim().getFloatValue() * 0.01f;
-                                                         });
-               
+        auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);               
+        auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);           
         auto release = std::make_unique<FloatParameter> ("adsrRelease", TRANS ("ADSR Release"), msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
                
         groups.emplace_back (std::make_unique<Group> ("ADSR", TRANS ("ADSR"), "|", 
@@ -221,21 +220,21 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         //  subgroup: de-esser
         auto ess_toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", TRANS ("De-esser toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);               
         auto ess_thresh = std::make_unique<FloatParameter> ("deEsserThresh", TRANS ("De-esser thresh"), gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);             
-        auto ess_amount = std::make_unique<FloatParameter> ("deEsserAmount", TRANS ("De-esser amount"), zeroToOneRange, 0.5f, emptyString, generic, nullptr, nullptr);       
+        auto ess_amount = std::make_unique<FloatParameter> ("deEsserAmount", TRANS ("De-esser amount"), zeroToOneRange, 0.5f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);       
                    
         auto deEss = std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", std::move (ess_toggle), std::move (ess_thresh), std::move (ess_amount));      
 
         //  subgroup: compressor
         auto comp_toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);                 
-        auto comp_amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic, nullptr, nullptr);
+        auto comp_amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
         
         auto compressor = std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (comp_toggle), std::move (comp_amount));       
                
         //  subgroup: reverb       
         auto verb_toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
         auto verb_dryWet = std::make_unique<IntParameter>   ("reverbDryWet", TRANS ("Reverb dry/wet"), 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
-        auto verb_decay  = std::make_unique<FloatParameter> ("reverbDecay", TRANS ("Reverb decay"), zeroToOneRange, 0.6f, emptyString, generic, nullptr, nullptr);             
-        auto verb_duck   = std::make_unique<FloatParameter> ("reverbDuck", TRANS ("Duck amount"), zeroToOneRange, 0.3f, emptyString, generic, nullptr, nullptr);               
+        auto verb_decay  = std::make_unique<FloatParameter> ("reverbDecay", TRANS ("Reverb decay"), zeroToOneRange, 0.6f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);             
+        auto verb_duck   = std::make_unique<FloatParameter> ("reverbDuck", TRANS ("Reverb duck"), zeroToOneRange, 0.3f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);               
         auto verb_loCut  = std::make_unique<FloatParameter> ("reverbLoCut", TRANS ("Reverb low cut"), hzRange, 80.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);             
         auto verb_hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", TRANS ("Reverb high cut"), hzRange, 5500.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
         
