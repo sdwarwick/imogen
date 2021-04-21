@@ -273,8 +273,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt = [](int value, int) { return juce::String(value) + "%"; };
     std::function< int (const juce::String& text) >                      pcnt_intFromString = [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); };
 
-    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int) { return juce::String(value) + " sec"; };
-    std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) { return text.endsWithIgnoreCase("sec") ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); };    
+    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int) { return juce::String(value) + TRANS(" sec"); };
+    std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) { return text.endsWithIgnoreCase(TRANS(" sec")) ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); };    
            
     {   //  bypasses
         auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
