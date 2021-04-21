@@ -332,16 +332,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
                                                       std::move (gate), std::move (deEss), std::move (compressor), std::move (reverb), std::move (limiter)));       
     } 
-    {   /* STEREO IMAGE */
-        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
-        auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
-               
-        auto leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
-                                                        [](int value, int) { return bav::midiPanIntToString (value); }, 
-                                                        [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
-               
-        groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (width), std::move (lowest), std::move (leadPan)));        
-    }
     {   /* MIDI */ 
         //  subgroup: pedal pitch
         auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
@@ -401,8 +391,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                    
         auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass));       
                
+        //  subgroup: stereo image     
+        auto stereo_width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
+        auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
+               
+        auto stereo_leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
+                                                               [](int value, int) { return bav::midiPanIntToString (value); }, 
+                                                               [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
+               
+        auto stereo = std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (stereo_width), std::move (stereo_lowest), std::move (stereo_leadPan));       
+               
         groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
-                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (bypasses)));  
+                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (bypasses), std::move (stereo)));  
     }
     
     return { groups.begin(), groups.end() };                                             
