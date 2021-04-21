@@ -339,8 +339,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  stereo image
         auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
         auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
+        auto leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, nullptr, nullptr);        
                
-        groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (width), std::move (lowest)));        
+        groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (width), std::move (lowest), std::move (leadPan)));        
     }
     {   //  descant 
         auto toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);              
@@ -392,12 +393,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
                
-        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);   
-               
-        auto leadPan = std::make_unique<IntParameter>   ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, nullptr, nullptr);      
+        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);        
                
         groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
-                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (leadPan)));  
+                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain)));  
     }
     
     return { groups.begin(), groups.end() };                                             
