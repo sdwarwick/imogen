@@ -115,7 +115,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< juce::String (int value, int maximumStringLength) >   pitch_stringFromInt = [](int value, int maxLength) { return bav::midi::pitchToString (value, imgn_USE_SHARPS_FOR_PITCHES).substring(0, maxLength); };
     std::function< int (const juce::String& text) >                      pitch_intFromString = [](const juce::String& text) 
                                                                                                { 
-                                                                                                    constexpr auto pitchClassTokens = juce::String("AaBbCcDdEeFfGg#") + bav::gui::getSharpSymbol() + bav::gui::getFlatSymbol();
+                                                                                                    const auto pitchClassTokens = juce::String("AaBbCcDdEeFfGg#") + bav::gui::getSharpSymbol() + bav::gui::getFlatSymbol();
                
                                                                                                     if (text.containsAnyOf (pitchClassTokens))
                                                                                                         return bav::midi::stringToPitch (text.trim(), imgn_USE_SHARPS_FOR_PITCHES);
