@@ -264,6 +264,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
            
     const auto emptyString = juce::String();
            
+           
     std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int) { return value ? TRANS("On") : TRANS("Off"); };
     std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase (TRANS("On")) || text.containsIgnoreCase (TRANS("Bypass"))) return true; return false; };
    
@@ -276,13 +277,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int) { return juce::String(value) + TRANS(" sec"); };
     std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) { return text.endsWithIgnoreCase(TRANS(" sec")) ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); };    
            
+    std::function< juce::String (float value, int maximumStringLength) > hz_stringFromFloat = [](float value, int) { return (value < 1000.0f) ? juce::String (value) + " Hz" : juce::String (value / 1000.0) + " kHz"; };
+    std::function< float (const juce::String& text) >                    hz_floatFromString = [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); };
+           
+           
     {   //  bypasses
         auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
         auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
         auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                    
-        groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", 
-                                                      std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
+        groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
     }      
     {   //  adsr
         auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
@@ -299,100 +303,58 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move (attack), std::move (decay), std::move (sustain), std::move (release)));       
     }        
     {   //  reverb
-        auto toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-               
-        auto dryWet = std::make_unique<IntParameter>   ("reverbDryWet", TRANS ("Reverb dry/wet"), 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-               
-        auto decay  = std::make_unique<FloatParameter> ("reverbDecay", TRANS ("Reverb decay"), zeroToOneRange, 0.6f, emptyString, generic,
-                                                        [](float value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getFloatValue(); });
-               
-        auto duck   = std::make_unique<FloatParameter> ("reverbDuck", TRANS ("Duck amount"), zeroToOneRange, 0.3f, emptyString, generic,
-                                                        [](float value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getFloatValue(); });
-               
-        auto loCut  = std::make_unique<FloatParameter> ("reverbLoCut", TRANS ("Reverb low cut"), hzRange, 80.0f, emptyString, generic,
-                                                        [](float value, int) { return (value < 1000.0f) ? juce::String (value) + " Hz" : juce::String (value / 1000.0) + " kHz"; },
-                                                        [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); });
-               
-        auto hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", TRANS ("Reverb high cut"), hzRange, 5500.0f, emptyString, generic,
-                                                        [](float value, int) { return (value < 1000.0f) ? juce::String (value) + " Hz" : juce::String (value / 1000.0) + " kHz"; },
-                                                        [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); });
+        auto toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
+        auto dryWet = std::make_unique<IntParameter>   ("reverbDryWet", TRANS ("Reverb dry/wet"), 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
+        auto decay  = std::make_unique<FloatParameter> ("reverbDecay", TRANS ("Reverb decay"), zeroToOneRange, 0.6f, emptyString, generic, nullptr, nullptr);             
+        auto duck   = std::make_unique<FloatParameter> ("reverbDuck", TRANS ("Duck amount"), zeroToOneRange, 0.3f, emptyString, generic, nullptr, nullptr);               
+        auto loCut  = std::make_unique<FloatParameter> ("reverbLoCut", TRANS ("Reverb low cut"), hzRange, 80.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);             
+        auto hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", TRANS ("Reverb high cut"), hzRange, 5500.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
         
         groups.emplace_back (std::make_unique<Group> ("Reverb", TRANS ("Reverb"), "|", 
                                                       std::move (toggle), std::move (dryWet), std::move (decay), std::move (duck), std::move (loCut), std::move (hiCut)));
     }
     {   //  compressor             
-        auto toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);   
-               
-        auto amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic,
-                                                        [](float value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getFloatValue(); });
+        auto toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);                 
+        auto amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic, nullptr, nullptr);
         
-        groups.emplace_back (std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", 
-                                                      std::move (toggle), std::move (amount)));       
+        groups.emplace_back (std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (toggle), std::move (amount)));       
     }
     {   //  de-esser
-        auto toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", TRANS ("De-esser toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-               
-        auto thresh = std::make_unique<FloatParameter> ("deEsserThresh", TRANS ("De-esser thresh"), gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
-               
-        auto amount = std::make_unique<FloatParameter> ("deEsserAmount", TRANS ("De-esser amount"), zeroToOneRange, 0.5f, emptyString, generic,
-                                                        [](float value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getFloatValue(); });       
+        auto toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", TRANS ("De-esser toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);               
+        auto thresh = std::make_unique<FloatParameter> ("deEsserThresh", TRANS ("De-esser thresh"), gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);             
+        auto amount = std::make_unique<FloatParameter> ("deEsserAmount", TRANS ("De-esser amount"), zeroToOneRange, 0.5f, emptyString, generic, nullptr, nullptr);       
                    
-        groups.emplace_back (std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", 
-                                                      std::move (toggle), std::move (thresh), std::move (amount)));      
+        groups.emplace_back (std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", std::move (toggle), std::move (thresh), std::move (amount)));      
     }
     {   //  noise gate
-        auto toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", TRANS ("Noise gate toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-               
+        auto toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", TRANS ("Noise gate toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);              
         auto thresh = std::make_unique<FloatParameter> ("noiseGateThresh", TRANS ("Noise gate threshold"), gainRange, -20.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
         
-        groups.emplace_back (std::make_unique<Group> ("Noise gate", TRANS ("Noise gate"), "|", 
-                                                      std::move (toggle), std::move (thresh)));           
+        groups.emplace_back (std::make_unique<Group> ("Noise gate", TRANS ("Noise gate"), "|", std::move (toggle), std::move (thresh)));           
     }
     {   //  limiter
         groups.emplace_back (std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
                                                       std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString)));       
     }      
     {   //  stereo image
-        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString); 
+        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
+        auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
                
-        auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString,
-                                                      [](int value, int) { return juce::String(value); },
-                                                      [](const juce::String& text) { return text.getIntValue(); });
-               
-        groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", 
-                                                      std::move (width), std::move (lowest)));        
+        groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (width), std::move (lowest)));        
     }
     {   //  descant 
-        auto toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);              
+        auto thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString, nullptr, nullptr);         
+        auto interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString, nullptr, nullptr);
                
-        auto thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString,
-                                                        [](int value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getIntValue(); });
-               
-        auto interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString,
-                                                        [](int value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getIntValue(); });
-               
-        groups.emplace_back (std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", 
-                                                      std::move (toggle), std::move (thresh), std::move (interval)));        
+        groups.emplace_back (std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (toggle), std::move (thresh), std::move (interval)));        
     }
     {  //  pedal pitch
-        auto toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
+        auto thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, nullptr, nullptr);               
+        auto interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString, nullptr, nullptr);
                
-        auto thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString,
-                                                        [](int value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getIntValue(); });
-               
-        auto interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString,
-                                                        [](int value, int) { return juce::String(value); },
-                                                        [](const juce::String& text) { return text.getIntValue(); });
-               
-        groups.emplace_back (std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", 
-                                                      std::move (toggle), std::move (thresh), std::move (interval)));       
+        groups.emplace_back (std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (toggle), std::move (thresh), std::move (interval)));       
     }
     {   //  midi settings 
         auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);   
@@ -432,9 +394,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);   
                
-        auto leadPan = std::make_unique<IntParameter>   ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString,
-                                                         [](int value, int) { return juce::String(value); },
-                                                         [](const juce::String& text) { return text.getIntValue(); });      
+        auto leadPan = std::make_unique<IntParameter>   ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, nullptr, nullptr);      
                
         groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
                                                       std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (leadPan)));  
