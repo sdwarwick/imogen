@@ -279,8 +279,75 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
            
     std::function< juce::String (float value, int maximumStringLength) > hz_stringFromFloat = [](float value, int) { return (value < 1000.0f) ? juce::String (value) + " Hz" : juce::String (value / 1000.0) + " kHz"; };
     std::function< float (const juce::String& text) >                    hz_floatFromString = [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); };
-           
+     
+    {   /* MIXING */
+        auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
+                                                         [](int value, int) 
+                                                         { 
+                                                             switch (value)
+                                                             {
+                                                                 case (2): return juce::String ("Right");  
+                                                                 case (3): return juce::String ("Mix to mono");
+                                                                 default:  return juce::String ("Left");
+                                                             }      
+                                                         },
+                                                         [](const juce::String& text) 
+                                                         {  
+                                                             if (text.containsIgnoreCase ("Right")) return 2;
+                                                             if (text.containsIgnoreCase ("mono") || text.containsIgnoreCase ("mix")) return 3;
+                                                             return 1;
+                                                         });  
                
+        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);                  
+        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);               
+        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);        
+               
+        //  subgroup: bypasses
+        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
+        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
+        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+                   
+        auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass));       
+               
+        //  subgroup: stereo image     
+        auto stereo_width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
+        auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
+               
+        auto stereo_leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
+                                                               [](int value, int) { return bav::midiPanIntToString (value); }, 
+                                                               [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
+               
+        auto stereo = std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (stereo_width), std::move (stereo_lowest), std::move (stereo_leadPan));       
+               
+        groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
+                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (bypasses), std::move (stereo)));  
+    }       
+    {   /* MIDI */     
+        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
+                                                                [](int value, int) { return juce::String(value) + " st"; },
+                                                                [](const juce::String& text) { return text.endsWith(" st") ? text.dropLastCharacters(3).getIntValue() : text.getIntValue(); });
+               
+        auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);       
+        auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);       
+        auto voiceStealing = std::make_unique<BoolParameter>   ("voiceStealing", TRANS ("Voice stealing"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);       
+               
+        //  subgroup: pedal pitch
+        auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
+        auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, nullptr, nullptr);               
+        auto pedal_interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString, nullptr, nullptr);
+               
+        auto pedal = std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (pedal_toggle), std::move (pedal_thresh), std::move (pedal_interval));     
+               
+        //  subgroup: descant       
+        auto descant_toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);              
+        auto descant_thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString, nullptr, nullptr);         
+        auto descant_interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString, nullptr, nullptr);
+               
+        auto descant = std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (descant_toggle), std::move (descant_thresh), std::move (descant_interval));
+               
+        groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
+                                                      std::move(pitchbendRange), std::move (velocitySens), std::move (aftertouchToggle), std::move (voiceStealing), std::move (pedal), std::move (descant)));       
+    }           
     {   /* ADSR */
         auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
                
@@ -332,78 +399,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
                                                       std::move (gate), std::move (deEss), std::move (compressor), std::move (reverb), std::move (limiter)));       
     } 
-    {   /* MIDI */ 
-        //  subgroup: pedal pitch
-        auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
-        auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, nullptr, nullptr);               
-        auto pedal_interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString, nullptr, nullptr);
-               
-        auto pedal = std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (pedal_toggle), std::move (pedal_thresh), std::move (pedal_interval));     
-               
-        //  subgroup: descant       
-        auto descant_toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);              
-        auto descant_thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString, nullptr, nullptr);         
-        auto descant_interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString, nullptr, nullptr);
-               
-        auto descant = std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (descant_toggle), std::move (descant_thresh), std::move (descant_interval));
-               
-        //
-               
-        auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);   
-               
-        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
-                                                                [](int value, int) { return juce::String(value) + " st"; },
-                                                                [](const juce::String& text) { return text.endsWith(" st") ? text.dropLastCharacters(3).getIntValue() : text.getIntValue(); });
-               
-        auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-               
-        auto voiceStealing = std::make_unique<BoolParameter>   ("voiceStealing", TRANS ("Voice stealing"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-               
-        groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
-                                                      std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing), std::move (pedal), std::move (descant)));       
-    }
-    {   /* MIXING */
-        auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
-                                                         [](int value, int) 
-                                                         { 
-                                                             switch (value)
-                                                             {
-                                                                 case (2): return juce::String ("Right");  
-                                                                 case (3): return juce::String ("Mix to mono");
-                                                                 default:  return juce::String ("Left");
-                                                             }      
-                                                         },
-                                                         [](const juce::String& text) 
-                                                         {  
-                                                             if (text.containsIgnoreCase ("Right")) return 2;
-                                                             if (text.containsIgnoreCase ("mono") || text.containsIgnoreCase ("mix")) return 3;
-                                                             return 1;
-                                                         });  
-               
-        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);                  
-        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);               
-        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);        
-               
-        //  subgroup: bypasses
-        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
-        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
-        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-                   
-        auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass));       
-               
-        //  subgroup: stereo image     
-        auto stereo_width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
-        auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
-               
-        auto stereo_leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
-                                                               [](int value, int) { return bav::midiPanIntToString (value); }, 
-                                                               [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
-               
-        auto stereo = std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (stereo_width), std::move (stereo_lowest), std::move (stereo_leadPan));       
-               
-        groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
-                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (bypasses), std::move (stereo)));  
-    }
+    
+    
     
     return { groups.begin(), groups.end() };                                             
 }
