@@ -144,6 +144,7 @@ public:
     bool isMidiEffect() const override { return false; }
     
     const juce::String getName() const override { return JucePlugin_Name; }
+    juce::StringArray getAlternateDisplayNames() const override { return { "Imgn" }; }
     
     bool hasEditor() const override { return true; }
     juce::AudioProcessorEditor* createEditor() override;
