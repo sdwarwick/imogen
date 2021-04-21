@@ -280,15 +280,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< juce::String (float value, int maximumStringLength) > hz_stringFromFloat = [](float value, int) { return (value < 1000.0f) ? juce::String (value) + " Hz" : juce::String (value / 1000.0) + " kHz"; };
     std::function< float (const juce::String& text) >                    hz_floatFromString = [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); };
            
-           
-    {   //  bypasses
-        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
-        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
-        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-                   
-        groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
-    }      
-    {   //  adsr
+               
+    {   /* ADSR */
         auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
                
         auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString); 
@@ -302,7 +295,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("ADSR", TRANS ("ADSR"), "|", 
                                                       std::move (attack), std::move (decay), std::move (sustain), std::move (release)));       
     }        
-    {    /* EFFECTS PARAMETERS */
+    {    /* EFFECTS */
         //  subgroup: noise gate   
         auto gate_toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", TRANS ("Noise gate toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);              
         auto gate_thresh = std::make_unique<FloatParameter> ("noiseGateThresh", TRANS ("Noise gate threshold"), gainRange, -20.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
@@ -339,7 +332,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
                                                       std::move (gate), std::move (deEss), std::move (compressor), std::move (reverb), std::move (limiter)));       
     } 
-    {   //  stereo image
+    {   /* STEREO IMAGE */
         auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
         auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
                
@@ -349,7 +342,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (width), std::move (lowest), std::move (leadPan)));        
     }
-    {   /* MIDI PARAMETERS */ 
+    {   /* MIDI */ 
         //  subgroup: pedal pitch
         auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
         auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, nullptr, nullptr);               
@@ -379,7 +372,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
                                                       std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing), std::move (pedal), std::move (descant)));       
     }
-    {   //  mixing
+    {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
                                                          [](int value, int) 
                                                          { 
@@ -397,14 +390,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                              return 1;
                                                          });  
                
-        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);   
-               
-        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
-               
+        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);                  
+        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);               
         auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);        
                
+        //  subgroup: bypasses
+        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
+        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
+        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+                   
+        auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass));       
+               
         groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
-                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain)));  
+                                                      std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (bypasses)));  
     }
     
     return { groups.begin(), groups.end() };                                             
