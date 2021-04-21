@@ -372,7 +372,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
                                                       std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString,
                                                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; })));       
+                                                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; })));       
     }      
     {   //  stereo image
         auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString,
