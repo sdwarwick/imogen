@@ -51,7 +51,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int maxLength) { return value ? TRANS("On").substring(0, maxLength) : TRANS("Off").substring(0, maxLength); };
     std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase (TRANS("On")) || text.containsIgnoreCase (TRANS("Yes")) || text.containsIgnoreCase (TRANS("True"))) return true; return false; };
    
-    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int maxLength) { auto string = juce::String(value) + " " + TRANS("dB"); return string.substring(0, maxLength); };          
+    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int maxLength) { return juce::String(value) + " " + TRANS("dB").substring(0, maxLength); };          
     std::function< float (const juce::String& text) >                    gain_floatFromString = [](const juce::String& text) 
                                                                                                 {
                                                                                                     const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("dB"));
@@ -62,7 +62,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                     return text.trim().getFloatValue();
                                                                                                 };
     
-    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt  = [](int value, int maxLength) { auto string = juce::String(value) + "%"; return string.substring(0, maxLength); };
+    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt  = [](int value, int maxLength) { return juce::String(value) + "%".substring(0, maxLength); };
     std::function< int (const juce::String& text) >                      pcnt_intFromString  = [](const juce::String& text) 
                                                                                                { 
                                                                                                     const auto token_location = text.indexOf ("%");
@@ -73,7 +73,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                     return text.trim().getIntValue(); 
                                                                                                };
 
-    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int maxLength) { auto string = juce::String(value) + " " + TRANS("sec"); return string.substring(0, maxLength); };          
+    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int maxLength) { return juce::String(value) + " " + TRANS("sec").substring(0, maxLength); };          
     std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) 
                                                                                                { 
                                                                                                    const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("sec"));
@@ -100,7 +100,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                    return text.trim().getFloatValue();
                                                                                                };
            
-    std::function< juce::String (int value, int maximumStringLength) >   st_stringFromInt    = [](int value, int maxLength) { auto string = juce::String(value) + " " + TRANS("st"); return string.substring(0, maxLength); };
+    std::function< juce::String (int value, int maximumStringLength) >   st_stringFromInt    = [](int value, int maxLength) { return juce::String(value) + " " + TRANS("st").substring(0, maxLength); };
     std::function< int (const juce::String& text) >                      st_intFromString    = [](const juce::String& text) 
                                                                                                { 
                                                                                                     const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("st"));
@@ -110,6 +110,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
                                                                                                     return text.trim().getIntValue();
                                                                                                };
+       
+#define imgn_USE_SHARPS_FOR_PITCHES true           
+    std::function< juce::String (int value, int maximumStringLength) >   pitch_stringFromInt = [](int value, int maxLength) { return bav::midi::pitchToString (value, imgn_USE_SHARPS_FOR_PITCHES).substring(0, maxLength); };
+    std::function< int (const juce::String& text) >                      pitch_intFromString = [](const juce::String& text) 
+                                                                                               { 
+                                                                                                    constexpr auto pitchClassTokens = juce::String("AaBbCcDdEeFfGg#") + bav::gui::getSharpSymbol() + bav::gui::getFlatSymbol();
+               
+                                                                                                    if (text.containsAnyOf (pitchClassTokens))
+                                                                                                        return bav::midi::stringToPitch (text.trim(), imgn_USE_SHARPS_FOR_PITCHES);
+               
+                                                                                                    return text.trim().getIntValue();
+                                                                                               };
+#undef imgn_USE_SHARPS_FOR_PITCHES
            
      
     {   /* MIXING */
@@ -143,7 +156,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         //  subgroup: stereo image     
         auto stereo_width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
-        auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
+        auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
                
         auto stereo_leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
                                                                [](int value, int maxLength) { return bav::midiPanIntToString (value).substring(0, maxLength); }, 
@@ -162,14 +175,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         //  subgroup: pedal pitch
         auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
-        auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, nullptr, nullptr);               
+        auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);               
         auto pedal_interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto pedal = std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (pedal_toggle), std::move (pedal_thresh), std::move (pedal_interval));     
                
         //  subgroup: descant       
         auto descant_toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);              
-        auto descant_thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString, nullptr, nullptr);         
+        auto descant_thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString, pcnt_stringFromInt, pitch_intFromString);         
         auto descant_interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto descant = std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (descant_toggle), std::move (descant_thresh), std::move (descant_interval));
