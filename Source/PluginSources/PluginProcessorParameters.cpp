@@ -267,15 +267,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  bypasses
         auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, 
                                                             [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                            [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass") return true; return false; });
+                                                            [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; });
           
         auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString,
                                                             [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                            [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass") return true; return false; });
+                                                            [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; });
                
         auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString,
                                                                [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                               [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass") return true; return false; });
+                                                               [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; });
                    
         groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", 
                                                       std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
@@ -303,7 +303,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  reverb
         auto toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString,
                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         auto dryWet = std::make_unique<IntParameter>   ("reverbDryWet", TRANS ("Reverb dry/wet"), 0, 100, 35, emptyString,
                                                         [](int value, int) { return juce::String(value, 0) + "%"; },
@@ -331,7 +331,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  compressor             
         auto toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString,
                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });   
+                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });   
                
         auto amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic,
                                                         [](float value, int) { return juce::String(value, 2); },
@@ -343,7 +343,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  de-esser
         auto toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", TRANS ("De-esser toggle"), true, emptyString,
                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         auto thresh = std::make_unique<FloatParameter> ("deEsserThresh", TRANS ("De-esser thresh"), gainRange, -6.0f, emptyString, generic,
                                                         [](float value, int) { return juce::String(value, 2) + " dB"; },
@@ -359,7 +359,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  noise gate
         auto toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", TRANS ("Noise gate toggle"), true, emptyString,
                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         auto thresh = std::make_unique<FloatParameter> ("noiseGateThresh", TRANS ("Noise gate threshold"), gainRange, -20.0f, emptyString, generic,
                                                         [](float value, int) { return juce::String(value, 2) + " dB"; },
@@ -389,7 +389,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  descant 
         auto toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString,
                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         auto thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString,
                                                         [](int value, int) { return juce::String(value, 0); },
@@ -405,7 +405,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {  //  pedal pitch
         auto toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString,
                                                         [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                        [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         auto thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString,
                                                         [](int value, int) { return juce::String(value, 0); },
@@ -429,11 +429,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString,
                                                                 [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                                [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                                [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         auto voiceStealing = std::make_unique<BoolParameter>   ("voiceStealing", TRANS ("Voice stealing"), false, emptyString,
                                                                 [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
-                                                                [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+                                                                [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes")) return true; return false; });
                
         groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
                                                       std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing)));       
