@@ -265,97 +265,212 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     const auto emptyString = juce::String();
    
     {   //  bypasses
-        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString);
-        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString);
-        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString);
+        auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, 
+                                                            [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                            [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass") return true; return false; })
+          
+        auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString,
+                                                            [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                            [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass") return true; return false; });
+               
+        auto harmonyBypass = std::make_unique<BoolParameter>  ("harmonyBypass", TRANS ("Harmony bypass"), false, emptyString,
+                                                               [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                               [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass") return true; return false; });
                    
         groups.emplace_back (std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", 
                                                       std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass)));       
     }      
     {   //  adsr
-        auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic);
-        auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic); 
-        auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic);
-        auto release = std::make_unique<FloatParameter> ("adsrRelease", TRANS ("ADSR Release"), msRange, 0.1f, emptyString, generic);
+        auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic,
+                                                         [](float value, int) { return juce::String(value, 3) + " sec"; },
+                                                         [](const juce::String& text) { return text.endsWithIgnoreCase("sec") ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); });
+               
+        auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic,
+                                                         [](float value, int) { return juce::String(value, 3) + " sec"; },
+                                                         [](const juce::String& text) { return text.endsWithIgnoreCase("sec") ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); }); 
+               
+        auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic,
+                                                         [](float value, int) { return juce::String(value * 100.0f, 0) + "%"; },
+                                                         [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getFloatValue() * 0.01f : text.getFloatValue() * 0.01f; });
+               
+        auto release = std::make_unique<FloatParameter> ("adsrRelease", TRANS ("ADSR Release"), msRange, 0.1f, emptyString, generic,
+                                                         [](float value, int) { return juce::String(value, 3) + " sec"; },
+                                                         [](const juce::String& text) { return text.endsWithIgnoreCase("sec") ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); });
                
         groups.emplace_back (std::make_unique<Group> ("ADSR", TRANS ("ADSR"), "|", 
                                                       std::move (attack), std::move (decay), std::move (sustain), std::move (release)));       
     }        
     {   //  reverb
-        auto toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString);
-        auto dryWet = std::make_unique<IntParameter>   ("reverbDryWet", TRANS ("Reverb dry/wet"), 0, 100, 35, emptyString);
-        auto decay  = std::make_unique<FloatParameter> ("reverbDecay", TRANS ("Reverb decay"), zeroToOneRange, 0.6f, emptyString, generic);
-        auto duck   = std::make_unique<FloatParameter> ("reverbDuck", TRANS ("Duck amount"), zeroToOneRange, 0.3f, emptyString, generic);
-        auto loCut  = std::make_unique<FloatParameter> ("reverbLoCut", TRANS ("Reverb low cut"), hzRange, 80.0f, emptyString, generic);
-        auto hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", TRANS ("Reverb high cut"), hzRange, 5500.0f, emptyString, generic);
+        auto toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString,
+                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+               
+        auto dryWet = std::make_unique<IntParameter>   ("reverbDryWet", TRANS ("Reverb dry/wet"), 0, 100, 35, emptyString,
+                                                        [](int value, int) { return juce::String(value, 0) + "%"; },
+                                                        [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); });
+               
+        auto decay  = std::make_unique<FloatParameter> ("reverbDecay", TRANS ("Reverb decay"), zeroToOneRange, 0.6f, emptyString, generic,
+                                                        [](float value, int) { return juce::String(value, 2); },
+                                                        [](const juce::String& text) { return text.getFloatValue(); });
+               
+        auto duck   = std::make_unique<FloatParameter> ("reverbDuck", TRANS ("Duck amount"), zeroToOneRange, 0.3f, emptyString, generic,
+                                                        [](float value, int) { return juce::String(value, 2); },
+                                                        [](const juce::String& text) { return text.getFloatValue(); });
+               
+        auto loCut  = std::make_unique<FloatParameter> ("reverbLoCut", TRANS ("Reverb low cut"), hzRange, 80.0f, emptyString, generic,
+                                                        [](float value, int) { return (value < 1000.0f) ? juce::String (value, 0) + " Hz" : juce::String (value / 1000.0, 2) + " kHz"; },
+                                                        [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); });
+               
+        auto hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", TRANS ("Reverb high cut"), hzRange, 5500.0f, emptyString, generic,
+                                                        [](float value, int) { return (value < 1000.0f) ? juce::String (value, 0) + " Hz" : juce::String (value / 1000.0, 2) + " kHz"; },
+                                                        [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); });
         
         groups.emplace_back (std::make_unique<Group> ("Reverb", TRANS ("Reverb"), "|", 
                                                       std::move (toggle), std::move (dryWet), std::move (decay), std::move (duck), std::move (loCut), std::move (hiCut)));
     }
     {   //  compressor             
-        auto toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString);    
-        auto amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic);
+        auto toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString,
+                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });   
+               
+        auto amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic,
+                                                        [](float value, int) { return juce::String(value, 2); },
+                                                        [](const juce::String& text) { return text.getFloatValue(); });
         
         groups.emplace_back (std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", 
                                                       std::move (toggle), std::move (amount)));       
     }
     {   //  de-esser
-        auto toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", TRANS ("De-esser toggle"), true, emptyString);
-        auto thresh = std::make_unique<FloatParameter> ("deEsserThresh", TRANS ("De-esser thresh"), gainRange, -6.0f, emptyString, generic);
-        auto amount = std::make_unique<FloatParameter> ("deEsserAmount", TRANS ("De-esser amount"), zeroToOneRange, 0.5f, emptyString, generic);       
+        auto toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", TRANS ("De-esser toggle"), true, emptyString,
+                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+               
+        auto thresh = std::make_unique<FloatParameter> ("deEsserThresh", TRANS ("De-esser thresh"), gainRange, -6.0f, emptyString, generic,
+                                                        [](float value, int) { return juce::String(value, 2) + " dB"; },
+                                                        [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); });
+               
+        auto amount = std::make_unique<FloatParameter> ("deEsserAmount", TRANS ("De-esser amount"), zeroToOneRange, 0.5f, emptyString, generic,
+                                                        [](float value, int) { return juce::String(value, 2); },
+                                                        [](const juce::String& text) { return text.getFloatValue(); });       
                    
         groups.emplace_back (std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", 
                                                       std::move (toggle), std::move (thresh), std::move (amount)));      
     }
     {   //  noise gate
-        auto toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", TRANS ("Noise gate toggle"), true, emptyString);
-        auto thresh = std::make_unique<FloatParameter> ("noiseGateThresh", TRANS ("Noise gate threshold"), gainRange, -20.0f, emptyString, generic);
+        auto toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", TRANS ("Noise gate toggle"), true, emptyString,
+                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+               
+        auto thresh = std::make_unique<FloatParameter> ("noiseGateThresh", TRANS ("Noise gate threshold"), gainRange, -20.0f, emptyString, generic,
+                                                        [](float value, int) { return juce::String(value, 2) + " dB"; },
+                                                        [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); });
         
         groups.emplace_back (std::make_unique<Group> ("Noise gate", TRANS ("Noise gate"), "|", 
                                                       std::move (toggle), std::move (thresh)));           
     }
     {   //  limiter
         groups.emplace_back (std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
-                                                      std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString)));       
+                                                      std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString,
+                                                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; })));       
     }      
     {   //  stereo image
-        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString); 
-        auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString);
+        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString,
+                                                      [](int value, int) { return juce::String(value, 0) + "%"; },
+                                                      [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); }); 
+               
+        auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString,
+                                                      [](int value, int) { return juce::String(value, 0); },
+                                                      [](const juce::String& text) { return text.getIntValue(); });
                
         groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", 
                                                       std::move (width), std::move (lowest)));        
     }
     {   //  descant 
-        auto toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString);
-        auto thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString);
-        auto interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString);
+        auto toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString,
+                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+               
+        auto thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString,
+                                                        [](int value, int) { return juce::String(value, 0); },
+                                                        [](const juce::String& text) { return text.getIntValue(); });
+               
+        auto interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString,
+                                                        [](int value, int) { return juce::String(value, 0); },
+                                                        [](const juce::String& text) { return text.getIntValue(); });
                
         groups.emplace_back (std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", 
                                                       std::move (toggle), std::move (thresh), std::move (interval)));        
     }
     {  //  pedal pitch
-        auto toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString);
-        auto thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString);
-        auto interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString);
+        auto toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString,
+                                                        [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                        [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+               
+        auto thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString,
+                                                        [](int value, int) { return juce::String(value, 0); },
+                                                        [](const juce::String& text) { return text.getIntValue(); });
+               
+        auto interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString,
+                                                        [](int value, int) { return juce::String(value, 0); },
+                                                        [](const juce::String& text) { return text.getIntValue(); });
                
         groups.emplace_back (std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", 
                                                       std::move (toggle), std::move (thresh), std::move (interval)));       
     }
     {   //  midi settings 
-        auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString);   
-        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString);
-        auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString);
-        auto voiceStealing = std::make_unique<BoolParameter>   ("voiceStealing", TRANS ("Voice stealing"), false, emptyString);
+        auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString,
+                                                                [](int value, int) { return juce::String(value, 0) + "%"; },
+                                                                [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); });   
+               
+        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
+                                                                [](int value, int) { return juce::String(value, 0) + " st"; },
+                                                                [](const juce::String& text) { return text.endsWith(" st") ? text.dropLastCharacters(3).getIntValue() : text.getIntValue(); });
+               
+        auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString,
+                                                                [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                                [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
+               
+        auto voiceStealing = std::make_unique<BoolParameter>   ("voiceStealing", TRANS ("Voice stealing"), false, emptyString,
+                                                                [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); },
+                                                                [](const juce::String& text) { if text.containsIgnoreCase("On") || text.containsIgnoreCase("Yes") return true; return false; });
                
         groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), "|", 
                                                       std::move (velocitySens), std::move (pitchbendRange), std::move (aftertouchToggle), std::move (voiceStealing)));       
     }
     {   //  mixing
-        auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString);      
-        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString);    
-        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain);
-        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain);   
-        auto leadPan = std::make_unique<IntParameter>   ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, juce::String());      
+        auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
+                                                         [](int value, int) 
+                                                         { 
+                                                             switch (value)
+                                                             {
+                                                                 case (2): return juce::String ("Right");  
+                                                                 case (3): return juce::String ("Mix to mono");
+                                                                 default:  return juce::String ("Left");
+                                                             }      
+                                                         },
+                                                         [](const juce::String& text) 
+                                                         {  
+                                                             if (text.containsIgnoreCase ("Right")) return 2;
+                                                             if (text.containsIgnoreCase ("mono") || text.containsIgnoreCase ("mix")) return 3;
+                                                             return 1;
+                                                         });  
+               
+        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString,
+                                                         [](int value, int) { return juce::String(value, 0) + "%"; },
+                                                         [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); });   
+               
+        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain,
+                                                         [](float value, int) { return juce::String(value, 2) + " dB"; },
+                                                         [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); });
+               
+        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain,
+                                                         [](float value, int) { return juce::String(value, 2) + " dB"; },
+                                                         [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); });   
+               
+        auto leadPan = std::make_unique<IntParameter>   ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString,
+                                                         [](int value, int) { return juce::String(value, 0); },
+                                                         [](const juce::String& text) { return text.getIntValue(); });      
                
         groups.emplace_back (std::make_unique<Group> ("Mixing", TRANS ("Mixing"), "|", 
                                                       std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (leadPan)));  
