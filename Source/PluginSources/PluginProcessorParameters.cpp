@@ -339,7 +339,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     {   //  stereo image
         auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);               
         auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString, nullptr, nullptr);
-        auto leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, nullptr, nullptr);        
+               
+        auto leadPan = std::make_unique<IntParameter>  ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString, 
+                                                        [](int value, int) { return bav::midiPanIntToString (value); }, 
+                                                        [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
                
         groups.emplace_back (std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|", std::move (width), std::move (lowest), std::move (leadPan)));        
     }
