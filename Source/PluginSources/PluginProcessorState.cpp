@@ -131,7 +131,8 @@ int ImogenAudioProcessor::getCurrentProgram()
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
 {
-    loadPreset (getProgramName (index));
+    if (index != getCurrentProgram())
+        loadPreset (getProgramName (index));
 }
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
