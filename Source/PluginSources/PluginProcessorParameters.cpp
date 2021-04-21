@@ -264,7 +264,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
            
     const auto emptyString = juce::String();
            
-           
     std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int) { return value ? TRANS("On") : TRANS("Off"); };
     std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase (TRANS("On")) || text.containsIgnoreCase (TRANS("Bypass"))) return true; return false; };
    
@@ -350,7 +349,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     }           
     {   /* ADSR */
         auto attack  = std::make_unique<FloatParameter> ("adsrAttack", TRANS ("ADSR Attack"), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
-               
         auto decay   = std::make_unique<FloatParameter> ("adsrDecay", TRANS ("ADSR Decay"), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString); 
                
         auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic,
@@ -399,8 +397,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
                                                       std::move (gate), std::move (deEss), std::move (compressor), std::move (reverb), std::move (limiter)));       
     } 
-    
-    
     
     return { groups.begin(), groups.end() };                                             
 }
