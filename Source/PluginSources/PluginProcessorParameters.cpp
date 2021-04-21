@@ -302,6 +302,19 @@ void ImogenAudioProcessor::initializeParameterPointers()
 }
 
 
+template<typename PointerType>
+PointerType ImogenAudioProcessor::makeParameterPointer (const juce::String& name)
+{
+    auto* param = dynamic_cast<PointerType> (tree.getParameter (name));    
+    jassert (param != nullptr);
+    return param;
+}
+///template function instantiations...
+template bav::FloatParameter* ImogenAudioProcessor::makeParameterPointer (const juce::String& name);
+template bav::IntParameter*   ImogenAudioProcessor::makeParameterPointer (const juce::String& name);
+template bav::BoolParameter*  ImogenAudioProcessor::makeParameterPointer (const juce::String& name);
+
+
 /*===========================================================================================================================
  ============================================================================================================================*/
 
