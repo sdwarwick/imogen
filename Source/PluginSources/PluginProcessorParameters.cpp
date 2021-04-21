@@ -99,6 +99,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
                                                                                                    return text.trim().getFloatValue();
                                                                                                };
+           
+    std::function< juce::String (int value, int maximumStringLength) >   st_stringFromInt    = [](int value, int maxLength) { auto string = juce::String(value) + " " + TRANS("st"); return string.substring(0, maxLength); };
+    std::function< int (const juce::String& text) >                      st_intFromString    = [](const juce::String& text) 
+                                                                                               { 
+                                                                                                    const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("st"));
+               
+                                                                                                    if (token_location > -1)
+                                                                                                        return text.substring (0, token_location).trim().getIntValue();
+
+                                                                                                    return text.trim().getIntValue();
+                                                                                               };
+           
      
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
@@ -143,18 +155,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move (inputMode), std::move (dryWet), std::move (inGain), std::move (outGain), std::move (bypasses), std::move (stereo)));  
     }       
     {   /* MIDI */     
-        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
-                                                                [](int value, int maxLength) { auto string = juce::String(value) + TRANS(" st"); return string.substring(0, maxLength); },
-                                                                [](const juce::String& text) 
-                                                                { 
-                                                                    const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("st"));
-               
-                                                                    if (token_location > -1)
-                                                                        return text.substring (0, token_location).trim().getIntValue();
-
-                                                                    return text.trim().getIntValue(); 
-                                                                });
-               
+        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString, st_stringFromInt, st_intFromString);             
         auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);       
         auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);       
         auto voiceStealing = std::make_unique<BoolParameter>   ("voiceStealing", TRANS ("Voice stealing"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);       
@@ -162,14 +163,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         //  subgroup: pedal pitch
         auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", TRANS ("Pedal pitch on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);             
         auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", TRANS ("Pedal pitch upper threshold"), 0, 127, 0, emptyString, nullptr, nullptr);               
-        auto pedal_interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString, nullptr, nullptr);
+        auto pedal_interval = std::make_unique<IntParameter> ("pedalPitchInterval", TRANS ("Pedal pitch interval"), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto pedal = std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (pedal_toggle), std::move (pedal_thresh), std::move (pedal_interval));     
                
         //  subgroup: descant       
         auto descant_toggle = std::make_unique<BoolParameter>  ("descantToggle", TRANS ("Descant on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);              
         auto descant_thresh = std::make_unique<IntParameter>   ("descantThresh", TRANS ("Descant lower threshold"), 0, 127, 127, emptyString, nullptr, nullptr);         
-        auto descant_interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString, nullptr, nullptr);
+        auto descant_interval = std::make_unique<IntParameter> ("descantInterval", TRANS ("Descant interval"), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto descant = std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (descant_toggle), std::move (descant_thresh), std::move (descant_interval));
                
