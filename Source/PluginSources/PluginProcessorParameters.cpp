@@ -52,19 +52,56 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     const auto emptyString = juce::String();
            
     std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int maxLength) { return value ? TRANS("On").substring(0, maxLength) : TRANS("Off").substring(0, maxLength); };
-    std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase (TRANS("On")) || text.containsIgnoreCase (TRANS("Bypass"))) return true; return false; };
+    std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase (TRANS("On")) || text.containsIgnoreCase (TRANS("Yes")) || text.containsIgnoreCase (TRANS("True"))) return true; return false; };
    
-    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int maxLength) { auto string = juce::String(value) + " dB"; return string.substring(0, maxLength); };
-    std::function< float (const juce::String& text) >                    gain_floatFromString = [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); };
+    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int maxLength) { auto string = juce::String(value) + " " + TRANS("dB"); return string.substring(0, maxLength); };          
+    std::function< float (const juce::String& text) >                    gain_floatFromString = [](const juce::String& text) 
+                                                                                                {
+                                                                                                    const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("dB"));
+               
+                                                                                                    if (token_location > -1)       
+                                                                                                        return text.substring (0, token_location).trim().getFloatValue();
+               
+                                                                                                    return text.trim().getFloatValue();
+                                                                                                };
     
-    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt = [](int value, int maxLength) { auto string = juce::String(value) + "%"; return string.substring(0, maxLength); };
-    std::function< int (const juce::String& text) >                      pcnt_intFromString = [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); };
+    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt  = [](int value, int maxLength) { auto string = juce::String(value) + "%"; return string.substring(0, maxLength); };
+    std::function< int (const juce::String& text) >                      pcnt_intFromString  = [](const juce::String& text) 
+                                                                                               { 
+                                                                                                    const auto token_location = text.indexOf ("%");
+               
+                                                                                                    if (token_location > -1)
+                                                                                                        return text.substring (0, token_location).trim().getIntValue();     
+                                                                                                               
+                                                                                                    return text.trim().getIntValue(); 
+                                                                                               };
 
-    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int maxLength) { auto string = juce::String(value) + TRANS(" sec"); return string.substring(0, maxLength); };
-    std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) { return text.endsWithIgnoreCase(TRANS(" sec")) ? text.dropLastCharacters (4).getFloatValue() : text.getFloatValue(); };    
+    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int maxLength) { auto string = juce::String(value) + " " + TRANS("sec"); return string.substring(0, maxLength); };          
+    std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) 
+                                                                                               { 
+                                                                                                   const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("sec"));
+               
+                                                                                                   if (token_location > -1)
+                                                                                                       return text.substring (0, token_location).trim().getFloatValue();
+                                                                                                   
+                                                                                                   return text.trim().getFloatValue(); 
+                                                                                               };    
            
-    std::function< juce::String (float value, int maximumStringLength) > hz_stringFromFloat = [](float value, int maxLength) { auto string = (value < 1000.0f) ? juce::String (value) + " Hz" : juce::String (value / 1000.0) + " kHz"; return string.substring(0, maxLength); };
-    std::function< float (const juce::String& text) >                    hz_floatFromString = [](juce::String text) { return text.endsWithIgnoreCase(" kHz") ? text.dropLastCharacters (4).getFloatValue() * 1000.0 : (text.endsWithIgnoreCase(" Hz") ? text.dropLastCharacters (3).getFloatValue() : text.getFloatValue()); };
+    std::function< juce::String (float value, int maximumStringLength) > hz_stringFromFloat  = [](float value, int maxLength) { auto string = (value < 1000.0f) ? juce::String (value) + " " + TRANS("Hz") : juce::String (value * 0.001f) + " " + TRANS("kHz"); return string.substring(0, maxLength); };
+    std::function< float (const juce::String& text) >                    hz_floatFromString  = [](juce::String text) 
+                                                                                               { 
+                                                                                                   const auto kHz_token_location = text.indexOfWholeWordIgnoreCase (TRANS("kHz"));
+               
+                                                                                                   if (kHz_token_location > -1)
+                                                                                                       return text.substring (0, kHz_token_location).trim().getFloatValue() * 1000.0f;
+               
+                                                                                                   const auto hz_token_location = text.indexOfWholeWordIgnoreCase (TRANS("Hz"));
+               
+                                                                                                   if (hz_token_location > -1)
+                                                                                                       return text.substring (0, hz_token_location).trim().getFloatValue();
+               
+                                                                                                   return text.trim().getFloatValue();
+                                                                                               };
      
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> ("inputSource", TRANS ("Input source"), 1, 3, 1, emptyString,
@@ -72,15 +109,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                          { 
                                                              switch (value)
                                                              {
-                                                                 case (2): return juce::String ("Right").substring(0, maxLength);  
-                                                                 case (3): return juce::String ("Mix to mono").substring(0, maxLength);
-                                                                 default:  return juce::String ("Left").substring(0, maxLength);
+                                                                 case (2): return TRANS("Right").substring(0, maxLength);  
+                                                                 case (3): return TRANS("Mix to mono").substring(0, maxLength);
+                                                                 default:  return TRANS("Left").substring(0, maxLength);
                                                              }      
                                                          },
                                                          [](const juce::String& text) 
                                                          {  
-                                                             if (text.containsIgnoreCase ("Right")) return 2;
-                                                             if (text.containsIgnoreCase ("mono") || text.containsIgnoreCase ("mix")) return 3;
+                                                             if (text.containsIgnoreCase (TRANS("Right"))) return 2;
+                                                             if (text.containsIgnoreCase (TRANS("mono")) || text.containsIgnoreCase (TRANS("mix"))) return 3;
                                                              return 1;
                                                          });  
                
@@ -110,8 +147,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     }       
     {   /* MIDI */     
         auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
-                                                                [](int value, int maxLength) { auto string = juce::String(value) + " st"; return string.substring(0, maxLength); },
-                                                                [](const juce::String& text) { return text.endsWith(" st") ? text.dropLastCharacters(3).getIntValue() : text.getIntValue(); });
+                                                                [](int value, int maxLength) { auto string = juce::String(value) + TRANS(" st"); return string.substring(0, maxLength); },
+                                                                [](const juce::String& text) 
+                                                                { 
+                                                                    const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("st"));
+               
+                                                                    if (token_location > -1)
+                                                                        return text.substring (0, token_location).trim().getIntValue();
+
+                                                                    return text.trim().getIntValue(); 
+                                                                });
                
         auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);       
         auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", TRANS ("Aftertouch gain on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString);       
@@ -140,7 +185,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         auto sustain = std::make_unique<FloatParameter> ("adsrSustain", TRANS ("ADSR Sustain"), zeroToOneRange, 0.8f, emptyString, generic,
                                                          [](float value, int maxLength) { auto string = juce::String(value * 100.0f) + "%"; return string.substring(0, maxLength); },
-                                                         [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getFloatValue() * 0.01f : text.getFloatValue() * 0.01f; });
+                                                         [](const juce::String& text) 
+                                                         { 
+                                                             const auto token_location = text.indexOf ("%");
+               
+                                                             if (token_location > -1)
+                                                                 return text.substring (0, token_location).trim().getFloatValue() * 0.01f;
+
+                                                             return text.trim().getFloatValue() * 0.01f;
+                                                         });
                
         auto release = std::make_unique<FloatParameter> ("adsrRelease", TRANS ("ADSR Release"), msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
                
