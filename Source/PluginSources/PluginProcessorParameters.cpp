@@ -264,9 +264,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
            
     const auto emptyString = juce::String();
            
-    std::function< juce::String (bool value, int maximumStringLength) > toggle_stringFromBool = [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); };
-    std::function< bool (const juce::String &text) >                    toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; };
+    std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int) { return value ? juce::String("On") : juce::String("Off"); };
+    std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase("On") || text.containsIgnoreCase("Bypass")) return true; return false; };
    
+    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int) { return juce::String(value) + " dB"; };
+    std::function< float (const juce::String& text) >                    gain_floatFromString = [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); };
+    
+    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt = [](int value, int) { return juce::String(value) + "%"; };
+    std::function< int (const juce::String& text) >                      pcnt_intFromString = [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); };
+
     {   //  bypasses
         auto mainBypass = std::make_unique<BoolParameter>  ("mainBypass", TRANS ("Bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);        
         auto leadBypass = std::make_unique<BoolParameter>  ("leadBypass", TRANS ("Lead bypass"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
@@ -360,9 +366,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString)));       
     }      
     {   //  stereo image
-        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString,
-                                                      [](int value, int) { return juce::String(value) + "%"; },
-                                                      [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); }); 
+        auto width  = std::make_unique<IntParameter> ("stereoWidth", TRANS ("Stereo Width"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString); 
                
         auto lowest = std::make_unique<IntParameter> ("lowestPan", TRANS ("Lowest panned midiPitch"), 0, 127, 0, emptyString,
                                                       [](int value, int) { return juce::String(value); },
@@ -400,9 +404,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move (toggle), std::move (thresh), std::move (interval)));       
     }
     {   //  midi settings 
-        auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString,
-                                                                [](int value, int) { return juce::String(value) + "%"; },
-                                                                [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); });   
+        auto velocitySens = std::make_unique<IntParameter>     ("midiVelocitySens", TRANS ("MIDI Velocity Sensitivity"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);   
                
         auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", TRANS ("Pitch bend range"), 0, 12, 2, emptyString,
                                                                 [](int value, int) { return juce::String(value) + " st"; },
@@ -433,17 +435,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                              return 1;
                                                          });  
                
-        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString,
-                                                         [](int value, int) { return juce::String(value) + "%"; },
-                                                         [](const juce::String& text) { return text.endsWith("%") ? text.dropLastCharacters(1).getIntValue() : text.getIntValue(); });   
+        auto dryWet  = std::make_unique<IntParameter>   ("masterDryWet", TRANS ("% wet"), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);   
                
-        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain,
-                                                         [](float value, int) { return juce::String(value) + " dB"; },
-                                                         [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); });
+        auto inGain  = std::make_unique<FloatParameter> ("inputGain", TRANS ("Input gain"),   gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
                
-        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain,
-                                                         [](float value, int) { return juce::String(value) + " dB"; },
-                                                         [](const juce::String& text) { return text.endsWithIgnoreCase(" dB") ? text.dropLastCharacters(3).getFloatValue() : text.getFloatValue(); });   
+        auto outGain = std::make_unique<FloatParameter> ("outputGain", TRANS ("Output gain"), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);   
                
         auto leadPan = std::make_unique<IntParameter>   ("dryPan", TRANS ("Dry vox pan"), 0, 127, 64, emptyString,
                                                          [](int value, int) { return juce::String(value); },
