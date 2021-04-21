@@ -51,7 +51,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int maxLength) { return value ? TRANS("On").substring(0, maxLength) : TRANS("Off").substring(0, maxLength); };
     std::function< bool (const juce::String& text) >                     toggle_boolFromString = [](const juce::String& text) { if (text.containsIgnoreCase (TRANS("On")) || text.containsIgnoreCase (TRANS("Yes")) || text.containsIgnoreCase (TRANS("True"))) return true; return false; };
    
-    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int maxLength) { return juce::String(value) + " " + TRANS("dB").substring(0, maxLength); };          
+    std::function< juce::String (float value, int maximumStringLength) > gain_stringFromFloat = [](float value, int maxLength) { return (juce::String(value) + " " + TRANS("dB")).substring(0, maxLength); };          
     std::function< float (const juce::String& text) >                    gain_floatFromString = [](const juce::String& text) 
                                                                                                 {
                                                                                                     const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("dB"));
@@ -62,7 +62,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                     return text.trim().getFloatValue();
                                                                                                 };
     
-    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt  = [](int value, int maxLength) { return juce::String(value) + "%".substring(0, maxLength); };
+    std::function< juce::String (int value, int maximumStringLength) >   pcnt_stringFromInt  = [](int value, int maxLength) { return (juce::String(value) + "%").substring(0, maxLength); };
     std::function< int (const juce::String& text) >                      pcnt_intFromString  = [](const juce::String& text) 
                                                                                                { 
                                                                                                     const auto token_location = text.indexOf ("%");
@@ -73,7 +73,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                     return text.trim().getIntValue(); 
                                                                                                };
 
-    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int maxLength) { return juce::String(value) + " " + TRANS("sec").substring(0, maxLength); };          
+    std::function< juce::String (float value, int maximumStringLength) > sec_stringFromFloat = [](float value, int maxLength) { return (juce::String(value) + " " + TRANS("sec")).substring(0, maxLength); };          
     std::function< float (const juce::String& text) >                    sec_floatFromString = [](const juce::String& text) 
                                                                                                { 
                                                                                                    const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("sec"));
@@ -100,7 +100,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                                                                    return text.trim().getFloatValue();
                                                                                                };
            
-    std::function< juce::String (int value, int maximumStringLength) >   st_stringFromInt    = [](int value, int maxLength) { return juce::String(value) + " " + TRANS("st").substring(0, maxLength); };
+    std::function< juce::String (int value, int maximumStringLength) >   st_stringFromInt    = [](int value, int maxLength) { return (juce::String(value) + " " + TRANS("st")).substring(0, maxLength); };
     std::function< int (const juce::String& text) >                      st_intFromString    = [](const juce::String& text) 
                                                                                                { 
                                                                                                     const auto token_location = text.indexOfWholeWordIgnoreCase (TRANS("st"));
