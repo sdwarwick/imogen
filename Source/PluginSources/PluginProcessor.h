@@ -244,6 +244,9 @@ private:
     
     juce::AudioProcessorValueTreeState tree;
     
+    template<typename PointerType>
+    PointerType makeParameterPointer (const juce::String& name);
+    
     // pointers to all the parameter objects
     BoolParamPtr  mainBypass, leadBypass, harmonyBypass, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle;
     IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, reverbDryWet, inputSource;
