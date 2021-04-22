@@ -109,7 +109,7 @@ option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 # ADD JUCE #
 
 if (DEFINED bv_juceDir)
-	add_subdirectory (${bv_juceDir})
+	add_subdirectory (${bv_juceDir} ${CMAKE_CURRENT_SOURCE_DIR}/Builds/JUCE)
 else()
 	if (NOT DEFINED bv_juceGitRepoToUse)
         set (bv_juceGitRepoToUse https://github.com/juce-framework/JUCE.git)
