@@ -56,20 +56,6 @@ set (Imogen_graphicAssetFiles
 
 #
 
-if (NOT DEFINED bv_juceGitRepoToUse)
-        set (bv_juceGitRepoToUse https://github.com/juce-framework/JUCE.git)
-endif()
-
-if (NOT DEFINED bv_juceGitRepo_TagToUse)
-        if ("${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
-	        set (bv_juceGitRepo_TagToUse origin/develop)
-	else()
-	        set (bv_juceGitRepo_TagToUse origin)
-	endif()
-endif()
-
-#
-
 if (NOT DEFINED bv_formats)
     set (bv_formats AU VST3 Standalone Unity)
 endif()
@@ -120,17 +106,35 @@ option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
 
 #
 
-message (STATUS "Fetching the latest version of JUCE from GitHub repo: ${bv_juceGitRepoToUse}")
+# ADD JUCE #
 
-include (FetchContent)
+if (DEFINED bv_juceDir)
+	add_subdirectory (${bv_juceDir})
+else()
+	if (NOT DEFINED bv_juceGitRepoToUse)
+        set (bv_juceGitRepoToUse https://github.com/juce-framework/JUCE.git)
+	endif()
 
-FetchContent_Declare (juce
-GIT_REPOSITORY ${bv_juceGitRepoToUse}
-GIT_TAG        ${bv_juceGitRepo_TagToUse})
+	if (NOT DEFINED bv_juceGitRepo_TagToUse)
+        if ("${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
+	        set (bv_juceGitRepo_TagToUse origin/develop)
+		else()
+	        set (bv_juceGitRepo_TagToUse origin)
+		endif()
+	endif()
 
-FetchContent_MakeAvailable (juce)
+	message (STATUS "Fetching the latest version of JUCE from GitHub repo: ${bv_juceGitRepoToUse}")
 
-set (bv_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src CACHE FILEPATH "${ds_juceDir}" FORCE)
+	include (FetchContent)
+
+	FetchContent_Declare (juce
+	GIT_REPOSITORY ${bv_juceGitRepoToUse}
+	GIT_TAG        ${bv_juceGitRepo_TagToUse})
+
+	FetchContent_MakeAvailable (juce)
+
+	set (bv_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src)
+endif()
 
 #
 
