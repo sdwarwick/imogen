@@ -39,6 +39,10 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h), tooltipWindow(this, msBefo
     //addAndMakeVisible(selectPreset);
     
     setSize (940, 435);
+  
+#if JUCE_MAC
+    // const bool initializeWithDarkMode = juce::Desktop::isOSXDarkModeActive();
+#endif
 }
 
 #undef bvi_GRAPHICS_FRAMERATE_HZ
