@@ -259,29 +259,29 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
-    mainBypass    = makeParameterPointer<BoolParamPtr> ("mainBypass");    
-    leadBypass    = makeParameterPointer<BoolParamPtr> ("leadBypass");
-    harmonyBypass = makeParameterPointer<BoolParamPtr> ("harmonyBypass");
-    inputSource   = makeParameterPointer<IntParamPtr>  ("inputSource");
-    dryPan        = makeParameterPointer<IntParamPtr>  ("dryPan");
-    dryWet        = makeParameterPointer<IntParamPtr>  ("masterDryWet");
-    adsrAttack    = makeParameterPointer<FloatParamPtr>("adsrAttack");        
-    adsrDecay     = makeParameterPointer<FloatParamPtr>("adsrDecay");     
-    adsrSustain   = makeParameterPointer<FloatParamPtr>("adsrSustain");
-    adsrRelease   = makeParameterPointer<FloatParamPtr>("adsrRelease");
+    mainBypass         = makeParameterPointer<BoolParamPtr> ("mainBypass");    
+    leadBypass         = makeParameterPointer<BoolParamPtr> ("leadBypass");
+    harmonyBypass      = makeParameterPointer<BoolParamPtr> ("harmonyBypass");
+    inputSource        = makeParameterPointer<IntParamPtr>  ("inputSource");
+    dryPan             = makeParameterPointer<IntParamPtr>  ("dryPan");
+    dryWet             = makeParameterPointer<IntParamPtr>  ("masterDryWet");
+    adsrAttack         = makeParameterPointer<FloatParamPtr>("adsrAttack");        
+    adsrDecay          = makeParameterPointer<FloatParamPtr>("adsrDecay");     
+    adsrSustain        = makeParameterPointer<FloatParamPtr>("adsrSustain");
+    adsrRelease        = makeParameterPointer<FloatParamPtr>("adsrRelease");
+    stereoWidth        = makeParameterPointer<IntParamPtr>  ("stereoWidth");    
+    lowestPanned       = makeParameterPointer<IntParamPtr>  ("lowestPan");
+    velocitySens       = makeParameterPointer<IntParamPtr>  ("midiVelocitySens");     
+    pitchBendRange     = makeParameterPointer<IntParamPtr>  ("PitchBendRange");       
+    pedalPitchIsOn     = makeParameterPointer<BoolParamPtr> ("pedalPitchToggle");    
+    pedalPitchThresh   = makeParameterPointer<IntParamPtr>  ("pedalPitchThresh");      
+    pedalPitchInterval = makeParameterPointer<IntParamPtr>  ("pedalPitchInterval");        
+    descantIsOn        = makeParameterPointer<BoolParamPtr> ("descantToggle");       
+    descantThresh      = makeParameterPointer<IntParamPtr>  ("descantThresh");     
+    descantInterval    = makeParameterPointer<IntParamPtr>  ("descantInterval");      
            
            
-    stereoWidth          = dynamic_cast<IntParamPtr>   (tree.getParameter ("stereoWidth"));                  jassert (stereoWidth);
-    lowestPanned         = dynamic_cast<IntParamPtr>   (tree.getParameter ("lowestPan"));                    jassert (lowestPanned);
-    velocitySens         = dynamic_cast<IntParamPtr>   (tree.getParameter ("midiVelocitySens"));             jassert (velocitySens);
-    pitchBendRange       = dynamic_cast<IntParamPtr>   (tree.getParameter ("PitchBendRange"));               jassert (pitchBendRange);
-    pedalPitchIsOn       = dynamic_cast<BoolParamPtr>  (tree.getParameter ("pedalPitchToggle"));             jassert (pedalPitchIsOn);
-    pedalPitchThresh     = dynamic_cast<IntParamPtr>   (tree.getParameter ("pedalPitchThresh"));             jassert (pedalPitchThresh);
-    pedalPitchInterval   = dynamic_cast<IntParamPtr>   (tree.getParameter ("pedalPitchInterval"));           jassert (pedalPitchInterval);
-    descantIsOn          = dynamic_cast<BoolParamPtr>  (tree.getParameter ("descantToggle"));                jassert (descantIsOn);
-    descantThresh        = dynamic_cast<IntParamPtr>   (tree.getParameter ("descantThresh"));                jassert (descantThresh);
-    descantInterval      = dynamic_cast<IntParamPtr>   (tree.getParameter ("descantInterval"));              jassert (descantInterval);
-    voiceStealing        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("voiceStealing"));                jassert (voiceStealing);
+           voiceStealing        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("voiceStealing"));                jassert (voiceStealing);
     inputGain            = dynamic_cast<FloatParamPtr> (tree.getParameter ("inputGain"));                    jassert (inputGain);
     outputGain           = dynamic_cast<FloatParamPtr> (tree.getParameter ("outputGain"));                   jassert (outputGain);
     limiterToggle        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("limiterIsOn"));                  jassert (limiterToggle);
