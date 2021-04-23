@@ -259,16 +259,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
-    mainBypass           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("mainBypass"));                   jassert (mainBypass);
-    leadBypass           = dynamic_cast<BoolParamPtr>  (tree.getParameter ("leadBypass"));                   jassert (leadBypass);
-    harmonyBypass        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("harmonyBypass"));                jassert (harmonyBypass);
-    inputSource          = dynamic_cast<IntParamPtr>   (tree.getParameter ("inputSource"));                  jassert (inputSource);
-    dryPan               = dynamic_cast<IntParamPtr>   (tree.getParameter ("dryPan"));                       jassert (dryPan);
-    dryWet               = dynamic_cast<IntParamPtr>   (tree.getParameter ("masterDryWet"));                 jassert (dryWet);
-    adsrAttack           = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrAttack"));                   jassert (adsrAttack);
-    adsrDecay            = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrDecay"));                    jassert (adsrDecay);
-    adsrSustain          = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrSustain"));                  jassert (adsrSustain);
-    adsrRelease          = dynamic_cast<FloatParamPtr> (tree.getParameter ("adsrRelease"));                  jassert (adsrRelease);
+    mainBypass    = makeParameterPointer ("mainBypass");    
+    leadBypass    = makeParameterPointer ("leadBypass");
+    harmonyBypass = makeParameterPointer ("harmonyBypass");
+    inputSource   = makeParameterPointer ("inputSource");
+    dryPan        = makeParameterPointer ("dryPan");
+    dryWet        = makeParameterPointer ("masterDryWet");
+    adsrAttack    = makeParameterPointer ("adsrAttack");        
+    adsrDecay     = makeParameterPointer ("adsrDecay");     
+    adsrSustain   = makeParameterPointer ("adsrSustain");
+    adsrRelease   = makeParameterPointer ("adsrRelease");
+           
+           
     stereoWidth          = dynamic_cast<IntParamPtr>   (tree.getParameter ("stereoWidth"));                  jassert (stereoWidth);
     lowestPanned         = dynamic_cast<IntParamPtr>   (tree.getParameter ("lowestPan"));                    jassert (lowestPanned);
     velocitySens         = dynamic_cast<IntParamPtr>   (tree.getParameter ("midiVelocitySens"));             jassert (velocitySens);
