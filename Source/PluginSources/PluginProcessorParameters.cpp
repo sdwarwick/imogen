@@ -259,46 +259,44 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
-    mainBypass         = makeParameterPointer<BoolParamPtr> ("mainBypass");    
-    leadBypass         = makeParameterPointer<BoolParamPtr> ("leadBypass");
-    harmonyBypass      = makeParameterPointer<BoolParamPtr> ("harmonyBypass");
-    inputSource        = makeParameterPointer<IntParamPtr>  ("inputSource");
-    dryPan             = makeParameterPointer<IntParamPtr>  ("dryPan");
-    dryWet             = makeParameterPointer<IntParamPtr>  ("masterDryWet");
-    adsrAttack         = makeParameterPointer<FloatParamPtr>("adsrAttack");        
-    adsrDecay          = makeParameterPointer<FloatParamPtr>("adsrDecay");     
-    adsrSustain        = makeParameterPointer<FloatParamPtr>("adsrSustain");
-    adsrRelease        = makeParameterPointer<FloatParamPtr>("adsrRelease");
-    stereoWidth        = makeParameterPointer<IntParamPtr>  ("stereoWidth");    
-    lowestPanned       = makeParameterPointer<IntParamPtr>  ("lowestPan");
-    velocitySens       = makeParameterPointer<IntParamPtr>  ("midiVelocitySens");     
-    pitchBendRange     = makeParameterPointer<IntParamPtr>  ("PitchBendRange");       
-    pedalPitchIsOn     = makeParameterPointer<BoolParamPtr> ("pedalPitchToggle");    
-    pedalPitchThresh   = makeParameterPointer<IntParamPtr>  ("pedalPitchThresh");      
-    pedalPitchInterval = makeParameterPointer<IntParamPtr>  ("pedalPitchInterval");        
-    descantIsOn        = makeParameterPointer<BoolParamPtr> ("descantToggle");       
-    descantThresh      = makeParameterPointer<IntParamPtr>  ("descantThresh");     
-    descantInterval    = makeParameterPointer<IntParamPtr>  ("descantInterval");      
-           
-           
-           voiceStealing        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("voiceStealing"));                jassert (voiceStealing);
-    inputGain            = dynamic_cast<FloatParamPtr> (tree.getParameter ("inputGain"));                    jassert (inputGain);
-    outputGain           = dynamic_cast<FloatParamPtr> (tree.getParameter ("outputGain"));                   jassert (outputGain);
-    limiterToggle        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("limiterIsOn"));                  jassert (limiterToggle);
-    noiseGateThreshold   = dynamic_cast<FloatParamPtr> (tree.getParameter ("noiseGateThresh"));              jassert (noiseGateThreshold);
-    noiseGateToggle      = dynamic_cast<BoolParamPtr>  (tree.getParameter ("noiseGateIsOn"));                jassert (noiseGateToggle);
-    compressorToggle     = dynamic_cast<BoolParamPtr>  (tree.getParameter ("compressorToggle"));             jassert (compressorToggle);
-    compressorAmount     = dynamic_cast<FloatParamPtr> (tree.getParameter ("compressorAmount"));             jassert (compressorAmount);
-    aftertouchGainToggle = dynamic_cast<BoolParamPtr>  (tree.getParameter ("aftertouchGainToggle"));         jassert (aftertouchGainToggle);
-    deEsserToggle        = dynamic_cast<BoolParamPtr>  (tree.getParameter ("deEsserIsOn"));                  jassert (deEsserToggle);
-    deEsserThresh        = dynamic_cast<FloatParamPtr> (tree.getParameter ("deEsserThresh"));                jassert (deEsserThresh);
-    deEsserAmount        = dynamic_cast<FloatParamPtr> (tree.getParameter ("deEsserAmount"));                jassert (deEsserAmount);
-    reverbToggle         = dynamic_cast<BoolParamPtr>  (tree.getParameter ("reverbIsOn"));                   jassert (reverbToggle);
-    reverbDryWet         = dynamic_cast<IntParamPtr>   (tree.getParameter ("reverbDryWet"));                 jassert (reverbDryWet);
-    reverbDecay          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbDecay"));                  jassert (reverbDecay);
-    reverbDuck           = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbDuck"));                   jassert (reverbDuck);
-    reverbLoCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbLoCut"));                  jassert (reverbLoCut);
-    reverbHiCut          = dynamic_cast<FloatParamPtr> (tree.getParameter ("reverbHiCut"));                  jassert (reverbHiCut);
+    mainBypass           = makeParameterPointer <BoolParamPtr>  ("mainBypass");    
+    leadBypass           = makeParameterPointer <BoolParamPtr>  ("leadBypass");
+    harmonyBypass        = makeParameterPointer <BoolParamPtr>  ("harmonyBypass");
+    inputSource          = makeParameterPointer <IntParamPtr>   ("inputSource");
+    dryPan               = makeParameterPointer <IntParamPtr>   ("dryPan");
+    dryWet               = makeParameterPointer <IntParamPtr>   ("masterDryWet");
+    adsrAttack           = makeParameterPointer <FloatParamPtr> ("adsrAttack");        
+    adsrDecay            = makeParameterPointer <FloatParamPtr> ("adsrDecay");     
+    adsrSustain          = makeParameterPointer <FloatParamPtr> ("adsrSustain");
+    adsrRelease          = makeParameterPointer <FloatParamPtr> ("adsrRelease");
+    stereoWidth          = makeParameterPointer <IntParamPtr>   ("stereoWidth");    
+    lowestPanned         = makeParameterPointer <IntParamPtr>   ("lowestPan");
+    velocitySens         = makeParameterPointer <IntParamPtr>   ("midiVelocitySens");     
+    pitchBendRange       = makeParameterPointer <IntParamPtr>   ("PitchBendRange");       
+    pedalPitchIsOn       = makeParameterPointer <BoolParamPtr>  ("pedalPitchToggle");    
+    pedalPitchThresh     = makeParameterPointer <IntParamPtr>   ("pedalPitchThresh");      
+    pedalPitchInterval   = makeParameterPointer <IntParamPtr>   ("pedalPitchInterval");        
+    descantIsOn          = makeParameterPointer <BoolParamPtr>  ("descantToggle");       
+    descantThresh        = makeParameterPointer <IntParamPtr>   ("descantThresh");     
+    descantInterval      = makeParameterPointer <IntParamPtr>   ("descantInterval");      
+    voiceStealing        = makeParameterPointer <BoolParamPtr>  ("voiceStealing");    
+    inputGain            = makeParameterPointer <FloatParamPtr> ("inputGain");      
+    outputGain           = makeParameterPointer <FloatParamPtr> ("outputGain");      
+    limiterToggle        = makeParameterPointer <BoolParamPtr>  ("limiterIsOn");      
+    noiseGateThreshold   = makeParameterPointer <FloatParamPtr> ("noiseGateThresh");   
+    noiseGateToggle      = makeParameterPointer <BoolParamPtr>  ("noiseGateIsOn");  
+    compressorToggle     = makeParameterPointer <BoolParamPtr>  ("compressorToggle");     
+    compressorAmount     = makeParameterPointer <FloatParamPtr> ("compressorAmount");     
+    aftertouchGainToggle = makeParameterPointer <BoolParamPtr>  ("aftertouchGainToggle");       
+    deEsserToggle        = makeParameterPointer <BoolParamPtr>  ("deEsserIsOn");       
+    deEsserThresh        = makeParameterPointer <FloatParamPtr> ("deEsserThresh");       
+    deEsserAmount        = makeParameterPointer <FloatParamPtr> ("deEsserAmount");        
+    reverbToggle         = makeParameterPointer <BoolParamPtr>  ("reverbIsOn");       
+    reverbDryWet         = makeParameterPointer <IntParamPtr>   ("reverbDryWet");      
+    reverbDecay          = makeParameterPointer <FloatParamPtr> ("reverbDecay");     
+    reverbDuck           = makeParameterPointer <FloatParamPtr> ("reverbDuck"); 
+    reverbLoCut          = makeParameterPointer <FloatParamPtr> ("reverbLoCut");        
+    reverbHiCut          = makeParameterPointer <FloatParamPtr> ("reverbHiCut");      
 }
 
 
