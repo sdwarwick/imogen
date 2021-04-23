@@ -259,16 +259,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
-    mainBypass    = makeParameterPointer ("mainBypass");    
-    leadBypass    = makeParameterPointer ("leadBypass");
-    harmonyBypass = makeParameterPointer ("harmonyBypass");
-    inputSource   = makeParameterPointer ("inputSource");
-    dryPan        = makeParameterPointer ("dryPan");
-    dryWet        = makeParameterPointer ("masterDryWet");
-    adsrAttack    = makeParameterPointer ("adsrAttack");        
-    adsrDecay     = makeParameterPointer ("adsrDecay");     
-    adsrSustain   = makeParameterPointer ("adsrSustain");
-    adsrRelease   = makeParameterPointer ("adsrRelease");
+    mainBypass    = makeParameterPointer<BoolParamPtr> ("mainBypass");    
+    leadBypass    = makeParameterPointer<BoolParamPtr> ("leadBypass");
+    harmonyBypass = makeParameterPointer<BoolParamPtr> ("harmonyBypass");
+    inputSource   = makeParameterPointer<IntParamPtr>  ("inputSource");
+    dryPan        = makeParameterPointer<IntParamPtr>  ("dryPan");
+    dryWet        = makeParameterPointer<IntParamPtr>  ("masterDryWet");
+    adsrAttack    = makeParameterPointer<FloatParamPtr>("adsrAttack");        
+    adsrDecay     = makeParameterPointer<FloatParamPtr>("adsrDecay");     
+    adsrSustain   = makeParameterPointer<FloatParamPtr>("adsrSustain");
+    adsrRelease   = makeParameterPointer<FloatParamPtr>("adsrRelease");
            
            
     stereoWidth          = dynamic_cast<IntParamPtr>   (tree.getParameter ("stereoWidth"));                  jassert (stereoWidth);
