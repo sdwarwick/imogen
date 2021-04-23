@@ -351,7 +351,7 @@ void ImogenAudioProcessor::initializeParameterOscMappings()
     for (int i = 0; i < IMGN_NUM_PARAMS; ++i)
     {
         auto* param = getParameterPntr (parameterID(i));
-        oscMapper.addNewMapping (param, juce::String("imogen/") + param->orig()->paramID);
+        oscMapper.addNewMapping (param, juce::String("/imogen/") + param->orig()->paramID);
     }    
 }
 

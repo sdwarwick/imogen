@@ -21,15 +21,21 @@ juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
                                                     true); // auto open midi devices
     
     window->setTitleBarTextCentred (true);
-    window->setDropShadowEnabled (true);
     window->setUsingNativeTitleBar (false);
     
-    window->setIcon (bav::Assets::getImage (juce::String("imogen_icon_png")));
+    window->setIcon (juce::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize));
+    
+    window->setVisible (true);
     
     if (isMobileApp())
     {
         window->setTitleBarHeight(0);
         window->setFullScreen (true);
+        window->setDropShadowEnabled (false);
+    }
+    else
+    {
+        window->setDropShadowEnabled (true);
     }
     
     return window;
@@ -38,19 +44,6 @@ juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
 void StandaloneFilterApp::initialise (const juce::String&)
 {
     mainWindow.reset (createWindow());
-    mainWindow->setTitleBarTextCentred (true);
-    mainWindow->setDropShadowEnabled (true);
-    mainWindow->setUsingNativeTitleBar (false);
-    
-    mainWindow->setIcon (bav::Assets::getImage (juce::String("imogen_icon_png")));
-    
-    mainWindow->setVisible (true);
-    
-    if (isMobileApp())
-    {
-        mainWindow->setTitleBarHeight(0);
-        mainWindow->setFullScreen (true);
-    }
 }
 
 void StandaloneFilterApp::shutdown()
