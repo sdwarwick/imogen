@@ -46,6 +46,7 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginEditor.h
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
+    ${guiSourcePath}/GuiHandle.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.h

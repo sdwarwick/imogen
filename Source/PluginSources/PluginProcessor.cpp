@@ -47,6 +47,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (doubleEngine);
     else
         initialize (floatEngine);
+    
+    rescanPresetsFolder();
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()

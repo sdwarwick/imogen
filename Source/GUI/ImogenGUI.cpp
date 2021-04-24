@@ -41,7 +41,8 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h), tooltipWindow(this, msBefo
     setSize (940, 435);
   
 #if JUCE_MAC
-    // const bool initializeWithDarkMode = juce::Desktop::isOSXDarkModeActive();
+    const bool initializeWithDarkMode = juce::Desktop::isOSXDarkModeActive();
+    juce::ignoreUnused (initializeWithDarkMode);
 #endif
 }
 
@@ -67,14 +68,6 @@ void ImogenGUI::resized()
 
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
-//    int id = 1;
-    
-//    for  (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (imgnProcessor.getPresetsFolder(), false))
-//    {
-//        box.addItem (entry.getFile().getFileName(), id);
-//        ++id;
-//    }
-           
     juce::ignoreUnused (box);
 }
 

@@ -34,7 +34,14 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 {
     this->setBufferedToImage (true);
     
-    setSize (940, 435);
+    setResizable (true, true);
+    const auto size = imgnProcessor.getLastEditorSize();
+    setSize (size.x, size.y);
+    setResizeLimits (800, 450, 2990, 1800);
+    
+#if JUCE_OPENGL
+    openGLContext.attachTo (*getTopLevelComponent());
+#endif
     
     Timer::startTimerHz (bvi_GRAPHICS_FRAMERATE_HZ);
 }
@@ -46,6 +53,10 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
     this->setLookAndFeel(nullptr);
     Timer::stopTimer();
+    
+#if JUCE_OPENGL
+    openGLContext.detach();
+#endif
 }
 
 
@@ -57,7 +68,9 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 
 void ImogenAudioProcessorEditor::resized()
 {
-    //selectPreset.setBounds(x, y, w, h);
+    imgnProcessor.saveEditorSize ({ getWidth(), getHeight() });
+    
+    gui.setBounds (0, 0, getWidth(), getHeight());
 }
 
 
@@ -67,12 +80,6 @@ void ImogenAudioProcessorEditor::timerCallback()
     if (imgnProcessor.hasUpdatedParamDefaults())
         gui.updateParameterDefaults();
 }
-
-
-// inline void ImogenAudioProcessorEditor::newPresetSelected()
-// {
-    // imgnProcessor.loadPreset (selectPreset.getItemText (selectPreset.getSelectedId()));
-// }
 
 
 void ImogenAudioProcessorEditor::updateParameterDefaults()

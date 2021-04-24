@@ -25,6 +25,25 @@
 
 
 /*
+    Scans the presets folder for preset files
+*/
+void ImogenAudioProcessor::rescanPresetsFolder()
+{
+    availablePresets.clearQuick();
+    
+    for (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
+    {
+        const auto file = entry.getFile();
+        const auto filename = file.getFileName();
+        
+        if (filename.endsWith (".xml"))
+            availablePresets.add (file);
+    }
+}
+
+
+
+/*
     Functions for state saving and loading
 */
 
@@ -33,13 +52,27 @@
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    std::unique_ptr<juce::XmlElement> xml = tree.copyState().createXml();
+    auto editorSize = tree.state.getOrCreateChildWithName ("editorSize", nullptr);
+    editorSize.setProperty ("editorSize_X", savedEditorSize.x, nullptr);
+    editorSize.setProperty ("editorSize_Y", savedEditorSize.y, nullptr);
+    
+    auto xml = tree.copyState().createXml();
+    
+    if (xml->hasAttribute("presetName"))
+        xml->removeAttribute("presetName");
+    
     copyXmlToBinary (*xml, destData);
 }
 
 void ImogenAudioProcessor::savePreset (juce::String presetName) // this function can be used both to save new preset files or to update existing ones
 {
-    std::unique_ptr<juce::XmlElement> xml = tree.copyState().createXml();
+    if (presetName.endsWith(".xml"))
+        presetName.dropLastCharacters(4);
+    
+    if (tree.state.hasProperty("editorSize"))
+        tree.state.removeProperty ("editorSize", nullptr);
+    
+    auto xml = tree.copyState().createXml();
     
     xml->setAttribute ("presetName", presetName);
     
@@ -57,16 +90,17 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     auto xmlElement (getXmlFromBinary (data, sizeInBytes));
     
     if (isUsingDoublePrecision())
-        updatePluginInternalState (*xmlElement, doubleEngine);
+        updatePluginInternalState (*xmlElement, doubleEngine, false);
     else
-        updatePluginInternalState (*xmlElement, floatEngine);
+        updatePluginInternalState (*xmlElement, floatEngine, false);
 }
 
 bool ImogenAudioProcessor::loadPreset (juce::String presetName)
 {
-    presetName += ".xml";
+    if (! presetName.endsWith(".xml"))
+        presetName += ".xml";
     
-    juce::File presetToLoad = getPresetsFolder().getChildFile(presetName);
+    auto presetToLoad = getPresetsFolder().getChildFile(presetName);
     
     if (! presetToLoad.existsAsFile())
         return false;
@@ -74,14 +108,16 @@ bool ImogenAudioProcessor::loadPreset (juce::String presetName)
     auto xmlElement = juce::parseXML (presetToLoad);
     
     if (isUsingDoublePrecision())
-        return updatePluginInternalState (*xmlElement, doubleEngine);
+        return updatePluginInternalState (*xmlElement, doubleEngine, true);
     
-    return updatePluginInternalState (*xmlElement, floatEngine);
+    return updatePluginInternalState (*xmlElement, floatEngine, true);
 }
 
 
 template<typename SampleType>
-inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine)
+inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState,
+                                                             bav::ImogenEngine<SampleType>& activeEngine,
+                                                             bool isPresetChange)
 {
     if (! newState.hasTagName (tree.state.getType()))
         return false;
@@ -99,6 +135,20 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
     
     updateParameterDefaults();
     
+    if (! isPresetChange)  // don't resize the editor for preset changes...
+    {
+        auto editor = tree.state.getChildWithName ("editorSize");
+        
+        if (editor.isValid())
+        {
+            savedEditorSize.setX (editor.getProperty ("editorSize_X", 900));
+            savedEditorSize.setY (editor.getProperty ("editorSize_Y", 500));
+            
+            if (auto* activeEditor = getActiveEditor())
+                activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
+        }
+    }
+    
     suspendProcessing (false);
     
     updateHostDisplay();
@@ -108,9 +158,10 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
 
 void ImogenAudioProcessor::deletePreset (juce::String presetName)
 {
-    presetName += ".xml";
+    if (! presetName.endsWith(".xml"))
+        presetName += ".xml";
     
-    juce::File presetToDelete = getPresetsFolder().getChildFile (presetName);
+    auto presetToDelete = getPresetsFolder().getChildFile (presetName);
     
     if (presetToDelete.existsAsFile())
         if (! presetToDelete.moveToTrash())
@@ -126,7 +177,7 @@ void ImogenAudioProcessor::deletePreset (juce::String presetName)
 
 int ImogenAudioProcessor::getNumPrograms()
 {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs, so this should be at least 1, even if you're not really implementing programs.
+    return std::max (1, availablePresets.size());
 }
 
 int ImogenAudioProcessor::getCurrentProgram()
@@ -142,8 +193,12 @@ void ImogenAudioProcessor::setCurrentProgram (int index)
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
 {
-    juce::ignoreUnused (index);
-    return {};
+    if (availablePresets.isEmpty())
+        return {};
+    
+    const auto name = availablePresets.getUnchecked(index).getFileName();
+    
+    return (name.endsWith(".xml")) ? name.dropLastCharacters(4) : name;
 }
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)

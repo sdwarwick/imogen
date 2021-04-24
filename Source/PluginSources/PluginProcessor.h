@@ -190,6 +190,15 @@ public:
     parameterID parameterPntrToID (const Parameter* const) const;
     
     
+    // enables saving and loading of the editor's last saved size
+    juce::Point<int> getLastEditorSize() const { return savedEditorSize; }
+    void saveEditorSize (const juce::Point<int>& size) { savedEditorSize = size; }
+    
+    
+    // rescans the presets folder for available presets
+    void rescanPresetsFolder();
+    
+    
 private:
     
     template <typename SampleType>
@@ -233,7 +242,9 @@ private:
     bav::MessageQueue<msgQueueSize> paramChanges;
     
     template<typename SampleType>
-    bool updatePluginInternalState (juce::XmlElement& newState, bav::ImogenEngine<SampleType>& activeEngine);
+    bool updatePluginInternalState (juce::XmlElement& newState,
+                                    bav::ImogenEngine<SampleType>& activeEngine,
+                                    bool isPresetChange);
     
     
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
@@ -294,6 +305,10 @@ private:
     
     // this object represents the plugin as a participant in an Ableton Link session.
     ableton::Link abletonLink;
+    
+    juce::Point<int> savedEditorSize;
+    
+    juce::Array<juce::File> availablePresets;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
