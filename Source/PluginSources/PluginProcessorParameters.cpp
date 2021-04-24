@@ -323,9 +323,9 @@ template bav::BoolParameter*  ImogenAudioProcessor::makeParameterPointer (const 
 // creates parameter listeners & messengers for each parameter
 void ImogenAudioProcessor::initializeParameterListeners()
 {
-    parameterMessengers.reserve (IMGN_NUM_PARAMS);
+    parameterMessengers.reserve (numParams);
            
-    for (int i = 0; i < IMGN_NUM_PARAMS; ++i)
+    for (int i = 0; i < numParams; ++i)
         addParameterMessenger (parameterID(i));
 }
 
@@ -348,7 +348,7 @@ void ImogenAudioProcessor::addParameterMessenger (parameterID paramID)
 
 void ImogenAudioProcessor::initializeParameterOscMappings()
 {
-    for (int i = 0; i < IMGN_NUM_PARAMS; ++i)
+    for (int i = 0; i < numParams; ++i)
     {
         auto* param = getParameterPntr (parameterID(i));
         oscMapper.addNewMapping (param, juce::String("/imogen/") + param->orig()->paramID);
@@ -660,7 +660,7 @@ template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngi
 // This function reassigns each parameter's internally stored default value to the parameter's current value. Run this function after loading a preset, etc.
 void ImogenAudioProcessor::updateParameterDefaults()
 {
-    for (int paramID = 0; paramID < IMGN_NUM_PARAMS; ++paramID)
+    for (int paramID = 0; paramID < numParams; ++paramID)
         getParameterPntr(parameterID(paramID))->refreshDefault();
     
     parameterDefaultsAreDirty.store (true);

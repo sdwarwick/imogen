@@ -107,7 +107,8 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
-#define IMGN_NUM_PARAMS reverbHiCutID + 1
+ 
+    static constexpr int numParams = reverbHiCutID + 1;
     
     // IDs for events from the editor that are not parameters
     enum eventID
@@ -136,6 +137,7 @@ public:
     int getCurrentProgram() override;
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
+    int indexOfProgram (const juce::String& name) const;
     void changeProgramName (int index, const juce::String& newName) override;
     
     bool acceptsMidi()  const override { return true;  }
@@ -309,6 +311,32 @@ private:
     juce::Point<int> savedEditorSize;
     
     juce::Array<juce::File> availablePresets;
+    
+    std::atomic<int> currentProgram;  // stores the current "program" number. -1 if no preset is active.
+    
+    
+    struct ParameterChangeUpdater :  public juce::AudioProcessorListener
+    {
+        ParameterChangeUpdater(ImogenAudioProcessor* p): processor(p) { }
+        
+        void audioProcessorChanged (juce::AudioProcessor* p,
+                                    const juce::AudioProcessorListener::ChangeDetails& details) override
+        {
+            juce::ignoreUnused (p, details);
+        }
+        
+        void audioProcessorParameterChanged (juce::AudioProcessor* p, int parameterIndex, float newValue) override
+        {
+            juce::ignoreUnused (p, parameterIndex, newValue);
+            processor->currentProgram.store (-1);
+        }
+        
+        ImogenAudioProcessor* processor;
+    };
+    
+    friend ParameterChangeUpdater;
+    
+    ParameterChangeUpdater parameterChangeUpdater;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

@@ -30,13 +30,14 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()), 
     oscMapper(false),
-    abletonLink(120.0) // constructed with the initial BPM
+    abletonLink(120.0), // constructed with the initial BPM
+    parameterChangeUpdater(this)
 {
 #if BV_USE_NE10
     ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!
 #endif
     
-    jassert (AudioProcessor::getParameters().size() == IMGN_NUM_PARAMS);
+    jassert (AudioProcessor::getParameters().size() == numParams);
     initializeParameterPointers();
     initializeParameterListeners();
     updateParameterDefaults();
@@ -49,11 +50,13 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (floatEngine);
     
     rescanPresetsFolder();
+    
+    addListener (&parameterChangeUpdater);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
-
+    removeListener (&parameterChangeUpdater);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
