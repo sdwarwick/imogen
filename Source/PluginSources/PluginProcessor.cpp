@@ -167,8 +167,6 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
 }
 
 
-// LAYER 2 ---------------------------------------------------------------------------------
-
 template <typename SampleType>
 inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                                        juce::MidiBuffer& midiMessages,
@@ -186,6 +184,16 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
            
+    // program change messages need to be handled at this top level...
+    std::for_each (midiMessages.cbegin(), midiMessages.cend(),
+                   [&] (const juce::MidiMessageMetadata& meta)
+                   {
+                       const auto msg = meta.getMessage();
+        
+                       if (msg.isProgramChange())
+                           setCurrentProgram (msg.getProgramChangeNumber());
+                   });
+    
     juce::AudioBuffer<SampleType> inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
     juce::AudioBuffer<SampleType> outBus = getBusBuffer (buffer, false, 0);
     

@@ -271,7 +271,6 @@ private:
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
     
     
-    
     /* simple attachment class that listens for chages in one specific parameter and pushes messages with the appropriate key value into the queue */
     class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
     {

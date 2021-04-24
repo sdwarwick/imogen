@@ -33,13 +33,13 @@ void ImogenAudioProcessor::rescanPresetsFolder()
     
     availablePresets.clearQuick();
     
-    for (juce::DirectoryEntry entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
+    for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
     {
         const auto file = entry.getFile();
         const auto filename = file.getFileName();
         
         if (filename.endsWith (".xml"))
-            availablePresets.add (file);
+            availablePresets.add (filename.dropLastCharacters(4));
     }
     
     if (! prevProgramName.isEmpty())
@@ -110,7 +110,7 @@ bool ImogenAudioProcessor::loadPreset (juce::String presetName)
     if (! presetName.endsWith(".xml"))
         presetName += ".xml";
     
-    auto presetToLoad = getPresetsFolder().getChildFile(presetName);
+    auto presetToLoad = getPresetsFolder().getChildFile (presetName);
     
     if (! presetToLoad.existsAsFile())
         return false;
@@ -208,6 +208,9 @@ int ImogenAudioProcessor::getCurrentProgram()
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
 {
+    if (index >= getNumPrograms())
+        return;
+    
     if (index != currentProgram.load())
         loadPreset (getProgramName (index));
 }
