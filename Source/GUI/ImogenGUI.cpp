@@ -66,6 +66,21 @@ void ImogenGUI::resized()
 }
 
 
+void ImogenGUI::changeDialDisplay (bool displayPitchCorrection, int paramID)
+{
+    if (displayPitchCorrection)
+    {
+        
+    }
+    else
+    {
+        
+    }
+    
+    juce::ignoreUnused (paramID);
+}
+
+
 void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
 {
     juce::ignoreUnused (paramID, newValue);
@@ -77,6 +92,23 @@ void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
     juce::ignoreUnused (box);
+}
+
+
+void ImogenGUI::presetNameChanged (const juce::String& newPresetName)
+{
+    juce::ignoreUnused (newPresetName);
+}
+
+
+void ImogenGUI::mts_connectionChange (bool isNowConnected)
+{
+    juce::ignoreUnused (isNowConnected);
+}
+
+void ImogenGUI::mts_scaleChange (const juce::String& newScaleName)
+{
+    juce::ignoreUnused (newScaleName);
 }
 
 

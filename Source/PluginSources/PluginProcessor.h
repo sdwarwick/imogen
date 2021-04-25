@@ -28,30 +28,10 @@
 
 #include "../../third-party/ableton-link/include/ableton/Link.hpp"
 
+#include "ImogenRecieverAPI.h"
+
 
 class ImogenAudioProcessorEditor; // forward declaration...
-
-/*
-*/
-
-// simple interface for anything that wants to recieve a callback when a parameter is changed
-struct ImogenParameterReciever
-{
-    ImogenParameterReciever() = default;
-    virtual ~ImogenParameterReciever() = default;
-    
-    virtual void recieveParameterChange (int paramID, float newValue) { juce::ignoreUnused (paramID, newValue); }
-    
-    virtual void parameterDefaultsUpdated() { }
-    
-    virtual void mts_connectionChange (bool isNowConnected) { juce::ignoreUnused (isNowConnected); }
-    
-    virtual void mts_scaleChange (const juce::String& newScaleName) { juce::ignoreUnused (newScaleName); }
-    
-    virtual void presetNameChange (const juce::String& newPresetName) { juce::ignoreUnused (newPresetName); }
-    
-    virtual void abletonLinkChange (bool isNowEnabled) { juce::ignoreUnused (isNowEnabled); }
-};
 
 /*
 */

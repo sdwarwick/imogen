@@ -40,17 +40,24 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
-    // Called to update the GUI when a parameter change is recieved from the processor
     void parameterChangeRecieved (int paramID, float newValue);
     
-    // Called when the processor has updated its parameter defaults (ie, loaded a new preset, etc)
     void updateParameterDefaults();
+    
+    void presetNameChanged (const juce::String& newPresetName);
+    
+    void mts_connectionChange (bool isNowConnected);
+    void mts_scaleChange (const juce::String& newScaleName);
+    
+    void abletonLinkChange (bool isNowEnabled) override { juce::ignoreUnused (isNowEnabled); }
     
     
 private:
     
     // Called to send a parameter change update to the processor from the GUI
     void sendParameterChange (int paramID, float newValue) { handle->sendParameterChange (paramID, newValue); }
+    
+    void changeDialDisplay (bool displayPitchCorrection, int paramID);
     
     juce::Component* getComponentForParameter (int paramID);
     
