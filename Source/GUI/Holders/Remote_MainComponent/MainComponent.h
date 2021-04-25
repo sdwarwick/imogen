@@ -26,8 +26,8 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "ImogenGuiHolder.h"
-#include "OSC_parser.h"
+#include "../ImogenGuiHolder.h"
+#include "../../../Remote/OSC_parser.h"
 
 
 class MainComponent  : public juce::Component,

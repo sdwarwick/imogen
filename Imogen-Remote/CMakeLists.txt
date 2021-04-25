@@ -30,8 +30,6 @@ message (STATUS "Welcome! I'm going to generate the Imogen Remote IDE project fo
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Remote_Source)
-
 set (guiSourcePath ${Imogen_sourceDir}/GUI)
 
 set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/../assets)  # The location of the graphical asset files (images, etc)
@@ -46,8 +44,8 @@ set (ImogenRemote_sourceFiles
     ${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
-    ${sourceDir}/Main.cpp
-    ${sourceDir}/OSC_parser.h)
+    ${Imogen_sourceDir}/Remote/Main.cpp
+    ${Imogen_sourceDir}/Remote/OSC_parser.h)
 
 set (ImogenRemote_graphicAssetFiles
     ${Imogen_graphicAssetsDir}/imogen_icon.png)
@@ -174,7 +172,7 @@ target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote_sourceFiles})
 
-target_include_directories (ImogenRemote PRIVATE ${CMAKE_CURRENT_LIST_DIR}/..)
+target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 target_link_libraries (ImogenRemote PRIVATE bv_SharedCode)
 

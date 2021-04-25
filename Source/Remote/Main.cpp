@@ -24,7 +24,7 @@
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 
-#include <Source/GUI/Holders/Remote_MainComponent/MainComponent.h>
+#include "GUI/Holders/Remote_MainComponent/MainComponent.h"
 
 
 //==============================================================================
