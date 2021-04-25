@@ -24,8 +24,6 @@
 
 #include "bv_SharedCode/BinaryDataHelpers.h"
 
-#include "ImogenGUI.h"
-
 #include "ImogenGuiHolder.h"
 
 
@@ -86,6 +84,19 @@ void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
     juce::ignoreUnused (paramID, newValue);
     
     // getComponentForParameter (paramID) ...
+}
+
+
+void ImogenGUI::parameterChangeGestureStarted (int paramID)
+{
+    // update the main dial to show this parameter...
+    juce::ignoreUnused (paramID);
+}
+
+void ImogenGUI::parameterChangeGestureEnded (int paramID)
+{
+    // update the main dial to show intonation...
+    juce::ignoreUnused (paramID);
 }
 
 

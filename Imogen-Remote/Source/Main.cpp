@@ -1,8 +1,28 @@
+/*================================================================================================================================
+             _             _   _                _                _                 _               _
+            /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
+            \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
+            /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
+           / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
+          / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/       _____  ______ __  __  ____ _______ ______
+         / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /       |  __ \|  ____|  \/  |/ __ \__   __|  ____|
+        / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /        | |__) | |__  | \  / | |  | | | |  | |__
+    ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /         |  _  /|  __| | |\/| | |  | | | |  |  __|
+   /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /          | | \ \| |____| |  | | |__| | | |  | |____
+   \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/           |_|  \_\______|_|  |_|\____/  |_|  |______|
+
+ 
+ This file is part of the Imogen codebase.
+ 
+ @2021 by Ben Vining. All rights reserved.
+ 
+ Main.cpp :     This file defines the application base for the Imogen Remote app.
+ 
+================================================================================================================================*/
+
 
 #include <juce_audio_plugin_client/juce_audio_plugin_client.h>
 #include <juce_audio_utils/juce_audio_utils.h>
-
-#include "BinaryData.h"
 
 #include "MainComponent.h"
 
@@ -25,18 +45,7 @@ public:
     void initialise (const juce::String& commandLine) override
     {
         juce::ignoreUnused (commandLine);
-        
-        auto window = new MainWindow (getApplicationName());
-        
-        window->setTitleBarTextCentred (true);
-        window->setUsingNativeTitleBar (false);
-        
-        window->setIcon (juce::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize));
-        
-        if (! isMobileApp())
-            window->setDropShadowEnabled (true);
-
-        mainWindow.reset (window);
+        mainWindow.reset (new MainWindow (getApplicationName(), getBackgroundColor()));
     }
 
     void shutdown() override
@@ -99,6 +108,12 @@ public:
         return ! isDesktopStandaloneApp();
     }
 
+    //==============================================================================
+    
+    juce::Colour getBackgroundColor() const
+    {
+        return juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId);
+    }
     
     //==============================================================================
     /*
@@ -108,21 +123,24 @@ public:
     class MainWindow    : public juce::DocumentWindow
     {
     public:
-        MainWindow (juce::String name)
-            : DocumentWindow (name,
-                              juce::Desktop::getInstance().getDefaultLookAndFeel()
-                                                          .findColour (juce::ResizableWindow::backgroundColourId),
-                              DocumentWindow::allButtons)
+        MainWindow (juce::String name, juce::Colour backgroundColour)
+            : DocumentWindow (name, backgroundColour, DocumentWindow::allButtons)
         {
-            setUsingNativeTitleBar (true);
+            setUsingNativeTitleBar (false);
+            setTitleBarTextCentred (true);
+            
             setContentOwned (new MainComponent(), true);
 
-           #if JUCE_IOS || JUCE_ANDROID
+          #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);
-           #else
+          #else
             setResizable (true, true);
             centreWithSize (getWidth(), getHeight());
-           #endif
+            setDropShadowEnabled (true);
+          #endif
+            
+            setIcon (juce::ImageCache::getFromMemory (BinaryData::imogen_icon_png,
+                                                      BinaryData::imogen_icon_pngSize));
 
             setVisible (true);
         }

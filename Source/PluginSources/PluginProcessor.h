@@ -113,20 +113,21 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
+    static constexpr int numParams = reverbHiCutID + 1;
     
     
     // this function is used by the editor to inform the processor of GUI parameter changes
-    void parameterChangeRecieved (int paramID, float newValue)
+    void recieveParameterValueChange (int paramID, float newValue)
     {
         getParameterPntr (parameterID(paramID))->orig()->setValueNotifyingHost (newValue);
     }
     
-    void parameterChangeGestureStarted (int paramID)
+    void recieveParameterChangeGestureBegin (int paramID)
     {
         getParameterPntr (parameterID(paramID))->orig()->beginChangeGesture();
     }
     
-    void parameterChangeGestureEnded (int paramID)
+    void recieveParameterChangeGestureEnd (int paramID)
     {
         getParameterPntr (parameterID(paramID))->orig()->endChangeGesture();
     }
@@ -139,13 +140,21 @@ public:
         if (auto* activeEditor = getActiveEditor())
             dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChange (paramID, newValue);
         
-        if (oscMapper.areOscMessagesEnabled())
-        {
-            // send param change as OSC message to any recievers...
-        }
+        // send param change as OSC message to any recievers...
+    }
+    
+    void sendParameterChangeGestureBegin (int paramID)
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureStart (paramID);
+    }
+    
+    void sendParameterChangeGestureEnd (int paramID)
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureEnd (paramID);
     }
  
-    static constexpr int numParams = reverbHiCutID + 1;
     
     // IDs for events from the editor that are not parameters
     enum eventID
@@ -310,7 +319,7 @@ private:
     
     
     /* simple attachment class that listens for chages in one specific parameter and pushes messages with the appropriate key value into the queue */
-    class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
+    class ParameterMessenger :  public juce::AudioProcessorParameter::Listener
     {
         using MsgQ = bav::MessageQueue<msgQueueSize>;
         using Processor = ImogenAudioProcessor;
@@ -322,13 +331,24 @@ private:
             jassert (param != nullptr);
         }
         
-        void parameterChanged (const juce::String& s, float value) override
+        void parameterValueChanged (int parameterIndex, float newValue) override
         {
-            juce::ignoreUnused (s);
-            value = param->normalize(value);
-            jassert (value >= 0.0f && value <= 1.0f);
-            q.pushMessage (paramID, value);  // the message will store a normalized value
-            processor.sendParameterChange (paramID, value);
+            juce::ignoreUnused (parameterIndex);
+            
+            //value = param->normalize(value);
+            jassert (newValue >= 0.0f && newValue <= 1.0f);
+            q.pushMessage (paramID, newValue);  // the message will store a normalized value
+            processor.sendParameterChange (paramID, newValue);
+        }
+        
+        void parameterGestureChanged (int parameterIndex, bool gestureIsStarting) override
+        {
+            juce::ignoreUnused (parameterIndex);
+            
+            if (gestureIsStarting)
+                processor.sendParameterChangeGestureBegin (paramID);
+            else
+                processor.sendParameterChangeGestureEnd (paramID);
         }
         
     private:

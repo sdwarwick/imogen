@@ -27,6 +27,8 @@
 
 #include "LookAndFeel/ImogenLookAndFeel.h"
 
+#include "BinaryData.h"
+
 
 /* The interface used to communicate from the GUI to the processor */
 struct ImogenGuiHandle
@@ -65,6 +67,8 @@ public:
     void resized() override;
     
     void parameterChangeRecieved (int paramID, float newValue);
+    void parameterChangeGestureStarted (int paramID);
+    void parameterChangeGestureEnded (int paramID);
     
     void updateParameterDefaults();
     

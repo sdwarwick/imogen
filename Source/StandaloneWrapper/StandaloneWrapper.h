@@ -6,8 +6,6 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
-#include "bv_SharedCode/BinaryDataHelpers.h"
-
 
 class StandaloneFilterApp : public juce::JUCEApplication
 {
@@ -20,7 +18,10 @@ public:
     const juce::String getDefaultAudioDeviceName() const { return juce::String(); }
     juce::AudioDeviceManager::AudioDeviceSetup* getDefaultAudioDeviceSetup() const { return nullptr; }
     
-    juce::Colour getBackgroundColor() const { return juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId); } 
+    juce::Colour getBackgroundColor() const
+    {
+        return juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId);
+    }
     
     bool moreThanOneInstanceAllowed() override { return true; }
     void anotherInstanceStarted (const juce::String&) override { }

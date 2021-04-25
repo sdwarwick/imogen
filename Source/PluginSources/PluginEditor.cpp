@@ -23,7 +23,6 @@
 
 
 #include "PluginEditor.h"
-#include "bv_SharedCode/BinaryDataHelpers.h"
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
@@ -71,17 +70,17 @@ void ImogenAudioProcessorEditor::resized()
 
 void ImogenAudioProcessorEditor::sendParameterChange (int paramID, float newValue)
 {
-    imgnProcessor.parameterChangeRecieved (paramID, newValue);
+    imgnProcessor.recieveParameterValueChange (paramID, newValue);
 }
 
 void ImogenAudioProcessorEditor::startParameterChangeGesture (int paramID) 
 {
-    imgnProcessor.parameterChangeGestureStarted (paramID);
+    imgnProcessor.recieveParameterChangeGestureBegin (paramID);
 }
 
 void ImogenAudioProcessorEditor::endParameterChangeGesture   (int paramID) 
 {
-    imgnProcessor.parameterChangeGestureEnded (paramID);
+    imgnProcessor.recieveParameterChangeGestureEnd (paramID);
 }
 
 void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
