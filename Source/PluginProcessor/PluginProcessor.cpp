@@ -22,7 +22,7 @@
 ======================================================================================================================================================*/
 
 
-#include "PluginEditor.h"
+#include "GUI/Holders/Plugin_Editor/PluginEditor.h"
 #include "PluginProcessor.h"
 
 
@@ -115,6 +115,11 @@ void ImogenAudioProcessor::timerCallback()
         
         abletonLink_wasEnabled.store (abletonLink_isEnabled);
     }
+    
+    /* send editor state data...
+     - latest intonation (pitch as string, + num cents sharp/flat)
+     - levels for all level / gain reduction meters
+    */
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

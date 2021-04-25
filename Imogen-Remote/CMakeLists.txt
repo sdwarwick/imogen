@@ -41,12 +41,13 @@ set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/../assets)  # The locatio
 set (ImogenRemote_sourceFiles
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
-    ${guiSourcePath}/ImogenGuiHolder.h
-    ${sourceDir}/Main.cpp
-    ${sourceDir}/MainComponent.h
-    ${sourceDir}/MainComponent.cpp
+    ${guiSourcePath}/Holders/ImogenGuiHolder.h
+	${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.h
+    ${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
-    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp)
+    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
+    ${sourceDir}/Main.cpp
+    ${sourceDir}/OSC_parser.h)
 
 set (ImogenRemote_graphicAssetFiles
     ${Imogen_graphicAssetsDir}/imogen_icon.png)
@@ -173,7 +174,7 @@ target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote_sourceFiles})
 
-target_include_directories (ImogenRemote PRIVATE ${guiSourcePath} ${sourceDir})
+target_include_directories (ImogenRemote PRIVATE ${guiSourcePath} ${guiSourcePath}/Holders ${sourceDir})
 
 target_link_libraries (ImogenRemote PRIVATE bv_SharedCode)
 

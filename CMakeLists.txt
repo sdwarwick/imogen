@@ -30,7 +30,7 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
-set (pluginSourcesDir       ${Imogen_sourceDir}/PluginSources)  # The rest of the source tree (child folders of the main sourceDir specified above)
+set (pluginSourcesDir       ${Imogen_sourceDir}/PluginProcessor)
 set (guiSourcePath          ${Imogen_sourceDir}/GUI)
 
 set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/assets)  # The location of the graphical asset files (images, etc)
@@ -42,15 +42,15 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessorParameters.cpp
     ${pluginSourcesDir}/PluginProcessorState.cpp
     ${pluginSourcesDir}/PluginProcessor.h
-    ${pluginSourcesDir}/PluginEditor.cpp
-    ${pluginSourcesDir}/PluginEditor.h
-    ${guiSourcePath}/ImogenGuiHolder.h
+    ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.cpp
+    ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.h
+    ${guiSourcePath}/Holders/ImogenGuiHolder.h
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
-    ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.h
-    ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.cpp)
+    ${guiSourcePath}/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
+    ${guiSourcePath}/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
 
 set (Imogen_graphicAssetFiles
     ${Imogen_graphicAssetsDir}/imogen_icon.png)

@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "ImogenGUI.h"
+#include "GUI/ImogenGUI.h"
 
 
 class ImogenGuiHolder  :    public ImogenGuiHandle

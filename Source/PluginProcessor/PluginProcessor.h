@@ -28,7 +28,7 @@
 
 #include "../../third-party/ableton-link/include/ableton/Link.hpp"
 
-#include "GUI/ImogenGuiHolder.h"
+#include "GUI/Holders/ImogenGuiHolder.h"
 
 
 class ImogenAudioProcessorEditor; // forward declaration...

@@ -24,7 +24,7 @@
 
 #include "bv_SharedCode/BinaryDataHelpers.h"
 
-#include "ImogenGuiHolder.h"
+#include "Holders/ImogenGuiHolder.h"
 
 
 ImogenGUI::ImogenGUI (ImogenGuiHandle* h): holder(h), tooltipWindow(this, msBeforeTooltip)

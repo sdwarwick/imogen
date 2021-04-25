@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "PluginProcessor.h"
+#include "PluginProcessor/PluginProcessor.h"
 
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
