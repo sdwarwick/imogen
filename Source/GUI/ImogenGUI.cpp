@@ -44,6 +44,8 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): holder(h), tooltipWindow(this, msBefo
     const bool initializeWithDarkMode = juce::Desktop::isOSXDarkModeActive();
     juce::ignoreUnused (initializeWithDarkMode);
 #endif
+    
+    mainDial.showPitchCorrection();
 }
 
 
@@ -64,21 +66,6 @@ void ImogenGUI::resized()
 }
 
 
-void ImogenGUI::changeDialDisplay (bool displayPitchCorrection, int paramID)
-{
-    if (displayPitchCorrection)
-    {
-        
-    }
-    else
-    {
-        
-    }
-    
-    juce::ignoreUnused (paramID);
-}
-
-
 void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
 {
     juce::ignoreUnused (paramID, newValue);
@@ -89,14 +76,13 @@ void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
 
 void ImogenGUI::parameterChangeGestureStarted (int paramID)
 {
-    // update the main dial to show this parameter...
-    juce::ignoreUnused (paramID);
+    mainDial.showParameter (paramID);
 }
 
 void ImogenGUI::parameterChangeGestureEnded (int paramID)
 {
-    // update the main dial to show intonation...
     juce::ignoreUnused (paramID);
+    mainDial.showPitchCorrection();
 }
 
 

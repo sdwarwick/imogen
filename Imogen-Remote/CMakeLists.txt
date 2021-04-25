@@ -42,6 +42,8 @@ set (ImogenRemote_sourceFiles
     ${guiSourcePath}/Holders/ImogenGuiHolder.h
 	${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.h
     ${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.cpp
+    ${guiSourcePath}/MainDialComponent/MainDialComponent.h
+    ${guiSourcePath}/MainDialComponent/MainDialComponent.cpp
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp

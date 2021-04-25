@@ -26,6 +26,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 
 #include "LookAndFeel/ImogenLookAndFeel.h"
+#include "MainDialComponent/MainDialComponent.h"
 
 #include "BinaryData.h"
 
@@ -89,11 +90,13 @@ public:
     //
     
 private:
-    void changeDialDisplay (bool displayPitchCorrection, int paramID);
-    
     juce::Component* getComponentForParameter (int paramID);
     
     inline void makePresetMenu (juce::ComboBox& box);
+    
+    //
+    
+    ImogenDialComponent mainDial;
     
     juce::ComboBox selectPreset;
     

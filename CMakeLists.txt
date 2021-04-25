@@ -47,6 +47,8 @@ set (Imogen_sourceFiles
     ${guiSourcePath}/Holders/ImogenGuiHolder.h
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
+    ${guiSourcePath}/MainDialComponent/MainDialComponent.h
+    ${guiSourcePath}/MainDialComponent/MainDialComponent.cpp
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${guiSourcePath}/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
