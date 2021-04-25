@@ -75,12 +75,16 @@ public:
     
     void abletonLinkChange (bool isNowEnabled) { juce::ignoreUnused (isNowEnabled); }
     
+    //
+    
+    bool keyPressed (const juce::KeyPress& key) override;
+    bool keyStateChanged (bool isKeyDown) override;
+    void modifierKeysChanged (const juce::ModifierKeys& modifiers) override;
+    void focusLost (FocusChangeType cause) override;
+    
+    //
     
 private:
-    
-    // Called to send a parameter change update to the processor from the GUI
-    void sendParameterChange (int paramID, float newValue) { holder->sendParameterChange (paramID, newValue); }
-    
     void changeDialDisplay (bool displayPitchCorrection, int paramID);
     
     juce::Component* getComponentForParameter (int paramID);

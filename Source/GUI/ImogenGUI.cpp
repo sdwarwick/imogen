@@ -123,3 +123,29 @@ juce::Component* ImogenGUI::getComponentForParameter (int paramID)
     juce::ignoreUnused (paramID);
     return nullptr;
 }
+
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+bool ImogenGUI::keyPressed (const juce::KeyPress& key)
+{
+    juce::ignoreUnused (key);
+    return false;
+}
+
+bool ImogenGUI::keyStateChanged (bool isKeyDown)
+{
+    juce::ignoreUnused (isKeyDown);
+    return false;
+}
+
+void ImogenGUI::modifierKeysChanged (const juce::ModifierKeys& modifiers)
+{
+    juce::ignoreUnused (modifiers);
+}
+
+void ImogenGUI::focusLost (FocusChangeType cause)
+{
+    juce::ignoreUnused (cause);
+}

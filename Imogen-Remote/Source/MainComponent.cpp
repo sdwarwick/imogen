@@ -6,6 +6,8 @@ MainComponent::MainComponent()
 {
     this->setBufferedToImage (true);
     
+    addAndMakeVisible (gui());
+    
     setSize (800, 2990);
     
     oscReceiver.addListener (&oscParser);
