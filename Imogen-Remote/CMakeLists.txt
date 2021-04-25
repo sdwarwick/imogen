@@ -30,7 +30,7 @@ message (STATUS "Welcome! I'm going to generate the Imogen Remote IDE project fo
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)
 
-set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
+set (sourceDir ${CMAKE_CURRENT_LIST_DIR}/Remote_Source)
 
 set (guiSourcePath ${Imogen_sourceDir}/GUI)
 
@@ -174,7 +174,7 @@ target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote_sourceFiles})
 
-target_include_directories (ImogenRemote PRIVATE ${guiSourcePath} ${guiSourcePath}/Holders ${sourceDir})
+target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir} ${guiSourcePath}/Holders/Remote_MainComponent)
 
 target_link_libraries (ImogenRemote PRIVATE bv_SharedCode)
 

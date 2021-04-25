@@ -26,7 +26,7 @@
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
-#include "../../third-party/ableton-link/include/ableton/Link.hpp"
+#include <../../third-party/ableton-link/include/ableton/Link.hpp>
 
 #include "GUI/Holders/ImogenGuiHolder.h"
 
