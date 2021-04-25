@@ -56,6 +56,8 @@ public:
     void savePreset   (const juce::String& presetName) override { imgnProcessor.savePreset  (presetName); }
     void deletePreset (const juce::String& presetName) override { imgnProcessor.deletePreset (presetName); }
     
+    void enableAbletonLink (bool shouldBeEnabled) override { imgnProcessor.enableAbletonLink (shouldBeEnabled); }
+    
     
 private:
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor

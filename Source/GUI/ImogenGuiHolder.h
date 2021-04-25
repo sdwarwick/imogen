@@ -17,7 +17,8 @@
  
  @2021 by Ben Vining. All rights reserved.
  
- ImogenRecieverAPI.h: This file defines the API used for communicating change events from an ImogenAudioProcessor object to an ImogenGUI object. The abstraction of this API allows the same GUI code to be used both for the plugin build and the remote app build.
+ ImogenGuiHolder.h: This file defines a class that holds an ImogenGui object and acts as its interface with the outside world.
+    Note that ImogenGuiHolder is an abstract class, because it inherits from ImogenGuiHandle and doesn't implement any of its pure virtual methods.
  
  ======================================================================================================================================================*/
 

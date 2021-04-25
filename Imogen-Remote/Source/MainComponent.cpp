@@ -70,3 +70,9 @@ void MainComponent::deletePreset (const juce::String& presetName)
 {
     juce::ignoreUnused (presetName);
 }
+
+
+void MainComponent::enableAbletonLink (bool shouldBeEnabled)
+{
+    juce::ignoreUnused (shouldBeEnabled);
+}

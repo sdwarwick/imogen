@@ -199,6 +199,8 @@ public:
     
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
     
+    void enableAbletonLink (bool shouldBeEnabled) { juce::ignoreUnused (shouldBeEnabled); }
+    
     int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
     
     

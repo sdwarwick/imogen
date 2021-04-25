@@ -31,6 +31,8 @@ public:
     void savePreset   (const juce::String& presetName) override;
     
     void deletePreset (const juce::String& presetName) override;
+    
+    void enableAbletonLink (bool shouldBeEnabled) override;
 
 
 private:

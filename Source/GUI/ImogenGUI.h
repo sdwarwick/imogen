@@ -33,18 +33,17 @@ struct ImogenGuiHandle
 {
     virtual ~ImogenGuiHandle() = default;
     
-    // called by the GUI to send parameter changes to the processor
-    virtual void sendParameterChange (int paramID, float newValue)=0;
+    virtual void sendParameterChange (int paramID, float newValue) = 0;
     
-    virtual void sendEditorPitchbend (int wheelValue)=0;
+    virtual void sendEditorPitchbend (int wheelValue) = 0;
     
-    //virtual void enableAbletonLink (bool shouldBeEnabled)=0;
+    virtual void sendMidiLatch (bool shouldBeLatched) = 0;
     
-    virtual void sendMidiLatch (bool shouldBeLatched)=0;
+    virtual void loadPreset   (const juce::String& presetName) = 0;
+    virtual void savePreset   (const juce::String& presetName) = 0;
+    virtual void deletePreset (const juce::String& presetName) = 0;
     
-    virtual void loadPreset   (const juce::String& presetName)=0;
-    virtual void savePreset   (const juce::String& presetName)=0;
-    virtual void deletePreset (const juce::String& presetName)=0;
+    virtual void enableAbletonLink (bool shouldBeEnabled) = 0;
 };
 
 
