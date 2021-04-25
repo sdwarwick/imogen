@@ -225,11 +225,11 @@ set_target_properties (Imogen PROPERTIES FOLDER "")  # prevets IDE from generati
 list (APPEND bv_formats "All")
 
 foreach (target ${bv_formats}) 
-        set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
+    set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
 
-        if (NOT TARGET ${thisTargetName})
-            continue()
-        endif()
+    if (NOT TARGET ${thisTargetName})
+        continue()
+    endif()
 	
 	message (STATUS "Configuring ${thisTargetName}...")
     set_target_properties (${thisTargetName} PROPERTIES FOLDER "Build Targets" XCODE_GENERATE_SCHEME ON)
@@ -255,16 +255,14 @@ if (ANDROID)
     target_include_directories (Imogen PRIVATE
         "${ANDROID_NDK}/sources/android/cpufeatures"
         "${OBOE_DIR}/include")
+
+    target_link_libraries (Imogen PUBLIC ${log} ${android} ${glesv2} ${egl} ${cpufeatures_lib} ${oboe_lib})
 endif()
 
 #
 
 if (NOT "${thingsToLinkTo}" STREQUAL "")
 	target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
-endif()
-
-if (ANDROID)
-        target_link_libraries (Imogen PUBLIC ${log} ${android} ${glesv2} ${egl} ${cpufeatures_lib} ${oboe_lib})
 endif()
 
 #
