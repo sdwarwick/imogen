@@ -49,7 +49,7 @@ public:
     void mts_connectionChange (bool isNowConnected);
     void mts_scaleChange (const juce::String& newScaleName);
     
-    void abletonLinkChange (bool isNowEnabled) override { juce::ignoreUnused (isNowEnabled); }
+    void abletonLinkChange (bool isNowEnabled) { juce::ignoreUnused (isNowEnabled); }
     
     
 private:

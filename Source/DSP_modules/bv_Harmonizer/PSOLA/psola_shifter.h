@@ -44,6 +44,8 @@ public:
     {
     //    nextSynthesisPitchMark = std::max(0, nextSynthesisPitchMark - prevBlocksize);
         
+        juce::ignoreUnused (prevBlocksize);
+        
         nextAnalysisPitchMark  = 0;
         nextSynthesisPitchMark = 0;
         
@@ -55,6 +57,8 @@ public:
     {
         for (auto* grain : synthesisGrains)
             grain->stop();
+        
+        juce::ignoreUnused (numSamples);
         
  //       nextSynthesisPitchMark = std::max(0, nextSynthesisPitchMark - numSamples);
     }
@@ -121,6 +125,8 @@ private:
     
     inline void startNewGrain (const int newPeriod, const int origPeriod, AnalysisGrain<SampleType>* lastGrain)
     {
+        juce::ignoreUnused (lastGrain);
+        
         if (auto* newGrain = getAvailableGrain())
         {
  //           auto* analysisGrain = lastGrain == nullptr ? analyzer->findClosestGrain (bufferPos) : analyzer->findBestNewGrain (lastGrain);

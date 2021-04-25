@@ -42,7 +42,7 @@ set (ImogenRemote_sourceFiles
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
     ${guiSourcePath}/GuiHandle.h
-    ${Imogen_sourceDir}/ImogenRecieverAPI.h
+    ${Imogen_sourceDir}/ImogenGuiHolder.h
     ${sourceDir}/Main.cpp
     ${sourceDir}/MainComponent.h
     ${sourceDir}/MainComponent.cpp

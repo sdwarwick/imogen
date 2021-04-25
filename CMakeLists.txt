@@ -38,7 +38,7 @@ set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/assets)  # The location o
 #
 
 set (Imogen_sourceFiles
-	${Imogen_sourceDir}/ImogenRecieverAPI.h
+	${Imogen_sourceDir}/ImogenGuiHolder.h
     ${pluginSourcesDir}/PluginProcessor.cpp
     ${pluginSourcesDir}/PluginProcessorParameters.cpp
     ${pluginSourcesDir}/PluginProcessorState.cpp

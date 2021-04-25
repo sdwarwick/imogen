@@ -26,8 +26,8 @@
 #include "bv_SharedCode/BinaryDataHelpers.h"
 
 
-ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
-    AudioProcessorEditor (&p), gui(this), imgnProcessor(p)
+ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
+    : AudioProcessorEditor (&p), imgnProcessor(p)
 {
     this->setBufferedToImage (true);
     
@@ -61,7 +61,5 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 void ImogenAudioProcessorEditor::resized()
 {
     imgnProcessor.saveEditorSize ({ getWidth(), getHeight() });
-    
-    gui.setBounds (0, 0, getWidth(), getHeight());
 }
 

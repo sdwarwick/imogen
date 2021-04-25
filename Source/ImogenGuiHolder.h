@@ -24,25 +24,43 @@
 
 #pragma once
 
+#include "GUI/ImogenGUI.h"
 
-struct ImogenParameterReciever
+
+class ImogenGuiHolder :     public ImogenGuiHandle
 {
-    ImogenParameterReciever() = default;
+public:
+    ImogenGuiHolder(): gui(this) { }
     
-    virtual ~ImogenParameterReciever() = default;
+    virtual ~ImogenGuiHolder() = default;
     
     //
     
-    virtual void recieveParameterChange (int paramID, float newValue) = 0;
+    virtual void sendParameterChange (int paramID, float newValue) = 0;
     
-    virtual void parameterDefaultsUpdated() = 0;
+    virtual void sendEditorPitchbend (int wheelValue) = 0;
     
-    virtual void mts_connectionChange (bool isNowConnected) = 0;
+    virtual void sendMidiLatch (bool shouldBeLatched) = 0;
     
-    virtual void mts_scaleChange (const juce::String& newScaleName) = 0;
+    virtual void loadPreset   (const juce::String& presetName) = 0;
+    virtual void savePreset   (const juce::String& presetName) = 0;
+    virtual void deletePreset (const juce::String& presetName) = 0;
     
-    virtual void presetNameChange (const juce::String& newPresetName) = 0;
+    //
     
-    virtual void abletonLinkChange (bool isNowEnabled) = 0;
+    void recieveParameterChange (int paramID, float newValue) { gui.parameterChangeRecieved (paramID, newValue); }
+    
+    void parameterDefaultsUpdated() { gui.updateParameterDefaults(); }
+    
+    void presetNameChange (const juce::String& newPresetName) { juce::ignoreUnused (newPresetName); }
+    
+    void mts_connectionChange (bool isNowConnected) { juce::ignoreUnused (isNowConnected); }
+    void mts_scaleChange (const juce::String& newScaleName) { juce::ignoreUnused (newScaleName); }
+    
+    void abletonLinkChange (bool isNowEnabled) { juce::ignoreUnused (isNowEnabled); }
+    
+    //
+    
+private:
+    ImogenGUI gui;
 };
-

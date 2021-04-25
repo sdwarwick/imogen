@@ -28,7 +28,7 @@
 
 #include "../../third-party/ableton-link/include/ableton/Link.hpp"
 
-#include "ImogenRecieverAPI.h"
+#include "ImogenGuiHolder.h"
 
 
 class ImogenAudioProcessorEditor; // forward declaration...
@@ -127,7 +127,7 @@ public:
         currentProgram.store (-1);
         
         if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenParameterReciever*>(activeEditor)->recieveParameterChange (paramID, newValue);
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChange (paramID, newValue);
         
         if (oscMapper.areOscMessagesEnabled())
         {

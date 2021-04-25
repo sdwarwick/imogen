@@ -73,7 +73,7 @@ void ImogenAudioProcessor::timerCallback()
     if (parameterDefaultsAreDirty.load())
     {
         if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenParameterReciever*>(activeEditor)->parameterDefaultsUpdated();
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->parameterDefaultsUpdated();
         
         parameterDefaultsAreDirty.store (false);
     }
@@ -82,7 +82,7 @@ void ImogenAudioProcessor::timerCallback()
     if (mts_isConnected != mts_wasConnected.load())
     {
         if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenParameterReciever*>(activeEditor)->mts_connectionChange (mts_isConnected);
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->mts_connectionChange (mts_isConnected);
         
         mts_wasConnected.store (mts_isConnected);
     }
@@ -91,7 +91,7 @@ void ImogenAudioProcessor::timerCallback()
     if (scaleName != mts_lastScaleName)
     {
         if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenParameterReciever*>(activeEditor)->mts_scaleChange (scaleName);
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->mts_scaleChange (scaleName);
         
         mts_lastScaleName = scaleName;
     }
@@ -100,7 +100,7 @@ void ImogenAudioProcessor::timerCallback()
     if (presetName != lastPresetName)
     {
         if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenParameterReciever*>(activeEditor)->presetNameChange (presetName);
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->presetNameChange (presetName);
         
         lastPresetName = presetName;
     }
@@ -109,7 +109,7 @@ void ImogenAudioProcessor::timerCallback()
     if (abletonLink_isEnabled != abletonLink_wasEnabled.load())
     {
         if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenParameterReciever*>(activeEditor)->abletonLinkChange (abletonLink_isEnabled);
+            dynamic_cast<ImogenGuiHolder*>(activeEditor)->abletonLinkChange (abletonLink_isEnabled);
         
         abletonLink_wasEnabled.store (abletonLink_isEnabled);
     }
