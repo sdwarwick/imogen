@@ -1,4 +1,4 @@
-name: Imogen all build
+name: Imogen_all_build
 
 on:
   workflow_dispatch:
