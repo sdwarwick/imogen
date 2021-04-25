@@ -41,7 +41,7 @@ set (ImogenRemote_sourceFiles
     ${guiSourcePath}/ImogenGUI.cpp
     ${guiSourcePath}/Holders/ImogenGuiHolder.h
 	${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.h
-    ${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.h
+    ${guiSourcePath}/Holders/Remote_MainComponent/MainComponent.cpp
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp
