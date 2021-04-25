@@ -83,7 +83,7 @@ jobs:
         
     - name: Run main build script
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/scripts/imogenRemote_build_desktop.sh
+      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_desktop.sh
       
       
   remote-ios-build:
@@ -100,6 +100,6 @@ jobs:
         
     - name: Run iOS build script
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/scripts/imogenRemote_build_iOS.sh 
+      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_iOS.sh 
    
 #
