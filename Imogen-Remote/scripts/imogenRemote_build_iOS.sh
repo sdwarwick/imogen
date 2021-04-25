@@ -97,12 +97,12 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -B Builds/ios_Build -GXcode -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=9.3 -Dbv_formats=Standalone .
+cmake -B Builds/ios_Build -GXcode -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=9.3 .
 
 
 # execute build
 printf "\n \t \v Building ImogenRemote... \n \n"
-cmake --build Builds/ios_Build --target ImogenRemote_Standalone --config Release -- -sdk iphonesimulator -allowProvisioningUpdates
+cmake --build Builds/ios_Build --target ImogenRemote --config Release -- -sdk iphonesimulator -allowProvisioningUpdates
 
 
 printf "\n \t \v ImogenRemote built successfully!"
