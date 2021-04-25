@@ -49,10 +49,71 @@ ImogenAudioProcessor::ImogenAudioProcessor():
         initialize (floatEngine);
     
     rescanPresetsFolder();
+    
+    mts_wasConnected.store (isConnectedToMtsEsp());
+    mts_lastScaleName = getScaleName();
+    
+    lastPresetName = getActivePresetName();
+    
+    abletonLink_wasEnabled.store (isAbletonLinkEnabled());
+    
+    constexpr int timerFramerate = 30;
+    Timer::startTimerHz (timerFramerate);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
-{ }
+{
+    Timer::stopTimer();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void ImogenAudioProcessor::timerCallback()
+{
+    if (parameterDefaultsAreDirty.load())
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenParameterReciever*>(activeEditor)->parameterDefaultsUpdated();
+        
+        parameterDefaultsAreDirty.store (false);
+    }
+    
+    const auto mts_isConnected = isConnectedToMtsEsp();
+    if (mts_isConnected != mts_wasConnected.load())
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenParameterReciever*>(activeEditor)->mts_connectionChange (mts_isConnected);
+        
+        mts_wasConnected.store (mts_isConnected);
+    }
+    
+    const auto scaleName = getScaleName();
+    if (scaleName != mts_lastScaleName)
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenParameterReciever*>(activeEditor)->mts_scaleChange (scaleName);
+        
+        mts_lastScaleName = scaleName;
+    }
+    
+    const auto presetName = getActivePresetName();
+    if (presetName != lastPresetName)
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenParameterReciever*>(activeEditor)->presetNameChange (presetName);
+        
+        lastPresetName = presetName;
+    }
+    
+    const auto abletonLink_isEnabled = isAbletonLinkEnabled();
+    if (abletonLink_isEnabled != abletonLink_wasEnabled.load())
+    {
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenParameterReciever*>(activeEditor)->abletonLinkChange (abletonLink_isEnabled);
+        
+        abletonLink_wasEnabled.store (abletonLink_isEnabled);
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -31,8 +31,7 @@
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public ImogenGuiHandle,
-                                    public ImogenParameterReciever,
-                                    public juce::Timer
+                                    public ImogenParameterReciever
 {
     using ids = ImogenAudioProcessor::parameterID;
     using event = ImogenAudioProcessor::eventID;
@@ -46,8 +45,6 @@ public:
     
     void paint (juce::Graphics&) override;
     void resized() override;
-    
-    void timerCallback() override;
     
     void sendParameterChange (int paramID, float newValue) override
     {
@@ -69,15 +66,25 @@ public:
         gui.parameterChangeRecieved (paramID, newValue);
     }
     
+    void parameterDefaultsUpdated() override
+    {
+        gui.updateParameterDefaults();
+    }
+    
     void loadPreset   (const juce::String& presetName) override { imgnProcessor.loadPreset (presetName); }
     void savePreset   (const juce::String& presetName) override { imgnProcessor.savePreset  (presetName); }
     void deletePreset (const juce::String& presetName) override { imgnProcessor.deletePreset (presetName); }
     
+    void presetNameChange (const juce::String& newPresetName) override { juce::ignoreUnused (newPresetName); }
+    
+    void mts_connectionChange (bool isNowConnected) override { juce::ignoreUnused (isNowConnected); }
+    void mts_scaleChange (const juce::String& newScaleName) override { juce::ignoreUnused (newScaleName); }
+    
+    void abletonLinkChange (bool isNowEnabled) override { juce::ignoreUnused (isNowEnabled); }
+    
     
     
 private:
-    
-    void updateParameterDefaults();
     
     ImogenGUI gui;
     

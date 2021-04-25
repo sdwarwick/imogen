@@ -239,3 +239,13 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
     }
 }
 
+
+juce::String ImogenAudioProcessor::getActivePresetName()
+{
+    const auto program = currentProgram.load();
+    
+    if (program == -1)
+        return {};
+    
+    return getProgramName (program);
+}

@@ -40,16 +40,24 @@ struct ImogenParameterReciever
     ImogenParameterReciever() = default;
     virtual ~ImogenParameterReciever() = default;
     
-    virtual void recieveParameterChange (int paramID, float newValue)
-    {
-        juce::ignoreUnused (paramID, newValue);
-    }
+    virtual void recieveParameterChange (int paramID, float newValue) { juce::ignoreUnused (paramID, newValue); }
+    
+    virtual void parameterDefaultsUpdated() { }
+    
+    virtual void mts_connectionChange (bool isNowConnected) { juce::ignoreUnused (isNowConnected); }
+    
+    virtual void mts_scaleChange (const juce::String& newScaleName) { juce::ignoreUnused (newScaleName); }
+    
+    virtual void presetNameChange (const juce::String& newPresetName) { juce::ignoreUnused (newPresetName); }
+    
+    virtual void abletonLinkChange (bool isNowEnabled) { juce::ignoreUnused (isNowEnabled); }
 };
 
 /*
 */
 
-class ImogenAudioProcessor    : public juce::AudioProcessor
+class ImogenAudioProcessor    : public juce::AudioProcessor,
+                                private juce::Timer
 {
     using Parameter      = bav::Parameter;
     using FloatParameter = bav::FloatParameter;
@@ -64,6 +72,8 @@ class ImogenAudioProcessor    : public juce::AudioProcessor
 public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
+    
+    void timerCallback() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     
@@ -155,9 +165,6 @@ public:
         pitchBendFromEditor
     };
     
-    // tracks whether the processor has updated its parameter defaults since the last time this function was called
-    bool hasUpdatedParamDefaults();
-    
     double getTailLengthSeconds() const override;
     
     void getStateInformation (juce::MemoryBlock& destData) override;
@@ -176,6 +183,8 @@ public:
     const juce::String getProgramName (int index) override;
     int indexOfProgram (const juce::String& name) const;
     void changeProgramName (int index, const juce::String& newName) override;
+    
+    juce::String getActivePresetName();
     
     bool acceptsMidi()  const override { return true;  }
     bool producesMidi() const override { return true;  }
@@ -352,6 +361,13 @@ private:
     juce::Array<juce::File> availablePresets;
     
     std::atomic<int> currentProgram;  // stores the current "program" number. -1 if no preset is active.
+    
+    std::atomic<bool> mts_wasConnected;
+    juce::String mts_lastScaleName;
+    
+    juce::String lastPresetName;
+    
+    std::atomic<bool> abletonLink_wasEnabled;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

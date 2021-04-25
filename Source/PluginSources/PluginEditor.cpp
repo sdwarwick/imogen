@@ -26,9 +26,6 @@
 #include "bv_SharedCode/BinaryDataHelpers.h"
 
 
-#define bvi_GRAPHICS_FRAMERATE_HZ 60
-
-
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p):
     AudioProcessorEditor (&p), gui(this), imgnProcessor(p)
 {
@@ -42,17 +39,12 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 #if JUCE_OPENGL
     openGLContext.attachTo (*getTopLevelComponent());
 #endif
-    
-    Timer::startTimerHz (bvi_GRAPHICS_FRAMERATE_HZ);
 }
-
-#undef bvi_GRAPHICS_FRAMERATE_HZ
 
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
     this->setLookAndFeel(nullptr);
-    Timer::stopTimer();
     
 #if JUCE_OPENGL
     openGLContext.detach();
@@ -73,16 +65,3 @@ void ImogenAudioProcessorEditor::resized()
     gui.setBounds (0, 0, getWidth(), getHeight());
 }
 
-
-
-void ImogenAudioProcessorEditor::timerCallback()
-{
-    if (imgnProcessor.hasUpdatedParamDefaults())
-        gui.updateParameterDefaults();
-}
-
-
-void ImogenAudioProcessorEditor::updateParameterDefaults()
-{
-    
-}

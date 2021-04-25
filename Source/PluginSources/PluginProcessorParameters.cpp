@@ -665,15 +665,3 @@ void ImogenAudioProcessor::updateParameterDefaults()
     
     parameterDefaultsAreDirty.store (true);
 }
-
-// Tracks whether or not the processor has updated its default parameter values since the last call to this function.
-bool ImogenAudioProcessor::hasUpdatedParamDefaults()
-{
-    if (parameterDefaultsAreDirty.load())
-    {
-        parameterDefaultsAreDirty.store (false);
-        return true;
-    }
-    
-    return false;
-}

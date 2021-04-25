@@ -26,19 +26,20 @@
 #include "GuiHandle.h"
 
 
-class RemoteGuiHandler :    public ImogenGuiHandle
+class RemoteGuiHandler :    public ImogenGuiHandle,
+                            public ImogenParameterReciever
 {
 public:
     RemoteGuiHandler() = default;
     
     void sendParameterChange (int paramID, float newValue) override
     {
-        imgnProcessor.parameterChangeRecieved (paramID, newValue);
+        juce::ignoreUnused (paramID, newValue);
     }
     
     void sendEditorPitchbend (int wheelValue) override
     {
-        imgnProcessor.editorPitchbend (wheelValue);
+        juce::ignoreUnused (wheelValue);
     }
     
     void sendMidiLatch (bool shouldBeLatched) override
@@ -46,10 +47,28 @@ public:
         juce::ignoreUnused (shouldBeLatched);
     }
     
-    void loadPreset   (const juce::String& presetName) override { imgnProcessor.loadPreset (presetName); }
-    void savePreset   (const juce::String& presetName) override { imgnProcessor.savePreset  (presetName); }
-    void deletePreset (const juce::String& presetName) override { imgnProcessor.deletePreset (presetName); }
+    void recieveParameterChange (int paramID, float newValue) override
+    {
+        gui.parameterChangeRecieved (paramID, newValue);
+    }
+    
+    void parameterDefaultsUpdated() override
+    {
+        gui.updateParameterDefaults();
+    }
+    
+    void loadPreset   (const juce::String& presetName) override { juce::ignoreUnused (presetName); }
+    void savePreset   (const juce::String& presetName) override { juce::ignoreUnused (presetName); }
+    void deletePreset (const juce::String& presetName) override { juce::ignoreUnused (presetName); }
+    
+    void presetNameChange (const juce::String& newPresetName) override { juce::ignoreUnused (newPresetName); }
+    
+    void mts_connectionChange (bool isNowConnected) override { juce::ignoreUnused (isNowConnected); }
+    void mts_scaleChange (const juce::String& newScaleName) override { juce::ignoreUnused (newScaleName); }
+    
+    void abletonLinkChange (bool isNowEnabled) override { juce::ignoreUnused (isNowEnabled); }
+    
     
 private:
-    
+    ImogenGUI gui;
 };
