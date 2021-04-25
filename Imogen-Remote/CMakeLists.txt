@@ -37,6 +37,7 @@ set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/../assets)  # The locatio
 #
 
 set (ImogenRemote_sourceFiles
+	${Imogen_sourceDir}/ImogenCommon.h
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
     ${guiSourcePath}/Holders/ImogenGuiHolder.h

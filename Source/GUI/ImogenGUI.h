@@ -90,8 +90,6 @@ public:
     //
     
 private:
-    juce::Component* getComponentForParameter (int paramID);
-    
     inline void makePresetMenu (juce::ComboBox& box);
     
     //

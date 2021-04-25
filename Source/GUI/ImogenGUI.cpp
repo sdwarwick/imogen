@@ -37,6 +37,7 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): holder(h), tooltipWindow(this, msBefo
     selectPreset.onChange = [this] { holder->loadPreset (selectPreset.getText()); };
     
     //addAndMakeVisible(selectPreset);
+    addAndMakeVisible (mainDial);
     
     setSize (940, 435);
   
@@ -62,7 +63,8 @@ void ImogenGUI::paint (juce::Graphics& g)
 
 void ImogenGUI::resized()
 {
-    //selectPreset.setBounds(x, y, w, h);
+    //selectPreset.setBounds (x, y, w, h);
+    //mainDial.setBounds (x, y, w, h);
 }
 
 
@@ -121,13 +123,6 @@ void ImogenGUI::mts_scaleChange (const juce::String& newScaleName)
 void ImogenGUI::updateParameterDefaults()
 {
     
-}
-
-
-juce::Component* ImogenGUI::getComponentForParameter (int paramID)
-{
-    juce::ignoreUnused (paramID);
-    return nullptr;
 }
 
 
