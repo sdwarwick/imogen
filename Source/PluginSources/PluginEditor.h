@@ -31,6 +31,7 @@
 
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public ImogenGuiHandle,
+                                    public ImogenParameterReciever,
                                     public juce::Timer
 {
     using ids = ImogenAudioProcessor::parameterID;
@@ -48,7 +49,30 @@ public:
     
     void timerCallback() override;
     
-    void loadPreset (juce::String presetName) override { imgnProcessor.loadPreset (presetName); }
+    void sendParameterChange (int paramID, float newValue) override
+    {
+        imgnProcessor.parameterChangeRecieved (paramID, newValue);
+    }
+    
+    void sendEditorPitchbend (int wheelValue) override
+    {
+        imgnProcessor.editorPitchbend (wheelValue);
+    }
+    
+    void sendMidiLatch (bool shouldBeLatched) override
+    {
+        juce::ignoreUnused (shouldBeLatched);
+    }
+    
+    void recieveParameterChange (int paramID, float newValue) override
+    {
+        gui.parameterChangeRecieved (paramID, newValue);
+    }
+    
+    void loadPreset   (const juce::String& presetName) override { imgnProcessor.loadPreset (presetName); }
+    void savePreset   (const juce::String& presetName) override { imgnProcessor.savePreset  (presetName); }
+    void deletePreset (const juce::String& presetName) override { imgnProcessor.deletePreset (presetName); }
+    
     
     
 private:

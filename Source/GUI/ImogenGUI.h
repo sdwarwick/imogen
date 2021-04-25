@@ -39,10 +39,17 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
+    // Called to update the GUI when a parameter change is recieved from the processor
+    void parameterChangeRecieved (int paramID, float newValue) { juce::ignoreUnused (paramID, newValue); }
+    
+    // Called when the processor has updated its parameter defaults (ie, loaded a new preset, etc)
     void updateParameterDefaults();
     
     
 private:
+    
+    // Called to send a parameter change update to the processor from the GUI
+    void sendParameterChange (int paramID, float newValue) { handle->sendParameterChange (paramID, newValue); }
     
     inline void makePresetMenu (juce::ComboBox& box);
     

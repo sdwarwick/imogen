@@ -334,7 +334,7 @@ void ImogenAudioProcessor::initializeParameterListeners()
 void ImogenAudioProcessor::addParameterMessenger (parameterID paramID)
 {
     auto* param = getParameterPntr (paramID);
-    auto& messenger { parameterMessengers.emplace_back (ParameterMessenger (paramChanges, param, paramID)) };
+    auto& messenger { parameterMessengers.emplace_back (ParameterMessenger (*this, paramChanges, param, paramID)) };
     tree.addParameterListener (param->orig()->paramID, &messenger);
 }
 

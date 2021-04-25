@@ -31,7 +31,24 @@ class RemoteGuiHandler :    public ImogenGuiHandle
 public:
     RemoteGuiHandler() = default;
     
-    void loadPreset (juce::String presetName) override { juce::ignoreUnused (presetName); }
+    void sendParameterChange (int paramID, float newValue) override
+    {
+        imgnProcessor.parameterChangeRecieved (paramID, newValue);
+    }
+    
+    void sendEditorPitchbend (int wheelValue) override
+    {
+        imgnProcessor.editorPitchbend (wheelValue);
+    }
+    
+    void sendMidiLatch (bool shouldBeLatched) override
+    {
+        juce::ignoreUnused (shouldBeLatched);
+    }
+    
+    void loadPreset   (const juce::String& presetName) override { imgnProcessor.loadPreset (presetName); }
+    void savePreset   (const juce::String& presetName) override { imgnProcessor.savePreset  (presetName); }
+    void deletePreset (const juce::String& presetName) override { imgnProcessor.deletePreset (presetName); }
     
 private:
     

@@ -31,7 +31,23 @@
 
 class ImogenAudioProcessorEditor; // forward declaration...
 
-///////////
+/*
+*/
+
+// simple interface for anything that wants to recieve a callback when a parameter is changed
+struct ImogenParameterReciever
+{
+    ImogenParameterReciever() = default;
+    virtual ~ImogenParameterReciever() = default;
+    
+    virtual void recieveParameterChange (int paramID, float newValue)
+    {
+        juce::ignoreUnused (paramID, newValue);
+    }
+};
+
+/*
+*/
 
 class ImogenAudioProcessor    : public juce::AudioProcessor
 {
@@ -107,6 +123,27 @@ public:
         reverbLoCutID,
         reverbHiCutID
     };
+    
+    
+    // this function is used by the editor to inform the processor of GUI parameter changes
+    void parameterChangeRecieved (int paramID, float newValue)
+    {
+        getParameterPntr (parameterID(paramID))->orig()->setValueNotifyingHost (newValue);
+    }
+    
+    // this function informs the editor of new parameter changes
+    void sendParameterChange (int paramID, float newValue)
+    {
+        currentProgram.store (-1);
+        
+        if (auto* activeEditor = getActiveEditor())
+            dynamic_cast<ImogenParameterReciever*>(activeEditor)->recieveParameterChange (paramID, newValue);
+        
+        if (oscMapper.areOscMessagesEnabled())
+        {
+            // send param change as OSC message to any recievers...
+        }
+    }
  
     static constexpr int numParams = reverbHiCutID + 1;
     
@@ -129,7 +166,7 @@ public:
     void savePreset  (juce::String presetName);
     bool loadPreset  (juce::String presetName);
     void deletePreset(juce::String presetName);
-    juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
+    inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
     
     juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
     
@@ -275,10 +312,11 @@ private:
     class ParameterMessenger :  public juce::AudioProcessorValueTreeState::Listener
     {
         using MsgQ = bav::MessageQueue<msgQueueSize>;
+        using Processor = ImogenAudioProcessor;
         
     public:
-        ParameterMessenger(MsgQ& queue, bav::Parameter* p, int paramIDtoListen)
-            : q(queue), param(p), paramID(paramIDtoListen)
+        ParameterMessenger(Processor& pcsr, MsgQ& queue, bav::Parameter* p, int paramIDtoListen)
+            : processor(pcsr), q(queue), param(p), paramID(paramIDtoListen)
         {
             jassert (param != nullptr);
         }
@@ -289,9 +327,11 @@ private:
             value = param->normalize(value);
             jassert (value >= 0.0f && value <= 1.0f);
             q.pushMessage (paramID, value);  // the message will store a normalized value
+            processor.sendParameterChange (paramID, value);
         }
         
     private:
+        Processor& processor;
         MsgQ& q;
         bav::Parameter* const param;
         const int paramID;
@@ -312,30 +352,6 @@ private:
     juce::Array<juce::File> availablePresets;
     
     std::atomic<int> currentProgram;  // stores the current "program" number. -1 if no preset is active.
-    
-    
-    struct ParameterChangeUpdater :  public juce::AudioProcessorListener
-    {
-        ParameterChangeUpdater(ImogenAudioProcessor* p): processor(p) { }
-        
-        void audioProcessorChanged (juce::AudioProcessor* p,
-                                    const juce::AudioProcessorListener::ChangeDetails& details) override
-        {
-            juce::ignoreUnused (p, details);
-        }
-        
-        void audioProcessorParameterChanged (juce::AudioProcessor* p, int parameterIndex, float newValue) override
-        {
-            juce::ignoreUnused (p, parameterIndex, newValue);
-            processor->currentProgram.store (-1);
-        }
-        
-        ImogenAudioProcessor* processor;
-    };
-    
-    friend ParameterChangeUpdater;
-    
-    ParameterChangeUpdater parameterChangeUpdater;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
