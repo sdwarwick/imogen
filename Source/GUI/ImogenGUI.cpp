@@ -66,6 +66,14 @@ void ImogenGUI::resized()
 }
 
 
+void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
+{
+    juce::ignoreUnused (paramID, newValue);
+    
+    // getComponentForParameter (paramID) ...
+}
+
+
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
     juce::ignoreUnused (box);
@@ -75,4 +83,11 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 void ImogenGUI::updateParameterDefaults()
 {
     
+}
+
+
+juce::Component* ImogenGUI::getComponentForParameter (int paramID)
+{
+    juce::ignoreUnused (paramID);
+    return nullptr;
 }
