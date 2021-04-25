@@ -17,7 +17,7 @@ public:
         juce::PluginHostType::jucePlugInClientCurrentWrapperType = juce::AudioProcessor::wrapperType_Standalone;
     }
 
-    const juce::String getApplicationName() override       { return { "ImogenRemote" }; }
+    const juce::String getApplicationName() override       { return juce::String("Imogen ") + TRANS("Remote"); }
     const juce::String getApplicationVersion() override    { return { "0.0.1" }; }
     bool moreThanOneInstanceAllowed() override             { return true; }
 

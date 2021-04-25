@@ -97,7 +97,15 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 
 void ImogenGUI::presetNameChanged (const juce::String& newPresetName)
 {
-    juce::ignoreUnused (newPresetName);
+    if (newPresetName.isEmpty())
+    {
+        
+    }
+    else
+    {
+        const auto displayName = TRANS(newPresetName);
+        juce::ignoreUnused (displayName);
+    }
 }
 
 
@@ -108,7 +116,8 @@ void ImogenGUI::mts_connectionChange (bool isNowConnected)
 
 void ImogenGUI::mts_scaleChange (const juce::String& newScaleName)
 {
-    juce::ignoreUnused (newScaleName);
+    const auto displayName = TRANS(newScaleName);
+    juce::ignoreUnused (displayName);
 }
 
 

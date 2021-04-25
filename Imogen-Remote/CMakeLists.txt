@@ -46,9 +46,7 @@ set (ImogenRemote_sourceFiles
     ${sourceDir}/MainComponent.h
     ${sourceDir}/MainComponent.cpp
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
-    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
-    ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.h
-    ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.cpp)
+    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp)
 
 set (ImogenRemote_graphicAssetFiles
     ${Imogen_graphicAssetsDir}/imogen_icon.png)
