@@ -1,0 +1,53 @@
+name: remote_app_build
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+jobs:
+
+  desktop-build:
+    name: ${{ matrix.artifact }} build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+        - os: windows-latest
+          artifact: Windows
+        - os: ubuntu-latest
+          artifact: Linux
+        - os: macos-latest
+          artifact: MacOS
+       
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        path: imogen
+        
+    - name: Run main build script
+      shell: bash
+      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/scripts/imogenRemote_build_desktop.sh
+      
+      
+  ios-build:
+    name: iOS build
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        path: imogen
+        
+    - name: Run iOS build script
+      shell: bash
+      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/scripts/imogenRemote_build_iOS.sh
