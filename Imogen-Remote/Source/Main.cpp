@@ -1,15 +1,21 @@
 
+#include <juce_audio_plugin_client/juce_audio_plugin_client.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 
-#include <juce_gui_extra/juce_gui_extra.h>
+#include "BinaryData.h"
 
 #include "MainComponent.h"
+
 
 //==============================================================================
 class ImogenRemoteApplication  : public juce::JUCEApplication
 {
 public:
     //==============================================================================
-    ImogenRemoteApplication() {}
+    ImogenRemoteApplication()
+    {
+        juce::PluginHostType::jucePlugInClientCurrentWrapperType = juce::AudioProcessor::wrapperType_Standalone;
+    }
 
     const juce::String getApplicationName() override       { return { "ImogenRemote" }; }
     const juce::String getApplicationVersion() override    { return { "0.0.1" }; }
@@ -18,33 +24,82 @@ public:
     //==============================================================================
     void initialise (const juce::String& commandLine) override
     {
-        // This method is where you should put your application's initialisation code..
+        juce::ignoreUnused (commandLine);
+        
+        auto window = new MainWindow (getApplicationName());
+        
+        window->setTitleBarTextCentred (true);
+        window->setUsingNativeTitleBar (false);
+        
+        window->setIcon (juce::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize));
+        
+        if (! isMobileApp())
+            window->setDropShadowEnabled (true);
 
-        mainWindow.reset (new MainWindow (getApplicationName()));
+        mainWindow.reset (window);
     }
 
     void shutdown() override
     {
-        // Add your application's shutdown code here..
-
-        mainWindow = nullptr; // (deletes our window)
+        mainWindow = nullptr;
     }
 
     //==============================================================================
     void systemRequestedQuit() override
     {
-        // This is called when the app is being asked to quit: you can ignore this
-        // request and let the app carry on running, or call quit() to allow the app to close.
-        quit();
+        if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
+            juce::Timer::callAfterDelay(100, [&]() { requestQuit(); });
+        else
+            quit();
+    }
+    
+    void requestQuit() const
+    {
+        if (auto app = getInstance())
+            app->systemRequestedQuit();
     }
 
     void anotherInstanceStarted (const juce::String& commandLine) override
     {
-        // When another instance of the app is launched while this one is running,
-        // this method is invoked, and the commandLine parameter tells you what
-        // the other instance's command-line arguments were.
+        juce::ignoreUnused (commandLine);
+    }
+    
+    //==============================================================================
+    
+    bool backButtonPressed() override
+    {
+        return false;
+    }
+    
+    //==============================================================================
+    
+    void suspended() override
+    {
+        
+    }
+    
+    void resumed() override
+    {
+        
+    }
+    
+    //==============================================================================
+    
+    static bool isDesktopStandaloneApp()
+    {
+#if JUCE_IOS || JUCE_ANDROID
+        return false;
+#else
+        return true;
+#endif
+    }
+    
+    static bool isMobileApp()
+    {
+        return ! isDesktopStandaloneApp();
     }
 
+    
     //==============================================================================
     /*
         This class implements the desktop window that contains an instance of
@@ -74,18 +129,8 @@ public:
 
         void closeButtonPressed() override
         {
-            // This is called when the user tries to close this window. Here, we'll just
-            // ask the app to quit when this happens, but you can change this to do
-            // whatever you need.
             JUCEApplication::getInstance()->systemRequestedQuit();
         }
-
-        /* Note: Be careful if you override any DocumentWindow methods - the base
-           class uses a lot of them, so by overriding you might break its functionality.
-           It's best to do all your work in your content component instead, but if
-           you really have to override any DocumentWindow methods, make sure your
-           subclass also calls the superclass's method.
-        */
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
@@ -94,6 +139,7 @@ public:
 private:
     std::unique_ptr<MainWindow> mainWindow;
 };
+
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
