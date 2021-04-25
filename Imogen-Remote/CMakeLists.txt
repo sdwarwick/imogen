@@ -174,7 +174,7 @@ target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote_sourceFiles})
 
-target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir} ${guiSourcePath}/Holders/Remote_MainComponent)
+target_include_directories (ImogenRemote PRIVATE ${CMAKE_CURRENT_LIST_DIR}/..)
 
 target_link_libraries (ImogenRemote PRIVATE bv_SharedCode)
 
