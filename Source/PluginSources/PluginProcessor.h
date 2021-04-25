@@ -121,6 +121,16 @@ public:
         getParameterPntr (parameterID(paramID))->orig()->setValueNotifyingHost (newValue);
     }
     
+    void parameterChangeGestureStarted (int paramID)
+    {
+        getParameterPntr (parameterID(paramID))->orig()->beginChangeGesture();
+    }
+    
+    void parameterChangeGestureEnded (int paramID)
+    {
+        getParameterPntr (parameterID(paramID))->orig()->endChangeGesture();
+    }
+    
     // this function informs the editor of new parameter changes
     void sendParameterChange (int paramID, float newValue)
     {

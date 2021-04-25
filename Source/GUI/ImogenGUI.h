@@ -34,6 +34,8 @@ struct ImogenGuiHandle
     virtual ~ImogenGuiHandle() = default;
     
     virtual void sendParameterChange (int paramID, float newValue) = 0;
+    virtual void startParameterChangeGesture (int paramID) = 0;
+    virtual void endParameterChangeGesture (int paramID) = 0;
     
     virtual void sendEditorPitchbend (int wheelValue) = 0;
     

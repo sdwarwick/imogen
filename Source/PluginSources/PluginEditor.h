@@ -40,23 +40,23 @@ public:
     
     ~ImogenAudioProcessorEditor() override;
     
-    void paint (juce::Graphics&) override;
-    void resized() override;
+    void paint (juce::Graphics&) override final;
+    void resized() override final;
     
-    void sendParameterChange (int paramID, float newValue) override { imgnProcessor.parameterChangeRecieved (paramID, newValue); }
+    void sendParameterChange (int paramID, float newValue) override final;
     
-    void sendEditorPitchbend (int wheelValue) override { imgnProcessor.editorPitchbend (wheelValue); }
+    void startParameterChangeGesture (int paramID) override final;
+    void endParameterChangeGesture   (int paramID) override final;
     
-    void sendMidiLatch (bool shouldBeLatched) override
-    {
-        juce::ignoreUnused (shouldBeLatched);
-    }
+    void sendEditorPitchbend (int wheelValue) override final;
     
-    void loadPreset   (const juce::String& presetName) override { imgnProcessor.loadPreset (presetName); }
-    void savePreset   (const juce::String& presetName) override { imgnProcessor.savePreset  (presetName); }
-    void deletePreset (const juce::String& presetName) override { imgnProcessor.deletePreset (presetName); }
+    void sendMidiLatch (bool shouldBeLatched) override final;
     
-    void enableAbletonLink (bool shouldBeEnabled) override { imgnProcessor.enableAbletonLink (shouldBeEnabled); }
+    void loadPreset   (const juce::String& presetName) override final;
+    void savePreset   (const juce::String& presetName) override final;
+    void deletePreset (const juce::String& presetName) override final;
+    
+    void enableAbletonLink (bool shouldBeEnabled) override final;
     
     
 private:

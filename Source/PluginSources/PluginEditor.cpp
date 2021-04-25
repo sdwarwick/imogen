@@ -63,3 +63,51 @@ void ImogenAudioProcessorEditor::resized()
     gui()->setBounds (0, 0, getWidth(), getHeight());
 }
 
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+void ImogenAudioProcessorEditor::sendParameterChange (int paramID, float newValue)
+{
+    imgnProcessor.parameterChangeRecieved (paramID, newValue);
+}
+
+void ImogenAudioProcessorEditor::startParameterChangeGesture (int paramID) 
+{
+    imgnProcessor.parameterChangeGestureStarted (paramID);
+}
+
+void ImogenAudioProcessorEditor::endParameterChangeGesture   (int paramID) 
+{
+    imgnProcessor.parameterChangeGestureEnded (paramID);
+}
+
+void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
+{
+    imgnProcessor.editorPitchbend (wheelValue);
+}
+
+void ImogenAudioProcessorEditor::sendMidiLatch (bool shouldBeLatched)
+{
+    juce::ignoreUnused (shouldBeLatched);
+}
+
+void ImogenAudioProcessorEditor::loadPreset (const juce::String& presetName)
+{
+    imgnProcessor.loadPreset (presetName);
+}
+
+void ImogenAudioProcessorEditor::savePreset (const juce::String& presetName)
+{
+    imgnProcessor.savePreset  (presetName);
+}
+
+void ImogenAudioProcessorEditor::deletePreset (const juce::String& presetName)
+{
+    imgnProcessor.deletePreset (presetName);
+}
+
+void ImogenAudioProcessorEditor::enableAbletonLink (bool shouldBeEnabled)
+{
+    imgnProcessor.enableAbletonLink (shouldBeEnabled);
+}

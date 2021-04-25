@@ -2,10 +2,13 @@
 
 
 MainComponent::MainComponent()
+    : oscParser(this)
 {
     this->setBufferedToImage (true);
     
     setSize (800, 2990);
+    
+    oscReceiver.addListener (&oscParser);
     
 #if JUCE_OPENGL
     openGLContext.attachTo (*getTopLevelComponent());
@@ -14,6 +17,8 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+    oscReceiver.removeListener (&oscParser);
+    
 #if JUCE_OPENGL
     openGLContext.detach();
 #endif
@@ -41,6 +46,16 @@ void MainComponent::resized()
 void MainComponent::sendParameterChange (int paramID, float newValue) 
 {
     juce::ignoreUnused (paramID, newValue);
+}
+
+void MainComponent::startParameterChangeGesture (int paramID)
+{
+    juce::ignoreUnused (paramID);
+}
+
+void MainComponent::endParameterChangeGesture (int paramID)
+{
+    juce::ignoreUnused (paramID);
 }
 
 
