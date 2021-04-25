@@ -1,13 +1,22 @@
 #include "MainComponent.h"
 
 
-MainComponent::MainComponent(): gui(this)
+MainComponent::MainComponent()
 {
-    setSize (600, 400);
+    this->setBufferedToImage (true);
+    
+    setSize (800, 2990);
+    
+#if JUCE_OPENGL
+    openGLContext.attachTo (*getTopLevelComponent());
+#endif
 }
 
 MainComponent::~MainComponent()
 {
+#if JUCE_OPENGL
+    openGLContext.detach();
+#endif
 }
 
 //==============================================================================
@@ -23,5 +32,41 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    
+    gui()->setBounds (0, 0, getWidth(), getHeight());
+}
+
+
+//==============================================================================
+
+void MainComponent::sendParameterChange (int paramID, float newValue) 
+{
+    juce::ignoreUnused (paramID, newValue);
+}
+
+
+void MainComponent::sendEditorPitchbend (int wheelValue) 
+{
+    juce::ignoreUnused (wheelValue);
+}
+
+
+void MainComponent::sendMidiLatch (bool shouldBeLatched) 
+{
+    juce::ignoreUnused (shouldBeLatched);
+}
+
+
+void MainComponent::loadPreset (const juce::String& presetName) 
+{
+    juce::ignoreUnused (presetName);
+}
+
+void MainComponent::savePreset (const juce::String& presetName) 
+{
+    juce::ignoreUnused (presetName);
+}
+
+void MainComponent::deletePreset (const juce::String& presetName) 
+{
+    juce::ignoreUnused (presetName);
 }

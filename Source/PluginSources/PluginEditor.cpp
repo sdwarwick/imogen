@@ -44,8 +44,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
-    this->setLookAndFeel(nullptr);
-    
 #if JUCE_OPENGL
     openGLContext.detach();
 #endif
@@ -61,5 +59,7 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 void ImogenAudioProcessorEditor::resized()
 {
     imgnProcessor.saveEditorSize ({ getWidth(), getHeight() });
+    
+    gui()->setBounds (0, 0, getWidth(), getHeight());
 }
 

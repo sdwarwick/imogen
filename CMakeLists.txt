@@ -38,16 +38,15 @@ set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/assets)  # The location o
 #
 
 set (Imogen_sourceFiles
-	${Imogen_sourceDir}/ImogenGuiHolder.h
     ${pluginSourcesDir}/PluginProcessor.cpp
     ${pluginSourcesDir}/PluginProcessorParameters.cpp
     ${pluginSourcesDir}/PluginProcessorState.cpp
     ${pluginSourcesDir}/PluginProcessor.h
     ${pluginSourcesDir}/PluginEditor.cpp
     ${pluginSourcesDir}/PluginEditor.h
+    ${guiSourcePath}/ImogenGuiHolder.h
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
-    ${guiSourcePath}/GuiHandle.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
     ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
     ${Imogen_sourceDir}/StandaloneWrapper/StandaloneWrapper.h

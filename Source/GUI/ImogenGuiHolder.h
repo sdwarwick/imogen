@@ -1,3 +1,4 @@
+
 /*======================================================================================================================================================
            _             _   _                _                _                 _               _
           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
@@ -16,32 +17,42 @@
  
  @2021 by Ben Vining. All rights reserved.
  
- GuiHandle.h: A GuiHandle object is essentially the relay between an ImogenGui object and whatever it is controlling. For a normal plugin or standalone, the GuiHandle will just connect the parameters to the processor's parameters, but this class is abstract so that it can be customized, for example, to create a GUI-only remote control for another instance of Imogen.
+ ImogenRecieverAPI.h: This file defines the API used for communicating change events from an ImogenAudioProcessor object to an ImogenGUI object. The abstraction of this API allows the same GUI code to be used both for the plugin build and the remote app build.
  
-======================================================================================================================================================*/
+ ======================================================================================================================================================*/
+
 
 #pragma once
 
+#include "ImogenGUI.h"
 
-class ImogenGuiHandle
+
+class ImogenGuiHolder  :    public ImogenGuiHandle
 {
 public:
-    ImogenGuiHandle() = default;
-  
-    virtual ~ImogenGuiHandle() = default;
+    ImogenGuiHolder(): p_gui(this) { }
     
-    // called by the GUI to send parameter changes to the processor
-    virtual void sendParameterChange (int paramID, float newValue)=0;
+    virtual ~ImogenGuiHolder() = default;
     
-    virtual void sendEditorPitchbend (int wheelValue)=0;
+    //
     
-    //virtual void enableAbletonLink (bool shouldBeEnabled)=0;
+    void recieveParameterChange (int paramID, float newValue) { p_gui.parameterChangeRecieved (paramID, newValue); }
     
-    virtual void sendMidiLatch (bool shouldBeLatched)=0;
-  
-    virtual void loadPreset   (const juce::String& presetName)=0;
-    virtual void savePreset   (const juce::String& presetName)=0;
-    virtual void deletePreset (const juce::String& presetName)=0;
-  
+    void parameterDefaultsUpdated() { p_gui.updateParameterDefaults(); }
+    
+    void presetNameChange (const juce::String& newPresetName) { p_gui.presetNameChanged (newPresetName); }
+    
+    void mts_connectionChange (bool isNowConnected) { p_gui.mts_connectionChange (isNowConnected); }
+    void mts_scaleChange (const juce::String& newScaleName) { p_gui.mts_scaleChange (newScaleName); }
+    
+    void abletonLinkChange (bool isNowEnabled) { p_gui.abletonLinkChange (isNowEnabled); }
+    
+    //
+    
+    ImogenGUI* gui() noexcept { return &p_gui; }
+    
+    //
+    
 private:
+    ImogenGUI p_gui;
 };

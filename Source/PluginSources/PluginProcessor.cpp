@@ -70,10 +70,12 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 void ImogenAudioProcessor::timerCallback()
 {
+    auto* const activeEditor = dynamic_cast<ImogenGuiHolder*> (getActiveEditor());
+    
     if (parameterDefaultsAreDirty.load())
     {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->parameterDefaultsUpdated();
+        if (activeEditor != nullptr)
+            activeEditor->parameterDefaultsUpdated();
         
         parameterDefaultsAreDirty.store (false);
     }
@@ -81,8 +83,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto mts_isConnected = isConnectedToMtsEsp();
     if (mts_isConnected != mts_wasConnected.load())
     {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->mts_connectionChange (mts_isConnected);
+        if (activeEditor != nullptr)
+            activeEditor->mts_connectionChange (mts_isConnected);
         
         mts_wasConnected.store (mts_isConnected);
     }
@@ -90,8 +92,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto scaleName = getScaleName();
     if (scaleName != mts_lastScaleName)
     {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->mts_scaleChange (scaleName);
+        if (activeEditor != nullptr)
+            activeEditor->mts_scaleChange (scaleName);
         
         mts_lastScaleName = scaleName;
     }
@@ -99,8 +101,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto presetName = getActivePresetName();
     if (presetName != lastPresetName)
     {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->presetNameChange (presetName);
+        if (activeEditor != nullptr)
+            activeEditor->presetNameChange (presetName);
         
         lastPresetName = presetName;
     }
@@ -108,8 +110,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto abletonLink_isEnabled = isAbletonLinkEnabled();
     if (abletonLink_isEnabled != abletonLink_wasEnabled.load())
     {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->abletonLinkChange (abletonLink_isEnabled);
+        if (activeEditor != nullptr)
+            activeEditor->abletonLinkChange (abletonLink_isEnabled);
         
         abletonLink_wasEnabled.store (abletonLink_isEnabled);
     }

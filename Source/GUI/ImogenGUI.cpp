@@ -26,15 +26,17 @@
 
 #include "ImogenGUI.h"
 
+#include "ImogenGuiHolder.h"
 
-ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h), tooltipWindow(this, msBeforeTooltip)
+
+ImogenGUI::ImogenGUI (ImogenGuiHandle* h): holder(h), tooltipWindow(this, msBeforeTooltip)
 {
-    jassert (handle != nullptr);
+    jassert (holder != nullptr);
            
     this->setBufferedToImage (true);
     
     makePresetMenu (selectPreset);
-    selectPreset.onChange = [this] { handle->loadPreset (selectPreset.getText()); };
+    selectPreset.onChange = [this] { holder->loadPreset (selectPreset.getText()); };
     
     //addAndMakeVisible(selectPreset);
     
@@ -45,8 +47,6 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): handle(h), tooltipWindow(this, msBefo
     juce::ignoreUnused (initializeWithDarkMode);
 #endif
 }
-
-#undef bvi_GRAPHICS_FRAMERATE_HZ
 
 
 ImogenGUI::~ImogenGUI()

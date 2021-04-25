@@ -24,9 +24,32 @@
 #pragma once
 
 #include <juce_gui_extra/juce_gui_extra.h>
-#include "GuiHandle.h"
+
 #include "LookAndFeel/ImogenLookAndFeel.h"
 
+
+/* The interface used to communicate from the GUI to the processor */
+struct ImogenGuiHandle
+{
+    virtual ~ImogenGuiHandle() = default;
+    
+    // called by the GUI to send parameter changes to the processor
+    virtual void sendParameterChange (int paramID, float newValue)=0;
+    
+    virtual void sendEditorPitchbend (int wheelValue)=0;
+    
+    //virtual void enableAbletonLink (bool shouldBeEnabled)=0;
+    
+    virtual void sendMidiLatch (bool shouldBeLatched)=0;
+    
+    virtual void loadPreset   (const juce::String& presetName)=0;
+    virtual void savePreset   (const juce::String& presetName)=0;
+    virtual void deletePreset (const juce::String& presetName)=0;
+};
+
+
+/*
+*/
 
 
 class ImogenGUI  :     public juce::Component
@@ -55,7 +78,7 @@ public:
 private:
     
     // Called to send a parameter change update to the processor from the GUI
-    void sendParameterChange (int paramID, float newValue) { handle->sendParameterChange (paramID, newValue); }
+    void sendParameterChange (int paramID, float newValue) { holder->sendParameterChange (paramID, newValue); }
     
     void changeDialDisplay (bool displayPitchCorrection, int paramID);
     
@@ -67,7 +90,7 @@ private:
     
     bav::ImogenLookAndFeel lookAndFeel;
     
-    ImogenGuiHandle* const handle;
+    ImogenGuiHandle* const holder;
     
     juce::TooltipWindow tooltipWindow;
     static constexpr int msBeforeTooltip = 700;

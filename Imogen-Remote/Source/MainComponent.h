@@ -19,39 +19,24 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     
-    void sendParameterChange (int paramID, float newValue) override
-    {
-        juce::ignoreUnused (paramID, newValue);
-    }
+    //==============================================================================
+    void sendParameterChange (int paramID, float newValue) override;
     
-    void sendEditorPitchbend (int wheelValue) override
-    {
-        juce::ignoreUnused (wheelValue);
-    }
+    void sendEditorPitchbend (int wheelValue) override;
     
-    void sendMidiLatch (bool shouldBeLatched) override
-    {
-        juce::ignoreUnused (shouldBeLatched);
-    }
+    void sendMidiLatch (bool shouldBeLatched) override;
     
-    void loadPreset   (const juce::String& presetName) override
-    {
-        juce::ignoreUnused (presetName);
-    }
+    void loadPreset   (const juce::String& presetName) override;
     
-    void savePreset   (const juce::String& presetName) override
-    {
-        juce::ignoreUnused (presetName);
-    }
+    void savePreset   (const juce::String& presetName) override;
     
-    void deletePreset (const juce::String& presetName) override
-    {
-        juce::ignoreUnused (presetName);
-    }
+    void deletePreset (const juce::String& presetName) override;
 
 
 private:
-    ImogenGUI gui;
+#if JUCE_OPENGL
+    OpenGLContext openGLContext;
+#endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
