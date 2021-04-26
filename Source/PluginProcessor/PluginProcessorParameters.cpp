@@ -223,7 +223,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         auto deEss = std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", std::move (ess_toggle), std::move (ess_thresh), std::move (ess_amount));      
 
         //  subgroup: compressor
-        auto comp_toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);                 
+        auto comp_toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor toggle"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
         auto comp_amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
         
         auto compressor = std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (comp_toggle), std::move (comp_amount));
@@ -247,7 +247,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                
         //  limiter   
         auto limiter = std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
-                                                std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString));       
+                                                std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter toggle"), true, emptyString, toggle_stringFromBool, toggle_boolFromString));
                
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
                                                       std::move (gate), std::move (deEss), std::move (compressor),

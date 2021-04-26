@@ -1,0 +1,144 @@
+Remote
+
+Input
+
+Sidechain
+
+Output
+
+On
+
+Off
+
+Yes
+
+True
+
+dB (abbr decibels)
+
+sec (abbr seconds)
+
+Hz
+
+kHz
+
+st (abbr semitones)
+
+Input source
+
+Right
+
+Left
+
+Mix to mono
+
+mono
+
+mix
+
+"% wet"
+
+Input gain
+
+Output gain
+
+Bypass
+
+Lead bypass
+
+Harmony bypass
+
+Bypasses
+
+stereo width
+
+Lowest panned midipitch
+
+Dry vox pan
+
+Stereo image
+
+Mixing
+
+Pitch bend range
+
+Midi velocity sensitivity
+
+Aftertouch gain on/off
+
+Voice stealing
+
+Pedal pitch on/off
+
+Pedal pitch upper threshold
+
+Pedal pitch interval
+
+Pedal pitch
+
+Descant on/off
+
+Descant lower threshold
+
+Descant interval
+
+Descant
+
+MIDI
+
+ADSR attack
+ADSR sustain
+ADSR decay
+ADSR release
+ADSR
+
+Noise gate toggle
+
+Noise gate thresh
+
+Noise gate
+
+De-esser toggle
+
+De-esser threshold
+
+De-esser amount
+
+De-esser
+
+Compressor toggle
+
+Compressor amount
+
+Compressor
+
+Delay toggle
+
+Delay dry/wet
+
+Delay
+
+Reverb toggle
+
+Reverb dry/wet
+
+Reverb decay
+
+Reverb duck
+
+Reverb low cut
+
+Reverb high cut
+
+Reverb
+
+Limiter toggle
+
+Limiter
+
+Effects 
+
+
+
+
+

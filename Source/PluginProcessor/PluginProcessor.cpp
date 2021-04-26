@@ -287,9 +287,9 @@ inline juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProper
     auto stereo = juce::AudioChannelSet::stereo();
     auto mono   = juce::AudioChannelSet::mono();
 
-    return BusesProperties().withInput ("Input",  stereo, true)
-                            .withInput ("Sidechain", mono, false)
-                            .withOutput("Output", stereo, true);
+    return BusesProperties().withInput (TRANS ("Input"),  stereo, true)
+                            .withInput (TRANS ("Sidechain"), mono, false)
+                            .withOutput(TRANS ("Output"), stereo, true);
 }
 
 
