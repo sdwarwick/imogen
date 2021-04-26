@@ -71,9 +71,11 @@ enum parameterID
     reverbDecayID,
     reverbDuckID,
     reverbLoCutID,
-    reverbHiCutID
+    reverbHiCutID,
+    delayToggleID,
+    delayDryWetID
 };
-static constexpr int numParams = reverbHiCutID + 1;
+static constexpr int numParams = delayDryWetID + 1;
 
 
 enum eventID

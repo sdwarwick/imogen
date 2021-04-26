@@ -226,7 +226,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
         auto comp_toggle = std::make_unique<BoolParameter>  ("compressorToggle", TRANS ("Compressor on/off"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);                 
         auto comp_amount = std::make_unique<FloatParameter> ("compressorAmount", TRANS ("Compressor amount"), zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
         
-        auto compressor = std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (comp_toggle), std::move (comp_amount));       
+        auto compressor = std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (comp_toggle), std::move (comp_amount));
+        
+        //  subgroup: delay
+        auto delay_toggle = std::make_unique<BoolParameter> ("delayIsOn", TRANS ("Delay toggle"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto delay_mix = std::make_unique<IntParameter>     ("delayDryWet", TRANS ("Delay dry/wet"), 0, 100, 35, emptyString,
+                                                             pcnt_stringFromInt, pcnt_intFromString);
+        
+        auto delay = std::make_unique<Group> ("Delay", TRANS ("Delay"), "|", std::move (delay_toggle), std::move (delay_mix));
                
         //  subgroup: reverb       
         auto verb_toggle = std::make_unique<BoolParameter>  ("reverbIsOn", TRANS ("Reverb toggle"), false, emptyString, toggle_stringFromBool, toggle_boolFromString);               
@@ -243,7 +250,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                 std::make_unique<BoolParameter>  ("limiterIsOn", TRANS ("Limiter on/off"), true, emptyString, toggle_stringFromBool, toggle_boolFromString));       
                
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
-                                                      std::move (gate), std::move (deEss), std::move (compressor), std::move (reverb), std::move (limiter)));       
+                                                      std::move (gate), std::move (deEss), std::move (compressor),
+                                                      std::move (delay), std::move (reverb), std::move (limiter)));
     } 
     
     return { groups.begin(), groups.end() };                                             
@@ -296,7 +304,9 @@ void ImogenAudioProcessor::initializeParameterPointers()
     reverbDecay          = makeParameterPointer <FloatParamPtr> ("reverbDecay");     
     reverbDuck           = makeParameterPointer <FloatParamPtr> ("reverbDuck"); 
     reverbLoCut          = makeParameterPointer <FloatParamPtr> ("reverbLoCut");        
-    reverbHiCut          = makeParameterPointer <FloatParamPtr> ("reverbHiCut");      
+    reverbHiCut          = makeParameterPointer <FloatParamPtr> ("reverbHiCut");
+    delayToggle          = makeParameterPointer <BoolParamPtr>  ("delayIsOn");
+    delayDryWet          = makeParameterPointer <IntParamPtr>   ("delayDryWet");
 }
 
 
@@ -405,6 +415,8 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
         case (reverbLoCutID):           return reverbLoCut;
         case (reverbHiCutID):           return reverbHiCut;
         case (inputSourceID):           return inputSource;
+        case (delayToggleID):           return delayToggle;
+        case (delayDryWetID):           return delayDryWet;
         default:                        return nullptr;
     }
 }
@@ -457,6 +469,8 @@ parameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const para
     if (parameter == reverbLoCut)          return reverbLoCutID;
     if (parameter == reverbHiCut)          return reverbHiCutID;
     if (parameter == inputSource)          return inputSourceID;
+    if (parameter == delayToggle)          return delayToggleID;
+    if (parameter == delayDryWet)          return delayDryWetID;
     return mainBypassID;
 }
 
@@ -514,6 +528,8 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 
     activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
                                reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+    
+    activeEngine.updateDelay (delayDryWet->get(), 2400, delayToggle->get());
 }
 ///function template instantiations...
 template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<float>& activeEngine);
@@ -601,6 +617,9 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
             case (reverbDuckID):   rDuck   = _FLOAT_MSG;  reverb = true;
             case (reverbLoCutID):  rLoCut  = _FLOAT_MSG;  reverb = true;
             case (reverbHiCutID):  rHiCut  = _FLOAT_MSG;  reverb = true;
+                
+            case (delayToggleID):   activeEngine.updateDelay (delayDryWet->get(), 2400, _BOOL_MSG);
+            case (delayDryWetID):   activeEngine.updateDelay (_INT_MSG, 2400, delayToggle->get());
                 
             case (adsrAttackID):  adsrA = _FLOAT_MSG;     adsr = true;
             case (adsrDecayID):   adsrD = _FLOAT_MSG;     adsr = true;

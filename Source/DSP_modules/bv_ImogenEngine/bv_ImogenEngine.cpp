@@ -67,6 +67,8 @@ ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
     deEsserIsOn.store (false);
     reverbIsOn.store (false);
     
+    delayIsOn.store (false);
+    
     dryWetMixer.setMixingRule (juce::dsp::DryWetMixingRule::balanced);
     dryWetMixer.setWetLatency (SampleType(0.0));
 }
@@ -82,6 +84,7 @@ bvie_VOID_TEMPLATE::resetTriggered()
     limiter.reset();
     deEsser.reset();
     reverb.reset();
+    delay.reset();
     
     monoBuffer.clear();
     
@@ -150,6 +153,8 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     
     reverb.prepare (newInternalBlocksize, samplerate, 2);
     
+    delay.prepare (newInternalBlocksize, samplerate, 2);
+    
     resetSmoothedValues (newInternalBlocksize);
            
     harmonizer.updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
@@ -193,6 +198,8 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     limiter.prepare (blocksize, samplerate, 2);
     
     compressor.prepare (blocksize, samplerate, 1);
+    
+    delay.prepare (blocksize, samplerate, 2);
     
     initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate,
                                                                                              SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
@@ -337,6 +344,9 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         harmonizer.render (monoBuffer, wetBuffer, midiMessages);  // renders the stereo output into wetBuffer
 
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
+    
+    if (delayIsOn.load())
+        delay.process (wetBuffer);
 
     if (reverbIsOn.load())
         reverb.process (wetBuffer);

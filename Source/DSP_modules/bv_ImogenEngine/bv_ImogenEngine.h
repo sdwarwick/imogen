@@ -79,6 +79,7 @@ public:
     void updateNoiseGate (const float newThreshDB, const bool isOn);
     void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
     void updateCompressor (const float threshDB, const float ratio, const bool isOn);
+    void updateDelay (int dryWet, int delayInSamples, bool isOn);
     void updateReverb (int wetPcnt, float decay, float duckAmount, float loCutFreq, float hiCutFreq, bool isOn);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
@@ -149,6 +150,9 @@ private:
     std::atomic<float> limiterThresh, limiterRelease;
     
     bav::dsp::Panner dryPanner;
+    
+    bav::dsp::FX::Delay<SampleType> delay;
+    std::atomic<bool> delayIsOn;
     
     std::atomic<bool> leadBypass, harmonyBypass;
     

@@ -178,6 +178,15 @@ bvie_VOID_TEMPLATE::updateReverb (int wetPcnt, float decay, float duckAmount, fl
 }
 
 
+bvie_VOID_TEMPLATE::updateDelay (int dryWet, int delayInSamples, bool isOn)
+{
+    delayIsOn.store (isOn);
+    delay.setDelay (delayInSamples);
+    jassert (dryWet >= 0 && dryWet <= 100);
+    delay.setDryWet (dryWet);
+}
+
+
 #undef bvie_VOID_TEMPLATE
 #undef bvie_MIN_SMOOTHED_GAIN
 #undef _SMOOTHING_ZERO_CHECK
