@@ -417,7 +417,7 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
     Returns the corresponding parameterID for the passed parameter.
 */
 
-ImogenAudioProcessor::parameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
+parameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
 {
     if (parameter == mainBypass)           return mainBypassID;
     if (parameter == leadBypass)           return leadBypassID;

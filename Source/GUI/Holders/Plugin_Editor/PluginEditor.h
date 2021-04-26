@@ -27,12 +27,12 @@
 #include "PluginProcessor/PluginProcessor.h"
 
 
+using namespace Imogen;
+
+
 class ImogenAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                     public ImogenGuiHolder
 {
-    using ids = ImogenAudioProcessor::parameterID;
-    using event = ImogenAudioProcessor::eventID;
-    
     
 public:
     

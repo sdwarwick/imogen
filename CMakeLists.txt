@@ -42,6 +42,7 @@ set (Imogen_sourceFiles
     ${pluginSourcesDir}/PluginProcessor.cpp
     ${pluginSourcesDir}/PluginProcessorParameters.cpp
     ${pluginSourcesDir}/PluginProcessorState.cpp
+    ${pluginSourcesDir}/PluginProcessorNetworking.cpp
     ${pluginSourcesDir}/PluginProcessor.h
     ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.cpp
     ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.h
@@ -312,6 +313,7 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
+    IMOGEN_REMOTE_APP=0
     )
     
 if (TARGET Imogen_LV2)

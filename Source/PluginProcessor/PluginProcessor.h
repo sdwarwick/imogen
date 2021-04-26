@@ -31,6 +31,9 @@
 #include "GUI/Holders/ImogenGuiHolder.h"
 
 
+using namespace Imogen;
+
+
 class ImogenAudioProcessorEditor; // forward declaration...
 
 /*
@@ -71,51 +74,6 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     
-    // key values by which parameters are accessed from the editor:
-    enum parameterID
-    {
-        inputSourceID,
-        mainBypassID,
-        leadBypassID,
-        harmonyBypassID,
-        dryPanID,
-        dryWetID,
-        adsrAttackID,
-        adsrDecayID,
-        adsrSustainID,
-        adsrReleaseID,
-        stereoWidthID,
-        lowestPannedID,
-        velocitySensID,
-        pitchBendRangeID,
-        pedalPitchIsOnID,
-        pedalPitchThreshID,
-        pedalPitchIntervalID,
-        descantIsOnID,
-        descantThreshID,
-        descantIntervalID,
-        voiceStealingID,
-        inputGainID,
-        outputGainID,
-        limiterToggleID,
-        noiseGateToggleID,
-        noiseGateThresholdID,
-        compressorToggleID,
-        compressorAmountID,
-        aftertouchGainToggleID,
-        deEsserToggleID,
-        deEsserThreshID,
-        deEsserAmountID,
-        reverbToggleID,
-        reverbDryWetID,
-        reverbDecayID,
-        reverbDuckID,
-        reverbLoCutID,
-        reverbHiCutID
-    };
-    static constexpr int numParams = reverbHiCutID + 1;
-    
-    
     // this function is used by the editor to inform the processor of GUI parameter changes
     void recieveParameterValueChange (int paramID, float newValue)
     {
@@ -154,15 +112,7 @@ public:
         if (auto* activeEditor = getActiveEditor())
             dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureEnd (paramID);
     }
- 
     
-    // IDs for events from the editor that are not parameters
-    enum eventID
-    {
-        killAllMidi,
-        midiLatch,
-        pitchBendFromEditor
-    };
     
     double getTailLengthSeconds() const override;
     

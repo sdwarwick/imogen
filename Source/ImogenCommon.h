@@ -19,3 +19,70 @@
  ImogenCommon.h: This file defines some common constants that the various modules of Imogen all refer to.
  
 ==========================================================================================================================*/
+
+
+#pragma once
+
+#ifndef IMOGEN_REMOTE_APP
+  #define IMOGEN_REMOTE_APP 0
+#endif
+
+
+namespace Imogen
+{
+
+
+enum parameterID
+{
+    inputSourceID,
+    mainBypassID,
+    leadBypassID,
+    harmonyBypassID,
+    dryPanID,
+    dryWetID,
+    adsrAttackID,
+    adsrDecayID,
+    adsrSustainID,
+    adsrReleaseID,
+    stereoWidthID,
+    lowestPannedID,
+    velocitySensID,
+    pitchBendRangeID,
+    pedalPitchIsOnID,
+    pedalPitchThreshID,
+    pedalPitchIntervalID,
+    descantIsOnID,
+    descantThreshID,
+    descantIntervalID,
+    voiceStealingID,
+    inputGainID,
+    outputGainID,
+    limiterToggleID,
+    noiseGateToggleID,
+    noiseGateThresholdID,
+    compressorToggleID,
+    compressorAmountID,
+    aftertouchGainToggleID,
+    deEsserToggleID,
+    deEsserThreshID,
+    deEsserAmountID,
+    reverbToggleID,
+    reverbDryWetID,
+    reverbDecayID,
+    reverbDuckID,
+    reverbLoCutID,
+    reverbHiCutID
+};
+static constexpr int numParams = reverbHiCutID + 1;
+
+
+enum eventID
+{
+    killAllMidi,
+    midiLatch,
+    pitchBendFromEditor
+};
+static constexpr int num_nonParamEventTypes = pitchBendFromEditor + 1;
+
+
+}  // namespace

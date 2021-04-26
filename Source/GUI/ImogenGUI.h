@@ -25,6 +25,8 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
+#include "ImogenCommon.h"
+
 #include "LookAndFeel/ImogenLookAndFeel.h"
 #include "MainDialComponent/MainDialComponent.h"
 
