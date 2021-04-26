@@ -41,9 +41,9 @@ struct ImogenGuiHandle
 {
     virtual ~ImogenGuiHandle() = default;
     
-    virtual void sendParameterChange (parameterID paramID, float newValue) = 0;
-    virtual void startParameterChangeGesture (parameterID paramID) = 0;
-    virtual void endParameterChangeGesture (parameterID paramID) = 0;
+    virtual void sendParameterChange (ParameterID paramID, float newValue) = 0;
+    virtual void startParameterChangeGesture (ParameterID paramID) = 0;
+    virtual void endParameterChangeGesture (ParameterID paramID) = 0;
     
     virtual void sendEditorPitchbend (int wheelValue) = 0;
     
@@ -72,9 +72,9 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
-    void parameterChangeRecieved (parameterID paramID, float newValue);
-    void parameterChangeGestureStarted (parameterID paramID);
-    void parameterChangeGestureEnded (parameterID paramID);
+    void parameterChangeRecieved (ParameterID paramID, float newValue);
+    void parameterChangeGestureStarted (ParameterID paramID);
+    void parameterChangeGestureEnded (ParameterID paramID);
     
     void updateParameterDefaults();
     

@@ -74,13 +74,13 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     
-    void recieveParameterValueChange (parameterID paramID, float newValue);
-    void recieveParameterChangeGestureBegin (parameterID paramID);
-    void recieveParameterChangeGestureEnd (parameterID paramID);
+    void recieveParameterValueChange (ParameterID paramID, float newValue);
+    void recieveParameterChangeGestureBegin (ParameterID paramID);
+    void recieveParameterChangeGestureEnd (ParameterID paramID);
     
-    void sendParameterChange (parameterID paramID, float newValue);
-    void sendParameterChangeGestureBegin (parameterID paramID);
-    void sendParameterChangeGestureEnd (parameterID paramID);
+    void sendParameterChange (ParameterID paramID, float newValue);
+    void sendParameterChangeGestureBegin (ParameterID paramID);
+    void sendParameterChangeGestureEnd (ParameterID paramID);
     
     void recieveMidiLatchEvent (bool isNowLatched);
     void recieveKillAllMidiEvent();
@@ -154,9 +154,9 @@ public:
     }
     
     
-    Parameter* getParameterPntr (const parameterID paramID) const;
+    Parameter* getParameterPntr (const ParameterID paramID) const;
     
-    parameterID parameterPntrToID (const Parameter* const) const;
+    ParameterID parameterPntrToID (const Parameter* const) const;
     
     
     // enables saving and loading of the editor's last saved size
@@ -203,7 +203,7 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     void initializeParameterListeners();
-    void addParameterMessenger (parameterID paramID);
+    void addParameterMessenger (ParameterID paramID);
     void updateParameterDefaults();
     
     void initializeParameterOscMappings();
@@ -245,7 +245,7 @@ private:
         using Processor = ImogenAudioProcessor;
         
     public:
-        ParameterMessenger(Processor& pcsr, MsgQ& queue, bav::Parameter* p, parameterID paramIDtoListen)
+        ParameterMessenger(Processor& pcsr, MsgQ& queue, bav::Parameter* p, ParameterID paramIDtoListen)
             : processor(pcsr), q(queue), param(p), paramID(paramIDtoListen)
         {
             jassert (param != nullptr);
@@ -277,7 +277,7 @@ private:
         Processor& processor;
         MsgQ& q;
         bav::Parameter* const param;
-        const parameterID paramID;
+        const ParameterID paramID;
     };
     
     

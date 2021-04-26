@@ -24,22 +24,22 @@
 #include "PluginProcessor.h"
 
 
-void ImogenAudioProcessor::recieveParameterValueChange (parameterID paramID, float newValue)
+void ImogenAudioProcessor::recieveParameterValueChange (ParameterID paramID, float newValue)
 {
     getParameterPntr(paramID)->orig()->setValueNotifyingHost (newValue);
 }
 
-void ImogenAudioProcessor::recieveParameterChangeGestureBegin (parameterID paramID)
+void ImogenAudioProcessor::recieveParameterChangeGestureBegin (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->beginChangeGesture();
 }
 
-void ImogenAudioProcessor::recieveParameterChangeGestureEnd (parameterID paramID)
+void ImogenAudioProcessor::recieveParameterChangeGestureEnd (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->endChangeGesture();
 }
 
-void ImogenAudioProcessor::sendParameterChange (parameterID paramID, float newValue)
+void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newValue)
 {
     currentProgram.store (-1);
     
@@ -49,7 +49,7 @@ void ImogenAudioProcessor::sendParameterChange (parameterID paramID, float newVa
     // send param change as OSC message to any recievers...
 }
 
-void ImogenAudioProcessor::sendParameterChangeGestureBegin (parameterID paramID)
+void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
 {
     if (auto* activeEditor = getActiveEditor())
         dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureStart (paramID);
@@ -57,7 +57,7 @@ void ImogenAudioProcessor::sendParameterChangeGestureBegin (parameterID paramID)
     // send OSC message...
 }
 
-void ImogenAudioProcessor::sendParameterChangeGestureEnd (parameterID paramID)
+void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
 {
     if (auto* activeEditor = getActiveEditor())
         dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureEnd (paramID);
@@ -68,16 +68,16 @@ void ImogenAudioProcessor::sendParameterChangeGestureEnd (parameterID paramID)
 void ImogenAudioProcessor::recieveMidiLatchEvent (bool isNowLatched)
 {
     const auto value = isNowLatched ? 1.0f : 0.0f;
-    nonParamEvents.pushMessage (midiLatch, value);
+    nonParamEvents.pushMessage (midiLatchID, value);
 }
 
 void ImogenAudioProcessor::recieveKillAllMidiEvent()
 {
-    nonParamEvents.pushMessage (killAllMidi, 1.0f);
+    nonParamEvents.pushMessage (killAllMidiID, 1.0f);
 }
 
 void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
 {
-    nonParamEvents.pushMessage (pitchBendFromEditor,
+    nonParamEvents.pushMessage (pitchBendFromEditorID,
                                 pitchbendNormalizedRange.convertTo0to1 (float (wheelValue)));
 }

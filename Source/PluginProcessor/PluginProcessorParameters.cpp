@@ -336,12 +336,12 @@ void ImogenAudioProcessor::initializeParameterListeners()
     parameterMessengers.reserve (numParams);
            
     for (int i = 0; i < numParams; ++i)
-        addParameterMessenger (parameterID(i));
+        addParameterMessenger (ParameterID(i));
 }
 
 
 // creates a single parameter listener & messenger for a requested parameter
-void ImogenAudioProcessor::addParameterMessenger (parameterID paramID)
+void ImogenAudioProcessor::addParameterMessenger (ParameterID paramID)
 {
     auto* param = getParameterPntr (paramID);
     auto& messenger { parameterMessengers.emplace_back (ParameterMessenger (*this, paramChanges, param, paramID)) };
@@ -360,7 +360,7 @@ void ImogenAudioProcessor::initializeParameterOscMappings()
 {
     for (int i = 0; i < numParams; ++i)
     {
-        auto* param = getParameterPntr (parameterID(i));
+        auto* param = getParameterPntr (ParameterID(i));
         oscMapper.addNewMapping (param, juce::String("/imogen/") + param->orig()->paramID);
     }    
 }
@@ -373,7 +373,7 @@ void ImogenAudioProcessor::initializeParameterOscMappings()
     Returns one of the processor's parameter objects, referenced by its parameterID.
 */
 
-bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramID) const
+bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
     switch (paramID)
     {
@@ -429,7 +429,7 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const parameterID paramI
     Returns the corresponding parameterID for the passed parameter.
 */
 
-parameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
+ParameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
 {
     if (parameter == mainBypass)           return mainBypassID;
     if (parameter == leadBypass)           return leadBypassID;
@@ -557,7 +557,7 @@ void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<Samp
     bool rToggle = reverbToggle->get();
     
     // converts a message's raw normalized value to its actual float value using the normalisable range of the selected parameter p
-#define _FLOAT_MSG getParameterPntr(parameterID(type))->denormalize (value)
+#define _FLOAT_MSG getParameterPntr(ParameterID(type))->denormalize (value)
     
     // converts a message's raw normalized value to its actual integer value using the normalisable range of the selected parameter p
 #define _INT_MSG juce::roundToInt (_FLOAT_MSG)
@@ -661,9 +661,9 @@ void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<Sample
         switch (msg.type())
         {
             default: continue;
-            case (killAllMidi): activeEngine.killAllMidi();  // any message of this type triggers this, regardless of its value
-            case (midiLatch):   activeEngine.updateMidiLatch (value >= 0.5f);
-            case (pitchBendFromEditor): activeEngine.recieveExternalPitchbend (juce::roundToInt (pitchbendNormalizedRange.convertFrom0to1 (value)));
+            case (killAllMidiID): activeEngine.killAllMidi();  // any message of this type triggers this, regardless of its value
+            case (midiLatchID):   activeEngine.updateMidiLatch (value >= 0.5f);
+            case (pitchBendFromEditorID): activeEngine.recieveExternalPitchbend (juce::roundToInt (pitchbendNormalizedRange.convertFrom0to1 (value)));
         }
     }
 }
@@ -680,7 +680,7 @@ template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngi
 void ImogenAudioProcessor::updateParameterDefaults()
 {
     for (int paramID = 0; paramID < numParams; ++paramID)
-        getParameterPntr(parameterID(paramID))->refreshDefault();
+        getParameterPntr(ParameterID(paramID))->refreshDefault();
     
     parameterDefaultsAreDirty.store (true);
 }

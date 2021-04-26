@@ -32,7 +32,7 @@ namespace Imogen
 {
 
 
-enum parameterID
+enum ParameterID
 {
     inputSourceID,
     mainBypassID,
@@ -78,13 +78,13 @@ enum parameterID
 static constexpr int numParams = delayDryWetID + 1;
 
 
-enum eventID
+enum EventID
 {
-    killAllMidi,
-    midiLatch,
-    pitchBendFromEditor
+    killAllMidiID,
+    midiLatchID,
+    pitchBendFromEditorID
 };
-static constexpr int num_nonParamEventTypes = pitchBendFromEditor + 1;
+static constexpr int numEventIDs = pitchBendFromEditorID + 1;
 
 
 }  // namespace

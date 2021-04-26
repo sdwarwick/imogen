@@ -68,7 +68,7 @@ void ImogenGUI::resized()
 }
 
 
-void ImogenGUI::parameterChangeRecieved (parameterID paramID, float newValue)
+void ImogenGUI::parameterChangeRecieved (ParameterID paramID, float newValue)
 {
     juce::ignoreUnused (paramID, newValue);
     
@@ -76,12 +76,12 @@ void ImogenGUI::parameterChangeRecieved (parameterID paramID, float newValue)
 }
 
 
-void ImogenGUI::parameterChangeGestureStarted (parameterID paramID)
+void ImogenGUI::parameterChangeGestureStarted (ParameterID paramID)
 {
     mainDial.showParameter (paramID);
 }
 
-void ImogenGUI::parameterChangeGestureEnded (parameterID paramID)
+void ImogenGUI::parameterChangeGestureEnded (ParameterID paramID)
 {
     juce::ignoreUnused (paramID);
     mainDial.showPitchCorrection();
@@ -104,6 +104,8 @@ void ImogenGUI::presetNameChanged (const juce::String& newPresetName)
     {
         const auto displayName = TRANS(newPresetName);
         juce::ignoreUnused (displayName);
+        
+        updateParameterDefaults();
     }
 }
 

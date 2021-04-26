@@ -43,9 +43,9 @@ public:
     void paint (juce::Graphics&) override final;
     void resized() override final;
     
-    void sendParameterChange (parameterID paramID, float newValue) override final;
-    void startParameterChangeGesture (parameterID paramID) override final;
-    void endParameterChangeGesture   (parameterID paramID) override final;
+    void sendParameterChange (ParameterID paramID, float newValue) override final;
+    void startParameterChangeGesture (ParameterID paramID) override final;
+    void endParameterChangeGesture   (ParameterID paramID) override final;
     
     void sendEditorPitchbend (int wheelValue) override final;
     
