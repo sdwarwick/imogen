@@ -82,6 +82,10 @@ public:
     void sendParameterChangeGestureBegin (parameterID paramID);
     void sendParameterChangeGestureEnd (parameterID paramID);
     
+    void recieveMidiLatchEvent (bool isNowLatched);
+    void recieveKillAllMidiEvent();
+    void recieveEditorPitchbendEvent (int wheelValue);
+    
     
     double getTailLengthSeconds() const override;
     
@@ -116,9 +120,6 @@ public:
     juce::AudioProcessorEditor* createEditor() override;
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
-    
-    void editorPitchbend (int wheelValue);
-    
     
     inline bool isMidiLatched() const
     {

@@ -64,3 +64,20 @@ void ImogenAudioProcessor::sendParameterChangeGestureEnd (parameterID paramID)
     
     // send OSC message...
 }
+
+void ImogenAudioProcessor::recieveMidiLatchEvent (bool isNowLatched)
+{
+    const auto value = isNowLatched ? 1.0f : 0.0f;
+    nonParamEvents.pushMessage (midiLatch, value);
+}
+
+void ImogenAudioProcessor::recieveKillAllMidiEvent()
+{
+    nonParamEvents.pushMessage (killAllMidi, 1.0f);
+}
+
+void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
+{
+    nonParamEvents.pushMessage (pitchBendFromEditor,
+                                pitchbendNormalizedRange.convertTo0to1 (float (wheelValue)));
+}

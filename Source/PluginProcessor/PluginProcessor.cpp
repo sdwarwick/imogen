@@ -172,6 +172,8 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     
     updateAllParameters (activeEngine);
     
+    processQueuedNonParamEvents (activeEngine);
+    
     jassert (activeEngine.getLatency() > 0);
     
     activeEngine.prepare (sampleRate);
@@ -196,12 +198,6 @@ void ImogenAudioProcessor::reset()
         doubleEngine.reset();
     else
         floatEngine.reset();
-}
-
-
-void ImogenAudioProcessor::editorPitchbend (int wheelValue)
-{
-    nonParamEvents.pushMessage (pitchBendFromEditor, pitchbendNormalizedRange.convertTo0to1(float(wheelValue)));
 }
 
 

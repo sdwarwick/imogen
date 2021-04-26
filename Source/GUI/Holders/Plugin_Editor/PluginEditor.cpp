@@ -85,7 +85,7 @@ void ImogenAudioProcessorEditor::endParameterChangeGesture   (parameterID paramI
 
 void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
 {
-    imgnProcessor.editorPitchbend (wheelValue);
+    imgnProcessor.recieveEditorPitchbendEvent (wheelValue);
 }
 
 void ImogenAudioProcessorEditor::sendMidiLatch (bool shouldBeLatched)
