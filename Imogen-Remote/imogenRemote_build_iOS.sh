@@ -21,7 +21,6 @@
 
 
 SCRIPT_DIR="$(dirname $0)"; # save the directory of the script
-IMOGEN_DIR="$SCRIPT_DIR/..";
 
 
 ###  UTILITY FUNCTIONS  ###
@@ -84,13 +83,13 @@ fi
 
 ###  THE BUILD SCRIPT  ###
 
-cd "$IMOGEN_DIR/.." # assume that the directory of the script is also the location of the local Imogen git clone
+cd "$SCRIPT_DIR/.." # assume that the directory of the script is also the location of the local Imogen git clone
 
 # first, make sure the local copy of the repo is up to date
 printf "\n \t \v Checking for new commits to Imogen remote... \n \n"
 git pull --recurse-submodules=yes
 
-cd "$IMOGEN_DIR"
+cd "$SCRIPT_DIR"
 
 set -e;  # from this point forward, any errors trigger an exit signal
 

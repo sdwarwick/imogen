@@ -21,7 +21,6 @@
 
 
 SCRIPT_DIR="$(dirname $0)"; # save the directory of the script
-IMOGEN_REMOTE_DIR="$SCRIPT_DIR/..";
 
 
 ###  UTILITY FUNCTIONS  ###
@@ -84,7 +83,7 @@ fi
 
 ###  THE BUILD SCRIPT  ###
 
-cd "$IMOGEN_REMOTE_DIR/.." 
+cd "$SCRIPT_DIR/.." 
 
 # first, make sure the local copy of the repo is up to date
 printf "\n \t \v Checking for new commits to Imogen remote... \n \n"
@@ -93,7 +92,7 @@ git pull --recurse-submodules=yes
 
 set -e;  # from this point forward, any errors trigger an exit signal
 
-cd "$IMOGEN_REMOTE_DIR"
+cd "$SCRIPT_DIR"
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
