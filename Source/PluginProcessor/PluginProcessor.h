@@ -74,44 +74,13 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     
-    // this function is used by the editor to inform the processor of GUI parameter changes
-    void recieveParameterValueChange (int paramID, float newValue)
-    {
-        getParameterPntr (parameterID(paramID))->orig()->setValueNotifyingHost (newValue);
-    }
+    void recieveParameterValueChange (parameterID paramID, float newValue);
+    void recieveParameterChangeGestureBegin (parameterID paramID);
+    void recieveParameterChangeGestureEnd (parameterID paramID);
     
-    void recieveParameterChangeGestureBegin (int paramID)
-    {
-        getParameterPntr (parameterID(paramID))->orig()->beginChangeGesture();
-    }
-    
-    void recieveParameterChangeGestureEnd (int paramID)
-    {
-        getParameterPntr (parameterID(paramID))->orig()->endChangeGesture();
-    }
-    
-    // this function informs the editor of new parameter changes
-    void sendParameterChange (int paramID, float newValue)
-    {
-        currentProgram.store (-1);
-        
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChange (paramID, newValue);
-        
-        // send param change as OSC message to any recievers...
-    }
-    
-    void sendParameterChangeGestureBegin (int paramID)
-    {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureStart (paramID);
-    }
-    
-    void sendParameterChangeGestureEnd (int paramID)
-    {
-        if (auto* activeEditor = getActiveEditor())
-            dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureEnd (paramID);
-    }
+    void sendParameterChange (parameterID paramID, float newValue);
+    void sendParameterChangeGestureBegin (parameterID paramID);
+    void sendParameterChangeGestureEnd (parameterID paramID);
     
     
     double getTailLengthSeconds() const override;
@@ -275,7 +244,7 @@ private:
         using Processor = ImogenAudioProcessor;
         
     public:
-        ParameterMessenger(Processor& pcsr, MsgQ& queue, bav::Parameter* p, int paramIDtoListen)
+        ParameterMessenger(Processor& pcsr, MsgQ& queue, bav::Parameter* p, parameterID paramIDtoListen)
             : processor(pcsr), q(queue), param(p), paramID(paramIDtoListen)
         {
             jassert (param != nullptr);
@@ -301,11 +270,13 @@ private:
                 processor.sendParameterChangeGestureEnd (paramID);
         }
         
+        bav::Parameter* parameter() const noexcept { return param; }
+        
     private:
         Processor& processor;
         MsgQ& q;
         bav::Parameter* const param;
-        const int paramID;
+        const parameterID paramID;
     };
     
     

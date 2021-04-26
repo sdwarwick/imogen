@@ -30,6 +30,9 @@
 #include "../../../Remote/OSC_parser.h"
 
 
+using namespace Imogen;
+
+
 class MainComponent  : public juce::Component,
                        public ImogenGuiHolder
 {
@@ -43,10 +46,9 @@ public:
     void resized() override final;
     
     //==============================================================================
-    void sendParameterChange (int paramID, float newValue) override final;
-    
-    void startParameterChangeGesture (int paramID) override final;
-    void endParameterChangeGesture (int paramID) override final;
+    void sendParameterChange (parameterID paramID, float newValue) override final;
+    void startParameterChangeGesture (parameterID paramID) override final;
+    void endParameterChangeGesture (parameterID paramID) override final;
     
     void sendEditorPitchbend (int wheelValue) override final;
     

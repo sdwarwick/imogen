@@ -28,6 +28,9 @@
 #include "GUI/ImogenGUI.h"
 
 
+using namespace Imogen;
+
+
 class ImogenGuiHolder  :    public ImogenGuiHandle
 {
 public:
@@ -37,9 +40,11 @@ public:
     
     //
     
-    void recieveParameterChange (int paramID, float newValue) { p_gui.parameterChangeRecieved (paramID, newValue); }
-    void recieveParameterChangeGestureStart (int paramID) { p_gui.parameterChangeGestureStarted (paramID); }
-    void recieveParameterChangeGestureEnd (int paramID) { p_gui.parameterChangeGestureEnded (paramID); }
+    void recieveParameterChange (parameterID paramID, float newValue) { p_gui.parameterChangeRecieved (paramID, newValue); }
+    
+    void recieveParameterChangeGestureStart (parameterID paramID) { p_gui.parameterChangeGestureStarted (paramID); }
+    
+    void recieveParameterChangeGestureEnd (parameterID paramID) { p_gui.parameterChangeGestureEnded (paramID); }
     
     void parameterDefaultsUpdated() { p_gui.updateParameterDefaults(); }
     

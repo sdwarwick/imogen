@@ -33,14 +33,17 @@
 #include "BinaryData.h"
 
 
+using namespace Imogen;
+
+
 /* The interface used to communicate from the GUI to the processor */
 struct ImogenGuiHandle
 {
     virtual ~ImogenGuiHandle() = default;
     
-    virtual void sendParameterChange (int paramID, float newValue) = 0;
-    virtual void startParameterChangeGesture (int paramID) = 0;
-    virtual void endParameterChangeGesture (int paramID) = 0;
+    virtual void sendParameterChange (parameterID paramID, float newValue) = 0;
+    virtual void startParameterChangeGesture (parameterID paramID) = 0;
+    virtual void endParameterChangeGesture (parameterID paramID) = 0;
     
     virtual void sendEditorPitchbend (int wheelValue) = 0;
     
@@ -69,9 +72,9 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
-    void parameterChangeRecieved (int paramID, float newValue);
-    void parameterChangeGestureStarted (int paramID);
-    void parameterChangeGestureEnded (int paramID);
+    void parameterChangeRecieved (parameterID paramID, float newValue);
+    void parameterChangeGestureStarted (parameterID paramID);
+    void parameterChangeGestureEnded (parameterID paramID);
     
     void updateParameterDefaults();
     

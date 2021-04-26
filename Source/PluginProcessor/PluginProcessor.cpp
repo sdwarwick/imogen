@@ -68,6 +68,12 @@ ImogenAudioProcessor::ImogenAudioProcessor():
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
     Timer::stopTimer();
+    
+    std::for_each (parameterMessengers.begin(), parameterMessengers.end(),
+                   [&] (ParameterMessenger& messenger)
+                   {
+                       messenger.parameter()->orig()->removeListener (&messenger);
+                   });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

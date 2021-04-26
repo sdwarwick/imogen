@@ -68,7 +68,7 @@ void ImogenGUI::resized()
 }
 
 
-void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
+void ImogenGUI::parameterChangeRecieved (parameterID paramID, float newValue)
 {
     juce::ignoreUnused (paramID, newValue);
     
@@ -76,12 +76,12 @@ void ImogenGUI::parameterChangeRecieved (int paramID, float newValue)
 }
 
 
-void ImogenGUI::parameterChangeGestureStarted (int paramID)
+void ImogenGUI::parameterChangeGestureStarted (parameterID paramID)
 {
     mainDial.showParameter (paramID);
 }
 
-void ImogenGUI::parameterChangeGestureEnded (int paramID)
+void ImogenGUI::parameterChangeGestureEnded (parameterID paramID)
 {
     juce::ignoreUnused (paramID);
     mainDial.showPitchCorrection();

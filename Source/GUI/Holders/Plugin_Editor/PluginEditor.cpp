@@ -68,17 +68,17 @@ void ImogenAudioProcessorEditor::resized()
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-void ImogenAudioProcessorEditor::sendParameterChange (int paramID, float newValue)
+void ImogenAudioProcessorEditor::sendParameterChange (parameterID paramID, float newValue)
 {
     imgnProcessor.recieveParameterValueChange (paramID, newValue);
 }
 
-void ImogenAudioProcessorEditor::startParameterChangeGesture (int paramID) 
+void ImogenAudioProcessorEditor::startParameterChangeGesture (parameterID paramID)
 {
     imgnProcessor.recieveParameterChangeGestureBegin (paramID);
 }
 
-void ImogenAudioProcessorEditor::endParameterChangeGesture   (int paramID) 
+void ImogenAudioProcessorEditor::endParameterChangeGesture   (parameterID paramID)
 {
     imgnProcessor.recieveParameterChangeGestureEnd (paramID);
 }

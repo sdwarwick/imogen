@@ -68,17 +68,17 @@ void MainComponent::resized()
 
 //==============================================================================
 
-void MainComponent::sendParameterChange (int paramID, float newValue) 
+void MainComponent::sendParameterChange (parameterID paramID, float newValue)
 {
     juce::ignoreUnused (paramID, newValue);
 }
 
-void MainComponent::startParameterChangeGesture (int paramID)
+void MainComponent::startParameterChangeGesture (parameterID paramID)
 {
     juce::ignoreUnused (paramID);
 }
 
-void MainComponent::endParameterChangeGesture (int paramID)
+void MainComponent::endParameterChangeGesture (parameterID paramID)
 {
     juce::ignoreUnused (paramID);
 }
