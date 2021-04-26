@@ -28,8 +28,6 @@
 #include "LookAndFeel/ImogenLookAndFeel.h"
 #include "MainDialComponent/MainDialComponent.h"
 
-#include "GUI_Framework.h"
-
 #include "BinaryData.h"
 
 

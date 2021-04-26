@@ -27,7 +27,7 @@
 #include "Holders/ImogenGuiHolder.h"
 
 
-ImogenGUI::ImogenGUI (ImogenGuiHandle* h): holder(h), tooltipWindow(this, msBeforeTooltip)
+ImogenGUI::ImogenGUI (ImogenGuiHandle* h): mainDial(h), holder(h), tooltipWindow(this, msBeforeTooltip)
 {
     jassert (holder != nullptr);
            

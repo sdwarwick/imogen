@@ -26,6 +26,15 @@
 void ImogenDialComponent::paint (juce::Graphics& g)
 {
     juce::ignoreUnused (g);
+    
+    if (showingPitchCorrection.load())
+    {
+        
+    }
+    else
+    {
+        
+    }
 }
 
 void ImogenDialComponent::resized()
@@ -36,12 +45,14 @@ void ImogenDialComponent::resized()
 
 void ImogenDialComponent::showPitchCorrection()
 {
+    showingPitchCorrection.store (true);
     this->repaint();
 }
 
 void ImogenDialComponent::showParameter (int paramID)
 {
     juce::ignoreUnused (paramID);
+    showingPitchCorrection.store (false);
     this->repaint();
 }
 

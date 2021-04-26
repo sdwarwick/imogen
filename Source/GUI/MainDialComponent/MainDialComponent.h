@@ -22,11 +22,13 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
+#include "../GUI_Framework.h"
+
 
 class ImogenDialComponent  :    public juce::Component
 {
 public:
-    ImogenDialComponent() { }
+    ImogenDialComponent(ImogenGuiHandle* h): holder(h) { jassert (holder != nullptr); }
     
     void paint (juce::Graphics& g) override final;
     
@@ -43,12 +45,14 @@ public:
     //
     
     void showPitchCorrection();
-    
     void showParameter (int paramID);
+    bool isShowingPitchCorrection() const noexcept { return showingPitchCorrection.load(); }
     
     //
     
     void newIntonationData (const juce::String& noteName, int centsOffPitch);
     
 private:
+    ImogenGuiHandle* const holder;
+    std::atomic<bool> showingPitchCorrection;
 };
