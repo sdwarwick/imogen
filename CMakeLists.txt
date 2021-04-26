@@ -47,6 +47,7 @@ set (Imogen_sourceFiles
     ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.cpp
     ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.h
     ${guiSourcePath}/Holders/ImogenGuiHolder.h
+    ${guiSourcePath}/GUI_Framework.h
     ${guiSourcePath}/ImogenGUI.h
     ${guiSourcePath}/ImogenGUI.cpp
     ${guiSourcePath}/MainDialComponent/MainDialComponent.h

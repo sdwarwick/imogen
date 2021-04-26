@@ -25,40 +25,15 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "ImogenCommon.h"
-
 #include "LookAndFeel/ImogenLookAndFeel.h"
 #include "MainDialComponent/MainDialComponent.h"
+
+#include "GUI_Framework.h"
 
 #include "BinaryData.h"
 
 
 using namespace Imogen;
-
-
-/* The interface used to communicate from the GUI to the processor */
-struct ImogenGuiHandle
-{
-    virtual ~ImogenGuiHandle() = default;
-    
-    virtual void sendParameterChange (ParameterID paramID, float newValue) = 0;
-    virtual void startParameterChangeGesture (ParameterID paramID) = 0;
-    virtual void endParameterChangeGesture (ParameterID paramID) = 0;
-    
-    virtual void sendEditorPitchbend (int wheelValue) = 0;
-    
-    virtual void sendMidiLatch (bool shouldBeLatched) = 0;
-    
-    virtual void loadPreset   (const juce::String& presetName) = 0;
-    virtual void savePreset   (const juce::String& presetName) = 0;
-    virtual void deletePreset (const juce::String& presetName) = 0;
-    
-    virtual void enableAbletonLink (bool shouldBeEnabled) = 0;
-};
-
-
-/*
-*/
 
 
 class ImogenGUI  :     public juce::Component
