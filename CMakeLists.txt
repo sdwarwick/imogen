@@ -131,7 +131,7 @@ endif()
 
 #
 set (lv2detector -1)
-list (FIND ${bv_formats} LV2 lv2detector)
+list (FIND bv_formats LV2 lv2detector)
 
 if (NOT ${lv2detector} EQUAL -1)
 	set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
