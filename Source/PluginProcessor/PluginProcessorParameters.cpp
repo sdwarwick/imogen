@@ -45,7 +45,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
     juce::NormalisableRange<float> hzRange (40.0f, 10000.0f, 1.0f);
            
     const auto generic = juce::AudioProcessorParameter::genericParameter;
-           
     const auto emptyString = juce::String();
            
     std::function< juce::String (bool value, int maximumStringLength) >  toggle_stringFromBool = [](bool value, int maxLength) { return value ? TRANS("On").substring(0, maxLength) : TRANS("Off").substring(0, maxLength); };

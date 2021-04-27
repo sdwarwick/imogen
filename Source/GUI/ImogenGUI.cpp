@@ -30,6 +30,9 @@
 ImogenGUI::ImogenGUI (ImogenGuiHandle* h): mainDial(h), holder(h), tooltipWindow(this, msBeforeTooltip)
 {
     jassert (holder != nullptr);
+    
+    createParameters();
+    jassert (parameters.size() == numParams);
            
     this->setBufferedToImage (true);
     
@@ -42,11 +45,60 @@ ImogenGUI::ImogenGUI (ImogenGuiHandle* h): mainDial(h), holder(h), tooltipWindow
     setSize (940, 435);
   
 #if JUCE_MAC
-    const bool initializeWithDarkMode = juce::Desktop::isOSXDarkModeActive();
-    juce::ignoreUnused (initializeWithDarkMode);
+    darkMode.store (juce::Desktop::isOSXDarkModeActive());
+#else
+    darkMode.store (true);
 #endif
     
     mainDial.showPitchCorrection();
+}
+
+
+void ImogenGUI::createParameters()
+{
+    parameters.clear();
+    parameters.reserve (numParams);
+    
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (inputSourceID,          TRANS ("Input source")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (mainBypassID,           TRANS ("Main bypass")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (leadBypassID,           TRANS ("Lead bypass")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (harmonyBypassID,        TRANS ("Harmony bypass")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (dryPanID,               TRANS ("Dry pan")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (dryWetID,               TRANS ("% wet")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (adsrAttackID,           TRANS ("ADSR attack")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (adsrDecayID,            TRANS ("ADSR decay")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (adsrSustainID,          TRANS ("ADSR sustain")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (adsrReleaseID,          TRANS ("ADSR release")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (stereoWidthID,          TRANS ("Stereo width")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (lowestPannedID,         TRANS ("Lowest panned note")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (velocitySensID,         TRANS ("MIDI velocity sensitivity")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (pitchBendRangeID,       TRANS ("Pitchbend range (st)")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (pedalPitchIsOnID,       TRANS ("Pedal pitch toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (pedalPitchThreshID,     TRANS ("Pedal pitch threshold")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (pedalPitchIntervalID,   TRANS ("Pedal pitch interval")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (descantIsOnID,          TRANS ("Descant toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (descantThreshID,        TRANS ("Descant threshold")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (descantIntervalID,      TRANS ("Descant interval")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (voiceStealingID,        TRANS ("Voice stealing")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (inputGainID,            TRANS ("Input gain")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (outputGainID,           TRANS ("Output gain")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (limiterToggleID,        TRANS ("Limiter toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (noiseGateToggleID,      TRANS ("Noise gate toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (noiseGateThresholdID,   TRANS ("Noise gate thresh")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (compressorToggleID,     TRANS ("Compressor toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (compressorAmountID,     TRANS ("Compressor amount")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (aftertouchGainToggleID, TRANS ("Aftertouch gain on/off")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (deEsserToggleID,        TRANS ("De-esser toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (deEsserThreshID,        TRANS ("De-esser thresh")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (deEsserAmountID,        TRANS ("De-esser amount")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (reverbToggleID,         TRANS ("Reverb toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (reverbDryWetID,         TRANS ("Reverb dry/wet")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (reverbDecayID,          TRANS ("Reverb decay")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (reverbDuckID,           TRANS ("Reverb duck")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (reverbLoCutID,          TRANS ("Reverb low cut")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (reverbHiCutID,          TRANS ("Reverb high cut")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (delayToggleID,          TRANS ("Delay toggle")));
+    parameters.emplace_back (std::make_unique<ImogenGUIParameter> (delayToggleID,          TRANS ("Delay dry/wet")));
 }
 
 
@@ -58,6 +110,23 @@ ImogenGUI::~ImogenGUI()
 void ImogenGUI::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
+    
+    if (darkMode.load())
+    {
+        
+    }
+    else
+    {
+        
+    }
+}
+
+
+void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
+{
+    darkMode.store (shouldUseDarkMode);
+    // inform all child components of the change...
+    this->repaint();
 }
 
 
@@ -151,4 +220,20 @@ void ImogenGUI::modifierKeysChanged (const juce::ModifierKeys& modifiers)
 void ImogenGUI::focusLost (FocusChangeType cause)
 {
     juce::ignoreUnused (cause);
+}
+
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+ImogenGUIParameter* ImogenGUI::getParameter (ParameterID paramID) const
+{
+    for (auto& parameter : parameters)
+    {
+        auto* param = parameter.get();
+        if (param->getID() == paramID)
+            return param;
+    }
+    
+    return nullptr;
 }

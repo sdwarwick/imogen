@@ -105,10 +105,14 @@ public:
     virtual ~ImogenComponent()
     {
         parameter->removeListener (this);
-        parameter->setComponent (nullptr);
+        
+        if (parameter->getComponent() == this)
+            parameter->setComponent (nullptr);
     }
     
     ImogenGUIParameter* getParameter() const noexcept { return parameter; }
+    
+    virtual void setDarkMode (bool shouldUseDarkMode) { juce::ignoreUnused (shouldUseDarkMode); }
     
 protected:
     ImogenGuiHandle* const holder;
