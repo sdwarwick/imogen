@@ -62,7 +62,31 @@ jobs:
      - name: Run iOS build script
        shell: bash
        run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
+       
+  plugin-LV2-build:
+  
+      name: plugin - LV2 build
+      runs-on: ubuntu-latest
+      timeout-minutes: 30
+      
+      steps:
+      
+        - name: Install JUCE's Linux dependencies
+          shell: bash
+          run: sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev
 
-     
-   
+        - name: Install LV2 development headers
+          shell: bash
+          run: sudo apt-get install lv2-dev
+      
+        - name: Checkout code
+          uses: actions/checkout@v2
+          with:
+            submodules: recursive
+            path: imogen
+
+        - name: Run main build script
+          shell: bash
+          run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_script.sh
+          
 #
