@@ -34,7 +34,8 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
     tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()), 
     oscMapper(false),
-    abletonLink(120.0) // constructed with the initial BPM
+    abletonLink(120.0), // constructed with the initial BPM
+    oscListener(this)
 {
 #if BV_USE_NE10
     ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!
@@ -63,6 +64,10 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     
     constexpr int timerFramerate = 30;
     Timer::startTimerHz (timerFramerate);
+    
+    oscReceiver.addListener (&oscListener);
+    
+    // if headless, automatically connect the oscSender...
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -74,6 +79,10 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
                    {
                        messenger.parameter()->orig()->removeListener (&messenger);
                    });
+    
+    oscSender.disconnect();
+    oscReceiver.removeListener (&oscListener);
+    oscReceiver.disconnect();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,6 +289,17 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 
 /*===========================================================================================================================
  ============================================================================================================================*/
+
+
+void ImogenAudioProcessor::changeMidiLatchState (bool isNowLatched)
+{
+    if (isUsingDoublePrecision())
+        doubleEngine.updateMidiLatch (isNowLatched);
+    else
+        floatEngine.updateMidiLatch (isNowLatched);
+    
+    oscSender.sendMidiLatch (isNowLatched);
+}
 
 
 // standard and general-purpose functions -----------------------------------------------------------------------------------------------------------

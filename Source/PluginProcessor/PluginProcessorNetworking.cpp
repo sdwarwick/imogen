@@ -26,17 +26,17 @@
 
 /* Functions for recieving events from the editor */
 
-void ImogenAudioProcessor::recieveParameterValueChange (ParameterID paramID, float newValue)
+void ImogenAudioProcessor::parameterChangeRecieved (ParameterID paramID, float newValue)
 {
     getParameterPntr(paramID)->orig()->setValueNotifyingHost (newValue);
 }
 
-void ImogenAudioProcessor::recieveParameterChangeGestureBegin (ParameterID paramID)
+void ImogenAudioProcessor::parameterChangeGestureStarted (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->beginChangeGesture();
 }
 
-void ImogenAudioProcessor::recieveParameterChangeGestureEnd (ParameterID paramID)
+void ImogenAudioProcessor::parameterChangeGestureEnded (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->endChangeGesture();
 }
@@ -59,6 +59,18 @@ void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
 }
 
 
+void ImogenAudioProcessor::presetNameChanged (const juce::String& newPresetName)
+{
+    loadPreset (newPresetName);
+}
+
+
+void ImogenAudioProcessor::abletonLinkChange (bool isNowEnabled)
+{
+    juce::ignoreUnused (isNowEnabled);
+}
+
+
 
 /* Functions for sending events to the editor (& any connected ImogenRemotes) */
 
@@ -69,7 +81,7 @@ void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newVa
     if (auto* editor = getActiveGui())
         editor->recieveParameterChange (paramID, newValue);
     
-    // send param change as OSC message to any recievers...
+    oscSender.sendParameterChange (paramID, newValue);
 }
 
 void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
@@ -77,7 +89,7 @@ void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
     if (auto* editor = getActiveGui())
         editor->recieveParameterChangeGestureStart (paramID);
     
-    // send OSC message...
+    oscSender.startParameterChangeGesture (paramID);
 }
 
 void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
@@ -85,28 +97,12 @@ void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
     if (auto* editor = getActiveGui())
         editor->recieveParameterChangeGestureEnd (paramID);
     
-    // send OSC message...
+    oscSender.endParameterChangeGesture (paramID);
 }
 
 
 
 /*
- OUTGOING OSC MESSAGES
- virtual void sendParameterChange (ParameterID paramID, float newValue) = 0;
- virtual void startParameterChangeGesture (ParameterID paramID) = 0;
- virtual void endParameterChangeGesture (ParameterID paramID) = 0;
- 
- virtual void sendEditorPitchbend (int wheelValue) = 0;
- 
- virtual void sendMidiLatch (bool shouldBeLatched) = 0;
- 
- virtual void loadPreset   (const juce::String& presetName) = 0;
- virtual void savePreset   (const juce::String& presetName) = 0;
- virtual void deletePreset (const juce::String& presetName) = 0;
- 
- virtual void enableAbletonLink (bool shouldBeEnabled) = 0;
- 
- 
  INCOMING OSC MESSAGES
  parameterChangeRecieved (ParameterID paramID, float newValue);
  void parameterChangeGestureStarted (ParameterID paramID);

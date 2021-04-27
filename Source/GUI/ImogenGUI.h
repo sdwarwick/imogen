@@ -34,7 +34,8 @@
 using namespace Imogen;
 
 
-class ImogenGUI  :     public juce::Component
+class ImogenGUI  :     public juce::Component,
+                       public ImogenEventReciever
 {
 public:
     
@@ -45,18 +46,18 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
-    void parameterChangeRecieved (ParameterID paramID, float newValue);
-    void parameterChangeGestureStarted (ParameterID paramID);
-    void parameterChangeGestureEnded (ParameterID paramID);
+    void parameterChangeRecieved       (ParameterID paramID, float newValue) override final;
+    void parameterChangeGestureStarted (ParameterID paramID) override final;
+    void parameterChangeGestureEnded   (ParameterID paramID) override final;
+    
+    void presetNameChanged (const juce::String& newPresetName) override final;
+    
+    void abletonLinkChange (bool isNowEnabled) override final { juce::ignoreUnused (isNowEnabled); }
     
     void updateParameterDefaults();
     
-    void presetNameChanged (const juce::String& newPresetName);
-    
     void mts_connectionChange (bool isNowConnected);
     void mts_scaleChange (const juce::String& newScaleName);
-    
-    void abletonLinkChange (bool isNowEnabled) { juce::ignoreUnused (isNowEnabled); }
     
     //
     

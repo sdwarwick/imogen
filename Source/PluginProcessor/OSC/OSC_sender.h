@@ -1,14 +1,14 @@
 
 #include <juce_osc/juce_osc.h>
  
-#include "GUI/GUI_Framework.h"
+#include "../../GUI/GUI_Framework.h"
 
 
-class ImogenGuiOSCSender    :   public ImogenGuiHandle,
-                                public juce::OSCSender
+class ImogenProcessorOSCSender    :   public ImogenGuiHandle,
+                                      public juce::OSCSender
 {
 public:
-    ImogenGuiOSCSender() = default;
+    ImogenProcessorOSCSender() = default;
     
     void sendParameterChange (ParameterID paramID, float newValue) override final
     {
@@ -25,7 +25,7 @@ public:
         juce::ignoreUnused (paramID);
     }
     
-    void sendEditorPitchbend (int wheelValue) override final
+    void sendEditorPitchbend (int wheelValue) override final  // not used
     {
         juce::ignoreUnused (wheelValue);
     }
@@ -35,17 +35,17 @@ public:
         juce::ignoreUnused (shouldBeLatched);
     }
     
-    void loadPreset   (const juce::String& presetName) override final
+    void loadPreset   (const juce::String& presetName) override final  // not used
     {
         juce::ignoreUnused (presetName);
     }
     
-    void savePreset   (const juce::String& presetName) override final
+    void savePreset   (const juce::String& presetName) override final  // not used
     {
         juce::ignoreUnused (presetName);
     }
     
-    void deletePreset (const juce::String& presetName) override final
+    void deletePreset (const juce::String& presetName) override final  // not used
     {
         juce::ignoreUnused (presetName);
     }

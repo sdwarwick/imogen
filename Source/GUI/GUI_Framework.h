@@ -7,7 +7,7 @@
 using namespace Imogen;
 
 
-/* The interface used to communicate from the GUI to the processor */
+/* The interface used to communicate between the GUI and the processor */
 struct ImogenGuiHandle
 {
     virtual ~ImogenGuiHandle() = default;

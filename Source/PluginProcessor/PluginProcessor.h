@@ -30,6 +30,9 @@
 
 #include "GUI/Holders/ImogenGuiHolder.h"
 
+#include "OSC/OSC_sender.h"
+#include "OSC/OSC_reciever.h"
+
 
 using namespace Imogen;
 
@@ -40,6 +43,7 @@ class ImogenAudioProcessorEditor; // forward declaration...
 */
 
 class ImogenAudioProcessor    : public juce::AudioProcessor,
+                                public ImogenEventReciever,
                                 private juce::Timer
 {
     using Parameter      = bav::Parameter;
@@ -74,9 +78,14 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     
     
-    void recieveParameterValueChange (ParameterID paramID, float newValue);
-    void recieveParameterChangeGestureBegin (ParameterID paramID);
-    void recieveParameterChangeGestureEnd (ParameterID paramID);
+    void parameterChangeRecieved       (ParameterID paramID, float newValue) override final;
+    void parameterChangeGestureStarted (ParameterID paramID) override final;
+    void parameterChangeGestureEnded   (ParameterID paramID) override final;
+    
+    void presetNameChanged (const juce::String& newPresetName) override final;
+    
+    void abletonLinkChange (bool isNowEnabled) override final;
+    
     
     void sendParameterChange (ParameterID paramID, float newValue);
     void sendParameterChangeGestureBegin (ParameterID paramID);
@@ -137,8 +146,6 @@ public:
     bool areOscMessagesEnabled() const noexcept { return oscMapper.areOscMessagesEnabled(); }
     
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
-    
-    void enableAbletonLink (bool shouldBeEnabled) { juce::ignoreUnused (shouldBeEnabled); }
     
     int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
     
@@ -284,6 +291,9 @@ private:
     };
     
     
+    void changeMidiLatchState (bool isNowLatched);
+    
+    
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
     
     // this object manages all parameters' mappings to OSC messages
@@ -305,6 +315,11 @@ private:
     juce::String lastPresetName;
     
     std::atomic<bool> abletonLink_wasEnabled;
+    
+    ImogenProcessorOSCSender   oscSender;
+    
+    juce::OSCReceiver          oscReceiver;
+    ImogenProcessorOSCReciever oscListener;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

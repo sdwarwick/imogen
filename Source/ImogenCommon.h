@@ -88,3 +88,17 @@ static constexpr int numEventIDs = pitchBendFromEditorID + 1;
 
 
 }  // namespace
+
+
+struct ImogenEventReciever
+{
+    virtual ~ImogenEventReciever() = default;
+    
+    virtual void parameterChangeRecieved (Imogen::ParameterID paramID, float newValue) = 0;
+    virtual void parameterChangeGestureStarted (Imogen::ParameterID paramID) = 0;
+    virtual void parameterChangeGestureEnded (Imogen::ParameterID paramID) = 0;
+    
+    virtual void presetNameChanged (const juce::String& newPresetName) = 0;
+    
+    virtual void abletonLinkChange (bool isNowEnabled) = 0;
+};

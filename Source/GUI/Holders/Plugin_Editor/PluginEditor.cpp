@@ -70,17 +70,17 @@ void ImogenAudioProcessorEditor::resized()
 
 void ImogenAudioProcessorEditor::sendParameterChange (ParameterID paramID, float newValue)
 {
-    imgnProcessor.recieveParameterValueChange (paramID, newValue);
+    imgnProcessor.parameterChangeRecieved (paramID, newValue);
 }
 
 void ImogenAudioProcessorEditor::startParameterChangeGesture (ParameterID paramID)
 {
-    imgnProcessor.recieveParameterChangeGestureBegin (paramID);
+    imgnProcessor.parameterChangeGestureStarted (paramID);
 }
 
 void ImogenAudioProcessorEditor::endParameterChangeGesture   (ParameterID paramID)
 {
-    imgnProcessor.recieveParameterChangeGestureEnd (paramID);
+    imgnProcessor.parameterChangeGestureEnded (paramID);
 }
 
 void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
@@ -110,5 +110,5 @@ void ImogenAudioProcessorEditor::deletePreset (const juce::String& presetName)
 
 void ImogenAudioProcessorEditor::enableAbletonLink (bool shouldBeEnabled)
 {
-    imgnProcessor.enableAbletonLink (shouldBeEnabled);
+    imgnProcessor.abletonLinkChange (shouldBeEnabled);
 }

@@ -661,7 +661,7 @@ void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<Sample
         {
             default: continue;
             case (killAllMidiID): activeEngine.killAllMidi();  // any message of this type triggers this, regardless of its value
-            case (midiLatchID):   activeEngine.updateMidiLatch (value >= 0.5f);
+            case (midiLatchID):   changeMidiLatchState (value >= 0.5f);
             case (pitchBendFromEditorID): activeEngine.recieveExternalPitchbend (juce::roundToInt (pitchbendNormalizedRange.convertFrom0to1 (value)));
         }
     }
