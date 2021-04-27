@@ -216,6 +216,9 @@ private:
                                     bool isPresetChange);
     
     
+    ImogenGuiHolder* getActiveGui() const;
+    
+    
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;

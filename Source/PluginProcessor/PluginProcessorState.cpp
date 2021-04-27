@@ -84,6 +84,8 @@ void ImogenAudioProcessor::savePreset (juce::String presetName) // this function
     presetName += ".xml";
     
     xml->writeTo (getPresetsFolder().getChildFile (presetName));
+    
+    rescanPresetsFolder();
     updateHostDisplay();
 }
 
@@ -106,6 +108,8 @@ bool ImogenAudioProcessor::loadPreset (juce::String presetName)
 {
     if (presetName.isEmpty())
         return false;
+    
+    rescanPresetsFolder();
     
     if (! presetName.endsWith(".xml"))
         presetName += ".xml";
@@ -185,6 +189,7 @@ void ImogenAudioProcessor::deletePreset (juce::String presetName)
         if (! presetToDelete.moveToTrash())
             presetToDelete.deleteFile();
     
+    rescanPresetsFolder();
     updateHostDisplay();
 }
 
@@ -217,7 +222,7 @@ void ImogenAudioProcessor::setCurrentProgram (int index)
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
 {
-    if (availablePresets.isEmpty() || index < 0)
+    if (availablePresets.isEmpty() || index < 0 || index >= availablePresets.size())
         return {};
     
     const auto name = availablePresets.getUnchecked(index).getFileName();
@@ -232,11 +237,12 @@ int ImogenAudioProcessor::indexOfProgram (const juce::String& name) const
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
+    deletePreset (getProgramName (index));
+    
     if (index == getCurrentProgram())
-    {
-        deletePreset (getProgramName (index));
         savePreset (newName);
-    }
+    
+    rescanPresetsFolder();
 }
 
 

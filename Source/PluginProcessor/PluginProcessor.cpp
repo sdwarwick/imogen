@@ -80,12 +80,10 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 void ImogenAudioProcessor::timerCallback()
 {
-    auto* const activeEditor = dynamic_cast<ImogenGuiHolder*> (getActiveEditor());
-    
     if (parameterDefaultsAreDirty.load())
     {
-        if (activeEditor != nullptr)
-            activeEditor->parameterDefaultsUpdated();
+        if (auto* editor = getActiveGui())
+            editor->parameterDefaultsUpdated();
         
         parameterDefaultsAreDirty.store (false);
     }
@@ -93,8 +91,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto mts_isConnected = isConnectedToMtsEsp();
     if (mts_isConnected != mts_wasConnected.load())
     {
-        if (activeEditor != nullptr)
-            activeEditor->mts_connectionChange (mts_isConnected);
+        if (auto* editor = getActiveGui())
+            editor->mts_connectionChange (mts_isConnected);
         
         mts_wasConnected.store (mts_isConnected);
     }
@@ -102,8 +100,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto scaleName = getScaleName();
     if (scaleName != mts_lastScaleName)
     {
-        if (activeEditor != nullptr)
-            activeEditor->mts_scaleChange (scaleName);
+        if (auto* editor = getActiveGui())
+            editor->mts_scaleChange (scaleName);
         
         mts_lastScaleName = scaleName;
     }
@@ -111,8 +109,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto presetName = getActivePresetName();
     if (presetName != lastPresetName)
     {
-        if (activeEditor != nullptr)
-            activeEditor->presetNameChange (presetName);
+        if (auto* editor = getActiveGui())
+            editor->presetNameChange (presetName);
         
         lastPresetName = presetName;
     }
@@ -120,8 +118,8 @@ void ImogenAudioProcessor::timerCallback()
     const auto abletonLink_isEnabled = isAbletonLinkEnabled();
     if (abletonLink_isEnabled != abletonLink_wasEnabled.load())
     {
-        if (activeEditor != nullptr)
-            activeEditor->abletonLinkChange (abletonLink_isEnabled);
+        if (auto* editor = getActiveGui())
+            editor->abletonLinkChange (abletonLink_isEnabled);
         
         abletonLink_wasEnabled.store (abletonLink_isEnabled);
     }
@@ -133,6 +131,16 @@ void ImogenAudioProcessor::timerCallback()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
+{
+    if (auto* editor = getActiveEditor())
+        return dynamic_cast<ImogenGuiHolder*> (editor);
+    
+    return nullptr;
+}
+
 
 template <typename SampleType>
 inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)

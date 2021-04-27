@@ -24,6 +24,8 @@
 #include "PluginProcessor.h"
 
 
+/* Functions for recieving events from the editor */
+
 void ImogenAudioProcessor::recieveParameterValueChange (ParameterID paramID, float newValue)
 {
     getParameterPntr(paramID)->orig()->setValueNotifyingHost (newValue);
@@ -37,32 +39,6 @@ void ImogenAudioProcessor::recieveParameterChangeGestureBegin (ParameterID param
 void ImogenAudioProcessor::recieveParameterChangeGestureEnd (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->endChangeGesture();
-}
-
-void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newValue)
-{
-    currentProgram.store (-1);
-    
-    if (auto* activeEditor = getActiveEditor())
-        dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChange (paramID, newValue);
-    
-    // send param change as OSC message to any recievers...
-}
-
-void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
-{
-    if (auto* activeEditor = getActiveEditor())
-        dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureStart (paramID);
-    
-    // send OSC message...
-}
-
-void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
-{
-    if (auto* activeEditor = getActiveEditor())
-        dynamic_cast<ImogenGuiHolder*>(activeEditor)->recieveParameterChangeGestureEnd (paramID);
-    
-    // send OSC message...
 }
 
 void ImogenAudioProcessor::recieveMidiLatchEvent (bool isNowLatched)
@@ -81,3 +57,34 @@ void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
     nonParamEvents.pushMessage (pitchBendFromEditorID,
                                 pitchbendNormalizedRange.convertTo0to1 (float (wheelValue)));
 }
+
+
+
+/* Functions for sending events to the editor (& any connected ImogenRemotes) */
+
+void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newValue)
+{
+    currentProgram.store (-1);
+    
+    if (auto* editor = getActiveGui())
+        editor->recieveParameterChange (paramID, newValue);
+    
+    // send param change as OSC message to any recievers...
+}
+
+void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
+{
+    if (auto* editor = getActiveGui())
+        editor->recieveParameterChangeGestureStart (paramID);
+    
+    // send OSC message...
+}
+
+void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
+{
+    if (auto* editor = getActiveGui())
+        editor->recieveParameterChangeGestureEnd (paramID);
+    
+    // send OSC message...
+}
+

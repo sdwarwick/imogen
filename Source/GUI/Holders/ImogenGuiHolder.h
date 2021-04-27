@@ -43,8 +43,7 @@ public:
     void recieveParameterChange (ParameterID paramID, float newValue) { p_gui.parameterChangeRecieved (paramID, newValue); }
     
     void recieveParameterChangeGestureStart (ParameterID paramID) { p_gui.parameterChangeGestureStarted (paramID); }
-    
-    void recieveParameterChangeGestureEnd (ParameterID paramID) { p_gui.parameterChangeGestureEnded (paramID); }
+    void recieveParameterChangeGestureEnd   (ParameterID paramID) { p_gui.parameterChangeGestureEnded (paramID); }
     
     void parameterDefaultsUpdated() { p_gui.updateParameterDefaults(); }
     
