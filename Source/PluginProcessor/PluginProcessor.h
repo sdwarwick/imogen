@@ -141,10 +141,7 @@ public:
     // this queue is SPSC; this is only for events flowing from the editor into the processor
     bav::MessageQueue<msgQueueSize> nonParamEvents;
     
-    
-    void setOscMessagesEnabled (bool shouldBeEnabled) { oscMapper.setEnabled (shouldBeEnabled); }
-    bool areOscMessagesEnabled() const noexcept { return oscMapper.areOscMessagesEnabled(); }
-    
+
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
     
     int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
@@ -212,8 +209,6 @@ private:
     void initializeParameterListeners();
     void addParameterMessenger (ParameterID paramID);
     void updateParameterDefaults();
-    
-    void initializeParameterOscMappings();
     
     bav::MessageQueue<msgQueueSize> paramChanges;
     
@@ -295,10 +290,6 @@ private:
     
     
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
-    
-    // this object manages all parameters' mappings to OSC messages
-    bav::OSCMappingManager oscMapper;
-    
     
     // this object represents the plugin as a participant in an Ableton Link session.
     ableton::Link abletonLink;

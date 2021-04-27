@@ -352,23 +352,6 @@ void ImogenAudioProcessor::addParameterMessenger (ParameterID paramID)
  ============================================================================================================================*/
 
 /*
-    Initializes OSC mappings for each parameter.
-*/
-
-void ImogenAudioProcessor::initializeParameterOscMappings()
-{
-    for (int i = 0; i < numParams; ++i)
-    {
-        auto* param = getParameterPntr (ParameterID(i));
-        oscMapper.addNewMapping (param, juce::String("/imogen/") + param->orig()->paramID);
-    }    
-}
-
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-/*
     Returns one of the processor's parameter objects, referenced by its parameterID.
 */
 

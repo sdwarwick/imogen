@@ -32,8 +32,7 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor():
     AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()), 
-    oscMapper(false),
+    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
     abletonLink(120.0), // constructed with the initial BPM
     oscListener(this)
 {
@@ -46,8 +45,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     initializeParameterListeners();
     updateParameterDefaults();
            
-    initializeParameterOscMappings();
-    
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
