@@ -28,6 +28,8 @@ set (ImogenCore_sourceFiles
     ${Imogen_sourceDir}/GUI/MainDialComponent/MainDialComponent.cpp
     ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.h
     ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.cpp
+    ${Imogen_sourceDir}/OSC/OSC_reciever.h
+    ${Imogen_sourceDir}/OSC/OSC_sender.h
     )
 
 #

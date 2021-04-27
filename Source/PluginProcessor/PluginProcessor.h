@@ -30,8 +30,8 @@
 
 #include "GUI/Holders/ImogenGuiHolder.h"
 
-#include "OSC/OSC_sender.h"
-#include "OSC/OSC_reciever.h"
+#include "../OSC/OSC_sender.h"
+#include "../OSC/OSC_reciever.h"
 
 
 using namespace Imogen;
@@ -316,10 +316,10 @@ private:
     
     std::atomic<bool> abletonLink_wasEnabled;
     
-    ImogenProcessorOSCSender   oscSender;
+    ImogenOSCSender   oscSender;
     
-    juce::OSCReceiver          oscReceiver;
-    ImogenProcessorOSCReciever oscListener;
+    juce::OSCReceiver oscReceiver;
+    ImogenOSCReciever oscListener;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

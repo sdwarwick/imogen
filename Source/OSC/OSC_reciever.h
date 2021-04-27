@@ -1,18 +1,20 @@
 
-#include "GUI/ImogenGUI.h"
+#pragma once
+
+#include "ImogenCommon.h"
 
 
-class ImogenProcessorOSCReciever :    public juce::OSCReceiver::Listener< juce::OSCReceiver::RealtimeCallback >
+class ImogenOSCReciever :    public juce::OSCReceiver::Listener< juce::OSCReceiver::MessageLoopCallback >
 {
 public:
-    ImogenProcessorOSCReciever(ImogenEventReciever* p): processor(p) { jassert (processor != nullptr); }
+    ImogenOSCReciever(ImogenEventReciever* r): reciever(r) { jassert (reciever != nullptr); }
     
     void oscMessageReceived (const juce::OSCMessage& message) override final
     {
         juce::ignoreUnused (message);
         
         /*
-         Redirect OSC messages to call these methods of the processor:
+         Redirect OSC messages to call these methods of the reciever:
          
          - parameterChangeRecieved (ParameterID paramID, float newValue)
          - parameterChangeGestureStarted (ParameterID paramID)
@@ -23,5 +25,5 @@ public:
     }
     
 private:
-    ImogenEventReciever* const processor;
+    ImogenEventReciever* const reciever;
 };

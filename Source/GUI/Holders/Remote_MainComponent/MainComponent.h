@@ -28,8 +28,8 @@
 
 #include "../ImogenGuiHolder.h"
 
-#include "../../../Remote/OSC/OSC_sender.h"
-#include "../../../Remote/OSC/OSC_reciever.h"
+#include "../../../OSC/OSC_sender.h"
+#include "../../../OSC/OSC_reciever.h"
 
 
 using namespace Imogen;
@@ -67,9 +67,9 @@ public:
 
 private:
     juce::OSCReceiver oscReceiver;
-    ImogenGuiOSCReciever oscParser;
+    ImogenOSCReciever oscParser;
     
-    ImogenGuiOSCSender oscSender;
+    ImogenOSCSender   oscSender;
     
 #if JUCE_OPENGL
     OpenGLContext openGLContext;
