@@ -130,6 +130,14 @@ else()
 endif()
 
 #
+set (lv2detector -1)
+list (FIND ${bv_formats} LV2 lv2detector)
+
+if (NOT ${lv2detector} EQUAL -1)
+	set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
+endif()
+
+#
 
 if (ANDROID)
     set (OBOE_DIR "../JUCE/modules/juce_audio_devices/native/oboe")
@@ -198,8 +206,8 @@ juce_add_plugin (Imogen
 
 #
 
-if (TARGET ${CMAKE_PROJECT_NAME}_LV2)
-    set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
+if (TARGET Imogen_LV2)
+    set_target_properties (Imogen PROPERTIES JUCE_LV2_URI https://github.com/benthevining/imogen)
 endif()
 
 #
@@ -303,9 +311,5 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
     IMOGEN_REMOTE_APP=0
     )
-    
-if (TARGET Imogen_LV2)
-    set_target_properties (Imogen PROPERTIES JUCE_LV2_URI https://github.com/benthevining/imogen)
-endif()
 
 #
