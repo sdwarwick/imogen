@@ -88,3 +88,34 @@ void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
     // send OSC message...
 }
 
+
+
+/*
+ OUTGOING OSC MESSAGES
+ virtual void sendParameterChange (ParameterID paramID, float newValue) = 0;
+ virtual void startParameterChangeGesture (ParameterID paramID) = 0;
+ virtual void endParameterChangeGesture (ParameterID paramID) = 0;
+ 
+ virtual void sendEditorPitchbend (int wheelValue) = 0;
+ 
+ virtual void sendMidiLatch (bool shouldBeLatched) = 0;
+ 
+ virtual void loadPreset   (const juce::String& presetName) = 0;
+ virtual void savePreset   (const juce::String& presetName) = 0;
+ virtual void deletePreset (const juce::String& presetName) = 0;
+ 
+ virtual void enableAbletonLink (bool shouldBeEnabled) = 0;
+ 
+ 
+ INCOMING OSC MESSAGES
+ parameterChangeRecieved (ParameterID paramID, float newValue);
+ void parameterChangeGestureStarted (ParameterID paramID);
+ void parameterChangeGestureEnded (ParameterID paramID);
+ 
+ void presetNameChanged (const juce::String& newPresetName);
+ 
+ void mts_connectionChange (bool isNowConnected);
+ void mts_scaleChange (const juce::String& newScaleName);
+ 
+ void abletonLinkChange (bool isNowEnabled)
+*/

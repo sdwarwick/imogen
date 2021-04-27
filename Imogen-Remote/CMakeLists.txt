@@ -37,7 +37,8 @@ set (ImogenRemote_sourceFiles
 	${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp
-    ${Imogen_sourceDir}/Remote/OSC_parser.h)
+    ${Imogen_sourceDir}/Remote/OSC/OSC_reciever.h
+    ${Imogen_sourceDir}/Remote/OSC/OSC_sender.h)
 
 #
 

@@ -43,6 +43,8 @@ set (Imogen_sourceFiles
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorNetworking.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h
+    ${Imogen_sourceDir}/PluginProcessor/OSC/OSC_sender.h
+    ${Imogen_sourceDir}/PluginProcessor/OSC/OSC_reciever.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h

@@ -24,8 +24,7 @@
 #include "MainComponent.h"
 
 
-MainComponent::MainComponent()
-    : oscParser(this)
+MainComponent::MainComponent(): oscParser(gui())
 {
     this->setBufferedToImage (true);
     
@@ -34,6 +33,8 @@ MainComponent::MainComponent()
     setSize (800, 2990);
     
     oscReceiver.addListener (&oscParser);
+    
+    // connect OSC sender & reciver...
     
 #if JUCE_OPENGL
     openGLContext.attachTo (*getTopLevelComponent());
@@ -44,6 +45,9 @@ MainComponent::~MainComponent()
 {
     oscReceiver.removeListener (&oscParser);
     
+    oscSender.disconnect();
+    oscReceiver.disconnect();
+    
 #if JUCE_OPENGL
     openGLContext.detach();
 #endif
@@ -52,12 +56,7 @@ MainComponent::~MainComponent()
 //==============================================================================
 void MainComponent::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setFont (juce::Font (16.0f));
-    g.setColour (juce::Colours::white);
-    g.drawText ("Hello World!", getLocalBounds(), juce::Justification::centred, true);
 }
 
 void MainComponent::resized()
@@ -68,51 +67,49 @@ void MainComponent::resized()
 
 //==============================================================================
 
+/* This app is just a remote control for another instance of Imogen. All its outgoing events are simply rerouted to an OSC message sender... */
+
 void MainComponent::sendParameterChange (ParameterID paramID, float newValue)
 {
-    juce::ignoreUnused (paramID, newValue);
+    oscSender.sendParameterChange (paramID, newValue);
 }
 
 void MainComponent::startParameterChangeGesture (ParameterID paramID)
 {
-    juce::ignoreUnused (paramID);
+    oscSender.startParameterChangeGesture (paramID);
 }
 
 void MainComponent::endParameterChangeGesture (ParameterID paramID)
 {
-    juce::ignoreUnused (paramID);
+    oscSender.endParameterChangeGesture (paramID);
 }
-
 
 void MainComponent::sendEditorPitchbend (int wheelValue) 
 {
-    juce::ignoreUnused (wheelValue);
+    oscSender.sendEditorPitchbend (wheelValue);
 }
-
 
 void MainComponent::sendMidiLatch (bool shouldBeLatched) 
 {
-    juce::ignoreUnused (shouldBeLatched);
+    oscSender.sendMidiLatch (shouldBeLatched);
 }
-
 
 void MainComponent::loadPreset (const juce::String& presetName) 
 {
-    juce::ignoreUnused (presetName);
+    oscSender.loadPreset (presetName);
 }
 
 void MainComponent::savePreset (const juce::String& presetName) 
 {
-    juce::ignoreUnused (presetName);
+    oscSender.savePreset (presetName);
 }
 
 void MainComponent::deletePreset (const juce::String& presetName) 
 {
-    juce::ignoreUnused (presetName);
+    oscSender.deletePreset (presetName);
 }
-
 
 void MainComponent::enableAbletonLink (bool shouldBeEnabled)
 {
-    juce::ignoreUnused (shouldBeEnabled);
+    oscSender.enableAbletonLink (shouldBeEnabled);
 }

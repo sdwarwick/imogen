@@ -60,7 +60,7 @@ void StandaloneFilterApp::systemRequestedQuit()
         mainWindow->pluginHolder->savePluginState();
 
     if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
-        juce::Timer::callAfterDelay(100, [&]() { requestQuit(); });
+        juce::Timer::callAfterDelay (100, [&]() { requestQuit(); });
     else
         quit();
 }
