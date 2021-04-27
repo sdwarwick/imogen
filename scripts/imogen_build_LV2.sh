@@ -49,8 +49,8 @@ unknown_argument () {
 
 # check to see if the script was invoked with the --help or -h flags
 if [[ ${#@} -ne 0 ]] && ( [[ ${@#"--help"} = "" ]] || [[ ${@#"-h"} = "" ]] ); then
- 	printf "\n \t \v IMOGEN BUILD SCRIPT \n USAGE: \n \n"
-  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in VST, AU and Standalone formats. \n"
+ 	printf "\n \t \v IMOGEN LV2 BUILD SCRIPT \n USAGE: \n \n"
+  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in LV2 format. \n"
   	exit 0;
 fi
 
@@ -100,7 +100,7 @@ cmake -B Builds/LV2_build -Dbv_formats=LV2 -Dbv_juceGitRepoToUse="https://github
 
 # execute build
 printf "\n \t \v Building Imogen... \n \n"
-cmake --build Builds/LV2_build --target Imogen_LV2 --config Release
+cmake --build Builds/LV2_build --target Imogen_All --config Release
 
 
 printf "\n \t \v Imogen built successfully!"

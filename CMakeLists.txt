@@ -68,19 +68,6 @@ endif()
 
 #
 
-if (UNIX AND NOT (APPLE OR WIN32))  # install JUCE's Linux dependencies 
-
-    message (STATUS "Updating JUCE's Linux dependencies...")
-
-    execute_process (COMMAND "sudo" "apt-get" "update" OUTPUT_QUIET)
-
-    foreach (pkg libasound2-dev libcurl4-openssl-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev)
-        execute_process (COMMAND "sudo" "apt" "install" "${pkg}" OUTPUT_QUIET)
-    endforeach()
-endif()
-
-#
-
 if (ANDROID)
     add_definitions (
     "-DJUCE_ANDROID=1" 
