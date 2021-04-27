@@ -30,130 +30,39 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
-set (pluginSourcesDir       ${Imogen_sourceDir}/PluginProcessor)
-set (guiSourcePath          ${Imogen_sourceDir}/GUI)
+#
 
-set (Imogen_graphicAssetsDir ${CMAKE_CURRENT_LIST_DIR}/assets)  # The location of the graphical asset files (images, etc)
+include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #
 
 set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/ImogenCommon.h
-    ${pluginSourcesDir}/PluginProcessor.cpp
-    ${pluginSourcesDir}/PluginProcessorParameters.cpp
-    ${pluginSourcesDir}/PluginProcessorState.cpp
-    ${pluginSourcesDir}/PluginProcessorNetworking.cpp
-    ${pluginSourcesDir}/PluginProcessor.h
-    ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.cpp
-    ${guiSourcePath}/Holders/Plugin_Editor/PluginEditor.h
-    ${guiSourcePath}/Holders/ImogenGuiHolder.h
-    ${guiSourcePath}/GUI_Framework.h
-    ${guiSourcePath}/ImogenGUI.h
-    ${guiSourcePath}/ImogenGUI.cpp
-    ${guiSourcePath}/MainDialComponent/MainDialComponent.h
-    ${guiSourcePath}/MainDialComponent/MainDialComponent.cpp
-    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.h
-    ${guiSourcePath}/LookAndFeel/ImogenLookAndFeel.cpp
-    ${guiSourcePath}/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
-    ${guiSourcePath}/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
-
-set (Imogen_graphicAssetFiles
-    ${Imogen_graphicAssetsDir}/imogen_icon.png)
-
+    ${ImogenCore_sourceFiles}
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorNetworking.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
 #
 
-if (NOT DEFINED bv_formats)
+if (DEFINED bv_formats)
+    set (lv2detector -1)
+    list (FIND bv_formats LV2 lv2detector)
+
+    if (NOT ${lv2detector} EQUAL -1)
+        set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
+    endif()
+else()
     set (bv_formats AU VST3 Standalone Unity)
 endif()
 
 #
 
-if (ANDROID)
-    add_definitions (
-    "-DJUCE_ANDROID=1" 
-    "-DJUCE_PUSH_NOTIFICATIONS=1" 
-    "-DJUCE_PUSH_NOTIFICATIONS_ACTIVITY=\"com/rmsl/juce/JuceActivity\"" 
-    )
-endif()
-
-#
-
-set_property (GLOBAL PROPERTY USE_FOLDERS YES)
-set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
-
-set (CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE INTERNAL "")  # universal macOS binaries 
-set (CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version" FORCE)  # minimum MacOS version to build for
-
-set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")  # static linking on Windows
-set (CMAKE_WIN32_EXECUTABLE TRUE)
-
-set (CMAKE_XCODE_GENERATE_SCHEME OFF)  # schemes are maually generated for each target to avoid clutter from modules getting schemes, etc
-
-set (CMAKE_SUPPRESS_REGENERATION TRUE)  # no "zero-check" target
-set (CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
-set (CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-
-option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
-option (JUCE_BUILD_EXAMPLES "Build JUCE Examples" OFF)
-option (JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
-
-#
-
-# ADD JUCE #
-
-if (DEFINED bv_juceDir)
-	add_subdirectory (${bv_juceDir} ${CMAKE_CURRENT_SOURCE_DIR}/Builds/JUCE)
-else()
-	if (NOT DEFINED bv_juceGitRepoToUse)
-        set (bv_juceGitRepoToUse https://github.com/juce-framework/JUCE.git)
-	endif()
-
-	if (NOT DEFINED bv_juceGitRepo_TagToUse)
-        if ("${bv_juceGitRepoToUse}" STREQUAL "https://github.com/juce-framework/JUCE.git")
-	        set (bv_juceGitRepo_TagToUse origin/develop)
-		else()
-	        set (bv_juceGitRepo_TagToUse origin)
-		endif()
-	endif()
-
-	message (STATUS "Fetching the latest version of JUCE from GitHub repo: ${bv_juceGitRepoToUse}")
-
-	include (FetchContent)
-
-	FetchContent_Declare (juce
-	GIT_REPOSITORY ${bv_juceGitRepoToUse}
-	GIT_TAG        ${bv_juceGitRepo_TagToUse})
-
-	FetchContent_MakeAvailable (juce)
-
-	set (bv_juceDir ${CMAKE_CURRENT_SOURCE_DIR}/Builds/_deps/juce-src)
-endif()
-
-#
-set (lv2detector -1)
-list (FIND bv_formats LV2 lv2detector)
-
-if (NOT ${lv2detector} EQUAL -1)
-	set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
-endif()
-
-#
-
-if (ANDROID)
-    set (OBOE_DIR "../JUCE/modules/juce_audio_devices/native/oboe")
-    add_subdirectory (${OBOE_DIR} ./oboe)
-
-    add_library ("cpufeatures" STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
-    set_source_files_properties ("${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c" PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion -Wno-gnu-statement-expression")
-
-    enable_language (ASM)
-endif()
-
-#
-
 set (thingsToLinkTo "")
-
-#
 
 juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_Harmonizer")
 list (APPEND thingsToLinkTo bv_Harmonizer)
@@ -238,7 +147,7 @@ endforeach()
 #
 
 file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_ImogenGraphicAssets)
-juce_add_binary_data (ImogenGraphicAssets SOURCES ${Imogen_graphicAssetFiles})
+juce_add_binary_data (ImogenGraphicAssets SOURCES ${Imogen_assetFiles})
 set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "Imogen")
 list (APPEND thingsToLinkTo ImogenGraphicAssets)
 
