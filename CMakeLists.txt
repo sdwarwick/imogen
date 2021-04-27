@@ -153,70 +153,23 @@ list (APPEND thingsToLinkTo ImogenGraphicAssets)
 
 #
 
-if (ANDROID)
-    find_library (log "log")
-    find_library (android "android")
-    find_library (glesv2 "GLESv2")
-    find_library (egl "EGL")
-    set (cpufeatures_lib "cpufeatures")
-    set (oboe_lib "oboe")
-
-    target_include_directories (Imogen PRIVATE
-        "${ANDROID_NDK}/sources/android/cpufeatures"
-        "${OBOE_DIR}/include")
-
-    target_link_libraries (Imogen PUBLIC ${log} ${android} ${glesv2} ${egl} ${cpufeatures_lib} ${oboe_lib})
-endif()
-
-#
-
-if (NOT "${thingsToLinkTo}" STREQUAL "")
-	target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
-endif()
+target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
 
 #
 
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 target_link_libraries (Imogen PRIVATE Ableton::Link)
 
-#
-
 target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
 target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
 
 #
 
-if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
-
-    target_compile_definitions (Imogen PUBLIC JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
-    
-    if (DEFINED BV_IGNORE_MIPP)
-        target_compile_definitions (Imogen PUBLIC BV_USE_MIPP=0)
-    else()
-        message (STATUS "Configuring MIPP...")
-	    target_compile_definitions (Imogen PUBLIC MIPP_ENABLE_BACKTRACE BV_USE_MIPP=1)
-        target_include_directories (Imogen PUBLIC "third-party/MIPP/src" "MIPP")
-    endif()
-else()
-    target_compile_definitions (Imogen PUBLIC BV_USE_VDSP=1 JUCE_USE_VDSP_FRAMEWORK=1)
-endif()
+imogenConfig_step2()
 
 #
 
-target_link_libraries (Imogen PUBLIC
-	    juce::juce_recommended_config_flags
-	    juce::juce_recommended_lto_flags
-	    juce::juce_recommended_warning_flags
-)
-
-target_compile_features (Imogen PUBLIC cxx_std_17)
-
 target_compile_definitions (Imogen PUBLIC 
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    JUCE_STRICT_REFCOUNTEDPTR=1
-    JUCE_VST3_CAN_REPLACE_VST2=0
-    JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
     IMOGEN_REMOTE_APP=0
     )
