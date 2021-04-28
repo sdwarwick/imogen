@@ -32,8 +32,8 @@ jobs:
     - name: Install JUCE's Linux dependencies
       if: runner.os == 'Linux'
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev libxcursor-dev libxrandr-dev
-
+      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
+      
     - name: Checkout code
       uses: actions/checkout@v2
       with:
@@ -73,7 +73,7 @@ jobs:
       
         - name: Install JUCE's Linux dependencies
           shell: bash
-          run: sudo apt-get update && sudo apt-get install -y libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev libxcursor-dev libxrandr-dev
+          run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
 
         - name: Install LV2 development headers
           shell: bash
@@ -110,8 +110,8 @@ jobs:
     - name: Install JUCE's Linux dependencies
       if: runner.os == 'Linux'
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev libxcursor-dev libxrandr-dev
-    
+      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
+
     - name: Checkout code
       uses: actions/checkout@v2
       with:
