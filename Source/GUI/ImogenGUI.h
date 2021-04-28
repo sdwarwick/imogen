@@ -46,18 +46,18 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
     
-    void parameterChangeRecieved       (ParameterID paramID, float newValue) override final;
-    void parameterChangeGestureStarted (ParameterID paramID) override final;
-    void parameterChangeGestureEnded   (ParameterID paramID) override final;
+    void recieveParameterChange             (ParameterID paramID, float newValue) override final;
+    void recieveParameterChangeGestureStart (ParameterID paramID) override final;
+    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
     
-    void presetNameChanged (const juce::String& newPresetName) override final;
+    void recievePresetNameChange (const juce::String& newPresetName) override final;
     
-    void abletonLinkChange (bool isNowEnabled) override final { juce::ignoreUnused (isNowEnabled); }
+    void recieveAbletonLinkChange (bool isNowEnabled) override final { juce::ignoreUnused (isNowEnabled); }
     
     void updateParameterDefaults();
     
-    void mts_connectionChange (bool isNowConnected) override final;
-    void mts_scaleChange (const juce::String& newScaleName) override final;
+    void recieveMTSconnectionChange (bool isNowConnected) override final;
+    void recieveMTSscaleChange (const juce::String& newScaleName) override final;
     
     void recieveMidiLatchEvent (bool isNowLatched) override final;
     void recieveKillAllMidiEvent() override final;

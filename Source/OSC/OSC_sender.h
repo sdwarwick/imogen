@@ -15,12 +15,12 @@ public:
         juce::ignoreUnused (paramID, newValue);
     }
     
-    void startParameterChangeGesture (ParameterID paramID) override final
+    void sendParameterChangeGestureStart (ParameterID paramID) override final
     {
         juce::ignoreUnused (paramID);
     }
     
-    void endParameterChangeGesture (ParameterID paramID) override final
+    void sendParameterChangeGestureEnd (ParameterID paramID) override final
     {
         juce::ignoreUnused (paramID);
     }
@@ -35,22 +35,22 @@ public:
         juce::ignoreUnused (shouldBeLatched);
     }
     
-    void loadPreset   (const juce::String& presetName) override final
+    void sendLoadPreset   (const juce::String& presetName) override final
     {
         juce::ignoreUnused (presetName);
     }
     
-    void savePreset   (const juce::String& presetName) override final
+    void sendSavePreset   (const juce::String& presetName) override final
     {
         juce::ignoreUnused (presetName);
     }
     
-    void deletePreset (const juce::String& presetName) override final
+    void sendDeletePreset (const juce::String& presetName) override final
     {
         juce::ignoreUnused (presetName);
     }
     
-    void enableAbletonLink (bool shouldBeEnabled) override final
+    void sendEnableAbletonLink (bool shouldBeEnabled) override final
     {
         juce::ignoreUnused (shouldBeEnabled);
     }

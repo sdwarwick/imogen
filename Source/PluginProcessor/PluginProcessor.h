@@ -79,34 +79,38 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override final;
     
     /* ImogenEventReciever functions */
-    void parameterChangeRecieved       (ParameterID paramID, float newValue) override final;
-    void parameterChangeGestureStarted (ParameterID paramID) override final;
-    void parameterChangeGestureEnded   (ParameterID paramID) override final;
+    void recieveParameterChange             (ParameterID paramID, float newValue) override final;
+    void recieveParameterChangeGestureStart (ParameterID paramID) override final;
+    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
     
-    void presetNameChanged (const juce::String& newPresetName) override final;
+    void recievePresetNameChange (const juce::String& newPresetName) override final;
     
-    void abletonLinkChange (bool isNowEnabled) override final;
+    void recieveAbletonLinkChange (bool isNowEnabled) override final;
     
     void recieveMidiLatchEvent (bool isNowLatched) override final;
     void recieveKillAllMidiEvent() override final;
     void recieveEditorPitchbendEvent (int wheelValue) override final;
     
-    void mts_connectionChange (bool) override final { }
-    void mts_scaleChange (const juce::String&) override final { }
+    void recieveMTSconnectionChange (bool) override final { }
+    void recieveMTSscaleChange (const juce::String&) override final { }
+    
+    void loadPreset   (const juce::String& presetName);
+    void savePreset   (const juce::String& presetName);
+    void deletePreset (const juce::String& presetName);
     
     
     /* ImogenEventSender functions */
-    void sendParameterChange (ParameterID paramID, float newValue) override final;
-    void startParameterChangeGesture (ParameterID paramID) override final;
-    void endParameterChangeGesture   (ParameterID paramID) override final;
+    void sendParameterChange             (ParameterID paramID, float newValue) override final;
+    void sendParameterChangeGestureStart (ParameterID paramID) override final;
+    void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
     
-    void savePreset   (const juce::String& presetName) override final;
-    void loadPreset   (const juce::String& presetName) override final;
-    void deletePreset (const juce::String& presetName) override final;
+    void sendSavePreset   (const juce::String& presetName) override final { }
+    void sendLoadPreset   (const juce::String& presetName) override final { }
+    void sendDeletePreset (const juce::String& presetName) override final { }
     
     void sendEditorPitchbend (int) override final { }
     void sendMidiLatch (bool) override final { }
-    void enableAbletonLink (bool) override final { }
+    void sendEnableAbletonLink (bool) override final { }
     
     /* */
     
@@ -196,7 +200,6 @@ private:
                                bav::ImogenEngine<SampleType1>& activeEngine,
                                bav::ImogenEngine<SampleType2>& idleEngine);
     
-    
     template <typename SampleType>
     inline void processBlockWrapped (juce::AudioBuffer<SampleType>& buffer,
                                      juce::MidiBuffer& midiMessages,
@@ -274,7 +277,7 @@ private:
             //value = param->normalize(value);
             jassert (newValue >= 0.0f && newValue <= 1.0f);
             q.pushMessage (paramID, newValue);  // the message will store a normalized value
-            reciever.parameterChangeRecieved (paramID, newValue);
+            reciever.recieveParameterChange (paramID, newValue);
         }
         
         void parameterGestureChanged (int parameterIndex, bool gestureIsStarting) override
@@ -282,9 +285,9 @@ private:
             juce::ignoreUnused (parameterIndex);
             
             if (gestureIsStarting)
-                reciever.parameterChangeGestureStarted (paramID);
+                reciever.recieveParameterChangeGestureStart (paramID);
             else
-                reciever.parameterChangeGestureEnded (paramID);
+                reciever.recieveParameterChangeGestureEnd (paramID);
         }
         
         bav::Parameter* parameter() const noexcept { return param; }

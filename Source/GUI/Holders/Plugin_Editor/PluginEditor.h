@@ -43,19 +43,21 @@ public:
     void paint (juce::Graphics&) override final;
     void resized() override final;
     
-    void sendParameterChange (ParameterID paramID, float newValue) override final;
-    void startParameterChangeGesture (ParameterID paramID) override final;
-    void endParameterChangeGesture   (ParameterID paramID) override final;
+    void sendParameterChange             (ParameterID paramID, float newValue) override final;
+    void sendParameterChangeGestureStart (ParameterID paramID) override final;
+    void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
     
     void sendEditorPitchbend (int wheelValue) override final;
     
     void sendMidiLatch (bool shouldBeLatched) override final;
     
-    void loadPreset   (const juce::String& presetName) override final;
-    void savePreset   (const juce::String& presetName) override final;
-    void deletePreset (const juce::String& presetName) override final;
+    void sendLoadPreset   (const juce::String& presetName) override final;
+    void sendSavePreset   (const juce::String& presetName) override final;
+    void sendDeletePreset (const juce::String& presetName) override final;
     
-    void enableAbletonLink (bool shouldBeEnabled) override final;
+    void sendEnableAbletonLink (bool shouldBeEnabled) override final;
+    
+    //
     
     
 private:

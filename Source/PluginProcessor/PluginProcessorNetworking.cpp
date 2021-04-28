@@ -26,17 +26,17 @@
 
 /* Functions for recieving events from the editor */
 
-void ImogenAudioProcessor::parameterChangeRecieved (ParameterID paramID, float newValue)
+void ImogenAudioProcessor::recieveParameterChange (ParameterID paramID, float newValue)
 {
     getParameterPntr(paramID)->orig()->setValueNotifyingHost (newValue);
 }
 
-void ImogenAudioProcessor::parameterChangeGestureStarted (ParameterID paramID)
+void ImogenAudioProcessor::recieveParameterChangeGestureStart (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->beginChangeGesture();
 }
 
-void ImogenAudioProcessor::parameterChangeGestureEnded (ParameterID paramID)
+void ImogenAudioProcessor::recieveParameterChangeGestureEnd (ParameterID paramID)
 {
     getParameterPntr(paramID)->orig()->endChangeGesture();
 }
@@ -59,13 +59,13 @@ void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
 }
 
 
-void ImogenAudioProcessor::presetNameChanged (const juce::String& newPresetName)
+void ImogenAudioProcessor::recievePresetNameChange (const juce::String& newPresetName)
 {
     loadPreset (newPresetName);
 }
 
 
-void ImogenAudioProcessor::abletonLinkChange (bool isNowEnabled)
+void ImogenAudioProcessor::recieveAbletonLinkChange (bool isNowEnabled)
 {
     juce::ignoreUnused (isNowEnabled);
 }
@@ -84,20 +84,20 @@ void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newVa
     oscSender.sendParameterChange (paramID, newValue);
 }
 
-void ImogenAudioProcessor::startParameterChangeGesture (ParameterID paramID)
+void ImogenAudioProcessor::sendParameterChangeGestureStart (ParameterID paramID)
 {
     if (auto* editor = getActiveGui())
         editor->recieveParameterChangeGestureStart (paramID);
     
-    oscSender.startParameterChangeGesture (paramID);
+    oscSender.sendParameterChangeGestureStart (paramID);
 }
 
-void ImogenAudioProcessor::endParameterChangeGesture (ParameterID paramID)
+void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
 {
     if (auto* editor = getActiveGui())
         editor->recieveParameterChangeGestureEnd (paramID);
     
-    oscSender.endParameterChangeGesture (paramID);
+    oscSender.sendParameterChangeGestureEnd (paramID);
 }
 
 

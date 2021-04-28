@@ -18,7 +18,7 @@
  @2021 by Ben Vining. All rights reserved.
  
  ImogenGuiHolder.h: This file defines a class that holds an ImogenGui object and acts as its interface with the outside world.
-    Note that ImogenGuiHolder is an abstract class, because it inherits from ImogenGuiHandle and doesn't implement any of its pure virtual methods.
+    Note that ImogenGuiHolder is an abstract class, because it inherits from ImogenEventSender and doesn't implement any of its pure virtual methods.
  
  ======================================================================================================================================================*/
 
@@ -31,7 +31,8 @@
 using namespace Imogen;
 
 
-class ImogenGuiHolder  :    public ImogenEventSender
+class ImogenGuiHolder  :    public ImogenEventSender,
+                            public ImogenEventReciever
 {
 public:
     ImogenGuiHolder(): p_gui(this) { }
@@ -40,19 +41,25 @@ public:
     
     //
     
-    void recieveParameterChange (ParameterID paramID, float newValue) { p_gui.parameterChangeRecieved (paramID, newValue); }
+    void recieveParameterChange (ParameterID paramID, float newValue) override final { p_gui.recieveParameterChange (paramID, newValue); }
     
-    void recieveParameterChangeGestureStart (ParameterID paramID) { p_gui.parameterChangeGestureStarted (paramID); }
-    void recieveParameterChangeGestureEnd   (ParameterID paramID) { p_gui.parameterChangeGestureEnded (paramID); }
+    void recieveParameterChangeGestureStart (ParameterID paramID) override final { p_gui.recieveParameterChangeGestureStart (paramID); }
+    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final { p_gui.recieveParameterChangeGestureEnd   (paramID); }
     
     void parameterDefaultsUpdated() { p_gui.updateParameterDefaults(); }
     
-    void presetNameChange (const juce::String& newPresetName) { p_gui.presetNameChanged (newPresetName); }
+    void recievePresetNameChange (const juce::String& newPresetName) override final { p_gui.recievePresetNameChange (newPresetName); }
     
-    void mts_connectionChange (bool isNowConnected) { p_gui.mts_connectionChange (isNowConnected); }
-    void mts_scaleChange (const juce::String& newScaleName) { p_gui.mts_scaleChange (newScaleName); }
+    void recieveMTSconnectionChange (bool isNowConnected) override final { p_gui.recieveMTSconnectionChange (isNowConnected); }
+    void recieveMTSscaleChange (const juce::String& newScaleName) override final { p_gui.recieveMTSscaleChange (newScaleName); }
     
-    void abletonLinkChange (bool isNowEnabled) { p_gui.abletonLinkChange (isNowEnabled); }
+    void recieveAbletonLinkChange (bool isNowEnabled) override final { p_gui.recieveAbletonLinkChange (isNowEnabled); }
+    
+    void recieveMidiLatchEvent (bool isNowLatched) override final { }
+    
+    void recieveKillAllMidiEvent() override final { }
+    
+    void recieveEditorPitchbendEvent (int wheelValue) override final { }
     
     //
     

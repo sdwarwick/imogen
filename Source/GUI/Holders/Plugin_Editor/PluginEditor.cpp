@@ -70,17 +70,17 @@ void ImogenAudioProcessorEditor::resized()
 
 void ImogenAudioProcessorEditor::sendParameterChange (ParameterID paramID, float newValue)
 {
-    imgnProcessor.parameterChangeRecieved (paramID, newValue);
+    imgnProcessor.recieveParameterChange (paramID, newValue);
 }
 
-void ImogenAudioProcessorEditor::startParameterChangeGesture (ParameterID paramID)
+void ImogenAudioProcessorEditor::sendParameterChangeGestureStart (ParameterID paramID)
 {
-    imgnProcessor.parameterChangeGestureStarted (paramID);
+    imgnProcessor.recieveParameterChangeGestureStart (paramID);
 }
 
-void ImogenAudioProcessorEditor::endParameterChangeGesture   (ParameterID paramID)
+void ImogenAudioProcessorEditor::sendParameterChangeGestureEnd   (ParameterID paramID)
 {
-    imgnProcessor.parameterChangeGestureEnded (paramID);
+    imgnProcessor.recieveParameterChangeGestureEnd (paramID);
 }
 
 void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
@@ -93,22 +93,22 @@ void ImogenAudioProcessorEditor::sendMidiLatch (bool shouldBeLatched)
     juce::ignoreUnused (shouldBeLatched);
 }
 
-void ImogenAudioProcessorEditor::loadPreset (const juce::String& presetName)
+void ImogenAudioProcessorEditor::sendLoadPreset (const juce::String& presetName)
 {
     imgnProcessor.loadPreset (presetName);
 }
 
-void ImogenAudioProcessorEditor::savePreset (const juce::String& presetName)
+void ImogenAudioProcessorEditor::sendSavePreset (const juce::String& presetName)
 {
     imgnProcessor.savePreset  (presetName);
 }
 
-void ImogenAudioProcessorEditor::deletePreset (const juce::String& presetName)
+void ImogenAudioProcessorEditor::sendDeletePreset (const juce::String& presetName)
 {
     imgnProcessor.deletePreset (presetName);
 }
 
-void ImogenAudioProcessorEditor::enableAbletonLink (bool shouldBeEnabled)
+void ImogenAudioProcessorEditor::sendEnableAbletonLink (bool shouldBeEnabled)
 {
-    imgnProcessor.abletonLinkChange (shouldBeEnabled);
+    imgnProcessor.recieveAbletonLinkChange (shouldBeEnabled);
 }

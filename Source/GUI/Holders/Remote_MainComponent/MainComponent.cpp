@@ -74,14 +74,14 @@ void MainComponent::sendParameterChange (ParameterID paramID, float newValue)
     oscSender.sendParameterChange (paramID, newValue);
 }
 
-void MainComponent::startParameterChangeGesture (ParameterID paramID)
+void MainComponent::sendParameterChangeGestureStart (ParameterID paramID)
 {
-    oscSender.startParameterChangeGesture (paramID);
+    oscSender.sendParameterChangeGestureStart (paramID);
 }
 
-void MainComponent::endParameterChangeGesture (ParameterID paramID)
+void MainComponent::sendParameterChangeGestureEnd (ParameterID paramID)
 {
-    oscSender.endParameterChangeGesture (paramID);
+    oscSender.sendParameterChangeGestureEnd (paramID);
 }
 
 void MainComponent::sendEditorPitchbend (int wheelValue) 
@@ -94,22 +94,22 @@ void MainComponent::sendMidiLatch (bool shouldBeLatched)
     oscSender.sendMidiLatch (shouldBeLatched);
 }
 
-void MainComponent::loadPreset (const juce::String& presetName) 
+void MainComponent::sendLoadPreset (const juce::String& presetName)
 {
-    oscSender.loadPreset (presetName);
+    oscSender.sendLoadPreset (presetName);
 }
 
-void MainComponent::savePreset (const juce::String& presetName) 
+void MainComponent::sendSavePreset (const juce::String& presetName) 
 {
-    oscSender.savePreset (presetName);
+    oscSender.sendSavePreset (presetName);
 }
 
-void MainComponent::deletePreset (const juce::String& presetName) 
+void MainComponent::sendDeletePreset (const juce::String& presetName) 
 {
-    oscSender.deletePreset (presetName);
+    oscSender.sendDeletePreset (presetName);
 }
 
-void MainComponent::enableAbletonLink (bool shouldBeEnabled)
+void MainComponent::sendEnableAbletonLink (bool shouldBeEnabled)
 {
-    oscSender.enableAbletonLink (shouldBeEnabled);
+    oscSender.sendEnableAbletonLink (shouldBeEnabled);
 }

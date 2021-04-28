@@ -37,7 +37,7 @@ ImogenGUI::ImogenGUI (ImogenEventSender* h): mainDial(h), holder(h), tooltipWind
     this->setBufferedToImage (true);
     
     makePresetMenu (selectPreset);
-    selectPreset.onChange = [this] { holder->loadPreset (selectPreset.getText()); };
+    selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
     
     //addAndMakeVisible(selectPreset);
     addAndMakeVisible (mainDial);
@@ -149,7 +149,7 @@ void ImogenGUI::recieveKillAllMidiEvent()
 }
 
 
-void ImogenGUI::parameterChangeRecieved (ParameterID paramID, float newValue)
+void ImogenGUI::recieveParameterChange (ParameterID paramID, float newValue)
 {
     juce::ignoreUnused (paramID, newValue);
     
@@ -157,12 +157,12 @@ void ImogenGUI::parameterChangeRecieved (ParameterID paramID, float newValue)
 }
 
 
-void ImogenGUI::parameterChangeGestureStarted (ParameterID paramID)
+void ImogenGUI::recieveParameterChangeGestureStart (ParameterID paramID)
 {
     mainDial.showParameter (paramID);
 }
 
-void ImogenGUI::parameterChangeGestureEnded (ParameterID paramID)
+void ImogenGUI::recieveParameterChangeGestureEnd (ParameterID paramID)
 {
     juce::ignoreUnused (paramID);
     mainDial.showPitchCorrection();
@@ -175,7 +175,7 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 }
 
 
-void ImogenGUI::presetNameChanged (const juce::String& newPresetName)
+void ImogenGUI::recievePresetNameChange (const juce::String& newPresetName)
 {
     if (newPresetName.isEmpty())
     {
@@ -191,12 +191,12 @@ void ImogenGUI::presetNameChanged (const juce::String& newPresetName)
 }
 
 
-void ImogenGUI::mts_connectionChange (bool isNowConnected)
+void ImogenGUI::recieveMTSconnectionChange (bool isNowConnected)
 {
     juce::ignoreUnused (isNowConnected);
 }
 
-void ImogenGUI::mts_scaleChange (const juce::String& newScaleName)
+void ImogenGUI::recieveMTSscaleChange (const juce::String& newScaleName)
 {
     const auto displayName = TRANS(newScaleName);
     juce::ignoreUnused (displayName);

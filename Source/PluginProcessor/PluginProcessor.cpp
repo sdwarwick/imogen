@@ -98,7 +98,7 @@ void ImogenAudioProcessor::timerCallback()
     if (mts_isConnected != mts_wasConnected.load())
     {
         if (auto* editor = getActiveGui())
-            editor->mts_connectionChange (mts_isConnected);
+            editor->recieveMTSconnectionChange (mts_isConnected);
         
         mts_wasConnected.store (mts_isConnected);
     }
@@ -107,7 +107,7 @@ void ImogenAudioProcessor::timerCallback()
     if (scaleName != mts_lastScaleName)
     {
         if (auto* editor = getActiveGui())
-            editor->mts_scaleChange (scaleName);
+            editor->recieveMTSscaleChange (scaleName);
         
         mts_lastScaleName = scaleName;
     }
@@ -116,7 +116,7 @@ void ImogenAudioProcessor::timerCallback()
     if (presetName != lastPresetName)
     {
         if (auto* editor = getActiveGui())
-            editor->presetNameChange (presetName);
+            editor->recievePresetNameChange (presetName);
         
         lastPresetName = presetName;
     }
@@ -125,7 +125,7 @@ void ImogenAudioProcessor::timerCallback()
     if (abletonLink_isEnabled != abletonLink_wasEnabled.load())
     {
         if (auto* editor = getActiveGui())
-            editor->abletonLinkChange (abletonLink_isEnabled);
+            editor->recieveAbletonLinkChange (abletonLink_isEnabled);
         
         abletonLink_wasEnabled.store (abletonLink_isEnabled);
     }
