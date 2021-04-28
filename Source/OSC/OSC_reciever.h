@@ -3,6 +3,8 @@
 
 #include "ImogenCommon.h"
 
+#include <juce_osc/juce_osc.h>
+
 
 class ImogenOSCReciever :    public juce::OSCReceiver::Listener< juce::OSCReceiver::MessageLoopCallback >
 {

@@ -1,7 +1,7 @@
 
-#include <juce_osc/juce_osc.h>
- 
 #include "GUI/GUI_Framework.h"
+
+#include <juce_osc/juce_osc.h>
 
 
 class ImogenOSCSender    :   public ImogenEventSender,
@@ -12,7 +12,7 @@ public:
     
     void sendParameterChange (ParameterID paramID, float newValue) override final
     {
-        juce::ignoreUnused (paramID, newValue);
+        send (getParameterOSCaddress (paramID), newValue);
     }
     
     void sendParameterChangeGestureStart (ParameterID paramID) override final
