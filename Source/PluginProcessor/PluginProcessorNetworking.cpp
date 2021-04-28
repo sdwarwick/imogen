@@ -94,6 +94,11 @@ void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
     oscSender.sendParameterChangeGestureEnd (paramID);
 }
 
+void ImogenAudioProcessor::sendErrorCode (ErrorCode code)
+{
+    juce::ignoreUnused (code);
+}
+
 
 
 /*

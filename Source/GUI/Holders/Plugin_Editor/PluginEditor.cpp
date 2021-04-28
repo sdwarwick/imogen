@@ -68,6 +68,8 @@ void ImogenAudioProcessorEditor::resized()
 /*===========================================================================================================================
  ============================================================================================================================*/
 
+/* In the plugin build, the processor takes care of all netowrking & event handling -- the GUI's only job is to relay events to the processor. */
+
 void ImogenAudioProcessorEditor::sendParameterChange (ParameterID paramID, float newValue)
 {
     imgnProcessor.recieveParameterChange (paramID, newValue);
@@ -90,7 +92,12 @@ void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
 
 void ImogenAudioProcessorEditor::sendMidiLatch (bool shouldBeLatched)
 {
-    juce::ignoreUnused (shouldBeLatched);
+    imgnProcessor.recieveMidiLatchEvent (shouldBeLatched);
+}
+
+void ImogenAudioProcessorEditor::sendKillAllMidiEvent()
+{
+    imgnProcessor.recieveKillAllMidiEvent();
 }
 
 void ImogenAudioProcessorEditor::sendLoadPreset (const juce::String& presetName)
@@ -111,4 +118,9 @@ void ImogenAudioProcessorEditor::sendDeletePreset (const juce::String& presetNam
 void ImogenAudioProcessorEditor::sendEnableAbletonLink (bool shouldBeEnabled)
 {
     imgnProcessor.recieveAbletonLinkChange (shouldBeEnabled);
+}
+
+void ImogenAudioProcessorEditor::sendErrorCode (ErrorCode code)
+{
+    imgnProcessor.recieveErrorCode (code);
 }

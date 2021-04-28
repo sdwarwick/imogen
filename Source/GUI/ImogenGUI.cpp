@@ -122,6 +122,15 @@ void ImogenGUI::paint (juce::Graphics& g)
 }
 
 
+void ImogenGUI::recieveErrorCode (ErrorCode code)
+{
+    switch (code)
+    {
+        case (loadingPresetFailed): return;
+    }
+}
+
+
 void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
 {
     darkMode.store (shouldUseDarkMode);

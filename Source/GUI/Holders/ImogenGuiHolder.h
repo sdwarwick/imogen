@@ -61,6 +61,8 @@ public:
     
     void recieveEditorPitchbendEvent (int wheelValue) override final { p_gui.recieveEditorPitchbendEvent (wheelValue); }
     
+    void recieveErrorCode (ErrorCode code) override final { p_gui.recieveErrorCode (code); }
+    
     //
     
     ImogenGUI* gui() noexcept { return &p_gui; }

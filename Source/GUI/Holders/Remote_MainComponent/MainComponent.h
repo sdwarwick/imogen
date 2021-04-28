@@ -53,7 +53,7 @@ public:
     void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
     
     void sendEditorPitchbend (int wheelValue) override final;
-    
+    void sendKillAllMidiEvent() override final;
     void sendMidiLatch (bool shouldBeLatched) override final;
     
     void sendLoadPreset   (const juce::String& presetName) override final;
@@ -61,6 +61,8 @@ public:
     void sendDeletePreset (const juce::String& presetName) override final;
     
     void sendEnableAbletonLink (bool shouldBeEnabled) override final;
+    
+    void sendErrorCode (ErrorCode) override final { }
 
 
 private:

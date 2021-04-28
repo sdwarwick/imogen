@@ -90,8 +90,7 @@ static constexpr int numEventIDs = pitchBendFromEditorID + 1;
 
 enum ErrorCode
 {
-    loadingPresetFailed,
-    savingPresetFailed
+    loadingPresetFailed
 };
 
 
@@ -116,12 +115,14 @@ struct ImogenEventReciever
     
     virtual void recieveAbletonLinkChange (bool isNowEnabled) = 0;
     
+    virtual void recieveEditorPitchbendEvent (int wheelValue) = 0;
     virtual void recieveMidiLatchEvent (bool isNowLatched) = 0;
     virtual void recieveKillAllMidiEvent() = 0;
-    virtual void recieveEditorPitchbendEvent (int wheelValue) = 0;
     
     virtual void recieveMTSconnectionChange (bool isNowConnected) = 0;
     virtual void recieveMTSscaleChange (const juce::String& newScaleName) = 0;
+    
+    virtual void recieveErrorCode (Imogen::ErrorCode code) = 0;
 };
 
 
@@ -138,12 +139,14 @@ struct ImogenEventSender
     virtual void sendParameterChangeGestureEnd   (Imogen::ParameterID paramID) = 0;
     
     virtual void sendEditorPitchbend (int wheelValue) = 0;
-    
     virtual void sendMidiLatch (bool shouldBeLatched) = 0;
+    virtual void sendKillAllMidiEvent() = 0;
     
     virtual void sendLoadPreset   (const juce::String& presetName) = 0;
     virtual void sendSavePreset   (const juce::String& presetName) = 0;
     virtual void sendDeletePreset (const juce::String& presetName) = 0;
     
     virtual void sendEnableAbletonLink (bool shouldBeEnabled) = 0;
+    
+    virtual void sendErrorCode (Imogen::ErrorCode code) = 0;
 };

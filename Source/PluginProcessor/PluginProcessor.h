@@ -96,6 +96,8 @@ public:
     void recieveSavePreset   (const juce::String& presetName) override final;
     void recieveDeletePreset (const juce::String& presetName) override final;
     
+    void recieveErrorCode (ErrorCode) override final { }
+    
     
     /* ImogenEventSender functions */
     void sendParameterChange             (ParameterID paramID, float newValue) override final;
@@ -108,7 +110,11 @@ public:
     
     void sendEditorPitchbend (int) override final { }
     void sendMidiLatch (bool) override final { }
+    void sendKillAllMidiEvent() override final { }
+    
     void sendEnableAbletonLink (bool) override final { }
+    
+    void sendErrorCode (ErrorCode code) override final;
     
     /* */
     

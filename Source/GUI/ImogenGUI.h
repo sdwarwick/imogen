@@ -66,6 +66,10 @@ public:
     
     //
     
+    void recieveErrorCode (ErrorCode code) override final;
+    
+    //
+    
     bool keyPressed (const juce::KeyPress& key) override;
     bool keyStateChanged (bool isKeyDown) override;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override;

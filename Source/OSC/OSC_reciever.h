@@ -12,16 +12,6 @@ public:
     void oscMessageReceived (const juce::OSCMessage& message) override final
     {
         juce::ignoreUnused (message);
-        
-        /*
-         Redirect OSC messages to call these methods of the reciever:
-         
-         - parameterChangeRecieved (ParameterID paramID, float newValue)
-         - parameterChangeGestureStarted (ParameterID paramID)
-         - parameterChangeGestureEnded (ParameterID paramID)
-         - presetNameChanged (const juce::String& newPresetName)
-         - abletonLinkChange (bool isNowEnabled)
-        */
     }
     
 private:

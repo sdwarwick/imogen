@@ -35,6 +35,11 @@ public:
         juce::ignoreUnused (shouldBeLatched);
     }
     
+    void sendKillAllMidiEvent() override final
+    {
+        
+    }
+    
     void sendLoadPreset   (const juce::String& presetName) override final
     {
         juce::ignoreUnused (presetName);
@@ -53,6 +58,11 @@ public:
     void sendEnableAbletonLink (bool shouldBeEnabled) override final
     {
         juce::ignoreUnused (shouldBeEnabled);
+    }
+    
+    void sendErrorCode (ErrorCode code) override final
+    {
+        juce::ignoreUnused (code);
     }
     
 private:

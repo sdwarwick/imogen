@@ -94,6 +94,11 @@ void MainComponent::sendMidiLatch (bool shouldBeLatched)
     oscSender.sendMidiLatch (shouldBeLatched);
 }
 
+void MainComponent::sendKillAllMidiEvent()
+{
+    oscSender.sendKillAllMidiEvent();
+}
+
 void MainComponent::sendLoadPreset (const juce::String& presetName)
 {
     oscSender.sendLoadPreset (presetName);

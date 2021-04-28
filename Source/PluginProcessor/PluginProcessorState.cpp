@@ -109,7 +109,10 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
 {
     if (presetName.isEmpty())
+    {
+        sendErrorCode (ErrorCode::loadingPresetFailed);
         return;
+    }
     
     rescanPresetsFolder();
     
@@ -121,7 +124,10 @@ void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
     auto presetToLoad = getPresetsFolder().getChildFile (name);
     
     if (! presetToLoad.existsAsFile())
+    {
+        sendErrorCode (ErrorCode::loadingPresetFailed);
         return;
+    }
     
     auto xmlElement = juce::parseXML (presetToLoad);
     
@@ -134,6 +140,10 @@ void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
             currentProgram.store (-1);
         else
             currentProgram.store (indexOfProgram (name.dropLastCharacters(4)));
+    }
+    else
+    {
+        sendErrorCode (ErrorCode::loadingPresetFailed);
     }
 }
 
