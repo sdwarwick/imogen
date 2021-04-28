@@ -29,7 +29,7 @@ juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
     
     window->setVisible (true);
     
-    if (isMobileApp())
+    if constexpr (isMobileApp())
     {
         window->setTitleBarHeight(0);
         window->setFullScreen (true);

@@ -132,6 +132,7 @@ public:
             setContentOwned (new MainComponent(), true);
 
           #if JUCE_IOS || JUCE_ANDROID
+            setDropShadowEnabled (false);
             setFullScreen (true);
           #else
             setResizable (true, true);
