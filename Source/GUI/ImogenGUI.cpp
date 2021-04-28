@@ -175,7 +175,7 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 }
 
 
-void ImogenGUI::recievePresetNameChange (const juce::String& newPresetName)
+void ImogenGUI::recieveLoadPreset (const juce::String& newPresetName)
 {
     if (newPresetName.isEmpty())
     {
@@ -185,8 +185,6 @@ void ImogenGUI::recievePresetNameChange (const juce::String& newPresetName)
     {
         const auto displayName = TRANS(newPresetName);
         juce::ignoreUnused (displayName);
-        
-        updateParameterDefaults();
     }
 }
 
@@ -200,12 +198,6 @@ void ImogenGUI::recieveMTSscaleChange (const juce::String& newScaleName)
 {
     const auto displayName = TRANS(newScaleName);
     juce::ignoreUnused (displayName);
-}
-
-
-void ImogenGUI::updateParameterDefaults()
-{
-    
 }
 
 

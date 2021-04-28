@@ -95,17 +95,17 @@ void ImogenAudioProcessorEditor::sendMidiLatch (bool shouldBeLatched)
 
 void ImogenAudioProcessorEditor::sendLoadPreset (const juce::String& presetName)
 {
-    imgnProcessor.loadPreset (presetName);
+    imgnProcessor.recieveLoadPreset (presetName);
 }
 
 void ImogenAudioProcessorEditor::sendSavePreset (const juce::String& presetName)
 {
-    imgnProcessor.savePreset  (presetName);
+    imgnProcessor.recieveSavePreset (presetName);
 }
 
 void ImogenAudioProcessorEditor::sendDeletePreset (const juce::String& presetName)
 {
-    imgnProcessor.deletePreset (presetName);
+    imgnProcessor.recieveDeletePreset (presetName);
 }
 
 void ImogenAudioProcessorEditor::sendEnableAbletonLink (bool shouldBeEnabled)

@@ -37,7 +37,7 @@ class ImogenGuiHolder  :    public ImogenEventSender,
 public:
     ImogenGuiHolder(): p_gui(this) { }
     
-    virtual ~ImogenGuiHolder() = default;
+    virtual ~ImogenGuiHolder() override = default;
     
     //
     
@@ -46,20 +46,20 @@ public:
     void recieveParameterChangeGestureStart (ParameterID paramID) override final { p_gui.recieveParameterChangeGestureStart (paramID); }
     void recieveParameterChangeGestureEnd   (ParameterID paramID) override final { p_gui.recieveParameterChangeGestureEnd   (paramID); }
     
-    void parameterDefaultsUpdated() { p_gui.updateParameterDefaults(); }
-    
-    void recievePresetNameChange (const juce::String& newPresetName) override final { p_gui.recievePresetNameChange (newPresetName); }
+    void recieveLoadPreset   (const juce::String& newPresetName) override final { p_gui.recieveLoadPreset (newPresetName); }
+    void recieveSavePreset   (const juce::String& newPresetName) override final { p_gui.recieveSavePreset (newPresetName); }
+    void recieveDeletePreset (const juce::String& newPresetName) override final { p_gui.recieveDeletePreset (newPresetName); }
     
     void recieveMTSconnectionChange (bool isNowConnected) override final { p_gui.recieveMTSconnectionChange (isNowConnected); }
     void recieveMTSscaleChange (const juce::String& newScaleName) override final { p_gui.recieveMTSscaleChange (newScaleName); }
     
     void recieveAbletonLinkChange (bool isNowEnabled) override final { p_gui.recieveAbletonLinkChange (isNowEnabled); }
     
-    void recieveMidiLatchEvent (bool isNowLatched) override final { }
+    void recieveMidiLatchEvent (bool isNowLatched) override final { p_gui.recieveMidiLatchEvent (isNowLatched); }
     
-    void recieveKillAllMidiEvent() override final { }
+    void recieveKillAllMidiEvent() override final { p_gui.recieveKillAllMidiEvent(); }
     
-    void recieveEditorPitchbendEvent (int wheelValue) override final { }
+    void recieveEditorPitchbendEvent (int wheelValue) override final { p_gui.recieveEditorPitchbendEvent (wheelValue); }
     
     //
     

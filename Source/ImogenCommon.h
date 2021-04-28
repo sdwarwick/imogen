@@ -110,7 +110,9 @@ struct ImogenEventReciever
     virtual void recieveParameterChangeGestureStart (Imogen::ParameterID paramID) = 0;
     virtual void recieveParameterChangeGestureEnd   (Imogen::ParameterID paramID) = 0;
     
-    virtual void recievePresetNameChange (const juce::String& newPresetName) = 0;
+    virtual void recieveLoadPreset   (const juce::String& presetName) = 0;
+    virtual void recieveSavePreset   (const juce::String& presetName) = 0;
+    virtual void recieveDeletePreset (const juce::String& presetName) = 0;
     
     virtual void recieveAbletonLinkChange (bool isNowEnabled) = 0;
     

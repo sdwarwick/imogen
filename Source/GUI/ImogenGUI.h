@@ -50,11 +50,11 @@ public:
     void recieveParameterChangeGestureStart (ParameterID paramID) override final;
     void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
     
-    void recievePresetNameChange (const juce::String& newPresetName) override final;
+    void recieveLoadPreset   (const juce::String& newPresetName) override final;
+    void recieveSavePreset   (const juce::String&) override final { }
+    void recieveDeletePreset (const juce::String&) override final { }
     
     void recieveAbletonLinkChange (bool isNowEnabled) override final { juce::ignoreUnused (isNowEnabled); }
-    
-    void updateParameterDefaults();
     
     void recieveMTSconnectionChange (bool isNowConnected) override final;
     void recieveMTSscaleChange (const juce::String& newScaleName) override final;

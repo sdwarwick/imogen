@@ -86,14 +86,6 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 void ImogenAudioProcessor::timerCallback()
 {
-    if (parameterDefaultsAreDirty.load())
-    {
-        if (auto* editor = getActiveGui())
-            editor->parameterDefaultsUpdated();
-        
-        parameterDefaultsAreDirty.store (false);
-    }
-    
     const auto mts_isConnected = isConnectedToMtsEsp();
     if (mts_isConnected != mts_wasConnected.load())
     {
@@ -116,7 +108,7 @@ void ImogenAudioProcessor::timerCallback()
     if (presetName != lastPresetName)
     {
         if (auto* editor = getActiveGui())
-            editor->recievePresetNameChange (presetName);
+            editor->recieveLoadPreset (presetName);
         
         lastPresetName = presetName;
     }

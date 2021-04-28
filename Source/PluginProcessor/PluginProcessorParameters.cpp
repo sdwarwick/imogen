@@ -663,6 +663,4 @@ void ImogenAudioProcessor::updateParameterDefaults()
 {
     for (int paramID = 0; paramID < numParams; ++paramID)
         getParameterPntr(ParameterID(paramID))->refreshDefault();
-    
-    parameterDefaultsAreDirty.store (true);
 }

@@ -83,8 +83,6 @@ public:
     void recieveParameterChangeGestureStart (ParameterID paramID) override final;
     void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
     
-    void recievePresetNameChange (const juce::String& newPresetName) override final;
-    
     void recieveAbletonLinkChange (bool isNowEnabled) override final;
     
     void recieveMidiLatchEvent (bool isNowLatched) override final;
@@ -94,9 +92,9 @@ public:
     void recieveMTSconnectionChange (bool) override final { }
     void recieveMTSscaleChange (const juce::String&) override final { }
     
-    void loadPreset   (const juce::String& presetName);
-    void savePreset   (const juce::String& presetName);
-    void deletePreset (const juce::String& presetName);
+    void recieveLoadPreset   (const juce::String& presetName) override final;
+    void recieveSavePreset   (const juce::String& presetName) override final;
+    void recieveDeletePreset (const juce::String& presetName) override final;
     
     
     /* ImogenEventSender functions */
@@ -104,9 +102,9 @@ public:
     void sendParameterChangeGestureStart (ParameterID paramID) override final;
     void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
     
-    void sendSavePreset   (const juce::String& presetName) override final { }
-    void sendLoadPreset   (const juce::String& presetName) override final { }
-    void sendDeletePreset (const juce::String& presetName) override final { }
+    void sendLoadPreset   (const juce::String&) override final { }
+    void sendSavePreset   (const juce::String&) override final { }
+    void sendDeletePreset (const juce::String&) override final { }
     
     void sendEditorPitchbend (int) override final { }
     void sendMidiLatch (bool) override final { }
@@ -193,7 +191,7 @@ private:
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
-    juce::AudioProcessor::BusesProperties makeBusProperties() const;
+    BusesProperties makeBusProperties() const;
     
     template <typename SampleType1, typename SampleType2>
     void prepareToPlayWrapped (const double sampleRate,
@@ -251,8 +249,6 @@ private:
     BoolParamPtr  mainBypass, leadBypass, harmonyBypass, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle, delayToggle;
     IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, reverbDryWet, inputSource, delayDryWet;
     FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
-    
-    std::atomic<bool> parameterDefaultsAreDirty;
     
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };

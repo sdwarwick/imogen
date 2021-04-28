@@ -69,7 +69,7 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     copyXmlToBinary (*xml, destData);
 }
 
-void ImogenAudioProcessor::savePreset (const juce::String& presetName) // this function can be used both to save new preset files or to update existing ones
+void ImogenAudioProcessor::recieveSavePreset (const juce::String& presetName) // this function can be used both to save new preset files or to update existing ones
 {
     auto name = presetName;
     
@@ -106,7 +106,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     currentProgram.store (-1);
 }
 
-void ImogenAudioProcessor::loadPreset (const juce::String& presetName)
+void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
 {
     if (presetName.isEmpty())
         return;
@@ -180,7 +180,7 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
 }
 
 
-void ImogenAudioProcessor::deletePreset (const juce::String& presetName)
+void ImogenAudioProcessor::recieveDeletePreset (const juce::String& presetName)
 {
     auto name = presetName;
     
@@ -221,7 +221,7 @@ void ImogenAudioProcessor::setCurrentProgram (int index)
         return;
     
     if (index != currentProgram.load())
-        loadPreset (getProgramName (index));
+        recieveLoadPreset (getProgramName (index));
 }
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
@@ -241,10 +241,10 @@ int ImogenAudioProcessor::indexOfProgram (const juce::String& name) const
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
-    deletePreset (getProgramName (index));
+    recieveDeletePreset (getProgramName (index));
     
     if (index == getCurrentProgram())
-        savePreset (newName);
+        recieveSavePreset (newName);
     
     rescanPresetsFolder();
 }

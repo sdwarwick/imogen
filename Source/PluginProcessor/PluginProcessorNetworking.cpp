@@ -59,12 +59,6 @@ void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
 }
 
 
-void ImogenAudioProcessor::recievePresetNameChange (const juce::String& newPresetName)
-{
-    loadPreset (newPresetName);
-}
-
-
 void ImogenAudioProcessor::recieveAbletonLinkChange (bool isNowEnabled)
 {
     juce::ignoreUnused (isNowEnabled);
