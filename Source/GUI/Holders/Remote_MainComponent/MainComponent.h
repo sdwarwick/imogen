@@ -67,7 +67,7 @@ public:
 
 private:
     juce::OSCReceiver oscReceiver;
-    ImogenOSCReciever oscParser;
+    ImogenOSCReciever<juce::OSCReceiver::MessageLoopCallback> oscParser;
     
     ImogenOSCSender   oscSender;
     

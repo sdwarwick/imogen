@@ -326,7 +326,7 @@ private:
     ImogenOSCSender   oscSender;
     
     juce::OSCReceiver oscReceiver;
-    ImogenOSCReciever oscListener;
+    ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
