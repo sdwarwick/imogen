@@ -53,23 +53,85 @@ ImogenGUI::ImogenGUI (ImogenEventSender* h): mainDial(h), holder(h), tooltipWind
     mainDial.showPitchCorrection();
 }
 
-void ImogenGUI::createParameters()
-{
-    parameters.clear();
-    parameters.reserve (numParams);
-    
-    for (int i = 0; i < numParams; ++i)
-    {
-        const auto id = ParameterID(i);
-        parameters.emplace_back (std::make_unique<ImogenGUIParameter> (id, getParameterNameShort(id)));
-    }
-}
-
 
 ImogenGUI::~ImogenGUI()
 {
     this->setLookAndFeel (nullptr);
 }
+
+
+/*=========================================================================================================
+    ImogenEventReciever functions
+=========================================================================================================*/
+
+void ImogenGUI::recieveParameterChange (ParameterID paramID, float newValue)
+{
+    mainDial.showParameter (paramID);
+    // getParameter(paramID)->getComponent()-> ...
+    juce::ignoreUnused (newValue);
+}
+
+void ImogenGUI::recieveParameterChangeGestureStart (ParameterID paramID)
+{
+    mainDial.showParameter (paramID);
+}
+
+void ImogenGUI::recieveParameterChangeGestureEnd (ParameterID)
+{
+    mainDial.showPitchCorrection();
+}
+
+void ImogenGUI::recieveLoadPreset (const juce::String& newPresetName)
+{
+    if (newPresetName.isEmpty())
+    {
+        // clear the preset display...
+    }
+    else
+    {
+        const auto displayName = TRANS(newPresetName);
+        juce::ignoreUnused (displayName);
+    }
+}
+
+void ImogenGUI::recieveAbletonLinkChange (bool isNowEnabled)
+{
+    juce::ignoreUnused (isNowEnabled);
+}
+
+void ImogenGUI::recieveMTSconnectionChange (bool isNowConnected)
+{
+    juce::ignoreUnused (isNowConnected);
+}
+
+void ImogenGUI::recieveMTSscaleChange (const juce::String& newScaleName)
+{
+    const auto displayName = TRANS(newScaleName);
+    juce::ignoreUnused (displayName);
+}
+
+void ImogenGUI::recieveMidiLatchEvent (bool isNowLatched)
+{
+    juce::ignoreUnused (isNowLatched);
+}
+
+void ImogenGUI::recieveKillAllMidiEvent()
+{
+    
+}
+
+void ImogenGUI::recieveErrorCode (ErrorCode code)
+{
+    switch (code)
+    {
+        case (loadingPresetFailed): return;
+    }
+}
+
+
+/*=========================================================================================================
+    juce::Component functions
+ =========================================================================================================*/
 
 void ImogenGUI::paint (juce::Graphics& g)
 {
@@ -85,97 +147,11 @@ void ImogenGUI::paint (juce::Graphics& g)
     }
 }
 
-
-void ImogenGUI::recieveErrorCode (ErrorCode code)
-{
-    switch (code)
-    {
-        case (loadingPresetFailed): return;
-    }
-}
-
-
-void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
-{
-    darkMode.store (shouldUseDarkMode);
-    // inform all child components of the change...
-    this->repaint();
-}
-
-
 void ImogenGUI::resized()
 {
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
 }
-
-
-void ImogenGUI::recieveMidiLatchEvent (bool isNowLatched)
-{
-    juce::ignoreUnused (isNowLatched);
-}
-
-
-void ImogenGUI::recieveKillAllMidiEvent()
-{
-    
-}
-
-
-void ImogenGUI::recieveParameterChange (ParameterID paramID, float newValue)
-{
-    juce::ignoreUnused (paramID, newValue);
-    
-    // getComponentForParameter (paramID) ...
-}
-
-
-void ImogenGUI::recieveParameterChangeGestureStart (ParameterID paramID)
-{
-    mainDial.showParameter (paramID);
-}
-
-void ImogenGUI::recieveParameterChangeGestureEnd (ParameterID paramID)
-{
-    juce::ignoreUnused (paramID);
-    mainDial.showPitchCorrection();
-}
-
-
-inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
-{
-    juce::ignoreUnused (box);
-}
-
-
-void ImogenGUI::recieveLoadPreset (const juce::String& newPresetName)
-{
-    if (newPresetName.isEmpty())
-    {
-        
-    }
-    else
-    {
-        const auto displayName = TRANS(newPresetName);
-        juce::ignoreUnused (displayName);
-    }
-}
-
-
-void ImogenGUI::recieveMTSconnectionChange (bool isNowConnected)
-{
-    juce::ignoreUnused (isNowConnected);
-}
-
-void ImogenGUI::recieveMTSscaleChange (const juce::String& newScaleName)
-{
-    const auto displayName = TRANS(newScaleName);
-    juce::ignoreUnused (displayName);
-}
-
-
-/*===========================================================================================================================
- ============================================================================================================================*/
 
 bool ImogenGUI::keyPressed (const juce::KeyPress& key)
 {
@@ -200,8 +176,32 @@ void ImogenGUI::focusLost (FocusChangeType cause)
 }
 
 
-/*===========================================================================================================================
- ============================================================================================================================*/
+/*=========================================================================================================
+ =========================================================================================================*/
+
+void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
+{
+    darkMode.store (shouldUseDarkMode);
+    // inform all child components of the change...
+    this->repaint();
+}
+
+inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
+{
+    juce::ignoreUnused (box);
+}
+
+void ImogenGUI::createParameters()
+{
+    parameters.clear();
+    parameters.reserve (numParams);
+    
+    for (int i = 0; i < numParams; ++i)
+    {
+        const auto id = ParameterID(i);
+        parameters.emplace_back (std::make_unique<ImogenGUIParameter> (id, getParameterNameShort(id)));
+    }
+}
 
 ImogenGUIParameter* ImogenGUI::getParameter (ParameterID paramID) const
 {

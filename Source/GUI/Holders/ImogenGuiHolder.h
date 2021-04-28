@@ -39,7 +39,8 @@ public:
     
     virtual ~ImogenGuiHolder() override = default;
     
-    //
+    /*=========================================================================================*/
+    /* ImogenEventReciever functions -- these calls are simply forwarded to the ImogenGUI object's ImogenEventReciever interface. */
     
     void recieveParameterChange (ParameterID paramID, float newValue) override final { p_gui.recieveParameterChange (paramID, newValue); }
     
@@ -63,11 +64,11 @@ public:
     
     void recieveErrorCode (ErrorCode code) override final { p_gui.recieveErrorCode (code); }
     
-    //
+    /*=========================================================================================*/
     
     ImogenGUI* gui() noexcept { return &p_gui; }
     
-    //
+    /*=========================================================================================*/
     
     ImogenGUIState returnState() const { return ImogenGUIState(&p_gui); }
     
@@ -75,7 +76,7 @@ public:
     
     void restoreState (const ImogenGUIState& state) { state.resoreState (&p_gui); }
     
-    //
+    /*=========================================================================================*/
     
 private:
     ImogenGUI p_gui;

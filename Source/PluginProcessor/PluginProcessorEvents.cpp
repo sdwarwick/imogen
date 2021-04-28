@@ -17,14 +17,16 @@
  
  @2021 by Ben Vining. All rights reserved.
  
- PluginProcessorNetworking.cpp: This file contains functions dealing with networking and communications.
+ PluginProcessorNetworking.cpp: This file contains the implementations for the processor's ImogenEventSender and ImogenEventReciever interfaces.
  
  ======================================================================================================================================================*/
 
 #include "PluginProcessor.h"
 
 
-/* Functions for recieving events from the editor */
+/*=========================================================================================================
+    ImogenEventReciever functions
+ =========================================================================================================*/
 
 void ImogenAudioProcessor::recieveParameterChange (ParameterID paramID, float newValue)
 {
@@ -66,7 +68,9 @@ void ImogenAudioProcessor::recieveAbletonLinkChange (bool isNowEnabled)
 
 
 
-/* Functions for sending events to the editor (& any connected ImogenRemotes) */
+/*=========================================================================================================
+    ImogenEventSender functions
+ =========================================================================================================*/
 
 void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newValue)
 {
@@ -99,18 +103,23 @@ void ImogenAudioProcessor::sendErrorCode (ErrorCode code)
     juce::ignoreUnused (code);
 }
 
+void ImogenAudioProcessor::sendLoadPreset (const juce::String& presetName)
+{
+    juce::ignoreUnused (presetName);
+}
 
+void ImogenAudioProcessor::sendMidiLatch (bool isLatched)
+{
+    juce::ignoreUnused (isLatched);
+}
 
-/*
- INCOMING OSC MESSAGES
- parameterChangeRecieved (ParameterID paramID, float newValue);
- void parameterChangeGestureStarted (ParameterID paramID);
- void parameterChangeGestureEnded (ParameterID paramID);
- 
- void presetNameChanged (const juce::String& newPresetName);
- 
- void mts_connectionChange (bool isNowConnected);
- void mts_scaleChange (const juce::String& newScaleName);
- 
- void abletonLinkChange (bool isNowEnabled)
-*/
+void ImogenAudioProcessor::sendKillAllMidiEvent()
+{
+    
+}
+
+void ImogenAudioProcessor::sendEnableAbletonLink (bool isEnabled)
+{
+    juce::ignoreUnused (isEnabled);
+}
+

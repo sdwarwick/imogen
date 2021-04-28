@@ -43,53 +43,52 @@ public:
     
     virtual ~ImogenGUI() override;
     
-    void paint (juce::Graphics& g) override;
-    void resized() override;
+    /*=========================================================================================*/
+    /* ImogenEventReciever functions */
     
     void recieveParameterChange             (ParameterID paramID, float newValue) override final;
     void recieveParameterChangeGestureStart (ParameterID paramID) override final;
     void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
     
     void recieveLoadPreset   (const juce::String& newPresetName) override final;
-    void recieveSavePreset   (const juce::String&) override final { }
-    void recieveDeletePreset (const juce::String&) override final { }
+    void recieveSavePreset   (const juce::String&) override final { }  // these do nothing on the GUI side...
+    void recieveDeletePreset (const juce::String&) override final { }  // these do nothing on the GUI side...
     
-    void recieveAbletonLinkChange (bool isNowEnabled) override final { juce::ignoreUnused (isNowEnabled); }
+    void recieveAbletonLinkChange (bool isNowEnabled) override final;
     
     void recieveMTSconnectionChange (bool isNowConnected) override final;
     void recieveMTSscaleChange (const juce::String& newScaleName) override final;
     
     void recieveMidiLatchEvent (bool isNowLatched) override final;
     void recieveKillAllMidiEvent() override final;
-    
-    void recieveEditorPitchbendEvent (int) override final { }
-    
-    //
+    void recieveEditorPitchbendEvent (int) override final { }  // this does nothing on the GUI side...
     
     void recieveErrorCode (ErrorCode code) override final;
     
-    //
+    /*=========================================================================================*/
+    /* juce::Component functions */
+    
+    void paint (juce::Graphics& g) override;
+    void resized() override;
     
     bool keyPressed (const juce::KeyPress& key) override;
     bool keyStateChanged (bool isKeyDown) override;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override;
     void focusLost (FocusChangeType cause) override;
     
-    //
+    /*=========================================================================================*/
     
     ImogenGUIParameter* getParameter (ParameterID paramID) const;
-    
-    //
     
     void setDarkMode (bool shouldUseDarkMode);
     bool isUsingDarkMode() const noexcept { return darkMode.load(); }
     
-    //
+    /*=========================================================================================*/
     
 private:
     inline void makePresetMenu (juce::ComboBox& box);
-    
-    //
+    void createParameters();
+    /*=========================================================================================*/
     
     ImogenDialComponent mainDial;
     
@@ -101,8 +100,6 @@ private:
     
     juce::TooltipWindow tooltipWindow;
     static constexpr int msBeforeTooltip = 700;
-    
-    void createParameters();
     
     std::vector<std::unique_ptr<ImogenGUIParameter>> parameters;
     

@@ -51,6 +51,10 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 }
 
 
+/*=========================================================================================================
+    juce::Component functions
+ =========================================================================================================*/
+
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
@@ -65,10 +69,9 @@ void ImogenAudioProcessorEditor::resized()
 }
 
 
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-/* In the plugin build, the processor takes care of all netowrking & event handling -- the GUI's only job is to relay events to the processor. */
+/*=========================================================================================================
+ ImogenEventSender functions -- these calls are simply forwarded to the processor's ImogenEventReciever interface.
+ =========================================================================================================*/
 
 void ImogenAudioProcessorEditor::sendParameterChange (ParameterID paramID, float newValue)
 {

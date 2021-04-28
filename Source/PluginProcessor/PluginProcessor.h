@@ -62,6 +62,52 @@ public:
     ~ImogenAudioProcessor() override;
     
     void timerCallback() override final;
+    
+    /*=========================================================================================*/
+    /* ImogenEventReciever functions */
+    
+    void recieveParameterChange             (ParameterID paramID, float newValue) override final;
+    void recieveParameterChangeGestureStart (ParameterID paramID) override final;
+    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
+    
+    void recieveAbletonLinkChange (bool isNowEnabled) override final;
+    
+    void recieveMidiLatchEvent (bool isNowLatched) override final;
+    void recieveKillAllMidiEvent() override final;
+    void recieveEditorPitchbendEvent (int wheelValue) override final;
+    
+    void recieveMTSconnectionChange (bool) override final { }  // these do nothing on the processor side...
+    void recieveMTSscaleChange (const juce::String&) override final { }
+    
+    void recieveLoadPreset   (const juce::String& presetName) override final;
+    void recieveSavePreset   (const juce::String& presetName) override final;
+    void recieveDeletePreset (const juce::String& presetName) override final;
+    
+    void recieveErrorCode (ErrorCode) override final { }  // this does nothing on the processor side
+    
+    
+    /*=========================================================================================*/
+    /* ImogenEventSender functions */
+    
+    void sendParameterChange             (ParameterID paramID, float newValue) override final;
+    void sendParameterChangeGestureStart (ParameterID paramID) override final;
+    void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
+    
+    void sendLoadPreset   (const juce::String&) override final;
+    void sendSavePreset   (const juce::String&) override final { }  // these do nothing on the processor side...
+    void sendDeletePreset (const juce::String&) override final { }  // these do nothing on the processor side...
+    
+    void sendEditorPitchbend (int) override final { }  // this does nothing on the processor side...
+    void sendMidiLatch (bool) override final;
+    void sendKillAllMidiEvent() override final;
+    
+    void sendEnableAbletonLink (bool) override final;
+    
+    void sendErrorCode (ErrorCode code) override final;
+    
+    
+    /*=========================================================================================*/
+    /* juce::AudioProcessor functions */
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override final;
     
@@ -78,53 +124,10 @@ public:
     bool canAddBus (bool isInput) const override { return isInput; }
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override final;
     
-    /* ImogenEventReciever functions */
-    void recieveParameterChange             (ParameterID paramID, float newValue) override final;
-    void recieveParameterChangeGestureStart (ParameterID paramID) override final;
-    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
-    
-    void recieveAbletonLinkChange (bool isNowEnabled) override final;
-    
-    void recieveMidiLatchEvent (bool isNowLatched) override final;
-    void recieveKillAllMidiEvent() override final;
-    void recieveEditorPitchbendEvent (int wheelValue) override final;
-    
-    void recieveMTSconnectionChange (bool) override final { }
-    void recieveMTSscaleChange (const juce::String&) override final { }
-    
-    void recieveLoadPreset   (const juce::String& presetName) override final;
-    void recieveSavePreset   (const juce::String& presetName) override final;
-    void recieveDeletePreset (const juce::String& presetName) override final;
-    
-    void recieveErrorCode (ErrorCode) override final { }
-    
-    
-    /* ImogenEventSender functions */
-    void sendParameterChange             (ParameterID paramID, float newValue) override final;
-    void sendParameterChangeGestureStart (ParameterID paramID) override final;
-    void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
-    
-    void sendLoadPreset   (const juce::String&) override final { }
-    void sendSavePreset   (const juce::String&) override final { }
-    void sendDeletePreset (const juce::String&) override final { }
-    
-    void sendEditorPitchbend (int) override final { }
-    void sendMidiLatch (bool) override final { }
-    void sendKillAllMidiEvent() override final { }
-    
-    void sendEnableAbletonLink (bool) override final { }
-    
-    void sendErrorCode (ErrorCode code) override final;
-    
-    /* */
-    
     double getTailLengthSeconds() const override;
     
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
-    
-    
-    inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
     
     juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
     
@@ -134,8 +137,6 @@ public:
     const juce::String getProgramName (int index) override;
     int indexOfProgram (const juce::String& name) const;
     void changeProgramName (int index, const juce::String& newName) override;
-    
-    juce::String getActivePresetName();
     
     bool acceptsMidi()  const override { return true;  }
     bool producesMidi() const override { return true;  }
@@ -150,22 +151,28 @@ public:
     
     bool supportsDoublePrecisionProcessing() const override { return true; }
     
+    /*=========================================================================================*/
+    
+    inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
+    
+    juce::String getActivePresetName();
+    
+    void rescanPresetsFolder();
+    
+    /*=========================================================================================*/
+    
     inline bool isMidiLatched() const
     {
         return isUsingDoublePrecision() ? doubleEngine.isMidiLatched() : floatEngine.isMidiLatched();
     }
     
-    
-    static constexpr auto msgQueueSize = size_t(100);
-    
-    // this queue is SPSC; this is only for events flowing from the editor into the processor
-    bav::MessageQueue<msgQueueSize> nonParamEvents;
-    
+    /*=========================================================================================*/
 
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
     
     int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
     
+    /*=========================================================================================*/
     
     bool isConnectedToMtsEsp() const noexcept
     {
@@ -177,27 +184,34 @@ public:
         return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
     }
     
+    /*=========================================================================================*/
     
-    Parameter* getParameterPntr (const ParameterID paramID) const;
-    
-    ParameterID parameterPntrToID (const Parameter* const) const;
-    
-    
-    // enables saving and loading of the editor's last saved size
     juce::Point<int> getLastEditorSize() const { return savedEditorSize; }
+    
     void saveEditorSize (const juce::Point<int>& size) { savedEditorSize = size; }
     
-    
-    // rescans the presets folder for available presets
-    void rescanPresetsFolder();
+    /*=========================================================================================*/
     
     
 private:
+    
+    /*=========================================================================================*/
+    /* Initialization functions */
     
     template <typename SampleType>
     void initialize (bav::ImogenEngine<SampleType>& activeEngine);
     
     BusesProperties makeBusProperties() const;
+    
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
+    void initializeParameterPointers();
+    void initializeParameterListeners();
+    void addParameterMessenger (ParameterID paramID);
+    
+    template<typename PointerType>
+    PointerType makeParameterPointer (const juce::String& name);
+    
+    /*=========================================================================================*/
     
     template <typename SampleType1, typename SampleType2>
     void prepareToPlayWrapped (const double sampleRate,
@@ -209,6 +223,8 @@ private:
                                      juce::MidiBuffer& midiMessages,
                                      bav::ImogenEngine<SampleType>& engine,
                                      const bool isBypassedThisCallback);
+    
+    /*=========================================================================================*/
     
     template<typename SampleType>
     void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
@@ -223,33 +239,29 @@ private:
     void updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
                            bool compressorIsOn, float knobValue);
     
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
-    void initializeParameterPointers();
-    void initializeParameterListeners();
-    void addParameterMessenger (ParameterID paramID);
     void updateParameterDefaults();
-    
-    bav::MessageQueue<msgQueueSize> paramChanges;
     
     template<typename SampleType>
     bool updatePluginInternalState (juce::XmlElement& newState,
                                     bav::ImogenEngine<SampleType>& activeEngine,
                                     bool isPresetChange);
     
+    void changeMidiLatchState (bool isNowLatched);
     
+    /*=========================================================================================*/
+
     ImogenGuiHolder* getActiveGui() const;
     
+    Parameter* getParameterPntr (const ParameterID paramID) const;
+    ParameterID parameterPntrToID (const Parameter* const) const;
+    
+    /*=========================================================================================*/
     
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
     
-    juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
-    
     juce::AudioProcessorValueTreeState tree;
-    
-    template<typename PointerType>
-    PointerType makeParameterPointer (const juce::String& name);
     
     // pointers to all the parameter objects
     BoolParamPtr  mainBypass, leadBypass, harmonyBypass, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle, delayToggle;
@@ -259,6 +271,33 @@ private:
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
     
+    ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session.
+    
+    juce::Point<int> savedEditorSize;
+    
+    juce::Array<juce::File> availablePresets;
+    
+    std::atomic<int> currentProgram;  // stores the current "program" number. -1 if no preset is active.
+    
+    std::atomic<bool> mts_wasConnected;
+    juce::String mts_lastScaleName;
+    
+    juce::String lastPresetName;
+    
+    std::atomic<bool> abletonLink_wasEnabled;
+    
+    ImogenOSCSender   oscSender;
+    
+    juce::OSCReceiver oscReceiver;
+    ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
+    
+    static constexpr auto msgQueueSize = size_t(100);
+    bav::MessageQueue<msgQueueSize> nonParamEvents;  // this queue is SPSC; this is only for events flowing from the editor into the processor
+    bav::MessageQueue<msgQueueSize> paramChanges;
+    
+    juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
+    
+    /*=========================================================================================*/
     
     /* simple attachment class that listens for chages in one specific parameter and pushes messages with the appropriate key value into the queue */
     class ParameterMessenger :  public juce::AudioProcessorParameter::Listener
@@ -267,7 +306,7 @@ private:
         
     public:
         ParameterMessenger(ImogenEventReciever& r, MsgQ& queue, bav::Parameter* p, ParameterID paramIDtoListen)
-            : reciever(r), q(queue), param(p), paramID(paramIDtoListen)
+        : reciever(r), q(queue), param(p), paramID(paramIDtoListen)
         {
             jassert (param != nullptr);
         }
@@ -302,31 +341,7 @@ private:
     };
     
     
-    void changeMidiLatchState (bool isNowLatched);
-    
-    
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
-    
-    // this object represents the plugin as a participant in an Ableton Link session.
-    ableton::Link abletonLink;
-    
-    juce::Point<int> savedEditorSize;
-    
-    juce::Array<juce::File> availablePresets;
-    
-    std::atomic<int> currentProgram;  // stores the current "program" number. -1 if no preset is active.
-    
-    std::atomic<bool> mts_wasConnected;
-    juce::String mts_lastScaleName;
-    
-    juce::String lastPresetName;
-    
-    std::atomic<bool> abletonLink_wasEnabled;
-    
-    ImogenOSCSender   oscSender;
-    
-    juce::OSCReceiver oscReceiver;
-    ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

@@ -41,6 +41,7 @@ MainComponent::MainComponent(): oscParser(gui())
 #endif
 }
 
+
 MainComponent::~MainComponent()
 {
     oscReceiver.removeListener (&oscParser);
@@ -53,21 +54,10 @@ MainComponent::~MainComponent()
 #endif
 }
 
-//==============================================================================
-void MainComponent::paint (juce::Graphics& g)
-{
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-}
 
-void MainComponent::resized()
-{
-    gui()->setBounds (0, 0, getWidth(), getHeight());
-}
-
-
-//==============================================================================
-
-/* This app is just a remote control for another instance of Imogen. All its outgoing events are simply rerouted to an OSC message sender... */
+/*=========================================================================================================
+    ImogenEventSender functions -- these calls are simply forwarded to the OSC sender's ImogenEventSender interface.
+ =========================================================================================================*/
 
 void MainComponent::sendParameterChange (ParameterID paramID, float newValue)
 {
@@ -117,4 +107,19 @@ void MainComponent::sendDeletePreset (const juce::String& presetName)
 void MainComponent::sendEnableAbletonLink (bool shouldBeEnabled)
 {
     oscSender.sendEnableAbletonLink (shouldBeEnabled);
+}
+
+
+/*=========================================================================================================
+    juce::Component functions
+ =========================================================================================================*/
+
+void MainComponent::paint (juce::Graphics& g)
+{
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+}
+
+void MainComponent::resized()
+{
+    gui()->setBounds (0, 0, getWidth(), getHeight());
 }

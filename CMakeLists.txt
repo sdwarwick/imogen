@@ -41,7 +41,7 @@ set (Imogen_sourceFiles
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorNetworking.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorEvents.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h

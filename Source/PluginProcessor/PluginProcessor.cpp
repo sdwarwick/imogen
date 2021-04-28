@@ -27,7 +27,7 @@
 
 #include "PluginProcessorParameters.cpp"
 #include "PluginProcessorState.cpp"
-#include "PluginProcessorNetworking.cpp"
+#include "PluginProcessorEvents.cpp"
 
 
 ImogenAudioProcessor::ImogenAudioProcessor():

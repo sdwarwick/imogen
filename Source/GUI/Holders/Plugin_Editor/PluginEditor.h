@@ -40,8 +40,8 @@ public:
     
     ~ImogenAudioProcessorEditor() override;
     
-    void paint (juce::Graphics&) override final;
-    void resized() override final;
+    /*=========================================================================================*/
+    /* ImogenEventSender functions */
     
     void sendParameterChange             (ParameterID paramID, float newValue) override final;
     void sendParameterChangeGestureStart (ParameterID paramID) override final;
@@ -59,8 +59,13 @@ public:
     
     void sendErrorCode (ErrorCode code) override final;
     
-    //
+    /*=========================================================================================*/
+    /* juce::Component functions */
     
+    void paint (juce::Graphics&) override final;
+    void resized() override final;
+    
+    /*=========================================================================================*/
     
 private:
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor
@@ -68,6 +73,5 @@ private:
 #if JUCE_OPENGL
     OpenGLContext openGLContext;
 #endif
-    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
