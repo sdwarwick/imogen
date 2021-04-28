@@ -64,6 +64,7 @@ juce_add_gui_app (ImogenRemote
     REQUIRES_FULL_SCREEN                 TRUE  # for iOS
     IPAD_SCREEN_ORIENTATIONS             UIInterfaceOrientationUnknown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight
     TARGETED_DEVICE_FAMILY               2     # target iPad only
+    DOCUMENT_EXTENSIONS xml
     )
 
 #

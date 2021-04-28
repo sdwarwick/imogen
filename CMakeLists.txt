@@ -111,6 +111,7 @@ juce_add_plugin (Imogen
     TARGETED_DEVICE_FAMILY               2     # target iPad only
     VST_NUM_MIDI_INS 1
     VST_NUM_MIDI_OUTS 1
+    DOCUMENT_EXTENSIONS xml
     )
 
 #
