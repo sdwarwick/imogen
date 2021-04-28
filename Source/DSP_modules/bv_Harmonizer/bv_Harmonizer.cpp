@@ -26,14 +26,6 @@
 #include "PSOLA/GrainExtractor/GrainExtractor.cpp"
 
 
-#define bvh_ADSR_QUICK_RELEASE_MS 5
-
-#define bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER 0.4
-#define bvh_SOFT_PEDAL_GAIN_MULTIPLIER 0.65
-
-#define bvh_PITCH_DETECTION_CONFIDENCE_THRESH 0.3
-
-
 namespace bav
 {
 
@@ -43,17 +35,13 @@ Harmonizer<SampleType>::Harmonizer()//: autoPitch(&analyzer)
 {
     Base::setConcertPitchHz(440);
     
-    pitchDetector.setConfidenceThresh (SampleType(bvh_PITCH_DETECTION_CONFIDENCE_THRESH));
+    pitchDetector.setConfidenceThresh (pitchDetectionConfidenceThresh);
     
-    Base::updateQuickReleaseMs (bvh_ADSR_QUICK_RELEASE_MS);
+    Base::updateQuickReleaseMs (adsrQuickReleaseMs);
     
-    Base::playingButReleasedMultiplier = float(bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER);
-    Base::softPedalMultiplier = float(bvh_SOFT_PEDAL_GAIN_MULTIPLIER);
+    Base::playingButReleasedMultiplier = playingButReleasedGainMultiplier;
+    Base::softPedalMultiplier          = softPedalGainMultiplier;
 }
-    
-#undef bvh_ADSR_QUICK_RELEASE_MS
-#undef bvh_PLAYING_BUT_RELEASED_GAIN_MULTIPLIER
-#undef bvh_SOFT_PEDAL_GAIN_MULTIPLIER
 
     
 template<typename SampleType>

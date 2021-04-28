@@ -26,27 +26,10 @@
 #include "bv_ImogenEngineParameters.cpp"
 
 
-#define bvie_LIMITER_THRESH_DB 0.0f
-#define bvie_LIMITER_RELEASE_MS 35.0f
-
-#define bvie_NOISE_GATE_ATTACK_MS 25.0f
-#define bvie_NOISE_GATE_RELEASE_MS 100.0f
-#define bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE 10.0f
-
-#define bvie_INIT_MIN_HZ 80
-#define bvie_INIT_MAX_HZ 2400
-
-#define bvie_INITIAL_HIDDEN_HI_PASS_FREQ 65
-
-#define bvie_COMPRESSOR_ATTACK_MS 4.0f
-#define bvie_COMPRESSOR_RELEASE_MS 200.0f
-
-
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
 
 namespace bav
-
 {
     
 
@@ -133,21 +116,21 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     harmonizer.initialize (16, samplerate, newInternalBlocksize);
     
     monoBuffer.setSize (1, newInternalBlocksize);
-    dryBuffer.setSize (2, newInternalBlocksize);
-    wetBuffer.setSize (2, newInternalBlocksize);
+    dryBuffer.setSize  (2, newInternalBlocksize);
+    wetBuffer.setSize  (2, newInternalBlocksize);
     
     // constant limiter settings
-    limiter.setRelease (bvie_LIMITER_RELEASE_MS);
-    limiter.setThreshold (bvie_LIMITER_THRESH_DB);
+    limiter.setRelease   (limiterReleaseMs);
+    limiter.setThreshold (limiterThreshDb);
     
     // constant noise gate settings
-    gate.setRatio (bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE);
-    gate.setAttack (bvie_NOISE_GATE_ATTACK_MS);
-    gate.setRelease (bvie_NOISE_GATE_RELEASE_MS);
+    gate.setRatio   (noiseGateFloorRatio);
+    gate.setAttack  (noiseGateAttackMs);
+    gate.setRelease (noiseGateReleaseMs);
     
     // constant compressor settings
-    compressor.setAttack (bvie_COMPRESSOR_ATTACK_MS);
-    compressor.setRelease (bvie_COMPRESSOR_RELEASE_MS);
+    compressor.setAttack  (compressorAttackMs);
+    compressor.setRelease (compressorReleaseMs);
     
     deEsser.prepare (newInternalBlocksize, samplerate);
     
@@ -157,20 +140,10 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
     
     resetSmoothedValues (newInternalBlocksize);
            
-    harmonizer.updatePitchDetectionHzRange (bvie_INIT_MIN_HZ, bvie_INIT_MAX_HZ);
+    harmonizer.updatePitchDetectionHzRange (pitchDetectorMinHz, pitchDetectorMaxHz);
 
     FIFOEngine::changeLatency (harmonizer.getLatencySamples());       
 }
-    
-#undef bvie_LIMITER_RELEASE_MS
-#undef bvie_LIMITER_THRESH_DB
-#undef bvie_NOISE_GATE_FLOOR_RATIO_TO_ONE
-#undef bvie_NOISE_GATE_ATTACK_MS
-#undef bvie_NOISE_GATE_RELEASE_MS
-#undef bvie_INIT_MIN_HZ
-#undef bvie_INIT_MAX_HZ
-#undef bvie_COMPRESSOR_ATTACK_MS
-#undef bvie_COMPRESSOR_RELEASE_MS
     
 
 bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
@@ -201,17 +174,14 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     
     delay.prepare (blocksize, samplerate, 2);
     
-    initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate,
-                                                                                             SampleType(bvie_INITIAL_HIDDEN_HI_PASS_FREQ));
+    initialHiddenLoCut.coefficients = juce::dsp::IIR::Coefficients<SampleType>::makeLowPass (samplerate, initialHiddenHiPassFreq);
     initialHiddenLoCut.reset();
     
     deEsser.prepare (blocksize, samplerate);
     
     reverb.prepare (blocksize, samplerate, 2);
 }
-    
-#undef bvie_INITIAL_HIDDEN_HI_PASS_FREQ
-    
+
 
 bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
 {
@@ -227,9 +197,6 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
     
     resetSmoothedValues (newInternalBlocksize);
 }
-    
-#undef bvie_LIMITER_RELEASE_MS
-#undef bvie_LIMITER_THRESH_DB
 
     
 bvie_VOID_TEMPLATE::release()

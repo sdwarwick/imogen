@@ -87,6 +87,11 @@ private:
     
     int choosePeakWithGreatestPower (const IArray& candidates, const SampleType* reading);
     
+    //
+    
+    static constexpr auto numPeaksToTest          = 10;
+    static constexpr auto defaultFinalHandfulSize = 5;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GrainExtractor)
 };
 

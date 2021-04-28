@@ -84,9 +84,6 @@ void HarmonizerVoice<SampleType>::bypassedBlockRecieved (float voicesLastOutputF
     shifter.bypassedBlockRecieved (numSamples);
 }
     
-
-#undef bvh_NUM_SYNTHESIS_GRAINS
-    
     
 template class HarmonizerVoice<float>;
 template class HarmonizerVoice<double>;

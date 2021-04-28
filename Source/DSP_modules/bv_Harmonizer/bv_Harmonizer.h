@@ -106,6 +106,14 @@ private:
     
 //    AutoPitch<SampleType> autoPitch;
     
+    //
+    
+    static constexpr auto adsrQuickReleaseMs = 5;
+    static constexpr auto playingButReleasedGainMultiplier = 0.4f;
+    static constexpr auto softPedalGainMultiplier          = 0.65f;
+    
+    static constexpr auto pitchDetectionConfidenceThresh = SampleType(0.3);
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
 

@@ -26,8 +26,6 @@
 
 #include "GrainExtractor.h"
 
-#define bvhge_NUM_PEAKS_TO_TEST 10
-#define bvhge_DEFAULT_FINAL_HANDFUL_SIZE 5
 
 
 namespace bav
@@ -65,15 +63,15 @@ void GrainExtractor<SampleType>::prepare (const int maxBlocksize)
     
     peakIndices.ensureStorageAllocated (maxBlocksize);
     
-    peakCandidates.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST + 1);
+    peakCandidates.ensureStorageAllocated (numPeaksToTest + 1);
     peakCandidates.clearQuick();
     peakSearchingOrder.ensureStorageAllocated(maxBlocksize);
     peakSearchingOrder.clearQuick();
-    candidateDeltas.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    candidateDeltas.ensureStorageAllocated (numPeaksToTest);
     candidateDeltas.clearQuick();
-    finalHandful.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    finalHandful.ensureStorageAllocated (numPeaksToTest);
     finalHandful.clearQuick();
-    finalHandfulDeltas.ensureStorageAllocated (bvhge_NUM_PEAKS_TO_TEST);
+    finalHandfulDeltas.ensureStorageAllocated (numPeaksToTest);
     finalHandfulDeltas.clearQuick();
 }
 
@@ -196,12 +194,10 @@ inline int GrainExtractor<SampleType>::findNextPeak (const int frameStart, const
     
     peakCandidates.clearQuick();
     
-    for (int i = 0; i < bvhge_NUM_PEAKS_TO_TEST; ++i)
+    for (int i = 0; i < numPeaksToTest; ++i)
         getPeakCandidateInRange (peakCandidates, reading, frameStart, frameEnd, predictedPeak, peakSearchingOrder);
     
     jassert (! peakCandidates.isEmpty());
-    
-#undef bvhge_NUM_PEAKS_TO_TEST
     
     switch (peakCandidates.size())
     {
@@ -314,15 +310,14 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
     for (int candidate : candidates)
     {
         candidateDeltas.add ((abs (candidate - deltaTarget1)
-                           + abs (candidate - deltaTarget2))
+                            + abs (candidate - deltaTarget2))
                              * 0.5f);
     }
     
     // 2. whittle our remaining candidates down to the final candidates with the minimum delta values
     
-    const auto finalHandfulSize = std::min (bvhge_DEFAULT_FINAL_HANDFUL_SIZE, candidateDeltas.size());
-#undef bvhge_DEFAULT_FINAL_HANDFUL_SIZE
-    
+    const auto finalHandfulSize = std::min (defaultFinalHandfulSize, candidateDeltas.size());
+
     float minimum = 0.0f;
     int minimumIndex = 0;
     const auto dataSize = candidateDeltas.size();

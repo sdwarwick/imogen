@@ -160,6 +160,20 @@ private:
     
     void resetSmoothedValues (int blocksize);
     
+    static constexpr auto limiterThreshDb     = 0.0f;
+    static constexpr auto limiterReleaseMs    = 35.0f;
+    static constexpr auto noiseGateAttackMs   = 25.0f;
+    static constexpr auto noiseGateReleaseMs  = 100.0f;
+    static constexpr auto noiseGateFloorRatio = 10.0f; // ratio to one when the noise gate is activated
+    static constexpr auto compressorAttackMs  = 4.0f;
+    static constexpr auto compressorReleaseMs = 200.0f;
+    
+    static constexpr auto pitchDetectorMinHz = 80;
+    static constexpr auto pitchDetectorMaxHz = 2400;
+    
+    static constexpr auto initialHiddenHiPassFreq = SampleType(65);
+    
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
 };
 

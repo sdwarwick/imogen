@@ -24,9 +24,6 @@
 namespace bav
 {
     
-#define bvh_NUM_SYNTHESIS_GRAINS 48  // these are cheap, no reason not to have a lot
-    
-    
 template<typename SampleType>
 class PsolaShifter
 {
@@ -73,7 +70,7 @@ public:
     
     SampleType getNextSample (const int newPeriod, const int origPeriod)
     {
-        jassert (synthesisGrains.size() == bvh_NUM_SYNTHESIS_GRAINS);
+        jassert (synthesisGrains.size() == numSynthesisGrains);
         jassert (newPeriod > 0 && origPeriod > 0);
         
         if (! anyGrainsAreActive())
@@ -101,7 +98,7 @@ public:
     
     void prepare()
     {
-        while (synthesisGrains.size() < bvh_NUM_SYNTHESIS_GRAINS)
+        while (synthesisGrains.size() < numSynthesisGrains)
             synthesisGrains.add (new Synthesis_Grain());
     }
     
@@ -190,12 +187,13 @@ private:
     int nextSynthesisPitchMark = 0;
     
     int nextAnalysisPitchMark = 0;
+    
+    static constexpr auto numSynthesisGrains = 48;
 };
 
 
 template class PsolaShifter<float>;
 template class PsolaShifter<double>;
     
-#undef bvh_NUM_SYNTHESIS_GRAINS
     
 }  // namespace

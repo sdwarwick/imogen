@@ -24,9 +24,6 @@
 #include "GrainExtractor/GrainExtractor.h"
 
 
-#define bvh_NUM_ANALYSIS_GRAINS 48
-
-
 namespace bav
 {
     
@@ -42,7 +39,7 @@ public:
     
     void prepare (int blocksize)
     {
-        while (analysisGrains.size() < bvh_NUM_ANALYSIS_GRAINS)
+        while (analysisGrains.size() < numAnalysisGrains)
             analysisGrains.add (new Analysis_Grain());
         
         for (auto* grain : analysisGrains)
@@ -62,7 +59,7 @@ public:
     
     void analyzeInput (const SampleType* inputSamples, const int numSamples, const int periodThisFrame)
     {
-        jassert (analysisGrains.size() == bvh_NUM_ANALYSIS_GRAINS);
+        jassert (analysisGrains.size() == numAnalysisGrains);
         jassert (periodThisFrame > 0 && numSamples >= periodThisFrame * 2);
         
         grainExtractor.getGrainOnsetIndices (indicesOfGrainOnsets, inputSamples, numSamples, periodThisFrame);
@@ -183,13 +180,13 @@ private:
     juce::Array<int> indicesOfGrainOnsets;
     
     juce::OwnedArray<Analysis_Grain> analysisGrains;
+    
+    static constexpr auto numAnalysisGrains = 48;
 };
 
 
 template class PsolaAnalyzer<float>;
 template class PsolaAnalyzer<double>;
     
-
-#undef bvh_NUM_ANALYSIS_GRAINS
     
 }  // namespace
