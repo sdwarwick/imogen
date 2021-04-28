@@ -28,17 +28,17 @@ jobs:
           artifact: MacOS
 
     steps:
-    
-    - name: Install JUCE's Linux dependencies
-      if: runner.os == 'Linux'
-      shell: bash
-      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
-      
+
     - name: Checkout code
       uses: actions/checkout@v2
       with:
         submodules: recursive
         path: imogen
+
+    - name: Install JUCE's Linux dependencies
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
 
     - name: Run main build script
       shell: bash
@@ -62,7 +62,8 @@ jobs:
      - name: Run iOS build script
        shell: bash
        run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
-       
+  
+
   plugin-LV2-build:
   
       name: plugin - LV2 build
@@ -70,15 +71,15 @@ jobs:
       timeout-minutes: 30
       
       steps:
-      
-        - name: Install JUCE's Linux dependencies
-          shell: bash
-          run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
 
         - name: Install LV2 development headers
           shell: bash
           run: sudo apt-get install lv2-dev
-      
+
+        - name: Install JUCE's Linux dependencies
+          shell: bash
+          run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
+
         - name: Checkout code
           uses: actions/checkout@v2
           with:
@@ -106,18 +107,18 @@ jobs:
           artifact: MacOS
        
     steps:
-    
-    - name: Install JUCE's Linux dependencies
-      if: runner.os == 'Linux'
-      shell: bash
-      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
 
     - name: Checkout code
       uses: actions/checkout@v2
       with:
         submodules: recursive
         path: imogen
-        
+
+    - name: Install JUCE's Linux dependencies
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
+
     - name: Run main build script
       shell: bash
       run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_desktop.sh
