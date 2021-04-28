@@ -76,15 +76,15 @@ jobs:
           shell: bash
           run: sudo apt-get install lv2-dev
 
-        - name: Install JUCE's Linux dependencies
-          shell: bash
-          run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
-
         - name: Checkout code
           uses: actions/checkout@v2
           with:
             submodules: recursive
             path: imogen
+            
+        - name: Install JUCE's Linux dependencies
+          shell: bash
+          run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
 
         - name: Run main build script
           shell: bash
