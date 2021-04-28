@@ -90,15 +90,50 @@ static constexpr int numEventIDs = pitchBendFromEditorID + 1;
 }  // namespace
 
 
+/*
+ */
+
+
 struct ImogenEventReciever
 {
     virtual ~ImogenEventReciever() = default;
     
-    virtual void parameterChangeRecieved (Imogen::ParameterID paramID, float newValue) = 0;
+    virtual void parameterChangeRecieved       (Imogen::ParameterID paramID, float newValue) = 0;
     virtual void parameterChangeGestureStarted (Imogen::ParameterID paramID) = 0;
-    virtual void parameterChangeGestureEnded (Imogen::ParameterID paramID) = 0;
+    virtual void parameterChangeGestureEnded   (Imogen::ParameterID paramID) = 0;
     
     virtual void presetNameChanged (const juce::String& newPresetName) = 0;
     
     virtual void abletonLinkChange (bool isNowEnabled) = 0;
+    
+    virtual void recieveMidiLatchEvent (bool isNowLatched) = 0;
+    virtual void recieveKillAllMidiEvent() = 0;
+    virtual void recieveEditorPitchbendEvent (int wheelValue) = 0;
+    
+    virtual void mts_connectionChange (bool isNowConnected) = 0;
+    virtual void mts_scaleChange (const juce::String& newScaleName) = 0;
+};
+
+
+/*
+ */
+
+
+struct ImogenEventSender
+{
+    virtual ~ImogenEventSender() = default;
+    
+    virtual void sendParameterChange         (Imogen::ParameterID paramID, float newValue) = 0;
+    virtual void startParameterChangeGesture (Imogen::ParameterID paramID) = 0;
+    virtual void endParameterChangeGesture   (Imogen::ParameterID paramID) = 0;
+    
+    virtual void sendEditorPitchbend (int wheelValue) = 0;
+    
+    virtual void sendMidiLatch (bool shouldBeLatched) = 0;
+    
+    virtual void loadPreset   (const juce::String& presetName) = 0;
+    virtual void savePreset   (const juce::String& presetName) = 0;
+    virtual void deletePreset (const juce::String& presetName) = 0;
+    
+    virtual void enableAbletonLink (bool shouldBeEnabled) = 0;
 };

@@ -69,21 +69,23 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     copyXmlToBinary (*xml, destData);
 }
 
-void ImogenAudioProcessor::savePreset (juce::String presetName) // this function can be used both to save new preset files or to update existing ones
+void ImogenAudioProcessor::savePreset (const juce::String& presetName) // this function can be used both to save new preset files or to update existing ones
 {
-    if (presetName.endsWith(".xml"))
-        presetName.dropLastCharacters(4);
+    auto name = presetName;
+    
+    if (name.endsWith(".xml"))
+        name = name.dropLastCharacters(4);
     
     if (tree.state.hasProperty("editorSize"))
         tree.state.removeProperty ("editorSize", nullptr);
     
     auto xml = tree.copyState().createXml();
     
-    xml->setAttribute ("presetName", presetName);
+    xml->setAttribute ("presetName", name);
     
-    presetName += ".xml";
+    name += ".xml";
     
-    xml->writeTo (getPresetsFolder().getChildFile (presetName));
+    xml->writeTo (getPresetsFolder().getChildFile (name));
     
     rescanPresetsFolder();
     updateHostDisplay();
@@ -104,20 +106,22 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     currentProgram.store (-1);
 }
 
-bool ImogenAudioProcessor::loadPreset (juce::String presetName)
+void ImogenAudioProcessor::loadPreset (const juce::String& presetName)
 {
     if (presetName.isEmpty())
-        return false;
+        return;
     
     rescanPresetsFolder();
     
-    if (! presetName.endsWith(".xml"))
-        presetName += ".xml";
+    auto name = presetName;
     
-    auto presetToLoad = getPresetsFolder().getChildFile (presetName);
+    if (! name.endsWith(".xml"))
+        name += ".xml";
+    
+    auto presetToLoad = getPresetsFolder().getChildFile (name);
     
     if (! presetToLoad.existsAsFile())
-        return false;
+        return;
     
     auto xmlElement = juce::parseXML (presetToLoad);
     
@@ -129,10 +133,8 @@ bool ImogenAudioProcessor::loadPreset (juce::String presetName)
         if (availablePresets.isEmpty())
             currentProgram.store (-1);
         else
-            currentProgram.store (indexOfProgram (presetName.dropLastCharacters(4)));
+            currentProgram.store (indexOfProgram (name.dropLastCharacters(4)));
     }
-    
-    return result;
 }
 
 
@@ -178,12 +180,14 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
 }
 
 
-void ImogenAudioProcessor::deletePreset (juce::String presetName)
+void ImogenAudioProcessor::deletePreset (const juce::String& presetName)
 {
-    if (! presetName.endsWith(".xml"))
-        presetName += ".xml";
+    auto name = presetName;
     
-    auto presetToDelete = getPresetsFolder().getChildFile (presetName);
+    if (! name.endsWith(".xml"))
+        name += ".xml";
+    
+    auto presetToDelete = getPresetsFolder().getChildFile (name);
     
     if (presetToDelete.existsAsFile())
         if (! presetToDelete.moveToTrash())

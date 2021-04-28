@@ -4,7 +4,7 @@
 #include "GUI/GUI_Framework.h"
 
 
-class ImogenOSCSender    :   public ImogenGuiHandle,
+class ImogenOSCSender    :   public ImogenEventSender,
                              public juce::OSCSender
 {
 public:

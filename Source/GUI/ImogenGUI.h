@@ -39,7 +39,7 @@ class ImogenGUI  :     public juce::Component,
 {
 public:
     
-    ImogenGUI (ImogenGuiHandle* h);
+    ImogenGUI (ImogenEventSender* h);
     
     virtual ~ImogenGUI() override;
     
@@ -56,8 +56,13 @@ public:
     
     void updateParameterDefaults();
     
-    void mts_connectionChange (bool isNowConnected);
-    void mts_scaleChange (const juce::String& newScaleName);
+    void mts_connectionChange (bool isNowConnected) override final;
+    void mts_scaleChange (const juce::String& newScaleName) override final;
+    
+    void recieveMidiLatchEvent (bool isNowLatched) override final;
+    void recieveKillAllMidiEvent() override final;
+    
+    void recieveEditorPitchbendEvent (int) override final { }
     
     //
     
@@ -88,7 +93,7 @@ private:
     
     bav::ImogenLookAndFeel lookAndFeel;
     
-    ImogenGuiHandle* const holder;
+    ImogenEventSender* const holder;
     
     juce::TooltipWindow tooltipWindow;
     static constexpr int msBeforeTooltip = 700;

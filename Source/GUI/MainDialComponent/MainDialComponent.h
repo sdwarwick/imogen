@@ -28,7 +28,7 @@
 class ImogenDialComponent  :    public juce::Component
 {
 public:
-    ImogenDialComponent(ImogenGuiHandle* h): holder(h) { jassert (holder != nullptr); }
+    ImogenDialComponent(ImogenEventSender* h): holder(h) { jassert (holder != nullptr); }
     
     void paint (juce::Graphics& g) override final;
     
@@ -53,6 +53,6 @@ public:
     void newIntonationData (const juce::String& noteName, int centsOffPitch);
     
 private:
-    ImogenGuiHandle* const holder;
+    ImogenEventSender* const holder;
     std::atomic<bool> showingPitchCorrection;
 };

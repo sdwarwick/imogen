@@ -84,7 +84,7 @@ void ImogenAudioProcessor::sendParameterChange (ParameterID paramID, float newVa
     oscSender.sendParameterChange (paramID, newValue);
 }
 
-void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
+void ImogenAudioProcessor::startParameterChangeGesture (ParameterID paramID)
 {
     if (auto* editor = getActiveGui())
         editor->recieveParameterChangeGestureStart (paramID);
@@ -92,7 +92,7 @@ void ImogenAudioProcessor::sendParameterChangeGestureBegin (ParameterID paramID)
     oscSender.startParameterChangeGesture (paramID);
 }
 
-void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
+void ImogenAudioProcessor::endParameterChangeGesture (ParameterID paramID)
 {
     if (auto* editor = getActiveGui())
         editor->recieveParameterChangeGestureEnd (paramID);

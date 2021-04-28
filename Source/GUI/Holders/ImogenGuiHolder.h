@@ -31,7 +31,7 @@
 using namespace Imogen;
 
 
-class ImogenGuiHolder  :    public ImogenGuiHandle
+class ImogenGuiHolder  :    public ImogenEventSender
 {
 public:
     ImogenGuiHolder(): p_gui(this) { }

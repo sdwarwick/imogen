@@ -7,27 +7,6 @@
 using namespace Imogen;
 
 
-/* The interface used to communicate between the GUI and the processor */
-struct ImogenGuiHandle
-{
-    virtual ~ImogenGuiHandle() = default;
-    
-    virtual void sendParameterChange (ParameterID paramID, float newValue) = 0;
-    virtual void startParameterChangeGesture (ParameterID paramID) = 0;
-    virtual void endParameterChangeGesture (ParameterID paramID) = 0;
-    
-    virtual void sendEditorPitchbend (int wheelValue) = 0;
-    
-    virtual void sendMidiLatch (bool shouldBeLatched) = 0;
-    
-    virtual void loadPreset   (const juce::String& presetName) = 0;
-    virtual void savePreset   (const juce::String& presetName) = 0;
-    virtual void deletePreset (const juce::String& presetName) = 0;
-    
-    virtual void enableAbletonLink (bool shouldBeEnabled) = 0;
-};
-
-
 /*
  */
 
@@ -96,7 +75,7 @@ class ImogenComponent   :       public juce::Component,
                                 public ImogenGUIParameter::Listener
 {
 public:
-    ImogenComponent(ImogenGuiHandle* h, ImogenGUIParameter* p)
+    ImogenComponent(ImogenEventSender* h, ImogenGUIParameter* p)
         : holder(h), parameter(p)
     {
         jassert (holder != nullptr && parameter != nullptr);
@@ -117,6 +96,6 @@ public:
     virtual void setDarkMode (bool shouldUseDarkMode) { juce::ignoreUnused (shouldUseDarkMode); }
     
 protected:
-    ImogenGuiHandle* const holder;
+    ImogenEventSender* const holder;
     ImogenGUIParameter* const parameter;
 };

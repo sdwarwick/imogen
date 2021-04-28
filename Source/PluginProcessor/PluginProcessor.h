@@ -44,6 +44,7 @@ class ImogenAudioProcessorEditor; // forward declaration...
 
 class ImogenAudioProcessor    : public juce::AudioProcessor,
                                 public ImogenEventReciever,
+                                public ImogenEventSender,
                                 private juce::Timer
 {
     using Parameter      = bav::Parameter;
@@ -60,24 +61,24 @@ public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
     
-    void timerCallback() override;
+    void timerCallback() override final;
 
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override final;
     
-    void releaseResources() override;
+    void releaseResources() override final;
     
-    void reset() override;
+    void reset() override final;
     
-    void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
-    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
+    void processBlock (juce::AudioBuffer<float>& buffer,  juce::MidiBuffer& midiMessages) override final;
+    void processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override final;
     
-    void processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
-    void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override;
+    void processBlockBypassed (juce::AudioBuffer<float>& buffer,  juce::MidiBuffer& midiMessages) override final;
+    void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override final;
     
     bool canAddBus (bool isInput) const override { return isInput; }
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override final;
     
-    
+    /* ImogenEventReciever functions */
     void parameterChangeRecieved       (ParameterID paramID, float newValue) override final;
     void parameterChangeGestureStarted (ParameterID paramID) override final;
     void parameterChangeGestureEnded   (ParameterID paramID) override final;
@@ -86,24 +87,35 @@ public:
     
     void abletonLinkChange (bool isNowEnabled) override final;
     
+    void recieveMidiLatchEvent (bool isNowLatched) override final;
+    void recieveKillAllMidiEvent() override final;
+    void recieveEditorPitchbendEvent (int wheelValue) override final;
     
-    void sendParameterChange (ParameterID paramID, float newValue);
-    void sendParameterChangeGestureBegin (ParameterID paramID);
-    void sendParameterChangeGestureEnd (ParameterID paramID);
+    void mts_connectionChange (bool) override final { }
+    void mts_scaleChange (const juce::String&) override final { }
     
-    void recieveMidiLatchEvent (bool isNowLatched);
-    void recieveKillAllMidiEvent();
-    void recieveEditorPitchbendEvent (int wheelValue);
     
+    /* ImogenEventSender functions */
+    void sendParameterChange (ParameterID paramID, float newValue) override final;
+    void startParameterChangeGesture (ParameterID paramID) override final;
+    void endParameterChangeGesture   (ParameterID paramID) override final;
+    
+    void savePreset   (const juce::String& presetName) override final;
+    void loadPreset   (const juce::String& presetName) override final;
+    void deletePreset (const juce::String& presetName) override final;
+    
+    void sendEditorPitchbend (int) override final { }
+    void sendMidiLatch (bool) override final { }
+    void enableAbletonLink (bool) override final { }
+    
+    /* */
     
     double getTailLengthSeconds() const override;
     
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void savePreset  (juce::String presetName);
-    bool loadPreset  (juce::String presetName);
-    void deletePreset(juce::String presetName);
+    
     inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
     
     juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
@@ -247,11 +259,10 @@ private:
     class ParameterMessenger :  public juce::AudioProcessorParameter::Listener
     {
         using MsgQ = bav::MessageQueue<msgQueueSize>;
-        using Processor = ImogenAudioProcessor;
         
     public:
-        ParameterMessenger(Processor& pcsr, MsgQ& queue, bav::Parameter* p, ParameterID paramIDtoListen)
-            : processor(pcsr), q(queue), param(p), paramID(paramIDtoListen)
+        ParameterMessenger(ImogenEventReciever& r, MsgQ& queue, bav::Parameter* p, ParameterID paramIDtoListen)
+            : reciever(r), q(queue), param(p), paramID(paramIDtoListen)
         {
             jassert (param != nullptr);
         }
@@ -263,7 +274,7 @@ private:
             //value = param->normalize(value);
             jassert (newValue >= 0.0f && newValue <= 1.0f);
             q.pushMessage (paramID, newValue);  // the message will store a normalized value
-            processor.sendParameterChange (paramID, newValue);
+            reciever.parameterChangeRecieved (paramID, newValue);
         }
         
         void parameterGestureChanged (int parameterIndex, bool gestureIsStarting) override
@@ -271,15 +282,15 @@ private:
             juce::ignoreUnused (parameterIndex);
             
             if (gestureIsStarting)
-                processor.sendParameterChangeGestureBegin (paramID);
+                reciever.parameterChangeGestureStarted (paramID);
             else
-                processor.sendParameterChangeGestureEnd (paramID);
+                reciever.parameterChangeGestureEnded (paramID);
         }
         
         bav::Parameter* parameter() const noexcept { return param; }
         
     private:
-        Processor& processor;
+        ImogenEventReciever& reciever;
         MsgQ& q;
         bav::Parameter* const param;
         const ParameterID paramID;

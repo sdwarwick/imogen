@@ -27,7 +27,7 @@
 #include "Holders/ImogenGuiHolder.h"
 
 
-ImogenGUI::ImogenGUI (ImogenGuiHandle* h): mainDial(h), holder(h), tooltipWindow(this, msBeforeTooltip)
+ImogenGUI::ImogenGUI (ImogenEventSender* h): mainDial(h), holder(h), tooltipWindow(this, msBeforeTooltip)
 {
     jassert (holder != nullptr);
     
@@ -134,6 +134,18 @@ void ImogenGUI::resized()
 {
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
+}
+
+
+void ImogenGUI::recieveMidiLatchEvent (bool isNowLatched)
+{
+    juce::ignoreUnused (isNowLatched);
+}
+
+
+void ImogenGUI::recieveKillAllMidiEvent()
+{
+    
 }
 
 
