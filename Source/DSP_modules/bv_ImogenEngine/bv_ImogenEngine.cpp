@@ -293,7 +293,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         {
             monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
 
-            const int totalNumChannels = input.getNumChannels();
+            const auto totalNumChannels = input.getNumChannels();
 
             if (totalNumChannels == 1)
                 break;

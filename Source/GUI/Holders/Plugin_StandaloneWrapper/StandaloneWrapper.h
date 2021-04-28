@@ -12,7 +12,7 @@ class StandaloneFilterApp : public juce::JUCEApplication
 public:
     StandaloneFilterApp();
 
-    const juce::String getApplicationName() override { return JucePlugin_Name; }
+    const juce::String getApplicationName()    override { return JucePlugin_Name; }
     const juce::String getApplicationVersion() override { return JucePlugin_VersionString; }
     
     const juce::String getDefaultAudioDeviceName() const { return juce::String(); }
@@ -35,7 +35,7 @@ public:
     virtual bool backButtonPressed() override;
     
     
-    static bool isDesktopStandaloneApp() 
+    static constexpr bool isDesktopStandaloneApp()
     {
 #if JUCE_IOS || JUCE_ANDROID
         return false;
@@ -44,7 +44,7 @@ public:
 #endif
     }
     
-    static bool isMobileApp() { return ! isDesktopStandaloneApp(); }
+    static constexpr bool isMobileApp() { return ! isDesktopStandaloneApp(); }
 
 private:
     juce::ApplicationProperties appProperties;

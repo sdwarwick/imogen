@@ -94,7 +94,7 @@ public:
     
     //==============================================================================
     
-    static bool isDesktopStandaloneApp()
+    static constexpr bool isDesktopStandaloneApp()
     {
 #if JUCE_IOS || JUCE_ANDROID
         return false;
@@ -103,7 +103,7 @@ public:
 #endif
     }
     
-    static bool isMobileApp()
+    static constexpr bool isMobileApp()
     {
         return ! isDesktopStandaloneApp();
     }

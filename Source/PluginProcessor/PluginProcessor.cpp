@@ -301,18 +301,18 @@ double ImogenAudioProcessor::getTailLengthSeconds() const
 
 inline juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
 {
-    auto stereo = juce::AudioChannelSet::stereo();
-    auto mono   = juce::AudioChannelSet::mono();
+    const auto stereo = juce::AudioChannelSet::stereo();
+    const auto mono   = juce::AudioChannelSet::mono();
 
-    return BusesProperties().withInput (TRANS ("Input"),  stereo, true)
-                            .withInput (TRANS ("Sidechain"), mono, false)
-                            .withOutput(TRANS ("Output"), stereo, true);
+    return BusesProperties().withInput (TRANS ("Input"),     stereo, true)
+                            .withInput (TRANS ("Sidechain"), mono,   false)
+                            .withOutput(TRANS ("Output"),    stereo, true);
 }
 
 
 bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    auto disabled = juce::AudioChannelSet::disabled();
+    const auto disabled = juce::AudioChannelSet::disabled();
     
     if (layouts.getMainInputChannelSet() == disabled && layouts.getChannelSet(true, 1) == disabled)
         return false;
