@@ -59,7 +59,28 @@ void ImogenAudioProcessor::recieveDeletePreset (const juce::String& presetName)
 
 void ImogenAudioProcessor::recieveRenamePreset (const juce::String& previousName, const juce::String& newName)
 {
-    juce::ignoreUnused (previousName, newName);
+    rescanPresetsFolder();
+    
+    const auto filename = previousName.endsWith(".xml") ? previousName : previousName + ".xml";
+    
+    auto presetToLoad = getPresetsFolder().getChildFile (filename);
+    
+    if (! presetToLoad.existsAsFile())
+    {
+        // sendErrorCode (ErrorCode::loadingPresetFailed);
+        return;
+    }
+    
+    auto xml = juce::parseXML (presetToLoad);
+    
+    if (! presetToLoad.moveToTrash())  // delete the old preset file
+        presetToLoad.deleteFile();
+    
+    const auto name = newName.endsWith (".xml") ? newName.dropLastCharacters(4) : newName;
+    
+    xml->setAttribute ("presetName", name);
+    xml->writeTo (getPresetsFolder().getChildFile (name + ".xml"));
+    
     rescanPresetsFolder();
     updateHostDisplay();
 }

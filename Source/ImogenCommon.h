@@ -174,12 +174,6 @@ static inline juce::String getParameterNameVerbose (ParameterID param)
 }
 
 
-static inline juce::String getParameterOSCaddress (ParameterID param)
-{
-    return juce::String ("/imogen/") + getParameterNameVerbose (param).replaceCharacters (" ", "/");
-}
-
-
 enum EventID
 {
     killAllMidiID,

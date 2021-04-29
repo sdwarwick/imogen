@@ -30,8 +30,7 @@
 
 #include "GUI/Holders/ImogenGuiHolder.h"
 
-#include "../OSC/OSC_sender.h"
-#include "../OSC/OSC_reciever.h"
+#include "../OSC/OSC.h"
 
 
 using namespace Imogen;

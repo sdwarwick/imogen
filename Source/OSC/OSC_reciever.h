@@ -3,8 +3,6 @@
 
 #include "ImogenCommon.h"
 
-#include <juce_osc/juce_osc.h>
-
 
 struct ImogenOSCRecieverState
 {
@@ -22,7 +20,15 @@ public:
     
     void oscMessageReceived (const juce::OSCMessage& message) override final
     {
-        juce::ignoreUnused (message);
+        const auto address = message.getAddressPattern();
+        
+        if (address.matches ({ OSC::getParameterOSCaddress (inputSourceID) }))
+        {
+            const auto arg = message[0];
+            
+            if (arg.isFloat32())
+                reciever->recieveParameterChange (inputSourceID, arg.getFloat32());
+        }
     }
     
     ImogenOSCRecieverState getState() const

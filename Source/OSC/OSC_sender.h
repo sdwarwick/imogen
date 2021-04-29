@@ -1,8 +1,6 @@
 
 #include "GUI/GUI_Framework.h"
 
-#include <juce_osc/juce_osc.h>
-
 
 struct ImogenOSCSenderState
 {
@@ -31,17 +29,17 @@ public:
     
     void sendParameterChange (ParameterID paramID, float newValue) override final
     {
-        send (getParameterOSCaddress (paramID), newValue);
+        send (OSC::getParameterChangeOSCaddress (paramID), newValue);
     }
     
     void sendParameterChangeGestureStart (ParameterID paramID) override final
     {
-        juce::ignoreUnused (paramID);
+        send (OSC::getParamGestureStartOSCaddress (paramID));
     }
     
     void sendParameterChangeGestureEnd (ParameterID paramID) override final
     {
-        juce::ignoreUnused (paramID);
+        send (OSC::getParamGestureEndOSCaddress (paramID));
     }
     
     void sendEditorPitchbend (int wheelValue) override final
