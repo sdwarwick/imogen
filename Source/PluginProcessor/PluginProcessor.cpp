@@ -148,20 +148,24 @@ void ImogenAudioProcessor::reset()
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, floatEngine, mainBypass->get());
+    processBlockWrapped (buffer, midiMessages, floatEngine,
+                         getParameterPntr (mainBypassID)->getCurrentNormalizedValue() >= 0.5f);
 }
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, doubleEngine, mainBypass->get());
+    processBlockWrapped (buffer, midiMessages, doubleEngine,
+                         getParameterPntr (mainBypassID)->getCurrentNormalizedValue() >= 0.5f);
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! mainBypass->get())
-        mainBypass->setValueNotifyingHost (1.0f);
+    auto mainBypass = getParameterPntr (mainBypassID);
+    
+    if (! (mainBypass->getCurrentNormalizedValue() >= 0.5f))
+        mainBypass->orig()->setValueNotifyingHost (1.0f);
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
 }
@@ -169,8 +173,10 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! mainBypass->get())
-        mainBypass->setValueNotifyingHost (1.0f);
+    auto mainBypass = getParameterPntr (mainBypassID);
+    
+    if (! (mainBypass->getCurrentNormalizedValue() >= 0.5f))
+        mainBypass->orig()->setValueNotifyingHost (1.0f);
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
 }
@@ -188,8 +194,33 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     
     updateAllParameters (engine);
     processQueuedNonParamEvents (engine);
+    
+    /* update all parameters... */
+    activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
 
-    // program change messages need to be handled at this top level...
+    activeEngine.updateInputGain               (juce::Decibels::decibelsToGain (inputGain->get()));
+    activeEngine.updateOutputGain              (juce::Decibels::decibelsToGain (outputGain->get()));
+    activeEngine.updateDryVoxPan               (dryPan->get());
+    activeEngine.updateDryWet                  (dryWet->get());
+    activeEngine.updateAdsr                    (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
+    activeEngine.updateStereoWidth             (stereoWidth->get(), lowestPanned->get());
+    activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
+    activeEngine.updatePitchbendRange          (pitchBendRange->get());
+    activeEngine.updatePedalPitch              (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+    activeEngine.updateDescant                 (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+    activeEngine.updateNoteStealing            (voiceStealing->get());
+    activeEngine.updateAftertouchGainOnOff     (aftertouchGainToggle->get());
+    activeEngine.setModulatorSource            (inputSource->get());
+    activeEngine.updateLimiter                 (limiterToggle->get());
+    activeEngine.updateNoiseGate               (noiseGateThreshold->get(), noiseGateToggle->get());
+    activeEngine.updateDeEsser                 (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
+    activeEngine.updateDelay                   (delayDryWet->get(), 2400, delayToggle->get());
+    activeEngine.updateReverb                  (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                                                reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
+
+    updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
+
+    /* program change messages need to be handled at this top level... */
     std::for_each (midiMessages.cbegin(), midiMessages.cend(),
                    [&] (const juce::MidiMessageMetadata& meta)
                    {
@@ -250,7 +281,7 @@ juce::String ImogenAudioProcessor::getScaleName() const
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-    return double(adsrRelease->get());
+    return double(getParameterPntr(adsrReleaseID)->getCurrentNormalizedValue());
 }
 
 

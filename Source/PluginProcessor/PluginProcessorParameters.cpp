@@ -148,7 +148,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
            
      
     {   /* MIXING */
-        auto inputMode = std::make_unique<IntParameter> ("inputSource", getParameterNameVerbose (inputSourceID), 1, 3, 1, emptyString,
+        auto inputMode = std::make_unique<IntParameter> (inputSourceID, "inputSource", getParameterNameVerbose (inputSourceID), 1, 3, 1, emptyString,
                                                          [](int value, int maxLength) 
                                                          { 
                                                              switch (value)
@@ -165,22 +165,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                              return 1;
                                                          });  
                
-        auto dryWetP = std::make_unique<IntParameter>   ("masterDryWet", getParameterNameVerbose (dryWetID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto inGain  = std::make_unique<FloatParameter> ("inputGain", getParameterNameVerbose (inputGainID), gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
-        auto outGain = std::make_unique<FloatParameter> ("outputGain", getParameterNameVerbose (outputGainID), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);
+        auto dryWetP = std::make_unique<IntParameter>   (dryWetID, "masterDryWet", getParameterNameVerbose (dryWetID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto inGain  = std::make_unique<FloatParameter> (inputGainID, "inputGain", getParameterNameVerbose (inputGainID), gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
+        auto outGain = std::make_unique<FloatParameter> (outputGainID, "outputGain", getParameterNameVerbose (outputGainID), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);
                
         //  subgroup: bypasses
-        auto mainBypassP = std::make_unique<BoolParameter>  ("mainBypass", getParameterNameVerbose (mainBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto leadBypassP = std::make_unique<BoolParameter>  ("leadBypass", getParameterNameVerbose (leadBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto harmonyBypassP = std::make_unique<BoolParameter>  ("harmonyBypass", getParameterNameVerbose (harmonyBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto mainBypassP = std::make_unique<BoolParameter>  (mainBypassID, "mainBypass", getParameterNameVerbose (mainBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto leadBypassP = std::make_unique<BoolParameter>  (leadBypassID, "leadBypass", getParameterNameVerbose (leadBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto harmonyBypassP = std::make_unique<BoolParameter>  (harmonyBypassID, "harmonyBypass", getParameterNameVerbose (harmonyBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                    
         auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypassP), std::move (leadBypassP), std::move (harmonyBypassP));
                
         //  subgroup: stereo image     
-        auto stereo_width  = std::make_unique<IntParameter> ("stereoWidth", getParameterNameVerbose (stereoWidthID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto stereo_lowest = std::make_unique<IntParameter> ("lowestPan", getParameterNameVerbose (lowestPannedID), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
+        auto stereo_width  = std::make_unique<IntParameter> (stereoWidthID, "stereoWidth", getParameterNameVerbose (stereoWidthID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto stereo_lowest = std::make_unique<IntParameter> (lowestPannedID, "lowestPan", getParameterNameVerbose (lowestPannedID), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
                
-        auto stereo_leadPan = std::make_unique<IntParameter>  ("dryPan", getParameterNameVerbose (dryPanID), 0, 127, 64, emptyString,
+        auto stereo_leadPan = std::make_unique<IntParameter>  (dryPanID, "dryPan", getParameterNameVerbose (dryPanID), 0, 127, 64, emptyString,
                                                                [](int value, int maxLength) { return bav::midiPanIntToString (value).substring(0, maxLength); }, 
                                                                [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
                
@@ -190,22 +190,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move (inputMode), std::move (dryWetP), std::move (inGain), std::move (outGain), std::move (bypasses), std::move (stereo)));
     }       
     {   /* MIDI */     
-        auto pitchbendRange = std::make_unique<IntParameter>   ("PitchBendRange", getParameterNameVerbose (pitchBendRangeID), 0, 12, 2, emptyString, st_stringFromInt, st_intFromString);
-        auto velocitySensP = std::make_unique<IntParameter>     ("midiVelocitySens", getParameterNameVerbose (velocitySensID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto aftertouchToggle = std::make_unique<BoolParameter>("aftertouchGainToggle", getParameterNameVerbose (aftertouchGainToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto voiceStealingP = std::make_unique<BoolParameter>   ("voiceStealing", getParameterNameVerbose (voiceStealingID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto pitchbendRange = std::make_unique<IntParameter>   (pitchBendRangeID, "PitchBendRange", getParameterNameVerbose (pitchBendRangeID), 0, 12, 2, emptyString, st_stringFromInt, st_intFromString);
+        auto velocitySensP = std::make_unique<IntParameter>     (velocitySensID, "midiVelocitySens", getParameterNameVerbose (velocitySensID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto aftertouchToggle = std::make_unique<BoolParameter>(aftertouchGainToggleID, "aftertouchGainToggle", getParameterNameVerbose (aftertouchGainToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto voiceStealingP = std::make_unique<BoolParameter>   (voiceStealingID, "voiceStealing", getParameterNameVerbose (voiceStealingID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                
         //  subgroup: pedal pitch
-        auto pedal_toggle = std::make_unique<BoolParameter>  ("pedalPitchToggle", getParameterNameVerbose (pedalPitchIsOnID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto pedal_thresh = std::make_unique<IntParameter>   ("pedalPitchThresh", getParameterNameVerbose (pedalPitchThreshID), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
-        auto pedal_interval = std::make_unique<IntParameter> ("pedalPitchInterval", getParameterNameVerbose (pedalPitchIntervalID), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
+        auto pedal_toggle = std::make_unique<BoolParameter>  (pedalPitchIsOnID, "pedalPitchToggle", getParameterNameVerbose (pedalPitchIsOnID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto pedal_thresh = std::make_unique<IntParameter>   (pedalPitchThreshID, "pedalPitchThresh", getParameterNameVerbose (pedalPitchThreshID), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
+        auto pedal_interval = std::make_unique<IntParameter> (pedalPitchIntervalID, "pedalPitchInterval", getParameterNameVerbose (pedalPitchIntervalID), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto pedal = std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (pedal_toggle), std::move (pedal_thresh), std::move (pedal_interval));     
                
         //  subgroup: descant       
-        auto descant_toggle = std::make_unique<BoolParameter>  ("descantToggle", getParameterNameVerbose (descantIsOnID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto descant_thresh = std::make_unique<IntParameter>   ("descantThresh", getParameterNameVerbose (descantThreshID), 0, 127, 127, emptyString, pcnt_stringFromInt, pitch_intFromString);
-        auto descant_interval = std::make_unique<IntParameter> ("descantInterval", getParameterNameVerbose (descantIntervalID), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
+        auto descant_toggle = std::make_unique<BoolParameter>  (descantIsOnID, "descantToggle", getParameterNameVerbose (descantIsOnID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto descant_thresh = std::make_unique<IntParameter>   (descantThreshID, "descantThresh", getParameterNameVerbose (descantThreshID), 0, 127, 127, emptyString, pcnt_stringFromInt, pitch_intFromString);
+        auto descant_interval = std::make_unique<IntParameter> (descantIntervalID, "descantInterval", getParameterNameVerbose (descantIntervalID), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto descant = std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (descant_toggle), std::move (descant_thresh), std::move (descant_interval));
                
@@ -213,54 +213,54 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move(pitchbendRange), std::move (velocitySensP), std::move (aftertouchToggle), std::move (voiceStealingP), std::move (pedal), std::move (descant)));
     }           
     {   /* ADSR */
-        auto attack  = std::make_unique<FloatParameter> ("adsrAttack", getParameterNameVerbose (adsrAttackID), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
-        auto decay   = std::make_unique<FloatParameter> ("adsrDecay", getParameterNameVerbose (adsrDecayID), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
-        auto sustain = std::make_unique<FloatParameter> ("adsrSustain", getParameterNameVerbose (adsrSustainID), zeroToOneRange, 0.8f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
-        auto release = std::make_unique<FloatParameter> ("adsrRelease", getParameterNameVerbose (adsrReleaseID), msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
+        auto attack  = std::make_unique<FloatParameter> (adsrAttackID, "adsrAttack", getParameterNameVerbose (adsrAttackID), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
+        auto decay   = std::make_unique<FloatParameter> (adsrDecayID, "adsrDecay", getParameterNameVerbose (adsrDecayID), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
+        auto sustain = std::make_unique<FloatParameter> (adsrSustainID, "adsrSustain", getParameterNameVerbose (adsrSustainID), zeroToOneRange, 0.8f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto release = std::make_unique<FloatParameter> (adsrReleaseID, "adsrRelease", getParameterNameVerbose (adsrReleaseID), msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
                
         groups.emplace_back (std::make_unique<Group> ("ADSR", TRANS ("ADSR"), "|", 
                                                       std::move (attack), std::move (decay), std::move (sustain), std::move (release)));       
     }        
     {    /* EFFECTS */
         //  subgroup: noise gate   
-        auto gate_toggle = std::make_unique<BoolParameter>  ("noiseGateIsOn", getParameterNameVerbose (noiseGateToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto gate_thresh = std::make_unique<FloatParameter> ("noiseGateThresh", getParameterNameVerbose (noiseGateThresholdID), gainRange, -20.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
+        auto gate_toggle = std::make_unique<BoolParameter>  (noiseGateToggleID, "noiseGateIsOn", getParameterNameVerbose (noiseGateToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto gate_thresh = std::make_unique<FloatParameter> (noiseGateThresholdID, "noiseGateThresh", getParameterNameVerbose (noiseGateThresholdID), gainRange, -20.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
         
         auto gate = std::make_unique<Group> ("Noise gate", TRANS ("Noise gate"), "|", std::move (gate_toggle), std::move (gate_thresh));       
                
         //  subgroup: de-esser
-        auto ess_toggle = std::make_unique<BoolParameter>  ("deEsserIsOn", getParameterNameVerbose (deEsserToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto ess_thresh = std::make_unique<FloatParameter> ("deEsserThresh", getParameterNameVerbose (deEsserThreshID), gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
-        auto ess_amount = std::make_unique<FloatParameter> ("deEsserAmount", getParameterNameVerbose (deEsserAmountID), zeroToOneRange, 0.5f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto ess_toggle = std::make_unique<BoolParameter>  (deEsserToggleID, "deEsserIsOn", getParameterNameVerbose (deEsserToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto ess_thresh = std::make_unique<FloatParameter> (deEsserThreshID, "deEsserThresh", getParameterNameVerbose (deEsserThreshID), gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
+        auto ess_amount = std::make_unique<FloatParameter> (deEsserAmountID, "deEsserAmount", getParameterNameVerbose (deEsserAmountID), zeroToOneRange, 0.5f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
                    
         auto deEss = std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", std::move (ess_toggle), std::move (ess_thresh), std::move (ess_amount));      
 
         //  subgroup: compressor
-        auto comp_toggle = std::make_unique<BoolParameter>  ("compressorToggle", getParameterNameVerbose (compressorToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto comp_amount = std::make_unique<FloatParameter> ("compressorAmount", getParameterNameVerbose (compressorAmountID), zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto comp_toggle = std::make_unique<BoolParameter>  (compressorToggleID, "compressorToggle", getParameterNameVerbose (compressorToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto comp_amount = std::make_unique<FloatParameter> (compressorAmountID, "compressorAmount", getParameterNameVerbose (compressorAmountID), zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
         
         auto compressor = std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (comp_toggle), std::move (comp_amount));
         
         //  subgroup: delay
-        auto delay_toggle = std::make_unique<BoolParameter> ("delayIsOn", getParameterNameVerbose (delayToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto delay_mix = std::make_unique<IntParameter>     ("delayDryWet", getParameterNameVerbose (delayDryWetID), 0, 100, 35, emptyString,
+        auto delay_toggle = std::make_unique<BoolParameter> (delayToggleID, "delayIsOn", getParameterNameVerbose (delayToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto delay_mix = std::make_unique<IntParameter>     (delayDryWetID, "delayDryWet", getParameterNameVerbose (delayDryWetID), 0, 100, 35, emptyString,
                                                              pcnt_stringFromInt, pcnt_intFromString);
         
         auto delay = std::make_unique<Group> ("Delay", TRANS ("Delay"), "|", std::move (delay_toggle), std::move (delay_mix));
                
         //  subgroup: reverb       
-        auto verb_toggle = std::make_unique<BoolParameter>  ("reverbIsOn", getParameterNameVerbose (reverbToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto verb_dryWet = std::make_unique<IntParameter>   ("reverbDryWet", getParameterNameVerbose (reverbDryWetID), 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto verb_decay  = std::make_unique<FloatParameter> ("reverbDecay", getParameterNameVerbose (reverbDecayID), zeroToOneRange, 0.6f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
-        auto verb_duck   = std::make_unique<FloatParameter> ("reverbDuck", getParameterNameVerbose (reverbDuckID), zeroToOneRange, 0.3f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
-        auto verb_loCut  = std::make_unique<FloatParameter> ("reverbLoCut", getParameterNameVerbose (reverbLoCutID), hzRange, 80.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
-        auto verb_hiCut  = std::make_unique<FloatParameter> ("reverbHiCut", getParameterNameVerbose (reverbHiCutID), hzRange, 5500.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
+        auto verb_toggle = std::make_unique<BoolParameter>  (reverbToggleID, "reverbIsOn", getParameterNameVerbose (reverbToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto verb_dryWet = std::make_unique<IntParameter>   (reverbDryWetID, "reverbDryWet", getParameterNameVerbose (reverbDryWetID), 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto verb_decay  = std::make_unique<FloatParameter> (reverbDecayID, "reverbDecay", getParameterNameVerbose (reverbDecayID), zeroToOneRange, 0.6f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto verb_duck   = std::make_unique<FloatParameter> (reverbDuckID, "reverbDuck", getParameterNameVerbose (reverbDuckID), zeroToOneRange, 0.3f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto verb_loCut  = std::make_unique<FloatParameter> (reverbLoCutID, "reverbLoCut", getParameterNameVerbose (reverbLoCutID), hzRange, 80.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
+        auto verb_hiCut  = std::make_unique<FloatParameter> (reverbHiCutID, "reverbHiCut", getParameterNameVerbose (reverbHiCutID), hzRange, 5500.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
         
         auto reverb = std::make_unique<Group> ("Reverb", TRANS ("Reverb"), "|", std::move (verb_toggle), std::move (verb_dryWet), std::move (verb_decay), std::move (verb_duck), std::move (verb_loCut), std::move (verb_hiCut));
                
         //  limiter   
         auto limiter = std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
-                                                std::make_unique<BoolParameter>  ("limiterIsOn", getParameterNameVerbose (limiterToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString));
+                                                std::make_unique<BoolParameter>  (limiterToggleID, "limiterIsOn", getParameterNameVerbose (limiterToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString));
                
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
                                                       std::move (gate), std::move (deEss), std::move (compressor),
@@ -277,61 +277,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
+    parameterPointers.reserve (numParams);
     
-    
-    mainBypass           = makeParameterPointer <BoolParamPtr>  ("mainBypass");    
-    leadBypass           = makeParameterPointer <BoolParamPtr>  ("leadBypass");
-    harmonyBypass        = makeParameterPointer <BoolParamPtr>  ("harmonyBypass");
-    inputSource          = makeParameterPointer <IntParamPtr>   ("inputSource");
-    dryPan               = makeParameterPointer <IntParamPtr>   ("dryPan");
-    dryWet               = makeParameterPointer <IntParamPtr>   ("masterDryWet");
-    adsrAttack           = makeParameterPointer <FloatParamPtr> ("adsrAttack");        
-    adsrDecay            = makeParameterPointer <FloatParamPtr> ("adsrDecay");     
-    adsrSustain          = makeParameterPointer <FloatParamPtr> ("adsrSustain");
-    adsrRelease          = makeParameterPointer <FloatParamPtr> ("adsrRelease");
-    stereoWidth          = makeParameterPointer <IntParamPtr>   ("stereoWidth");    
-    lowestPanned         = makeParameterPointer <IntParamPtr>   ("lowestPan");
-    velocitySens         = makeParameterPointer <IntParamPtr>   ("midiVelocitySens");     
-    pitchBendRange       = makeParameterPointer <IntParamPtr>   ("PitchBendRange");       
-    pedalPitchIsOn       = makeParameterPointer <BoolParamPtr>  ("pedalPitchToggle");    
-    pedalPitchThresh     = makeParameterPointer <IntParamPtr>   ("pedalPitchThresh");      
-    pedalPitchInterval   = makeParameterPointer <IntParamPtr>   ("pedalPitchInterval");        
-    descantIsOn          = makeParameterPointer <BoolParamPtr>  ("descantToggle");       
-    descantThresh        = makeParameterPointer <IntParamPtr>   ("descantThresh");     
-    descantInterval      = makeParameterPointer <IntParamPtr>   ("descantInterval");      
-    voiceStealing        = makeParameterPointer <BoolParamPtr>  ("voiceStealing");    
-    inputGain            = makeParameterPointer <FloatParamPtr> ("inputGain");      
-    outputGain           = makeParameterPointer <FloatParamPtr> ("outputGain");      
-    limiterToggle        = makeParameterPointer <BoolParamPtr>  ("limiterIsOn");      
-    noiseGateThreshold   = makeParameterPointer <FloatParamPtr> ("noiseGateThresh");   
-    noiseGateToggle      = makeParameterPointer <BoolParamPtr>  ("noiseGateIsOn");  
-    compressorToggle     = makeParameterPointer <BoolParamPtr>  ("compressorToggle");     
-    compressorAmount     = makeParameterPointer <FloatParamPtr> ("compressorAmount");     
-    aftertouchGainToggle = makeParameterPointer <BoolParamPtr>  ("aftertouchGainToggle");       
-    deEsserToggle        = makeParameterPointer <BoolParamPtr>  ("deEsserIsOn");       
-    deEsserThresh        = makeParameterPointer <FloatParamPtr> ("deEsserThresh");       
-    deEsserAmount        = makeParameterPointer <FloatParamPtr> ("deEsserAmount");        
-    reverbToggle         = makeParameterPointer <BoolParamPtr>  ("reverbIsOn");       
-    reverbDryWet         = makeParameterPointer <IntParamPtr>   ("reverbDryWet");      
-    reverbDecay          = makeParameterPointer <FloatParamPtr> ("reverbDecay");     
-    reverbDuck           = makeParameterPointer <FloatParamPtr> ("reverbDuck"); 
-    reverbLoCut          = makeParameterPointer <FloatParamPtr> ("reverbLoCut");        
-    reverbHiCut          = makeParameterPointer <FloatParamPtr> ("reverbHiCut");
-    delayToggle          = makeParameterPointer <BoolParamPtr>  ("delayIsOn");
-    delayDryWet          = makeParameterPointer <IntParamPtr>   ("delayDryWet");
+    for (auto* rawParam : getParameters())
+        parameterPointers.push_back (dynamic_cast<Parameter*>(rawParam));
 }
-
-template<typename PointerType>
-PointerType ImogenAudioProcessor::makeParameterPointer (const juce::String& name)
-{
-    auto* param = dynamic_cast<PointerType> (tree.getParameter (name));    
-    jassert (param != nullptr);
-    return param;
-}
-///template function instantiations...
-template bav::FloatParameter* ImogenAudioProcessor::makeParameterPointer (const juce::String& name);
-template bav::IntParameter*   ImogenAudioProcessor::makeParameterPointer (const juce::String& name);
-template bav::BoolParameter*  ImogenAudioProcessor::makeParameterPointer (const juce::String& name);
 
 
 /*===========================================================================================================================
@@ -340,100 +290,11 @@ template bav::BoolParameter*  ImogenAudioProcessor::makeParameterPointer (const 
 
 bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
-    switch (paramID)
-    {
-        case (mainBypassID):            return mainBypass;
-        case (leadBypassID):            return leadBypass;
-        case (harmonyBypassID):         return harmonyBypass;
-        case (dryPanID):                return dryPan;
-        case (dryWetID):                return dryWet;
-        case (adsrAttackID):            return adsrAttack;
-        case (adsrDecayID):             return adsrDecay;
-        case (adsrSustainID):           return adsrSustain;
-        case (adsrReleaseID):           return adsrRelease;
-        case (stereoWidthID):           return stereoWidth;
-        case (lowestPannedID):          return lowestPanned;
-        case (velocitySensID):          return velocitySens;
-        case (pitchBendRangeID):        return pitchBendRange;
-        case (pedalPitchIsOnID):        return pedalPitchIsOn;
-        case (pedalPitchThreshID):      return pedalPitchThresh;
-        case (pedalPitchIntervalID):    return pedalPitchInterval;
-        case (descantIsOnID):           return descantIsOn;
-        case (descantThreshID):         return descantThresh;
-        case (descantIntervalID):       return descantInterval;
-        case (voiceStealingID):         return voiceStealing;
-        case (inputGainID):             return inputGain;
-        case (outputGainID):            return outputGain;
-        case (limiterToggleID):         return limiterToggle;
-        case (noiseGateToggleID):       return noiseGateToggle;
-        case (noiseGateThresholdID):    return noiseGateThreshold;
-        case (compressorToggleID):      return compressorToggle;
-        case (compressorAmountID):      return compressorAmount;
-        case (aftertouchGainToggleID):  return aftertouchGainToggle;
-        case (deEsserToggleID):         return deEsserToggle;
-        case (deEsserThreshID):         return deEsserThresh;
-        case (deEsserAmountID):         return deEsserAmount;
-        case (reverbToggleID):          return reverbToggle;
-        case (reverbDryWetID):          return reverbDryWet;
-        case (reverbDecayID):           return reverbDecay;
-        case (reverbDuckID):            return reverbDuck;
-        case (reverbLoCutID):           return reverbLoCut;
-        case (reverbHiCutID):           return reverbHiCut;
-        case (inputSourceID):           return inputSource;
-        case (delayToggleID):           return delayToggle;
-        case (delayDryWetID):           return delayDryWet;
-        default:                        return nullptr;
-    }
-}
-
-
-/*===========================================================================================================================
-    Returns the corresponding parameterID for the passed parameter.
- ============================================================================================================================*/
-
-ParameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
-{
-    if (parameter == mainBypass)           return mainBypassID;
-    if (parameter == leadBypass)           return leadBypassID;
-    if (parameter == harmonyBypass)        return harmonyBypassID;
-    if (parameter == dryPan)               return dryPanID;
-    if (parameter == dryWet)               return dryWetID;
-    if (parameter == adsrAttack)           return adsrAttackID;
-    if (parameter == adsrDecay)            return adsrDecayID;
-    if (parameter == adsrSustain)          return adsrSustainID;
-    if (parameter == adsrRelease)          return adsrReleaseID;
-    if (parameter == stereoWidth)          return stereoWidthID;
-    if (parameter == lowestPanned)         return lowestPannedID;
-    if (parameter == velocitySens)         return velocitySensID;
-    if (parameter == pitchBendRange)       return pitchBendRangeID;
-    if (parameter == pedalPitchIsOn)       return pedalPitchIsOnID;
-    if (parameter == pedalPitchThresh)     return pedalPitchThreshID;
-    if (parameter == pedalPitchInterval)   return pedalPitchIntervalID;
-    if (parameter == descantIsOn)          return descantIsOnID;
-    if (parameter == descantThresh)        return descantThreshID;
-    if (parameter == descantInterval)      return descantIntervalID;
-    if (parameter == voiceStealing)        return voiceStealingID;
-    if (parameter == inputGain)            return inputGainID;
-    if (parameter == outputGain)           return outputGainID;
-    if (parameter == limiterToggle)        return limiterToggleID;
-    if (parameter == noiseGateToggle)      return noiseGateToggleID;
-    if (parameter == noiseGateThreshold)   return noiseGateThresholdID;
-    if (parameter == compressorToggle)     return compressorToggleID;
-    if (parameter == compressorAmount)     return compressorAmountID;
-    if (parameter == aftertouchGainToggle) return aftertouchGainToggleID;
-    if (parameter == deEsserToggle)        return deEsserToggleID;
-    if (parameter == deEsserThresh)        return deEsserThreshID;
-    if (parameter == deEsserAmount)        return deEsserAmountID;
-    if (parameter == reverbToggle)         return reverbToggleID;
-    if (parameter == reverbDryWet)         return reverbDryWetID;
-    if (parameter == reverbDecay)          return reverbDecayID;
-    if (parameter == reverbDuck)           return reverbDuckID;
-    if (parameter == reverbLoCut)          return reverbLoCutID;
-    if (parameter == reverbHiCut)          return reverbHiCutID;
-    if (parameter == inputSource)          return inputSourceID;
-    if (parameter == delayToggle)          return delayToggleID;
-    if (parameter == delayDryWet)          return delayDryWetID;
-    return mainBypassID;
+    for (auto* pntr : parameterPointers)
+        if (ParameterID(pntr->key()) == paramID)
+            return pntr;
+    
+    return nullptr;
 }
 
 
@@ -451,42 +312,6 @@ void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& acti
                                    juce::jmap (knobValue, 1.0f, 10.0f),  // ratio
                                    compressorIsOn);
 }
-
-
-/*===========================================================================================================================
-    Updates all parameters
- ============================================================================================================================*/
-
-template<typename SampleType>
-void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
-{
-    activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
-
-    activeEngine.updateInputGain               (juce::Decibels::decibelsToGain (inputGain->get()));
-    activeEngine.updateOutputGain              (juce::Decibels::decibelsToGain (outputGain->get()));
-    activeEngine.updateDryVoxPan               (dryPan->get());
-    activeEngine.updateDryWet                  (dryWet->get());
-    activeEngine.updateAdsr                    (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
-    activeEngine.updateStereoWidth             (stereoWidth->get(), lowestPanned->get());
-    activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
-    activeEngine.updatePitchbendRange          (pitchBendRange->get());
-    activeEngine.updatePedalPitch              (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
-    activeEngine.updateDescant                 (descantIsOn->get(), descantThresh->get(), descantInterval->get());
-    activeEngine.updateNoteStealing            (voiceStealing->get());
-    activeEngine.updateAftertouchGainOnOff     (aftertouchGainToggle->get());
-    activeEngine.setModulatorSource            (inputSource->get());
-    activeEngine.updateLimiter                 (limiterToggle->get());
-    activeEngine.updateNoiseGate               (noiseGateThreshold->get(), noiseGateToggle->get());
-    activeEngine.updateDeEsser                 (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
-    activeEngine.updateDelay                   (delayDryWet->get(), 2400, delayToggle->get());
-    activeEngine.updateReverb                  (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
-                                                reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
-
-    updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
-}
-///function template instantiations...
-template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<float>& activeEngine);
-template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<double>& activeEngine);
 
 
 /*===========================================================================================================================

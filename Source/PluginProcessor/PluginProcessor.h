@@ -145,9 +145,6 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
     
-    template<typename PointerType>
-    PointerType makeParameterPointer (const juce::String& name);
-    
     /*=========================================================================================*/
     
     template <typename SampleType1, typename SampleType2>
@@ -164,9 +161,6 @@ private:
     /*=========================================================================================*/
     
     template<typename SampleType>
-    void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template<typename SampleType>
     void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
     
     template<typename SampleType>
@@ -180,7 +174,6 @@ private:
     ImogenGuiHolder* getActiveGui() const;
     
     Parameter* getParameterPntr (const ParameterID paramID) const;
-    ParameterID parameterPntrToID (const Parameter* const) const;
     
     /*=========================================================================================*/
     
@@ -193,10 +186,7 @@ private:
     
     juce::AudioProcessorValueTreeState tree;
     
-    // pointers to all the parameter objects
-    BoolParamPtr  mainBypass, leadBypass, harmonyBypass, pedalPitchIsOn, descantIsOn, voiceStealing, limiterToggle, noiseGateToggle, compressorToggle, aftertouchGainToggle, deEsserToggle, reverbToggle, delayToggle;
-    IntParamPtr   dryPan, dryWet, stereoWidth, lowestPanned, velocitySens, pitchBendRange, pedalPitchThresh, pedalPitchInterval, descantThresh, descantInterval, reverbDryWet, inputSource, delayDryWet;
-    FloatParamPtr adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateThreshold, inputGain, outputGain, compressorAmount, deEsserThresh, deEsserAmount, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut;
+    std::vector< Parameter* > parameterPointers;
     
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
