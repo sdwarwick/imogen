@@ -288,18 +288,36 @@ template <typename SampleType>
 void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine)
 {
     // these functions will all be called with the current denormalized value as a float -- so just static_cast to int, etc
+    getParameterPntr(inputSourceID)->actionableFunction = [&engine](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
+    getParameterPntr(mainBypassID)->actionableFunction  = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
+    getParameterPntr(leadBypassID)->actionableFunction  = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
+    getParameterPntr(harmonyBypassID)->actionableFunction = [&engine](float value) { engine.updateHarmonyBypass (value >= 0.5f); };
+    getParameterPntr(dryPanID)->actionableFunction = [&engine](float value) { engine.updateDryVoxPan (juce::roundToInt (value)); };
+    getParameterPntr(adsrAttackID)->actionableFunction  = [&engine](float value) { engine.updateAdsrAttack (value); };
+    getParameterPntr(adsrDecayID)->actionableFunction   = [&engine](float value) { engine.updateAdsrDecay (value); };
+    getParameterPntr(adsrSustainID)->actionableFunction = [&engine](float value) { engine.updateAdsrSustain (value); };
+    getParameterPntr(adsrReleaseID)->actionableFunction = [&engine](float value) { engine.updateAdsrRelease (value); };
+    getParameterPntr(stereoWidthID)->actionableFunction = [&engine](float value) { engine.updateStereoWidth (juce::roundToInt (value)); };
+    getParameterPntr(lowestPannedID)->actionableFunction = [&engine](float value) { engine.updateLowestPannedNote (juce::roundToInt (value)); };
+    getParameterPntr(velocitySensID)->actionableFunction = [&engine](float value) { engine.updateMidiVelocitySensitivity(juce::roundToInt(value)); };
+    getParameterPntr(pitchBendRangeID)->actionableFunction     = [&engine](float value) { engine.updatePitchbendRange (juce::roundToInt (value)); };
+    getParameterPntr(pedalPitchIsOnID)->actionableFunction     = [&engine](float value) { engine.updatePedalToggle (value >= 0.5f); };
+    getParameterPntr(pedalPitchThreshID)->actionableFunction   = [&engine](float value) { engine.updatePedalThresh (juce::roundToInt (value)); };
+    getParameterPntr(pedalPitchIntervalID)->actionableFunction = [&engine](float value) { engine.updatePedalInterval (juce::roundToInt (value)); };
+    getParameterPntr(descantIsOnID)->actionableFunction        = [&engine](float value) { engine.updateDescantToggle (value >= 0.5f); };
+    getParameterPntr(descantThreshID)->actionableFunction      = [&engine](float value) { engine.updateDescantThresh (juce::roundToInt (value)); };
+    getParameterPntr(descantIntervalID)->actionableFunction    = [&engine](float value) { engine.updateDescantInterval (juce::roundToInt (value)); };
+    getParameterPntr(voiceStealingID)->actionableFunction      = [&engine](float value) { engine.updateNoteStealing (value >= 0.5f); };
+    getParameterPntr(inputGainID)->actionableFunction          = [&engine](float value) { engine.updateInputGain (value); };
+    getParameterPntr(outputGainID)->actionableFunction         = [&engine](float value) { engine.updateOutputGain (value); };
+    getParameterPntr(limiterToggleID)->actionableFunction      = [&engine](float value) { engine.updateLimiter (value >= 0.5f); };
+    getParameterPntr(noiseGateToggleID)->actionableFunction    = [&engine](float value) { engine.updateNoiseGateToggle (value >= 0.5f); };
+    getParameterPntr(noiseGateThresholdID)->actionableFunction = [&engine](float value) { engine.updateNoiseGateThresh (value); };
+    getParameterPntr(compressorToggleID)->actionableFunction   = [&engine](float value) { engine.updateCompressorToggle (value >= 0.5f); };
+    getParameterPntr(compressorAmountID)->actionableFunction   = [&engine](float value) { engine.updateCompressorAmount (value); };
+    getParameterPntr(aftertouchGainToggleID)->actionableFunction = [&engine](float value) { engine.updateAftertouchGainOnOff (value >= 0.5f); };
     
-    getParameterPntr(mainBypassID)->actionableFunction = [&](float value) { juce::ignoreUnused(value); };
     
-    getParameterPntr(inputSourceID)->actionableFunction = [&](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
-    getParameterPntr(mainBypassID)->actionableFunction = [&](float value) { engine.updateLeadBypass (value >= 0.5f); };
-    getParameterPntr(leadBypassID)->actionableFunction = [&](float value) { engine.updateLeadBypass (value >= 0.5f); };
-    getParameterPntr(harmonyBypassID)->actionableFunction = [&](float value) { engine.updateHarmonyBypass (value >= 0.5f); };
-    getParameterPntr(dryPanID)->actionableFunction = [&](float value) { engine.updateDryVoxPan (juce::jlimit (0, 127, juce::roundToInt (value))); };
-    getParameterPntr(adsrAttackID)->actionableFunction = [&](float value) { engine.updateAdsrAttack (value); };
-    getParameterPntr(adsrDecayID)->actionableFunction = [&](float value) { engine.updateAdsrDecay (value); };
-    getParameterPntr(adsrSustainID)->actionableFunction = [&](float value) { engine.updateAdsrSustain (value); };
-    getParameterPntr(adsrReleaseID)->actionableFunction = [&](float value) { engine.updateAdsrRelease (value); };
 }
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>& engine);
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>& engine);

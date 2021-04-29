@@ -67,31 +67,45 @@ public:
     
     void recieveExternalPitchbend (const int bend);
     
+    void updateLeadBypass (bool leadIsBypassed) { leadBypass.store (leadIsBypassed); }
+    void updateHarmonyBypass (bool harmoniesAreBypassed) { harmonyBypass.store (harmoniesAreBypassed); }
     void updateDryWet      (float percentWet);
     void updateDryVoxPan   (int newMidiPan);
     void updateAdsrAttack  (float attack);
     void updateAdsrDecay   (float decay);
     void updateAdsrSustain (float sustain);
     void updateAdsrRelease (float release);
-    
-    void updateAdsr       (const float attack, const float decay, const float sustain, const float release);
-    void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
-    void updateMidiVelocitySensitivity(const int newSensitivity);
+    void updateStereoWidth (int width);
+    void updateLowestPannedNote (int note);
+    void updateMidiVelocitySensitivity (const int newSensitivity);
     void updatePitchbendRange (const int rangeST);
-    void updatePedalPitch  (const bool isOn, const int upperThresh, const int interval);
-    void updateDescant     (const bool isOn, const int lowerThresh, const int interval);
-    void updateNoteStealing(const bool shouldSteal);
-    void updateLimiter     (const bool isOn);
-    void updateNoiseGate (const float newThreshDB, const bool isOn);
-    void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
-    void updateCompressor (const float threshDB, const float ratio, const bool isOn);
-    void updateDelay (int dryWet, int delayInSamples, bool isOn);
-    void updateReverb (int wetPcnt, float decay, float duckAmount, float loCutFreq, float hiCutFreq, bool isOn);
+    void updatePedalToggle (bool isOn) { harmonizer.setPedalPitch (isOn); }
+    void updatePedalThresh (int note)  { harmonizer.setPedalPitchUpperThresh (note); }
+    void updatePedalInterval (int st) { harmonizer.setPedalPitchInterval (st); }
+    void updateDescantToggle (bool isOn) { harmonizer.setDescant (isOn); }
+    void updateDescantThresh (int note)  { harmonizer.setDescantLowerThresh (note); }
+    void updateDescantInterval (int st) { harmonizer.setDescantInterval (st); }
+    void updateNoteStealing (const bool shouldSteal);
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
+    void updateLimiter    (const bool isOn);
+    void updateNoiseGateToggle (bool isOn) { noiseGateIsOn.store (isOn); }
+    void updateNoiseGateThresh (float threshDB) { gate.setThreshold (threshDB); }
+    void updateCompressorToggle (bool isOn) { compressorIsOn.store (isOn); }
+    void updateCompressorAmount (float amount)
+    {
+        compressor.setThreshold (juce::jmap (amount, 0.0f, -60.0f));
+        compressor.setRatio (juce::jmap (amount, 1.0f, 10.0f));
+    }
     void updateAftertouchGainOnOff (const bool shouldBeOn);
-    void updateLeadBypass (bool leadIsBypassed) { leadBypass.store (leadIsBypassed); }
-    void updateHarmonyBypass (bool harmoniesAreBypassed) { harmonyBypass.store (harmoniesAreBypassed); }
+    
+    
+    void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
+    void updateDelay (int dryWet, int delayInSamples, bool isOn);
+    void updateReverb (int wetPcnt, float decay, float duckAmount, float loCutFreq, float hiCutFreq, bool isOn);
+    
+    
+    
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource);

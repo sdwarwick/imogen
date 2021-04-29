@@ -87,18 +87,17 @@ bvie_VOID_TEMPLATE::updateAdsrRelease (float release)
     
 }
 
-
-bvie_VOID_TEMPLATE::updateAdsr (const float attack, const float decay, const float sustain, const float release)
+bvie_VOID_TEMPLATE::updateStereoWidth (int width)
 {
-    harmonizer.updateADSRsettings (attack, decay, sustain, release);
+    jassert (width >= 0 && width <= 100);
+    harmonizer.updateStereoWidth (width);
+    reverb.setWidth (static_cast<float>(width) * 0.01f);
 }
-    
 
-bvie_VOID_TEMPLATE::updateStereoWidth (const int newStereoWidth, const int lowestPannedNote)
+bvie_VOID_TEMPLATE::updateLowestPannedNote (int note)
 {
-    harmonizer.updateLowestPannedNote (lowestPannedNote);
-    harmonizer.updateStereoWidth (newStereoWidth);
-    reverb.setWidth (newStereoWidth * 0.01f);
+    jassert (note >= 0 && note <= 127);
+    harmonizer.updateLowestPannedNote (note);
 }
 
 
@@ -111,22 +110,6 @@ bvie_VOID_TEMPLATE::updateMidiVelocitySensitivity (const int newSensitivity)
 bvie_VOID_TEMPLATE::updatePitchbendRange (const int rangeST)
 {
     harmonizer.updatePitchbendSettings (rangeST, rangeST);
-}
-
-
-bvie_VOID_TEMPLATE::updatePedalPitch (const bool isOn, const int upperThresh, const int interval)
-{
-    harmonizer.setPedalPitch (isOn);
-    harmonizer.setPedalPitchUpperThresh (upperThresh);
-    harmonizer.setPedalPitchInterval (interval);
-}
-
-
-bvie_VOID_TEMPLATE::updateDescant (const bool isOn, const int lowerThresh, const int interval)
-{
-    harmonizer.setDescant (isOn);
-    harmonizer.setDescantLowerThresh (lowerThresh);
-    harmonizer.setDescantInterval (interval);
 }
 
 
@@ -146,15 +129,6 @@ bvie_VOID_TEMPLATE::updateLimiter (const bool isOn)
 {
     limiterIsOn.store (isOn);
 }
-    
-
-bvie_VOID_TEMPLATE::updateCompressor (const float threshDB, const float ratio, const bool isOn)
-{
-    compressor.setThreshold (threshDB);
-    compressor.setRatio (ratio);
-    compressorIsOn.store (isOn);
-}
-    
 
 bvie_VOID_TEMPLATE::updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn)
 {
@@ -167,13 +141,6 @@ bvie_VOID_TEMPLATE::updateDeEsser (const float deEssAmount, const float thresh_d
 bvie_VOID_TEMPLATE::updateAftertouchGainOnOff (const bool shouldBeOn)
 {
     harmonizer.setAftertouchGainOnOff (shouldBeOn);
-}
-
-    
-bvie_VOID_TEMPLATE::updateNoiseGate (const float newThreshDB, const bool isOn)
-{
-    gate.setThreshold (newThreshDB);
-    noiseGateIsOn.store (isOn);
 }
     
 

@@ -198,12 +198,6 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     for (auto* pntr : parameterPointers)
         pntr->doAction();
     
-    const auto compressorKnobValue = getParameterPntr(compressorAmountID)->getCurrentDenormalizedValue();
-    
-    engine.updateCompressor (juce::jmap (compressorKnobValue, 0.0f, -60.0f),  // threshold (dB)
-                             juce::jmap (compressorKnobValue, 1.0f, 10.0f),  // ratio
-                             getParameterPntr(compressorToggleID)->getCurrentNormalizedValue() >= 0.5f);
-
     /* program change messages need to be handled at this top level... */
     std::for_each (midiMessages.cbegin(), midiMessages.cend(),
                    [&] (const juce::MidiMessageMetadata& meta)
