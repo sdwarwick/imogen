@@ -47,13 +47,39 @@ void ImogenAudioProcessor::rescanPresetsFolder()
 }
 
 
+void ImogenAudioProcessor::recieveDeletePreset (const juce::String& presetName)
+{
+    auto name = presetName;
+    
+    if (! name.endsWith(".xml"))
+        name += ".xml";
+    
+    auto presetToDelete = getPresetsFolder().getChildFile (name);
+    
+    if (presetToDelete.existsAsFile())
+        if (! presetToDelete.moveToTrash())
+            presetToDelete.deleteFile();
+    
+    rescanPresetsFolder();
+    updateHostDisplay();
+}
 
-/*
-    Functions for state saving and loading
-*/
+
+juce::String ImogenAudioProcessor::getActivePresetName()
+{
+    const auto program = currentProgram.load();
+    
+    if (program == -1)
+        return {};
+    
+    return getProgramName (program);
+}
 
 
-// functions for saving state info.....................................
+
+/*===========================================================================================================================
+    Functions for state saving
+ ============================================================================================================================*/
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
@@ -92,7 +118,9 @@ void ImogenAudioProcessor::recieveSavePreset (const juce::String& presetName) //
 }
 
 
-// functions for loading state info.................................
+/*===========================================================================================================================
+    Functions for state loading
+ ============================================================================================================================*/
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
@@ -190,30 +218,9 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
 }
 
 
-void ImogenAudioProcessor::recieveDeletePreset (const juce::String& presetName)
-{
-    auto name = presetName;
-    
-    if (! name.endsWith(".xml"))
-        name += ".xml";
-    
-    auto presetToDelete = getPresetsFolder().getChildFile (name);
-    
-    if (presetToDelete.existsAsFile())
-        if (! presetToDelete.moveToTrash())
-            presetToDelete.deleteFile();
-    
-    rescanPresetsFolder();
-    updateHostDisplay();
-}
-
-
 /*===========================================================================================================================
+    Functions for managing programs
  ==========================================================================================================================*/
-
-/*
-    Functions for managing "programs".
-*/
 
 int ImogenAudioProcessor::getNumPrograms()
 {
@@ -257,15 +264,4 @@ void ImogenAudioProcessor::changeProgramName (int index, const juce::String& new
         recieveSavePreset (newName);
     
     rescanPresetsFolder();
-}
-
-
-juce::String ImogenAudioProcessor::getActivePresetName()
-{
-    const auto program = currentProgram.load();
-    
-    if (program == -1)
-        return {};
-    
-    return getProgramName (program);
 }

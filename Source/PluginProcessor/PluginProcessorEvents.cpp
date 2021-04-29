@@ -60,7 +60,6 @@ void ImogenAudioProcessor::recieveEditorPitchbendEvent (int wheelValue)
                                 pitchbendNormalizedRange.convertTo0to1 (float (wheelValue)));
 }
 
-
 void ImogenAudioProcessor::recieveAbletonLinkChange (bool isNowEnabled)
 {
     juce::ignoreUnused (isNowEnabled);
@@ -100,26 +99,41 @@ void ImogenAudioProcessor::sendParameterChangeGestureEnd (ParameterID paramID)
 
 void ImogenAudioProcessor::sendErrorCode (ErrorCode code)
 {
-    juce::ignoreUnused (code);
+    if (auto* editor = getActiveGui())
+        editor->recieveErrorCode (code);
+    
+    oscSender.sendErrorCode (code);
 }
 
 void ImogenAudioProcessor::sendLoadPreset (const juce::String& presetName)
 {
-    juce::ignoreUnused (presetName);
+    if (auto* editor = getActiveGui())
+        editor->recieveLoadPreset (presetName);
+    
+    oscSender.sendLoadPreset (presetName);
 }
 
 void ImogenAudioProcessor::sendMidiLatch (bool isLatched)
 {
-    juce::ignoreUnused (isLatched);
+    if (auto* editor = getActiveGui())
+        editor->recieveMidiLatchEvent (isLatched);
+    
+    oscSender.sendMidiLatch (isLatched);
 }
 
 void ImogenAudioProcessor::sendKillAllMidiEvent()
 {
+    if (auto* editor = getActiveGui())
+        editor->recieveKillAllMidiEvent();
     
+    oscSender.sendKillAllMidiEvent();
 }
 
 void ImogenAudioProcessor::sendEnableAbletonLink (bool isEnabled)
 {
-    juce::ignoreUnused (isEnabled);
+    if (auto* editor = getActiveGui())
+        editor->recieveAbletonLinkChange (isEnabled);
+    
+    oscSender.sendEnableAbletonLink (isEnabled);
 }
 

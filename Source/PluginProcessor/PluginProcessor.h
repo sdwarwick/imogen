@@ -161,34 +161,21 @@ public:
     
     /*=========================================================================================*/
     
-    inline bool isMidiLatched() const
-    {
-        return isUsingDoublePrecision() ? doubleEngine.isMidiLatched() : floatEngine.isMidiLatched();
-    }
+    inline bool isMidiLatched() const;
     
-    /*=========================================================================================*/
-
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
     
-    int getNumAbletonLinkSessionPeers() const { return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0; }
+    int getNumAbletonLinkSessionPeers() const;
     
-    /*=========================================================================================*/
+    bool isConnectedToMtsEsp() const noexcept;
     
-    bool isConnectedToMtsEsp() const noexcept
-    {
-        return isUsingDoublePrecision() ? doubleEngine.isConnectedToMtsEsp() : floatEngine.isConnectedToMtsEsp();
-    }
-    
-    juce::String getScaleName() const
-    {
-        return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
-    }
+    juce::String getScaleName() const;
     
     /*=========================================================================================*/
     
     juce::Point<int> getLastEditorSize() const { return savedEditorSize; }
     
-    void saveEditorSize (const juce::Point<int>& size) { savedEditorSize = size; }
+    void saveEditorSize (int width, int height);
     
     /*=========================================================================================*/
     
@@ -340,6 +327,7 @@ private:
         const ParameterID paramID;
     };
     
+    /*=========================================================================================*/
     
     std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
     

@@ -63,8 +63,6 @@ ImogenAudioProcessor::ImogenAudioProcessor():
     Timer::startTimerHz (timerFramerate);
     
     oscReceiver.addListener (&oscListener);
-    
-    // if headless, automatically connect the oscSender...
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
@@ -82,7 +80,8 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
     oscReceiver.disconnect();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*===========================================================================================================
+===========================================================================================================*/
 
 void ImogenAudioProcessor::timerCallback()
 {
@@ -128,17 +127,8 @@ void ImogenAudioProcessor::timerCallback()
     */
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
-{
-    if (auto* editor = getActiveEditor())
-        return dynamic_cast<ImogenGuiHolder*> (editor);
-    
-    return nullptr;
-}
-
+/*===========================================================================================================
+ ===========================================================================================================*/
 
 template <typename SampleType>
 inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)
@@ -187,6 +177,8 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     setLatencySamples (activeEngine.reportLatency());
 }
 
+/*===========================================================================================================
+ ===========================================================================================================*/
 
 void ImogenAudioProcessor::releaseResources()
 {
@@ -206,11 +198,8 @@ void ImogenAudioProcessor::reset()
         floatEngine.reset();
 }
 
-
-/*
- These four functions represent the top-level callbacks made by the host during audio processing. Audio samples may be sent to us as float or double values; both of these functions redirect to the templated processBlockWrapped() function below.
- The buffers sent to this function by the host may be variable in size, so I have coded defensively around several edge cases & possible buggy host behavior and created several layers of checks that each callback passes through before individual chunks of audio are actually rendered.
-*/
+/*===========================================================================================================
+ ===========================================================================================================*/
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
@@ -275,10 +264,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 }
 
-
 /*===========================================================================================================================
  ============================================================================================================================*/
-
 
 void ImogenAudioProcessor::changeMidiLatchState (bool isNowLatched)
 {
@@ -290,8 +277,30 @@ void ImogenAudioProcessor::changeMidiLatchState (bool isNowLatched)
     oscSender.sendMidiLatch (isNowLatched);
 }
 
+bool ImogenAudioProcessor::isMidiLatched() const
+{
+    return isUsingDoublePrecision() ? doubleEngine.isMidiLatched() : floatEngine.isMidiLatched();
+}
 
-// standard and general-purpose functions -----------------------------------------------------------------------------------------------------------
+
+int ImogenAudioProcessor::getNumAbletonLinkSessionPeers() const
+{
+    return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0;
+}
+
+
+bool ImogenAudioProcessor::isConnectedToMtsEsp() const noexcept
+{
+    return isUsingDoublePrecision() ? doubleEngine.isConnectedToMtsEsp() : floatEngine.isConnectedToMtsEsp();
+}
+
+juce::String ImogenAudioProcessor::getScaleName() const
+{
+    return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
+}
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
@@ -320,12 +329,30 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
 }
 
+/*===========================================================================================================================
+ ============================================================================================================================*/
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {
     return new ImogenAudioProcessorEditor(*this);
 }
 
+ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
+{
+    if (auto* editor = getActiveEditor())
+        return dynamic_cast<ImogenGuiHolder*> (editor);
+    
+    return nullptr;
+}
+
+void ImogenAudioProcessor::saveEditorSize (int width, int height)
+{
+    savedEditorSize.setX (width);
+    savedEditorSize.setY (height);
+}
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

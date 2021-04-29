@@ -57,13 +57,13 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 }
 
 
 void ImogenAudioProcessorEditor::resized()
 {
-    imgnProcessor.saveEditorSize ({ getWidth(), getHeight() });
+    imgnProcessor.saveEditorSize (getWidth(), getHeight());
     
     gui()->setBounds (0, 0, getWidth(), getHeight());
 }

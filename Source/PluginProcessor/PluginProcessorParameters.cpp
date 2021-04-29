@@ -27,11 +27,8 @@
 
 
 /*===========================================================================================================================
+    Creates Imogen's parameter tree.
  ============================================================================================================================*/
-
-/*
-    Creates Imogen's parameter layout.
-*/
 
 juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::createParameters()
 {
@@ -258,11 +255,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 
 /*===========================================================================================================================
- ============================================================================================================================*/
-
-/*
     Initializes pointers to each parameter object.
-*/
+ ============================================================================================================================*/
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
@@ -308,7 +302,6 @@ void ImogenAudioProcessor::initializeParameterPointers()
     delayDryWet          = makeParameterPointer <IntParamPtr>   ("delayDryWet");
 }
 
-
 template<typename PointerType>
 PointerType ImogenAudioProcessor::makeParameterPointer (const juce::String& name)
 {
@@ -323,13 +316,9 @@ template bav::BoolParameter*  ImogenAudioProcessor::makeParameterPointer (const 
 
 
 /*===========================================================================================================================
+    Initializes individual listener callbacks for each parameter.
  ============================================================================================================================*/
 
-/*
-    Initializes individual listener callbacks for each parameter.
-*/
-
-// creates parameter listeners & messengers for each parameter
 void ImogenAudioProcessor::initializeParameterListeners()
 {
     parameterMessengers.reserve (numParams);
@@ -338,8 +327,6 @@ void ImogenAudioProcessor::initializeParameterListeners()
         addParameterMessenger (ParameterID(i));
 }
 
-
-// creates a single parameter listener & messenger for a requested parameter
 void ImogenAudioProcessor::addParameterMessenger (ParameterID paramID)
 {
     auto* param = getParameterPntr (paramID);
@@ -349,11 +336,8 @@ void ImogenAudioProcessor::addParameterMessenger (ParameterID paramID)
 
 
 /*===========================================================================================================================
- ============================================================================================================================*/
-
-/*
     Returns one of the processor's parameter objects, referenced by its parameterID.
-*/
+ ============================================================================================================================*/
 
 bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
@@ -405,11 +389,8 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramI
 
 
 /*===========================================================================================================================
- ============================================================================================================================*/
-
-/*
     Returns the corresponding parameterID for the passed parameter.
-*/
+ ============================================================================================================================*/
 
 ParameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const parameter) const
 {
@@ -458,12 +439,8 @@ ParameterID ImogenAudioProcessor::parameterPntrToID (const Parameter* const para
 
 
 /*===========================================================================================================================
- ============================================================================================================================*/
-
-
-/*
     Updates the compressor's settings based on the "one knob"
-*/
+ ============================================================================================================================*/
 
 template<typename SampleType>
 void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
@@ -478,11 +455,8 @@ void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& acti
 
 
 /*===========================================================================================================================
+    Updates all parameters
  ============================================================================================================================*/
-
-/*
-    Updates all parameters based on their current values
-*/
 
 template<typename SampleType>
 void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine)
@@ -519,11 +493,8 @@ template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<doubl
 
 
 /*===========================================================================================================================
- ============================================================================================================================*/
-
-/*
     Processes all the parameter changes in the message queue.
-*/
+ ============================================================================================================================*/
 
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
@@ -656,7 +627,6 @@ template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngi
 
 /*===========================================================================================================================
  ============================================================================================================================*/
-
 
 // This function reassigns each parameter's internally stored default value to the parameter's current value. Run this function after loading a preset, etc.
 void ImogenAudioProcessor::updateParameterDefaults()
