@@ -29,17 +29,17 @@ public:
     
     void sendParameterChange (ParameterID paramID, float newValue) override final
     {
-        send (OSC::getParameterChangeOSCaddress (paramID), newValue);
+        send (OSC::getParameterChangeOSCaddress(), int (paramID), newValue);
     }
     
     void sendParameterChangeGestureStart (ParameterID paramID) override final
     {
-        send (OSC::getParamGestureStartOSCaddress (paramID));
+        send (OSC::getParamGestureStartOSCaddress(), int (paramID));
     }
     
     void sendParameterChangeGestureEnd (ParameterID paramID) override final
     {
-        send (OSC::getParamGestureEndOSCaddress (paramID));
+        send (OSC::getParamGestureEndOSCaddress(), int (paramID));
     }
     
     void sendEditorPitchbend (int wheelValue) override final

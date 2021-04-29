@@ -5,29 +5,24 @@
 namespace Imogen::OSC
 {
 
-static inline juce::String getParameterOSCaddress (ParameterID param)
+
+static inline juce::String getParameterChangeOSCaddress()
 {
-    const auto temp = getParameterNameVerbose (param).replaceCharacters (" ", "/").trim();
-    return (temp.endsWith ("/")) ? temp : temp + "/";
+    return { "/imogen/param/" };
 }
 
-static inline juce::String getParameterChangeOSCaddress (ParameterID param)
+static inline juce::String getParamGestureStartOSCaddress()
 {
-    return { "/imogen/param/" + getParameterOSCaddress (param) };
+    return { "/imogen/gestureStart/" };
 }
 
-static inline juce::String getParamGestureStartOSCaddress (ParameterID param)
+static inline juce::String getParamGestureEndOSCaddress()
 {
-    return { "/imogen/gestureStart/" + getParameterOSCaddress (param) };
+    return { "/imogen/gestureEnd/" };
 }
 
-static inline juce::String getParamGestureEndOSCaddress (ParameterID param)
-{
-    return { "/imogen/gestureEnd/" + getParameterOSCaddress (param) };
-}
 
 }  // namespace OSC
-
 
 
 #include "OSC_sender.h"
