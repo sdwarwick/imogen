@@ -98,7 +98,7 @@ void ImogenGUI::rescanPresetsFolder()
 
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    const auto filename = addPresetFileExtensionIfMissing (presetName);
+    const auto filename = bav::addFileExtensionIfMissing (presetName, getPresetFileExtension());
 
 //    auto state = tree.copyState();
 //
@@ -125,7 +125,7 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
 
     rescanPresetsFolder();
 
-    const auto filename = addPresetFileExtensionIfMissing (presetName);
+    const auto filename = bav::addFileExtensionIfMissing (presetName, getPresetFileExtension());
     const auto presetToLoad = getPresetsFolder().getChildFile (filename);
 
     if (! presetToLoad.existsAsFile())
@@ -148,7 +148,7 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 {
     rescanPresetsFolder();
     
-    auto presetToDelete = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (presetName));
+    auto presetToDelete = getPresetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, getPresetFileExtension()));
 
     if (presetToDelete.existsAsFile())
     {
@@ -163,8 +163,10 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
 {
     rescanPresetsFolder();
+    
+    const auto extension = getPresetFileExtension();
 
-    const auto presetToLoad = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (previousName));
+    const auto presetToLoad = getPresetsFolder().getChildFile (bav::addFileExtensionIfMissing (previousName, extension));
 
     if (! presetToLoad.existsAsFile())
     {
@@ -177,10 +179,10 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
     if (! presetToLoad.moveToTrash())  // delete the old preset file
         presetToLoad.deleteFile();
 
-    const auto name = removePresetFileExtensionIfThere (newName);
+    const auto name = bav::removeFileExtensionIfThere (newName, extension);
 
     xml->setAttribute ("presetName", name);
-    xml->writeTo (getPresetsFolder().getChildFile (name + getPresetFileExtension()));
+    xml->writeTo (getPresetsFolder().getChildFile (name + extension));
 
     rescanPresetsFolder();
 }

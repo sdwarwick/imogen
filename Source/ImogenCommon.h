@@ -230,32 +230,6 @@ static inline juce::String getPresetFileExtension()
     return { ".xml" };
 }
 
-static inline juce::String addPresetFileExtensionIfMissing (const juce::String& string)
-{
-    const auto xtn = getPresetFileExtension();
-    return juce::File::createLegalFileName (string.endsWith (xtn) ? string.trim() : (string + xtn).trim());
-}
-
-static inline juce::String removePresetFileExtensionIfThere (const juce::String& string)
-{
-    const auto xtn = getPresetFileExtension();
-    return (string.endsWith (xtn)) ? string.dropLastCharacters (xtn.length()).trim() : string.trim();
-}
-
 
 }  // namespace
 
-
-/*
- */
-
-
-// simple hack to force the juce::LocalisedStrings singleton to initialize its mappings before Imogen creates its parameters...
-struct TranslationInitializer
-{
-    TranslationInitializer (const juce::File& fileToLoad)
-    {
-        if (fileToLoad.existsAsFile())
-            juce::LocalisedStrings::setCurrentMappings (new juce::LocalisedStrings (fileToLoad, true));
-    }
-};
