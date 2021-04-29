@@ -82,6 +82,7 @@ public:
     void recieveLoadPreset   (const juce::String& presetName) override final;
     void recieveSavePreset   (const juce::String& presetName) override final;
     void recieveDeletePreset (const juce::String& presetName) override final;
+    void recieveRenamePreset (const juce::String& previousName, const juce::String& newName);
     
     void recieveErrorCode (ErrorCode) override final { }  // this does nothing on the processor side
     
