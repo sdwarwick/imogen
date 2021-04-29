@@ -163,10 +163,6 @@ private:
     template<typename SampleType>
     void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
     
-    template<typename SampleType>
-    void updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
-                           bool compressorIsOn, float knobValue);
-    
     void changeMidiLatchState (bool isNowLatched);
     
     /*=========================================================================================*/

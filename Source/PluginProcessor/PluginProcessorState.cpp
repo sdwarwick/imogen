@@ -73,11 +73,6 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
             activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
     }
     
-    if (isUsingDoublePrecision())
-        updateAllParameters (doubleEngine);
-    else
-        updateAllParameters (floatEngine);
-    
     suspendProcessing (false);
     
     updateHostDisplay();

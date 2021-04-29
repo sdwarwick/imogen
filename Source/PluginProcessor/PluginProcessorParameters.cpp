@@ -299,22 +299,6 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramI
 
 
 /*===========================================================================================================================
-    Updates the compressor's settings based on the "one knob"
- ============================================================================================================================*/
-
-template<typename SampleType>
-void ImogenAudioProcessor::updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
-                                             bool compressorIsOn, float knobValue)
-{
-    jassert (knobValue >= 0.0f && knobValue <= 1.0f);
-    
-    activeEngine.updateCompressor (juce::jmap (knobValue, 0.0f, -60.0f),  // threshold (dB)
-                                   juce::jmap (knobValue, 1.0f, 10.0f),  // ratio
-                                   compressorIsOn);
-}
-
-
-/*===========================================================================================================================
     Processes all the non-parameter events in the message queue.
  ============================================================================================================================*/
 
