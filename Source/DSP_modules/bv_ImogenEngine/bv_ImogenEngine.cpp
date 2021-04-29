@@ -22,8 +22,7 @@
 ======================================================================================================================================================*/
 
 
-
-#include "bv_ImogenEngineParameters.cpp"
+#include "bv_ImogenEngine.h"
 
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>

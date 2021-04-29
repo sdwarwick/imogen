@@ -288,9 +288,9 @@ template <typename SampleType>
 void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine)
 {
     // these functions will all be called with the current denormalized value as a float -- so just static_cast to int, etc
-    getParameterPntr(inputSourceID)->actionableFunction = [&engine](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
-    getParameterPntr(mainBypassID)->actionableFunction  = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
-    getParameterPntr(leadBypassID)->actionableFunction  = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
+    getParameterPntr(inputSourceID)->actionableFunction   = [&engine](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
+    getParameterPntr(mainBypassID)->actionableFunction    = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
+    getParameterPntr(leadBypassID)->actionableFunction    = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
     getParameterPntr(harmonyBypassID)->actionableFunction = [&engine](float value) { engine.updateHarmonyBypass (value >= 0.5f); };
     getParameterPntr(dryPanID)->actionableFunction = [&engine](float value) { engine.updateDryVoxPan (juce::roundToInt (value)); };
     getParameterPntr(adsrAttackID)->actionableFunction  = [&engine](float value) { engine.updateAdsrAttack (value); };
@@ -316,8 +316,17 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
     getParameterPntr(compressorToggleID)->actionableFunction   = [&engine](float value) { engine.updateCompressorToggle (value >= 0.5f); };
     getParameterPntr(compressorAmountID)->actionableFunction   = [&engine](float value) { engine.updateCompressorAmount (value); };
     getParameterPntr(aftertouchGainToggleID)->actionableFunction = [&engine](float value) { engine.updateAftertouchGainOnOff (value >= 0.5f); };
-    
-    
+    getParameterPntr(deEsserToggleID)->actionableFunction = [&engine](float value) { engine.updateDeEsserToggle (value >= 0.5f); };
+    getParameterPntr(deEsserThreshID)->actionableFunction = [&engine](float value) { engine.updateDeEsserThresh (value); };
+    getParameterPntr(deEsserAmountID)->actionableFunction = [&engine](float value) { engine.updateDeEsserAmount (value); };
+    getParameterPntr(reverbToggleID)->actionableFunction  = [&engine](float value) { engine.updateReverbToggle (value >= 0.5f); };
+    getParameterPntr(reverbDryWetID)->actionableFunction  = [&engine](float value) { engine.updateReverbDryWet (juce::roundToInt (value)); };
+    getParameterPntr(reverbDecayID)->actionableFunction   = [&engine](float value) { engine.updateReverbDecay (value); };
+    getParameterPntr(reverbDuckID)->actionableFunction    = [&engine](float value) { engine.updateReverbDuck (value); };
+    getParameterPntr(reverbLoCutID)->actionableFunction   = [&engine](float value) { engine.updateReverbLoCut (value); };
+    getParameterPntr(reverbHiCutID)->actionableFunction   = [&engine](float value) { engine.updateReverbHiCut (value); };
+    getParameterPntr(delayToggleID)->actionableFunction   = [&engine](float value) { engine.updateDelayToggle (value >= 0.5f); };
+    getParameterPntr(delayDryWetID)->actionableFunction   = [&engine](float value) { engine.updateDelayDryWet (juce::roundToInt (value)); };
 }
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>& engine);
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>& engine);

@@ -69,26 +69,51 @@ public:
     
     void updateLeadBypass (bool leadIsBypassed) { leadBypass.store (leadIsBypassed); }
     void updateHarmonyBypass (bool harmoniesAreBypassed) { harmonyBypass.store (harmoniesAreBypassed); }
-    void updateDryWet      (float percentWet);
-    void updateDryVoxPan   (int newMidiPan);
-    void updateAdsrAttack  (float attack);
-    void updateAdsrDecay   (float decay);
-    void updateAdsrSustain (float sustain);
-    void updateAdsrRelease (float release);
-    void updateStereoWidth (int width);
-    void updateLowestPannedNote (int note);
-    void updateMidiVelocitySensitivity (const int newSensitivity);
-    void updatePitchbendRange (const int rangeST);
+    void updateDryWet      (float percentWet) { dryWetMixer.setWetMixProportion (percentWet); }
+    void updateDryVoxPan   (int newMidiPan)
+    {
+        dryPanner.setMidiPan (newMidiPan);
+        dryLgain.setTargetValue (smoothingZeroCheck (dryPanner.getLeftGain()));
+        dryRgain.setTargetValue (smoothingZeroCheck (dryPanner.getRightGain()));
+    }
+    void updateAdsrAttack  (float attack)
+    {
+        adsrSettings.attack = attack;
+        harmonizer.updateADSRsettings (attack, adsrSettings.decay, adsrSettings.sustain, adsrSettings.release);
+    }
+    void updateAdsrDecay   (float decay)
+    {
+        adsrSettings.decay = decay;
+        harmonizer.updateADSRsettings (adsrSettings.attack, decay, adsrSettings.sustain, adsrSettings.release);
+    }
+    void updateAdsrSustain (float sustain)
+    {
+        adsrSettings.sustain = sustain;
+        harmonizer.updateADSRsettings (adsrSettings.attack, adsrSettings.decay, sustain, adsrSettings.release);
+    }
+    void updateAdsrRelease (float release)
+    {
+        adsrSettings.release = release;
+        harmonizer.updateADSRsettings (adsrSettings.attack, adsrSettings.decay, adsrSettings.sustain, release);
+    }
+    void updateStereoWidth (int width)
+    {
+        harmonizer.updateStereoWidth (width);
+        reverb.setWidth (static_cast<float>(width) * 0.01f);
+    }
+    void updateLowestPannedNote (int note) { harmonizer.updateLowestPannedNote (note); }
+    void updateMidiVelocitySensitivity (const int newSensitivity) { harmonizer.updateMidiVelocitySensitivity (newSensitivity); }
+    void updatePitchbendRange (const int rangeST) { harmonizer.updatePitchbendSettings (rangeST, rangeST); }
     void updatePedalToggle (bool isOn) { harmonizer.setPedalPitch (isOn); }
     void updatePedalThresh (int note)  { harmonizer.setPedalPitchUpperThresh (note); }
     void updatePedalInterval (int st) { harmonizer.setPedalPitchInterval (st); }
     void updateDescantToggle (bool isOn) { harmonizer.setDescant (isOn); }
     void updateDescantThresh (int note)  { harmonizer.setDescantLowerThresh (note); }
     void updateDescantInterval (int st) { harmonizer.setDescantInterval (st); }
-    void updateNoteStealing (const bool shouldSteal);
-    void updateInputGain  (const float newInGain);
-    void updateOutputGain (const float newOutGain);
-    void updateLimiter    (const bool isOn);
+    void updateNoteStealing (const bool shouldSteal) { harmonizer.setNoteStealingEnabled (shouldSteal); }
+    void updateInputGain  (const float newInGain)  { inputGain.setTargetValue (smoothingZeroCheck (newInGain)); }
+    void updateOutputGain (const float newOutGain) { outputGain.setTargetValue (smoothingZeroCheck (newOutGain)); }
+    void updateLimiter    (const bool isOn) { limiterIsOn.store (isOn); }
     void updateNoiseGateToggle (bool isOn) { noiseGateIsOn.store (isOn); }
     void updateNoiseGateThresh (float threshDB) { gate.setThreshold (threshDB); }
     void updateCompressorToggle (bool isOn) { compressorIsOn.store (isOn); }
@@ -97,23 +122,30 @@ public:
         compressor.setThreshold (juce::jmap (amount, 0.0f, -60.0f));
         compressor.setRatio (juce::jmap (amount, 1.0f, 10.0f));
     }
-    void updateAftertouchGainOnOff (const bool shouldBeOn);
-    
-    
-    void updateDeEsser (const float deEssAmount, const float thresh_dB, const bool isOn);
-    void updateDelay (int dryWet, int delayInSamples, bool isOn);
-    void updateReverb (int wetPcnt, float decay, float duckAmount, float loCutFreq, float hiCutFreq, bool isOn);
-    
-    
-    
+    void updateAftertouchGainOnOff (const bool shouldBeOn) { harmonizer.setAftertouchGainOnOff (shouldBeOn); }
+    void updateDeEsserToggle (bool isOn) { deEsserIsOn.store (isOn); }
+    void updateDeEsserThresh (float threshDB) { deEsser.setThresh (threshDB); }
+    void updateDeEsserAmount (float amount) { deEsser.setDeEssAmount (amount); }
+    void updateReverbToggle (bool isOn) { reverbIsOn.store (isOn); }
+    void updateReverbDryWet (int wetPcnt) { reverb.setDryWet (wetPcnt); }
+    void updateReverbDecay  (float decay)
+    {
+        reverb.setDamping (1.0f - decay);
+        reverb.setRoomSize (decay);
+    }
+    void updateReverbDuck (float duck) { reverb.setDuckAmount (duck); }
+    void updateReverbLoCut (float loCutFreq) { reverb.setLoCutFrequency (loCutFreq); }
+    void updateReverbHiCut (float hiCutFreq) { reverb.setHiCutFrequency (hiCutFreq); }
+    void updateDelayToggle (bool isOn) { delayIsOn.store (isOn); }
+    void updateDelayDryWet (int pcntWet) { delay.setDryWet (pcntWet); }
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
-    void setModulatorSource (const int newSource);
+    void setModulatorSource (const int newSource) { modulatorInput.store (newSource); }
     
     void playChord (const juce::Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
     
     bool isMidiLatched() const { return harmonizer.isLatched(); }
-    void updateMidiLatch (const bool isLatched);
+    void updateMidiLatch (const bool isLatched) { harmonizer.setMidiLatch (isLatched, true); }
     
     
     bool isConnectedToMtsEsp() const noexcept { return harmonizer.isConnectedToMtsEsp(); }
@@ -188,6 +220,13 @@ private:
     juce::SmoothedValue<SampleType, juce::ValueSmoothingTypes::Multiplicative> inputGain, outputGain, dryLgain, dryRgain;
     
     void resetSmoothedValues (int blocksize);
+    
+    struct ADSRsettings
+    {
+        float attack, decay, sustain, release;
+    };
+    
+    ADSRsettings adsrSettings;
     
     static constexpr auto limiterThreshDb     = 0.0f;
     static constexpr auto limiterReleaseMs    = 35.0f;
