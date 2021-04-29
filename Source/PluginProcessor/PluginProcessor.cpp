@@ -30,11 +30,12 @@
 #include "PluginProcessorEvents.cpp"
 
 
-ImogenAudioProcessor::ImogenAudioProcessor():
-    AudioProcessor(makeBusProperties()),
-    tree(*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
-    abletonLink(120.0), // constructed with the initial BPM
-    oscListener(this)
+ImogenAudioProcessor::ImogenAudioProcessor()
+  : AudioProcessor (makeBusProperties()),
+    translationInitializer (findAppropriateTranslationFile()),
+    tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
+    abletonLink (120.0), // constructed with the initial BPM
+    oscListener (this)
 {
 #if BV_USE_NE10
     ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!

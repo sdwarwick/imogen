@@ -29,13 +29,14 @@ void ImogenAudioProcessor::rescanPresetsFolder()
     const auto prevProgramName = getProgramName (currentProgram.load());
     
     availablePresets.clearQuick();
+    const auto xtn = getPresetFileExtension();
     
     for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
     {
         const auto filename = entry.getFile().getFileName();
         
-        if (filename.endsWith (".xml"))
-            availablePresets.add (filename.dropLastCharacters (4));
+        if (filename.endsWith (xtn))
+            availablePresets.add (filename.dropLastCharacters (xtn.length()));
     }
     
     if (! prevProgramName.isEmpty())
@@ -45,15 +46,16 @@ void ImogenAudioProcessor::rescanPresetsFolder()
 
 void ImogenAudioProcessor::recieveDeletePreset (const juce::String& presetName)
 {
-    auto presetToDelete = (presetName.endsWith (".xml")) ? getPresetsFolder().getChildFile (presetName)
-                                                         : getPresetsFolder().getChildFile (presetName + ".xml");
+    auto presetToDelete = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (presetName));
     
     if (presetToDelete.existsAsFile())
+    {
         if (! presetToDelete.moveToTrash())
             presetToDelete.deleteFile();
     
-    rescanPresetsFolder();
-    updateHostDisplay();
+        rescanPresetsFolder();
+        updateHostDisplay();
+    }
 }
 
 
@@ -61,9 +63,7 @@ void ImogenAudioProcessor::recieveRenamePreset (const juce::String& previousName
 {
     rescanPresetsFolder();
     
-    const auto filename = previousName.endsWith(".xml") ? previousName : previousName + ".xml";
-    
-    auto presetToLoad = getPresetsFolder().getChildFile (filename);
+    auto presetToLoad = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (previousName));
     
     if (! presetToLoad.existsAsFile())
     {
@@ -76,10 +76,10 @@ void ImogenAudioProcessor::recieveRenamePreset (const juce::String& previousName
     if (! presetToLoad.moveToTrash())  // delete the old preset file
         presetToLoad.deleteFile();
     
-    const auto name = newName.endsWith (".xml") ? newName.dropLastCharacters(4) : newName;
+    const auto name = removePresetFileExtensionIfThere (newName);
     
     xml->setAttribute ("presetName", name);
-    xml->writeTo (getPresetsFolder().getChildFile (name + ".xml"));
+    xml->writeTo (getPresetsFolder().getChildFile (name + getPresetFileExtension()));
     
     rescanPresetsFolder();
     updateHostDisplay();
@@ -118,7 +118,7 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
 void ImogenAudioProcessor::recieveSavePreset (const juce::String& presetName) // this function can be used both to save new preset files or to update existing ones
 {
-    const auto filename = (presetName.endsWith(".xml")) ? presetName : presetName + ".xml";
+    const auto filename = addPresetFileExtensionIfMissing (presetName);
     
     auto state = tree.copyState();
     
@@ -127,7 +127,7 @@ void ImogenAudioProcessor::recieveSavePreset (const juce::String& presetName) //
     
     auto xml = state.createXml();
     
-    xml->setAttribute ("presetName", filename.dropLastCharacters(4));
+    xml->setAttribute ("presetName", filename.dropLastCharacters (getPresetFileExtension().length()));
     
     xml->writeTo (getPresetsFolder().getChildFile (filename));
     
@@ -162,7 +162,7 @@ void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
     
     rescanPresetsFolder();
     
-    const auto filename = (presetName.endsWith(".xml")) ? presetName : presetName + ".xml";
+    const auto filename = addPresetFileExtensionIfMissing (presetName);
     
     auto presetToLoad = getPresetsFolder().getChildFile (filename);
     
@@ -182,7 +182,7 @@ void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
         if (availablePresets.isEmpty())
             currentProgram.store (-1);
         else
-            currentProgram.store (indexOfProgram (filename.dropLastCharacters(4)));
+            currentProgram.store (indexOfProgram (filename.dropLastCharacters (getPresetFileExtension().length())));
     }
     else
     {
@@ -261,9 +261,7 @@ const juce::String ImogenAudioProcessor::getProgramName (int index)
     if (availablePresets.isEmpty() || index < 0 || index >= availablePresets.size())
         return {};
     
-    const auto name = availablePresets.getUnchecked(index).getFileName();
-    
-    return (name.endsWith(".xml")) ? name.dropLastCharacters(4) : name;
+    return removePresetFileExtensionIfThere (availablePresets.getUnchecked(index).getFileName());
 }
 
 int ImogenAudioProcessor::indexOfProgram (const juce::String& name) const

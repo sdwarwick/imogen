@@ -244,6 +244,9 @@ private:
     
     /*=========================================================================================*/
     
+    // simple hack to force the translation system to initialize before anything else in our initialization list
+    TranslationInitializer translationInitializer;
+    
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
