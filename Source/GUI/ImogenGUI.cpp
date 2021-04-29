@@ -49,12 +49,28 @@ ImogenGUI::ImogenGUI (ProcessorStateChangeSender* s): sender(s), tooltipWindow(t
 #endif
     
     mainDial.showPitchCorrection();
+    
+    rescanPresetsFolder();
 }
 
 
 ImogenGUI::~ImogenGUI()
 {
     this->setLookAndFeel (nullptr);
+}
+
+
+/*=========================================================================================================
+ =========================================================================================================*/
+
+void ImogenGUI::recieveParameterChange  (ParameterID param, float newValue)
+{
+    
+}
+
+void ImogenGUI::recieveParameterGesture (ParameterID param, bool gestureStart)
+{
+    
 }
 
 
@@ -73,6 +89,8 @@ void ImogenGUI::rescanPresetsFolder()
 //        if (filename.endsWith (xtn))
 //            availablePresets.add (filename.dropLastCharacters (xtn.length()));
 //    }
+    
+    // show spinning/progress graphic...?
     
     repaint();
 }

@@ -25,6 +25,10 @@
 #include "PluginProcessor.h"
 
 
+/*===========================================================================================================================
+ ProcessorStateChangeReciever functions
+ ============================================================================================================================*/
+
 void ImogenAudioProcessor::recieveExternalParameterChange (ParameterID param, float newValue)
 {
     getParameterPntr(param)->orig()->setValueNotifyingHost (newValue);
@@ -273,6 +277,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
+    
+    
     mainBypass           = makeParameterPointer <BoolParamPtr>  ("mainBypass");    
     leadBypass           = makeParameterPointer <BoolParamPtr>  ("leadBypass");
     harmonyBypass        = makeParameterPointer <BoolParamPtr>  ("harmonyBypass");
@@ -514,13 +520,3 @@ void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<Sample
 template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<float>& activeEngine);
 template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<double>& activeEngine);
 
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-// This function reassigns each parameter's internally stored default value to the parameter's current value. Run this function after loading a preset, etc.
-void ImogenAudioProcessor::updateParameterDefaults()
-{
-    for (int paramID = 0; paramID < numParams; ++paramID)
-        getParameterPntr(ParameterID(paramID))->refreshDefault();
-}

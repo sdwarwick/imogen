@@ -48,52 +48,39 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    if (isUsingDoublePrecision())
-        updatePluginInternalState (*(getXmlFromBinary (data, sizeInBytes)), doubleEngine, false);
-    else
-        updatePluginInternalState (*(getXmlFromBinary (data, sizeInBytes)), floatEngine, false);
-}
-
-
-template<typename SampleType>
-inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& newState,
-                                                             bav::ImogenEngine<SampleType>& activeEngine,
-                                                             bool isPresetChange)
-{
+    auto newState = *(getXmlFromBinary (data, sizeInBytes));
+    
     if (! newState.hasTagName (tree.state.getType()))
-        return false;
-           
+        return;
+    
     auto newTree = juce::ValueTree::fromXml (newState);
-           
+    
     if (! newTree.isValid())
-        return false;
+        return;
     
     suspendProcessing (true);
     
     tree.replaceState (newTree);
     
-    updateAllParameters (activeEngine);
+    auto editor = tree.state.getChildWithName ("editorSize");
     
-    updateParameterDefaults();
-    
-    if (! isPresetChange)
+    if (editor.isValid())
     {
-        auto editor = tree.state.getChildWithName ("editorSize");
+        savedEditorSize.setX (editor.getProperty ("editorSize_X", 900));
+        savedEditorSize.setY (editor.getProperty ("editorSize_Y", 500));
         
-        if (editor.isValid())
-        {
-            savedEditorSize.setX (editor.getProperty ("editorSize_X", 900));
-            savedEditorSize.setY (editor.getProperty ("editorSize_Y", 500));
-            
-            if (auto* activeEditor = getActiveEditor())
-                activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
-        }
+        if (auto* activeEditor = getActiveEditor())
+            activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
     }
+    
+    if (isUsingDoublePrecision())
+        updateAllParameters (doubleEngine);
+    else
+        updateAllParameters (floatEngine);
     
     suspendProcessing (false);
     
     updateHostDisplay();
-    return true;
 }
 
 

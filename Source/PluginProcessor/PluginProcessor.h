@@ -173,13 +173,6 @@ private:
     void updateCompressor (bav::ImogenEngine<SampleType>& activeEngine,
                            bool compressorIsOn, float knobValue);
     
-    void updateParameterDefaults();
-    
-    template<typename SampleType>
-    bool updatePluginInternalState (juce::XmlElement& newState,
-                                    bav::ImogenEngine<SampleType>& activeEngine,
-                                    bool isPresetChange);
-    
     void changeMidiLatchState (bool isNowLatched);
     
     /*=========================================================================================*/

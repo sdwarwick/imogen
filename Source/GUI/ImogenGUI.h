@@ -43,6 +43,11 @@ public:
     ImogenGUI (ProcessorStateChangeSender* s);
     
     virtual ~ImogenGUI() override;
+    
+    /*=========================================================================================*/
+    
+    void recieveParameterChange  (ParameterID param, float newValue);
+    void recieveParameterGesture (ParameterID param, bool gestureStart);
      
     /*=========================================================================================*/
     /* juce::Component functions */

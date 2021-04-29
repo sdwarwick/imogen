@@ -18,7 +18,7 @@
  @2021 by Ben Vining. All rights reserved.
  
  ImogenGuiHolder.h: This file defines a class that holds an ImogenGui object and acts as its interface with the outside world.
-    Note that ImogenGuiHolder is an abstract class, because it inherits from ProcessorStateChangeSender and doesn't implement any of its pure virtual methods.
+    Note that ImogenGuiHolder is an abstract class, because it inherits from ProcessorStateChangeSender and doesn't implement all of its pure virtual methods.
  
  ======================================================================================================================================================*/
 
@@ -37,6 +37,11 @@ public:
     ImogenGuiHolder(): p_gui(this) { }
     
     virtual ~ImogenGuiHolder() = default;
+    
+    /*=========================================================================================*/
+    
+    void recieveParameterChangeFromProcessor  (ParameterID param, float newValue) override final { p_gui.recieveParameterChange (param, newValue); }
+    void recieveParameterGestureFromProcessor (ParameterID param, bool gestureStart) override final { p_gui.recieveParameterGesture (param, gestureStart); }
     
     /*=========================================================================================*/
     

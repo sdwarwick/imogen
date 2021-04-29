@@ -65,7 +65,6 @@ void ImogenAudioProcessorEditor::sendParameterGesture (ParameterID param, bool g
     imgnProcessor.recieveExternalParameterGesture (param, gestureStart);
 }
 
-
 /*=========================================================================================================
     juce::Component functions
  =========================================================================================================*/

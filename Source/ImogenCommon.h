@@ -78,12 +78,24 @@ enum ParameterID
 static constexpr int numParams = delayDryWetID + 1;
 
 
+enum EventID
+{
+    killAllMidiID,
+    midiLatchID,
+    pitchBendFromEditorID
+};
+static constexpr int numEventIDs = pitchBendFromEditorID + 1;
+
+
 /* This struct contains every piece of stateful data that affects the ImogenAudioProcessor's audio rendering */
 struct ProcessorState
 {
-    // set of currently active midi notes
+    // set of currently active midi notes (+ which one is pedal/descant)
     // current input pitch as note string + cents sharp/flat
     // values for all level/redux meters
+    // midi latch on/off
+    // ableton link on/off, # of session peers
+    // MTS-ESP connection status, scale name
 };
 
 
@@ -92,6 +104,9 @@ struct ProcessorStateChangeSender
 {
     virtual void sendParameterChange  (ParameterID param, float newValue) = 0;
     virtual void sendParameterGesture (ParameterID param, bool gestureStart) = 0;
+    
+    virtual void recieveParameterChangeFromProcessor  (ParameterID param, float newValue) = 0;
+    virtual void recieveParameterGestureFromProcessor (ParameterID param, bool gestureStart) = 0;
 };
 
 
@@ -197,16 +212,6 @@ static inline juce::String getParameterNameVerbose (ParameterID param)
         case (delayDryWetID):          return TRANS ("Delay dry/wet");
     }
 }
-
-
-enum EventID
-{
-    killAllMidiID,
-    midiLatchID,
-    pitchBendFromEditorID
-};
-static constexpr int numEventIDs = pitchBendFromEditorID + 1;
-
 
 
 static inline juce::File findAppropriateTranslationFile()

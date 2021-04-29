@@ -38,16 +38,14 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 #if BV_USE_NE10
     ne10_init();
 #endif
+    
     jassert (AudioProcessor::getParameters().size() == numParams);
     initializeParameterPointers();
-    updateParameterDefaults();
            
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-    
-    // rescanPresetsFolder();
     
     // lastPresetName = getActivePresetName();
     
@@ -189,12 +187,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     juce::ScopedNoDenormals nodenorms;
     
     updateAllParameters (engine);
-    //processQueuedParameterChanges (engine);
-    //processQueuedNonParamEvents (engine);
+    processQueuedNonParamEvents (engine);
 
-    if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
-        return;
-           
     // program change messages need to be handled at this top level...
     std::for_each (midiMessages.cbegin(), midiMessages.cend(),
                    [&] (const juce::MidiMessageMetadata& meta)
@@ -205,8 +199,13 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
                            setCurrentProgram (msg.getProgramChangeNumber());
                    });
     
-    juce::AudioBuffer<SampleType> inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
-    juce::AudioBuffer<SampleType> outBus = getBusBuffer (buffer, false, 0);
+    if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
+        return;
+    
+    using Buffer = juce::AudioBuffer<SampleType>;
+    
+    Buffer inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
+    Buffer outBus = getBusBuffer (buffer, false, 0);
     
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 }
