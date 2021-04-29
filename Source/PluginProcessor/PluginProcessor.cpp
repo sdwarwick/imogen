@@ -87,6 +87,8 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
     activeEngine.initialize (initSamplerate, initBlockSize);
     
     setLatencySamples (activeEngine.reportLatency());
+    
+    initializeParameterFunctionPointers (activeEngine);
 }
 
 
@@ -108,6 +110,8 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
 {
     if (! idleEngine.hasBeenReleased())
         idleEngine.releaseResources();
+    
+    initializeParameterFunctionPointers (activeEngine);
     
     processQueuedNonParamEvents (activeEngine);
     
@@ -191,46 +195,9 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     processQueuedNonParamEvents (engine);
     
     /* update all parameters... */
-    engine.updateBypassStates (getParameterPntr(leadBypassID)->getCurrentNormalizedValue() >= 0.5f,
-                               getParameterPntr(harmonyBypassID)->getCurrentNormalizedValue() >= 0.5f);
-
-    engine.updateInputGain               (juce::Decibels::decibelsToGain (getParameterPntr(inputGainID)->getCurrentDenormalizedValue()));
-    engine.updateOutputGain              (juce::Decibels::decibelsToGain (getParameterPntr(outputGainID)->getCurrentDenormalizedValue()));
-    engine.updateDryVoxPan               (getParameterPntr(dryPanID)->getCurrentDenormalizedValue());
-    engine.updateDryWet                  (getParameterPntr(dryWetID)->getCurrentDenormalizedValue());
-    engine.updateNoteStealing            (getParameterPntr(voiceStealingID)->getCurrentNormalizedValue() >= 0.5f);
-    engine.updateAftertouchGainOnOff     (getParameterPntr(aftertouchGainToggleID)->getCurrentNormalizedValue() >= 0.5f);
-    engine.setModulatorSource            (getParameterPntr(inputSourceID)->getCurrentDenormalizedValue());
-    engine.updateMidiVelocitySensitivity (getParameterPntr(velocitySensID)->getCurrentDenormalizedValue());
-    engine.updatePitchbendRange          (getParameterPntr(pitchBendRangeID)->getCurrentDenormalizedValue());
-    engine.updateAdsr                    (getParameterPntr(adsrAttackID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(adsrDecayID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(adsrSustainID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(adsrReleaseID)->getCurrentDenormalizedValue());
-    engine.updateStereoWidth             (getParameterPntr(stereoWidthID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(lowestPannedID)->getCurrentDenormalizedValue());
-    engine.updatePedalPitch              (getParameterPntr(pedalPitchIsOnID)->getCurrentNormalizedValue() >= 0.5f,
-                                          getParameterPntr(pedalPitchThreshID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(pedalPitchIntervalID)->getCurrentDenormalizedValue());
-    engine.updateDescant                 (getParameterPntr(descantIsOnID)->getCurrentNormalizedValue() >= 0.5f,
-                                          getParameterPntr(descantThreshID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(descantIntervalID)->getCurrentDenormalizedValue());
-    engine.updateLimiter                 (getParameterPntr(limiterToggleID)->getCurrentNormalizedValue() >= 0.5f);
-    engine.updateNoiseGate               (getParameterPntr(noiseGateThresholdID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(noiseGateToggleID)->getCurrentNormalizedValue() >= 0.5f);
-    engine.updateDeEsser                 (getParameterPntr(deEsserAmountID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(deEsserThreshID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(deEsserToggleID)->getCurrentNormalizedValue() >= 0.5f);
-    engine.updateDelay                   (getParameterPntr(delayDryWetID)->getCurrentDenormalizedValue(),
-                                          2400,
-                                          getParameterPntr(delayToggleID)->getCurrentNormalizedValue() >= 0.5f);
-    engine.updateReverb                  (getParameterPntr(reverbDryWetID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(reverbDecayID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(reverbDuckID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(reverbLoCutID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(reverbHiCutID)->getCurrentDenormalizedValue(),
-                                          getParameterPntr(reverbToggleID)->getCurrentNormalizedValue() >= 0.5f);
-
+    for (auto* pntr : parameterPointers)
+        pntr->doAction();
+    
     const auto compressorKnobValue = getParameterPntr(compressorAmountID)->getCurrentDenormalizedValue();
     
     engine.updateCompressor (juce::jmap (compressorKnobValue, 0.0f, -60.0f),  // threshold (dB)

@@ -85,37 +85,32 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 
 int ImogenAudioProcessor::getNumPrograms()
 {
-    //return std::max (1, availablePresets.size());
+    return 1;
 }
 
 int ImogenAudioProcessor::getCurrentProgram()
 {
- //   return currentProgram.load();
+    return 1;
 }
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
 {
-    if (index >= getNumPrograms())
-        return;
-    
-//    if (index != currentProgram.load())
-//        internalEventHandler.recieveLoadPreset (getProgramName (index));
+    juce::ignoreUnused (index);
 }
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
 {
-//    if (availablePresets.isEmpty() || index < 0 || index >= availablePresets.size())
-//        return {};
-//
-//    return removePresetFileExtensionIfThere (availablePresets.getUnchecked(index).getFileName());
+    juce::ignoreUnused (index);
+    return { };
 }
 
 int ImogenAudioProcessor::indexOfProgram (const juce::String& name) const
 {
-//    return name.isEmpty() ? -1 : availablePresets.indexOf (name);
+    juce::ignoreUnused (name);
+    return 0;
 }
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
-//    renamePreset (getProgramName (index), newName);
+    juce::ignoreUnused (index, newName);
 }

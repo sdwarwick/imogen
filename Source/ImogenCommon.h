@@ -27,6 +27,8 @@
   #define IMOGEN_REMOTE_APP 0
 #endif
 
+#include "Shared-code/bv_SharedCode/bv_SharedCode.h"
+
 
 namespace Imogen
 {
@@ -212,6 +214,9 @@ static inline juce::String getParameterNameVerbose (ParameterID param)
         case (delayDryWetID):          return TRANS ("Delay dry/wet");
     }
 }
+
+
+static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
 
 
 static inline juce::File findAppropriateTranslationFile()

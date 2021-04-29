@@ -25,10 +25,6 @@
 #include "bv_ImogenEngine.h"
 
 
-// multiplicative smoothing cannot ever actually reach 0
-#define bvie_MIN_SMOOTHED_GAIN 0.0000001
-#define _SMOOTHING_ZERO_CHECK(inputGain) std::max(SampleType(bvie_MIN_SMOOTHED_GAIN), SampleType (inputGain))
-
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>
 
@@ -37,13 +33,6 @@ namespace bav
 {
     
     
-bvie_VOID_TEMPLATE::updateBypassStates (bool leadIsBypassed, bool harmoniesAreBypassed)
-{
-    leadBypass.store (leadIsBypassed);
-    harmonyBypass.store (harmoniesAreBypassed);
-}
-    
-
 bvie_VOID_TEMPLATE::setModulatorSource (const int newSource)
 {
     jassert (newSource == 1 || newSource == 2 || newSource == 3);
@@ -53,26 +42,49 @@ bvie_VOID_TEMPLATE::setModulatorSource (const int newSource)
 
 bvie_VOID_TEMPLATE::updateInputGain (const float newInGain)
 {
-    inputGain.setTargetValue (_SMOOTHING_ZERO_CHECK (newInGain));
+    inputGain.setTargetValue (smoothingZeroCheck (newInGain));
 }
 
 bvie_VOID_TEMPLATE::updateOutputGain (const float newOutGain)
 {
-    outputGain.setTargetValue (_SMOOTHING_ZERO_CHECK (newOutGain));
+    outputGain.setTargetValue (smoothingZeroCheck (newOutGain));
 }
 
 
-bvie_VOID_TEMPLATE::updateDryVoxPan  (const int newMidiPan)
+bvie_VOID_TEMPLATE::updateDryVoxPan  (int newMidiPan)
 {
+    jassert (newMidiPan >= 0 && newMidiPan <= 127);
     dryPanner.setMidiPan (newMidiPan);
-    dryLgain.setTargetValue (_SMOOTHING_ZERO_CHECK (dryPanner.getLeftGain()));
-    dryRgain.setTargetValue (_SMOOTHING_ZERO_CHECK (dryPanner.getRightGain()));
+    dryLgain.setTargetValue (smoothingZeroCheck (dryPanner.getLeftGain()));
+    dryRgain.setTargetValue (smoothingZeroCheck (dryPanner.getRightGain()));
 }
 
 
-bvie_VOID_TEMPLATE::updateDryWet (const int percentWet)
+bvie_VOID_TEMPLATE::updateDryWet (float percentWet)
 {
-    dryWetMixer.setWetMixProportion (percentWet * SampleType(0.01));
+    jassert (percentWet >= 0.0f && percentWet <= 1.0f);
+    dryWetMixer.setWetMixProportion (percentWet);
+}
+
+
+bvie_VOID_TEMPLATE::updateAdsrAttack (float attack)
+{
+    
+}
+
+bvie_VOID_TEMPLATE::updateAdsrDecay  (float decay)
+{
+    
+}
+
+bvie_VOID_TEMPLATE::updateAdsrSustain (float sustain)
+{
+    
+}
+
+bvie_VOID_TEMPLATE::updateAdsrRelease (float release)
+{
+    
 }
 
 
@@ -186,10 +198,7 @@ bvie_VOID_TEMPLATE::updateDelay (int dryWet, int delayInSamples, bool isOn)
     delay.setDryWet (dryWet);
 }
 
-
 #undef bvie_VOID_TEMPLATE
-#undef bvie_MIN_SMOOTHED_GAIN
-#undef _SMOOTHING_ZERO_CHECK
 
 
 }  // namespace

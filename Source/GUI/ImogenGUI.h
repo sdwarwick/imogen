@@ -73,7 +73,6 @@ private:
     inline void makePresetMenu (juce::ComboBox& box);
     void createParameters();
     
-    inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
     void rescanPresetsFolder();
     void loadPreset   (const juce::String& presetName);
     void savePreset   (const juce::String& presetName);

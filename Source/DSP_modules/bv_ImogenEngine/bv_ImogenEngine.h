@@ -39,6 +39,7 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+
 namespace bav
 {
 
@@ -66,8 +67,13 @@ public:
     
     void recieveExternalPitchbend (const int bend);
     
-    void updateDryWet     (const int percentWet);
-    void updateDryVoxPan  (const int newMidiPan);
+    void updateDryWet      (float percentWet);
+    void updateDryVoxPan   (int newMidiPan);
+    void updateAdsrAttack  (float attack);
+    void updateAdsrDecay   (float decay);
+    void updateAdsrSustain (float sustain);
+    void updateAdsrRelease (float release);
+    
     void updateAdsr       (const float attack, const float decay, const float sustain, const float release);
     void updateStereoWidth(const int newStereoWidth, const int lowestPannedNote);
     void updateMidiVelocitySensitivity(const int newSensitivity);
@@ -84,7 +90,8 @@ public:
     void updateInputGain  (const float newInGain);
     void updateOutputGain (const float newOutGain);
     void updateAftertouchGainOnOff (const bool shouldBeOn);
-    void updateBypassStates (bool leadIsBypassed, bool harmoniesAreBypassed);
+    void updateLeadBypass (bool leadIsBypassed) { leadBypass.store (leadIsBypassed); }
+    void updateHarmonyBypass (bool harmoniesAreBypassed) { harmonyBypass.store (harmoniesAreBypassed); }
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource);
@@ -106,6 +113,14 @@ private:
     // 1 - right channel only
     // 2 - mix all input channels to mono
     std::atomic<int> modulatorInput;
+    
+    static constexpr auto minSmoothedGain = SampleType(0.0000001);
+    
+    template<typename Type>
+    inline Type smoothingZeroCheck (Type value)
+    {
+        return std::max (minSmoothedGain, static_cast<SampleType>(value));
+    }
     
     void renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages) override;
     

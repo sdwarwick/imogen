@@ -126,7 +126,7 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
     rescanPresetsFolder();
 
     const auto filename = bav::addFileExtensionIfMissing (presetName, getPresetFileExtension());
-    const auto presetToLoad = getPresetsFolder().getChildFile (filename);
+    const auto presetToLoad = presetsFolder().getChildFile (filename);
 
     if (! presetToLoad.existsAsFile())
     {
@@ -148,7 +148,7 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 {
     rescanPresetsFolder();
     
-    auto presetToDelete = getPresetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, getPresetFileExtension()));
+    auto presetToDelete = presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, getPresetFileExtension()));
 
     if (presetToDelete.existsAsFile())
     {
@@ -166,7 +166,7 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
     
     const auto extension = getPresetFileExtension();
 
-    const auto presetToLoad = getPresetsFolder().getChildFile (bav::addFileExtensionIfMissing (previousName, extension));
+    const auto presetToLoad = presetsFolder().getChildFile (bav::addFileExtensionIfMissing (previousName, extension));
 
     if (! presetToLoad.existsAsFile())
     {
@@ -182,7 +182,7 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
     const auto name = bav::removeFileExtensionIfThere (newName, extension);
 
     xml->setAttribute ("presetName", name);
-    xml->writeTo (getPresetsFolder().getChildFile (name + extension));
+    xml->writeTo (presetsFolder().getChildFile (name + extension));
 
     rescanPresetsFolder();
 }

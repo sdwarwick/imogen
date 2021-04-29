@@ -284,6 +284,26 @@ void ImogenAudioProcessor::initializeParameterPointers()
 }
 
 
+template <typename SampleType>
+void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine)
+{
+    // these functions will all be called with the current denormalized value as a float -- so just static_cast to int, etc
+    
+    getParameterPntr(mainBypassID)->actionableFunction = [&](float value) { juce::ignoreUnused(value); };
+    
+    getParameterPntr(inputSourceID)->actionableFunction = [&](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
+    getParameterPntr(mainBypassID)->actionableFunction = [&](float value) { engine.updateLeadBypass (value >= 0.5f); };
+    getParameterPntr(leadBypassID)->actionableFunction = [&](float value) { engine.updateLeadBypass (value >= 0.5f); };
+    getParameterPntr(harmonyBypassID)->actionableFunction = [&](float value) { engine.updateHarmonyBypass (value >= 0.5f); };
+    getParameterPntr(dryPanID)->actionableFunction = [&](float value) { engine.updateDryVoxPan (juce::jlimit (0, 127, juce::roundToInt (value))); };
+    getParameterPntr(adsrAttackID)->actionableFunction = [&](float value) { engine.updateAdsrAttack (value); };
+    getParameterPntr(adsrDecayID)->actionableFunction = [&](float value) { engine.updateAdsrDecay (value); };
+    getParameterPntr(adsrSustainID)->actionableFunction = [&](float value) { engine.updateAdsrSustain (value); };
+    getParameterPntr(adsrReleaseID)->actionableFunction = [&](float value) { engine.updateAdsrRelease (value); };
+}
+template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>& engine);
+template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>& engine);
+
 /*===========================================================================================================================
     Returns one of the processor's parameter objects, referenced by its parameterID.
  ============================================================================================================================*/
@@ -291,7 +311,7 @@ void ImogenAudioProcessor::initializeParameterPointers()
 bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
     for (auto* pntr : parameterPointers)
-        if (ParameterID(pntr->key()) == paramID)
+        if (static_cast<ParameterID>(pntr->key()) == paramID)
             return pntr;
     
     return nullptr;

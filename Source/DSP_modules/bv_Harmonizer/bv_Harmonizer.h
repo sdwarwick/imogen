@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "bv_SynthBase/bv_SynthBase.h"  // this file includes the bv_SharedCode header
+#include "bv_SynthBase/bv_SynthBase.h"
 #include "PSOLA/granular_resynthesis.h"
 #include "PSOLA/psola_analyzer.h"
 #include "PSOLA/psola_shifter.h"
