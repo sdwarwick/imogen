@@ -24,7 +24,7 @@
 #include "MainComponent.h"
 
 
-MainComponent::MainComponent(): oscParser(gui())
+MainComponent::MainComponent()
 {
     this->setBufferedToImage (true);
     
@@ -56,59 +56,18 @@ MainComponent::~MainComponent()
 
 
 /*=========================================================================================================
-    ImogenEventSender functions -- these calls are simply forwarded to the OSC sender's ImogenEventSender interface.
+    ProcessorStateChangeSender functions -- these calls are simply forwarded to the OSC sender's ImogenEventSender interface.
  =========================================================================================================*/
 
-void MainComponent::sendParameterChange (ParameterID paramID, float newValue)
+void MainComponent::sendParameterChange  (ParameterID param, float newValue)
 {
-    oscSender.sendParameterChange (paramID, newValue);
+    
 }
 
-void MainComponent::sendParameterChangeGestureStart (ParameterID paramID)
+void MainComponent::sendParameterGesture (ParameterID param, bool gestureStart)
 {
-    oscSender.sendParameterChangeGestureStart (paramID);
+    
 }
-
-void MainComponent::sendParameterChangeGestureEnd (ParameterID paramID)
-{
-    oscSender.sendParameterChangeGestureEnd (paramID);
-}
-
-void MainComponent::sendEditorPitchbend (int wheelValue) 
-{
-    oscSender.sendEditorPitchbend (wheelValue);
-}
-
-void MainComponent::sendMidiLatch (bool shouldBeLatched) 
-{
-    oscSender.sendMidiLatch (shouldBeLatched);
-}
-
-void MainComponent::sendKillAllMidiEvent()
-{
-    oscSender.sendKillAllMidiEvent();
-}
-
-void MainComponent::sendLoadPreset (const juce::String& presetName)
-{
-    oscSender.sendLoadPreset (presetName);
-}
-
-void MainComponent::sendSavePreset (const juce::String& presetName) 
-{
-    oscSender.sendSavePreset (presetName);
-}
-
-void MainComponent::sendDeletePreset (const juce::String& presetName) 
-{
-    oscSender.sendDeletePreset (presetName);
-}
-
-void MainComponent::sendEnableAbletonLink (bool shouldBeEnabled)
-{
-    oscSender.sendEnableAbletonLink (shouldBeEnabled);
-}
-
 
 /*=========================================================================================================
     juce::Component functions

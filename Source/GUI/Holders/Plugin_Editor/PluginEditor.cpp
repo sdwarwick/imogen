@@ -52,6 +52,21 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 
 
 /*=========================================================================================================
+    ProcessorStateChangeSender functions
+ =========================================================================================================*/
+
+void ImogenAudioProcessorEditor::sendParameterChange  (ParameterID param, float newValue)
+{
+    imgnProcessor.recieveExternalParameterChange (param, newValue);
+}
+
+void ImogenAudioProcessorEditor::sendParameterGesture (ParameterID param, bool gestureStart)
+{
+    imgnProcessor.recieveExternalParameterGesture (param, gestureStart);
+}
+
+
+/*=========================================================================================================
     juce::Component functions
  =========================================================================================================*/
 
@@ -66,64 +81,4 @@ void ImogenAudioProcessorEditor::resized()
     imgnProcessor.saveEditorSize (getWidth(), getHeight());
     
     gui()->setBounds (0, 0, getWidth(), getHeight());
-}
-
-
-/*=========================================================================================================
- ImogenEventSender functions -- these calls are simply forwarded to the processor's ImogenEventReciever interface.
- =========================================================================================================*/
-
-void ImogenAudioProcessorEditor::sendParameterChange (ParameterID paramID, float newValue)
-{
-    imgnProcessor.recieveParameterChange (paramID, newValue);
-}
-
-void ImogenAudioProcessorEditor::sendParameterChangeGestureStart (ParameterID paramID)
-{
-    imgnProcessor.recieveParameterChangeGestureStart (paramID);
-}
-
-void ImogenAudioProcessorEditor::sendParameterChangeGestureEnd   (ParameterID paramID)
-{
-    imgnProcessor.recieveParameterChangeGestureEnd (paramID);
-}
-
-void ImogenAudioProcessorEditor::sendEditorPitchbend (int wheelValue)
-{
-    imgnProcessor.recieveEditorPitchbendEvent (wheelValue);
-}
-
-void ImogenAudioProcessorEditor::sendMidiLatch (bool shouldBeLatched)
-{
-    imgnProcessor.recieveMidiLatchEvent (shouldBeLatched);
-}
-
-void ImogenAudioProcessorEditor::sendKillAllMidiEvent()
-{
-    imgnProcessor.recieveKillAllMidiEvent();
-}
-
-void ImogenAudioProcessorEditor::sendLoadPreset (const juce::String& presetName)
-{
-    imgnProcessor.recieveLoadPreset (presetName);
-}
-
-void ImogenAudioProcessorEditor::sendSavePreset (const juce::String& presetName)
-{
-    imgnProcessor.recieveSavePreset (presetName);
-}
-
-void ImogenAudioProcessorEditor::sendDeletePreset (const juce::String& presetName)
-{
-    imgnProcessor.recieveDeletePreset (presetName);
-}
-
-void ImogenAudioProcessorEditor::sendEnableAbletonLink (bool shouldBeEnabled)
-{
-    imgnProcessor.recieveAbletonLinkChange (shouldBeEnabled);
-}
-
-void ImogenAudioProcessorEditor::sendErrorCode (ErrorCode code)
-{
-    imgnProcessor.recieveErrorCode (code);
 }

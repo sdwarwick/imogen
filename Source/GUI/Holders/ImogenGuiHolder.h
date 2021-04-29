@@ -18,7 +18,7 @@
  @2021 by Ben Vining. All rights reserved.
  
  ImogenGuiHolder.h: This file defines a class that holds an ImogenGui object and acts as its interface with the outside world.
-    Note that ImogenGuiHolder is an abstract class, because it inherits from ImogenEventSender and doesn't implement any of its pure virtual methods.
+    Note that ImogenGuiHolder is an abstract class, because it inherits from ProcessorStateChangeSender and doesn't implement any of its pure virtual methods.
  
  ======================================================================================================================================================*/
 
@@ -27,42 +27,16 @@
 
 #include "GUI/ImogenGUI.h"
 
-
+ 
 using namespace Imogen;
 
 
-class ImogenGuiHolder  :    public ImogenEventSender,
-                            public ImogenEventReciever
+class ImogenGuiHolder  :    public ProcessorStateChangeSender
 {
 public:
     ImogenGuiHolder(): p_gui(this) { }
     
-    virtual ~ImogenGuiHolder() override = default;
-    
-    /*=========================================================================================*/
-    /* ImogenEventReciever functions -- these calls are simply forwarded to the ImogenGUI object's ImogenEventReciever interface. */
-    
-    void recieveParameterChange (ParameterID paramID, float newValue) override final { p_gui.recieveParameterChange (paramID, newValue); }
-    
-    void recieveParameterChangeGestureStart (ParameterID paramID) override final { p_gui.recieveParameterChangeGestureStart (paramID); }
-    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final { p_gui.recieveParameterChangeGestureEnd   (paramID); }
-    
-    void recieveLoadPreset   (const juce::String& newPresetName) override final { p_gui.recieveLoadPreset (newPresetName); }
-    void recieveSavePreset   (const juce::String& newPresetName) override final { p_gui.recieveSavePreset (newPresetName); }
-    void recieveDeletePreset (const juce::String& newPresetName) override final { p_gui.recieveDeletePreset (newPresetName); }
-    
-    void recieveMTSconnectionChange (bool isNowConnected) override final { p_gui.recieveMTSconnectionChange (isNowConnected); }
-    void recieveMTSscaleChange (const juce::String& newScaleName) override final { p_gui.recieveMTSscaleChange (newScaleName); }
-    
-    void recieveAbletonLinkChange (bool isNowEnabled) override final { p_gui.recieveAbletonLinkChange (isNowEnabled); }
-    
-    void recieveMidiLatchEvent (bool isNowLatched) override final { p_gui.recieveMidiLatchEvent (isNowLatched); }
-    
-    void recieveKillAllMidiEvent() override final { p_gui.recieveKillAllMidiEvent(); }
-    
-    void recieveEditorPitchbendEvent (int wheelValue) override final { p_gui.recieveEditorPitchbendEvent (wheelValue); }
-    
-    void recieveErrorCode (ErrorCode code) override final { p_gui.recieveErrorCode (code); }
+    virtual ~ImogenGuiHolder() = default;
     
     /*=========================================================================================*/
     

@@ -25,6 +25,19 @@
 #include "PluginProcessor.h"
 
 
+void ImogenAudioProcessor::recieveExternalParameterChange (ParameterID param, float newValue)
+{
+    getParameterPntr(param)->orig()->setValueNotifyingHost (newValue);
+}
+
+void ImogenAudioProcessor::recieveExternalParameterGesture (ParameterID param, bool gestureStart)
+{
+    if (gestureStart)
+        getParameterPntr(param)->orig()->beginChangeGesture();
+    else
+        getParameterPntr(param)->orig()->endChangeGesture();
+}
+
 
 /*===========================================================================================================================
     Creates Imogen's parameter tree.
@@ -316,26 +329,6 @@ template bav::BoolParameter*  ImogenAudioProcessor::makeParameterPointer (const 
 
 
 /*===========================================================================================================================
-    Initializes individual listener callbacks for each parameter.
- ============================================================================================================================*/
-
-void ImogenAudioProcessor::initializeParameterListeners()
-{
-    parameterMessengers.reserve (numParams);
-           
-    for (int i = 0; i < numParams; ++i)
-        addParameterMessenger (ParameterID(i));
-}
-
-void ImogenAudioProcessor::addParameterMessenger (ParameterID paramID)
-{
-    auto* param = getParameterPntr (paramID);
-    auto& messenger { parameterMessengers.emplace_back (ParameterMessenger (*this, paramChanges, param, paramID)) };
-    param->orig()->addListener (&messenger);
-}
-
-
-/*===========================================================================================================================
     Returns one of the processor's parameter objects, referenced by its parameterID.
  ============================================================================================================================*/
 
@@ -463,29 +456,27 @@ void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<SampleType>& a
 {
     activeEngine.updateBypassStates (leadBypass->get(), harmonyBypass->get());
 
-    activeEngine.updateInputGain (juce::Decibels::decibelsToGain (inputGain->get()));
-    activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (outputGain->get()));
-    activeEngine.updateDryVoxPan (dryPan->get());
-    activeEngine.updateDryWet (dryWet->get());
-    activeEngine.updateAdsr (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
-    activeEngine.updateStereoWidth (stereoWidth->get(), lowestPanned->get());
+    activeEngine.updateInputGain               (juce::Decibels::decibelsToGain (inputGain->get()));
+    activeEngine.updateOutputGain              (juce::Decibels::decibelsToGain (outputGain->get()));
+    activeEngine.updateDryVoxPan               (dryPan->get());
+    activeEngine.updateDryWet                  (dryWet->get());
+    activeEngine.updateAdsr                    (adsrAttack->get(), adsrDecay->get(), adsrSustain->get(), adsrRelease->get());
+    activeEngine.updateStereoWidth             (stereoWidth->get(), lowestPanned->get());
     activeEngine.updateMidiVelocitySensitivity (velocitySens->get());
-    activeEngine.updatePitchbendRange (pitchBendRange->get());
-    activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
-    activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), descantInterval->get());
-    activeEngine.updateNoteStealing (voiceStealing->get());
-    activeEngine.updateAftertouchGainOnOff (aftertouchGainToggle->get());
-    activeEngine.setModulatorSource (inputSource->get());
-    activeEngine.updateLimiter (limiterToggle->get());
-    activeEngine.updateNoiseGate (noiseGateThreshold->get(), noiseGateToggle->get());
-    activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
+    activeEngine.updatePitchbendRange          (pitchBendRange->get());
+    activeEngine.updatePedalPitch              (pedalPitchIsOn->get(), pedalPitchThresh->get(), pedalPitchInterval->get());
+    activeEngine.updateDescant                 (descantIsOn->get(), descantThresh->get(), descantInterval->get());
+    activeEngine.updateNoteStealing            (voiceStealing->get());
+    activeEngine.updateAftertouchGainOnOff     (aftertouchGainToggle->get());
+    activeEngine.setModulatorSource            (inputSource->get());
+    activeEngine.updateLimiter                 (limiterToggle->get());
+    activeEngine.updateNoiseGate               (noiseGateThreshold->get(), noiseGateToggle->get());
+    activeEngine.updateDeEsser                 (deEsserAmount->get(), deEsserThresh->get(), deEsserToggle->get());
+    activeEngine.updateDelay                   (delayDryWet->get(), 2400, delayToggle->get());
+    activeEngine.updateReverb                  (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
+                                                reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
 
     updateCompressor (activeEngine, compressorToggle->get(), compressorAmount->get());
-
-    activeEngine.updateReverb (reverbDryWet->get(), reverbDecay->get(), reverbDuck->get(),
-                               reverbLoCut->get(), reverbHiCut->get(), reverbToggle->get());
-    
-    activeEngine.updateDelay (delayDryWet->get(), 2400, delayToggle->get());
 }
 ///function template instantiations...
 template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<float>& activeEngine);
@@ -493,109 +484,8 @@ template void ImogenAudioProcessor::updateAllParameters (bav::ImogenEngine<doubl
 
 
 /*===========================================================================================================================
-    Processes all the parameter changes in the message queue.
+    Processes all the non-parameter events in the message queue.
  ============================================================================================================================*/
-
-template<typename SampleType>
-void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine)
-{
-    paramChanges.getReadyMessages (currentMessages);
-    
-    bool adsr = false;
-    float adsrA = adsrAttack->get(), adsrD = adsrDecay->get(), adsrS = adsrSustain->get(), adsrR = adsrRelease->get();
-    
-    bool reverb = false;
-    int rDryWet = reverbDryWet->get();
-    float rDecay = reverbDecay->get(), rDuck = reverbDuck->get(), rLoCut = reverbLoCut->get(), rHiCut = reverbHiCut->get();
-    bool rToggle = reverbToggle->get();
-    
-    // converts a message's raw normalized value to its actual float value using the normalisable range of the selected parameter p
-#define _FLOAT_MSG getParameterPntr(ParameterID(type))->denormalize (value)
-    
-    // converts a message's raw normalized value to its actual integer value using the normalisable range of the selected parameter p
-#define _INT_MSG juce::roundToInt (_FLOAT_MSG)
-    
-    // converts a message's raw normalized value to its actual boolean true/false value
-#define _BOOL_MSG value >= 0.5f
-    
-    for (const auto& msg : currentMessages)
-    {
-        if (! msg.isValid())
-            continue;
-        
-        const float value = msg.value();
-        
-        jassert (value >= 0.0f && value <= 1.0f);
-        
-        const int type = msg.type();
-        
-        switch (type)
-        {
-            default:             continue;
-            case (mainBypassID): continue;
-            case (leadBypassID):     activeEngine.updateBypassStates (_BOOL_MSG, harmonyBypass->get());
-            case (harmonyBypassID):  activeEngine.updateBypassStates (leadBypass->get(), _BOOL_MSG);
-            case (inputSourceID):    activeEngine.setModulatorSource (_INT_MSG);
-            case (dryPanID):         activeEngine.updateDryVoxPan (_INT_MSG);
-            case (dryWetID):         activeEngine.updateDryWet (_INT_MSG);
-            case (stereoWidthID):    activeEngine.updateStereoWidth (_INT_MSG, lowestPanned->get());
-            case (lowestPannedID):   activeEngine.updateStereoWidth (stereoWidth->get(), _INT_MSG);
-            case (velocitySensID):   activeEngine.updateMidiVelocitySensitivity (_INT_MSG);
-            case (pitchBendRangeID): activeEngine.updatePitchbendRange (_INT_MSG);
-            case (voiceStealingID):         activeEngine.updateNoteStealing (_BOOL_MSG);
-            case (inputGainID):             activeEngine.updateInputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG));
-            case (outputGainID):            activeEngine.updateOutputGain (juce::Decibels::decibelsToGain (_FLOAT_MSG));
-            case (limiterToggleID):         activeEngine.updateLimiter (_BOOL_MSG);
-            case (noiseGateToggleID):       activeEngine.updateNoiseGate (noiseGateThreshold->get(), _BOOL_MSG);
-            case (noiseGateThresholdID):    activeEngine.updateNoiseGate (_FLOAT_MSG, noiseGateToggle->get());
-            case (compressorToggleID):      updateCompressor (activeEngine, _BOOL_MSG, compressorAmount->get());
-            case (compressorAmountID):      updateCompressor (activeEngine, compressorToggle->get(), _FLOAT_MSG);
-            case (aftertouchGainToggleID):  activeEngine.updateAftertouchGainOnOff (_BOOL_MSG);
-                
-            case (pedalPitchIsOnID):     activeEngine.updatePedalPitch (_BOOL_MSG, pedalPitchThresh->get(), pedalPitchInterval->get());
-            case (pedalPitchThreshID):   activeEngine.updatePedalPitch (pedalPitchIsOn->get(), _INT_MSG, pedalPitchInterval->get());
-            case (pedalPitchIntervalID): activeEngine.updatePedalPitch (pedalPitchIsOn->get(), pedalPitchThresh->get(), _INT_MSG);
-                
-            case (descantIsOnID):     activeEngine.updateDescant (_BOOL_MSG, descantThresh->get(), descantInterval->get());
-            case (descantThreshID):   activeEngine.updateDescant (descantIsOn->get(), _INT_MSG, descantInterval->get());
-            case (descantIntervalID): activeEngine.updateDescant (descantIsOn->get(), descantThresh->get(), _INT_MSG);
-                
-            case (deEsserToggleID):   activeEngine.updateDeEsser (deEsserAmount->get(), deEsserThresh->get(), _BOOL_MSG);
-            case (deEsserThreshID):   activeEngine.updateDeEsser (deEsserAmount->get(), _FLOAT_MSG, deEsserToggle->get());
-            case (deEsserAmountID):   activeEngine.updateDeEsser (_FLOAT_MSG, deEsserThresh->get(), deEsserToggle->get());
-                
-            case (reverbToggleID): rToggle = _BOOL_MSG;   reverb = true;
-            case (reverbDryWetID): rDryWet = _INT_MSG;    reverb = true;
-            case (reverbDecayID):  rDecay  = _FLOAT_MSG;  reverb = true;
-            case (reverbDuckID):   rDuck   = _FLOAT_MSG;  reverb = true;
-            case (reverbLoCutID):  rLoCut  = _FLOAT_MSG;  reverb = true;
-            case (reverbHiCutID):  rHiCut  = _FLOAT_MSG;  reverb = true;
-                
-            case (delayToggleID):   activeEngine.updateDelay (delayDryWet->get(), 2400, _BOOL_MSG);
-            case (delayDryWetID):   activeEngine.updateDelay (_INT_MSG, 2400, delayToggle->get());
-                
-            case (adsrAttackID):  adsrA = _FLOAT_MSG;     adsr = true;
-            case (adsrDecayID):   adsrD = _FLOAT_MSG;     adsr = true;
-            case (adsrSustainID): adsrS = _FLOAT_MSG;     adsr = true;
-            case (adsrReleaseID): adsrR = _FLOAT_MSG;     adsr = true;
-        }
-    }
-    
-    if (adsr)
-        activeEngine.updateAdsr (adsrA, adsrD, adsrS, adsrR);
-    
-    if (reverb)
-        activeEngine.updateReverb (rDryWet, rDecay, rDuck, rLoCut, rHiCut, rToggle);
-}
-///function template instantiations...
-template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<float>& activeEngine);
-template void ImogenAudioProcessor::processQueuedParameterChanges (bav::ImogenEngine<double>& activeEngine);
-
-#undef _FLOAT_MSG
-#undef _INT_MSG
-#undef _BOOL_MSG
-
-
 
 template<typename SampleType>
 void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)

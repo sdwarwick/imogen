@@ -27,17 +27,15 @@
 #include "Holders/ImogenGuiHolder.h"
 
 
-ImogenGUI::ImogenGUI (ImogenEventSender* h): mainDial(h), holder(h), tooltipWindow(this, msBeforeTooltip)
+ImogenGUI::ImogenGUI (ProcessorStateChangeSender* s): sender(s), tooltipWindow(this, msBeforeTooltip)
 {
-    jassert (holder != nullptr);
-    
     createParameters();
     jassert (parameters.size() == numParams);
            
     this->setBufferedToImage (true);
     
     makePresetMenu (selectPreset);
-    selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
+    // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
     
     //addAndMakeVisible(selectPreset);
     addAndMakeVisible (mainDial);
@@ -61,71 +59,112 @@ ImogenGUI::~ImogenGUI()
 
 
 /*=========================================================================================================
-    ImogenEventReciever functions
-=========================================================================================================*/
+ =========================================================================================================*/
 
-void ImogenGUI::recieveParameterChange (ParameterID paramID, float newValue)
+void ImogenGUI::rescanPresetsFolder()
 {
-    mainDial.showParameter (paramID);
-    // getParameter(paramID)->getComponent()-> ...
-    juce::ignoreUnused (newValue);
-}
-
-void ImogenGUI::recieveParameterChangeGestureStart (ParameterID paramID)
-{
-    mainDial.showParameter (paramID);
-}
-
-void ImogenGUI::recieveParameterChangeGestureEnd (ParameterID)
-{
-    mainDial.showPitchCorrection();
-}
-
-void ImogenGUI::recieveLoadPreset (const juce::String& newPresetName)
-{
-    if (newPresetName.isEmpty())
-    {
-        // clear the preset display...
-    }
-    else
-    {
-        const auto displayName = TRANS(newPresetName);
-        juce::ignoreUnused (displayName);
-    }
-}
-
-void ImogenGUI::recieveAbletonLinkChange (bool isNowEnabled)
-{
-    juce::ignoreUnused (isNowEnabled);
-}
-
-void ImogenGUI::recieveMTSconnectionChange (bool isNowConnected)
-{
-    juce::ignoreUnused (isNowConnected);
-}
-
-void ImogenGUI::recieveMTSscaleChange (const juce::String& newScaleName)
-{
-    const auto displayName = TRANS(newScaleName);
-    juce::ignoreUnused (displayName);
-}
-
-void ImogenGUI::recieveMidiLatchEvent (bool isNowLatched)
-{
-    juce::ignoreUnused (isNowLatched);
-}
-
-void ImogenGUI::recieveKillAllMidiEvent()
-{
+//    availablePresets.clearQuick();
+//    const auto xtn = getPresetFileExtension();
+//
+//    for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
+//    {
+//        const auto filename = entry.getFile().getFileName();
+//
+//        if (filename.endsWith (xtn))
+//            availablePresets.add (filename.dropLastCharacters (xtn.length()));
+//    }
     
+    repaint();
 }
 
-void ImogenGUI::recieveErrorCode (ErrorCode code)
+
+void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    switch (code)
+    const auto filename = addPresetFileExtensionIfMissing (presetName);
+
+//    auto state = tree.copyState();
+//
+//    if (state.hasProperty ("editorSize"))
+//        state.removeProperty ("editorSize", nullptr);
+//
+//    auto xml = state.createXml();
+//
+//    xml->setAttribute ("presetName", filename.dropLastCharacters (getPresetFileExtension().length()));
+//
+//    xml->writeTo (getPresetsFolder().getChildFile (filename));
+
+    rescanPresetsFolder();
+}
+
+
+void ImogenGUI::loadPreset (const juce::String& presetName)
+{
+    if (presetName.isEmpty())
     {
-        case (loadingPresetFailed): return;
+        // display error message...
+        return;
     }
+
+    rescanPresetsFolder();
+
+    const auto filename = addPresetFileExtensionIfMissing (presetName);
+    const auto presetToLoad = getPresetsFolder().getChildFile (filename);
+
+    if (! presetToLoad.existsAsFile())
+    {
+        // display error message...
+        return;
+    }
+
+//    const auto result = isUsingDoublePrecision() ? updatePluginInternalState (*juce::parseXML (presetToLoad), doubleEngine, true)
+//                                                 : updatePluginInternalState (*juce::parseXML (presetToLoad), floatEngine,  true);
+
+//    if (! result)
+//    {
+//        // display error message...
+//    }
+}
+
+
+void ImogenGUI::deletePreset (const juce::String& presetName)
+{
+    rescanPresetsFolder();
+    
+    auto presetToDelete = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (presetName));
+
+    if (presetToDelete.existsAsFile())
+    {
+        if (! presetToDelete.moveToTrash())
+            presetToDelete.deleteFile();
+
+        rescanPresetsFolder();
+    }
+}
+
+
+void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
+{
+    rescanPresetsFolder();
+
+    const auto presetToLoad = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (previousName));
+
+    if (! presetToLoad.existsAsFile())
+    {
+        // display error message...
+        return;
+    }
+
+    auto xml = juce::parseXML (presetToLoad);
+
+    if (! presetToLoad.moveToTrash())  // delete the old preset file
+        presetToLoad.deleteFile();
+
+    const auto name = removePresetFileExtensionIfThere (newName);
+
+    xml->setAttribute ("presetName", name);
+    xml->writeTo (getPresetsFolder().getChildFile (name + getPresetFileExtension()));
+
+    rescanPresetsFolder();
 }
 
 

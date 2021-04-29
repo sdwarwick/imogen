@@ -27,23 +27,19 @@
 
 #include "PluginProcessorParameters.cpp"
 #include "PluginProcessorState.cpp"
-#include "PluginProcessorEvents.cpp"
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
     translationInitializer (findAppropriateTranslationFile()),
     tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
-    abletonLink (120.0), // constructed with the initial BPM
-    oscListener (this)
+    abletonLink (120.0) // constructed with the initial BPM
 {
 #if BV_USE_NE10
-    ne10_init();  // if you use the Ne10 library, you must initialize it in your constructor like this!
+    ne10_init();
 #endif
-    
     jassert (AudioProcessor::getParameters().size() == numParams);
     initializeParameterPointers();
-    initializeParameterListeners();
     updateParameterDefaults();
            
     if (isUsingDoublePrecision())
@@ -51,33 +47,22 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     else
         initialize (floatEngine);
     
-    rescanPresetsFolder();
+    // rescanPresetsFolder();
     
-    mts_wasConnected.store (isConnectedToMtsEsp());
-    mts_lastScaleName = getScaleName();
-    
-    lastPresetName = getActivePresetName();
-    
-    abletonLink_wasEnabled.store (isAbletonLinkEnabled());
+    // lastPresetName = getActivePresetName();
     
     constexpr int timerFramerate = 30;
     Timer::startTimerHz (timerFramerate);
     
-    oscReceiver.addListener (&oscListener);
+    // oscReceiver.addListener (&oscListener);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
     Timer::stopTimer();
     
-    std::for_each (parameterMessengers.begin(), parameterMessengers.end(),
-                   [&] (ParameterMessenger& messenger)
-                   {
-                       messenger.parameter()->orig()->removeListener (&messenger);
-                   });
-    
     oscSender.disconnect();
-    oscReceiver.removeListener (&oscListener);
+    // oscReceiver.removeListener (&oscListener);
     oscReceiver.disconnect();
 }
 
@@ -86,46 +71,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 void ImogenAudioProcessor::timerCallback()
 {
-    const auto mts_isConnected = isConnectedToMtsEsp();
-    if (mts_isConnected != mts_wasConnected.load())
-    {
-        if (auto* editor = getActiveGui())
-            editor->recieveMTSconnectionChange (mts_isConnected);
-        
-        mts_wasConnected.store (mts_isConnected);
-    }
-    
-    const auto scaleName = getScaleName();
-    if (scaleName != mts_lastScaleName)
-    {
-        if (auto* editor = getActiveGui())
-            editor->recieveMTSscaleChange (scaleName);
-        
-        mts_lastScaleName = scaleName;
-    }
-    
-    const auto presetName = getActivePresetName();
-    if (presetName != lastPresetName)
-    {
-        if (auto* editor = getActiveGui())
-            editor->recieveLoadPreset (presetName);
-        
-        lastPresetName = presetName;
-    }
-    
-    const auto abletonLink_isEnabled = isAbletonLinkEnabled();
-    if (abletonLink_isEnabled != abletonLink_wasEnabled.load())
-    {
-        if (auto* editor = getActiveGui())
-            editor->recieveAbletonLinkChange (abletonLink_isEnabled);
-        
-        abletonLink_wasEnabled.store (abletonLink_isEnabled);
-    }
-    
-    /* send editor state data...
-     - latest intonation (pitch as string, + num cents sharp/flat)
-     - levels for all level / gain reduction meters
-    */
+
 }
 
 /*===========================================================================================================

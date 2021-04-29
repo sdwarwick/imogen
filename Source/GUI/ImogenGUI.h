@@ -30,41 +30,20 @@
 
 #include "BinaryData.h"
 
+#include "bv_SharedCode/bv_SharedCode.h"
+
 
 using namespace Imogen;
 
 
-class ImogenGUI  :     public juce::Component,
-                       public ImogenEventReciever
+class ImogenGUI  :     public juce::Component
 {
 public:
     
-    ImogenGUI (ImogenEventSender* h);
+    ImogenGUI (ProcessorStateChangeSender* s);
     
     virtual ~ImogenGUI() override;
-    
-    /*=========================================================================================*/
-    /* ImogenEventReciever functions */
-    
-    void recieveParameterChange             (ParameterID paramID, float newValue) override final;
-    void recieveParameterChangeGestureStart (ParameterID paramID) override final;
-    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
-    
-    void recieveLoadPreset   (const juce::String& newPresetName) override final;
-    void recieveSavePreset   (const juce::String&) override final { }  // these do nothing on the GUI side...
-    void recieveDeletePreset (const juce::String&) override final { }  // these do nothing on the GUI side...
-    
-    void recieveAbletonLinkChange (bool isNowEnabled) override final;
-    
-    void recieveMTSconnectionChange (bool isNowConnected) override final;
-    void recieveMTSscaleChange (const juce::String& newScaleName) override final;
-    
-    void recieveMidiLatchEvent (bool isNowLatched) override final;
-    void recieveKillAllMidiEvent() override final;
-    void recieveEditorPitchbendEvent (int) override final { }  // this does nothing on the GUI side...
-    
-    void recieveErrorCode (ErrorCode code) override final;
-    
+     
     /*=========================================================================================*/
     /* juce::Component functions */
     
@@ -88,15 +67,23 @@ public:
 private:
     inline void makePresetMenu (juce::ComboBox& box);
     void createParameters();
+    
+    inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
+    void rescanPresetsFolder();
+    void loadPreset   (const juce::String& presetName);
+    void savePreset   (const juce::String& presetName);
+    void renamePreset (const juce::String& previousName, const juce::String& newName);
+    void deletePreset (const juce::String& presetName);
+    
     /*=========================================================================================*/
+    
+    ProcessorStateChangeSender* const sender;
     
     ImogenDialComponent mainDial;
     
     juce::ComboBox selectPreset;
     
     bav::ImogenLookAndFeel lookAndFeel;
-    
-    ImogenEventSender* const holder;
     
     juce::TooltipWindow tooltipWindow;
     static constexpr int msBeforeTooltip = 700;

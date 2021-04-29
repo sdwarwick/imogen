@@ -43,23 +43,10 @@ public:
     ~MainComponent() override;
 
     /*=========================================================================================*/
-    /* ImogenEventSender functions */
+    /* ProcessorStateChangeSender functions */
     
-    void sendParameterChange (ParameterID paramID, float newValue) override final;
-    void sendParameterChangeGestureStart (ParameterID paramID) override final;
-    void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
-    
-    void sendEditorPitchbend (int wheelValue) override final;
-    void sendKillAllMidiEvent() override final;
-    void sendMidiLatch (bool shouldBeLatched) override final;
-    
-    void sendLoadPreset   (const juce::String& presetName) override final;
-    void sendSavePreset   (const juce::String& presetName) override final;
-    void sendDeletePreset (const juce::String& presetName) override final;
-    
-    void sendEnableAbletonLink (bool shouldBeEnabled) override final;
-    
-    void sendErrorCode (ErrorCode) override final { } // this does nothing in the remote app
+    void sendParameterChange  (ParameterID param, float newValue) override final;
+    void sendParameterGesture (ParameterID param, bool gestureStart) override final;
     
     /*=========================================================================================*/
     /* juce::Component functions */

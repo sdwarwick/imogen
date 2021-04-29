@@ -42,8 +42,7 @@ class ImogenAudioProcessorEditor; // forward declaration...
 */
 
 class ImogenAudioProcessor    : public juce::AudioProcessor,
-                                public ImogenEventReciever,
-                                public ImogenEventSender,
+                                public ProcessorStateChangeReciever,
                                 private juce::Timer
 {
     using Parameter      = bav::Parameter;
@@ -63,48 +62,10 @@ public:
     void timerCallback() override final;
     
     /*=========================================================================================*/
-    /* ImogenEventReciever functions */
+    /* ProcessorStateChangeReciever functions -- for external sources (GUI, OSC) to update the processor's state */
     
-    void recieveParameterChange             (ParameterID paramID, float newValue) override final;
-    void recieveParameterChangeGestureStart (ParameterID paramID) override final;
-    void recieveParameterChangeGestureEnd   (ParameterID paramID) override final;
-    
-    void recieveAbletonLinkChange (bool isNowEnabled) override final;
-    
-    void recieveMidiLatchEvent (bool isNowLatched) override final;
-    void recieveKillAllMidiEvent() override final;
-    void recieveEditorPitchbendEvent (int wheelValue) override final;
-    
-    void recieveMTSconnectionChange (bool) override final { }  // these do nothing on the processor side...
-    void recieveMTSscaleChange (const juce::String&) override final { }
-    
-    void recieveLoadPreset   (const juce::String& presetName) override final;
-    void recieveSavePreset   (const juce::String& presetName) override final;
-    void recieveDeletePreset (const juce::String& presetName) override final;
-    void recieveRenamePreset (const juce::String& previousName, const juce::String& newName);
-    
-    void recieveErrorCode (ErrorCode) override final { }  // this does nothing on the processor side
-    
-    
-    /*=========================================================================================*/
-    /* ImogenEventSender functions */
-    
-    void sendParameterChange             (ParameterID paramID, float newValue) override final;
-    void sendParameterChangeGestureStart (ParameterID paramID) override final;
-    void sendParameterChangeGestureEnd   (ParameterID paramID) override final;
-    
-    void sendLoadPreset   (const juce::String&) override final;
-    void sendSavePreset   (const juce::String&) override final { }  // these do nothing on the processor side...
-    void sendDeletePreset (const juce::String&) override final { }  // these do nothing on the processor side...
-    
-    void sendEditorPitchbend (int) override final { }  // this does nothing on the processor side...
-    void sendMidiLatch (bool) override final;
-    void sendKillAllMidiEvent() override final;
-    
-    void sendEnableAbletonLink (bool) override final;
-    
-    void sendErrorCode (ErrorCode code) override final;
-    
+    void recieveExternalParameterChange  (ParameterID param, float newValue) override final;
+    void recieveExternalParameterGesture (ParameterID param, bool gestureStart) override final;
     
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */
@@ -153,14 +114,6 @@ public:
     
     /*=========================================================================================*/
     
-    inline juce::File getPresetsFolder() const { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
-    
-    juce::String getActivePresetName();
-    
-    void rescanPresetsFolder();
-    
-    /*=========================================================================================*/
-    
     inline bool isMidiLatched() const;
     
     bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
@@ -179,7 +132,6 @@ public:
     
     /*=========================================================================================*/
     
-    
 private:
     
     /*=========================================================================================*/
@@ -192,8 +144,6 @@ private:
     
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     void initializeParameterPointers();
-    void initializeParameterListeners();
-    void addParameterMessenger (ParameterID paramID);
     
     template<typename PointerType>
     PointerType makeParameterPointer (const juce::String& name);
@@ -215,9 +165,6 @@ private:
     
     template<typename SampleType>
     void updateAllParameters (bav::ImogenEngine<SampleType>& activeEngine);
-    
-    template<typename SampleType>
-    void processQueuedParameterChanges (bav::ImogenEngine<SampleType>& activeEngine);
     
     template<typename SampleType>
     void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
@@ -265,74 +212,14 @@ private:
     
     juce::Point<int> savedEditorSize;
     
-    juce::Array<juce::File> availablePresets;
-    
-    std::atomic<int> currentProgram;  // stores the current "program" number. -1 if no preset is active.
-    
-    std::atomic<bool> mts_wasConnected;
-    juce::String mts_lastScaleName;
-    
-    juce::String lastPresetName;
-    
-    std::atomic<bool> abletonLink_wasEnabled;
-    
-    ImogenOSCSender   oscSender;
-    
-    juce::OSCReceiver oscReceiver;
-    ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
-    
     static constexpr auto msgQueueSize = size_t(100);
     bav::MessageQueue<msgQueueSize> nonParamEvents;  // this queue is SPSC; this is only for events flowing from the editor into the processor
-    bav::MessageQueue<msgQueueSize> paramChanges;
     
     juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
-    /*=========================================================================================*/
-    
-    /* simple attachment class that listens for chages in one specific parameter and pushes messages with the appropriate key value into the queue */
-    class ParameterMessenger :  public juce::AudioProcessorParameter::Listener
-    {
-        using MsgQ = bav::MessageQueue<msgQueueSize>;
-        
-    public:
-        ParameterMessenger(ImogenEventReciever& r, MsgQ& queue, bav::Parameter* p, ParameterID paramIDtoListen)
-        : reciever(r), q(queue), param(p), paramID(paramIDtoListen)
-        {
-            jassert (param != nullptr);
-        }
-        
-        void parameterValueChanged (int parameterIndex, float newValue) override
-        {
-            juce::ignoreUnused (parameterIndex);
-            
-            //value = param->normalize(value);
-            jassert (newValue >= 0.0f && newValue <= 1.0f);
-            q.pushMessage (paramID, newValue);  // the message will store a normalized value
-            reciever.recieveParameterChange (paramID, newValue);
-        }
-        
-        void parameterGestureChanged (int parameterIndex, bool gestureIsStarting) override
-        {
-            juce::ignoreUnused (parameterIndex);
-            
-            if (gestureIsStarting)
-                reciever.recieveParameterChangeGestureStart (paramID);
-            else
-                reciever.recieveParameterChangeGestureEnd (paramID);
-        }
-        
-        bav::Parameter* parameter() const noexcept { return param; }
-        
-    private:
-        ImogenEventReciever& reciever;
-        MsgQ& q;
-        bav::Parameter* const param;
-        const ParameterID paramID;
-    };
-    
-    /*=========================================================================================*/
-    
-    std::vector<ParameterMessenger> parameterMessengers; // all messengers are stored in here
+    ImogenOSCSender   oscSender;
+    juce::OSCReceiver oscReceiver;
+    // ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

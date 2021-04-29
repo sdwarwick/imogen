@@ -11,8 +11,7 @@ struct ImogenOSCSenderState
 
 
 
-class ImogenOSCSender    :   public ImogenEventSender,
-                             public juce::OSCSender
+class ImogenOSCSender    :      public juce::OSCSender
 {
 public:
     ImogenOSCSender() = default;
@@ -27,59 +26,54 @@ public:
         
     }
     
-    void sendParameterChange (ParameterID paramID, float newValue) override final
+    void sendParameterChange (ParameterID paramID, float newValue)
     {
         send (OSC::getParameterChangeOSCaddress(), int (paramID), newValue);
     }
     
-    void sendParameterChangeGestureStart (ParameterID paramID) override final
+    void sendParameterChangeGestureStart (ParameterID paramID)
     {
         send (OSC::getParamGestureStartOSCaddress(), int (paramID));
     }
     
-    void sendParameterChangeGestureEnd (ParameterID paramID) override final
+    void sendParameterChangeGestureEnd (ParameterID paramID)
     {
         send (OSC::getParamGestureEndOSCaddress(), int (paramID));
     }
     
-    void sendEditorPitchbend (int wheelValue) override final
+    void sendEditorPitchbend (int wheelValue)
     {
         juce::ignoreUnused (wheelValue);
     }
     
-    void sendMidiLatch (bool shouldBeLatched) override final
+    void sendMidiLatch (bool shouldBeLatched)
     {
         juce::ignoreUnused (shouldBeLatched);
     }
     
-    void sendKillAllMidiEvent() override final
+    void sendKillAllMidiEvent()
     {
         
     }
     
-    void sendLoadPreset   (const juce::String& presetName) override final
+    void sendLoadPreset   (const juce::String& presetName)
     {
         juce::ignoreUnused (presetName);
     }
     
-    void sendSavePreset   (const juce::String& presetName) override final
+    void sendSavePreset   (const juce::String& presetName)
     {
         juce::ignoreUnused (presetName);
     }
     
-    void sendDeletePreset (const juce::String& presetName) override final
+    void sendDeletePreset (const juce::String& presetName)
     {
         juce::ignoreUnused (presetName);
     }
     
-    void sendEnableAbletonLink (bool shouldBeEnabled) override final
+    void sendEnableAbletonLink (bool shouldBeEnabled)
     {
         juce::ignoreUnused (shouldBeEnabled);
-    }
-    
-    void sendErrorCode (ErrorCode code) override final
-    {
-        juce::ignoreUnused (code);
     }
     
 private:

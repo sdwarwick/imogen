@@ -16,7 +16,7 @@ template <typename CallbackType = juce::OSCReceiver::MessageLoopCallback>
 class ImogenOSCReciever :    public juce::OSCReceiver::Listener< CallbackType >
 {
 public:
-    ImogenOSCReciever(ImogenEventReciever* r): reciever(r) { jassert (reciever != nullptr); }
+    ImogenOSCReciever() { }
     
     
     void oscMessageReceived (const juce::OSCMessage& message) override final
@@ -29,10 +29,10 @@ public:
             {
                 const auto arg1 = message[0];  // parameter ID
                 const auto arg2 = message[1];  // new value
-                
-                if (arg1.isInt32() && arg2.isFloat32())
-                    reciever->recieveParameterChange (ParameterID (arg1.getInt32()),
-                                                      juce::jlimit (0.0f, 1.0f, arg2.getFloat32()));
+//
+//                if (arg1.isInt32() && arg2.isFloat32())
+//                    reciever->recieveParameterChange (ParameterID (arg1.getInt32()),
+//                                                      juce::jlimit (0.0f, 1.0f, arg2.getFloat32()));
             }
         }
         else if (address.matches ({ OSC::getParamGestureStartOSCaddress() }))
@@ -40,9 +40,9 @@ public:
             if (message.size() == 1)  // parameter gesture messages are expected to have 1 argument
             {
                 const auto arg = message[0];  // parameter ID
-                
-                if (arg.isInt32())
-                    reciever->recieveParameterChangeGestureStart (ParameterID (arg.getInt32()));
+//
+//                if (arg.isInt32())
+//                    reciever->recieveParameterChangeGestureStart (ParameterID (arg.getInt32()));
             }
         }
         else if (address.matches ({ OSC::getParamGestureEndOSCaddress() }))
@@ -50,9 +50,9 @@ public:
             if (message.size() == 1)  // parameter gesture messages are expected to have 1 argument
             {
                 const auto arg = message[0];  // parameter ID
-                
-                if (arg.isInt32())
-                    reciever->recieveParameterChangeGestureEnd (ParameterID (arg.getInt32()));
+//
+//                if (arg.isInt32())
+//                    reciever->recieveParameterChangeGestureEnd (ParameterID (arg.getInt32()));
             }
         }
     }
@@ -68,7 +68,6 @@ public:
     }
     
 private:
-    ImogenEventReciever* const reciever;
 };
 
 template class ImogenOSCReciever<juce::OSCReceiver::MessageLoopCallback>;

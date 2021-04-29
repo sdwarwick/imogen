@@ -23,81 +23,6 @@
 
 #include "PluginProcessor.h"
 
-
-void ImogenAudioProcessor::rescanPresetsFolder()
-{
-    const auto prevProgramName = getProgramName (currentProgram.load());
-    
-    availablePresets.clearQuick();
-    const auto xtn = getPresetFileExtension();
-    
-    for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
-    {
-        const auto filename = entry.getFile().getFileName();
-        
-        if (filename.endsWith (xtn))
-            availablePresets.add (filename.dropLastCharacters (xtn.length()));
-    }
-    
-    if (! prevProgramName.isEmpty())
-        currentProgram.store (indexOfProgram (prevProgramName));
-}
-
-
-void ImogenAudioProcessor::recieveDeletePreset (const juce::String& presetName)
-{
-    auto presetToDelete = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (presetName));
-    
-    if (presetToDelete.existsAsFile())
-    {
-        if (! presetToDelete.moveToTrash())
-            presetToDelete.deleteFile();
-    
-        rescanPresetsFolder();
-        updateHostDisplay();
-    }
-}
-
-
-void ImogenAudioProcessor::recieveRenamePreset (const juce::String& previousName, const juce::String& newName)
-{
-    rescanPresetsFolder();
-    
-    auto presetToLoad = getPresetsFolder().getChildFile (addPresetFileExtensionIfMissing (previousName));
-    
-    if (! presetToLoad.existsAsFile())
-    {
-        // sendErrorCode (ErrorCode::loadingPresetFailed);
-        return;
-    }
-    
-    auto xml = juce::parseXML (presetToLoad);
-    
-    if (! presetToLoad.moveToTrash())  // delete the old preset file
-        presetToLoad.deleteFile();
-    
-    const auto name = removePresetFileExtensionIfThere (newName);
-    
-    xml->setAttribute ("presetName", name);
-    xml->writeTo (getPresetsFolder().getChildFile (name + getPresetFileExtension()));
-    
-    rescanPresetsFolder();
-    updateHostDisplay();
-}
-
-
-juce::String ImogenAudioProcessor::getActivePresetName()
-{
-    const auto program = currentProgram.load();
-    
-    if (program == -1)
-        return {};
-    
-    return getProgramName (program);
-}
-
-
-
 /*===========================================================================================================================
     Functions for state saving
  ============================================================================================================================*/
@@ -116,25 +41,6 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     copyXmlToBinary (*xml, destData);
 }
 
-void ImogenAudioProcessor::recieveSavePreset (const juce::String& presetName) // this function can be used both to save new preset files or to update existing ones
-{
-    const auto filename = addPresetFileExtensionIfMissing (presetName);
-    
-    auto state = tree.copyState();
-    
-    if (state.hasProperty("editorSize"))
-        state.removeProperty ("editorSize", nullptr);
-    
-    auto xml = state.createXml();
-    
-    xml->setAttribute ("presetName", filename.dropLastCharacters (getPresetFileExtension().length()));
-    
-    xml->writeTo (getPresetsFolder().getChildFile (filename));
-    
-    rescanPresetsFolder();
-    updateHostDisplay();
-}
-
 
 /*===========================================================================================================================
     Functions for state loading
@@ -142,52 +48,10 @@ void ImogenAudioProcessor::recieveSavePreset (const juce::String& presetName) //
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto xmlElement (getXmlFromBinary (data, sizeInBytes));
-    
     if (isUsingDoublePrecision())
-        updatePluginInternalState (*xmlElement, doubleEngine, false);
+        updatePluginInternalState (*(getXmlFromBinary (data, sizeInBytes)), doubleEngine, false);
     else
-        updatePluginInternalState (*xmlElement, floatEngine, false);
-    
-    currentProgram.store (-1);
-}
-
-void ImogenAudioProcessor::recieveLoadPreset (const juce::String& presetName)
-{
-    if (presetName.isEmpty())
-    {
-        sendErrorCode (ErrorCode::loadingPresetFailed);
-        return;
-    }
-    
-    rescanPresetsFolder();
-    
-    const auto filename = addPresetFileExtensionIfMissing (presetName);
-    
-    auto presetToLoad = getPresetsFolder().getChildFile (filename);
-    
-    if (! presetToLoad.existsAsFile())
-    {
-        sendErrorCode (ErrorCode::loadingPresetFailed);
-        return;
-    }
-    
-    auto xmlElement = juce::parseXML (presetToLoad);
-    
-    const auto result = isUsingDoublePrecision() ? updatePluginInternalState (*xmlElement, doubleEngine, true)
-                                                 : updatePluginInternalState (*xmlElement, floatEngine,  true);
-    
-    if (result)
-    {
-        if (availablePresets.isEmpty())
-            currentProgram.store (-1);
-        else
-            currentProgram.store (indexOfProgram (filename.dropLastCharacters (getPresetFileExtension().length())));
-    }
-    else
-    {
-        sendErrorCode (ErrorCode::loadingPresetFailed);
-    }
+        updatePluginInternalState (*(getXmlFromBinary (data, sizeInBytes)), floatEngine, false);
 }
 
 
@@ -239,12 +103,12 @@ inline bool ImogenAudioProcessor::updatePluginInternalState (juce::XmlElement& n
 
 int ImogenAudioProcessor::getNumPrograms()
 {
-    return std::max (1, availablePresets.size());
+    //return std::max (1, availablePresets.size());
 }
 
 int ImogenAudioProcessor::getCurrentProgram()
 {
-    return currentProgram.load();
+ //   return currentProgram.load();
 }
 
 void ImogenAudioProcessor::setCurrentProgram (int index)
@@ -252,24 +116,24 @@ void ImogenAudioProcessor::setCurrentProgram (int index)
     if (index >= getNumPrograms())
         return;
     
-    if (index != currentProgram.load())
-        recieveLoadPreset (getProgramName (index));
+//    if (index != currentProgram.load())
+//        internalEventHandler.recieveLoadPreset (getProgramName (index));
 }
 
 const juce::String ImogenAudioProcessor::getProgramName (int index)
 {
-    if (availablePresets.isEmpty() || index < 0 || index >= availablePresets.size())
-        return {};
-    
-    return removePresetFileExtensionIfThere (availablePresets.getUnchecked(index).getFileName());
+//    if (availablePresets.isEmpty() || index < 0 || index >= availablePresets.size())
+//        return {};
+//
+//    return removePresetFileExtensionIfThere (availablePresets.getUnchecked(index).getFileName());
 }
 
 int ImogenAudioProcessor::indexOfProgram (const juce::String& name) const
 {
-    return name.isEmpty() ? -1 : availablePresets.indexOf (name);
+//    return name.isEmpty() ? -1 : availablePresets.indexOf (name);
 }
 
 void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
-    recieveRenamePreset (getProgramName (index), newName);
+//    renamePreset (getProgramName (index), newName);
 }
