@@ -28,13 +28,6 @@ message (STATUS "Welcome! I'm going to generate the Imogen Remote IDE project fo
 
 #
 
-if (DEFINED bv_ignoreAllThirdPartyLibs)
-    set (BV_IGNORE_VDSP)
-    set (BV_IGNORE_MIPP)
-endif()
-
-#
-
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)
 
 include (${Imogen_sourceDir}/imogenConfig.cmake)

@@ -39,13 +39,6 @@ set (IMOGEN_BUILD_FOR_ELK TRUE)
 
 #
 
-if (DEFINED bv_ignoreAllThirdPartyLibs)
-    set (BV_IGNORE_VDSP)
-    set (BV_IGNORE_MIPP)
-endif()
-
-#
-
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #

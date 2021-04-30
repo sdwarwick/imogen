@@ -35,8 +35,6 @@ set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivabl
 if (DEFINED bv_ignoreAllThirdPartyLibs)
 	set (bv_use_AbletonLink FALSE)
 	set (bv_use_MTS_ESP FALSE)
-	set (BV_IGNORE_VDSP)
-	set (BV_IGNORE_MIPP)
 else()
 	set (bv_use_AbletonLink TRUE)
 	set (bv_use_MTS_ESP TRUE)

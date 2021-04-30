@@ -22,6 +22,12 @@ if (NOT DEFINED IMOGEN_BUILD_FOR_ELK)
     set (IMOGEN_BUILD_FOR_ELK FALSE)
 endif()
 
+if (DEFINED bv_ignoreAllThirdPartyLibs)
+    set (BV_IGNORE_VDSP)
+    set (BV_IGNORE_MIPP)
+endif()
+
+#
 
 set (Imogen_Processor_SourceFiles
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
