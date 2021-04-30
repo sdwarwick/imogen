@@ -65,12 +65,12 @@ ImogenGUI::~ImogenGUI()
 
 void ImogenGUI::recieveParameterChange  (ParameterID param, float newValue)
 {
-    
+    juce::ignoreUnused (param, newValue);
 }
 
 void ImogenGUI::recieveParameterGesture (ParameterID param, bool gestureStart)
 {
-    
+    juce::ignoreUnused (param, gestureStart);
 }
 
 

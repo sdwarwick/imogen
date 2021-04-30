@@ -16,15 +16,15 @@ class ImogenOSCSender    :      public juce::OSCSender
 public:
     ImogenOSCSender() = default;
     
-    ImogenOSCSenderState getState() const
-    {
-        
-    }
-    
-    void setState (const ImogenOSCSenderState& state)
-    {
-        
-    }
+//    ImogenOSCSenderState getState() const
+//    {
+//
+//    }
+//
+//    void setState (const ImogenOSCSenderState& state)
+//    {
+//
+//    }
     
     void sendParameterChange (ParameterID paramID, float newValue)
     {

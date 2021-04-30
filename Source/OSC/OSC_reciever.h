@@ -57,15 +57,15 @@ public:
         }
     }
     
-    ImogenOSCRecieverState getState() const
-    {
-        
-    }
-    
-    void setState (const ImogenOSCRecieverState& state)
-    {
-        
-    }
+//    ImogenOSCRecieverState getState() const
+//    {
+//
+//    }
+//
+//    void setState (const ImogenOSCRecieverState& state)
+//    {
+//
+//    }
     
 private:
 };

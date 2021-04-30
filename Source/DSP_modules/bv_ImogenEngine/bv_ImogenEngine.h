@@ -67,77 +67,91 @@ public:
     
     void recieveExternalPitchbend (const int bend);
     
-    void updateLeadBypass (bool leadIsBypassed) { leadBypass.store (leadIsBypassed); }
-    void updateHarmonyBypass (bool harmoniesAreBypassed) { harmonyBypass.store (harmoniesAreBypassed); }
-    void updateDryWet      (float percentWet) { dryWetMixer.setWetMixProportion (percentWet); }
+    /*=========================================================================================*/
+    /* Parameter updating functions */
+    
+    void updateLeadBypass              (bool leadIsBypassed) { leadBypass.store (leadIsBypassed); }
+    void updateHarmonyBypass           (bool harmoniesAreBypassed) { harmonyBypass.store (harmoniesAreBypassed); }
+    void updateDryWet                  (float percentWet) { dryWetMixer.setWetMixProportion (percentWet); }
+    void updateLowestPannedNote        (int note) { harmonizer.updateLowestPannedNote (note); }
+    void updateMidiVelocitySensitivity (const int newSensitivity) { harmonizer.updateMidiVelocitySensitivity (newSensitivity); }
+    void updatePitchbendRange          (const int rangeST) { harmonizer.updatePitchbendSettings (rangeST, rangeST); }
+    void updatePedalToggle             (bool isOn) { harmonizer.setPedalPitch (isOn); }
+    void updatePedalThresh             (int note)  { harmonizer.setPedalPitchUpperThresh (note); }
+    void updatePedalInterval           (int st) { harmonizer.setPedalPitchInterval (st); }
+    void updateDescantToggle           (bool isOn) { harmonizer.setDescant (isOn); }
+    void updateDescantThresh           (int note)  { harmonizer.setDescantLowerThresh (note); }
+    void updateDescantInterval         (int st) { harmonizer.setDescantInterval (st); }
+    void updateNoteStealing            (const bool shouldSteal) { harmonizer.setNoteStealingEnabled (shouldSteal); }
+    void updateInputGain               (const float newInGain)  { inputGain.setTargetValue (smoothingZeroCheck (newInGain)); }
+    void updateOutputGain              (const float newOutGain) { outputGain.setTargetValue (smoothingZeroCheck (newOutGain)); }
+    void updateLimiter                 (const bool isOn) { limiterIsOn.store (isOn); }
+    void updateNoiseGateToggle         (bool isOn) { noiseGateIsOn.store (isOn); }
+    void updateNoiseGateThresh         (float threshDB) { gate.setThreshold (threshDB); }
+    void updateCompressorToggle        (bool isOn) { compressorIsOn.store (isOn); }
+    void updateAftertouchGainOnOff     (const bool shouldBeOn) { harmonizer.setAftertouchGainOnOff (shouldBeOn); }
+    void updateDeEsserToggle           (bool isOn) { deEsserIsOn.store (isOn); }
+    void updateDeEsserThresh           (float threshDB) { deEsser.setThresh (threshDB); }
+    void updateDeEsserAmount           (float amount) { deEsser.setDeEssAmount (amount); }
+    void updateReverbToggle            (bool isOn) { reverbIsOn.store (isOn); }
+    void updateReverbDryWet            (int wetPcnt) { reverb.setDryWet (wetPcnt); }
+    void updateReverbDuck              (float duck) { reverb.setDuckAmount (duck); }
+    void updateReverbLoCut             (float loCutFreq) { reverb.setLoCutFrequency (loCutFreq); }
+    void updateReverbHiCut             (float hiCutFreq) { reverb.setHiCutFrequency (hiCutFreq); }
+    void updateDelayToggle             (bool isOn) { delayIsOn.store (isOn); }
+    void updateDelayDryWet             (int pcntWet) { delay.setDryWet (pcntWet); }
+    
     void updateDryVoxPan   (int newMidiPan)
     {
         dryPanner.setMidiPan (newMidiPan);
         dryLgain.setTargetValue (smoothingZeroCheck (dryPanner.getLeftGain()));
         dryRgain.setTargetValue (smoothingZeroCheck (dryPanner.getRightGain()));
     }
+    
     void updateAdsrAttack  (float attack)
     {
         adsrSettings.attack = attack;
         harmonizer.updateADSRsettings (attack, adsrSettings.decay, adsrSettings.sustain, adsrSettings.release);
     }
+    
     void updateAdsrDecay   (float decay)
     {
         adsrSettings.decay = decay;
         harmonizer.updateADSRsettings (adsrSettings.attack, decay, adsrSettings.sustain, adsrSettings.release);
     }
+    
     void updateAdsrSustain (float sustain)
     {
         adsrSettings.sustain = sustain;
         harmonizer.updateADSRsettings (adsrSettings.attack, adsrSettings.decay, sustain, adsrSettings.release);
     }
+    
     void updateAdsrRelease (float release)
     {
         adsrSettings.release = release;
         harmonizer.updateADSRsettings (adsrSettings.attack, adsrSettings.decay, adsrSettings.sustain, release);
     }
+    
     void updateStereoWidth (int width)
     {
         harmonizer.updateStereoWidth (width);
         reverb.setWidth (static_cast<float>(width) * 0.01f);
     }
-    void updateLowestPannedNote (int note) { harmonizer.updateLowestPannedNote (note); }
-    void updateMidiVelocitySensitivity (const int newSensitivity) { harmonizer.updateMidiVelocitySensitivity (newSensitivity); }
-    void updatePitchbendRange (const int rangeST) { harmonizer.updatePitchbendSettings (rangeST, rangeST); }
-    void updatePedalToggle (bool isOn) { harmonizer.setPedalPitch (isOn); }
-    void updatePedalThresh (int note)  { harmonizer.setPedalPitchUpperThresh (note); }
-    void updatePedalInterval (int st) { harmonizer.setPedalPitchInterval (st); }
-    void updateDescantToggle (bool isOn) { harmonizer.setDescant (isOn); }
-    void updateDescantThresh (int note)  { harmonizer.setDescantLowerThresh (note); }
-    void updateDescantInterval (int st) { harmonizer.setDescantInterval (st); }
-    void updateNoteStealing (const bool shouldSteal) { harmonizer.setNoteStealingEnabled (shouldSteal); }
-    void updateInputGain  (const float newInGain)  { inputGain.setTargetValue (smoothingZeroCheck (newInGain)); }
-    void updateOutputGain (const float newOutGain) { outputGain.setTargetValue (smoothingZeroCheck (newOutGain)); }
-    void updateLimiter    (const bool isOn) { limiterIsOn.store (isOn); }
-    void updateNoiseGateToggle (bool isOn) { noiseGateIsOn.store (isOn); }
-    void updateNoiseGateThresh (float threshDB) { gate.setThreshold (threshDB); }
-    void updateCompressorToggle (bool isOn) { compressorIsOn.store (isOn); }
+    
     void updateCompressorAmount (float amount)
     {
         compressor.setThreshold (juce::jmap (amount, 0.0f, -60.0f));
         compressor.setRatio (juce::jmap (amount, 1.0f, 10.0f));
     }
-    void updateAftertouchGainOnOff (const bool shouldBeOn) { harmonizer.setAftertouchGainOnOff (shouldBeOn); }
-    void updateDeEsserToggle (bool isOn) { deEsserIsOn.store (isOn); }
-    void updateDeEsserThresh (float threshDB) { deEsser.setThresh (threshDB); }
-    void updateDeEsserAmount (float amount) { deEsser.setDeEssAmount (amount); }
-    void updateReverbToggle (bool isOn) { reverbIsOn.store (isOn); }
-    void updateReverbDryWet (int wetPcnt) { reverb.setDryWet (wetPcnt); }
+    
     void updateReverbDecay  (float decay)
     {
         reverb.setDamping (1.0f - decay);
         reverb.setRoomSize (decay);
     }
-    void updateReverbDuck (float duck) { reverb.setDuckAmount (duck); }
-    void updateReverbLoCut (float loCutFreq) { reverb.setLoCutFrequency (loCutFreq); }
-    void updateReverbHiCut (float hiCutFreq) { reverb.setHiCutFrequency (hiCutFreq); }
-    void updateDelayToggle (bool isOn) { delayIsOn.store (isOn); }
-    void updateDelayDryWet (int pcntWet) { delay.setDryWet (pcntWet); }
+    
+    
+    /*=========================================================================================*/
     
     int getModulatorSource() const noexcept { return modulatorInput.load(); }
     void setModulatorSource (const int newSource) { modulatorInput.store (newSource); }
@@ -147,26 +161,12 @@ public:
     bool isMidiLatched() const { return harmonizer.isLatched(); }
     void updateMidiLatch (const bool isLatched) { harmonizer.setMidiLatch (isLatched, true); }
     
-    
     bool isConnectedToMtsEsp() const noexcept { return harmonizer.isConnectedToMtsEsp(); }
     juce::String getScaleName() const { return harmonizer.getScaleName(); }
     
+    /*=========================================================================================*/
     
 private:
-    
-    // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
-    // 0 - left channel only
-    // 1 - right channel only
-    // 2 - mix all input channels to mono
-    std::atomic<int> modulatorInput;
-    
-    static constexpr auto minSmoothedGain = SampleType(0.0000001);
-    
-    template<typename Type>
-    inline Type smoothingZeroCheck (Type value)
-    {
-        return std::max (minSmoothedGain, static_cast<SampleType>(value));
-    }
     
     void renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages) override;
     
@@ -182,11 +182,28 @@ private:
     
     void release() override;
     
+    void resetSmoothedValues (int blocksize);
+    
+    static constexpr auto minSmoothedGain = SampleType(0.0000001);
+    template<typename Type>
+    inline Type smoothingZeroCheck (Type value)
+    {
+        return static_cast<Type> (std::max (minSmoothedGain, static_cast<SampleType>(value)));
+    }
+    
+    /*=========================================================================================*/
+    
     Harmonizer<SampleType> harmonizer;
     
     AudioBuffer monoBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
     AudioBuffer wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer dryBuffer; // this buffer is used for panning & delaying the dry signal
+    
+    // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
+    // 0 - left channel only
+    // 1 - right channel only
+    // 2 - mix all input channels to mono
+    std::atomic<int> modulatorInput;
     
     juce::dsp::ProcessSpec dspSpec;
     
@@ -218,8 +235,6 @@ private:
     std::atomic<bool> leadBypass, harmonyBypass;
     
     juce::SmoothedValue<SampleType, juce::ValueSmoothingTypes::Multiplicative> inputGain, outputGain, dryLgain, dryRgain;
-    
-    void resetSmoothedValues (int blocksize);
     
     struct ADSRsettings
     {
