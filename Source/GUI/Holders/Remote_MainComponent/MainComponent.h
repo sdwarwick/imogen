@@ -28,7 +28,9 @@
 
 #include "../ImogenGuiHolder.h"
 
-#include "../../../OSC/OSC.h"
+#if IMOGEN_USE_OSC
+  #include "../../../OSC/OSC.h"
+#endif
 
 
 using namespace Imogen;
@@ -57,10 +59,12 @@ public:
     /*=========================================================================================*/
 
 private:
+#if IMOGEN_USE_OSC
     juce::OSCReceiver oscReceiver;
     ImogenOSCReciever<juce::OSCReceiver::MessageLoopCallback> oscParser;
     
     ImogenOSCSender   oscSender;
+#endif
     
 #if JUCE_OPENGL
     OpenGLContext openGLContext;

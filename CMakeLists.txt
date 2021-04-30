@@ -32,16 +32,27 @@ set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivabl
 
 #
 
+if (DEFINED bv_ignoreAllThirdPartyLibs)
+	set (bv_use_AbletonLink FALSE)
+	set (bv_use_MTS_ESP FALSE)
+	set (BV_IGNORE_VDSP)
+	set (BV_IGNORE_MIPP)
+else()
+	set (bv_use_AbletonLink TRUE)
+	set (bv_use_MTS_ESP TRUE)
+endif()
+
+#
+
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #
 
 set (Imogen_sourceFiles
-    ${ImogenCore_sourceFiles}
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h
+    ${Imogen_sourceDir}/ImogenCommon.h
+    ${Imogen_Processor_SourceFiles}
+    ${Imogen_GUI_SourceFiles}
+    ${Imogen_OSC_SourceFiles}
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
@@ -145,6 +156,7 @@ foreach (target ${bv_formats})
 endforeach()
 
 #
+# Add binary data
 
 file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_ImogenGraphicAssets)
 juce_add_binary_data (ImogenGraphicAssets SOURCES ${Imogen_assetFiles})
@@ -157,15 +169,38 @@ target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
 
 #
 
-include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
-target_link_libraries (Imogen PRIVATE Ableton::Link)
+if (bv_use_AbletonLink)
+	include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
+	target_link_libraries (Imogen PRIVATE Ableton::Link)
+	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_ABLETON_LINK=1)
+else()
+	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_ABLETON_LINK=0)
+endif()
 
-target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
-target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
+#
+
+if (bv_use_MTS_ESP)
+	target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
+	target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
+else()
+	target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=0)
+endif()
 
 #
 
 imogenConfig_step2()
+
+#
+
+if (NOT DEFINED bv_use_OSC)
+	set (bv_use_OSC FALSE)
+endif()
+
+if (bv_use_OSC)
+	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_OSC=1)
+else()
+	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_OSC=0)
+endif()
 
 #
 

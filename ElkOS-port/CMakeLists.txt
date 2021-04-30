@@ -39,16 +39,20 @@ set (IMOGEN_BUILD_FOR_ELK TRUE)
 
 #
 
+if (DEFINED bv_ignoreAllThirdPartyLibs)
+    set (BV_IGNORE_VDSP)
+    set (BV_IGNORE_MIPP)
+endif()
+
+#
+
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #
 
 set (Imogen_sourceFiles
     ${Imogen_sourceDir}/ImogenCommon.h
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h)
+    ${Imogen_Processor_SourceFiles})
 #
 
 set (bv_formats Standalone VST3)
@@ -104,13 +108,13 @@ juce_add_plugin (ImogenHeadless
 
 #
 
-target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
+target_sources (ImogenHeadless PRIVATE ${Imogen_sourceFiles})
 
 source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
 
-target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
+target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
 
-set_target_properties (Imogen PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
+set_target_properties (ImogenHeadless PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
 
 #
 
@@ -129,15 +133,12 @@ endforeach()
 
 #
 
-target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
+target_link_libraries (ImogenHeadless PRIVATE ${thingsToLinkTo})
 
 #
 
-include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
-target_link_libraries (Imogen PRIVATE Ableton::Link)
-
-target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
-target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
+target_include_directories (ImogenHeadless PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
+target_compile_definitions (ImogenHeadless PUBLIC bvsb_USE_MTS_ESP=1)
 
 #
 
@@ -145,11 +146,14 @@ imogenConfig_step2()
 
 #
 
-target_compile_definitions (Imogen PUBLIC 
+target_compile_definitions (ImogenHeadless PUBLIC 
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
     JUCE_HEADLESS_PLUGIN_CLIENT=1
     IMOGEN_REMOTE_APP=0
     IMOGEN_HEADLESS=1
+    IMOGEN_USE_ABLETON_LINK=0
+    IMOGEN_USE_OSC=0
+    bvsb_USE_MTS_ESP=0
     )
 
 #

@@ -32,7 +32,9 @@ MainComponent::MainComponent()
     
     setSize (800, 2990);
     
+#if IMOGEN_USE_OSC
     oscReceiver.addListener (&oscParser);
+#endif
     
     // connect OSC sender & reciver...
     
@@ -44,10 +46,12 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+#if IMOGEN_USE_OSC
     oscReceiver.removeListener (&oscParser);
     
     oscSender.disconnect();
     oscReceiver.disconnect();
+#endif
     
 #if JUCE_OPENGL
     openGLContext.detach();
@@ -61,12 +65,12 @@ MainComponent::~MainComponent()
 
 void MainComponent::sendParameterChange  (ParameterID param, float newValue)
 {
-    
+    juce::ignoreUnused (param, newValue);
 }
 
 void MainComponent::sendParameterGesture (ParameterID param, bool gestureStart)
 {
-    
+    juce::ignoreUnused (param, gestureStart);
 }
 
 /*=========================================================================================================

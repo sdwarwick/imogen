@@ -32,8 +32,10 @@
 ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
     translationInitializer (findAppropriateTranslationFile()),
-    tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
-    abletonLink (120.0) // constructed with the initial BPM
+    tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
+#if IMOGEN_USE_ABLETON_LINK
+    , abletonLink (120.0) // constructed with the initial BPM
+#endif
 {
 #if BV_USE_NE10
     ne10_init();
@@ -59,9 +61,11 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 {
     Timer::stopTimer();
     
+#if IMOGEN_USE_OSC
     oscSender.disconnect();
     // oscReceiver.removeListener (&oscListener);
     oscReceiver.disconnect();
+#endif
 }
 
 /*===========================================================================================================
@@ -229,7 +233,9 @@ void ImogenAudioProcessor::changeMidiLatchState (bool isNowLatched)
     else
         floatEngine.updateMidiLatch (isNowLatched);
     
+#if IMOGEN_USE_OSC
     oscSender.sendMidiLatch (isNowLatched);
+#endif
 }
 
 bool ImogenAudioProcessor::isMidiLatched() const
@@ -238,9 +244,22 @@ bool ImogenAudioProcessor::isMidiLatched() const
 }
 
 
+bool ImogenAudioProcessor::isAbletonLinkEnabled() const
+{
+#if IMOGEN_USE_ABLETON_LINK
+    return abletonLink.isEnabled();
+#else
+    return false;
+#endif
+}
+
 int ImogenAudioProcessor::getNumAbletonLinkSessionPeers() const
 {
+#if IMOGEN_USE_ABLETON_LINK
     return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0;
+#else
+    return 0;
+#endif
 }
 
 
@@ -286,6 +305,15 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 /*===========================================================================================================================
  ============================================================================================================================*/
+
+bool ImogenAudioProcessor::hasEditor() const
+{
+#if IMOGEN_HEADLESS
+    return false;
+#else
+    return true;
+#endif
+}
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {

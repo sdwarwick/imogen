@@ -28,12 +28,21 @@ message (STATUS "Welcome! I'm going to generate the Imogen Remote IDE project fo
 
 #
 
+if (DEFINED bv_ignoreAllThirdPartyLibs)
+    set (BV_IGNORE_VDSP)
+    set (BV_IGNORE_MIPP)
+endif()
+
+#
+
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)
 
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 set (ImogenRemote_sourceFiles
-    ${ImogenCore_sourceFiles}
+    ${Imogen_sourceDir}/ImogenCommon.h
+    ${Imogen_GUI_SourceFiles}
+    ${Imogen_OSC_SourceFiles}
 	${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp)
@@ -80,6 +89,7 @@ target_link_libraries (ImogenRemote PRIVATE bv_SharedCode)
 set_target_properties (ImogenRemote PROPERTIES FOLDER "" XCODE_GENERATE_SCHEME ON)  # prevets IDE from generating an extra nested folder
 
 #
+# Add binary data
 
 file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_ImogenRemoteGraphicAssets)
 juce_add_binary_data (ImogenRemoteGraphicAssets SOURCES ${Imogen_assetFiles})
@@ -93,9 +103,22 @@ imogenConfig_step2()
 
 #
 
+if (NOT DEFINED bv_use_OSC)
+    set (bv_use_OSC FALSE)
+endif()
+
+if (bv_use_OSC)
+    target_compile_definitions (ImogenRemote PUBLIC IMOGEN_USE_OSC=1)
+else()
+    target_compile_definitions (ImogenRemote PUBLIC IMOGEN_USE_OSC=0)
+endif()
+
 target_compile_definitions (ImogenRemote PUBLIC 
     IMOGEN_REMOTE_APP=1
     IMOGEN_HEADLESS=0
+    IMOGEN_USE_ABLETON_LINK=0
+    bvsb_USE_MTS_ESP=0
+    IMOGEN_USE_MTS_ESP=0
     )
 
 #

@@ -26,16 +26,16 @@
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
-#include <../../third-party/ableton-link/include/ableton/Link.hpp>
+#if IMOGEN_USE_ABLETON_LINK
+  #include <../../third-party/ableton-link/include/ableton/Link.hpp>
+#endif
 
 #include "GUI/Holders/ImogenGuiHolder.h"
 
-#include "../OSC/OSC.h"
-
-
-#ifndef IMOGEN_HEADLESS
-  #define IMOGEN_HEADLESS 0
+#if IMOGEN_USE_OSC
+  #include "../OSC/OSC.h"
 #endif
+
 
 
 using namespace Imogen;
@@ -46,8 +46,8 @@ class ImogenAudioProcessorEditor; // forward declaration...
 /*
 */
 
-class ImogenAudioProcessor    : public juce::AudioProcessor,
-                                public ProcessorStateChangeReciever,
+class ImogenAudioProcessor    : public  juce::AudioProcessor,
+                                public  ProcessorStateChangeReciever,
                                 private juce::Timer
 {
     using Parameter      = bav::Parameter;
@@ -87,49 +87,42 @@ public:
     void processBlockBypassed (juce::AudioBuffer<float>& buffer,  juce::MidiBuffer& midiMessages) override final;
     void processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages) override final;
     
-    bool canAddBus (bool isInput) const override { return isInput; }
+    bool canAddBus (bool isInput) const override final { return isInput; }
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override final;
     
-    double getTailLengthSeconds() const override;
+    double getTailLengthSeconds() const override final;
     
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation (juce::MemoryBlock& destData) override final;
+    void setStateInformation (const void* data, int sizeInBytes) override final;
     
-    juce::AudioProcessorParameter* getBypassParameter() const override { return tree.getParameter ("mainBypass"); }
+    juce::AudioProcessorParameter* getBypassParameter() const override final { return tree.getParameter ("mainBypass"); }
     
-    int getNumPrograms() override;
-    int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
+    int getNumPrograms() override final;
+    int getCurrentProgram() override final;
+    void setCurrentProgram (int index) override final;
+    const juce::String getProgramName (int index) override final;
     int indexOfProgram (const juce::String& name) const;
-    void changeProgramName (int index, const juce::String& newName) override;
+    void changeProgramName (int index, const juce::String& newName) override final;
     
-    bool acceptsMidi()  const override { return true;  }
-    bool producesMidi() const override { return true;  }
-    bool supportsMPE()  const override { return false; }
-    bool isMidiEffect() const override { return false; }
+    bool acceptsMidi()  const override final { return true;  }
+    bool producesMidi() const override final { return true;  }
+    bool supportsMPE()  const override final { return false; }
+    bool isMidiEffect() const override final { return false; }
     
-    const juce::String getName() const override { return JucePlugin_Name; }
-    juce::StringArray getAlternateDisplayNames() const override { return { "Imgn" }; }
+    const juce::String getName() const override final { return JucePlugin_Name; }
+    juce::StringArray getAlternateDisplayNames() const override final { return { "Imgn" }; }
     
-    bool hasEditor() const override
-    {
-#if IMOGEN_HEADLESS
-        return false;
-#else
-        return true;
-#endif
-    }
+    bool hasEditor() const override final;
     
-    juce::AudioProcessorEditor* createEditor() override;
+    juce::AudioProcessorEditor* createEditor() override final;
     
-    bool supportsDoublePrecisionProcessing() const override { return true; }
+    bool supportsDoublePrecisionProcessing() const override final { return true; }
     
     /*=========================================================================================*/
     
     inline bool isMidiLatched() const;
     
-    bool isAbletonLinkEnabled() const { return abletonLink.isEnabled(); }
+    bool isAbletonLinkEnabled() const;
     
     int getNumAbletonLinkSessionPeers() const;
     
@@ -203,7 +196,9 @@ private:
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
     
+#if IMOGEN_USE_ABLETON_LINK
     ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session.
+#endif
     
     juce::Point<int> savedEditorSize;
     
@@ -212,9 +207,11 @@ private:
     
     juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
+#if IMOGEN_USE_OSC
     ImogenOSCSender   oscSender;
     juce::OSCReceiver oscReceiver;
     // ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
+#endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

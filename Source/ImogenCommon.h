@@ -27,6 +27,18 @@
   #define IMOGEN_REMOTE_APP 0
 #endif
 
+#ifndef IMOGEN_HEADLESS
+  #define IMOGEN_HEADLESS 0
+#endif
+
+#ifndef IMOGEN_USE_ABLETON_LINK
+  #define IMOGEN_USE_ABLETON_LINK 0
+#endif
+
+#ifndef IMOGEN_USE_OSC
+  #define IMOGEN_USE_OSC 0
+#endif
+
 #include "Shared-code/bv_SharedCode/bv_SharedCode.h"
 
 

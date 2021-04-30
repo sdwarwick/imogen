@@ -23,8 +23,13 @@ if (NOT DEFINED IMOGEN_BUILD_FOR_ELK)
 endif()
 
 
-set (ImogenCore_sourceFiles
-	${Imogen_sourceDir}/ImogenCommon.h
+set (Imogen_Processor_SourceFiles
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
+    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h)
+
+set (Imogen_GUI_SourceFiles
     ${Imogen_sourceDir}/GUI/GUI_Framework.h
     ${Imogen_sourceDir}/GUI/ImogenGUI.h
     ${Imogen_sourceDir}/GUI/ImogenGUI.cpp
@@ -32,11 +37,12 @@ set (ImogenCore_sourceFiles
     ${Imogen_sourceDir}/GUI/MainDialComponent/MainDialComponent.h
     ${Imogen_sourceDir}/GUI/MainDialComponent/MainDialComponent.cpp
     ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.h
-    ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.cpp
+    ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.cpp)
+
+set (Imogen_OSC_SourceFiles
     ${Imogen_sourceDir}/OSC/OSC.h
     ${Imogen_sourceDir}/OSC/OSC_reciever.h
-    ${Imogen_sourceDir}/OSC/OSC_sender.h
-    )
+    ${Imogen_sourceDir}/OSC/OSC_sender.h)
 
 #
 
