@@ -289,15 +289,23 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {
+#if IMOGEN_HEADLESS
+    return nullptr;
+#else
     return new ImogenAudioProcessorEditor(*this);
+#endif
 }
 
 ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
 {
+#if IMOGEN_HEADLESS
+    return nullptr;
+#else
     if (auto* editor = getActiveEditor())
         return dynamic_cast<ImogenGuiHolder*> (editor);
     
     return nullptr;
+#endif
 }
 
 void ImogenAudioProcessor::saveEditorSize (int width, int height)

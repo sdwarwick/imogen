@@ -28,12 +28,14 @@ message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you."
 
 #
 
-set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
+set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)  # This could conceivably be in a different place, but the source tree must be intact 
 
 #
 
 set (bv_juceGitRepoToUse https://github.com/elk-audio/JUCE.git)
 set (bv_juceGitRepo_TagToUse mind/headless_plugin_client_v5.2)
+
+set (IMOGEN_BUILD_FOR_ELK TRUE)
 
 #
 
@@ -42,7 +44,7 @@ include (${Imogen_sourceDir}/imogenConfig.cmake)
 #
 
 set (Imogen_sourceFiles
-    ${ImogenCore_sourceFiles}
+    ${Imogen_sourceDir}/ImogenCommon.h
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
@@ -69,12 +71,12 @@ list (APPEND thingsToLinkTo "bv_SynthBase")
 
 #
 
-juce_add_plugin (Imogen
-    PRODUCT_NAME                Imogen
-    PLUGIN_CODE                 Imgn
+juce_add_plugin (ImogenHeadless
+    PRODUCT_NAME                ImogenHeadless
+    PLUGIN_CODE                 Imnh
     VERSION                     ${CMAKE_PROJECT_VERSION}
     BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
-    PLUGIN_NAME                 Imogen
+    PLUGIN_NAME                 ImogenHeadless
     PLUGIN_MANUFACTURER_CODE    Benv
     DESCRIPTION                 "Real-time vocal harmonizer instrument"
     IS_SYNTH                    FALSE
@@ -127,13 +129,6 @@ endforeach()
 
 #
 
-file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_ImogenGraphicAssets)
-juce_add_binary_data (ImogenGraphicAssets SOURCES ${Imogen_assetFiles})
-set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "Imogen")
-list (APPEND thingsToLinkTo ImogenGraphicAssets)
-
-#
-
 target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
 
 #
@@ -154,6 +149,7 @@ target_compile_definitions (Imogen PUBLIC
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
     JUCE_HEADLESS_PLUGIN_CLIENT=1
     IMOGEN_REMOTE_APP=0
+    IMOGEN_HEADLESS=1
     )
 
 #

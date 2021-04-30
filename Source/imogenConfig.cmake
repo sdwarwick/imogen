@@ -18,6 +18,11 @@
 #  imogenConfig.cmake :		This file contains the build configuration elements common to both the main Imogen build and the Imogen Remote build.
 
 
+if (NOT DEFINED IMOGEN_BUILD_FOR_ELK)
+    set (IMOGEN_BUILD_FOR_ELK FALSE)
+endif()
+
+
 set (ImogenCore_sourceFiles
 	${Imogen_sourceDir}/ImogenCommon.h
     ${Imogen_sourceDir}/GUI/GUI_Framework.h
@@ -163,16 +168,23 @@ target_link_libraries (${CMAKE_PROJECT_NAME} PUBLIC
 target_compile_features (${CMAKE_PROJECT_NAME} PUBLIC cxx_std_17)
 
 target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
     JUCE_STRICT_REFCOUNTEDPTR=1
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
     )
 
+if (${IMOGEN_BUILD_FOR_ELK})
+    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    )
+else()
+    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    )
+endif()
+
 endfunction()
-
-
-
 

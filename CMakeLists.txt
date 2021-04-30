@@ -172,6 +172,7 @@ imogenConfig_step2()
 target_compile_definitions (Imogen PUBLIC 
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
     IMOGEN_REMOTE_APP=0
+    IMOGEN_HEADLESS=0
     )
 
 #

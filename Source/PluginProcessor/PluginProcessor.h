@@ -33,6 +33,11 @@
 #include "../OSC/OSC.h"
 
 
+#ifndef IMOGEN_HEADLESS
+  #define IMOGEN_HEADLESS 0
+#endif
+
+
 using namespace Imogen;
 
 
@@ -107,7 +112,15 @@ public:
     const juce::String getName() const override { return JucePlugin_Name; }
     juce::StringArray getAlternateDisplayNames() const override { return { "Imgn" }; }
     
-    bool hasEditor() const override { return true; }
+    bool hasEditor() const override
+    {
+#if IMOGEN_HEADLESS
+        return false;
+#else
+        return true;
+#endif
+    }
+    
     juce::AudioProcessorEditor* createEditor() override;
     
     bool supportsDoublePrecisionProcessing() const override { return true; }

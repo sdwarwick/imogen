@@ -93,6 +93,9 @@ imogenConfig_step2()
 
 #
 
-target_compile_definitions (ImogenRemote PUBLIC IMOGEN_REMOTE_APP=1)
+target_compile_definitions (ImogenRemote PUBLIC 
+    IMOGEN_REMOTE_APP=1
+    IMOGEN_HEADLESS=0
+    )
 
 #
