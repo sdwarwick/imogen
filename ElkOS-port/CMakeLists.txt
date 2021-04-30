@@ -15,7 +15,7 @@
  
 #  @2021 by Ben Vining. All rights reserved.
 
-#  CMakeLists.txt :	This file defines the build configuration for Imogen.
+#  CMakeLists.txt :	This file defines the build configuration for Imogen, ported to ElkOS as a headless plugin with a GUI control app.
  
 
 cmake_minimum_required (VERSION 3.18) 
@@ -94,7 +94,7 @@ juce_add_plugin (Imogen
     MICROPHONE_PERMISSION_ENABLED        TRUE
     MICROPHONE_PERMISSION_TEXT           "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
     SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
-    DOCUMENT_BROWSER_ENABLED             TRUE
+    DOCUMENT_BROWSER_ENABLED             FALSE
     VST_NUM_MIDI_INS 1
     VST_NUM_MIDI_OUTS 1
     DOCUMENT_EXTENSIONS xml
@@ -152,6 +152,7 @@ imogenConfig_step2()
 
 target_compile_definitions (Imogen PUBLIC 
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
+    JUCE_HEADLESS_PLUGIN_CLIENT=1
     IMOGEN_REMOTE_APP=0
     )
 
