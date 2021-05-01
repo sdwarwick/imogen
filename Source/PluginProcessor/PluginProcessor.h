@@ -37,6 +37,13 @@
 #endif
 
 
+#undef IMOGEN_PROCESSOR_TIMER
+#if IMOGEN_REMOTE_APP || ! IMOGEN_HEADLESS
+  #define IMOGEN_PROCESSOR_TIMER 1
+#else
+  #define IMOGEN_PROCESSOR_TIMER 0
+#endif
+
 
 using namespace Imogen;
 
@@ -46,9 +53,12 @@ class ImogenAudioProcessorEditor; // forward declaration...
 /*
 */
 
-class ImogenAudioProcessor    : public  juce::AudioProcessor,
-                                public  ProcessorStateChangeReciever,
-                                private juce::Timer
+class ImogenAudioProcessor    : private bav::TranslationInitializer,
+                                public  juce::AudioProcessor,
+                                public  ProcessorStateChangeReciever
+#if IMOGEN_PROCESSOR_TIMER
+                              , private juce::Timer
+#endif
 {
     using Parameter      = bav::Parameter;
     using FloatParameter = bav::FloatParameter;
@@ -64,7 +74,9 @@ public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
     
+#if IMOGEN_PROCESSOR_TIMER
     void timerCallback() override final;
+#endif
     
     /*=========================================================================================*/
     /* ProcessorStateChangeReciever functions -- for external sources (GUI, OSC) to update the processor's state */
@@ -97,12 +109,11 @@ public:
     
     juce::AudioProcessorParameter* getBypassParameter() const override final { return tree.getParameter ("mainBypass"); }
     
-    int getNumPrograms() override final;
-    int getCurrentProgram() override final;
-    void setCurrentProgram (int index) override final;
-    const juce::String getProgramName (int index) override final;
-    int indexOfProgram (const juce::String& name) const;
-    void changeProgramName (int index, const juce::String& newName) override final;
+    int getNumPrograms() override final { return 1; }
+    int getCurrentProgram() override final { return 0; }
+    void setCurrentProgram (int) override final { }
+    const juce::String getProgramName (int) override final { return {}; }
+    void changeProgramName (int, const juce::String&) override final { }
     
     bool acceptsMidi()  const override final { return true;  }
     bool producesMidi() const override final { return true;  }
@@ -170,20 +181,19 @@ private:
     /*=========================================================================================*/
     
     template<typename SampleType>
-    void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
+    inline void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
     
     void changeMidiLatchState (bool isNowLatched);
     
     /*=========================================================================================*/
 
-    ImogenGuiHolder* getActiveGui() const;
+    void updateEditorSizeFromAPVTS();
     
-    Parameter* getParameterPntr (const ParameterID paramID) const;
+    inline ImogenGuiHolder* getActiveGui() const;
+    
+    inline Parameter* getParameterPntr (const ParameterID paramID) const;
     
     /*=========================================================================================*/
-    
-    // simple hack to force the translation system to initialize before anything else in our initialization list
-    bav::TranslationInitializer translationInitializer;
     
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine<float>  floatEngine;
@@ -192,6 +202,7 @@ private:
     juce::AudioProcessorValueTreeState tree;
     
     std::vector< Parameter* > parameterPointers;
+    Parameter* mainBypassPntr;
     
     // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
@@ -204,7 +215,6 @@ private:
     
     static constexpr auto msgQueueSize = size_t(100);
     bav::MessageQueue<msgQueueSize> nonParamEvents;  // this queue is SPSC; this is only for events flowing from the editor into the processor
-    
     juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
 #if IMOGEN_USE_OSC

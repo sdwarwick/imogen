@@ -45,15 +45,16 @@ public:
     
     /*=========================================================================================*/
     
-    ImogenGUI* gui() noexcept { return &p_gui; }
-    
-    /*=========================================================================================*/
-    
     ImogenGUIState returnState() const { return ImogenGUIState(&p_gui); }
     
     void saveState (ImogenGUIState& state) { state.saveState (&p_gui); }
     
     void restoreState (const ImogenGUIState& state) { state.resoreState (&p_gui); }
+    
+    /*=========================================================================================*/
+    
+protected:
+    ImogenGUI* gui() noexcept { return &p_gui; }
     
     /*=========================================================================================*/
     

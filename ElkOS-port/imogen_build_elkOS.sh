@@ -4,31 +4,16 @@
 SCRIPT_DIR="$(dirname $0)"; # save the directory of the script
 
 
-###  UTILITY FUNCTIONS  ###
-
 # function to check if a requested command is valid
 command_exists () {
 	loc="$(type "$1" > /dev/null)" || [[ -z "$loc" ]] ;
 }
 
-# no cmake, and you're on Windows :(
-windows_no_cmake () {
-	printf "\n \t \v CMake cannot be found, and I've detected you're on Windows. \n"
-	printf "\t Installing software from the command line on Windows is the realm of gods and demons. \n"
-	printf "Please manually install CMake and re-run this script. \n"
-	exit 1
-}
-
-
 ###  CMAKE INSTALLATION  ###
 
 # if CMake can't be found, install it
 if ! command_exists cmake ; then
-	case "$OSTYPE" in
-		darwin*) printf "\n \t \v Installing CMake... \n \n" && brew install cmake ;;  # MacOS
-		msys*)   windows_no_cmake ;;
-		*)       printf "\n \t \v Installing Cmake... \n \n" && sudo apt-get -y install cmake ;;  # Linux
-	esac
+	printf "\n \t \v Installing Cmake... \n \n" && sudo apt-get -y install cmake ;;  # Linux
 fi
 
 
@@ -43,18 +28,18 @@ fi
 
 cd "$SCRIPT_DIR/.." 
 
-# first, make sure the local copy of the repo is up to date
-printf "\n \t \v Checking for new commits to Imogen remote... \n \n"
-git pull --recurse-submodules=yes
-
-
 set -e;  # from this point forward, any errors trigger an exit signal
+
+# need to download the ElkOS cross-compiling toolchain from https://github.com/elk-audio/elkpi-sdk/releases/download/0.9.0/elk-glibc-x86_64-elkpi-audio-os-image-aarch64-raspberrypi4-64-toolchain-1.0.sh
+
+# unset LD_LIBRARY_PATH
+# source [path-to-extracted-sdk]/environment-setup-aarch64-elk-linux
 
 cd "$SCRIPT_DIR"
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -B Builds/headless_plugin .
+cmake -B Builds/headless_plugin -GMakefile .
 
 
 # execute build

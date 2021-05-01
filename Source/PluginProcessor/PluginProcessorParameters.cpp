@@ -277,10 +277,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
 
 void ImogenAudioProcessor::initializeParameterPointers()
 {
+    parameterPointers.clear();
     parameterPointers.reserve (numParams);
     
     for (auto* rawParam : getParameters())
         parameterPointers.push_back (dynamic_cast<Parameter*>(rawParam));
+    
+    jassert (parameterPointers.size() == numParams);
+    
+    mainBypassPntr = getParameterPntr (mainBypassID);
+    jassert (mainBypassPntr != nullptr);
 }
 
 
@@ -335,7 +341,7 @@ template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::Im
     Returns one of the processor's parameter objects, referenced by its parameterID.
  ============================================================================================================================*/
 
-bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
+inline bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
     for (auto* pntr : parameterPointers)
         if (static_cast<ParameterID>(pntr->key()) == paramID)
@@ -350,7 +356,7 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramI
  ============================================================================================================================*/
 
 template<typename SampleType>
-void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
+inline void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
 {
     nonParamEvents.getReadyMessages (currentMessages);
     

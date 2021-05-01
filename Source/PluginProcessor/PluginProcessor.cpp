@@ -30,8 +30,8 @@
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
-  : AudioProcessor (makeBusProperties()),
-    translationInitializer (findAppropriateTranslationFile()),
+  : bav::TranslationInitializer (findAppropriateTranslationFile()),
+    AudioProcessor (makeBusProperties()),
     tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
 #if IMOGEN_USE_ABLETON_LINK
     , abletonLink (120.0) // constructed with the initial BPM
@@ -49,17 +49,21 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     else
         initialize (floatEngine);
     
-    // lastPresetName = getActivePresetName();
+    updateEditorSizeFromAPVTS();
     
+#if IMOGEN_PROCESSOR_TIMER
     constexpr int timerFramerate = 30;
     Timer::startTimerHz (timerFramerate);
+#endif
     
     // oscReceiver.addListener (&oscListener);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
+#if IMOGEN_PROCESSOR_TIMER
     Timer::stopTimer();
+#endif
     
 #if IMOGEN_USE_OSC
     oscSender.disconnect();
@@ -71,10 +75,12 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 /*===========================================================================================================
 ===========================================================================================================*/
 
+#if IMOGEN_PROCESSOR_TIMER
 void ImogenAudioProcessor::timerCallback()
 {
 
 }
+#endif
 
 /*===========================================================================================================
  ===========================================================================================================*/
@@ -153,23 +159,21 @@ void ImogenAudioProcessor::reset()
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     processBlockWrapped (buffer, midiMessages, floatEngine,
-                         getParameterPntr (mainBypassID)->getCurrentNormalizedValue() >= 0.5f);
+                         mainBypassPntr->getCurrentNormalizedValue() >= 0.5f);
 }
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
     processBlockWrapped (buffer, midiMessages, doubleEngine,
-                         getParameterPntr (mainBypassID)->getCurrentNormalizedValue() >= 0.5f);
+                         mainBypassPntr->getCurrentNormalizedValue() >= 0.5f);
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    auto mainBypass = getParameterPntr (mainBypassID);
-    
-    if (! (mainBypass->getCurrentNormalizedValue() >= 0.5f))
-        mainBypass->orig()->setValueNotifyingHost (1.0f);
+    if (! (mainBypassPntr->getCurrentNormalizedValue() >= 0.5f))
+        mainBypassPntr->orig()->setValueNotifyingHost (1.0f);
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
 }
@@ -177,10 +181,8 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    auto mainBypass = getParameterPntr (mainBypassID);
-    
-    if (! (mainBypass->getCurrentNormalizedValue() >= 0.5f))
-        mainBypass->orig()->setValueNotifyingHost (1.0f);
+    if (! (mainBypassPntr->getCurrentNormalizedValue() >= 0.5f))
+        mainBypassPntr->orig()->setValueNotifyingHost (1.0f);
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
 }
@@ -201,16 +203,6 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     /* update all parameters... */
     for (auto* pntr : parameterPointers)
         pntr->doAction();
-    
-    /* program change messages need to be handled at this top level... */
-    std::for_each (midiMessages.cbegin(), midiMessages.cend(),
-                   [&] (const juce::MidiMessageMetadata& meta)
-                   {
-                       const auto msg = meta.getMessage();
-        
-                       if (msg.isProgramChange())
-                           setCurrentProgram (msg.getProgramChangeNumber());
-                   });
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
@@ -324,7 +316,7 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #endif
 }
 
-ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
+inline ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
 {
 #if IMOGEN_HEADLESS
     return nullptr;
@@ -340,6 +332,20 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
 {
     savedEditorSize.setX (width);
     savedEditorSize.setY (height);
+}
+
+void ImogenAudioProcessor::updateEditorSizeFromAPVTS()
+{
+    auto editor = tree.state.getChildWithName ("editorSize");
+    
+    if (editor.isValid())
+    {
+        savedEditorSize.setX (editor.getProperty ("editorSize_X", 900));
+        savedEditorSize.setY (editor.getProperty ("editorSize_Y", 500));
+        
+        if (auto* activeEditor = getActiveEditor())
+            activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
+    }
 }
 
 /*===========================================================================================================================

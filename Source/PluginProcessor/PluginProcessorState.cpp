@@ -62,55 +62,13 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     
     tree.replaceState (newTree);
     
-    auto editor = tree.state.getChildWithName ("editorSize");
+    updateEditorSizeFromAPVTS();
     
-    if (editor.isValid())
-    {
-        savedEditorSize.setX (editor.getProperty ("editorSize_X", 900));
-        savedEditorSize.setY (editor.getProperty ("editorSize_Y", 500));
-        
-        if (auto* activeEditor = getActiveEditor())
-            activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
-    }
+    /* update all parameters... */
+    for (auto* pntr : parameterPointers)
+        pntr->doAction();
     
     suspendProcessing (false);
     
     updateHostDisplay();
-}
-
-
-/*===========================================================================================================================
-    Functions for managing programs
- ==========================================================================================================================*/
-
-int ImogenAudioProcessor::getNumPrograms()
-{
-    return 1;
-}
-
-int ImogenAudioProcessor::getCurrentProgram()
-{
-    return 1;
-}
-
-void ImogenAudioProcessor::setCurrentProgram (int index)
-{
-    juce::ignoreUnused (index);
-}
-
-const juce::String ImogenAudioProcessor::getProgramName (int index)
-{
-    juce::ignoreUnused (index);
-    return { };
-}
-
-int ImogenAudioProcessor::indexOfProgram (const juce::String& name) const
-{
-    juce::ignoreUnused (name);
-    return 0;
-}
-
-void ImogenAudioProcessor::changeProgramName (int index, const juce::String& newName)
-{
-    juce::ignoreUnused (index, newName);
 }
