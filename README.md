@@ -16,7 +16,7 @@ Imogen is a low-latency pitch shifter designed to function as an instrument that
 Imogen features integrations with Ableton Link and MTS-ESP. On non-Apple platforms, the MIPP library is used for portable SIMD intrinsics.
 
 <p align="center">
- <img src="https://github.com/benthevining/imogen/blob/master/assets/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
+ <img src="https://github.com/benthevining/imogen/blob/master/assets/graphics/imogen_icon.png" alt="Imogen icon" width="150" height="150" />
  </p>
  
  
