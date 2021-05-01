@@ -10,7 +10,8 @@
             "mode" : "stereo",
             "inputs" : [
                 {
-                    "engine_bus" : 0
+                    "engine_bus" : 0,
+                    "track_bus" : 0
                 }
             ],
             "outputs" : [
@@ -21,7 +22,7 @@
             ],
             "plugins" : [
                 {
-                    "uid" : "sushi.testing.step_sequencer",
+                    "uid" : "imogen",
                     "name" : "imogen",
                     "type" : "internal"
                 }
@@ -44,16 +45,5 @@
                 "processor" : "peakmeter"
             }
         ]
-    },
-    "events" : [
-        {
-           "time" : 0.0,
-           "type" : "parameter_change",
-           "data" : {
-               "plugin_name" : "imogen",
-               "parameter_name" : "gain",
-               "value" : 0.7
-           }
-       }
-    ]
+    }
 }

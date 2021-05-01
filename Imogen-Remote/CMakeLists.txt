@@ -1,36 +1,13 @@
-#            _             _   _                _                _                 _               _
-#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _               
-#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/       _____  ______ __  __  ____ _______ ______ 
-#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /       |  __ \|  ____|  \/  |/ __ \__   __|  ____|
-#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /        | |__) | |__  | \  / | |  | | | |  | |__   
-#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /         |  _  /|  __| | |\/| | |  | | | |  |  __|  
-#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /          | | \ \| |____| |  | | |__| | | |  | |____ 
-#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/           |_|  \_\______|_|  |_|\____/  |_|  |______|
- 
- 
-#  This file is part of the Imogen codebase.
- 
-#  @2021 by Ben Vining. All rights reserved.
-
-#  CMakeLists.txt :	This file defines the build configuration for the Imogen Remote standalone app.
- 
 
 cmake_minimum_required (VERSION 3.18) 
 
 project (ImogenRemote VERSION 0.0.1 LANGUAGES CXX) 
 
-#
-
-message (STATUS "Welcome! I'm going to generate the Imogen Remote IDE project for you.")
-
-#
-
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)
 
 include (${Imogen_sourceDir}/imogenConfig.cmake)
+
+#
 
 set (ImogenRemote_sourceFiles
     ${Imogen_sourceDir}/ImogenCommon.h
@@ -39,8 +16,6 @@ set (ImogenRemote_sourceFiles
 	${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp)
-
-#
 
 juce_add_module ("${Imogen_sourceDir}/Shared-code/bv_SharedCode")
 

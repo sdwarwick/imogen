@@ -14,13 +14,16 @@ if ! echo "$MIDI_KEYBOARD" | grep -q "16"; then
     exit 0
 fi
 
-./stop
+stop
 sleep 1
+
 sudo systemctl start sensei
 sleep 1
+
 sushi -r  --multicore-processing=2 -c ./config_imogen.json &
 sleep 1
-(cd ./main; ./main_app &)
+
+main_app &
 sleep 3
 aconnect -x
 aconnect 16 128

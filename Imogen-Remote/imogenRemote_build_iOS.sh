@@ -1,22 +1,5 @@
 #!/bin/bash
 
-#            _             _   _                _                _                 _               _
-#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _               
-#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/       _____  ______ __  __  ____ _______ ______ 
-#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /       |  __ \|  ____|  \/  |/ __ \__   __|  ____|
-#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /        | |__) | |__  | \  / | |  | | | |  | |__   
-#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /         |  _  /|  __| | |\/| | |  | | | |  |  __|  
-#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /          | | \ \| |____| |  | | |__| | | |  | |____ 
-#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/           |_|  \_\______|_|  |_|\____/  |_|  |______|
- 
- 
-#  This file is part of the Imogen codebase.
- 
-#  @2021 by Ben Vining. All rights reserved.
-
 #  imogenRemote_build_iOS.sh :	  This script builds an iOS version of ImogenRemote. When cross compiling for iOS, using MacOS is recommended, as is using CMake's XCode generator.
 
 
@@ -37,30 +20,6 @@ windows_no_cmake () {
 	printf "Please manually install CMake and re-run this script. \n"
 	exit 1
 }
-
-
-unknown_argument () {
-	printf "\v Unknown argument '$1'. For usage, run this script with --help or -h. \n"
-	exit 0;
-}
-
-
-###  CHECK FOR FLAGS & ARGUMENTS  ###
-
-# check to see if the script was invoked with the --help or -h flags
-if [[ ${#@} -ne 0 ]] && ( [[ ${@#"--help"} = "" ]] || [[ ${@#"-h"} = "" ]] ); then
- 	printf "\n \t \v IMOGEN REMOTE IOS BUILD SCRIPT \n USAGE: \n \n"
-  	printf "Simply execute this script with no flags or arguments to build a default release confguration of the ImogenRemote app, cross-compiled for iOS. \n"
-  	exit 0;
-fi
-
-
-for flag in "$@" ; do
-	case "$flag" in
-		*) unknown_argument "$flag" ;;
-	esac
-done
-
 
 ###  CMAKE INSTALLATION  ###
 

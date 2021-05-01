@@ -1,43 +1,14 @@
-#            _             _   _                _                _                 _               _
-#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
-#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
-#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
-#  This file is part of the Imogen codebase.
- 
-#  @2021 by Ben Vining. All rights reserved.
-
-#  CMakeLists.txt :	This file defines the build configuration for Imogen, ported to ElkOS as a headless plugin with a GUI control app.
- 
 
 cmake_minimum_required (VERSION 3.18) 
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-#
-
-message (STATUS "Welcome! I'm going to generate the Imogen IDE project for you.")
-
-#
-
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)  # This could conceivably be in a different place, but the source tree must be intact 
-
-#
 
 set (bv_juceGitRepoToUse https://github.com/elk-audio/JUCE.git)
 set (bv_juceGitRepo_TagToUse mind/headless_plugin_client_v5.2)
 
 set (IMOGEN_BUILD_FOR_ELK TRUE)
-
-#
 
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 

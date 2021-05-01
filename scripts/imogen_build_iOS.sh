@@ -1,22 +1,5 @@
 #!/bin/bash
 
-#            _             _   _                _                _                 _               _
-#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
-#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
-#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
-#  This file is part of the Imogen codebase.
- 
-#  @2021 by Ben Vining. All rights reserved.
-
 #  imogen_build_iOS.sh :	  This script builds an iOS version of Imogen. When cross compiling for iOS, using MacOS is recommended, as is using CMake's XCode generator.
 
 
@@ -38,29 +21,6 @@ windows_no_cmake () {
 	printf "Please manually install CMake and re-run this script. \n"
 	exit 1
 }
-
-
-unknown_argument () {
-	printf "\v Unknown argument '$1'. For usage, run this script with --help or -h. \n"
-	exit 0;
-}
-
-
-###  CHECK FOR FLAGS & ARGUMENTS  ###
-
-# check to see if the script was invoked with the --help or -h flags
-if [[ ${#@} -ne 0 ]] && ( [[ ${@#"--help"} = "" ]] || [[ ${@#"-h"} = "" ]] ); then
- 	printf "\n \t \v IMOGEN IOS BUILD SCRIPT \n USAGE: \n \n"
-  	printf "Simply execute this script with no flags or arguments to build a default release confguration of Imogen in its Standalone format, cross-compiled for iOS. \n"
-  	exit 0;
-fi
-
-
-for flag in "$@" ; do
-	case "$flag" in
-		*) unknown_argument "$flag" ;;
-	esac
-done
 
 
 ###  CMAKE INSTALLATION  ###
@@ -85,11 +45,6 @@ fi
 ###  THE BUILD SCRIPT  ###
 
 cd "$IMOGEN_DIR" # assume that the directory of the script is also the location of the local Imogen git clone
-
-# first, make sure the local copy of the repo is up to date
-printf "\n \t \v Checking for new commits to Imogen remote... \n \n"
-git pull --recurse-submodules=yes
-
 
 set -e;  # from this point forward, any errors trigger an exit signal
 
