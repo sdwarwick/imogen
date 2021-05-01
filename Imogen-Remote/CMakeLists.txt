@@ -29,7 +29,7 @@ juce_add_gui_app (ImogenRemote
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/../assets/imogen_icon.png
+    ICON_BIG                    ${ImogenIconPath}
     COMPANY_NAME                BenViningMusicSoftware
     COMPANY_WEBSITE             www.benvining.com
     COMPANY_EMAIL               ben.the.vining@gmail.com

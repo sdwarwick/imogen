@@ -29,6 +29,8 @@ endif()
 
 #
 
+set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
+
 set (Imogen_Processor_SourceFiles
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
@@ -53,7 +55,7 @@ set (Imogen_OSC_SourceFiles
 #
 
 set (Imogen_assetFiles
-	${Imogen_sourceDir}/../assets/imogen_icon.png
+	${ImogenIconPath}
 	)
 
 #

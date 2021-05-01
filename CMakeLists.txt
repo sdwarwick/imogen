@@ -77,7 +77,7 @@ juce_add_plugin (Imogen
     FORMATS                     ${bv_formats}
     VST3_CATEGORIES             "Pitch Shift"
     AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
-    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/assets/imogen_icon.png
+    ICON_BIG                    ${ImogenIconPath}
     COMPANY_NAME                BenViningMusicSoftware
     COMPANY_WEBSITE             www.benvining.com
     COMPANY_EMAIL               ben.the.vining@gmail.com
