@@ -46,13 +46,15 @@ void ImogenDialComponent::resized()
 void ImogenDialComponent::showPitchCorrection()
 {
     showingPitchCorrection.store (true);
+    setTooltip (TRANS ("Intonation"));
     this->repaint();
 }
 
-void ImogenDialComponent::showParameter (int paramID)
+void ImogenDialComponent::showParameter (ParameterID paramID)
 {
     juce::ignoreUnused (paramID);
     showingPitchCorrection.store (false);
+    setTooltip (getParameterNameVerbose (paramID));
     this->repaint();
 }
 

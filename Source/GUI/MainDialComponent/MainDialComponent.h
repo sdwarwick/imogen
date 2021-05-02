@@ -25,10 +25,11 @@
 #include "../GUI_Framework.h"
 
 
-class ImogenDialComponent  :    public juce::Component
+class ImogenDialComponent  :    public juce::Component,
+                                public juce::SettableTooltipClient
 {
 public:
-    ImogenDialComponent() { }
+    ImogenDialComponent() { showPitchCorrection(); }
     
     void paint (juce::Graphics& g) override final;
     
@@ -45,7 +46,7 @@ public:
     //
     
     void showPitchCorrection();
-    void showParameter (int paramID);
+    void showParameter (ParameterID paramID);
     bool isShowingPitchCorrection() const noexcept { return showingPitchCorrection.load(); }
     
     //
