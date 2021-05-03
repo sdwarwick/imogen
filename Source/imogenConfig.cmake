@@ -31,6 +31,11 @@ endif()
 
 set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
 
+set (Imogen_Common_SourceFiles
+    ${Imogen_sourceDir}/ImogenCommon.h
+    ${Imogen_sourceDir}/ImogenParameters.h
+    )
+
 set (Imogen_Processor_SourceFiles
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp

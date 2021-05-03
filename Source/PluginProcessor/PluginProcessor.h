@@ -26,11 +26,13 @@
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
+#include "GUI/Holders/ImogenGuiHolder.h"
+
+#include "../ImogenParameters.h"
+
 #if IMOGEN_USE_ABLETON_LINK
   #include <../../third-party/ableton-link/include/ableton/Link.hpp>
 #endif
-
-#include "GUI/Holders/ImogenGuiHolder.h"
 
 #if IMOGEN_USE_OSC
   #include "../OSC/OSC.h"
@@ -61,9 +63,9 @@ class ImogenAudioProcessor    : private bav::TranslationInitializer,
 #endif
 {
     using Parameter      = bav::Parameter;
-    using FloatParameter = bav::FloatParameter;
-    using IntParameter   = bav::IntParameter;
-    using BoolParameter  = bav::BoolParameter;
+    using FloatParameter = ImogenFloatParameter;
+    using IntParameter   = ImogenIntParameter;
+    using BoolParameter  = ImogenBoolParameter;
     
     using FloatParamPtr = FloatParameter*;
     using IntParamPtr   = IntParameter*;

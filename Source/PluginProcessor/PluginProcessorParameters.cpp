@@ -148,7 +148,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
            
      
     {   /* MIXING */
-        auto inputMode = std::make_unique<IntParameter> (inputSourceID, "inputSource", getParameterNameVerbose (inputSourceID), 1, 3, 1, emptyString,
+        auto inputMode = std::make_unique<IntParameter> (inputSourceID, 1, 3, 1, emptyString,
                                                          [](int value, int maxLength) 
                                                          { 
                                                              switch (value)
@@ -165,22 +165,24 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                              return 1;
                                                          });  
                
-        auto dryWetP = std::make_unique<IntParameter>   (dryWetID, "masterDryWet", getParameterNameVerbose (dryWetID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto inGain  = std::make_unique<FloatParameter> (inputGainID, "inputGain", getParameterNameVerbose (inputGainID), gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
-        auto outGain = std::make_unique<FloatParameter> (outputGainID, "outputGain", getParameterNameVerbose (outputGainID), gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);
+        auto dryWetP = std::make_unique<IntParameter>   (dryWetID, 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        
+        auto inGain = std::make_unique<FloatParameter>  (inputGainID, gainRange, 0.0f,  emptyString, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);
+        
+        auto outGain = std::make_unique<FloatParameter> (outputGainID, gainRange, -4.0f, emptyString, juce::AudioProcessorParameter::outputGain, gain_stringFromFloat, gain_floatFromString);
                
         //  subgroup: bypasses
-        auto mainBypassP = std::make_unique<BoolParameter>  (mainBypassID, "mainBypass", getParameterNameVerbose (mainBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto leadBypassP = std::make_unique<BoolParameter>  (leadBypassID, "leadBypass", getParameterNameVerbose (leadBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto harmonyBypassP = std::make_unique<BoolParameter>  (harmonyBypassID, "harmonyBypass", getParameterNameVerbose (harmonyBypassID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto mainBypassP = std::make_unique<BoolParameter> (mainBypassID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto leadBypassP = std::make_unique<BoolParameter> (leadBypassID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto harmonyBypassP = std::make_unique<BoolParameter> (harmonyBypassID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                    
         auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|", std::move (mainBypassP), std::move (leadBypassP), std::move (harmonyBypassP));
                
         //  subgroup: stereo image     
-        auto stereo_width  = std::make_unique<IntParameter> (stereoWidthID, "stereoWidth", getParameterNameVerbose (stereoWidthID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto stereo_lowest = std::make_unique<IntParameter> (lowestPannedID, "lowestPan", getParameterNameVerbose (lowestPannedID), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
+        auto stereo_width  = std::make_unique<IntParameter> (stereoWidthID, 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto stereo_lowest = std::make_unique<IntParameter> (lowestPannedID, 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
                
-        auto stereo_leadPan = std::make_unique<IntParameter>  (dryPanID, "dryPan", getParameterNameVerbose (dryPanID), 0, 127, 64, emptyString,
+        auto stereo_leadPan = std::make_unique<IntParameter>  (dryPanID, 0, 127, 64, emptyString,
                                                                [](int value, int maxLength) { return bav::midiPanIntToString (value).substring(0, maxLength); }, 
                                                                [](const juce::String& text) { return bav::midiPanStringToInt (text); });        
                
@@ -190,22 +192,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move (inputMode), std::move (dryWetP), std::move (inGain), std::move (outGain), std::move (bypasses), std::move (stereo)));
     }       
     {   /* MIDI */     
-        auto pitchbendRange = std::make_unique<IntParameter>   (pitchBendRangeID, "PitchBendRange", getParameterNameVerbose (pitchBendRangeID), 0, 12, 2, emptyString, st_stringFromInt, st_intFromString);
-        auto velocitySensP = std::make_unique<IntParameter>     (velocitySensID, "midiVelocitySens", getParameterNameVerbose (velocitySensID), 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto aftertouchToggle = std::make_unique<BoolParameter>(aftertouchGainToggleID, "aftertouchGainToggle", getParameterNameVerbose (aftertouchGainToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto voiceStealingP = std::make_unique<BoolParameter>   (voiceStealingID, "voiceStealing", getParameterNameVerbose (voiceStealingID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto pitchbendRange = std::make_unique<IntParameter>   (pitchBendRangeID, 0, 12, 2, emptyString, st_stringFromInt, st_intFromString);
+        auto velocitySensP = std::make_unique<IntParameter>    (velocitySensID, 0, 100, 100, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto aftertouchToggle = std::make_unique<BoolParameter>(aftertouchGainToggleID, true, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto voiceStealingP = std::make_unique<BoolParameter>  (voiceStealingID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
                
         //  subgroup: pedal pitch
-        auto pedal_toggle = std::make_unique<BoolParameter>  (pedalPitchIsOnID, "pedalPitchToggle", getParameterNameVerbose (pedalPitchIsOnID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto pedal_thresh = std::make_unique<IntParameter>   (pedalPitchThreshID, "pedalPitchThresh", getParameterNameVerbose (pedalPitchThreshID), 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
-        auto pedal_interval = std::make_unique<IntParameter> (pedalPitchIntervalID, "pedalPitchInterval", getParameterNameVerbose (pedalPitchIntervalID), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
+        auto pedal_toggle = std::make_unique<BoolParameter>  (pedalPitchIsOnID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto pedal_thresh = std::make_unique<IntParameter>   (pedalPitchThreshID, 0, 127, 0, emptyString, pitch_stringFromInt, pitch_intFromString);
+        auto pedal_interval = std::make_unique<IntParameter> (pedalPitchIntervalID, 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto pedal = std::make_unique<Group> ("Pedal pitch", TRANS ("Pedal pitch"), "|", std::move (pedal_toggle), std::move (pedal_thresh), std::move (pedal_interval));     
                
         //  subgroup: descant       
-        auto descant_toggle = std::make_unique<BoolParameter>  (descantIsOnID, "descantToggle", getParameterNameVerbose (descantIsOnID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto descant_thresh = std::make_unique<IntParameter>   (descantThreshID, "descantThresh", getParameterNameVerbose (descantThreshID), 0, 127, 127, emptyString, pcnt_stringFromInt, pitch_intFromString);
-        auto descant_interval = std::make_unique<IntParameter> (descantIntervalID, "descantInterval", getParameterNameVerbose (descantIntervalID), 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
+        auto descant_toggle = std::make_unique<BoolParameter>  (descantIsOnID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto descant_thresh = std::make_unique<IntParameter>   (descantThreshID, 0, 127, 127, emptyString, pcnt_stringFromInt, pitch_intFromString);
+        auto descant_interval = std::make_unique<IntParameter> (descantIntervalID, 1, 12, 12, emptyString, st_stringFromInt, st_intFromString);
                
         auto descant = std::make_unique<Group> ("Descant", TRANS ("Descant"), "|", std::move (descant_toggle), std::move (descant_thresh), std::move (descant_interval));
                
@@ -213,57 +215,57 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
                                                       std::move(pitchbendRange), std::move (velocitySensP), std::move (aftertouchToggle), std::move (voiceStealingP), std::move (pedal), std::move (descant)));
     }           
     {   /* ADSR */
-        auto attack  = std::make_unique<FloatParameter> (adsrAttackID, "adsrAttack", getParameterNameVerbose (adsrAttackID), msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
-        auto decay   = std::make_unique<FloatParameter> (adsrDecayID, "adsrDecay", getParameterNameVerbose (adsrDecayID), msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
-        auto sustain = std::make_unique<FloatParameter> (adsrSustainID, "adsrSustain", getParameterNameVerbose (adsrSustainID), zeroToOneRange, 0.8f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
-        auto release = std::make_unique<FloatParameter> (adsrReleaseID, "adsrRelease", getParameterNameVerbose (adsrReleaseID), msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
+        auto attack  = std::make_unique<FloatParameter> (adsrAttackID, msRange, 0.35f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
+        auto decay   = std::make_unique<FloatParameter> (adsrDecayID, msRange, 0.06f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
+        auto sustain = std::make_unique<FloatParameter> (adsrSustainID, zeroToOneRange, 0.8f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto release = std::make_unique<FloatParameter> (adsrReleaseID, msRange, 0.1f, emptyString, generic, sec_stringFromFloat, sec_floatFromString);
                
         groups.emplace_back (std::make_unique<Group> ("ADSR", TRANS ("ADSR"), "|", 
                                                       std::move (attack), std::move (decay), std::move (sustain), std::move (release)));       
     }        
     {    /* EFFECTS */
         //  subgroup: noise gate   
-        auto gate_toggle = std::make_unique<BoolParameter>  (noiseGateToggleID, "noiseGateIsOn", getParameterNameVerbose (noiseGateToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto gate_thresh = std::make_unique<FloatParameter> (noiseGateThresholdID, "noiseGateThresh", getParameterNameVerbose (noiseGateThresholdID), gainRange, -20.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
+        auto gate_toggle = std::make_unique<BoolParameter>  (noiseGateToggleID, true, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto gate_thresh = std::make_unique<FloatParameter> (noiseGateThresholdID, gainRange, -20.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
         
         auto gate = std::make_unique<Group> ("Noise gate", TRANS ("Noise gate"), "|", std::move (gate_toggle), std::move (gate_thresh));       
                
         //  subgroup: de-esser
-        auto ess_toggle = std::make_unique<BoolParameter>  (deEsserToggleID, "deEsserIsOn", getParameterNameVerbose (deEsserToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto ess_thresh = std::make_unique<FloatParameter> (deEsserThreshID, "deEsserThresh", getParameterNameVerbose (deEsserThreshID), gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
-        auto ess_amount = std::make_unique<FloatParameter> (deEsserAmountID, "deEsserAmount", getParameterNameVerbose (deEsserAmountID), zeroToOneRange, 0.5f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto ess_toggle = std::make_unique<BoolParameter>  (deEsserToggleID, true, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto ess_thresh = std::make_unique<FloatParameter> (deEsserThreshID, gainRange, -6.0f, emptyString, generic, gain_stringFromFloat, gain_floatFromString);
+        auto ess_amount = std::make_unique<FloatParameter> (deEsserAmountID, zeroToOneRange, 0.5f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
                    
         auto deEss = std::make_unique<Group> ("De-esser", TRANS ("De-esser"), "|", std::move (ess_toggle), std::move (ess_thresh), std::move (ess_amount));      
 
         //  subgroup: compressor
-        auto comp_toggle = std::make_unique<BoolParameter>  (compressorToggleID, "compressorToggle", getParameterNameVerbose (compressorToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto comp_amount = std::make_unique<FloatParameter> (compressorAmountID, "compressorAmount", getParameterNameVerbose (compressorAmountID), zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto comp_toggle = std::make_unique<BoolParameter>  (compressorToggleID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto comp_amount = std::make_unique<FloatParameter> (compressorAmountID, zeroToOneRange, 0.35f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
         
         auto compressor = std::make_unique<Group> ("Compressor", TRANS ("Compressor"), "|", std::move (comp_toggle), std::move (comp_amount));
         
         //  subgroup: delay
-        auto delay_toggle = std::make_unique<BoolParameter> (delayToggleID, "delayIsOn", getParameterNameVerbose (delayToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto delay_mix = std::make_unique<IntParameter>     (delayDryWetID, "delayDryWet", getParameterNameVerbose (delayDryWetID), 0, 100, 35, emptyString,
+        auto delay_toggle = std::make_unique<BoolParameter> (delayToggleID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto delay_mix = std::make_unique<IntParameter>     (delayDryWetID, 0, 100, 35, emptyString,
                                                              pcnt_stringFromInt, pcnt_intFromString);
         
         auto delay = std::make_unique<Group> ("Delay", TRANS ("Delay"), "|", std::move (delay_toggle), std::move (delay_mix));
                
         //  subgroup: reverb       
-        auto verb_toggle = std::make_unique<BoolParameter>  (reverbToggleID, "reverbIsOn", getParameterNameVerbose (reverbToggleID), false, emptyString, toggle_stringFromBool, toggle_boolFromString);
-        auto verb_dryWet = std::make_unique<IntParameter>   (reverbDryWetID, "reverbDryWet", getParameterNameVerbose (reverbDryWetID), 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);
-        auto verb_decay  = std::make_unique<FloatParameter> (reverbDecayID, "reverbDecay", getParameterNameVerbose (reverbDecayID), zeroToOneRange, 0.6f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
-        auto verb_duck   = std::make_unique<FloatParameter> (reverbDuckID, "reverbDuck", getParameterNameVerbose (reverbDuckID), zeroToOneRange, 0.3f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
-        auto verb_loCut  = std::make_unique<FloatParameter> (reverbLoCutID, "reverbLoCut", getParameterNameVerbose (reverbLoCutID), hzRange, 80.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
-        auto verb_hiCut  = std::make_unique<FloatParameter> (reverbHiCutID, "reverbHiCut", getParameterNameVerbose (reverbHiCutID), hzRange, 5500.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
+        auto verb_toggle = std::make_unique<BoolParameter>  (reverbToggleID, false, emptyString, toggle_stringFromBool, toggle_boolFromString);
+        auto verb_dryWet = std::make_unique<IntParameter>   (reverbDryWetID, 0, 100, 35, emptyString, pcnt_stringFromInt, pcnt_intFromString);
+        auto verb_decay  = std::make_unique<FloatParameter> (reverbDecayID, zeroToOneRange, 0.6f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto verb_duck   = std::make_unique<FloatParameter> (reverbDuckID, zeroToOneRange, 0.3f, emptyString, generic, normPcnt_stringFromInt, normPcnt_intFromString);
+        auto verb_loCut  = std::make_unique<FloatParameter> (reverbLoCutID, hzRange, 80.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
+        auto verb_hiCut  = std::make_unique<FloatParameter> (reverbHiCutID, hzRange, 5500.0f, emptyString, generic, hz_stringFromFloat, hz_floatFromString);
         
         auto reverb = std::make_unique<Group> ("Reverb", TRANS ("Reverb"), "|", std::move (verb_toggle), std::move (verb_dryWet), std::move (verb_decay), std::move (verb_duck), std::move (verb_loCut), std::move (verb_hiCut));
                
         //  limiter   
         auto limiter = std::make_unique<Group> ("Limiter", TRANS ("Limiter"), "|", 
-                                                std::make_unique<BoolParameter>  (limiterToggleID, "limiterIsOn", getParameterNameVerbose (limiterToggleID), true, emptyString, toggle_stringFromBool, toggle_boolFromString));
+                                                std::make_unique<BoolParameter>  (limiterToggleID, true, emptyString, toggle_stringFromBool, toggle_boolFromString));
                
         groups.emplace_back (std::make_unique<Group> ("Effects", TRANS ("Effects"), "|", 
-                                                      std::move (gate), std::move (deEss), std::move (compressor),
+                                                      std::move (gate),  std::move (deEss), std::move (compressor),
                                                       std::move (delay), std::move (reverb), std::move (limiter)));
     } 
     

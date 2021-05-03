@@ -22,7 +22,7 @@ include (${Imogen_sourceDir}/imogenConfig.cmake)
 #
 
 set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/ImogenCommon.h
+    ${Imogen_Common_SourceFiles}
     ${Imogen_Processor_SourceFiles}
     ${Imogen_GUI_SourceFiles}
     ${Imogen_OSC_SourceFiles}

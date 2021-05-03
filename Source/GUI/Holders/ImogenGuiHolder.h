@@ -53,6 +53,8 @@ public:
     
     /*=========================================================================================*/
     
+    const ImogenGUI* gui() const noexcept { return &p_gui; }
+    
 protected:
     ImogenGUI* gui() noexcept { return &p_gui; }
     
