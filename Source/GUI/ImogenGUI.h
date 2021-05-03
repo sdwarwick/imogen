@@ -40,15 +40,10 @@ class ImogenGUI  :     public juce::Component
 {
 public:
     
-    ImogenGUI (ProcessorStateChangeSender* s);
+    ImogenGUI();
     
     virtual ~ImogenGUI() override;
     
-    /*=========================================================================================*/
-    
-    void recieveParameterChange  (ParameterID param, float newValue);
-    void recieveParameterGesture (ParameterID param, bool gestureStart);
-     
     /*=========================================================================================*/
     /* juce::Component functions */
     
@@ -80,8 +75,6 @@ private:
     void deletePreset (const juce::String& presetName);
     
     /*=========================================================================================*/
-    
-    ProcessorStateChangeSender* const sender;
     
     ImogenDialComponent mainDial;
     

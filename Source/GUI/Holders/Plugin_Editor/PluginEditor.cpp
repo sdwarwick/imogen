@@ -50,21 +50,6 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 #endif
 }
 
-
-/*=========================================================================================================
-    ProcessorStateChangeSender functions
- =========================================================================================================*/
-
-void ImogenAudioProcessorEditor::sendParameterChange  (ParameterID param, float newValue)
-{
-    imgnProcessor.recieveExternalParameterChange (param, newValue);
-}
-
-void ImogenAudioProcessorEditor::sendParameterGesture (ParameterID param, bool gestureStart)
-{
-    imgnProcessor.recieveExternalParameterGesture (param, gestureStart);
-}
-
 /*=========================================================================================================
     juce::Component functions
  =========================================================================================================*/

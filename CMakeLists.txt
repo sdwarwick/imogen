@@ -25,7 +25,6 @@ set (Imogen_sourceFiles
     ${Imogen_Common_SourceFiles}
     ${Imogen_Processor_SourceFiles}
     ${Imogen_GUI_SourceFiles}
-    ${Imogen_OSC_SourceFiles}
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h

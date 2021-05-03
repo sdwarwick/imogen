@@ -68,6 +68,8 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     for (auto* pntr : parameterPointers)
         pntr->doAction();
     
+    treeSync.sendFullSyncCallback();
+    
     suspendProcessing (false);
     
     updateHostDisplay();

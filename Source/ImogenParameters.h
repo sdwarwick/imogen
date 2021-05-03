@@ -43,6 +43,3 @@ struct ImogenBoolParameter   :    public bav::BoolParameter
     { }
 };
 
-
-
-

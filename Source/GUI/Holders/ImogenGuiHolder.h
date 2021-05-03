@@ -31,17 +31,12 @@
 using namespace Imogen;
 
 
-class ImogenGuiHolder  :    public ProcessorStateChangeSender
+class ImogenGuiHolder
 {
 public:
-    ImogenGuiHolder(): p_gui(this) { }
+    ImogenGuiHolder() { }
     
     virtual ~ImogenGuiHolder() = default;
-    
-    /*=========================================================================================*/
-    
-    void recieveParameterChangeFromProcessor  (ParameterID param, float newValue) override final { p_gui.recieveParameterChange (param, newValue); }
-    void recieveParameterGestureFromProcessor (ParameterID param, bool gestureStart) override final { p_gui.recieveParameterGesture (param, gestureStart); }
     
     /*=========================================================================================*/
     

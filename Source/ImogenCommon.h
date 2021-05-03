@@ -35,10 +35,6 @@
   #define IMOGEN_USE_ABLETON_LINK 0
 #endif
 
-#ifndef IMOGEN_USE_OSC
-  #define IMOGEN_USE_OSC 0
-#endif
-
 #include "Shared-code/bv_SharedCode/bv_SharedCode.h"
 
 
@@ -110,25 +106,6 @@ struct ProcessorState
     // midi latch on/off
     // ableton link on/off, # of session peers
     // MTS-ESP connection status, scale name
-};
-
-
-/* Anything outside of the processor or host automation that wants to affect the processor's state must use this interface */
-struct ProcessorStateChangeSender
-{
-    virtual void sendParameterChange  (ParameterID param, float newValue) = 0;
-    virtual void sendParameterGesture (ParameterID param, bool gestureStart) = 0;
-    
-    virtual void recieveParameterChangeFromProcessor  (ParameterID param, float newValue) = 0;
-    virtual void recieveParameterGestureFromProcessor (ParameterID param, bool gestureStart) = 0;
-};
-
-
-/* The processor uses this interface to recieve external changes from ProcessorStateChangeSender objects */
-struct ProcessorStateChangeReciever
-{
-    virtual void recieveExternalParameterChange  (ParameterID param, float newValue) = 0;
-    virtual void recieveExternalParameterGesture (ParameterID param, bool gestureStart) = 0;
 };
 
 

@@ -26,24 +26,6 @@
 
 
 /*===========================================================================================================================
- ProcessorStateChangeReciever functions
- ============================================================================================================================*/
-
-void ImogenAudioProcessor::recieveExternalParameterChange (ParameterID param, float newValue)
-{
-    getParameterPntr(param)->orig()->setValueNotifyingHost (newValue);
-}
-
-void ImogenAudioProcessor::recieveExternalParameterGesture (ParameterID param, bool gestureStart)
-{
-    if (gestureStart)
-        getParameterPntr(param)->orig()->beginChangeGesture();
-    else
-        getParameterPntr(param)->orig()->endChangeGesture();
-}
-
-
-/*===========================================================================================================================
     Creates Imogen's parameter tree.
  ============================================================================================================================*/
 

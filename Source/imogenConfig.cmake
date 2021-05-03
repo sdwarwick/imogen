@@ -52,11 +52,6 @@ set (Imogen_GUI_SourceFiles
     ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.h
     ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.cpp)
 
-set (Imogen_OSC_SourceFiles
-    ${Imogen_sourceDir}/OSC/OSC.h
-    ${Imogen_sourceDir}/OSC/OSC_reciever.h
-    ${Imogen_sourceDir}/OSC/OSC_sender.h)
-
 #
 
 set (Imogen_assetFiles

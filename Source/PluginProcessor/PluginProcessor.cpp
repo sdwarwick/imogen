@@ -32,7 +32,8 @@
 ImogenAudioProcessor::ImogenAudioProcessor()
   : bav::TranslationInitializer (findAppropriateTranslationFile()),
     AudioProcessor (makeBusProperties()),
-    tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters())
+    tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
+    treeSync (tree.state, *this)
 #if IMOGEN_USE_ABLETON_LINK
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
@@ -51,24 +52,18 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     updateEditorSizeFromAPVTS();
     
+    treeSync.sendFullSyncCallback();
+    
 #if IMOGEN_PROCESSOR_TIMER
     constexpr int timerFramerate = 30;
     Timer::startTimerHz (timerFramerate);
 #endif
-    
-    // oscReceiver.addListener (&oscListener);
 }
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
 #if IMOGEN_PROCESSOR_TIMER
     Timer::stopTimer();
-#endif
-    
-#if IMOGEN_USE_OSC
-    oscSender.disconnect();
-    // oscReceiver.removeListener (&oscListener);
-    oscReceiver.disconnect();
 #endif
 }
 
@@ -207,10 +202,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
     
-    using Buffer = juce::AudioBuffer<SampleType>;
-    
-    Buffer inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
-    Buffer outBus = getBusBuffer (buffer, false, 0);
+    auto inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
+    auto outBus = getBusBuffer (buffer, false, 0);
     
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 }
@@ -316,7 +309,7 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #endif
 }
 
-inline ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
+ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
 {
 #if IMOGEN_HEADLESS
     return nullptr;

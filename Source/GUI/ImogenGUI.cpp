@@ -27,7 +27,7 @@
 #include "Holders/ImogenGuiHolder.h"
 
 
-ImogenGUI::ImogenGUI (ProcessorStateChangeSender* s): sender(s), tooltipWindow(this, msBeforeTooltip)
+ImogenGUI::ImogenGUI(): tooltipWindow(this, msBeforeTooltip)
 {
     createParameters();
     jassert (parameters.size() == numParams);
@@ -57,20 +57,6 @@ ImogenGUI::ImogenGUI (ProcessorStateChangeSender* s): sender(s), tooltipWindow(t
 ImogenGUI::~ImogenGUI()
 {
     this->setLookAndFeel (nullptr);
-}
-
-
-/*=========================================================================================================
- =========================================================================================================*/
-
-void ImogenGUI::recieveParameterChange  (ParameterID param, float newValue)
-{
-    juce::ignoreUnused (param, newValue);
-}
-
-void ImogenGUI::recieveParameterGesture (ParameterID param, bool gestureStart)
-{
-    juce::ignoreUnused (param, gestureStart);
 }
 
 

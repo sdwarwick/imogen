@@ -34,10 +34,6 @@
   #include <../../third-party/ableton-link/include/ableton/Link.hpp>
 #endif
 
-#if IMOGEN_USE_OSC
-  #include "../OSC/OSC.h"
-#endif
-
 
 #undef IMOGEN_PROCESSOR_TIMER
 #if IMOGEN_REMOTE_APP || ! IMOGEN_HEADLESS
@@ -50,14 +46,14 @@
 using namespace Imogen;
 
 
-class ImogenAudioProcessorEditor; // forward declaration...
+
+class ImogenAudioProcessorEditor;  // forward declaration...
 
 /*
 */
 
 class ImogenAudioProcessor    : private bav::TranslationInitializer,
-                                public  juce::AudioProcessor,
-                                public  ProcessorStateChangeReciever
+                                public  juce::AudioProcessor
 #if IMOGEN_PROCESSOR_TIMER
                               , private juce::Timer
 #endif
@@ -79,12 +75,6 @@ public:
 #if IMOGEN_PROCESSOR_TIMER
     void timerCallback() override final;
 #endif
-    
-    /*=========================================================================================*/
-    /* ProcessorStateChangeReciever functions -- for external sources (GUI, OSC) to update the processor's state */
-    
-    void recieveExternalParameterChange  (ParameterID param, float newValue) override final;
-    void recieveExternalParameterGesture (ParameterID param, bool gestureStart) override final;
     
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */
@@ -191,7 +181,7 @@ private:
 
     void updateEditorSizeFromAPVTS();
     
-    inline ImogenGuiHolder* getActiveGui() const;
+    ImogenGuiHolder* getActiveGui() const;
     
     inline Parameter* getParameterPntr (const ParameterID paramID) const;
     
@@ -201,17 +191,35 @@ private:
     bav::ImogenEngine<float>  floatEngine;
     bav::ImogenEngine<double> doubleEngine;
     
+    /*=========================================================================================*/
+    
     juce::AudioProcessorValueTreeState tree;
     
+    struct ImogenProcessorValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
+    {
+        ImogenProcessorValueTreeSynchronizer (const juce::ValueTree& vtree, ImogenAudioProcessor& p)
+            : juce::ValueTreeSynchroniser(vtree), processor(p) { }
+        
+        void stateChanged (const void* encodedChange, size_t encodedChangeSize) override final
+        {
+            if (auto* editor = processor.getActiveGui())
+            {
+                // relay state change info to editor...
+            }
+            juce::ignoreUnused (encodedChange, encodedChangeSize);
+        }
+        
+        ImogenAudioProcessor& processor;
+    };
+    
+    ImogenProcessorValueTreeSynchronizer treeSync;
+    
+    /*=========================================================================================*/
+    
     std::vector< Parameter* > parameterPointers;
-    Parameter* mainBypassPntr;
+    Parameter* mainBypassPntr;  // this one gets referenced specifically...
     
-    // range object used to scale pitchbend values to and from the normalized 0.0-1.0 range
-    juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f };
-    
-#if IMOGEN_USE_ABLETON_LINK
-    ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session.
-#endif
+    juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f }; // range object used to scale pitchbend values
     
     juce::Point<int> savedEditorSize;
     
@@ -219,10 +227,8 @@ private:
     bav::MessageQueue<msgQueueSize> nonParamEvents;  // this queue is SPSC; this is only for events flowing from the editor into the processor
     juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
-#if IMOGEN_USE_OSC
-    ImogenOSCSender   oscSender;
-    juce::OSCReceiver oscReceiver;
-    // ImogenOSCReciever<juce::OSCReceiver::RealtimeCallback> oscListener;
+#if IMOGEN_USE_ABLETON_LINK
+    ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session
 #endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)

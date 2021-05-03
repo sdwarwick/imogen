@@ -28,10 +28,6 @@
 
 #include "../ImogenGuiHolder.h"
 
-#if IMOGEN_USE_OSC
-  #include "../../../OSC/OSC.h"
-#endif
-
 
 using namespace Imogen;
 
@@ -45,12 +41,6 @@ public:
     ~MainComponent() override;
 
     /*=========================================================================================*/
-    /* ProcessorStateChangeSender functions */
-    
-    void sendParameterChange  (ParameterID param, float newValue) override final;
-    void sendParameterGesture (ParameterID param, bool gestureStart) override final;
-    
-    /*=========================================================================================*/
     /* juce::Component functions */
     
     void paint (juce::Graphics&) override final;
@@ -59,13 +49,6 @@ public:
     /*=========================================================================================*/
 
 private:
-#if IMOGEN_USE_OSC
-    juce::OSCReceiver oscReceiver;
-    ImogenOSCReciever<juce::OSCReceiver::MessageLoopCallback> oscParser;
-    
-    ImogenOSCSender   oscSender;
-#endif
-    
 #if JUCE_OPENGL
     OpenGLContext openGLContext;
 #endif

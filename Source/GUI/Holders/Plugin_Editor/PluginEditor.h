@@ -41,12 +41,6 @@ public:
     ~ImogenAudioProcessorEditor() override;
     
     /*=========================================================================================*/
-    /* ProcessorStateChangeSender functions */
-    
-    void sendParameterChange  (ParameterID param, float newValue) override final;
-    void sendParameterGesture (ParameterID param, bool gestureStart) override final;
-    
-    /*=========================================================================================*/
     /* juce::Component functions */
     
     void paint (juce::Graphics&) override final;

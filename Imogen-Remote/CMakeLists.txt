@@ -12,7 +12,6 @@ include (${Imogen_sourceDir}/imogenConfig.cmake)
 set (ImogenRemote_sourceFiles
     ${Imogen_Common_SourceFiles}
     ${Imogen_GUI_SourceFiles}
-    ${Imogen_OSC_SourceFiles}
 	${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp)
