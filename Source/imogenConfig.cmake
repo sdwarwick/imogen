@@ -34,6 +34,7 @@ set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
 set (Imogen_Common_SourceFiles
     ${Imogen_sourceDir}/Common/ImogenCommon.h
     ${Imogen_sourceDir}/Common/ImogenParameters.h
+    ${Imogen_sourceDir}/Common/ImogenState.h
     )
 
 set (Imogen_Processor_SourceFiles
