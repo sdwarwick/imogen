@@ -29,6 +29,7 @@
 #include "GUI/Holders/ImogenGuiHolder.h"
 
 #include "../Common/ImogenParameters.h"
+#include "../Common/ImogenState.h"
 
 #if IMOGEN_USE_ABLETON_LINK
   #include <../../third-party/ableton-link/include/ableton/Link.hpp>
@@ -213,6 +214,8 @@ private:
     };
     
     ImogenProcessorValueTreeSynchronizer treeSync;
+    
+    ImogenState internalstate;
     
     /*=========================================================================================*/
     
