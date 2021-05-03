@@ -28,7 +28,7 @@
 
 #include "GUI/Holders/ImogenGuiHolder.h"
 
-#include "../ImogenParameters.h"
+#include "../Common/ImogenParameters.h"
 
 #if IMOGEN_USE_ABLETON_LINK
   #include <../../third-party/ableton-link/include/ableton/Link.hpp>

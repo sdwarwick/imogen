@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "ImogenCommon.h"
+#include "../Common/ImogenCommon.h"
 
 
 using namespace Imogen;
