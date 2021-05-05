@@ -23,6 +23,13 @@
 
 #include "PluginProcessor.h"
 
+
+void ImogenAudioProcessor::applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize)
+{
+    juce::ValueTreeSynchroniser::applyChange (state, encodedChangeData, encodedChangeDataSize, nullptr);
+}
+
+
 /*===========================================================================================================================
     Functions for state saving
  ============================================================================================================================*/

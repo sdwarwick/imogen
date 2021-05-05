@@ -11,6 +11,7 @@ namespace Imogen
 {
 
 
+
 struct ImogenFloatParameter :   public bav::FloatParameter
 {
     ImogenFloatParameter (ParameterID paramtrID, const juce::NormalisableRange<float>& nRange, float defaultVal,
@@ -318,6 +319,161 @@ static inline void createValueTree (juce::ValueTree& tree,
         }
     }
 }
+
+
+/* Updates the ValueTree with changes from the parameter object */
+class ParameterToValueTreeAttachment   :     public juce::Timer,
+                                             public juce::AudioProcessorParameter::Listener
+{
+public:
+    ParameterToValueTreeAttachment (bav::Parameter* paramToUse,
+                                    juce::ValueTree& treeToUse,
+                                    ParameterID parameterID)
+        : param (paramToUse),
+          paramID (parameterID),
+          tree (treeToUse)
+    {
+        param->orig()->addListener (this);
+        startTimerHz (10);
+        lastSentValue = param->getCurrentDenormalizedValue();
+        lastSentChangeState = false;
+    }
+    
+    virtual ~ParameterToValueTreeAttachment() override
+    {
+        stopTimer();
+        param->orig()->removeListener (this);
+    }
+    
+    void timerCallback() override final
+    {
+        const auto idString = getParameterIdentifier (paramID);
+        
+        const auto key = juce::Identifier { idString };
+        const auto gestureKey = juce::Identifier { idString + "_isChanging" };
+        
+        
+        const auto newValue = param->getCurrentDenormalizedValue();
+        
+        if (lastSentValue != newValue)
+        {
+            lastSentValue = newValue;
+            tree.setProperty (key, newValue, nullptr);
+        }
+        
+        const auto changeState = isChanging.load();
+        
+        if (lastSentChangeState != changeState)
+        {
+            lastSentChangeState = changeState;
+            tree.setProperty (gestureKey, isChanging.load(), nullptr);
+        }
+    }
+    
+    void parameterValueChanged (int, float) override final { }
+    
+    void parameterGestureChanged (int, bool gestureIsStarting) override final
+    {
+        isChanging.store (gestureIsStarting);
+    }
+    
+    
+private:
+    bav::Parameter* const param;
+    const ParameterID paramID;
+    juce::ValueTree& tree;
+    
+    float lastSentValue;
+    bool  lastSentChangeState;
+    std::atomic<bool> isChanging;
+};
+
+
+/* Updates the parameter object with changes from the ValueTree */
+class ValueTreeToParameterAttachment   :    public juce::ValueTree::Listener
+{
+public:
+    ValueTreeToParameterAttachment (bav::Parameter* paramToUse,
+                                    juce::ValueTree& treeToUse,
+                                    ParameterID parameterID)
+        : param (paramToUse),
+          paramID (parameterID),
+          tree (treeToUse),
+          paramIdentifier (getParameterIdentifier (paramID)),
+          paramGestureIdentifier (getParameterIdentifier (paramID) + "_isChanging")
+    {
+        tree.addListener (this);
+        lastSentValue = param->getCurrentDenormalizedValue();
+        lastSentChangeState = false;
+    }
+    
+    ~ValueTreeToParameterAttachment() override
+    {
+        tree.removeListener (this);
+    }
+    
+    void valueTreePropertyChanged (juce::ValueTree& ltree, const juce::Identifier& property) override final
+    {
+        if (property == paramIdentifier)
+        {
+            const float newValue = ltree.getProperty (paramIdentifier);
+            
+            if (lastSentValue != newValue)
+            {
+                lastSentValue = newValue;
+                param->orig()->setValueNotifyingHost (newValue);
+            }
+        }
+        else if (property == paramGestureIdentifier)
+        {
+            const bool isNowChanging = ltree.getProperty (paramGestureIdentifier);
+            
+            if (lastSentChangeState != isNowChanging)
+            {
+                lastSentChangeState = isNowChanging;
+                
+                if (isNowChanging)
+                    param->orig()->beginChangeGesture();
+                else
+                    param->orig()->endChangeGesture();
+            }
+        }
+    }
+    
+    
+private:
+    bav::Parameter* const param;
+    const ParameterID paramID;
+    juce::ValueTree& tree;
+    
+    float lastSentValue;
+    bool  lastSentChangeState;
+    
+    const juce::Identifier paramIdentifier;
+    const juce::Identifier paramGestureIdentifier;
+};
+
+
+struct ParameterAttachment :    public ParameterToValueTreeAttachment,
+                                public ValueTreeToParameterAttachment
+{
+    ParameterAttachment (bav::Parameter* paramToUse,
+                         juce::ValueTree& treeToUse)
+        : ParameterToValueTreeAttachment (paramToUse, treeToUse, static_cast<ParameterID>(paramToUse->key())),
+          ValueTreeToParameterAttachment (paramToUse, treeToUse, static_cast<ParameterID>(paramToUse->key()))
+    {
+        jassert (paramToUse != nullptr);
+    }
+    
+    ParameterAttachment (bav::Parameter* paramToUse,
+                         juce::ValueTree& treeToUse,
+                         ParameterID parameterID)
+        : ParameterToValueTreeAttachment (paramToUse, treeToUse, parameterID),
+          ValueTreeToParameterAttachment (paramToUse, treeToUse, parameterID)
+    {
+        jassert (paramToUse != nullptr);
+    }
+};
 
 
 static inline juce::Identifier imogenValueTreeType()

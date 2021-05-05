@@ -24,14 +24,31 @@
 
 #include "bv_SharedCode/BinaryDataHelpers.h"
 
-#include "Holders/ImogenGuiHolder.h"
+#include "ImogenGUI.h"
 
 
-ImogenGUI::ImogenGUI(): tooltipWindow(this, msBeforeTooltip)
+ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
+      : parameterTree (createParameterTree()),
+        state (imogenValueTreeType()),
+        treeSync (state, s),
+        tooltipWindow (this, msBeforeTooltip)
 {
     setBufferedToImage (true);
     
     setInterceptsMouseClicks (false, true);
+    
+    Imogen::createValueTree (state, *parameterTree);
+    
+    parameterPointers.reserve (numParams);
+    parseParameterTreeForParameterPointers (*parameterTree);
+    
+    parameterTreeAttachments.ensureStorageAllocated (numParams);
+    
+    for (int i = 0; i < numParams; ++i)
+    {
+        const auto paramID = static_cast<ParameterID>(i);
+        parameterTreeAttachments.add (new ParameterAttachment (getParameterPntr (paramID), state, paramID));
+    }
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -57,6 +74,50 @@ ImogenGUI::~ImogenGUI()
 {
     this->setLookAndFeel (nullptr);
 }
+
+
+inline bav::Parameter* ImogenGUI::getParameterPntr (const ParameterID paramID) const
+{
+    for (auto* pntr : parameterPointers)
+        if (static_cast<ParameterID>(pntr->key()) == paramID)
+            return pntr;
+    
+    return nullptr;
+}
+
+
+inline void ImogenGUI::parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup& group)
+{
+    for (auto* node : group)
+    {
+        if (auto* param = node->getParameter())
+        {
+            if (auto* parameter = dynamic_cast<bav::Parameter*>(param))
+            {
+                parameterPointers.emplace_back (parameter);
+            }
+            else
+            {
+                jassertfalse;
+            }
+        }
+        else if (auto* thisGroup = node->getGroup())
+        {
+            parseParameterTreeForParameterPointers (*thisGroup);
+        }
+    }
+}
+
+
+/*=========================================================================================================
+ =========================================================================================================*/
+
+
+void ImogenGUI::applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize)
+{
+    juce::ValueTreeSynchroniser::applyChange (state, encodedChangeData, encodedChangeDataSize, nullptr);
+}
+
 
 
 /*=========================================================================================================

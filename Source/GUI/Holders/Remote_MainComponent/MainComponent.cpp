@@ -24,11 +24,11 @@
 #include "MainComponent.h"
 
 
-MainComponent::MainComponent()
+MainComponent::MainComponent(): gui(this)
 {
     this->setBufferedToImage (true);
     
-    addAndMakeVisible (gui());
+    addAndMakeVisible (gui);
     
     setSize (800, 2990);
     
@@ -49,6 +49,14 @@ MainComponent::~MainComponent()
 
 
 /*=========================================================================================================
+ =========================================================================================================*/
+
+void MainComponent::sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize)
+{
+    juce::ignoreUnused (encodedChange, encodedChangeSize);
+}
+
+/*=========================================================================================================
     juce::Component functions
  =========================================================================================================*/
 
@@ -59,5 +67,5 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    gui()->setBounds (0, 0, getWidth(), getHeight());
+    gui.setBounds (0, 0, getWidth(), getHeight());
 }

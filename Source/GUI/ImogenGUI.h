@@ -32,17 +32,29 @@
 
 #include "bv_SharedCode/bv_SharedCode.h"
 
+#include "../Common/ImogenParameters.h"
+
 
 using namespace Imogen;
+
+
+struct ImogenGUIUpdateSender
+{
+    virtual void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) = 0;
+};
 
 
 class ImogenGUI  :     public juce::Component
 {
 public:
     
-    ImogenGUI();
+    ImogenGUI (ImogenGUIUpdateSender* s);
     
     virtual ~ImogenGUI() override;
+    
+    /*=========================================================================================*/
+    
+    void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize);
     
     /*=========================================================================================*/
     /* juce::Component functions */
@@ -63,6 +75,8 @@ public:
     /*=========================================================================================*/
     
 private:
+    inline bav::Parameter* getParameterPntr (const ParameterID paramID) const;
+    
     inline void makePresetMenu (juce::ComboBox& box);
     
     void rescanPresetsFolder();
@@ -70,6 +84,36 @@ private:
     void savePreset   (const juce::String& presetName);
     void renamePreset (const juce::String& previousName, const juce::String& newName);
     void deletePreset (const juce::String& presetName);
+    
+    /*=========================================================================================*/
+    
+    inline void parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup& group);
+    
+    /*=========================================================================================*/
+    
+    std::unique_ptr<juce::AudioProcessorParameterGroup> parameterTree;
+    std::vector< bav::Parameter* > parameterPointers;
+    juce::ValueTree state;
+    
+    juce::OwnedArray<ParameterAttachment> parameterTreeAttachments;
+    
+    
+    struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
+    {
+        ValueTreeSynchronizer (const juce::ValueTree& vtree, ImogenGUIUpdateSender* s)
+            : juce::ValueTreeSynchroniser(vtree),
+              sender (s)
+        { }
+        
+        void stateChanged (const void* encodedChange, size_t encodedChangeSize) override final
+        {
+            sender->sendValueTreeStateChange (encodedChange, encodedChangeSize);
+        }
+        
+        ImogenGUIUpdateSender* const sender;
+    };
+    
+    ValueTreeSynchronizer treeSync;
     
     /*=========================================================================================*/
     
@@ -86,6 +130,12 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };
+
+
+
+
+/*=========================================================================================*/
+/*=========================================================================================*/
 
 
 

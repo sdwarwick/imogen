@@ -26,11 +26,11 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-    : AudioProcessorEditor (&p), imgnProcessor(p)
+    : AudioProcessorEditor (&p), imgnProcessor(p), gui(this)
 {
     this->setBufferedToImage (true);
     
-    addAndMakeVisible (gui());
+    addAndMakeVisible (gui);
     
     setResizable (true, true);
     setResizeLimits (800, 450, 2990, 1800);
@@ -50,6 +50,18 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 #endif
 }
 
+/*=========================================================================================================*/
+
+void ImogenAudioProcessorEditor::applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize)
+{
+    gui.applyValueTreeStateChange (encodedChangeData, encodedChangeDataSize);
+}
+
+void ImogenAudioProcessorEditor::sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize)
+{
+    imgnProcessor.applyValueTreeStateChange (encodedChange, encodedChangeSize);
+}
+
 /*=========================================================================================================
     juce::Component functions
  =========================================================================================================*/
@@ -64,5 +76,5 @@ void ImogenAudioProcessorEditor::resized()
 {
     imgnProcessor.saveEditorSize (getWidth(), getHeight());
     
-    gui()->setBounds (0, 0, getWidth(), getHeight());
+    gui.setBounds (0, 0, getWidth(), getHeight());
 }

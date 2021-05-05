@@ -45,9 +45,17 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     addParameterGroup (createParameterTree());
     
-    createValueTree (state, getParameterTree());
+    Imogen::createValueTree (state, getParameterTree());
     
     jassert (getParameters().size() == numParams);
+    
+    parameterTreeAttachments.ensureStorageAllocated (numParams);
+    
+    for (int i = 0; i < numParams; ++i)
+    {
+        const auto paramID = static_cast<ParameterID>(i);
+        parameterTreeAttachments.add (new ParameterAttachment (getParameterPntr (paramID), state, paramID));
+    }
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -315,13 +323,13 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #endif
 }
 
-ImogenGuiHolder* ImogenAudioProcessor::getActiveGui() const
+ImogenGUIUpdateReciever* ImogenAudioProcessor::getActiveGuiEventReciever() const
 {
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
     if (auto* editor = getActiveEditor())
-        return dynamic_cast<ImogenGuiHolder*> (editor);
+        return dynamic_cast<ImogenGUIUpdateReciever*> (editor);
     
     return nullptr;
 #endif

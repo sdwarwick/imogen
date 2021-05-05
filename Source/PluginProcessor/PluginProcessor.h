@@ -26,10 +26,7 @@
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
 
-#include "GUI/Holders/ImogenGuiHolder.h"
-
 #include "../Common/ImogenParameters.h"
-#include "../Common/ImogenState.h"
 
 #ifndef IMOGEN_USE_ABLETON_LINK
   #define IMOGEN_USE_ABLETON_LINK 0
@@ -53,6 +50,14 @@ using namespace Imogen;
 
 
 class ImogenAudioProcessorEditor;  // forward declaration...
+
+
+struct ImogenGUIUpdateReciever
+{
+    virtual void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize) = 0;
+};
+
+
 
 /*
 */
@@ -143,6 +148,10 @@ public:
     
     /*=========================================================================================*/
     
+    void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize);
+    
+    /*=========================================================================================*/
+    
 private:
     
     /*=========================================================================================*/
@@ -183,7 +192,7 @@ private:
 
     void updateEditorSizeFromAPVTS();
     
-    ImogenGuiHolder* getActiveGui() const;
+    ImogenGUIUpdateReciever* getActiveGuiEventReciever() const;
     
     inline Parameter* getParameterPntr (const ParameterID paramID) const;
     
@@ -197,24 +206,27 @@ private:
     
     juce::ValueTree state;
     
-    struct ImogenProcessorValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
+    juce::OwnedArray<ParameterAttachment> parameterTreeAttachments;
+    
+    struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
     {
-        ImogenProcessorValueTreeSynchronizer (const juce::ValueTree& vtree, ImogenAudioProcessor& p)
+        ValueTreeSynchronizer (const juce::ValueTree& vtree, ImogenAudioProcessor& p)
             : juce::ValueTreeSynchroniser(vtree), processor(p) { }
         
         void stateChanged (const void* encodedChange, size_t encodedChangeSize) override final
         {
-            if (auto* editor = processor.getActiveGui())
+            if (auto* editor = processor.getActiveGuiEventReciever())
             {
-                // relay state change info to editor...
+                editor->applyValueTreeStateChange (encodedChange, encodedChangeSize);
             }
+            
             juce::ignoreUnused (encodedChange, encodedChangeSize);
         }
         
         ImogenAudioProcessor& processor;
     };
     
-    ImogenProcessorValueTreeSynchronizer treeSync;
+    ValueTreeSynchronizer treeSync;
     
     /*=========================================================================================*/
     
