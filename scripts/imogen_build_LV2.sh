@@ -51,7 +51,7 @@ set -e;  # from this point forward, any errors trigger an exit signal
 
 # configure CMake
 printf "\n \t \v Configuring CMake... \n \n"
-cmake -B Builds/LV2_build -Dbv_formats=LV2 -Dbv_juceGitRepoToUse="https://github.com/lv2-porting-project/JUCE.git" -Dbv_juceGitRepo_TagToUse="origin/lv2" .
+cmake -B Builds/LV2_build -Dbv_formats=LV2 -Dbv_use_AbletonLink=FALSE -Dbv_juceGitRepoToUse="https://github.com/lv2-porting-project/JUCE.git" -Dbv_juceGitRepo_TagToUse="origin/lv2" .
 
 
 # execute build

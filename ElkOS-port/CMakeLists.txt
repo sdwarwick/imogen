@@ -14,6 +14,16 @@ set (bv_formats Standalone VST3)
 
 #
 
+set (bv_use_AbletonLink FALSE)
+
+if (DEFINED bv_ignoreAllThirdPartyLibs)
+    set (bv_use_MTS_ESP FALSE)
+elseif (NOT DEFINED bv_use_MTS_ESP)
+    set (bv_use_MTS_ESP TRUE)
+endif()
+
+#
+
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #

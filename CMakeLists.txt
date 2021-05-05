@@ -11,8 +11,13 @@ if (DEFINED bv_ignoreAllThirdPartyLibs)
 	set (bv_use_AbletonLink FALSE)
 	set (bv_use_MTS_ESP FALSE)
 else()
-	set (bv_use_AbletonLink TRUE)
-	set (bv_use_MTS_ESP TRUE)
+    if (NOT DEFINED bv_use_AbletonLink)
+	   set (bv_use_AbletonLink TRUE)
+    endif()
+
+    if (NOT DEFINED bv_use_MTS_ESP)
+	   set (bv_use_MTS_ESP TRUE)
+    endif()
 endif()
 
 #

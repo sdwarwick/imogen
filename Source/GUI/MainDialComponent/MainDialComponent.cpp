@@ -34,6 +34,8 @@ ImogenDialComponent::ImogenDialComponent()
 
 void ImogenDialComponent::paint (juce::Graphics& g)
 {
+    juce::Graphics::ScopedSaveState graphicsState (g);
+    
     juce::ignoreUnused (g);
     
     if (showingPitchCorrection.load())

@@ -5,6 +5,13 @@ project (ImogenRemote VERSION 0.0.1 LANGUAGES CXX)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/../Source)
 
+#
+
+set (bv_use_AbletonLink FALSE)
+set (bv_use_MTS_ESP FALSE)
+
+#
+
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #
