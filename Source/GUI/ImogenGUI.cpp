@@ -29,9 +29,6 @@
 
 ImogenGUI::ImogenGUI(): tooltipWindow(this, msBeforeTooltip)
 {
-    createParameters();
-    jassert (parameters.size() == numParams);
-           
     setBufferedToImage (true);
     
     setInterceptsMouseClicks (false, true);
@@ -240,28 +237,4 @@ void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
     juce::ignoreUnused (box);
-}
-
-void ImogenGUI::createParameters()
-{
-    parameters.clear();
-    parameters.reserve (numParams);
-    
-    for (int i = 0; i < numParams; ++i)
-    {
-        const auto id = ParameterID(i);
-        parameters.emplace_back (std::make_unique<ImogenGUIParameter> (id, getParameterNameShort(id)));
-    }
-}
-
-ImogenGUIParameter* ImogenGUI::getParameter (ParameterID paramID) const
-{
-    for (auto& parameter : parameters)
-    {
-        auto* param = parameter.get();
-        if (param->getID() == paramID)
-            return param;
-    }
-    
-    return nullptr;
 }

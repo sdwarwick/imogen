@@ -27,6 +27,8 @@
 
 #include "GUI/ImogenGUI.h"
 
+#include "../../Common/ImogenParameters.h"
+
  
 using namespace Imogen;
 
@@ -34,7 +36,10 @@ using namespace Imogen;
 class ImogenGuiHolder
 {
 public:
-    ImogenGuiHolder() { }
+    ImogenGuiHolder(): parameterTree(createParameterTree()), state(imogenValueTreeType())
+    {
+        createValueTree (state, *(parameterTree));
+    }
     
     virtual ~ImogenGuiHolder() = default;
     
@@ -42,9 +47,9 @@ public:
     
     ImogenGUIState returnState() const { return ImogenGUIState(&p_gui); }
     
-    void saveState (ImogenGUIState& state) { state.saveState (&p_gui); }
+    void saveState (ImogenGUIState& guistate) { guistate.saveState (&p_gui); }
     
-    void restoreState (const ImogenGUIState& state) { state.resoreState (&p_gui); }
+    void restoreState (const ImogenGUIState& guistate) { guistate.resoreState (&p_gui); }
     
     /*=========================================================================================*/
     
@@ -57,4 +62,7 @@ protected:
     
 private:
     ImogenGUI p_gui;
+    
+    std::unique_ptr<juce::AudioProcessorParameterGroup> parameterTree;
+    juce::ValueTree state;
 };

@@ -29,11 +29,12 @@
 #include "PluginProcessorState.cpp"
 
 
+
 ImogenAudioProcessor::ImogenAudioProcessor()
   : bav::TranslationInitializer (findAppropriateTranslationFile()),
     AudioProcessor (makeBusProperties()),
-    tree (*this, nullptr, "IMOGEN_PARAMETERS", createParameters()),
-    treeSync (tree.state, *this)
+    state (imogenValueTreeType()),
+    treeSync (state, *this)
 #if IMOGEN_USE_ABLETON_LINK
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
@@ -42,13 +43,18 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     ne10_init();
 #endif
     
-    jassert (AudioProcessor::getParameters().size() == numParams);
-    initializeParameterPointers();
-           
+    addParameterGroup (createParameterTree());
+    
+    createValueTree (state, getParameterTree());
+    
+    jassert (getParameters().size() == numParams);
+    
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
         initialize (floatEngine);
+    
+    initializeParameterPointers();
     
     updateEditorSizeFromAPVTS();
     
@@ -329,7 +335,7 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
 
 void ImogenAudioProcessor::updateEditorSizeFromAPVTS()
 {
-    auto editor = tree.state.getChildWithName ("editorSize");
+    auto editor = state.getChildWithName ("editorSize");
     
     if (editor.isValid())
     {

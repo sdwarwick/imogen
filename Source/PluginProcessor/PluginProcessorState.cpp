@@ -29,11 +29,11 @@
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    auto editorSize = tree.state.getOrCreateChildWithName ("editorSize", nullptr);
+    auto editorSize = state.getOrCreateChildWithName ("editorSize", nullptr);
     editorSize.setProperty ("editorSize_X", savedEditorSize.x, nullptr);
     editorSize.setProperty ("editorSize_Y", savedEditorSize.y, nullptr);
     
-    auto xml = tree.copyState().createXml();
+    auto xml = state.createXml();
     
     if (xml->hasAttribute("presetName"))
         xml->removeAttribute("presetName");
@@ -50,7 +50,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 {
     auto newState = *(getXmlFromBinary (data, sizeInBytes));
     
-    if (! newState.hasTagName (tree.state.getType()))
+    if (! newState.hasTagName (state.getType()))
         return;
     
     auto newTree = juce::ValueTree::fromXml (newState);
@@ -60,7 +60,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     
     suspendProcessing (true);
     
-    tree.replaceState (newTree);
+    state.copyPropertiesAndChildrenFrom (newTree, nullptr);
     
     updateEditorSizeFromAPVTS();
     

@@ -57,8 +57,6 @@ public:
     
     /*=========================================================================================*/
     
-    ImogenGUIParameter* getParameter (ParameterID paramID) const;
-    
     void setDarkMode (bool shouldUseDarkMode);
     bool isUsingDarkMode() const noexcept { return darkMode.load(); }
     
@@ -66,7 +64,6 @@ public:
     
 private:
     inline void makePresetMenu (juce::ComboBox& box);
-    void createParameters();
     
     void rescanPresetsFolder();
     void loadPreset   (const juce::String& presetName);
@@ -84,8 +81,6 @@ private:
     
     juce::TooltipWindow tooltipWindow;
     static constexpr int msBeforeTooltip = 700;
-    
-    std::vector<std::unique_ptr<ImogenGUIParameter>> parameters;
     
     std::atomic<bool> darkMode;
     
