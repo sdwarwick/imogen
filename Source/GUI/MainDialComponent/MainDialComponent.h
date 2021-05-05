@@ -22,7 +22,7 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "../GUI_Framework.h"
+#include "../../Common/ImogenCommon.h"
 
 
 class ImogenDialComponent  :    public juce::Component,
@@ -46,7 +46,7 @@ public:
     //
     
     void showPitchCorrection();
-    void showParameter (ParameterID paramID);
+    void showParameter (Imogen::ParameterID paramID);
     bool isShowingPitchCorrection() const noexcept { return showingPitchCorrection.load(); }
     
     //

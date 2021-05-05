@@ -61,7 +61,7 @@ void ImogenDialComponent::showPitchCorrection()
     this->repaint();
 }
 
-void ImogenDialComponent::showParameter (ParameterID paramID)
+void ImogenDialComponent::showParameter (Imogen::ParameterID paramID)
 {
     juce::ignoreUnused (paramID);
     showingPitchCorrection.store (false);

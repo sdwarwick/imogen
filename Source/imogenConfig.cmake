@@ -24,7 +24,6 @@ set (Imogen_Processor_SourceFiles
     ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h)
 
 set (Imogen_GUI_SourceFiles
-    ${Imogen_sourceDir}/GUI/GUI_Framework.h
     ${Imogen_sourceDir}/GUI/ImogenGUI.h
     ${Imogen_sourceDir}/GUI/ImogenGUI.cpp
     ${Imogen_sourceDir}/GUI/MainDialComponent/MainDialComponent.h
