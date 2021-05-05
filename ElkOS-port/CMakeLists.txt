@@ -10,6 +10,10 @@ set (bv_juceGitRepo_TagToUse mind/headless_plugin_client_v5.2)
 
 set (IMOGEN_BUILD_FOR_ELK TRUE)
 
+set (bv_formats Standalone VST3)
+
+#
+
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
 #
@@ -17,9 +21,6 @@ include (${Imogen_sourceDir}/imogenConfig.cmake)
 set (Imogen_sourceFiles
     ${Imogen_Common_SourceFiles}
     ${Imogen_Processor_SourceFiles})
-#
-
-set (bv_formats Standalone VST3)
 
 #
 
@@ -40,34 +41,10 @@ list (APPEND thingsToLinkTo "bv_SynthBase")
 #
 
 juce_add_plugin (ImogenHeadless
-    PRODUCT_NAME                ImogenHeadless
+    ${Imogen_Common_Flags}
+    ${Imogen_Plugin_Flags}
     PLUGIN_CODE                 Imnh
-    VERSION                     ${CMAKE_PROJECT_VERSION}
-    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
-    PLUGIN_NAME                 ImogenHeadless
-    PLUGIN_MANUFACTURER_CODE    Benv
-    DESCRIPTION                 "Real-time vocal harmonizer instrument"
-    IS_SYNTH                    FALSE
-    NEEDS_MIDI_INPUT            TRUE
-    NEEDS_MIDI_OUTPUT           TRUE
-    IS_MIDI_EFFECT              FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    FORMATS                     ${bv_formats}
-    VST3_CATEGORIES             "Pitch Shift"
-    AU_MAIN_TYPE                "kAudioUnitType_MusicEffect"
-    ICON_BIG                    ${ImogenIconPath}
-    COMPANY_NAME                BenViningMusicSoftware
-    COMPANY_WEBSITE             www.benvining.com
-    COMPANY_EMAIL               ben.the.vining@gmail.com
-    COPY_PLUGIN_AFTER_BUILD     FALSE
-    COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
-    MICROPHONE_PERMISSION_ENABLED        TRUE
-    MICROPHONE_PERMISSION_TEXT           "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
-    SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
-    DOCUMENT_BROWSER_ENABLED             FALSE
-    VST_NUM_MIDI_INS 1
-    VST_NUM_MIDI_OUTS 1
-    DOCUMENT_EXTENSIONS xml
+    DOCUMENT_BROWSER_ENABLED    FALSE
     )
 
 #

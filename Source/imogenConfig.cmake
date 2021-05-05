@@ -42,6 +42,44 @@ set (Imogen_assetFiles
 
 #
 
+set (Imogen_Common_Flags
+    PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
+    VERSION                     ${CMAKE_PROJECT_VERSION}
+    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
+    NEEDS_MIDI_INPUT            TRUE
+    NEEDS_MIDI_OUTPUT           TRUE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    ICON_BIG                    ${ImogenIconPath}
+    COMPANY_NAME                BenViningMusicSoftware
+    COMPANY_WEBSITE             www.benvining.com
+    COMPANY_EMAIL               ben.the.vining@gmail.com
+    COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
+    STATUS_BAR_HIDDEN           TRUE  # for iOS
+    REQUIRES_FULL_SCREEN        TRUE  # for iOS
+    IPAD_SCREEN_ORIENTATIONS    UIInterfaceOrientationUnknown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight
+    TARGETED_DEVICE_FAMILY      2     # target iPad only
+    DOCUMENT_EXTENSIONS         xml
+    SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
+    )
+
+set (Imogen_Plugin_Flags
+    PLUGIN_NAME                     Imogen
+    PLUGIN_MANUFACTURER_CODE        Benv
+    DESCRIPTION                     "Real-time vocal harmonizer instrument"
+    IS_SYNTH                        FALSE
+    IS_MIDI_EFFECT                  FALSE
+    DISABLE_AAX_MULTI_MONO          TRUE
+    VST_NUM_MIDI_INS                1
+    VST_NUM_MIDI_OUTS               1
+    VST3_CATEGORIES                 "Pitch Shift"
+    AU_MAIN_TYPE                    "kAudioUnitType_MusicEffect"
+    FORMATS                         ${bv_formats}
+    MICROPHONE_PERMISSION_ENABLED   TRUE
+    MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
+    )
+
+#
+
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 set_property (GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "Build Targets")
 

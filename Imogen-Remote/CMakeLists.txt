@@ -21,26 +21,11 @@ juce_add_module ("${Imogen_sourceDir}/Shared-code/bv_SharedCode")
 #
 
 juce_add_gui_app (ImogenRemote
-    PRODUCT_NAME                ImogenRemote
-    VERSION                     ${CMAKE_PROJECT_VERSION}
-    BUNDLE_ID                   com.BenViningMusicSoftware.ImogenRemote
-    DESCRIPTION                 "Remote control for the Imogen plugin"
-    NEEDS_MIDI_INPUT            TRUE
-    NEEDS_MIDI_OUTPUT           TRUE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    ICON_BIG                    ${ImogenIconPath}
-    COMPANY_NAME                BenViningMusicSoftware
-    COMPANY_WEBSITE             www.benvining.com
-    COMPANY_EMAIL               ben.the.vining@gmail.com
-    COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
-    MICROPHONE_PERMISSION_ENABLED        FALSE
-    SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
-    DOCUMENT_BROWSER_ENABLED             TRUE
-    STATUS_BAR_HIDDEN                    TRUE  # for iOS
-    REQUIRES_FULL_SCREEN                 TRUE  # for iOS
-    IPAD_SCREEN_ORIENTATIONS             UIInterfaceOrientationUnknown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight
-    TARGETED_DEVICE_FAMILY               2     # target iPad only
-    DOCUMENT_EXTENSIONS xml
+    ${Imogen_Common_Flags}
+    DESCRIPTION                   "Remote control for the Imogen plugin"
+    DOCUMENT_BROWSER_ENABLED      TRUE
+    MICROPHONE_PERMISSION_ENABLED FALSE
+    BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
 #
