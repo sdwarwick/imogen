@@ -28,6 +28,7 @@ if (DEFINED bv_formats)
 
     if (NOT ${lv2detector} EQUAL -1)
         set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
+        set (bv_use_AbletonLink FALSE)
     endif()
 else()
     set (bv_formats AU VST3 Standalone Unity)
@@ -119,7 +120,7 @@ target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
 
 #
 
-if (bv_use_AbletonLink)
+if (${bv_use_AbletonLink})
 	include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 	target_link_libraries (Imogen PRIVATE Ableton::Link)
 	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_ABLETON_LINK=1)
@@ -129,7 +130,7 @@ endif()
 
 #
 
-if (bv_use_MTS_ESP)
+if (${bv_use_MTS_ESP})
 	target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
 	target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
 else()

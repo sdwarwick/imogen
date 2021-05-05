@@ -31,6 +31,10 @@
 #include "../Common/ImogenParameters.h"
 #include "../Common/ImogenState.h"
 
+#ifndef IMOGEN_USE_ABLETON_LINK
+  #define IMOGEN_USE_ABLETON_LINK 0
+#endif
+
 #if IMOGEN_USE_ABLETON_LINK
   #include <../../third-party/ableton-link/include/ableton/Link.hpp>
 #endif
