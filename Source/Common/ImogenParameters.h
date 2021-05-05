@@ -299,9 +299,13 @@ static inline void createValueTree (juce::ValueTree& tree,
             if (auto* parameter = dynamic_cast<bav::Parameter*>(param))
             {
                 const auto paramID = static_cast<Imogen::ParameterID> (parameter->key());
-                const auto key = juce::Identifier { getParameterIdentifier (paramID) };
+                const auto idString = getParameterIdentifier (paramID);
+                
+                const auto key = juce::Identifier { idString };
+                const auto gestureKey = juce::Identifier { idString + "_isChanging" };
                 
                 tree.setProperty (key, parameter->getCurrentDenormalizedValue(), nullptr);
+                tree.setProperty (gestureKey, false, nullptr);
             }
             else
             {
