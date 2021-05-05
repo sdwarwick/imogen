@@ -29,7 +29,7 @@ class ImogenDialComponent  :    public juce::Component,
                                 public juce::SettableTooltipClient
 {
 public:
-    ImogenDialComponent() { showPitchCorrection(); }
+    ImogenDialComponent();
     
     void paint (juce::Graphics& g) override final;
     

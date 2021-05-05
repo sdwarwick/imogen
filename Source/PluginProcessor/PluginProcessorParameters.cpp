@@ -130,22 +130,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout ImogenAudioProcessor::create
      
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> (inputSourceID, 1, 3, 1,
-                                                         [](int value, int maxLength) 
-                                                         { 
+                                                         [](int value, int maxLength)
+                                                         {
                                                              switch (value)
                                                              {
-                                                                 case (2): return TRANS("Right").substring(0, maxLength);  
+                                                                 case (2): return TRANS("Right").substring(0, maxLength);
                                                                  case (3): return TRANS("Mix to mono").substring(0, maxLength);
                                                                  default:  return TRANS("Left").substring(0, maxLength);
-                                                             }      
+                                                             }
                                                          },
-                                                         [](const juce::String& text) 
-                                                         {  
+                                                         [](const juce::String& text)
+                                                         {
                                                              if (text.containsIgnoreCase (TRANS("Right"))) return 2;
                                                              if (text.containsIgnoreCase (TRANS("mono")) || text.containsIgnoreCase (TRANS("mix"))) return 3;
                                                              return 1;
-                                                         });  
-               
+                                                         });
+        
         auto dryWetP = std::make_unique<IntParameter>   (dryWetID, 0, 100, 100, pcnt_stringFromInt, pcnt_intFromString);
         
         auto inGain = std::make_unique<FloatParameter>  (inputGainID, gainRange, 0.0f, juce::AudioProcessorParameter::inputGain, gain_stringFromFloat, gain_floatFromString);

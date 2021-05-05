@@ -23,6 +23,15 @@
 #include "MainDialComponent.h"
 
 
+ImogenDialComponent::ImogenDialComponent()
+{
+    setOpaque (true);
+    setInterceptsMouseClicks (true, true);
+    
+    showPitchCorrection();
+}
+
+
 void ImogenDialComponent::paint (juce::Graphics& g)
 {
     juce::ignoreUnused (g);

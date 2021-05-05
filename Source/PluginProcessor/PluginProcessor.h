@@ -59,11 +59,57 @@ class ImogenAudioProcessor    : private bav::TranslationInitializer,
                               , private juce::Timer
 #endif
 {
-    using Parameter      = bav::Parameter;
-    using FloatParameter = ImogenFloatParameter;
-    using IntParameter   = ImogenIntParameter;
-    using BoolParameter  = ImogenBoolParameter;
     
+    struct FloatParameter :   bav::FloatParameter
+    {
+        FloatParameter (ParameterID paramtrID, juce::NormalisableRange<float>& nrange, float defaultVal,
+                        juce::AudioProcessorParameter::Category parameterCategory = juce::AudioProcessorParameter::genericParameter,
+                        std::function<juce::String(float value, int maximumStringLength)> stringFromValue = nullptr,
+                        std::function<float(const juce::String& text)> valueFromString = nullptr)
+        : bav::FloatParameter (paramtrID, getParameterIdentifier (paramtrID), getParameterNameVerbose (paramtrID),
+                               nrange, defaultVal, juce::String(), parameterCategory, stringFromValue, valueFromString)
+        { }
+        
+        FloatParameter (ImogenFloatParameter parameter,
+                        juce::AudioProcessorParameter::Category parameterCategory = juce::AudioProcessorParameter::genericParameter)
+        : bav::FloatParameter (parameter.parameterID, parameter.shortName, parameter.verboseName, parameter.range, parameter.defaultValue,
+                               juce::String(), parameterCategory, parameter.stringFromFloat, parameter.floatFromString)
+        { }
+    };
+    
+    struct IntParameter   :  bav::IntParameter
+    {
+        IntParameter (ParameterID paramtrID, int min, int max, int defaultVal,
+                      std::function<juce::String(int value, int maximumStringLength)> stringFromInt = nullptr,
+                      std::function<int(const juce::String& text)> intFromString = nullptr)
+        : bav::IntParameter (paramtrID, getParameterIdentifier (paramtrID), getParameterNameVerbose (paramtrID),
+                             min, max, defaultVal, juce::String(), stringFromInt, intFromString)
+        { }
+        
+        IntParameter (ImogenIntParameter parameter)
+        : bav::IntParameter (parameter.parameterID, parameter.shortName, parameter.verboseName, parameter.minimum, parameter.maximum,
+                             parameter.defaultValue, juce::String(), parameter.stringFromInt, parameter.intFromString)
+        { }
+    };
+    
+    struct BoolParameter   : bav::BoolParameter
+    {
+        BoolParameter (ParameterID paramtrID, bool defaultVal,
+                       std::function<juce::String(bool value, int maximumStringLength)> stringFromBool = nullptr,
+                       std::function<bool(const juce::String& text)> boolFromString = nullptr)
+        
+        : bav::BoolParameter (paramtrID, getParameterIdentifier (paramtrID), getParameterNameVerbose (paramtrID),
+                              defaultVal, juce::String(), stringFromBool, boolFromString)
+        { }
+        
+        BoolParameter (ImogenBoolParameter parameter)
+        : bav::BoolParameter (parameter.parameterID, parameter.shortName, parameter.verboseName, parameter.defaultValue,
+                              juce::String(), parameter.stringFromBool, parameter.boolFromString)
+        { }
+    };
+    
+    
+    using Parameter     = bav::Parameter;
     using FloatParamPtr = FloatParameter*;
     using IntParamPtr   = IntParameter*;
     using BoolParamPtr  = BoolParameter*;

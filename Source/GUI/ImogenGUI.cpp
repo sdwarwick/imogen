@@ -32,7 +32,9 @@ ImogenGUI::ImogenGUI(): tooltipWindow(this, msBeforeTooltip)
     createParameters();
     jassert (parameters.size() == numParams);
            
-    this->setBufferedToImage (true);
+    setBufferedToImage (true);
+    
+    setInterceptsMouseClicks (false, true);
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -196,6 +198,10 @@ void ImogenGUI::resized()
 {
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
+    
+    auto r = getLocalBounds();  // this rectangle represents the entire area of our GUI
+    
+    juce::ignoreUnused (r);
 }
 
 bool ImogenGUI::keyPressed (const juce::KeyPress& key)

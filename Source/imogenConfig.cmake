@@ -1,22 +1,3 @@
-#            _             _   _                _                _                 _               _
-#           /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-#           \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-#           /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-#          / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-#         / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-#        / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-#       / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-#   ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
-#  /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
-#  \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
-#  This file is part of the Imogen codebase.
- 
-#  @2021 by Ben Vining. All rights reserved.
-
-#  imogenConfig.cmake :		This file contains the build configuration elements common to both the main Imogen build and the Imogen Remote build.
-
 
 if (NOT DEFINED IMOGEN_BUILD_FOR_ELK)
     set (IMOGEN_BUILD_FOR_ELK FALSE)

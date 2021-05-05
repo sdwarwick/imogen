@@ -6,12 +6,11 @@
 
 struct ImogenParameterMetadata
 {
-    ImogenParameterMetadata(ParameterID paramID, const juce::String& parentGroupName = juce::String())
+    ImogenParameterMetadata (ParameterID paramID)
          :  parameterID(paramID),
             shortName (getParameterNameShort (paramID)),
             verboseName (getParameterNameVerbose (paramID)),
-            identifier (getParameterIdentifier (paramID)),
-            parentParameterGroupName (parentGroupName)
+            identifier (getParameterIdentifier (paramID))
     { }
     
     const ParameterID      parameterID;
@@ -19,75 +18,104 @@ struct ImogenParameterMetadata
     const juce::String     verboseName;
     const juce::Identifier identifier;
     
-    const juce::String parentParameterGroupName;
+    std::atomic<bool> isChanging;
 };
 
 
-
-struct ImogenFloatParameter  :    public bav::FloatParameter
+struct ImogenFloatParameter :   ImogenParameterMetadata
 {
-    ImogenFloatParameter (ParameterID paramtrID, juce::NormalisableRange<float>& nrange, float defaultVal,
-                          juce::AudioProcessorParameter::Category parameterCategory = juce::AudioProcessorParameter::genericParameter,
-                          std::function<juce::String(float value, int maximumStringLength)> stringFromValue = nullptr,
-                          std::function<float(const juce::String& text)> valueFromString = nullptr)
+    ImogenFloatParameter (ParameterID paramID,
+                          const juce::NormalisableRange<float>& nRange,
+                          float defaultVal,
+                          std::function<juce::String(float value, int maximumStringLength)> stringfromfloat = nullptr,
+                          std::function<float(const juce::String& text)> floatfromstring = nullptr)
+        :  ImogenParameterMetadata(paramID), range(nRange), defaultValue(defaultVal),
+           stringFromFloat(stringfromfloat), floatFromString(floatfromstring)
+    {
+        value.store (defaultValue);
+    }
     
-    : bav::FloatParameter (paramtrID, getParameterIdentifier (paramtrID), getParameterNameVerbose (paramtrID),
-                           nrange, defaultVal, juce::String(), parameterCategory, stringFromValue, valueFromString)
-    { }
+    std::atomic<float> value;
+    juce::NormalisableRange<float> range;
+    const float defaultValue;
     
-    
-    ImogenFloatParameter (ImogenParameterMetadata metadata,
-                          juce::NormalisableRange<float>& nrange, float defaultVal,
-                          juce::AudioProcessorParameter::Category parameterCategory = juce::AudioProcessorParameter::genericParameter,
-                          std::function<juce::String(float value, int maximumStringLength)> stringFromValue = nullptr,
-                          std::function<float(const juce::String& text)> valueFromString = nullptr)
-    
-    : bav::FloatParameter (metadata.parameterID, metadata.shortName, metadata.verboseName, nrange, defaultVal, juce::String(),
-                           parameterCategory, stringFromValue, valueFromString)
-    { }
+    std::function<juce::String(float value, int maximumStringLength)> stringFromFloat = nullptr;
+    std::function<float(const juce::String& text)> floatFromString = nullptr;
 };
 
 
-
-struct ImogenIntParameter    :    public bav::IntParameter
+struct ImogenIntParameter   :   ImogenParameterMetadata
 {
-    ImogenIntParameter (ParameterID paramtrID, int min, int max, int defaultVal,
-                        std::function<juce::String(int value, int maximumStringLength)> stringFromInt = nullptr,
-                        std::function<int(const juce::String& text)> intFromString = nullptr)
+    ImogenIntParameter (ParameterID paramID,
+                        int min, int max, int defaultVal,
+                        std::function<juce::String(int value, int maximumStringLength)> stringfromint = nullptr,
+                        std::function<int(const juce::String& text)> intfromstring = nullptr)
+        :  ImogenParameterMetadata(paramID), minimum(min), maximum(max), defaultValue(defaultVal),
+           stringFromInt(stringfromint), intFromString(intfromstring)
+    {
+        value.store (defaultValue);
+    }
     
-    : bav::IntParameter (paramtrID, getParameterIdentifier (paramtrID), getParameterNameVerbose (paramtrID),
-                         min, max, defaultVal, juce::String(), stringFromInt, intFromString)
-    { }
+    std::atomic<int> value;
+    const int minimum;
+    const int maximum;
+    const int defaultValue;
     
-    
-    ImogenIntParameter (ImogenParameterMetadata metadata, int min, int max, int defaultVal,
-                        std::function<juce::String(int value, int maximumStringLength)> stringFromInt = nullptr,
-                        std::function<int(const juce::String& text)> intFromString = nullptr)
-    
-    : bav::IntParameter (metadata.parameterID, metadata.shortName, metadata.verboseName, min, max, defaultVal,
-                         juce::String(), stringFromInt, intFromString)
-    { }
+    std::function<juce::String(int value, int maximumStringLength)> stringFromInt = nullptr;
+    std::function<int(const juce::String& text)> intFromString = nullptr;
 };
 
 
-
-struct ImogenBoolParameter   :    public bav::BoolParameter
+struct ImogenBoolParameter  :   ImogenParameterMetadata
 {
-    ImogenBoolParameter (ParameterID paramtrID, bool defaultVal,
-                         std::function<juce::String(bool value, int maximumStringLength)> stringFromBool = nullptr,
-                         std::function<bool(const juce::String& text)> boolFromString = nullptr)
+    ImogenBoolParameter(ParameterID paramID,
+                        bool defaultVal,
+                        std::function<juce::String(bool value, int maximumStringLength)> stringfrombool = nullptr,
+                        std::function<bool(const juce::String& text)> boolfromstring = nullptr)
+        :  ImogenParameterMetadata(paramID), defaultValue(defaultVal),
+           stringFromBool(stringfrombool), boolFromString(boolfromstring)
+    {
+        value.store (defaultValue);
+    }
     
-    : bav::BoolParameter (paramtrID, getParameterIdentifier (paramtrID), getParameterNameVerbose (paramtrID),
-                          defaultVal, juce::String(), stringFromBool, boolFromString)
-    { }
+    std::atomic<bool> value;
+    const bool defaultValue;
     
-    
-    ImogenBoolParameter (ImogenParameterMetadata metadata, bool defaultVal,
-                         std::function<juce::String(bool value, int maximumStringLength)> stringFromBool = nullptr,
-                         std::function<bool(const juce::String& text)> boolFromString = nullptr)
-    
-    : bav::BoolParameter (metadata.parameterID, metadata.shortName, metadata.verboseName,
-                          defaultVal, juce::String(), stringFromBool, boolFromString)
-    { }
+    std::function<juce::String(bool value, int maximumStringLength)> stringFromBool = nullptr;
+    std::function<bool(const juce::String& text)> boolFromString = nullptr;
 };
 
+
+
+
+
+class ImogenParameterOwner      :       public juce::ValueTreeSynchroniser  // this interface does not implement the virtual stateChanged()!
+{
+public:
+    ImogenParameterOwner()
+        : juce::ValueTreeSynchroniser (state)
+    {
+        
+    }
+    
+    virtual ~ImogenParameterOwner() = default;
+    
+    virtual void refreshParameterFunctionPointers() = 0;
+    
+    bav::Parameter* getParameter (ParameterID paramID)
+    {
+        
+    }
+    
+    
+    void recieveStateUpdate (const void* encodedChangeData, size_t encodedChangeDataSize)
+    {
+        juce::ValueTreeSynchroniser::applyChange (state, encodedChangeData, encodedChangeDataSize, nullptr);
+    }
+    
+    
+    juce::ValueTree state;
+    
+private:
+    std::vector<std::unique_ptr<bav::Parameter>> parameters;
+};
