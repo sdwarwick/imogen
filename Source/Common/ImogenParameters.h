@@ -110,18 +110,9 @@ static inline std::unique_ptr<juce::AudioProcessorParameterGroup> createParamete
         auto bypasses = std::make_unique<Group> ("Bypasses", TRANS ("Bypasses"), "|",
                                                  std::move (mainBypass), std::move (leadBypass), std::move (harmonyBypass));
         //  subgroup: stereo image
-        auto stereo_width  = std::make_unique<IntParameter> (stereoWidthID, 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString);
-        auto stereo_lowest = std::make_unique<IntParameter> (lowestPannedID, 0, 127, 0,  l::pitch_stringFromInt, l::pitch_intFromString);
-        
-        auto stereo_leadPan = std::make_unique<IntParameter>  (dryPanID, 0, 127, 64,
-                                                               [](int value, int maxLength)
-                                                               {
-                                                                   return bav::midiPanIntToString (value).substring(0, maxLength);
-                                                               },
-                                                               [](const juce::String& text)
-                                                               {
-                                                                   return bav::midiPanStringToInt (text);
-                                                               });
+        auto stereo_width   = std::make_unique<IntParameter> (stereoWidthID, 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString);
+        auto stereo_lowest  = std::make_unique<IntParameter> (lowestPannedID, 0, 127, 0,  l::pitch_stringFromInt, l::pitch_intFromString);
+        auto stereo_leadPan = std::make_unique<IntParameter> (dryPanID, 0, 127, 64, l::midiPan_stringFromInt, l::midiPan_intFromString);
         
         auto stereo = std::make_unique<Group> ("Stereo image", TRANS ("Stereo image"), "|",
                                                std::move (stereo_width), std::move (stereo_lowest), std::move (stereo_leadPan));
@@ -131,8 +122,8 @@ static inline std::unique_ptr<juce::AudioProcessorParameterGroup> createParamete
                                                       std::move (bypasses), std::move (stereo)));
     }
     {   /* MIDI */
-        auto pitchbendRange   = std::make_unique<IntParameter>  (pitchBendRangeID, 0, 12, 2,   l::st_stringFromInt, l::st_intFromString);
-        auto velocitySens     = std::make_unique<IntParameter>  (velocitySensID, 0, 100, 100,  l::pcnt_stringFromInt, l::pcnt_intFromString);
+        auto pitchbendRange   = std::make_unique<IntParameter>  (pitchBendRangeID, 0, 12, 2,   l::st_stringFromInt,      l::st_intFromString);
+        auto velocitySens     = std::make_unique<IntParameter>  (velocitySensID, 0, 100, 100,  l::pcnt_stringFromInt,    l::pcnt_intFromString);
         auto aftertouchToggle = std::make_unique<BoolParameter> (aftertouchGainToggleID, true, l::toggle_stringFromBool, l::toggle_boolFromString);
         auto voiceStealing    = std::make_unique<BoolParameter> (voiceStealingID, false, l::toggle_stringFromBool, l::toggle_boolFromString);
         
@@ -158,7 +149,7 @@ static inline std::unique_ptr<juce::AudioProcessorParameterGroup> createParamete
     }
     {   /* ADSR */
         auto attack  = std::make_unique<FloatParameter> (adsrAttackID, msRange, 0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString);
-        auto decay   = std::make_unique<FloatParameter> (adsrDecayID, msRange, 0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString);
+        auto decay   = std::make_unique<FloatParameter> (adsrDecayID, msRange, 0.06f, generic,  l::sec_stringFromFloat, l::sec_floatFromString);
         auto sustain = std::make_unique<FloatParameter> (adsrSustainID, zeroToOneRange, 0.8f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString);
         auto release = std::make_unique<FloatParameter> (adsrReleaseID, msRange, 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString);
         
@@ -232,13 +223,9 @@ static inline void createValueTree (juce::ValueTree& tree,
             if (auto* parameter = dynamic_cast<bav::Parameter*>(param))
             {
                 const auto paramID = static_cast<Imogen::ParameterID> (parameter->key());
-                const auto idString = getParameterNameVerboseNoSpaces (paramID);
                 
-                const auto key = juce::Identifier { idString };
-                const auto gestureKey = juce::Identifier { idString + "_isChanging" };
-                
-                tree.setProperty (key, parameter->getCurrentDenormalizedValue(), nullptr);
-                tree.setProperty (gestureKey, false, nullptr);
+                tree.setProperty (getParameterIdentifier (paramID), parameter->getCurrentDenormalizedValue(), nullptr);
+                tree.setProperty (getParameterGestureIdentifier (paramID), false, nullptr);
             }
             else
             {
@@ -279,18 +266,12 @@ public:
     
     void timerCallback() override final
     {
-        const auto idString = getParameterNameVerboseNoSpaces (paramID);
-        
-        const auto key = juce::Identifier { idString };
-        const auto gestureKey = juce::Identifier { idString + "_isChanging" };
-        
-        
         const auto newValue = param->getCurrentDenormalizedValue();
         
         if (lastSentValue != newValue)
         {
             lastSentValue = newValue;
-            tree.setProperty (key, newValue, nullptr);
+            tree.setProperty (getParameterIdentifier (paramID), newValue, nullptr);
         }
         
         const auto changeState = isChanging.load();
@@ -298,7 +279,7 @@ public:
         if (lastSentChangeState != changeState)
         {
             lastSentChangeState = changeState;
-            tree.setProperty (gestureKey, isChanging.load(), nullptr);
+            tree.setProperty (getParameterGestureIdentifier (paramID), isChanging.load(), nullptr);
         }
     }
     
@@ -331,8 +312,8 @@ public:
         : param (paramToUse),
           paramID (parameterID),
           tree (treeToUse),
-          paramIdentifier (getParameterNameVerboseNoSpaces (paramID)),
-          paramGestureIdentifier (getParameterNameVerboseNoSpaces (paramID) + "_isChanging")
+          paramIdentifier (getParameterIdentifier (paramID)),
+          paramGestureIdentifier (getParameterGestureIdentifier (paramID))
     {
         tree.addListener (this);
         lastSentValue = param->getCurrentDenormalizedValue();
@@ -389,14 +370,6 @@ private:
 struct ParameterAttachment :    public ParameterToValueTreeAttachment,
                                 public ValueTreeToParameterAttachment
 {
-    ParameterAttachment (bav::Parameter* paramToUse,
-                         juce::ValueTree& treeToUse)
-        : ParameterToValueTreeAttachment (paramToUse, treeToUse, static_cast<ParameterID>(paramToUse->key())),
-          ValueTreeToParameterAttachment (paramToUse, treeToUse, static_cast<ParameterID>(paramToUse->key()))
-    {
-        jassert (paramToUse != nullptr);
-    }
-    
     ParameterAttachment (bav::Parameter* paramToUse,
                          juce::ValueTree& treeToUse,
                          ParameterID parameterID)

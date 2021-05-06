@@ -199,6 +199,18 @@ static inline juce::String getParameterNameVerboseNoSpaces (ParameterID param)
 }
 
 
+static inline juce::Identifier getParameterIdentifier (ParameterID param)
+{
+    return { getParameterNameVerboseNoSpaces (param) };
+}
+
+
+static inline juce::Identifier getParameterGestureIdentifier (ParameterID param)
+{
+    return { getParameterNameVerboseNoSpaces (param) + "_isChanging" };
+}
+
+
 static inline juce::Identifier imogenValueTreeType()
 {
     static juce::Identifier type { "ImogenParameters" };
