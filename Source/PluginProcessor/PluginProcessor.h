@@ -25,8 +25,8 @@
 #pragma once
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
-
-#include "../Common/ImogenParameters.h"
+#include "../GUI/ImogenGUI.h"
+//#include "../Common/ImogenParameters.h"
 
 #ifndef IMOGEN_USE_ABLETON_LINK
   #define IMOGEN_USE_ABLETON_LINK 0
@@ -220,7 +220,7 @@ private:
                 editor->applyValueTreeStateChange (encodedChange, encodedChangeSize);
             }
             
-            juce::ignoreUnused (encodedChange, encodedChangeSize);
+            // transmit to OSC...
         }
         
         ImogenAudioProcessor& processor;

@@ -42,6 +42,15 @@ namespace Imogen
 {
 
 
+enum EventID
+{
+    killAllMidiID,
+    midiLatchID,
+    pitchBendFromEditorID
+};
+static constexpr int numEventIDs = pitchBendFromEditorID + 1;
+
+
 enum ParameterID
 {
     inputSourceID,
@@ -86,27 +95,6 @@ enum ParameterID
     delayDryWetID
 };
 static constexpr int numParams = delayDryWetID + 1;
-
-
-enum EventID
-{
-    killAllMidiID,
-    midiLatchID,
-    pitchBendFromEditorID
-};
-static constexpr int numEventIDs = pitchBendFromEditorID + 1;
-
-
-/* This struct contains every piece of stateful data that affects the ImogenAudioProcessor's audio rendering */
-struct ProcessorState
-{
-    // set of currently active midi notes (+ which one is pedal/descant)
-    // current input pitch as note string + cents sharp/flat
-    // values for all level/redux meters
-    // midi latch on/off
-    // ableton link on/off, # of session peers
-    // MTS-ESP connection status, scale name
-};
 
 
 static inline juce::String getParameterNameShort (ParameterID param)
@@ -204,51 +192,17 @@ static inline juce::String getParameterNameVerbose (ParameterID param)
     }
 }
 
-static inline juce::String getParameterIdentifier (ParameterID param)
+
+static inline juce::String getParameterNameVerboseNoSpaces (ParameterID param)
 {
-    switch (param)
-    {
-        case (inputSourceID):          return "inputSource";
-        case (mainBypassID):           return "mainBypass";
-        case (leadBypassID):           return "leadBypass";
-        case (harmonyBypassID):        return "harmonyBypass";
-        case (dryPanID):               return "dryPan";
-        case (dryWetID):               return "masterDryWet";
-        case (adsrAttackID):           return "adsrAttack";
-        case (adsrDecayID):            return "adsrDecay";
-        case (adsrSustainID):          return "adsrSustain";
-        case (adsrReleaseID):          return "adsrRelease";
-        case (stereoWidthID):          return "stereoWidth";
-        case (lowestPannedID):         return "lowestPan";
-        case (velocitySensID):         return "midiVelocitySens";
-        case (pitchBendRangeID):       return "pitchBendRange";
-        case (pedalPitchIsOnID):       return "pedalPitchToggle";
-        case (pedalPitchThreshID):     return "pedalPitchThresh";
-        case (pedalPitchIntervalID):   return "pedalPitchInterval";
-        case (descantIsOnID):          return "descantToggle";
-        case (descantThreshID):        return "descantThresh";
-        case (descantIntervalID):      return "descantInterval";
-        case (voiceStealingID):        return "voiceStealing";
-        case (inputGainID):            return "inputGain";
-        case (outputGainID):           return "outputGain";
-        case (limiterToggleID):        return "limiterIsOn";
-        case (noiseGateToggleID):      return "noiseGateIsOn";
-        case (noiseGateThresholdID):   return "noiseGateThresh";
-        case (compressorToggleID):     return "compressorToggle";
-        case (compressorAmountID):     return "compressorAmount";
-        case (aftertouchGainToggleID): return "aftertouchGainToggle";
-        case (deEsserToggleID):        return "deEsserIsOn";
-        case (deEsserAmountID):        return "deEsserAmount";
-        case (deEsserThreshID):        return "deEsserThresh";
-        case (reverbToggleID):         return "reverbIsOn";
-        case (reverbDryWetID):         return "reverbDryWet";
-        case (reverbDecayID):          return "reverbDecay";
-        case (reverbDuckID):           return "reverbDuck";
-        case (reverbLoCutID):          return "reverbLoCut";
-        case (reverbHiCutID):          return "reverbHiCut";
-        case (delayToggleID):          return "delayIsOn";
-        case (delayDryWetID):          return "delayDryWet";
-    }
+    return getParameterNameVerbose (param).replaceCharacters (" ", "_");
+}
+
+
+static inline juce::Identifier imogenValueTreeType()
+{
+    static juce::Identifier type { "ImogenParameters" };
+    return type;
 }
 
 
