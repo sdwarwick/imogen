@@ -37,7 +37,7 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     setInterceptsMouseClicks (false, true);
     
-    Imogen::createValueTree (state, *parameterTree);
+    bav::createValueTreeFromParameterTree (state, *parameterTree);
     
     parameterPointers.reserve (numParams);
     parseParameterTreeForParameterPointers (*parameterTree);
@@ -47,7 +47,7 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     for (int i = 0; i < numParams; ++i)
     {
         const auto paramID = static_cast<ParameterID>(i);
-        parameterTreeAttachments.add (new ImogenParameterAttachment (getParameterPntr (paramID), state, paramID));
+        parameterTreeAttachments.add (new bav::ParameterAttachment (getParameterPntr (paramID), state));
     }
     
     makePresetMenu (selectPreset);

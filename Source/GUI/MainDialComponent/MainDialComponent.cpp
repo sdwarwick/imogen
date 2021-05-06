@@ -58,15 +58,14 @@ void ImogenDialComponent::showPitchCorrection()
 {
     showingPitchCorrection.store (true);
     setTooltip (TRANS ("Intonation"));
-    this->repaint();
+    repaint();
 }
 
-void ImogenDialComponent::showParameter (Imogen::ParameterID paramID)
+void ImogenDialComponent::showParameter (bav::Parameter* parameter)
 {
-    juce::ignoreUnused (paramID);
     showingPitchCorrection.store (false);
-    setTooltip (getParameterNameVerbose (paramID));
-    this->repaint();
+    setTooltip (parameter->parameterNameVerbose);
+    repaint();
 }
 
 

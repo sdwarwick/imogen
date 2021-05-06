@@ -204,7 +204,7 @@ private:
     
     juce::ValueTree state;
     
-    juce::OwnedArray<ImogenParameterAttachment> parameterTreeAttachments;
+    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;
     
     struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
     {

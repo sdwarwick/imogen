@@ -95,7 +95,7 @@ private:
     std::vector< bav::Parameter* > parameterPointers;
     juce::ValueTree state;
     
-    juce::OwnedArray<ImogenParameterAttachment> parameterTreeAttachments;
+    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;
     
     
     struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser

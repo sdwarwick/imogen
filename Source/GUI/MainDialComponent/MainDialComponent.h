@@ -46,7 +46,7 @@ public:
     //
     
     void showPitchCorrection();
-    void showParameter (Imogen::ParameterID paramID);
+    void showParameter (bav::Parameter* parameter);
     bool isShowingPitchCorrection() const noexcept { return showingPitchCorrection.load(); }
     
     //
