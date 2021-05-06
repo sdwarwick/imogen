@@ -246,9 +246,10 @@ struct ImogenParameterAttachment  :     bav::ParameterAttachment
     ImogenParameterAttachment (bav::Parameter* paramToUse,
                                juce::ValueTree& treeToUse,
                                ParameterID paramID)
-    : bav::ParameterAttachment (paramToUse, treeToUse,
-                                getParameterIdentifier (paramID),
-                                getParameterGestureIdentifier (paramID))
+    
+        : bav::ParameterAttachment (paramToUse, treeToUse,
+                                    getParameterIdentifier (paramID),
+                                    getParameterGestureIdentifier (paramID))
     { }
 };
 

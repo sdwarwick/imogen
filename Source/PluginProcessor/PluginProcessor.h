@@ -190,8 +190,6 @@ private:
     
     /*=========================================================================================*/
 
-    void updateEditorSizeFromAPVTS();
-    
     ImogenGUIUpdateReciever* getActiveGuiEventReciever() const;
     
     inline Parameter* getParameterPntr (const ParameterID paramID) const;

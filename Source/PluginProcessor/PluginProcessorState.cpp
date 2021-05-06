@@ -37,13 +37,11 @@ void ImogenAudioProcessor::applyValueTreeStateChange (const void* encodedChangeD
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto editorSize = state.getOrCreateChildWithName ("editorSize", nullptr);
+    
     editorSize.setProperty ("editorSize_X", savedEditorSize.x, nullptr);
     editorSize.setProperty ("editorSize_Y", savedEditorSize.y, nullptr);
     
     auto xml = state.createXml();
-    
-    if (xml->hasAttribute("presetName"))
-        xml->removeAttribute("presetName");
     
     copyXmlToBinary (*xml, destData);
 }
@@ -68,8 +66,6 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     suspendProcessing (true);
     
     state.copyPropertiesAndChildrenFrom (newTree, nullptr);
-    
-    updateEditorSizeFromAPVTS();
     
     /* update all parameters... */
     for (auto* pntr : parameterPointers)

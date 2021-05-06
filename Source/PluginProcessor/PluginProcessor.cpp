@@ -49,11 +49,13 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     jassert (getParameters().size() == numParams);
     
+    initializeParameterPointers();
+    
     parameterTreeAttachments.ensureStorageAllocated (numParams);
     
     for (int i = 0; i < numParams; ++i)
     {
-        const auto paramID = static_cast<ParameterID>(i);
+        const auto paramID = static_cast<ParameterID> (i);
         parameterTreeAttachments.add (new ImogenParameterAttachment (getParameterPntr (paramID), state, paramID));
     }
     
@@ -61,10 +63,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-    
-    initializeParameterPointers();
-    
-    updateEditorSizeFromAPVTS();
     
     treeSync.sendFullSyncCallback();
     
@@ -255,7 +253,7 @@ bool ImogenAudioProcessor::isAbletonLinkEnabled() const
 int ImogenAudioProcessor::getNumAbletonLinkSessionPeers() const
 {
 #if IMOGEN_USE_ABLETON_LINK
-    return abletonLink.isEnabled() ? (int)abletonLink.numPeers() : 0;
+    return abletonLink.isEnabled() ? static_cast<int>(abletonLink.numPeers()) : 0;
 #else
     return 0;
 #endif
@@ -319,6 +317,7 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
+    juce::Timer::callAfterDelay (10, [&](){ treeSync.sendFullSyncCallback(); });
     return new ImogenAudioProcessorEditor(*this);
 #endif
 }
@@ -341,19 +340,6 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
     savedEditorSize.setY (height);
 }
 
-void ImogenAudioProcessor::updateEditorSizeFromAPVTS()
-{
-    auto editor = state.getChildWithName ("editorSize");
-    
-    if (editor.isValid())
-    {
-        savedEditorSize.setX (editor.getProperty ("editorSize_X", 900));
-        savedEditorSize.setY (editor.getProperty ("editorSize_Y", 500));
-        
-        if (auto* activeEditor = getActiveEditor())
-            activeEditor->setSize (savedEditorSize.x, savedEditorSize.y);
-    }
-}
 
 /*===========================================================================================================================
  ============================================================================================================================*/
