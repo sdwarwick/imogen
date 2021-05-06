@@ -54,7 +54,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     for (int i = 0; i < numParams; ++i)
     {
         const auto paramID = static_cast<ParameterID>(i);
-        parameterTreeAttachments.add (new ParameterAttachment (getParameterPntr (paramID), state, paramID));
+        parameterTreeAttachments.add (new ImogenParameterAttachment (getParameterPntr (paramID), state, paramID));
     }
     
     if (isUsingDoublePrecision())
