@@ -31,8 +31,7 @@
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
-  : bav::TranslationInitializer (findAppropriateTranslationFile()),
-    AudioProcessor (makeBusProperties()),
+  : AudioProcessor (makeBusProperties()),
     state (imogenValueTreeType()),
     treeSync (state, *this)
 #if IMOGEN_USE_ABLETON_LINK
@@ -42,6 +41,10 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 #if BV_USE_NE10
     ne10_init();
 #endif
+    
+    const auto translations = findAppropriateTranslationFile();
+    if (translations.existsAsFile())
+        juce::LocalisedStrings::setCurrentMappings (new juce::LocalisedStrings (translations, true));
     
     addParameterGroup (createParameterTree());
     

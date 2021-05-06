@@ -26,6 +26,10 @@
 
 MainComponent::MainComponent(): gui(this)
 {
+    const auto translations = findAppropriateTranslationFile();
+    if (translations.existsAsFile())
+        juce::LocalisedStrings::setCurrentMappings (new juce::LocalisedStrings (translations, true));
+    
     this->setBufferedToImage (true);
     
     addAndMakeVisible (gui);

@@ -62,8 +62,7 @@ struct ImogenGUIUpdateReciever
 /*
 */
 
-class ImogenAudioProcessor    : private bav::TranslationInitializer,
-                                public  juce::AudioProcessor
+class ImogenAudioProcessor    : public  juce::AudioProcessor
 #if IMOGEN_PROCESSOR_TIMER
                               , private juce::Timer
 #endif
