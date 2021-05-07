@@ -25,6 +25,8 @@
 #include "GUI/Holders/Plugin_Editor/PluginEditor.h"
 #include "PluginProcessor.h"
 
+#include "PluginProcessorParameters.cpp"
+#include "PluginProcessorState.cpp"
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
