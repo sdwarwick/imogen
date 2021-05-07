@@ -97,6 +97,20 @@ enum ParameterID
 static constexpr int numParams = delayDryWetID + 1;
 
 
+enum MeterID
+{
+    inputLevelID = numParams,
+    outputLevelID,
+    gateReduxID,
+    compReduxID,
+    deEssGainReduxID,
+    limiterGainReduxID,
+    reverbLevelID,
+    delayLevelID
+};
+static constexpr int numMeters = delayLevelID + 1;
+
+
 static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
 
 
@@ -124,18 +138,64 @@ namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level Va
 
     IMOGEN_DECLARE_VALUETREEID (Imogen);  // the type that the top-level tree will have
     IMOGEN_DECLARE_VALUETREEID (Parameters);
+    IMOGEN_DECLARE_VALUETREEID (Meters);
 
 #undef IMOGEN_DECLARE_VALUETREEID
 }  // namespace
+
+
+static inline juce::String parameterTreeName() { return TRANS ("Parameters"); }
+
+static inline juce::String meterTreeName() { return TRANS ("Meters"); }
 
 
 static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
                                              const juce::AudioProcessorParameterGroup& parameterTree)
 {
     // create the parameter tree
-    juce::ValueTree parameters { ValueTreeIDs::Parameters };
-    bav::createValueTreeFromParameterTree (parameters, parameterTree);
-    topLevelTree.addChild (parameters, 0, nullptr);
+    if (auto* params = bav::findParameterSubgroup (parameterTree, parameterTreeName()))
+    {
+        juce::ValueTree parameters { ValueTreeIDs::Parameters };
+        
+        bav::createValueTreeFromParameterTree (parameters, *params);
+        
+        topLevelTree.addChild (parameters, 0, nullptr);
+    }
+    else
+    {
+        jassertfalse;
+    }
+
+    // create the meter parameter tree
+    if (auto* mtrs = bav::findParameterSubgroup (parameterTree, meterTreeName()))
+    {
+        juce::ValueTree meters { ValueTreeIDs::Meters };
+        
+        bav::createValueTreeFromParameterTree (meters, *mtrs);
+        
+        topLevelTree.addChild (meters, 0, nullptr);
+    }
+    else
+    {
+        jassertfalse;
+    }
+}
+
+
+static inline void createValueTreeParameterAttachments (juce::ValueTree& topLevelValueTree,
+                                                        juce::OwnedArray<bav::ParameterAttachment>& attachments,
+                                                        std::function<bav::Parameter*(ParameterID)> findParameter,
+                                                        std::function<bav::Parameter*(MeterID)> findMeter)
+{
+    bav::createParameterValueTreeAttachments (attachments,
+                                              topLevelValueTree.getChildWithName (ValueTreeIDs::Parameters),
+                                              numParams,
+                                              [findParameter](int param) { return findParameter (static_cast<ParameterID> (param)); });
+    
+    bav::createParameterValueTreeAttachments (attachments,
+                                              topLevelValueTree.getChildWithName (ValueTreeIDs::Meters),
+                                              numMeters,
+                                              [findMeter](int meter) { return findMeter (static_cast<MeterID> (meter)); });
 }
 
 

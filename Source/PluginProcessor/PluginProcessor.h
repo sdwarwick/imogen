@@ -174,6 +174,8 @@ private:
     
     inline Parameter* getParameterPntr (const ParameterID paramID) const;
     
+    inline Parameter* getMeterParamPntr (const MeterID meterID) const;
+    
     /*=========================================================================================*/
     
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
@@ -210,6 +212,8 @@ private:
     
     std::vector< Parameter* > parameterPointers;
     Parameter* mainBypassPntr;  // this one gets referenced specifically...
+    
+    std::vector< Parameter* > meterParameterPointers;
     
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f }; // range object used to scale pitchbend values
     

@@ -11,7 +11,33 @@ namespace Imogen
 {
 
 
-static inline auto createParameterTree()
+static inline auto createMeterParameterTree()
+{
+    using Group = juce::AudioProcessorParameterGroup;
+    using Gain  = bav::GainMeterParameter;
+    
+    constexpr auto compLimMeter = juce::AudioProcessorParameter::compressorLimiterGainReductionMeter;
+    constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
+    
+    
+    auto inputLevel  = std::make_unique<Gain> (inputLevelID,  "In",  "Input level",  juce::AudioProcessorParameter::inputMeter);
+    auto outputLevel = std::make_unique<Gain> (outputLevelID, "Out", "Output level", juce::AudioProcessorParameter::outputMeter);
+    
+    auto gateGainRedux  = std::make_unique<Gain> (gateReduxID, "Gate redux", "Noise gate gain reduction", compLimMeter);
+    auto compGainRedux  = std::make_unique<Gain> (compReduxID, "Comp redux", "Compressor gain reduction", compLimMeter);
+    auto deEssGainRedux = std::make_unique<Gain> (deEssGainReduxID, "D-S redux", "De-esser gain reduction", compLimMeter);
+    auto limtrGainRedux = std::make_unique<Gain> (limiterGainReduxID, "Lim redux", "Limiter gain reduction", compLimMeter);
+    
+    auto reverbLevel = std::make_unique<Gain> (reverbLevelID,  "Reverb",  "Reverb level",  otherMeter);
+    auto delayLevel  = std::make_unique<Gain> (delayLevelID,   "Delay",   "Delay level",   otherMeter);
+    
+    return std::make_unique<Group> (meterTreeName(), TRANS ("Imogen Meters"), "|",
+                                    std::move (inputLevel), std::move (outputLevel), std::move (gateGainRedux), std::move (compGainRedux),
+                                    std::move (deEssGainRedux), std::move (limtrGainRedux), std::move (reverbLevel), std::move (delayLevel));
+}
+
+
+static inline auto createAutomatableParameterTree()
 {
     using Group = juce::AudioProcessorParameterGroup;
     
@@ -40,21 +66,21 @@ static inline auto createParameterTree()
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> (inputSourceID, "Input source", "Input source",
                                                          1, 3, 1, juce::String(),
-            [](int value, int maxLength)
+                                                         [](int value, int maxLength)
+                                                         {
+            switch (value)
             {
-                switch (value)
-                {
-                    case (2): return TRANS("Right").substring(0, maxLength);
-                    case (3): return TRANS("Mix to mono").substring(0, maxLength);
-                    default:  return TRANS("Left").substring(0, maxLength);
-                }
-            },
-            [](const juce::String& text)
-            {
-                if (text.containsIgnoreCase (TRANS("Right"))) return 2;
-                if (text.containsIgnoreCase (TRANS("mono")) || text.containsIgnoreCase (TRANS("mix"))) return 3;
-                return 1;
-            });
+                case (2): return TRANS("Right").substring(0, maxLength);
+                case (3): return TRANS("Mix to mono").substring(0, maxLength);
+                default:  return TRANS("Left").substring(0, maxLength);
+            }
+        },
+                                                         [](const juce::String& text)
+                                                         {
+            if (text.containsIgnoreCase (TRANS("Right"))) return 2;
+            if (text.containsIgnoreCase (TRANS("mono")) || text.containsIgnoreCase (TRANS("mix"))) return 3;
+            return 1;
+        });
         
         auto dryWet = std::make_unique<IntParameter> (dryWetID, "Dry/wet", "Main dry/wet",
                                                       0, 100, 100, "%", l::pcnt_stringFromInt, l::pcnt_intFromString);
@@ -230,7 +256,7 @@ static inline auto createParameterTree()
                                                       std::move (delay), std::move (reverb), std::move (limiter)));
     }
     
-    auto mainGroup = std::make_unique<Group> ("ImogenParameters", TRANS ("Imogen Parameters"), div);
+    auto mainGroup = std::make_unique<Group> (parameterTreeName(), TRANS ("Imogen Parameters"), div);
     
     for (auto& group : groups)
         mainGroup->addChild (std::move (group));
@@ -239,21 +265,11 @@ static inline auto createParameterTree()
 }
 
 
-
-static inline void createParameterValueTreeAttachments (juce::OwnedArray<bav::ParameterAttachment>& attachments,
-                                                        juce::ValueTree parameterValueTree,
-                                                        std::function<bav::Parameter*(ParameterID)> findParameter)
+static inline auto createParameterTree()
 {
-    attachments.ensureStorageAllocated (numParams);
-    
-    for (int i = 0; i < numParams; ++i)
-    {
-        auto parameter = findParameter (static_cast<ParameterID> (i));
-        jassert (parameter != nullptr);
-        
-        attachments.add (new bav::ParameterAttachment (parameter,
-                                                       bav::getChildTreeForParameter (parameterValueTree, parameter)));
-    }
+    return std::make_unique<juce::AudioProcessorParameterGroup> ("Imogen", "Imogen", "|",
+                                                                 createAutomatableParameterTree(),
+                                                                 createMeterParameterTree());
 }
 
 

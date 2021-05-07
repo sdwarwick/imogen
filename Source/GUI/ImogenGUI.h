@@ -75,6 +75,10 @@ public:
 private:
     inline bav::Parameter* getParameterPntr (const ParameterID paramID) const;
     
+    inline bav::Parameter* getMeterParamPntr (const MeterID meter) const;
+    
+    /*=========================================================================================*/
+    
     inline void makePresetMenu (juce::ComboBox& box);
     
     void rescanPresetsFolder();
@@ -91,6 +95,8 @@ private:
     
     std::unique_ptr<juce::AudioProcessorParameterGroup> parameterTree;
     std::vector< bav::Parameter* > parameterPointers;
+    std::vector< bav::Parameter* > meterParameterPointers;
+    
     juce::ValueTree state;
     
     juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;

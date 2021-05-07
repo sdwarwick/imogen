@@ -49,9 +49,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     initializeParameterPointers();
     
-    Imogen::createParameterValueTreeAttachments (parameterTreeAttachments,
-                                                 state.getChildWithName (ValueTreeIDs::Parameters),
-                                                 [this](ParameterID param) { return getParameterPntr (param); });
+    Imogen::createValueTreeParameterAttachments (state, parameterTreeAttachments,
+                                                 [this](ParameterID param) { return getParameterPntr (param); },
+                                                 [this](MeterID meter) { return getMeterParamPntr (meter); });
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);

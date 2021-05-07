@@ -41,9 +41,8 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     editorSize.setProperty ("editorSize_X", savedEditorSize.x, nullptr);
     editorSize.setProperty ("editorSize_Y", savedEditorSize.y, nullptr);
     
-    auto xml = state.createXml();
-    
-    copyXmlToBinary (*xml, destData);
+    juce::MemoryOutputStream stream (destData, false);
+    state.writeToStream (stream);
 }
 
 
@@ -53,14 +52,9 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto newState = *(getXmlFromBinary (data, sizeInBytes));
+    auto newTree = juce::ValueTree::readFromData (data, static_cast<size_t> (sizeInBytes));
     
-    if (! newState.hasTagName (state.getType()))
-        return;
-    
-    auto newTree = juce::ValueTree::fromXml (newState);
-    
-    if (! newTree.isValid())
+    if (! newTree.isValid() || ! newTree.hasType (state.getType()))
         return;
     
     suspendProcessing (true);

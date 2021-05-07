@@ -42,9 +42,9 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     parameterPointers.reserve (numParams);
     parseParameterTreeForParameterPointers (*parameterTree);
     
-    Imogen::createParameterValueTreeAttachments (parameterTreeAttachments,
-                                                 state.getChildWithName (ValueTreeIDs::Parameters),
-                                                 [this](ParameterID param) { return getParameterPntr (param); });
+    Imogen::createValueTreeParameterAttachments (state, parameterTreeAttachments,
+                                                 [this](ParameterID param) { return getParameterPntr (param); },
+                                                 [this](MeterID meter) { return getMeterParamPntr (meter); });
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -82,14 +82,26 @@ inline bav::Parameter* ImogenGUI::getParameterPntr (const ParameterID paramID) c
 }
 
 
+inline bav::Parameter* ImogenGUI::getMeterParamPntr (const MeterID meter) const
+{
+    for (auto* pntr : meterParameterPointers)
+        if (static_cast<MeterID>(pntr->key()) == meter)
+            return pntr;
+    
+    return nullptr;
+}
+
+
 inline void ImogenGUI::parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup& group)
 {
     for (auto* node : group)
     {
-        if (auto* param = node->getParameter())
+        if (auto* rawParam = node->getParameter())
         {
-            if (auto* parameter = dynamic_cast<bav::Parameter*>(param))
-                parameterPointers.emplace_back (parameter);
+            if (auto* meter = dynamic_cast<bav::MeterParameter*> (rawParam))
+                meterParameterPointers.push_back (meter);
+            else if (auto* param = dynamic_cast<bav::Parameter*> (rawParam))
+                parameterPointers.push_back (param);
             else
                 jassertfalse;
         }
@@ -109,7 +121,6 @@ void ImogenGUI::applyValueTreeStateChange (const void* encodedChangeData, size_t
 {
     juce::ValueTreeSynchroniser::applyChange (state, encodedChangeData, encodedChangeDataSize, nullptr);
 }
-
 
 
 /*=========================================================================================================
@@ -137,17 +148,16 @@ void ImogenGUI::rescanPresetsFolder()
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
     const auto filename = bav::addFileExtensionIfMissing (presetName, getPresetFileExtension());
-
-//    auto state = tree.copyState();
-//
-//    if (state.hasProperty ("editorSize"))
-//        state.removeProperty ("editorSize", nullptr);
-//
-//    auto xml = state.createXml();
-//
-//    xml->setAttribute ("presetName", filename.dropLastCharacters (getPresetFileExtension().length()));
-//
-//    xml->writeTo (getPresetsFolder().getChildFile (filename));
+    
+    juce::FileOutputStream stream (filename);
+    
+    auto tree = state.createCopy();
+    
+    tree.setProperty ("PresetName",
+                      bav::removeFileExtensionIfThere (presetName, getPresetFileExtension()),
+                      nullptr);
+    
+    tree.writeToStream (stream);
 
     rescanPresetsFolder();
 }
@@ -172,13 +182,22 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
         return;
     }
 
-//    const auto result = isUsingDoublePrecision() ? updatePluginInternalState (*juce::parseXML (presetToLoad), doubleEngine, true)
-//                                                 : updatePluginInternalState (*juce::parseXML (presetToLoad), floatEngine,  true);
-
-//    if (! result)
-//    {
-//        // display error message...
-//    }
+    juce::MemoryBlock data;
+    
+    juce::FileInputStream stream (presetToLoad);
+    
+    stream.readIntoMemoryBlock (data);
+    
+    auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
+    
+    if (! newTree.isValid() || ! newTree.hasType (state.getType()))
+        return;
+    
+    state.copyPropertiesAndChildrenFrom (newTree, nullptr);
+    
+    treeSync.sendFullSyncCallback();
+    
+    repaint();
 }
 
 
@@ -200,28 +219,52 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 
 void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
 {
+    if (previousName.isEmpty() || newName.isEmpty())
+    {
+        // display error message...
+        return;
+    }
+    
     rescanPresetsFolder();
     
-    const auto extension = getPresetFileExtension();
-
-    const auto presetToLoad = presetsFolder().getChildFile (bav::addFileExtensionIfMissing (previousName, extension));
-
+    const auto filename = bav::addFileExtensionIfMissing (previousName, getPresetFileExtension());
+    const auto presetToLoad = presetsFolder().getChildFile (filename);
+    
     if (! presetToLoad.existsAsFile())
     {
         // display error message...
         return;
     }
-
-    auto xml = juce::parseXML (presetToLoad);
-
-    if (! presetToLoad.moveToTrash())  // delete the old preset file
+    
+    // load the old preset into memory
+    
+    juce::MemoryBlock data;
+    
+    juce::FileInputStream inStream (presetToLoad);
+    
+    inStream.readIntoMemoryBlock (data);
+    
+    auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
+    
+    if (! newTree.isValid() || ! newTree.hasType (state.getType()))
+        return;
+    
+    // delete the old preset file
+    if (! presetToLoad.moveToTrash())
         presetToLoad.deleteFile();
-
-    const auto name = bav::removeFileExtensionIfThere (newName, extension);
-
-    xml->setAttribute ("presetName", name);
-    xml->writeTo (presetsFolder().getChildFile (name + extension));
-
+    
+    // edit the saved preset name
+    newTree.setProperty ("PresetName",
+                         bav::removeFileExtensionIfThere (newName, getPresetFileExtension()),
+                         nullptr);
+    
+    // write to a new file
+    const auto newFilename = bav::addFileExtensionIfMissing (newName, getPresetFileExtension());
+    
+    juce::FileOutputStream outStream (newFilename);
+    
+    newTree.writeToStream (outStream);
+    
     rescanPresetsFolder();
 }
 

@@ -34,10 +34,18 @@ void ImogenAudioProcessor::initializeParameterPointers()
     parameterPointers.clear();
     parameterPointers.reserve (numParams);
     
-    for (auto* rawParam : getParameters())
-        parameterPointers.push_back (dynamic_cast<Parameter*>(rawParam));
+    meterParameterPointers.clear();
+    meterParameterPointers.reserve (numMeters);
     
-    jassert (parameterPointers.size() == numParams);
+    for (auto* rawParam : getParameters())
+    {
+        if (auto* meter = dynamic_cast<bav::MeterParameter*> (rawParam))
+            meterParameterPointers.push_back (meter);
+        else if (auto* param = dynamic_cast<bav::Parameter*> (rawParam))
+            parameterPointers.push_back (param);
+        else
+            jassertfalse;
+    }
     
     mainBypassPntr = getParameterPntr (mainBypassID);
     jassert (mainBypassPntr != nullptr);
@@ -99,6 +107,16 @@ inline bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID
 {
     for (auto* pntr : parameterPointers)
         if (static_cast<ParameterID>(pntr->key()) == paramID)
+            return pntr;
+    
+    return nullptr;
+}
+
+
+inline bav::Parameter* ImogenAudioProcessor::getMeterParamPntr (const MeterID meterID) const
+{
+    for (auto* pntr : meterParameterPointers)
+        if (static_cast<MeterID>(pntr->key()) == meterID)
             return pntr;
     
     return nullptr;
