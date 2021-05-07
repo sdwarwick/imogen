@@ -89,7 +89,7 @@ public:
     Analysis_Grain* findClosestGrain (int idealBufferPos) const
     {
         Analysis_Grain* closestGrain = nullptr;
-        int distance = INT_MAX;
+        int distance = std::numeric_limits<int>::max();
         
         for (auto* grain : analysisGrains)
         {

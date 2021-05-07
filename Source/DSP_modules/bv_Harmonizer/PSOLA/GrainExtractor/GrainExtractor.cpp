@@ -241,13 +241,16 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (IArray& candida
     if (starting == -1)
         return;
     
-#define bvhge_WEIGHT(index, predicted, numSamples) SampleType(1.0 - ((abs(index - predicted) / numSamples) * 0.5))
-    
     jassert (starting >= startSample && starting <= endSample);
+    
+    const auto weight = [](int index, int predicted, int numSamples)
+    {
+        return static_cast<SampleType>(1.0 - ((abs(index - predicted) / numSamples) * 0.5));
+    };
     
     const auto numSamples = endSample - startSample;
     
-    auto localMin = input[starting] * bvhge_WEIGHT(starting, predictedPeak, numSamples);
+    auto localMin = input[starting] * weight(starting, predictedPeak, numSamples);
     auto localMax = localMin;
     auto indexOfLocalMin = starting;
     auto indexOfLocalMax = starting;
@@ -259,7 +262,7 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (IArray& candida
         
         jassert (index >= startSample && index <= endSample);
         
-        const auto currentSample = input[index] * bvhge_WEIGHT(index, predictedPeak, numSamples);
+        const auto currentSample = input[index] * weight(index, predictedPeak, numSamples);
         
         if (currentSample < localMin)
         {
@@ -273,8 +276,6 @@ inline void GrainExtractor<SampleType>::getPeakCandidateInRange (IArray& candida
             indexOfLocalMax = index;
         }
     }
-    
-#undef bvhge_WEIGHT
     
     if (indexOfLocalMax == indexOfLocalMin)
     {
@@ -341,10 +342,10 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
     if (deltaRange < 0.05f)  // prevent dividing by 0 in the next step...
         return finalHandful.getUnchecked(0);
     
-#define bvhge_DELTA_WEIGHT(delta, deltaRange) 1.0f - (delta / deltaRange)
+    const auto deltaWeight = [](float delta, float totalDeltaRange) { return 1.0f - (delta / totalDeltaRange); };
     
     auto chosenPeak = finalHandful.getUnchecked (0);
-    auto strongestPeak = abs(reading[chosenPeak]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(0), deltaRange);
+    auto strongestPeak = abs(reading[chosenPeak]) * deltaWeight(finalHandfulDeltas.getUnchecked(0), deltaRange);
     
     for (int i = 1; i < finalHandfulSize; ++i)
     {
@@ -353,7 +354,7 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
         if (candidate == chosenPeak)
             continue;
         
-        auto testingPeak = abs(reading[candidate]) * bvhge_DELTA_WEIGHT(finalHandfulDeltas.getUnchecked(i), deltaRange);
+        auto testingPeak = abs(reading[candidate]) * deltaWeight(finalHandfulDeltas.getUnchecked(i), deltaRange);
         
         if (testingPeak > strongestPeak)
         {
@@ -361,8 +362,6 @@ inline int GrainExtractor<SampleType>::chooseIdealPeakCandidate (const IArray& c
             chosenPeak = candidate;
         }
     }
-    
-#undef bvhge_DELTA_WEIGHT
     
     return chosenPeak;
 }
