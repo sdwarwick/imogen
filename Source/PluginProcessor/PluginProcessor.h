@@ -25,23 +25,11 @@
 #pragma once
 
 #include "bv_ImogenEngine/bv_ImogenEngine.h"
-#include "../GUI/ImogenGUI.h"
-//#include "../Common/ImogenParameters.h"
 
-#ifndef IMOGEN_USE_ABLETON_LINK
-  #define IMOGEN_USE_ABLETON_LINK 0
-#endif
+#include "../Common/ImogenParameters.h"
 
 #if IMOGEN_USE_ABLETON_LINK
   #include <../../third-party/ableton-link/include/ableton/Link.hpp>
-#endif
-
-
-#undef IMOGEN_PROCESSOR_TIMER
-#if IMOGEN_REMOTE_APP || ! IMOGEN_HEADLESS
-  #define IMOGEN_PROCESSOR_TIMER 1
-#else
-  #define IMOGEN_PROCESSOR_TIMER 0
 #endif
 
 
@@ -63,9 +51,6 @@ struct ImogenGUIUpdateReciever
 */
 
 class ImogenAudioProcessor    : public  juce::AudioProcessor
-#if IMOGEN_PROCESSOR_TIMER
-                              , private juce::Timer
-#endif
 {
     
     using Parameter     = bav::Parameter;
@@ -77,10 +62,6 @@ class ImogenAudioProcessor    : public  juce::AudioProcessor
 public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
-    
-#if IMOGEN_PROCESSOR_TIMER
-    void timerCallback() override final;
-#endif
     
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */

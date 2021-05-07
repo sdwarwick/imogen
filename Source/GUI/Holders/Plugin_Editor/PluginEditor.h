@@ -25,8 +25,7 @@
 #pragma once
 
 #include "PluginProcessor/PluginProcessor.h"
-
-//#include "../../ImogenGUI.h"
+#include "../../ImogenGUI.h"
 
 
 using namespace Imogen;

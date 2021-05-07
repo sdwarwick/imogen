@@ -30,8 +30,6 @@
 
 #include "BinaryData.h"
 
-#include "bv_SharedCode/bv_SharedCode.h"
-
 #include "../Common/ImogenParameters.h"
 
 

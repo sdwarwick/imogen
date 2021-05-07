@@ -25,9 +25,6 @@
 #include "GUI/Holders/Plugin_Editor/PluginEditor.h"
 #include "PluginProcessor.h"
 
-#include "PluginProcessorParameters.cpp"
-#include "PluginProcessorState.cpp"
-
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
@@ -81,16 +78,6 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
     Timer::stopTimer();
 #endif
 }
-
-/*===========================================================================================================
-===========================================================================================================*/
-
-#if IMOGEN_PROCESSOR_TIMER
-void ImogenAudioProcessor::timerCallback()
-{
-
-}
-#endif
 
 /*===========================================================================================================
  ===========================================================================================================*/
