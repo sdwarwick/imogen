@@ -97,13 +97,6 @@ enum ParameterID
 static constexpr int numParams = delayDryWetID + 1;
 
 
-static inline juce::Identifier imogenValueTreeType()
-{
-    static juce::Identifier type { "ImogenParameters" };
-    return type;
-}
-
-
 static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
 
 
@@ -121,6 +114,28 @@ static inline juce::File findAppropriateTranslationFile()
 static inline juce::String getPresetFileExtension()
 {
     return { ".xml" };
+}
+
+
+
+namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level ValueTree */
+{
+#define IMOGEN_DECLARE_VALUETREEID(name) static inline juce::Identifier name { "name" }
+
+    IMOGEN_DECLARE_VALUETREEID (Imogen);  // the type that the top-level tree will have
+    IMOGEN_DECLARE_VALUETREEID (Parameters);
+
+#undef IMOGEN_DECLARE_VALUETREEID
+}  // namespace
+
+
+static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
+                                             const juce::AudioProcessorParameterGroup& parameterTree)
+{
+    // create the parameter tree
+    juce::ValueTree parameters { ValueTreeIDs::Parameters };
+    bav::createValueTreeFromParameterTree (parameters, parameterTree);
+    topLevelTree.addChild (parameters, 0, nullptr);
 }
 
 

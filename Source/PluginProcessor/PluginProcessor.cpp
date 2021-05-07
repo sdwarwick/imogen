@@ -31,7 +31,7 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
-    state (imogenValueTreeType()),
+    state (ValueTreeIDs::Imogen),
     treeSync (state, *this)
 #if IMOGEN_USE_ABLETON_LINK
     , abletonLink (120.0) // constructed with the initial BPM
@@ -41,25 +41,17 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     ne10_init();
 #endif
     
-    const auto translations = findAppropriateTranslationFile();
-    if (translations.existsAsFile())
-        juce::LocalisedStrings::setCurrentMappings (new juce::LocalisedStrings (translations, true));
+    bav::initializeTranslations (findAppropriateTranslationFile());
     
-    addParameterGroup (createParameterTree());
+    addParameterGroup (Imogen::createParameterTree());
     
-    bav::createValueTreeFromParameterTree (state, getParameterTree());
-    
-    jassert (getParameters().size() == numParams);
+    Imogen::buildImogenMainValueTree (state, getParameterTree());
     
     initializeParameterPointers();
     
-    parameterTreeAttachments.ensureStorageAllocated (numParams);
-    
-    for (int i = 0; i < numParams; ++i)
-    {
-        const auto paramID = static_cast<ParameterID> (i);
-        parameterTreeAttachments.add (new bav::ParameterAttachment (getParameterPntr (paramID), state));
-    }
+    Imogen::createParameterValueTreeAttachments (parameterTreeAttachments,
+                                                 state.getChildWithName (ValueTreeIDs::Parameters),
+                                                 [this](ParameterID param) { return getParameterPntr (param); });
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -67,22 +59,18 @@ ImogenAudioProcessor::ImogenAudioProcessor()
         initialize (floatEngine);
     
     treeSync.sendFullSyncCallback();
-    
-#if IMOGEN_PROCESSOR_TIMER
-    constexpr int timerFramerate = 30;
-    Timer::startTimerHz (timerFramerate);
-#endif
 }
+
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
-#if IMOGEN_PROCESSOR_TIMER
-    Timer::stopTimer();
-#endif
+
 }
+
 
 /*===========================================================================================================
  ===========================================================================================================*/
+
 
 template <typename SampleType>
 inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& activeEngine)

@@ -239,4 +239,22 @@ static inline auto createParameterTree()
 }
 
 
+
+static inline void createParameterValueTreeAttachments (juce::OwnedArray<bav::ParameterAttachment>& attachments,
+                                                        juce::ValueTree parameterValueTree,
+                                                        std::function<bav::Parameter*(ParameterID)> findParameter)
+{
+    attachments.ensureStorageAllocated (numParams);
+    
+    for (int i = 0; i < numParams; ++i)
+    {
+        auto parameter = findParameter (static_cast<ParameterID> (i));
+        jassert (parameter != nullptr);
+        
+        attachments.add (new bav::ParameterAttachment (parameter,
+                                                       bav::getChildTreeForParameter (parameterValueTree, parameter)));
+    }
+}
+
+
 }  // namespace

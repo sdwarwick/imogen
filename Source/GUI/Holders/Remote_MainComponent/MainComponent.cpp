@@ -26,17 +26,17 @@
 
 MainComponent::MainComponent(): gui(this)
 {
-    const auto translations = findAppropriateTranslationFile();
-    if (translations.existsAsFile())
-        juce::LocalisedStrings::setCurrentMappings (new juce::LocalisedStrings (translations, true));
+#if BV_USE_NE10
+    ne10_init();
+#endif
+    
+    bav::initializeTranslations (findAppropriateTranslationFile());
     
     this->setBufferedToImage (true);
     
     addAndMakeVisible (gui);
     
     setSize (800, 2990);
-    
-    // connect OSC sender & reciver...
     
 #if JUCE_OPENGL
     openGLContext.attachTo (*getTopLevelComponent());

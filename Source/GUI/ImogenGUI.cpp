@@ -28,8 +28,8 @@
 
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
-      : parameterTree (createParameterTree()),
-        state (imogenValueTreeType()),
+      : parameterTree (Imogen::createParameterTree()),
+        state (ValueTreeIDs::Imogen),
         treeSync (state, s),
         tooltipWindow (this, msBeforeTooltip)
 {
@@ -37,18 +37,14 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     setInterceptsMouseClicks (false, true);
     
-    bav::createValueTreeFromParameterTree (state, *parameterTree);
+    Imogen::buildImogenMainValueTree (state, *parameterTree);
     
     parameterPointers.reserve (numParams);
     parseParameterTreeForParameterPointers (*parameterTree);
     
-    parameterTreeAttachments.ensureStorageAllocated (numParams);
-    
-    for (int i = 0; i < numParams; ++i)
-    {
-        const auto paramID = static_cast<ParameterID>(i);
-        parameterTreeAttachments.add (new bav::ParameterAttachment (getParameterPntr (paramID), state));
-    }
+    Imogen::createParameterValueTreeAttachments (parameterTreeAttachments,
+                                                 state.getChildWithName (ValueTreeIDs::Parameters),
+                                                 [this](ParameterID param) { return getParameterPntr (param); });
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -93,13 +89,9 @@ inline void ImogenGUI::parseParameterTreeForParameterPointers (const juce::Audio
         if (auto* param = node->getParameter())
         {
             if (auto* parameter = dynamic_cast<bav::Parameter*>(param))
-            {
                 parameterPointers.emplace_back (parameter);
-            }
             else
-            {
                 jassertfalse;
-            }
         }
         else if (auto* thisGroup = node->getGroup())
         {
