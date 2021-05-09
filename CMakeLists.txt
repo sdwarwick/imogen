@@ -73,6 +73,8 @@ juce_add_plugin (Imogen
     PLUGIN_CODE                 Imgn
     DOCUMENT_BROWSER_ENABLED    TRUE
     BACKGROUND_AUDIO_ENABLED	FALSE # for iOS
+    NEEDS_CURL                  TRUE
+    NEEDS_WEB_BROWSER           TRUE
     )
 
 #

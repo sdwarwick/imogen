@@ -33,6 +33,8 @@ juce_add_gui_app (ImogenRemote
     DOCUMENT_BROWSER_ENABLED      TRUE
     MICROPHONE_PERMISSION_ENABLED FALSE
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
+    NEEDS_CURL                    TRUE
+    NEEDS_WEB_BROWSER             TRUE
     )
 
 #

@@ -55,6 +55,8 @@ juce_add_plugin (ImogenHeadless
     ${Imogen_Plugin_Flags}
     PLUGIN_CODE                 Imnh
     DOCUMENT_BROWSER_ENABLED    FALSE
+    NEEDS_CURL                  FALSE
+    NEEDS_WEB_BROWSER           FALSE
     )
 
 #

@@ -1,15 +1,4 @@
 
-if (NOT DEFINED IMOGEN_BUILD_FOR_ELK)
-    set (IMOGEN_BUILD_FOR_ELK FALSE)
-endif()
-
-if (DEFINED bv_ignoreAllThirdPartyLibs)
-    set (BV_IGNORE_VDSP)
-    set (BV_IGNORE_MIPP)
-endif()
-
-#
-
 set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
 
 set (Imogen_Common_SourceFiles
@@ -204,18 +193,6 @@ target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC
     JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
     )
-
-if (${IMOGEN_BUILD_FOR_ELK})
-    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    )
-else()
-    target_compile_definitions (${CMAKE_PROJECT_NAME} PUBLIC 
-    JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=0
-    )
-endif()
 
 endfunction()
 
