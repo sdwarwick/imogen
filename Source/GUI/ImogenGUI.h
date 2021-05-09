@@ -89,7 +89,8 @@ private:
     
     /*=========================================================================================*/
     
-    inline void parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup& group);
+    inline void parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup* group,
+                                                        std::vector< bav::Parameter* >& pointers);
     
     /*=========================================================================================*/
     

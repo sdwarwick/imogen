@@ -99,7 +99,7 @@ static constexpr int numParams = delayDryWetID + 1;
 
 enum MeterID
 {
-    inputLevelID = numParams,
+    inputLevelID,
     outputLevelID,
     gateReduxID,
     compReduxID,
@@ -144,13 +144,17 @@ namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level Va
 }  // namespace
 
 
+static inline juce::String parameterTreeID()   { return "ImogenParameters"; }
 static inline juce::String parameterTreeName() { return TRANS ("Parameters"); }
 
+static inline juce::String meterTreeID()   { return "ImogenMeters"; }
 static inline juce::String meterTreeName() { return TRANS ("Meters"); }
+
+static inline juce::String parameterTreeSeparatorString() { return { " | " }; }
 
 
 static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
-                                             const juce::AudioProcessorParameterGroup& parameterTree)
+                                             const juce::AudioProcessorParameterGroup* parameterTree)
 {
     // create the parameter tree
     if (auto* params = bav::findParameterSubgroup (parameterTree, parameterTreeName()))

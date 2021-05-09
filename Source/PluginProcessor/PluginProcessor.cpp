@@ -45,7 +45,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     addParameterGroup (Imogen::createParameterTree());
     
-    Imogen::buildImogenMainValueTree (state, getParameterTree());
+    Imogen::buildImogenMainValueTree (state, &getParameterTree());
     
     initializeParameterPointers();
     

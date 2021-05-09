@@ -37,10 +37,15 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     setInterceptsMouseClicks (false, true);
     
-    Imogen::buildImogenMainValueTree (state, *parameterTree);
+    Imogen::buildImogenMainValueTree (state, parameterTree.get());
     
     parameterPointers.reserve (numParams);
-    parseParameterTreeForParameterPointers (*parameterTree);
+    parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), parameterTreeName()),
+                                            parameterPointers);
+    
+    meterParameterPointers.reserve (numMeters);
+    parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), meterTreeName()),
+                                            meterParameterPointers);
     
     Imogen::createValueTreeParameterAttachments (state, parameterTreeAttachments,
                                                  [this](ParameterID param) { return getParameterPntr (param); },
@@ -92,22 +97,21 @@ inline bav::Parameter* ImogenGUI::getMeterParamPntr (const MeterID meter) const
 }
 
 
-inline void ImogenGUI::parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup& group)
+inline void ImogenGUI::parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup* group,
+                                                               std::vector< bav::Parameter* >& pointers)
 {
-    for (auto* node : group)
+    for (auto* node : *group)
     {
         if (auto* rawParam = node->getParameter())
         {
-            if (auto* meter = dynamic_cast<bav::MeterParameter*> (rawParam))
-                meterParameterPointers.push_back (meter);
-            else if (auto* param = dynamic_cast<bav::Parameter*> (rawParam))
-                parameterPointers.push_back (param);
+            if (auto* meter = dynamic_cast<bav::Parameter*> (rawParam))
+                pointers.push_back (meter);
             else
                 jassertfalse;
         }
         else if (auto* thisGroup = node->getGroup())
         {
-            parseParameterTreeForParameterPointers (*thisGroup);
+            parseParameterTreeForParameterPointers (thisGroup, pointers);
         }
     }
 }

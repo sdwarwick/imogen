@@ -31,7 +31,7 @@ static inline auto createMeterParameterTree()
     auto reverbLevel = std::make_unique<Gain> (reverbLevelID,  "Reverb",  "Reverb level",  otherMeter);
     auto delayLevel  = std::make_unique<Gain> (delayLevelID,   "Delay",   "Delay level",   otherMeter);
     
-    return std::make_unique<Group> (meterTreeName(), TRANS ("Imogen Meters"), "|",
+    return std::make_unique<Group> (meterTreeID(), meterTreeName(), parameterTreeSeparatorString(),
                                     std::move (inputLevel), std::move (outputLevel), std::move (gateGainRedux), std::move (compGainRedux),
                                     std::move (deEssGainRedux), std::move (limtrGainRedux), std::move (reverbLevel), std::move (delayLevel));
 }
@@ -61,7 +61,7 @@ static inline auto createAutomatableParameterTree()
     const auto st  = TRANS ("st");
     const auto sec = TRANS ("sec");
     
-    constexpr auto div = "|";  // the dividing character that will be used for each AudioParameterGroup
+    const auto div = parameterTreeSeparatorString();
     
     {   /* MIXING */
         auto inputMode = std::make_unique<IntParameter> (inputSourceID, "Input source", "Input source",
@@ -256,7 +256,7 @@ static inline auto createAutomatableParameterTree()
                                                       std::move (delay), std::move (reverb), std::move (limiter)));
     }
     
-    auto mainGroup = std::make_unique<Group> (parameterTreeName(), TRANS ("Imogen Parameters"), div);
+    auto mainGroup = std::make_unique<Group> (parameterTreeID(), parameterTreeName(), div);
     
     for (auto& group : groups)
         mainGroup->addChild (std::move (group));
@@ -267,7 +267,7 @@ static inline auto createAutomatableParameterTree()
 
 static inline auto createParameterTree()
 {
-    return std::make_unique<juce::AudioProcessorParameterGroup> ("Imogen", "Imogen", "|",
+    return std::make_unique<juce::AudioProcessorParameterGroup> ("Imogen", "Imogen", parameterTreeSeparatorString(),
                                                                  createAutomatableParameterTree(),
                                                                  createMeterParameterTree());
 }
