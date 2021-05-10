@@ -33,9 +33,6 @@
 #include "../Common/ImogenParameters.h"
 
 
-using namespace Imogen;
-
-
 struct ImogenGUIUpdateSender
 {
     virtual void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) = 0;
@@ -44,6 +41,9 @@ struct ImogenGUIUpdateSender
 
 class ImogenGUI  :     public juce::Component
 {
+    using ParameterID = Imogen::ParameterID;
+    using MeterID = Imogen::MeterID;
+    
 public:
     
     ImogenGUI (ImogenGUIUpdateSender* s);

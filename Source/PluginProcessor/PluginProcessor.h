@@ -33,10 +33,6 @@
 #endif
 
 
-using namespace Imogen;
-
-
-
 class ImogenAudioProcessorEditor;  // forward declaration...
 
 
@@ -52,11 +48,13 @@ struct ImogenGUIUpdateReciever
 
 class ImogenAudioProcessor    : public  juce::AudioProcessor
 {
-    
     using Parameter     = bav::Parameter;
     using FloatParamPtr = bav::FloatParameter*;
     using IntParamPtr   = bav::IntParameter*;
     using BoolParamPtr  = bav::BoolParameter*;
+    
+    using ParameterID = Imogen::ParameterID;
+    using MeterID = Imogen::MeterID;
 
     
 public:

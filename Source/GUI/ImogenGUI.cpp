@@ -26,7 +26,7 @@
 
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
-      : state (ValueTreeIDs::Imogen),
+      : state (Imogen::ValueTreeIDs::Imogen),
         treeSync (state, s),
         tooltipWindow (this, msBeforeTooltip)
 {
@@ -45,11 +45,13 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, processor.getParameterTree());
     
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
-                                                    state.getChildWithName (ValueTreeIDs::Parameters), numParams,
+                                                    state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
+                                                    Imogen::numParams,
                                                     [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
     
     bav::createReadOnlyParameterValueTreeAttachments (meterTreeAttachments,
-                                                      state.getChildWithName (ValueTreeIDs::Meters), numMeters,
+                                                      state.getChildWithName (Imogen::ValueTreeIDs::Meters),
+                                                      Imogen::numMeters,
                                                       [this](int param) { return getMeterParamPntr (static_cast<MeterID>(param)); });
     
     makePresetMenu (selectPreset);
@@ -132,14 +134,16 @@ void ImogenGUI::rescanPresetsFolder()
 
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    const auto filename = bav::addFileExtensionIfMissing (presetName, getPresetFileExtension());
+    const auto xtn = Imogen::getPresetFileExtension();
+    
+    const auto filename = bav::addFileExtensionIfMissing (presetName, xtn);
     
     juce::FileOutputStream stream (filename);
     
     auto tree = state.createCopy();
     
     tree.setProperty ("PresetName",
-                      bav::removeFileExtensionIfThere (presetName, getPresetFileExtension()),
+                      bav::removeFileExtensionIfThere (presetName, xtn),
                       nullptr);
     
     tree.writeToStream (stream);
@@ -157,9 +161,9 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
     }
 
     rescanPresetsFolder();
-
-    const auto filename = bav::addFileExtensionIfMissing (presetName, getPresetFileExtension());
-    const auto presetToLoad = presetsFolder().getChildFile (filename);
+    
+    const auto filename = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
+    const auto presetToLoad = Imogen::presetsFolder().getChildFile (filename);
 
     if (! presetToLoad.existsAsFile())
     {
@@ -190,7 +194,8 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 {
     rescanPresetsFolder();
     
-    auto presetToDelete = presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, getPresetFileExtension()));
+    auto presetToDelete = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
+                                                                                                Imogen::getPresetFileExtension()));
 
     if (presetToDelete.existsAsFile())
     {
@@ -212,8 +217,10 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
     
     rescanPresetsFolder();
     
-    const auto filename = bav::addFileExtensionIfMissing (previousName, getPresetFileExtension());
-    const auto presetToLoad = presetsFolder().getChildFile (filename);
+    const auto xtn = Imogen::getPresetFileExtension();
+    
+    const auto filename = bav::addFileExtensionIfMissing (previousName, xtn);
+    const auto presetToLoad = Imogen::presetsFolder().getChildFile (filename);
     
     if (! presetToLoad.existsAsFile())
     {
@@ -240,11 +247,11 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
     
     // edit the saved preset name
     newTree.setProperty ("PresetName",
-                         bav::removeFileExtensionIfThere (newName, getPresetFileExtension()),
+                         bav::removeFileExtensionIfThere (newName, xtn),
                          nullptr);
     
     // write to a new file
-    const auto newFilename = bav::addFileExtensionIfMissing (newName, getPresetFileExtension());
+    const auto newFilename = bav::addFileExtensionIfMissing (newName, xtn);
     
     juce::FileOutputStream outStream (newFilename);
     

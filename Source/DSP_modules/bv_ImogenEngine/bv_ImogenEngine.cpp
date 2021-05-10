@@ -276,20 +276,46 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         }
     }
     
+    meterData.inputLevel = static_cast<float> (monoBuffer.getMagnitude (0, blockSize));
+    
     inputGain.applyGain (monoBuffer, blockSize);
 
 //    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
 //    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
 
     if (noiseGateIsOn.load())
-        gate.process (monoBuffer);
-
+    {
+        SampleType gainRedux;
+        gate.process (monoBuffer, &gainRedux);
+        meterData.noiseGateGainReduction = static_cast<float> (gainRedux);
+    }
+    else
+    {
+        meterData.noiseGateGainReduction = 0.0f;
+    }
+    
     if (deEsserIsOn.load())
-        deEsser.process (monoBuffer);
-
+    {
+        SampleType gainRedux;
+        deEsser.process (monoBuffer, &gainRedux);
+        meterData.deEsserGainReduction = static_cast<float> (gainRedux);
+    }
+    else
+    {
+        meterData.deEsserGainReduction = 0.0f;
+    }
+    
     if (compressorIsOn.load())
-        compressor.process (monoBuffer);
-
+    {
+        SampleType gainRedux;
+        compressor.process (monoBuffer, &gainRedux);
+        meterData.compressorGainReduction = static_cast<float> (gainRedux);
+    }
+    else
+    {
+        meterData.compressorGainReduction = 0.0f;
+    }
+    
     dryBuffer.clear();
 
     if (! leadIsBypassed)  //  write to dry buffer & apply panning
@@ -312,15 +338,42 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     dryWetMixer.mixWetSamples ( juce::dsp::AudioBlock<SampleType>(wetBuffer) ); // puts the mixed dry & wet samples into wetBuffer
     
     if (delayIsOn.load())
-        delay.process (wetBuffer);
+    {
+        SampleType level;
+        delay.process (wetBuffer, &level);
+        meterData.delayLevel = static_cast<float> (level);
+    }
+    else
+    {
+        meterData.delayLevel = 0.0f;
+    }
 
     if (reverbIsOn.load())
-        reverb.process (wetBuffer);
+    {
+        SampleType level;
+        reverb.process (wetBuffer, &level);
+        meterData.reverbLevel = static_cast<float> (level);
+    }
+    else
+    {
+        meterData.reverbLevel = 0.0f;
+    }
 
     outputGain.applyGain (wetBuffer, blockSize);
 
     if (limiterIsOn.load())
-        limiter.process (wetBuffer);
+    {
+        SampleType gainRedux;
+        limiter.process (wetBuffer, &gainRedux);
+        
+    }
+    else
+    {
+        meterData.limiterGainReduction = 0.0f;
+    }
+    
+    meterData.outputLevelL = static_cast<float> (wetBuffer.getMagnitude (0, 0, blockSize));
+    meterData.outputLevelR = static_cast<float> (wetBuffer.getMagnitude (1, 0, blockSize));
     
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);

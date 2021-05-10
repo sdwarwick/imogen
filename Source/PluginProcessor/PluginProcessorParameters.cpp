@@ -28,6 +28,8 @@
 template <typename SampleType>
 void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine)
 {
+    using namespace Imogen;
+    
     // these functions will all be called with the current denormalized value as a float -- so just static_cast to int, etc
     getParameterPntr(inputSourceID)->actionableFunction   = [&engine](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
     getParameterPntr(mainBypassID)->actionableFunction    = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
@@ -103,6 +105,8 @@ inline bav::Parameter* ImogenAudioProcessor::getMeterParamPntr (const MeterID me
 template<typename SampleType>
 inline void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
 {
+    using namespace Imogen;
+    
     nonParamEvents.getReadyMessages (currentMessages);
     
     for (const auto& msg : currentMessages)

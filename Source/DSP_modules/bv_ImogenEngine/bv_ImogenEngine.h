@@ -39,6 +39,20 @@
 #include "bv_Harmonizer/bv_Harmonizer.h"
 
 
+struct ImogenMeterData
+{
+    float inputLevel {};
+    float outputLevelL {};
+    float outputLevelR {};
+    float noiseGateGainReduction {};
+    float compressorGainReduction {};
+    float deEsserGainReduction {};
+    float limiterGainReduction {};
+    float reverbLevel {};
+    float delayLevel {};
+};
+
+
 
 namespace bav
 {
@@ -66,6 +80,8 @@ public:
     void returnActivePitches (juce::Array<int>& outputArray) const;
     
     void recieveExternalPitchbend (const int bend);
+    
+    ImogenMeterData getLatestMeterData() const { return meterData; }
     
     /*=========================================================================================*/
     /* Parameter updating functions */
@@ -242,6 +258,9 @@ private:
     };
     
     ADSRsettings adsrSettings;
+    
+    
+    ImogenMeterData meterData;
     
     static constexpr auto limiterThreshDb     = 0.0f;
     static constexpr auto limiterReleaseMs    = 35.0f;

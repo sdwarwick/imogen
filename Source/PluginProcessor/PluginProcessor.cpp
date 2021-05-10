@@ -167,7 +167,7 @@ void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     if (! (mainBypassPntr->getCurrentNormalizedValue() >= 0.5f))
-        mainBypassPntr->orig()->setValueNotifyingHost (1.0f);
+        mainBypassPntr->orig()->setValue (1.0f);
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
 }
@@ -176,7 +176,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
     if (! (mainBypassPntr->getCurrentNormalizedValue() >= 0.5f))
-        mainBypassPntr->orig()->setValueNotifyingHost (1.0f);
+        mainBypassPntr->orig()->setValue (1.0f);
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
 }
@@ -205,6 +205,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     auto outBus = getBusBuffer (buffer, false, 0);
     
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
+    
+    auto meterData = engine.getLatestMeterData();
 }
 
 /*===========================================================================================================================
