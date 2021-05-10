@@ -134,6 +134,18 @@ public:
     
 private:
     
+    inline void updateAllParameters()
+    {
+        for (auto* pntr : parameterPointers)
+            pntr->doAction();
+    }
+    
+    inline void resetParameterDefaultsToCurrentValues()
+    {
+        for (auto* pntr : parameterPointers)
+            pntr->refreshDefault();
+    }
+    
     /*=========================================================================================*/
     /* Initialization functions */
     
@@ -220,15 +232,6 @@ private:
     RAP* mainBypassPntr;  // this one gets referenced specifically...
     
     std::vector< Parameter* > meterParameterPointers;
-    RAP* inputLevel;
-    RAP* outputLevelL;
-    RAP* outputLevelR;
-    RAP* noiseGateGainRedux;
-    RAP* compressorGainRedux;
-    RAP* deEsserGainRedux;
-    RAP* limiterGainRedux;
-    RAP* reverbLevel;
-    RAP* delayLevel;
     
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f }; // range object used to scale pitchbend values
     

@@ -53,23 +53,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     jassert (tempMB != nullptr);
     mainBypassPntr = tempMB->orig();
     
-    auto initMeterPointer = [this](MeterID meterID)
-                            {
-                                auto* param = getMeterParamPntr (meterID);
-                                jassert (param != nullptr);
-                                return param->orig();
-                            };
-    
-    inputLevel = initMeterPointer (inputLevelID);
-    outputLevelL = initMeterPointer (outputLevelLID);
-    outputLevelR = initMeterPointer (outputLevelRID);
-    noiseGateGainRedux = initMeterPointer (gateReduxID);
-    compressorGainRedux = initMeterPointer (compReduxID);
-    deEsserGainRedux = initMeterPointer (deEssGainReduxID);
-    limiterGainRedux = initMeterPointer (limiterGainReduxID);
-    reverbLevel = initMeterPointer (reverbLevelID);
-    delayLevel = initMeterPointer (delayLevelID);
-    
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (ValueTreeIDs::Parameters), numParams,
                                                     [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
@@ -84,6 +67,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
         initialize (floatEngine);
     
     treeSync.sendFullSyncCallback();
+    resetParameterDefaultsToCurrentValues();
 }
 
 
@@ -218,9 +202,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     
     processQueuedNonParamEvents (engine);
     
-    /* update all parameters... */
-    for (auto* pntr : parameterPointers)
-        pntr->doAction();
+    updateAllParameters();
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
@@ -241,58 +223,35 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 {
     bool anyChanged = false;
     
-    if (inputLevel->getValue() != meterData.inputLevel)
-    {
-        inputLevel->setValueNotifyingHost (meterData.inputLevel);
-        anyChanged = true;
-    }
+    auto getMeterValue = [&meterData](MeterID meter)
+                         {
+                             switch (meter)
+                             {
+                                 case (inputLevelID):        return meterData.inputLevel;
+                                 case (outputLevelLID):      return meterData.outputLevelL;
+                                 case (outputLevelRID):      return meterData.outputLevelR;
+                                 case (gateReduxID):         return meterData.noiseGateGainReduction;
+                                 case (compReduxID):         return meterData.compressorGainReduction;
+                                 case (deEssGainReduxID):    return meterData.deEsserGainReduction;
+                                 case (limiterGainReduxID):  return meterData.limiterGainReduction;
+                                 case (reverbLevelID):       return meterData.reverbLevel;
+                                 case (delayLevelID):        return meterData.delayLevel;
+                             }
+                         };
     
-    if (outputLevelL->getValue() != meterData.outputLevelL)
-    {
-        outputLevelL->setValueNotifyingHost (meterData.outputLevelL);
-        anyChanged = true;
-    }
+    auto updateMeter = [&anyChanged](RAP* meter, float newValue)
+                       {
+                           if (meter->getValue() != newValue)
+                           {
+                               meter->setValueNotifyingHost (newValue);
+                               anyChanged = true;
+                           }
+                       };
     
-    if (outputLevelR->getValue() != meterData.outputLevelR)
+    for (auto* param : meterParameterPointers)
     {
-        outputLevelR->setValueNotifyingHost (meterData.outputLevelR);
-        anyChanged = true;
-    }
-    
-    if (noiseGateGainRedux->getValue() != meterData.noiseGateGainReduction)
-    {
-        noiseGateGainRedux->setValueNotifyingHost (meterData.noiseGateGainReduction);
-        anyChanged = true;
-    }
-    
-    if (compressorGainRedux->getValue() != meterData.compressorGainReduction)
-    {
-        compressorGainRedux->setValueNotifyingHost (meterData.compressorGainReduction);
-        anyChanged = true;
-    }
-    
-    if (deEsserGainRedux->getValue() != meterData.deEsserGainReduction)
-    {
-        deEsserGainRedux->setValueNotifyingHost (meterData.deEsserGainReduction);
-        anyChanged = true;
-    }
-    
-    if (limiterGainRedux->getValue() != meterData.limiterGainReduction)
-    {
-        limiterGainRedux->setValueNotifyingHost (meterData.limiterGainReduction);
-        anyChanged = true;
-    }
-    
-    if (reverbLevel->getValue() != meterData.reverbLevel)
-    {
-        reverbLevel->setValueNotifyingHost (meterData.reverbLevel);
-        anyChanged = true;
-    }
-    
-    if (delayLevel->getValue() != meterData.delayLevel)
-    {
-        delayLevel->setValueNotifyingHost (meterData.delayLevel);
-        anyChanged = true;
+        updateMeter (param->orig(),
+                     getMeterValue (static_cast<MeterID> (param->key())));
     }
     
     if (anyChanged)
@@ -308,10 +267,6 @@ void ImogenAudioProcessor::changeMidiLatchState (bool isNowLatched)
         doubleEngine.updateMidiLatch (isNowLatched);
     else
         floatEngine.updateMidiLatch (isNowLatched);
-    
-#if IMOGEN_USE_OSC
-    oscSender.sendMidiLatch (isNowLatched);
-#endif
 }
 
 bool ImogenAudioProcessor::isMidiLatched() const
@@ -425,6 +380,8 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
 
 void ImogenAudioProcessor::saveEditorSizeToValueTree()
 {
+    jassert (juce::MessageManager::getInstance()->isThisTheMessageThread() || isSuspended());
+    
     if (auto* editor = getActiveEditor())
     {
         savedEditorSize.x = editor->getWidth();
@@ -439,6 +396,8 @@ void ImogenAudioProcessor::saveEditorSizeToValueTree()
 
 void ImogenAudioProcessor::updateEditorSizeFromValueTree()
 {
+    jassert (juce::MessageManager::getInstance()->isThisTheMessageThread() || isSuspended());
+    
     auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
     
     if (editorSize.isValid())
@@ -449,6 +408,8 @@ void ImogenAudioProcessor::updateEditorSizeFromValueTree()
     
     if (auto* editor = getActiveEditor())
         editor->setSize (savedEditorSize.x, savedEditorSize.y);
+    
+    updateHostDisplay();
 }
 
 

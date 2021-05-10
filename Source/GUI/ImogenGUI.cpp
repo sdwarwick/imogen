@@ -35,14 +35,16 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
 #endif
     
 #if IMOGEN_REMOTE_APP
-    bav::initializeTranslations (findAppropriateTranslationFile());
+    bav::initializeTranslations (Imogen::findAppropriateTranslationFile());
 #endif
     
     setInterceptsMouseClicks (false, true);
     
-    Imogen::buildImogenMainValueTree (state, processor.getParameterTree());
+    addParameterGroup (Imogen::createParameterTree());
     
-    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, processor.getParameterTree());
+    Imogen::buildImogenMainValueTree (state, getParameterTree());
+    
+    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, getParameterTree());
     
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (Imogen::ValueTreeIDs::Parameters),

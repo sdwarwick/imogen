@@ -39,7 +39,8 @@ struct ImogenGUIUpdateSender
 };
 
 
-class ImogenGUI  :     public juce::Component
+class ImogenGUI  :     public juce::Component,
+                       private bav::dsp::DummyAudioProcessor  // juce's parameter objects need to live inside an AudioProcessor object, so...
 {
     using ParameterID = Imogen::ParameterID;
     using MeterID = Imogen::MeterID;
@@ -86,20 +87,6 @@ private:
     void savePreset   (const juce::String& presetName);
     void renamePreset (const juce::String& previousName, const juce::String& newName);
     void deletePreset (const juce::String& presetName);
-    
-    /*=========================================================================================*/
-    
-    // juce's parameter objects need to live inside an AudioProcessor object, so...
-    
-    struct DummyAudioProcessor  :   bav::dsp::DummyAudioProcessor
-    {
-        DummyAudioProcessor()
-        {
-            addParameterGroup (Imogen::createParameterTree());
-        }
-    };
-    
-    DummyAudioProcessor processor;
     
     /*=========================================================================================*/
     
