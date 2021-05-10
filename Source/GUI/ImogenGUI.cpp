@@ -40,8 +40,6 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     setInterceptsMouseClicks (false, true);
     
-    processor.addParameterGroup (Imogen::createParameterTree());
-    
     Imogen::buildImogenMainValueTree (state, processor.getParameterTree());
     
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, processor.getParameterTree());

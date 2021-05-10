@@ -158,10 +158,10 @@ static inline juce::String parameterTreeSeparatorString() { return { " | " }; }
 
 
 static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
-                                             const juce::AudioProcessorParameterGroup* parameterTree)
+                                             const juce::AudioProcessorParameterGroup& parameterTree)
 {
     // create the parameter tree
-    if (auto* params = bav::findParameterSubgroup (parameterTree, parameterTreeName()))
+    if (auto* params = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))
     {
         juce::ValueTree parameters { ValueTreeIDs::Parameters };
         
@@ -175,7 +175,7 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     }
 
     // create the meter parameter tree
-    if (auto* mtrs = bav::findParameterSubgroup (parameterTree, meterTreeName()))
+    if (auto* mtrs = bav::findParameterSubgroup (&parameterTree, meterTreeName()))
     {
         juce::ValueTree meters { ValueTreeIDs::Meters };
         
@@ -187,12 +187,6 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     {
         jassertfalse;
     }
-}
-
-static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
-                                             const juce::AudioProcessorParameterGroup& parameterTree)
-{
-    buildImogenMainValueTree (topLevelTree, &parameterTree);
 }
 
 

@@ -89,7 +89,19 @@ private:
     
     /*=========================================================================================*/
     
-    bav::dsp::DummyAudioProcessor processor;  // juce's parameter objects need to live inside an AudioProcessor object. so...
+    // juce's parameter objects need to live inside an AudioProcessor object, so...
+    
+    struct DummyAudioProcessor  :   bav::dsp::DummyAudioProcessor
+    {
+        DummyAudioProcessor()
+        {
+            addParameterGroup (Imogen::createParameterTree());
+        }
+    };
+    
+    DummyAudioProcessor processor;
+    
+    /*=========================================================================================*/
     
     std::vector< bav::Parameter* > parameterPointers;
     std::vector< bav::Parameter* > meterParameterPointers;
