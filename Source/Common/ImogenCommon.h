@@ -140,6 +140,10 @@ namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level Va
     IMOGEN_DECLARE_VALUETREEID (Parameters);
     IMOGEN_DECLARE_VALUETREEID (Meters);
 
+    IMOGEN_DECLARE_VALUETREEID (SavedEditorSize);
+    IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_X);
+    IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_Y);
+
 #undef IMOGEN_DECLARE_VALUETREEID
 }  // namespace
 
@@ -183,23 +187,6 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     {
         jassertfalse;
     }
-}
-
-
-static inline void createValueTreeParameterAttachments (juce::ValueTree& topLevelValueTree,
-                                                        juce::OwnedArray<bav::ParameterAttachment>& attachments,
-                                                        std::function<bav::Parameter*(ParameterID)> findParameter,
-                                                        std::function<bav::Parameter*(MeterID)> findMeter)
-{
-    bav::createParameterValueTreeAttachments (attachments,
-                                              topLevelValueTree.getChildWithName (ValueTreeIDs::Parameters),
-                                              numParams,
-                                              [findParameter](int param) { return findParameter (static_cast<ParameterID> (param)); });
-    
-    bav::createParameterValueTreeAttachments (attachments,
-                                              topLevelValueTree.getChildWithName (ValueTreeIDs::Meters),
-                                              numMeters,
-                                              [findMeter](int meter) { return findMeter (static_cast<MeterID> (meter)); });
 }
 
 

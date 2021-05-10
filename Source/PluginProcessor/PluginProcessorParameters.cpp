@@ -37,15 +37,13 @@ void ImogenAudioProcessor::initializeParameterPointers()
     meterParameterPointers.clear();
     meterParameterPointers.reserve (numMeters);
     
-    for (auto* rawParam : getParameters())
-    {
-        if (auto* meter = dynamic_cast<bav::MeterParameter*> (rawParam))
-            meterParameterPointers.push_back (meter);
-        else if (auto* param = dynamic_cast<bav::Parameter*> (rawParam))
-            parameterPointers.push_back (param);
-        else
-            jassertfalse;
-    }
+    parameterPointers.reserve (numParams);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&getParameterTree(), parameterTreeName()),
+                                                 parameterPointers);
+    
+    meterParameterPointers.reserve (numMeters);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&getParameterTree(), meterTreeName()),
+                                                 meterParameterPointers);
     
     mainBypassPntr = getParameterPntr (mainBypassID);
     jassert (mainBypassPntr != nullptr);

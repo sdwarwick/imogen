@@ -49,9 +49,13 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     initializeParameterPointers();
     
-    Imogen::createValueTreeParameterAttachments (state, parameterTreeAttachments,
-                                                 [this](ParameterID param) { return getParameterPntr (param); },
-                                                 [this](MeterID meter) { return getMeterParamPntr (meter); });
+    bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
+                                                    state.getChildWithName (ValueTreeIDs::Parameters), numParams,
+                                                    [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
+    
+    bav::createWriteOnlyParameterValueTreeAttachments (meterTreeAttachments,
+                                                       state.getChildWithName (ValueTreeIDs::Meters), numMeters,
+                                                       [this](int param) { return getMeterParamPntr (static_cast<MeterID>(param)); });
     
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -297,7 +301,7 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
-    juce::Timer::callAfterDelay (10, [&](){ treeSync.sendFullSyncCallback(); });
+    juce::Timer::callAfterDelay (20, [&](){ treeSync.sendFullSyncCallback(); });
     return new ImogenAudioProcessorEditor(*this);
 #endif
 }
@@ -318,6 +322,38 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
 {
     savedEditorSize.setX (width);
     savedEditorSize.setY (height);
+    
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+        saveEditorSizeToValueTree();
+}
+
+
+inline void ImogenAudioProcessor::saveEditorSizeToValueTree()
+{
+    if (auto* editor = getActiveEditor())
+    {
+        savedEditorSize.x = editor->getWidth();
+        savedEditorSize.y = editor->getHeight();
+    }
+    
+    auto editorSize = state.getOrCreateChildWithName (ValueTreeIDs::SavedEditorSize, nullptr);
+    
+    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_X, savedEditorSize.x, nullptr);
+    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_Y, savedEditorSize.y, nullptr);
+}
+
+inline void ImogenAudioProcessor::updateEditorSizeFromValueTree()
+{
+    auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
+    
+    if (editorSize.isValid())
+    {
+        savedEditorSize.x = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_X);
+        savedEditorSize.y = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_Y);
+    }
+    
+    if (auto* editor = getActiveEditor())
+        editor->setSize (savedEditorSize.x, savedEditorSize.y);
 }
 
 

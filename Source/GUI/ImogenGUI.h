@@ -89,18 +89,14 @@ private:
     
     /*=========================================================================================*/
     
-    inline void parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup* group,
-                                                        std::vector< bav::Parameter* >& pointers);
-    
-    /*=========================================================================================*/
-    
     std::unique_ptr<juce::AudioProcessorParameterGroup> parameterTree;
     std::vector< bav::Parameter* > parameterPointers;
     std::vector< bav::Parameter* > meterParameterPointers;
     
     juce::ValueTree state;
     
-    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;
+    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;  // these are two-way
+    juce::OwnedArray<bav::ValueTreeToParameterAttachment> meterTreeAttachments;  // these are read-only
     
     
     struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser

@@ -38,16 +38,20 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     Imogen::buildImogenMainValueTree (state, parameterTree.get());
     
     parameterPointers.reserve (numParams);
-    parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), parameterTreeName()),
-                                            parameterPointers);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), parameterTreeName()),
+                                                 parameterPointers);
     
     meterParameterPointers.reserve (numMeters);
-    parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), meterTreeName()),
-                                            meterParameterPointers);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), meterTreeName()),
+                                                 meterParameterPointers);
     
-    Imogen::createValueTreeParameterAttachments (state, parameterTreeAttachments,
-                                                 [this](ParameterID param) { return getParameterPntr (param); },
-                                                 [this](MeterID meter) { return getMeterParamPntr (meter); });
+    bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
+                                                    state.getChildWithName (ValueTreeIDs::Parameters), numParams,
+                                                    [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
+    
+    bav::createReadOnlyParameterValueTreeAttachments (meterTreeAttachments,
+                                                      state.getChildWithName (ValueTreeIDs::Meters), numMeters,
+                                                      [this](int param) { return getMeterParamPntr (static_cast<MeterID>(param)); });
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -92,26 +96,6 @@ inline bav::Parameter* ImogenGUI::getMeterParamPntr (const MeterID meter) const
             return pntr;
     
     return nullptr;
-}
-
-
-inline void ImogenGUI::parseParameterTreeForParameterPointers (const juce::AudioProcessorParameterGroup* group,
-                                                               std::vector< bav::Parameter* >& pointers)
-{
-    for (auto* node : *group)
-    {
-        if (auto* rawParam = node->getParameter())
-        {
-            if (auto* meter = dynamic_cast<bav::Parameter*> (rawParam))
-                pointers.push_back (meter);
-            else
-                jassertfalse;
-        }
-        else if (auto* thisGroup = node->getGroup())
-        {
-            parseParameterTreeForParameterPointers (thisGroup, pointers);
-        }
-    }
 }
 
 

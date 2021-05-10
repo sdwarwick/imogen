@@ -176,6 +176,10 @@ private:
     
     inline Parameter* getMeterParamPntr (const MeterID meterID) const;
     
+    inline void saveEditorSizeToValueTree();
+    
+    inline void updateEditorSizeFromValueTree();
+    
     /*=========================================================================================*/
     
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
@@ -186,7 +190,8 @@ private:
     
     juce::ValueTree state;
     
-    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;
+    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;  // these are two-way
+    juce::OwnedArray<bav::ParameterToValueTreeAttachment> meterTreeAttachments;  // these are write-only
     
     struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
     {
