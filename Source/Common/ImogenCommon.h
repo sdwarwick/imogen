@@ -100,7 +100,8 @@ static constexpr int numParams = delayDryWetID + 1;
 enum MeterID
 {
     inputLevelID,
-    outputLevelID,
+    outputLevelLID,
+    outputLevelRID,
     gateReduxID,
     compReduxID,
     deEssGainReduxID,

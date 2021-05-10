@@ -49,8 +49,26 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, getParameterTree());
     
-    mainBypassPntr = getParameterPntr (mainBypassID);
-    jassert (mainBypassPntr != nullptr);
+    auto* tempMB = getParameterPntr (mainBypassID);
+    jassert (tempMB != nullptr);
+    mainBypassPntr = tempMB->orig();
+    
+    auto initMeterPointer = [this](MeterID meterID)
+                            {
+                                auto* param = getMeterParamPntr (meterID);
+                                jassert (param != nullptr);
+                                return param->orig();
+                            };
+    
+    inputLevel = initMeterPointer (inputLevelID);
+    outputLevelL = initMeterPointer (outputLevelLID);
+    outputLevelR = initMeterPointer (outputLevelRID);
+    noiseGateGainRedux = initMeterPointer (gateReduxID);
+    compressorGainRedux = initMeterPointer (compReduxID);
+    deEsserGainRedux = initMeterPointer (deEssGainReduxID);
+    limiterGainRedux = initMeterPointer (limiterGainReduxID);
+    reverbLevel = initMeterPointer (reverbLevelID);
+    delayLevel = initMeterPointer (delayLevelID);
     
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (ValueTreeIDs::Parameters), numParams,
@@ -153,21 +171,24 @@ void ImogenAudioProcessor::reset()
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     processBlockWrapped (buffer, midiMessages, floatEngine,
-                         mainBypassPntr->getCurrentNormalizedValue() >= 0.5f);
+                         mainBypassPntr->getValue() >= 0.5f);
 }
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
     processBlockWrapped (buffer, midiMessages, doubleEngine,
-                         mainBypassPntr->getCurrentNormalizedValue() >= 0.5f);
+                         mainBypassPntr->getValue() >= 0.5f);
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! (mainBypassPntr->getCurrentNormalizedValue() >= 0.5f))
-        mainBypassPntr->orig()->setValue (1.0f);
+    if (! (mainBypassPntr->getValue() >= 0.5f))
+    {
+        mainBypassPntr->setValueNotifyingHost (1.0f);
+        updateHostDisplay();
+    }
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
 }
@@ -175,8 +196,11 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! (mainBypassPntr->getCurrentNormalizedValue() >= 0.5f))
-        mainBypassPntr->orig()->setValue (1.0f);
+    if (! (mainBypassPntr->getValue() >= 0.5f))
+    {
+        mainBypassPntr->setValueNotifyingHost (1.0f);
+        updateHostDisplay();
+    }
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
 }
@@ -206,7 +230,73 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
     
-    auto meterData = engine.getLatestMeterData();
+    updateMeters (engine.getLatestMeterData());
+}
+
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
+{
+    bool anyChanged = false;
+    
+    if (inputLevel->getValue() != meterData.inputLevel)
+    {
+        inputLevel->setValueNotifyingHost (meterData.inputLevel);
+        anyChanged = true;
+    }
+    
+    if (outputLevelL->getValue() != meterData.outputLevelL)
+    {
+        outputLevelL->setValueNotifyingHost (meterData.outputLevelL);
+        anyChanged = true;
+    }
+    
+    if (outputLevelR->getValue() != meterData.outputLevelR)
+    {
+        outputLevelR->setValueNotifyingHost (meterData.outputLevelR);
+        anyChanged = true;
+    }
+    
+    if (noiseGateGainRedux->getValue() != meterData.noiseGateGainReduction)
+    {
+        noiseGateGainRedux->setValueNotifyingHost (meterData.noiseGateGainReduction);
+        anyChanged = true;
+    }
+    
+    if (compressorGainRedux->getValue() != meterData.compressorGainReduction)
+    {
+        compressorGainRedux->setValueNotifyingHost (meterData.compressorGainReduction);
+        anyChanged = true;
+    }
+    
+    if (deEsserGainRedux->getValue() != meterData.deEsserGainReduction)
+    {
+        deEsserGainRedux->setValueNotifyingHost (meterData.deEsserGainReduction);
+        anyChanged = true;
+    }
+    
+    if (limiterGainRedux->getValue() != meterData.limiterGainReduction)
+    {
+        limiterGainRedux->setValueNotifyingHost (meterData.limiterGainReduction);
+        anyChanged = true;
+    }
+    
+    if (reverbLevel->getValue() != meterData.reverbLevel)
+    {
+        reverbLevel->setValueNotifyingHost (meterData.reverbLevel);
+        anyChanged = true;
+    }
+    
+    if (delayLevel->getValue() != meterData.delayLevel)
+    {
+        delayLevel->setValueNotifyingHost (meterData.delayLevel);
+        anyChanged = true;
+    }
+    
+    if (anyChanged)
+        updateHostDisplay();
 }
 
 /*===========================================================================================================================
@@ -333,7 +423,7 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
 }
 
 
-inline void ImogenAudioProcessor::saveEditorSizeToValueTree()
+void ImogenAudioProcessor::saveEditorSizeToValueTree()
 {
     if (auto* editor = getActiveEditor())
     {
@@ -347,7 +437,7 @@ inline void ImogenAudioProcessor::saveEditorSizeToValueTree()
     editorSize.setProperty (ValueTreeIDs::SavedEditorSize_Y, savedEditorSize.y, nullptr);
 }
 
-inline void ImogenAudioProcessor::updateEditorSizeFromValueTree()
+void ImogenAudioProcessor::updateEditorSizeFromValueTree()
 {
     auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
     

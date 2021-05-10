@@ -21,7 +21,8 @@ static inline auto createMeterParameterTree()
     
     
     auto inputLevel  = std::make_unique<Gain> (inputLevelID,  "In",  "Input level",  juce::AudioProcessorParameter::inputMeter);
-    auto outputLevel = std::make_unique<Gain> (outputLevelID, "Out", "Output level", juce::AudioProcessorParameter::outputMeter);
+    auto outputLevelL = std::make_unique<Gain> (outputLevelLID, "OutL", "Output level (L)", juce::AudioProcessorParameter::outputMeter);
+    auto outputLevelR = std::make_unique<Gain> (outputLevelRID, "OutL", "Output level (R)", juce::AudioProcessorParameter::outputMeter);
     
     auto gateGainRedux  = std::make_unique<Gain> (gateReduxID, "Gate redux", "Noise gate gain reduction", compLimMeter);
     auto compGainRedux  = std::make_unique<Gain> (compReduxID, "Comp redux", "Compressor gain reduction", compLimMeter);
@@ -32,8 +33,9 @@ static inline auto createMeterParameterTree()
     auto delayLevel  = std::make_unique<Gain> (delayLevelID,   "Delay",   "Delay level",   otherMeter);
     
     return std::make_unique<Group> (meterTreeID(), meterTreeName(), parameterTreeSeparatorString(),
-                                    std::move (inputLevel), std::move (outputLevel), std::move (gateGainRedux), std::move (compGainRedux),
-                                    std::move (deEssGainRedux), std::move (limtrGainRedux), std::move (reverbLevel), std::move (delayLevel));
+                                    std::move (inputLevel), std::move (outputLevelL), std::move (outputLevelR), std::move (gateGainRedux),
+                                    std::move (compGainRedux), std::move (deEssGainRedux), std::move (limtrGainRedux),
+                                    std::move (reverbLevel), std::move (delayLevel));
 }
 
 

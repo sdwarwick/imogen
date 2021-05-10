@@ -53,6 +53,8 @@ class ImogenAudioProcessor    : public  juce::AudioProcessor
     using IntParamPtr   = bav::IntParameter*;
     using BoolParamPtr  = bav::BoolParameter*;
     
+    using RAP = juce::RangedAudioParameter;
+    
     using ParameterID = Imogen::ParameterID;
     using MeterID = Imogen::MeterID;
 
@@ -84,7 +86,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override final;
     void setStateInformation (const void* data, int sizeInBytes) override final;
     
-    juce::AudioProcessorParameter* getBypassParameter() const override final { return mainBypassPntr->orig(); }
+    juce::AudioProcessorParameter* getBypassParameter() const override final { return mainBypassPntr; }
     
     int getNumPrograms() override final { return 1; }
     int getCurrentProgram() override final { return 0; }
@@ -164,6 +166,10 @@ private:
     void changeMidiLatchState (bool isNowLatched);
     
     /*=========================================================================================*/
+    
+    void updateMeters (ImogenMeterData meterData);
+    
+    /*=========================================================================================*/
 
     ImogenGUIUpdateReciever* getActiveGuiEventReciever() const;
     
@@ -171,9 +177,9 @@ private:
     
     inline Parameter* getMeterParamPntr (const MeterID meterID) const;
     
-    inline void saveEditorSizeToValueTree();
+    void saveEditorSizeToValueTree();
     
-    inline void updateEditorSizeFromValueTree();
+    void updateEditorSizeFromValueTree();
     
     /*=========================================================================================*/
     
@@ -211,9 +217,18 @@ private:
     /*=========================================================================================*/
     
     std::vector< Parameter* > parameterPointers;
-    Parameter* mainBypassPntr;  // this one gets referenced specifically...
+    RAP* mainBypassPntr;  // this one gets referenced specifically...
     
     std::vector< Parameter* > meterParameterPointers;
+    RAP* inputLevel;
+    RAP* outputLevelL;
+    RAP* outputLevelR;
+    RAP* noiseGateGainRedux;
+    RAP* compressorGainRedux;
+    RAP* deEsserGainRedux;
+    RAP* limiterGainRedux;
+    RAP* reverbLevel;
+    RAP* delayLevel;
     
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f }; // range object used to scale pitchbend values
     
