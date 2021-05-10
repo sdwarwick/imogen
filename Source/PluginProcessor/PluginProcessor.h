@@ -57,6 +57,8 @@ class ImogenAudioProcessor    : public  juce::AudioProcessor
     
     using ParameterID = Imogen::ParameterID;
     using MeterID = Imogen::MeterID;
+    
+    using ChangeDetails = juce::AudioProcessorListener::ChangeDetails;
 
     
 public:

@@ -93,6 +93,8 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
     activeEngine.initialize (initSamplerate, initBlockSize);
     
     setLatencySamples (activeEngine.reportLatency());
+    ChangeDetails change;
+    updateHostDisplay (change.withLatencyChanged (true));
     
     initializeParameterFunctionPointers (activeEngine);
 }
@@ -126,6 +128,8 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
     activeEngine.prepare (sampleRate);
     
     setLatencySamples (activeEngine.reportLatency());
+    ChangeDetails change;
+    updateHostDisplay (change.withLatencyChanged (true));
 }
 
 /*===========================================================================================================
@@ -171,7 +175,9 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffe
     if (! (mainBypassPntr->getValue() >= 0.5f))
     {
         mainBypassPntr->setValueNotifyingHost (1.0f);
-        updateHostDisplay();
+
+        ChangeDetails change;
+        updateHostDisplay (change.withParameterInfoChanged (true));
     }
     
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
@@ -183,7 +189,9 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer<double>& buff
     if (! (mainBypassPntr->getValue() >= 0.5f))
     {
         mainBypassPntr->setValueNotifyingHost (1.0f);
-        updateHostDisplay();
+        
+        ChangeDetails change;
+        updateHostDisplay (change.withParameterInfoChanged (true));
     }
     
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
@@ -255,7 +263,10 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
     }
     
     if (anyChanged)
-        updateHostDisplay();
+    {
+        ChangeDetails change;
+        updateHostDisplay (change.withParameterInfoChanged (true));
+    }
 }
 
 /*===========================================================================================================================
@@ -309,7 +320,7 @@ juce::String ImogenAudioProcessor::getScaleName() const
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-    return double(getParameterPntr(adsrReleaseID)->getCurrentNormalizedValue());
+    return static_cast<double> (getParameterPntr(adsrReleaseID)->getCurrentNormalizedValue());
 }
 
 
@@ -380,8 +391,6 @@ void ImogenAudioProcessor::saveEditorSize (int width, int height)
 
 void ImogenAudioProcessor::saveEditorSizeToValueTree()
 {
-    jassert (juce::MessageManager::getInstance()->isThisTheMessageThread() || isSuspended());
-    
     if (auto* editor = getActiveEditor())
     {
         savedEditorSize.x = editor->getWidth();
@@ -396,8 +405,6 @@ void ImogenAudioProcessor::saveEditorSizeToValueTree()
 
 void ImogenAudioProcessor::updateEditorSizeFromValueTree()
 {
-    jassert (juce::MessageManager::getInstance()->isThisTheMessageThread() || isSuspended());
-    
     auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
     
     if (editorSize.isValid())
