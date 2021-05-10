@@ -49,7 +49,8 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
                                                     Imogen::numParams,
-                                                    [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
+                                                    [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); },
+                                                    &undoManager);
     
     bav::createReadOnlyParameterValueTreeAttachments (meterTreeAttachments,
                                                       state.getChildWithName (Imogen::ValueTreeIDs::Meters),

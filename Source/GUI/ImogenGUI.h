@@ -90,6 +90,8 @@ private:
     
     /*=========================================================================================*/
     
+    juce::UndoManager undoManager;
+    
     std::vector< bav::Parameter* > parameterPointers;
     std::vector< bav::Parameter* > meterParameterPointers;
     
