@@ -26,24 +26,25 @@
 
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
-      : parameterTree (Imogen::createParameterTree()),
-        state (ValueTreeIDs::Imogen),
+      : state (ValueTreeIDs::Imogen),
         treeSync (state, s),
         tooltipWindow (this, msBeforeTooltip)
 {
-    setBufferedToImage (true);
+#if BV_USE_NE10
+    ne10_init();
+#endif
+    
+#if IMOGEN_REMOTE_APP
+    bav::initializeTranslations (findAppropriateTranslationFile());
+#endif
     
     setInterceptsMouseClicks (false, true);
     
-    Imogen::buildImogenMainValueTree (state, parameterTree.get());
+    processor.addParameterGroup (Imogen::createParameterTree());
     
-    parameterPointers.reserve (numParams);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), parameterTreeName()),
-                                                 parameterPointers);
+    Imogen::buildImogenMainValueTree (state, processor.getParameterTree());
     
-    meterParameterPointers.reserve (numMeters);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (parameterTree.get(), meterTreeName()),
-                                                 meterParameterPointers);
+    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, processor.getParameterTree());
     
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (ValueTreeIDs::Parameters), numParams,

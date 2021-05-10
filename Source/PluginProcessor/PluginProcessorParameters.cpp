@@ -25,31 +25,6 @@
 #include "PluginProcessor.h"
 
 
-/*===========================================================================================================================
-    Initializes pointers to each parameter object.
- ============================================================================================================================*/
-
-void ImogenAudioProcessor::initializeParameterPointers()
-{
-    parameterPointers.clear();
-    parameterPointers.reserve (numParams);
-    
-    meterParameterPointers.clear();
-    meterParameterPointers.reserve (numMeters);
-    
-    parameterPointers.reserve (numParams);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&getParameterTree(), parameterTreeName()),
-                                                 parameterPointers);
-    
-    meterParameterPointers.reserve (numMeters);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&getParameterTree(), meterTreeName()),
-                                                 meterParameterPointers);
-    
-    mainBypassPntr = getParameterPntr (mainBypassID);
-    jassert (mainBypassPntr != nullptr);
-}
-
-
 template <typename SampleType>
 void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine)
 {

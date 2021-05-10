@@ -142,9 +142,6 @@ private:
     
     BusesProperties makeBusProperties() const;
     
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
-    void initializeParameterPointers();
-    
     template <typename SampleType>
     void initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine);
     

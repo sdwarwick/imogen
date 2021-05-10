@@ -189,6 +189,26 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     }
 }
 
+static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
+                                             const juce::AudioProcessorParameterGroup& parameterTree)
+{
+    buildImogenMainValueTree (topLevelTree, &parameterTree);
+}
+
+
+static inline void initializeParameterPointers (std::vector< bav::Parameter* >& parameterPointers,
+                                                std::vector< bav::Parameter* >& meterParameterPointers,
+                                                const juce::AudioProcessorParameterGroup& parameterTree)
+{
+    parameterPointers.reserve (numParams);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, parameterTreeName()),
+                                                 parameterPointers);
+    
+    meterParameterPointers.reserve (numMeters);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, meterTreeName()),
+                                                 meterParameterPointers);
+}
+
 
 }  // namespace
 

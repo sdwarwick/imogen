@@ -26,12 +26,6 @@
 
 MainComponent::MainComponent(): gui(this)
 {
-#if BV_USE_NE10
-    ne10_init();
-#endif
-    
-    bav::initializeTranslations (findAppropriateTranslationFile());
-    
     this->setBufferedToImage (true);
     
     addAndMakeVisible (gui);
