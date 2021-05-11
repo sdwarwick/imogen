@@ -162,11 +162,11 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
                                              const juce::AudioProcessorParameterGroup& parameterTree)
 {
     // create the parameter tree
-    if (auto* params = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))
+    if (auto* paramGroup = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))
     {
         juce::ValueTree parameters { ValueTreeIDs::Parameters };
         
-        bav::createValueTreeFromParameterTree (parameters, *params);
+        bav::createValueTreeFromParameterTree (parameters, *paramGroup);
         
         topLevelTree.addChild (parameters, 0, nullptr);
     }
@@ -176,11 +176,11 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     }
 
     // create the meter parameter tree
-    if (auto* mtrs = bav::findParameterSubgroup (&parameterTree, meterTreeName()))
+    if (auto* meterGroup = bav::findParameterSubgroup (&parameterTree, meterTreeName()))
     {
         juce::ValueTree meters { ValueTreeIDs::Meters };
         
-        bav::createValueTreeFromParameterTree (meters, *mtrs);
+        bav::createValueTreeFromParameterTree (meters, *meterGroup);
         
         topLevelTree.addChild (meters, 0, nullptr);
     }

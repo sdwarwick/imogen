@@ -38,9 +38,10 @@ struct ImogenGUIUpdateSender
     virtual void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) = 0;
 };
 
+/*=========================================================================================*/
 
-class ImogenGUI  :     public juce::Component,
-                       private bav::dsp::DummyAudioProcessor  // juce's parameter objects need to live inside an AudioProcessor object, so...
+
+class ImogenGUI  :     public juce::Component
 {
     using ParameterID = Imogen::ParameterID;
     using MeterID = Imogen::MeterID;
@@ -96,10 +97,6 @@ private:
     std::vector< bav::Parameter* > meterParameterPointers;
     
     juce::ValueTree state;
-    
-    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;  // these are two-way
-    juce::OwnedArray<bav::ValueTreeToParameterAttachment> meterTreeAttachments;  // these are read-only
-    
     
     struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
     {

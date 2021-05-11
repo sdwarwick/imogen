@@ -30,32 +30,21 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
         treeSync (state, s),
         tooltipWindow (this, msBeforeTooltip)
 {
-#if BV_USE_NE10
-    ne10_init();
-#endif
-    
 #if IMOGEN_REMOTE_APP
     bav::initializeTranslations (Imogen::findAppropriateTranslationFile());
+    
+  #if BV_USE_NE10
+    ne10_init();
+  #endif
 #endif
     
     setInterceptsMouseClicks (false, true);
     
-    addParameterGroup (Imogen::createParameterTree());
+    auto parameterTree = Imogen::createParameterTree();
     
-    Imogen::buildImogenMainValueTree (state, getParameterTree());
+    Imogen::buildImogenMainValueTree (state, *parameterTree);
     
-    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, getParameterTree());
-    
-    bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
-                                                    state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
-                                                    Imogen::numParams,
-                                                    [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); },
-                                                    &undoManager);
-    
-    bav::createReadOnlyParameterValueTreeAttachments (meterTreeAttachments,
-                                                      state.getChildWithName (Imogen::ValueTreeIDs::Meters),
-                                                      Imogen::numMeters,
-                                                      [this](int param) { return getMeterParamPntr (static_cast<MeterID>(param)); });
+    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, *parameterTree);
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
