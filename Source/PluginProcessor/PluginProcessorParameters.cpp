@@ -97,37 +97,3 @@ inline bav::Parameter* ImogenAudioProcessor::getMeterParamPntr (const MeterID me
     return nullptr;
 }
 
-
-/*===========================================================================================================================
-    Processes all the non-parameter events in the message queue.
- ============================================================================================================================*/
-
-template<typename SampleType>
-inline void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine)
-{
-    using namespace Imogen;
-    
-    nonParamEvents.getReadyMessages (currentMessages);
-    
-    for (const auto& msg : currentMessages)
-    {
-        if (! msg.isValid())
-            continue;
-        
-        const auto value = msg.value();
-        
-        jassert (value >= 0.0f && value <= 1.0f);
-        
-        switch (msg.type())
-        {
-            default: continue;
-            case (killAllMidiID): activeEngine.killAllMidi();  // any message of this type triggers this, regardless of its value
-            case (midiLatchID):   changeMidiLatchState (value >= 0.5f);
-            case (pitchBendFromEditorID): activeEngine.recieveExternalPitchbend (juce::roundToInt (pitchbendNormalizedRange.convertFrom0to1 (value)));
-        }
-    }
-}
-///function template instantiations...
-template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<float>& activeEngine);
-template void ImogenAudioProcessor::processQueuedNonParamEvents (bav::ImogenEngine<double>& activeEngine);
-

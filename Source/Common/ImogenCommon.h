@@ -41,16 +41,6 @@
 namespace Imogen
 {
 
-
-enum EventID
-{
-    killAllMidiID,
-    midiLatchID,
-    pitchBendFromEditorID
-};
-static constexpr int numEventIDs = pitchBendFromEditorID + 1;
-
-
 enum ParameterID
 {
     inputSourceID,
@@ -110,6 +100,17 @@ enum MeterID
     delayLevelID
 };
 static constexpr int numMeters = delayLevelID + 1;
+
+
+enum NonAutomatableParameterID
+{
+    linkIsEnabledID,
+    linkNumSessionPeersID,
+    mtsEspIsConnectedID,
+    midiLatchID,
+    editorPitchbendID
+};
+static constexpr int numNonAutomatableParams = editorPitchbendID + 1;
 
 
 static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }

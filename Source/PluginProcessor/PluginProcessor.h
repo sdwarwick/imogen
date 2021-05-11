@@ -174,9 +174,6 @@ private:
     
     /*=========================================================================================*/
     
-    template<typename SampleType>
-    inline void processQueuedNonParamEvents (bav::ImogenEngine<SampleType>& activeEngine);
-    
     void changeMidiLatchState (bool isNowLatched);
     
     /*=========================================================================================*/
@@ -238,10 +235,6 @@ private:
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f }; // range object used to scale pitchbend values
     
     juce::Point<int> savedEditorSize;
-    
-    static constexpr auto msgQueueSize = size_t(100);
-    bav::MessageQueue<msgQueueSize> nonParamEvents;  // this queue is SPSC; this is only for events flowing from the editor into the processor
-    juce::Array< bav::MessageQueue<msgQueueSize>::Message >  currentMessages;  // this array stores the current messages from the message FIFO
     
 #if IMOGEN_USE_ABLETON_LINK
     ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session

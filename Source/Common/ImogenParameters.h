@@ -275,4 +275,62 @@ static inline auto createParameterTree()
 }
 
 
+
+static inline auto createNonAutomatableParametersTree()
+{
+    using Group = juce::AudioProcessorParameterGroup;
+    
+    using IntParameter   = bav::IntParameter;
+    using BoolParameter  = bav::BoolParameter;
+    
+    namespace l = bav::ParameterValueConversionLambdas;
+    
+    std::vector<std::unique_ptr<Group>> groups;
+    
+    const auto div = parameterTreeSeparatorString();
+    
+    { /* Ableton Link */
+        auto isEnabled = std::make_unique<BoolParameter> (linkIsEnabledID, "Toggle", "Ableton link toggle",
+                                                          false, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString);
+        
+        auto numSessionPeers = std::make_unique<IntParameter> (linkNumSessionPeersID, "Num peers", "Ableton link num session peers",
+                                                               0, 100, 0, TRANS ("peers"),
+                                                               [](int value, int maximumStringLength)
+                                                               { return juce::String(value).substring (0, maximumStringLength); },
+                                                               nullptr);
+        
+        groups.emplace_back (std::make_unique<Group> ("Ableton Link", TRANS ("Ableton Link"), div,
+                                                      std::move (isEnabled), std::move (numSessionPeers)));
+    }
+    { /* MTS-ESP */
+        auto isConnected = std::make_unique<BoolParameter> (mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected",
+                                                            false, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString);
+        
+        groups.emplace_back (std::make_unique<Group> ("MTS-ESP", "MTS-ESP", div,
+                                                      std::move (isConnected)));
+    }
+    { /* MIDI */
+        auto isLatched = std::make_unique<BoolParameter> (midiLatchID, "Is latched", "MIDI is latched",
+                                                          false, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString);
+        
+        auto editorPitchbend = std::make_unique<IntParameter> (editorPitchbendID, "Pitchbend", "GUI pitchbend",
+                                                               0, 127, 64, juce::String(),
+                                                               [](int value, int maximumStringLength)
+                                                               { return juce::String(value).substring (0, maximumStringLength); },
+                                                               [](const juce::String& text)
+                                                               { return text.retainCharacters ("1234567890").getIntValue(); });
+        
+        groups.emplace_back (std::make_unique<Group> ("MIDI", TRANS ("MIDI"), div,
+                                                      std::move (isLatched), std::move (editorPitchbend)));
+    }
+    
+    auto mainGroup = std::make_unique<Group> ("NonAutomatableParams", "NonAutomatableParams", div);
+    
+    for (auto& group : groups)
+        mainGroup->addChild (std::move (group));
+    
+    return mainGroup;
+}
+
+
 }  // namespace

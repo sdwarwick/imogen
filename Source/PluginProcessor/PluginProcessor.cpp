@@ -106,8 +106,6 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, floatEngine,  doubleEngine);
-    
-    currentMessages.ensureStorageAllocated (samplesPerBlock);
 }
 
 
@@ -120,8 +118,6 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
         idleEngine.releaseResources();
     
     initializeParameterFunctionPointers (activeEngine);
-    
-    processQueuedNonParamEvents (activeEngine);
     
     jassert (activeEngine.getLatency() > 0);
     
@@ -207,8 +203,6 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
     
     juce::ScopedNoDenormals nodenorms;
-    
-    processQueuedNonParamEvents (engine);
     
     updateAllParameters();
     
