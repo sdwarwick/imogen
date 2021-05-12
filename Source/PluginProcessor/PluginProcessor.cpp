@@ -108,6 +108,8 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int sam
         prepareToPlayWrapped (sampleRate, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, floatEngine,  doubleEngine);
+    
+    juce::ignoreUnused (samplesPerBlock);
 }
 
 

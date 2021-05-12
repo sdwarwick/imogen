@@ -49,9 +49,6 @@ struct ImogenGUIUpdateReciever
 class ImogenAudioProcessor    : public  juce::AudioProcessor
 {
     using Parameter     = bav::Parameter;
-    using FloatParamPtr = bav::FloatParameter*;
-    using IntParamPtr   = bav::IntParameter*;
-    using BoolParamPtr  = bav::BoolParameter*;
     
     using RAP = juce::RangedAudioParameter;
     
@@ -184,7 +181,11 @@ private:
 
     ImogenGUIUpdateReciever* getActiveGuiEventReciever() const;
     
-    inline Parameter* getParameterPntr (const ParameterID paramID) const;
+    Parameter* getParameterPntr (const ParameterID paramID) const;
+    
+    bav::FloatParameter* getFloatParameterPntr (const ParameterID paramID) const;
+    bav::IntParameter*   getIntParameterPntr   (const ParameterID paramID) const;
+    bav::BoolParameter*  getBoolParameterPntr  (const ParameterID paramID) const;
     
     inline Parameter* getMeterParamPntr (const MeterID meterID) const;
     

@@ -30,46 +30,46 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
 {
     using namespace Imogen;
     
-    // these functions will all be called with the current denormalized value as a float -- so just static_cast to int, etc
-    getParameterPntr(inputSourceID)->actionableFunction   = [&engine](float value) { engine.setModulatorSource (juce::roundToInt (value)); };
-    getParameterPntr(mainBypassID)->actionableFunction    = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
-    getParameterPntr(leadBypassID)->actionableFunction    = [&engine](float value) { engine.updateLeadBypass (value >= 0.5f); };
-    getParameterPntr(harmonyBypassID)->actionableFunction = [&engine](float value) { engine.updateHarmonyBypass (value >= 0.5f); };
-    getParameterPntr(dryPanID)->actionableFunction = [&engine](float value) { engine.updateDryVoxPan (juce::roundToInt (value)); };
-    getParameterPntr(adsrAttackID)->actionableFunction  = [&engine](float value) { engine.updateAdsrAttack (value); };
-    getParameterPntr(adsrDecayID)->actionableFunction   = [&engine](float value) { engine.updateAdsrDecay (value); };
-    getParameterPntr(adsrSustainID)->actionableFunction = [&engine](float value) { engine.updateAdsrSustain (value); };
-    getParameterPntr(adsrReleaseID)->actionableFunction = [&engine](float value) { engine.updateAdsrRelease (value); };
-    getParameterPntr(stereoWidthID)->actionableFunction = [&engine](float value) { engine.updateStereoWidth (juce::roundToInt (value)); };
-    getParameterPntr(lowestPannedID)->actionableFunction = [&engine](float value) { engine.updateLowestPannedNote (juce::roundToInt (value)); };
-    getParameterPntr(velocitySensID)->actionableFunction = [&engine](float value) { engine.updateMidiVelocitySensitivity(juce::roundToInt(value)); };
-    getParameterPntr(pitchBendRangeID)->actionableFunction     = [&engine](float value) { engine.updatePitchbendRange (juce::roundToInt (value)); };
-    getParameterPntr(pedalPitchIsOnID)->actionableFunction     = [&engine](float value) { engine.updatePedalToggle (value >= 0.5f); };
-    getParameterPntr(pedalPitchThreshID)->actionableFunction   = [&engine](float value) { engine.updatePedalThresh (juce::roundToInt (value)); };
-    getParameterPntr(pedalPitchIntervalID)->actionableFunction = [&engine](float value) { engine.updatePedalInterval (juce::roundToInt (value)); };
-    getParameterPntr(descantIsOnID)->actionableFunction        = [&engine](float value) { engine.updateDescantToggle (value >= 0.5f); };
-    getParameterPntr(descantThreshID)->actionableFunction      = [&engine](float value) { engine.updateDescantThresh (juce::roundToInt (value)); };
-    getParameterPntr(descantIntervalID)->actionableFunction    = [&engine](float value) { engine.updateDescantInterval (juce::roundToInt (value)); };
-    getParameterPntr(voiceStealingID)->actionableFunction      = [&engine](float value) { engine.updateNoteStealing (value >= 0.5f); };
-    getParameterPntr(inputGainID)->actionableFunction          = [&engine](float value) { engine.updateInputGain (value); };
-    getParameterPntr(outputGainID)->actionableFunction         = [&engine](float value) { engine.updateOutputGain (value); };
-    getParameterPntr(limiterToggleID)->actionableFunction      = [&engine](float value) { engine.updateLimiter (value >= 0.5f); };
-    getParameterPntr(noiseGateToggleID)->actionableFunction    = [&engine](float value) { engine.updateNoiseGateToggle (value >= 0.5f); };
-    getParameterPntr(noiseGateThresholdID)->actionableFunction = [&engine](float value) { engine.updateNoiseGateThresh (value); };
-    getParameterPntr(compressorToggleID)->actionableFunction   = [&engine](float value) { engine.updateCompressorToggle (value >= 0.5f); };
-    getParameterPntr(compressorAmountID)->actionableFunction   = [&engine](float value) { engine.updateCompressorAmount (value); };
-    getParameterPntr(aftertouchGainToggleID)->actionableFunction = [&engine](float value) { engine.updateAftertouchGainOnOff (value >= 0.5f); };
-    getParameterPntr(deEsserToggleID)->actionableFunction = [&engine](float value) { engine.updateDeEsserToggle (value >= 0.5f); };
-    getParameterPntr(deEsserThreshID)->actionableFunction = [&engine](float value) { engine.updateDeEsserThresh (value); };
-    getParameterPntr(deEsserAmountID)->actionableFunction = [&engine](float value) { engine.updateDeEsserAmount (value); };
-    getParameterPntr(reverbToggleID)->actionableFunction  = [&engine](float value) { engine.updateReverbToggle (value >= 0.5f); };
-    getParameterPntr(reverbDryWetID)->actionableFunction  = [&engine](float value) { engine.updateReverbDryWet (juce::roundToInt (value)); };
-    getParameterPntr(reverbDecayID)->actionableFunction   = [&engine](float value) { engine.updateReverbDecay (value); };
-    getParameterPntr(reverbDuckID)->actionableFunction    = [&engine](float value) { engine.updateReverbDuck (value); };
-    getParameterPntr(reverbLoCutID)->actionableFunction   = [&engine](float value) { engine.updateReverbLoCut (value); };
-    getParameterPntr(reverbHiCutID)->actionableFunction   = [&engine](float value) { engine.updateReverbHiCut (value); };
-    getParameterPntr(delayToggleID)->actionableFunction   = [&engine](float value) { engine.updateDelayToggle (value >= 0.5f); };
-    getParameterPntr(delayDryWetID)->actionableFunction   = [&engine](float value) { engine.updateDelayDryWet (juce::roundToInt (value)); };
+    getFloatParameterPntr (adsrAttackID)->onAction = [&engine](float value) { engine.updateAdsrAttack (value); };
+    getFloatParameterPntr (adsrDecayID)->onAction = [&engine](float value) { engine.updateAdsrDecay (value); };
+    getFloatParameterPntr (adsrSustainID)->onAction = [&engine](float value) { engine.updateAdsrSustain (value); };
+    getFloatParameterPntr (adsrReleaseID)->onAction = [&engine](float value) { engine.updateAdsrRelease (value); };
+    getFloatParameterPntr (inputGainID)->onAction = [&engine](float value) { engine.updateInputGain (value); };
+    getFloatParameterPntr (outputGainID)->onAction = [&engine](float value) { engine.updateOutputGain (value); };
+    getFloatParameterPntr (noiseGateThresholdID)->onAction = [&engine](float value) { engine.updateNoiseGateThresh (value); };
+    getFloatParameterPntr (compressorAmountID)->onAction = [&engine](float value) { engine.updateCompressorAmount (value); };
+    getFloatParameterPntr (deEsserThreshID)->onAction = [&engine](float value) { engine.updateDeEsserThresh (value); };
+    getFloatParameterPntr (deEsserAmountID)->onAction = [&engine](float value) { engine.updateDeEsserAmount (value); };
+    getFloatParameterPntr (reverbDecayID)->onAction = [&engine](float value) { engine.updateReverbDecay (value); };
+    getFloatParameterPntr (reverbDuckID)->onAction = [&engine](float value) { engine.updateReverbDuck (value); };
+    getFloatParameterPntr (reverbLoCutID)->onAction = [&engine](float value) { engine.updateReverbLoCut (value); };
+    getFloatParameterPntr (reverbHiCutID)->onAction = [&engine](float value) { engine.updateReverbHiCut (value); };
+    
+    getIntParameterPntr (inputSourceID)->onAction = [&engine](int value) { engine.setModulatorSource (value); };
+    getIntParameterPntr (dryPanID)->onAction = [&engine](int value) { engine.updateDryVoxPan(value); };
+    getIntParameterPntr (stereoWidthID)->onAction = [&engine](int value) { engine.updateStereoWidth (value); };
+    getIntParameterPntr (lowestPannedID)->onAction = [&engine](int value) { engine.updateLowestPannedNote (value); };
+    getIntParameterPntr (velocitySensID)->onAction = [&engine](int value) { engine.updateMidiVelocitySensitivity (value); };
+    getIntParameterPntr (pitchBendRangeID)->onAction = [&engine](int value) { engine.updatePitchbendRange (value); };
+    getIntParameterPntr (pedalPitchThreshID)->onAction = [&engine](int value) { engine.updatePedalThresh (value); };
+    getIntParameterPntr (pedalPitchIntervalID)->onAction = [&engine](int value) { engine.updatePedalInterval (value); };
+    getIntParameterPntr (descantThreshID)->onAction = [&engine](int value) { engine.updateDescantThresh (value); };
+    getIntParameterPntr (descantIntervalID)->onAction = [&engine](int value) { engine.updateDescantInterval (value); };
+    getIntParameterPntr (reverbDryWetID)->onAction = [&engine](int value) { engine.updateReverbDryWet (value); };
+    getIntParameterPntr (delayDryWetID)->onAction = [&engine](int value) { engine.updateDelayDryWet (value); };
+    
+    getBoolParameterPntr (leadBypassID)->onAction = [&engine](bool value) { engine.updateLeadBypass (value); };
+    getBoolParameterPntr (harmonyBypassID)->onAction = [&engine](bool value) { engine.updateHarmonyBypass (value); };
+    getBoolParameterPntr (pedalPitchIsOnID)->onAction = [&engine](bool value) { engine.updatePedalToggle (value); };
+    getBoolParameterPntr (descantIsOnID)->onAction = [&engine](bool value) { engine.updateDescantToggle (value); };
+    getBoolParameterPntr (voiceStealingID)->onAction = [&engine](bool value) { engine.updateNoteStealing (value); };
+    getBoolParameterPntr (limiterToggleID)->onAction = [&engine](bool value) { engine.updateLimiter (value); };
+    getBoolParameterPntr (noiseGateToggleID)->onAction = [&engine](bool value) { engine.updateNoiseGateToggle (value); };
+    getBoolParameterPntr (compressorToggleID)->onAction = [&engine](bool value) { engine.updateCompressorToggle (value); };
+    getBoolParameterPntr (aftertouchGainToggleID)->onAction = [&engine](bool value) { engine.updateAftertouchGainOnOff (value); };
+    getBoolParameterPntr (deEsserToggleID)->onAction = [&engine](bool value) { engine.updateDeEsserToggle (value); };
+    getBoolParameterPntr (reverbToggleID)->onAction = [&engine](bool value) { engine.updateReverbToggle (value); };
+    getBoolParameterPntr (delayToggleID)->onAction = [&engine](bool value) { engine.updateDelayToggle (value); };
 }
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>& engine);
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>& engine);
@@ -78,13 +78,28 @@ template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::Im
     Returns one of the processor's parameter objects, referenced by its parameterID.
  ============================================================================================================================*/
 
-inline bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
+bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
     for (auto* pntr : parameterPointers)
         if (static_cast<ParameterID>(pntr->key()) == paramID)
             return pntr;
     
     return nullptr;
+}
+
+bav::FloatParameter* ImogenAudioProcessor::getFloatParameterPntr (const ParameterID paramID) const
+{
+    return dynamic_cast<bav::FloatParameter*> (getParameterPntr (paramID));
+}
+
+bav::IntParameter* ImogenAudioProcessor::getIntParameterPntr (const ParameterID paramID) const
+{
+    return dynamic_cast<bav::IntParameter*> (getParameterPntr (paramID));
+}
+
+bav::BoolParameter* ImogenAudioProcessor::getBoolParameterPntr (const ParameterID paramID) const
+{
+    return dynamic_cast<bav::BoolParameter*> (getParameterPntr (paramID));
 }
 
 
