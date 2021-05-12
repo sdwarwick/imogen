@@ -109,9 +109,14 @@ enum NonAutomatableParameterID
     mtsEspIsConnectedID,
     mtsEspScaleNameID,
     midiLatchID,
-    editorPitchbendID
+    editorPitchbendID,
+    lastMovedMidiCCnumberID,
+    lastMovedMidiCCvalueID,
+    currentInputNoteAsStringID,
+    currentCentsSharpID,
+    guiLightDarkModeID
 };
-static constexpr int numNonAutomatableParams = editorPitchbendID + 1;
+static constexpr int numNonAutomatableParams = guiLightDarkModeID + 1;
 
 
 static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }

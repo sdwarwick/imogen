@@ -275,6 +275,7 @@ static inline auto createParameterTree()
 }
 
 
+
 static inline auto createNonAutomatableParametersTree()
 {
     using Group = bav::NonParamValueTreeNodeGroup;
@@ -301,7 +302,6 @@ static inline auto createNonAutomatableParametersTree()
         auto link = new Group ("Ableton Link");
         link->addChild (&isEnabled);
         link->addChild (&numSessionPeers);
-        
         groups.emplace_back (std::move (link));
     }
     { /* MTS-ESP */
@@ -313,7 +313,6 @@ static inline auto createNonAutomatableParametersTree()
         auto mts = new Group ("MTS-ESP");
         mts->addChild (&isConnected);
         mts->addChild (&scaleName);
-        
         groups.emplace_back (std::move (mts));
     }
     { /* MIDI */
@@ -329,8 +328,63 @@ static inline auto createNonAutomatableParametersTree()
         auto midi = new Group ("MIDI");
         midi->addChild (&isLatched);
         midi->addChild (&editorPitchbend);
-        
         groups.emplace_back (std::move (midi));
+    }
+    { /* last moved MIDI CC */
+        auto number = IntNode (lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0,
+                               nullptr,
+                               nullptr);
+        
+        auto value = IntNode (lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0,
+                              nullptr,
+                              nullptr);
+        
+        auto lastMovedMidiCC = new Group ("Last moved MIDI controller");
+        lastMovedMidiCC->addChild (&number);
+        lastMovedMidiCC->addChild (&value);
+        groups.emplace_back (std::move (lastMovedMidiCC));
+    }
+    
+    { /* GUI state */
+        auto lightDarkMode = BoolNode (guiLightDarkModeID, "Dark mode", "GUI Dark mode",
+                                       true,
+                                       [](bool val, int maxLength)
+                                       {
+                                            if (val)
+                                                return juce::String("Dark mode is on").substring (0, maxLength);
+            
+                                            return juce::String("Dark mode is off").substring (0, maxLength);
+                                       },
+                                       nullptr);
+        
+        auto guiState = new Group ("GUI state");
+        guiState->addChild (&lightDarkMode);
+        groups.emplace_back (std::move (guiState));
+    }
+    
+    { /* Current intonation information */
+        auto currentNote = StringNode (currentInputNoteAsStringID,
+                                       "Current note", "Current input note as string",
+                                       "-");
+        
+        auto currentCentsSharp = IntNode (currentCentsSharpID, "Cents sharp", "Current input cents sharp",
+                                          -100, 100, 0,
+                                          [](int cents, int maxLength)
+                                          {
+                                              if (cents == 0)
+                                                  return TRANS ("Perfect!");
+                                                  
+                                              if (cents > 0)
+                                                  return (juce::String(cents) + TRANS (" cents sharp")).substring (0, maxLength);
+            
+                                              return (juce::String(abs (cents)) + TRANS (" cents flat")).substring (0, maxLength);
+                                          },
+                                          nullptr);
+        
+        auto intonation = new Group ("Intonation information");
+        intonation->addChild (&currentNote);
+        intonation->addChild (&currentCentsSharp);
+        groups.emplace_back (std::move (intonation));
     }
     
     
