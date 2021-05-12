@@ -42,7 +42,9 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     auto parameterTree = Imogen::createParameterTree();
     
-    Imogen::buildImogenMainValueTree (state, *parameterTree);
+    auto nonAutomatablePropertyTree = Imogen::createNonAutomatableParametersTree();
+    
+    Imogen::buildImogenMainValueTree (state, *parameterTree, nonAutomatablePropertyTree);
     
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, *parameterTree);
     

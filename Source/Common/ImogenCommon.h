@@ -107,6 +107,7 @@ enum NonAutomatableParameterID
     linkIsEnabledID,
     linkNumSessionPeersID,
     mtsEspIsConnectedID,
+    mtsEspScaleNameID,
     midiLatchID,
     editorPitchbendID
 };
@@ -141,6 +142,7 @@ namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level Va
     IMOGEN_DECLARE_VALUETREEID (Imogen);  // the type that the top-level tree will have
     IMOGEN_DECLARE_VALUETREEID (Parameters);
     IMOGEN_DECLARE_VALUETREEID (Meters);
+    IMOGEN_DECLARE_VALUETREEID (NonParameters);
 
     IMOGEN_DECLARE_VALUETREEID (SavedEditorSize);
     IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_X);
@@ -160,7 +162,8 @@ static inline juce::String parameterTreeSeparatorString() { return { " | " }; }
 
 
 static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
-                                             const juce::AudioProcessorParameterGroup& parameterTree)
+                                             const juce::AudioProcessorParameterGroup& parameterTree,
+                                             const std::vector<std::unique_ptr<bav::NonParamValueTreeNodeGroup>>& nonAutomatableTree)
 {
     // create the parameter tree
     if (auto* paramGroup = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))
@@ -169,7 +172,7 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
         
         bav::createValueTreeFromParameterTree (parameters, *paramGroup);
         
-        topLevelTree.addChild (parameters, 0, nullptr);
+        topLevelTree.addChild (parameters, -1, nullptr);
     }
     else
     {
@@ -183,12 +186,20 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
         
         bav::createValueTreeFromParameterTree (meters, *meterGroup);
         
-        topLevelTree.addChild (meters, 0, nullptr);
+        topLevelTree.addChild (meters, -1, nullptr);
     }
     else
     {
         jassertfalse;
     }
+    
+    
+    /* create the rest of the ValueTree that's not bound to actual paramter objects... */
+    juce::ValueTree nonParameters { ValueTreeIDs::NonParameters };
+    
+    bav::createValueTreeFromNonParamNodes (nonParameters, nonAutomatableTree);
+    
+    topLevelTree.addChild (nonParameters, -1, nullptr);
 }
 
 

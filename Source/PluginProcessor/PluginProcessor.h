@@ -225,6 +225,8 @@ private:
     
     ValueTreeSynchronizer treeSync;
     
+    std::vector<std::unique_ptr<bav::NonParamValueTreeNodeGroup>> nonAutomatableProperties;
+    
     /*=========================================================================================*/
     
     std::vector< Parameter* > parameterPointers;

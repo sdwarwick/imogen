@@ -32,7 +32,8 @@
 ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
     state (ValueTreeIDs::Imogen),
-    treeSync (state, *this)
+    treeSync (state, *this),
+    nonAutomatableProperties (Imogen::createNonAutomatableParametersTree())
 #if IMOGEN_USE_ABLETON_LINK
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
@@ -45,7 +46,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     addParameterGroup (Imogen::createParameterTree());
     
-    Imogen::buildImogenMainValueTree (state, getParameterTree());
+    Imogen::buildImogenMainValueTree (state, getParameterTree(), nonAutomatableProperties);
     
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, getParameterTree());
     
