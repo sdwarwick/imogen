@@ -168,7 +168,7 @@ static inline juce::String parameterTreeSeparatorString() { return { " | " }; }
 
 static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
                                              const juce::AudioProcessorParameterGroup& parameterTree,
-                                             const std::vector<std::unique_ptr<bav::NonParamValueTreeNodeGroup>>& nonAutomatableTree)
+                                             const bav::NonParamValueTreeNodeGroup& nonAutomatableTree)
 {
     // create the parameter tree
     if (auto* paramGroup = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))

@@ -289,106 +289,99 @@ static inline auto createNonAutomatableParametersTree()
     std::vector<std::unique_ptr<Group>> groups;
     
     { /* Ableton Link */
-        auto isEnabled = BoolNode (linkIsEnabledID, "Toggle", "Ableton link toggle",
-                                   false, l::toggle_stringFromBool, l::toggle_boolFromString);
+        auto isEnabled = std::make_unique<BoolNode> (linkIsEnabledID, "Toggle", "Ableton link toggle",
+                                                     false, l::toggle_stringFromBool, l::toggle_boolFromString);
         
-        auto numSessionPeers = IntNode (linkNumSessionPeersID, "Num peers",
-                                        "Ableton link num session peers",
-                                        0, 50, 0,
-                                        [](int value, int maximumStringLength)
-                                        { return juce::String(value).substring (0, maximumStringLength); },
-                                        nullptr);
+        auto numSessionPeers = std::make_unique<IntNode> (linkNumSessionPeersID, "Num peers",
+                                                          "Ableton link num session peers",
+                                                          0, 50, 0,
+                                                          [](int value, int maximumStringLength)
+                                                          { return juce::String(value).substring (0, maximumStringLength); },
+                                                          nullptr);
         
-        auto link = new Group ("Ableton Link");
-        link->addChild (&isEnabled);
-        link->addChild (&numSessionPeers);
-        groups.emplace_back (std::move (link));
+        groups.emplace_back (std::make_unique<Group> ("Ableton Link",
+                                                      std::move (isEnabled), std::move (numSessionPeers)));
     }
     { /* MTS-ESP */
-        auto isConnected = BoolNode (mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected",
-                                     false, l::toggle_stringFromBool, l::toggle_boolFromString);
+        auto isConnected = std::make_unique<BoolNode> (mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected",
+                                                       false, l::toggle_stringFromBool, l::toggle_boolFromString);
         
-        auto scaleName = StringNode (mtsEspScaleNameID, "Scale name", "MTS-ESP scale name", "No active scale");
+        auto scaleName = std::make_unique<StringNode> (mtsEspScaleNameID, "Scale name", "MTS-ESP scale name", "No active scale");
         
-        auto mts = new Group ("MTS-ESP");
-        mts->addChild (&isConnected);
-        mts->addChild (&scaleName);
-        groups.emplace_back (std::move (mts));
+        groups.emplace_back (std::make_unique<Group> ("MTS-ESP",
+                                                      std::move (isConnected), std::move (scaleName)));
     }
     { /* MIDI */
-        auto isLatched = BoolNode (midiLatchID, "Is latched", "MIDI is latched",
-                                   false, l::toggle_stringFromBool, l::toggle_boolFromString);
+        auto isLatched = std::make_unique<BoolNode> (midiLatchID, "Is latched", "MIDI is latched",
+                                                     false, l::toggle_stringFromBool, l::toggle_boolFromString);
         
-        auto editorPitchbend = IntNode (editorPitchbendID, "Pitchbend", "GUI pitchbend", 0, 127, 64,
-                                        [](int value, int maximumStringLength)
-                                        { return juce::String(value).substring (0, maximumStringLength); },
-                                        [](const juce::String& text)
-                                        { return text.retainCharacters ("1234567890").getIntValue(); });
+        auto editorPitchbend = std::make_unique<IntNode> (editorPitchbendID, "Pitchbend", "GUI pitchbend", 0, 127, 64,
+                                                          [](int value, int maximumStringLength)
+                                                          { return juce::String(value).substring (0, maximumStringLength); },
+                                                          [](const juce::String& text)
+                                                          { return text.retainCharacters ("1234567890").getIntValue(); });
         
-        auto midi = new Group ("MIDI");
-        midi->addChild (&isLatched);
-        midi->addChild (&editorPitchbend);
-        groups.emplace_back (std::move (midi));
-    }
-    { /* last moved MIDI CC */
-        auto number = IntNode (lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0,
-                               nullptr,
-                               nullptr);
+        // subgroup: last moved MIDI controller
+        auto number = std::make_unique<IntNode> (lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0,
+                                                 nullptr,
+                                                 nullptr);
         
-        auto value = IntNode (lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0,
-                              nullptr,
-                              nullptr);
+        auto value = std::make_unique<IntNode> (lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0,
+                                                nullptr,
+                                                nullptr);
         
-        auto lastMovedMidiCC = new Group ("Last moved MIDI controller");
-        lastMovedMidiCC->addChild (&number);
-        lastMovedMidiCC->addChild (&value);
-        groups.emplace_back (std::move (lastMovedMidiCC));
+        auto lastMovedController = std::make_unique<Group> ("Last moved MIDI controller",
+                                                            std::move (number), std::move (value));
+        
+        groups.emplace_back (std::make_unique<Group> ("MIDI",
+                                                      std::move (isLatched), std::move (editorPitchbend), std::move (lastMovedController)));
     }
     
     { /* GUI state */
-        auto lightDarkMode = BoolNode (guiLightDarkModeID, "Dark mode", "GUI Dark mode",
-                                       true,
-                                       [](bool val, int maxLength)
-                                       {
-                                            if (val)
-                                                return juce::String("Dark mode is on").substring (0, maxLength);
+        auto lightDarkMode = std::make_unique<BoolNode> (guiLightDarkModeID, "Dark mode", "GUI Dark mode",
+                                                         true,
+                                                         [](bool val, int maxLength)
+                                                         {
+                                                             if (val)
+                                                                 return juce::String("Dark mode is on").substring (0, maxLength);
             
-                                            return juce::String("Dark mode is off").substring (0, maxLength);
-                                       },
-                                       nullptr);
+                                                             return juce::String("Dark mode is off").substring (0, maxLength);
+                                                         },
+                                                         nullptr);
         
-        auto guiState = new Group ("GUI state");
-        guiState->addChild (&lightDarkMode);
-        groups.emplace_back (std::move (guiState));
+        groups.emplace_back (std::make_unique<Group> ("GUI state",
+                                                      std::move (lightDarkMode)));
     }
     
     { /* Current intonation information */
-        auto currentNote = StringNode (currentInputNoteAsStringID,
-                                       "Current note", "Current input note as string",
-                                       "-");
+        auto currentNote = std::make_unique<StringNode> (currentInputNoteAsStringID,
+                                                         "Current note", "Current input note as string",
+                                                         "-");
         
-        auto currentCentsSharp = IntNode (currentCentsSharpID, "Cents sharp", "Current input cents sharp",
-                                          -100, 100, 0,
-                                          [](int cents, int maxLength)
-                                          {
-                                              if (cents == 0)
-                                                  return TRANS ("Perfect!");
+        auto currentCentsSharp = std::make_unique<IntNode> (currentCentsSharpID, "Cents sharp", "Current input cents sharp",
+                                                            -100, 100, 0,
+                                                            [](int cents, int maxLength)
+                                                            {
+                                                                if (cents == 0)
+                                                                    return TRANS ("Perfect!");
                                                   
-                                              if (cents > 0)
-                                                  return (juce::String(cents) + TRANS (" cents sharp")).substring (0, maxLength);
+                                                                if (cents > 0)
+                                                                    return (juce::String(cents) + TRANS (" cents sharp")).substring (0, maxLength);
             
-                                              return (juce::String(abs (cents)) + TRANS (" cents flat")).substring (0, maxLength);
-                                          },
-                                          nullptr);
+                                                                return (juce::String(abs (cents)) + TRANS (" cents flat")).substring (0, maxLength);
+                                                            },
+                                                            nullptr);
         
-        auto intonation = new Group ("Intonation information");
-        intonation->addChild (&currentNote);
-        intonation->addChild (&currentCentsSharp);
-        groups.emplace_back (std::move (intonation));
+        groups.emplace_back (std::make_unique<Group> ("Intonation information",
+                                                      std::move (currentNote), std::move (currentCentsSharp)));
     }
     
+    auto mainGroup = std::make_unique<Group> ("Non-parameter properties");
     
-    return groups;
+    for (auto& group : groups)
+        mainGroup->addChild (std::move (group));
+    
+    return mainGroup;
 }
 
 
