@@ -35,88 +35,14 @@
   #define IMOGEN_USE_ABLETON_LINK 0
 #endif
 
+
 #include "Shared-code/bv_SharedCode/bv_SharedCode.h"
+
+#include "ImogenParameters.h"
 
 
 namespace Imogen
 {
-
-enum ParameterID
-{
-    inputSourceID,
-    mainBypassID,
-    leadBypassID,
-    harmonyBypassID,
-    dryPanID,
-    dryWetID,
-    adsrAttackID,
-    adsrDecayID,
-    adsrSustainID,
-    adsrReleaseID,
-    stereoWidthID,
-    lowestPannedID,
-    velocitySensID,
-    pitchBendRangeID,
-    pedalPitchIsOnID,
-    pedalPitchThreshID,
-    pedalPitchIntervalID,
-    descantIsOnID,
-    descantThreshID,
-    descantIntervalID,
-    voiceStealingID,
-    inputGainID,
-    outputGainID,
-    limiterToggleID,
-    noiseGateToggleID,
-    noiseGateThresholdID,
-    compressorToggleID,
-    compressorAmountID,
-    aftertouchGainToggleID,
-    deEsserToggleID,
-    deEsserThreshID,
-    deEsserAmountID,
-    reverbToggleID,
-    reverbDryWetID,
-    reverbDecayID,
-    reverbDuckID,
-    reverbLoCutID,
-    reverbHiCutID,
-    delayToggleID,
-    delayDryWetID
-};
-static constexpr int numParams = delayDryWetID + 1;
-
-
-enum MeterID
-{
-    inputLevelID,
-    outputLevelLID,
-    outputLevelRID,
-    gateReduxID,
-    compReduxID,
-    deEssGainReduxID,
-    limiterGainReduxID,
-    reverbLevelID,
-    delayLevelID
-};
-static constexpr int numMeters = delayLevelID + 1;
-
-
-enum NonAutomatableParameterID
-{
-    linkIsEnabledID,
-    linkNumSessionPeersID,
-    mtsEspIsConnectedID,
-    mtsEspScaleNameID,
-    midiLatchID,
-    editorPitchbendID,
-    lastMovedMidiCCnumberID,
-    lastMovedMidiCCvalueID,
-    currentInputNoteAsStringID,
-    currentCentsSharpID,
-    guiLightDarkModeID
-};
-static constexpr int numNonAutomatableParams = guiLightDarkModeID + 1;
 
 
 static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
@@ -139,6 +65,9 @@ static inline juce::String getPresetFileExtension()
 }
 
 
+/*=========================================================================================*/
+/*=========================================================================================*/
+
 
 namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level ValueTree */
 {
@@ -147,7 +76,7 @@ namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level Va
     IMOGEN_DECLARE_VALUETREEID (Imogen);  // the type that the top-level tree will have
     IMOGEN_DECLARE_VALUETREEID (Parameters);
     IMOGEN_DECLARE_VALUETREEID (Meters);
-    IMOGEN_DECLARE_VALUETREEID (NonParameters);
+    IMOGEN_DECLARE_VALUETREEID (Properties);
 
     IMOGEN_DECLARE_VALUETREEID (SavedEditorSize);
     IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_X);
@@ -157,13 +86,7 @@ namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level Va
 }  // namespace
 
 
-static inline juce::String parameterTreeID()   { return "ImogenParameters"; }
-static inline juce::String parameterTreeName() { return TRANS ("Parameters"); }
-
-static inline juce::String meterTreeID()   { return "ImogenMeters"; }
-static inline juce::String meterTreeName() { return TRANS ("Meters"); }
-
-static inline juce::String parameterTreeSeparatorString() { return { " | " }; }
+/*=========================================================================================*/
 
 
 static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
@@ -200,25 +123,11 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     
     
     /* create the rest of the ValueTree that's not bound to actual paramter objects... */
-    juce::ValueTree nonParameters { ValueTreeIDs::NonParameters };
+    juce::ValueTree nonParameters { ValueTreeIDs::Properties };
     
     bav::createValueTreeFromNonParamNodes (nonParameters, nonAutomatableTree);
     
     topLevelTree.addChild (nonParameters, -1, nullptr);
-}
-
-
-static inline void initializeParameterPointers (std::vector< bav::Parameter* >& parameterPointers,
-                                                std::vector< bav::Parameter* >& meterParameterPointers,
-                                                const juce::AudioProcessorParameterGroup& parameterTree)
-{
-    parameterPointers.reserve (numParams);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, parameterTreeName()),
-                                                 parameterPointers);
-    
-    meterParameterPointers.reserve (numMeters);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, meterTreeName()),
-                                                 meterParameterPointers);
 }
 
 

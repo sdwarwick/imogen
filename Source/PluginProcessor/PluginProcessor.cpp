@@ -45,7 +45,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     addParameterGroup (Imogen::createParameterTree());
     
-    auto nonAutomatablePropertyTree = Imogen::createNonAutomatableParametersTree();
+    auto nonAutomatablePropertyTree = Imogen::createPropertyTree();
     
     Imogen::buildImogenMainValueTree (state, getParameterTree(), *nonAutomatablePropertyTree);
     

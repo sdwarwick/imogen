@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "ImogenCommon.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -9,6 +8,99 @@
 
 namespace Imogen
 {
+
+
+static inline juce::String parameterTreeID()   { return "ImogenParameters"; }
+static inline juce::String parameterTreeName() { return TRANS ("Parameters"); }
+
+static inline juce::String meterTreeID()   { return "ImogenMeters"; }
+static inline juce::String meterTreeName() { return TRANS ("Meters"); }
+
+static inline juce::String parameterTreeSeparatorString() { return { " | " }; }
+
+
+/*=========================================================================================*/
+
+
+enum ParameterID
+{
+    inputSourceID,
+    mainBypassID,
+    leadBypassID,
+    harmonyBypassID,
+    dryPanID,
+    dryWetID,
+    adsrAttackID,
+    adsrDecayID,
+    adsrSustainID,
+    adsrReleaseID,
+    stereoWidthID,
+    lowestPannedID,
+    velocitySensID,
+    pitchBendRangeID,
+    pedalPitchIsOnID,
+    pedalPitchThreshID,
+    pedalPitchIntervalID,
+    descantIsOnID,
+    descantThreshID,
+    descantIntervalID,
+    voiceStealingID,
+    inputGainID,
+    outputGainID,
+    limiterToggleID,
+    noiseGateToggleID,
+    noiseGateThresholdID,
+    compressorToggleID,
+    compressorAmountID,
+    aftertouchGainToggleID,
+    deEsserToggleID,
+    deEsserThreshID,
+    deEsserAmountID,
+    reverbToggleID,
+    reverbDryWetID,
+    reverbDecayID,
+    reverbDuckID,
+    reverbLoCutID,
+    reverbHiCutID,
+    delayToggleID,
+    delayDryWetID
+};
+static constexpr int numParams = delayDryWetID + 1;
+
+
+enum MeterID
+{
+    inputLevelID,
+    outputLevelLID,
+    outputLevelRID,
+    gateReduxID,
+    compReduxID,
+    deEssGainReduxID,
+    limiterGainReduxID,
+    reverbLevelID,
+    delayLevelID
+};
+static constexpr int numMeters = delayLevelID + 1;
+
+
+enum NonAutomatableParameterID
+{
+    linkIsEnabledID,
+    linkNumSessionPeersID,
+    mtsEspIsConnectedID,
+    mtsEspScaleNameID,
+    midiLatchID,
+    editorPitchbendID,
+    lastMovedMidiCCnumberID,
+    lastMovedMidiCCvalueID,
+    currentInputNoteAsStringID,
+    currentCentsSharpID,
+    guiLightDarkModeID
+};
+static constexpr int numNonAutomatableParams = guiLightDarkModeID + 1;
+
+
+/*=========================================================================================*/
 
 
 static inline auto createMeterParameterTree()
@@ -37,6 +129,9 @@ static inline auto createMeterParameterTree()
                                     std::move (compGainRedux), std::move (deEssGainRedux), std::move (limtrGainRedux),
                                     std::move (reverbLevel), std::move (delayLevel));
 }
+
+
+/*=========================================================================================*/
 
 
 static inline auto createAutomatableParameterTree()
@@ -267,6 +362,9 @@ static inline auto createAutomatableParameterTree()
 }
 
 
+/*=========================================================================================*/
+
+
 static inline auto createParameterTree()
 {
     return std::make_unique<juce::AudioProcessorParameterGroup> ("Imogen", "Imogen", parameterTreeSeparatorString(),
@@ -275,8 +373,27 @@ static inline auto createParameterTree()
 }
 
 
+/*=========================================================================================*/
 
-static inline auto createNonAutomatableParametersTree()
+
+static inline void initializeParameterPointers (std::vector< bav::Parameter* >& parameterPointers,
+                                                std::vector< bav::Parameter* >& meterParameterPointers,
+                                                const juce::AudioProcessorParameterGroup& parameterTree)
+{
+    parameterPointers.reserve (numParams);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, parameterTreeName()),
+                                                 parameterPointers);
+    
+    meterParameterPointers.reserve (numMeters);
+    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, meterTreeName()),
+                                                 meterParameterPointers);
+}
+
+
+/*=========================================================================================*/
+
+
+static inline auto createPropertyTree()
 {
     using Group = bav::NonParamValueTreeNodeGroup;
     
