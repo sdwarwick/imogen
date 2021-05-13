@@ -50,26 +50,25 @@ jobs:
      name: plugin - iOS build
      runs-on: macos-latest
      timeout-minutes: 30
-     
+
      steps:
-     
+
      - name: Checkout code
        uses: actions/checkout@v2
        with:
         submodules: recursive
         path: imogen
-      
+
      - name: Run iOS build script
        shell: bash
        run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
-  
 
   plugin-LV2-build:
   
       name: plugin - LV2 build
       runs-on: ubuntu-latest
       timeout-minutes: 30
-      
+
       steps:
 
         - name: Install LV2 development headers
@@ -81,7 +80,7 @@ jobs:
           with:
             submodules: recursive
             path: imogen
-            
+ 
         - name: Install JUCE's Linux dependencies
           shell: bash
           run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
@@ -105,7 +104,7 @@ jobs:
           artifact: Linux
         - os: macos-latest
           artifact: MacOS
-       
+
     steps:
 
     - name: Checkout code
@@ -122,22 +121,19 @@ jobs:
     - name: Run main build script
       shell: bash
       run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_desktop.sh
-      
-      
+ 
   remote-ios-build:
     name: remote - iOS build
     runs-on: macos-latest
     timeout-minutes: 30
-    
+ 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
       with:
         submodules: recursive
         path: imogen
-        
+      
     - name: Run iOS build script
       shell: bash
       run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_iOS.sh 
-   
-#
