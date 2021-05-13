@@ -51,7 +51,7 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
     
     bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
-                                                   state.getChildWithName (Imogen::ValueTreeIDs::Meters),
+                                                   state.getChildWithName (Imogen::ValueTreeIDs::Properties),
                                                    Imogen::numNonAutomatableParams,
                                                    [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
     

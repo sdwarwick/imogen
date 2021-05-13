@@ -63,12 +63,12 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                                                     [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
     
     bav::createWriteOnlyParameterValueTreeAttachments (meterTreeAttachments,
-                                                       state.getChildWithName (Imogen::ValueTreeIDs::Properties),
+                                                       state.getChildWithName (Imogen::ValueTreeIDs::Meters),
                                                        Imogen::numMeters,
                                                        [this](int param) { return getMeterParamPntr (static_cast<MeterID>(param)); });
     
     bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
-                                                   state.getChildWithName (Imogen::ValueTreeIDs::Meters),
+                                                   state.getChildWithName (Imogen::ValueTreeIDs::Properties),
                                                    Imogen::numNonAutomatableParams,
                                                    [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
     
