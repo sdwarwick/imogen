@@ -45,7 +45,11 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     Imogen::buildImogenMainValueTree (state, *parameterTree, *properties);
     
-    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, *parameterTree);
+    std::vector< bav::Parameter* > parameterPointers;
+    
+    Imogen::initializeParameterPointers (&parameterPointers, nullptr, *parameterTree);
+    
+    bav::convertPluginParametersToFreestanding (parameterPointers, parameters);
     
     propertyPointers.reserve (Imogen::numNonAutomatableParams);
     bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
@@ -54,6 +58,11 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
                                                    state.getChildWithName (Imogen::ValueTreeIDs::Properties),
                                                    Imogen::numNonAutomatableParams,
                                                    [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
+    
+    bav::createTwoWayFreeParameterValueTreeAttachments (parameters,
+                                                        state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
+                                                        Imogen::numParams,
+                                                        [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -78,26 +87,6 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
 ImogenGUI::~ImogenGUI()
 {
     this->setLookAndFeel (nullptr);
-}
-
-
-inline bav::Parameter* ImogenGUI::getParameterPntr (const ParameterID paramID) const
-{
-    for (auto* pntr : parameterPointers)
-        if (static_cast<ParameterID>(pntr->key()) == paramID)
-            return pntr;
-    
-    return nullptr;
-}
-
-
-inline bav::Parameter* ImogenGUI::getMeterParamPntr (const MeterID meter) const
-{
-    for (auto* pntr : meterParameterPointers)
-        if (static_cast<MeterID>(pntr->key()) == meter)
-            return pntr;
-    
-    return nullptr;
 }
 
 
@@ -337,6 +326,16 @@ bav::NonParamValueTreeNode* ImogenGUI::getPropertyPntr (const NonAutomatablePara
 {
     for (auto* pntr : propertyPointers)
         if (static_cast<NonAutomatableParameterID>(pntr->nodeID) == propID)
+            return pntr;
+    
+    return nullptr;
+}
+
+
+bav::FreestandingParameter* ImogenGUI::getParameterPntr (const ParameterID paramID) const
+{
+    for (auto* pntr : parameters)
+        if (static_cast<ParameterID>(pntr->key()) == paramID)
             return pntr;
     
     return nullptr;

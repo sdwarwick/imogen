@@ -48,7 +48,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     Imogen::buildImogenMainValueTree (state, getParameterTree(), *properties);
     
-    Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, getParameterTree());
+    Imogen::initializeParameterPointers (&parameterPointers, &meterParameterPointers, getParameterTree());
     
     propertyPointers.reserve (Imogen::numNonAutomatableParams);
     bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);

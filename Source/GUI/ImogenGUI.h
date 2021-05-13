@@ -76,11 +76,6 @@ public:
     /*=========================================================================================*/
     
 private:
-    inline bav::Parameter* getParameterPntr (const ParameterID paramID) const;
-    
-    inline bav::Parameter* getMeterParamPntr (const MeterID meter) const;
-    
-    /*=========================================================================================*/
     
     inline void makePresetMenu (juce::ComboBox& box);
     
@@ -94,12 +89,12 @@ private:
     
     bav::NonParamValueTreeNode* getPropertyPntr (const NonAutomatableParameterID propID) const;
     
+    bav::FreestandingParameter* getParameterPntr (const ParameterID paramID) const;
+    
     /*=========================================================================================*/
     
     juce::UndoManager undoManager;
     
-    std::vector< bav::Parameter* > parameterPointers;
-    std::vector< bav::Parameter* > meterParameterPointers;
     std::vector< bav::NonParamValueTreeNode* > propertyPointers;
     
     juce::ValueTree state;
@@ -122,6 +117,8 @@ private:
     ValueTreeSynchronizer treeSync;
     
     std::unique_ptr<bav::NonParamValueTreeNodeGroup> properties;
+    
+    juce::OwnedArray<bav::FreestandingParameter> parameters;
     
     juce::OwnedArray< bav::PropertyAttachmentBase >  propertyValueTreeAttachments;  // these are two-way
     

@@ -376,17 +376,21 @@ static inline auto createParameterTree()
 /*=========================================================================================*/
 
 
-static inline void initializeParameterPointers (std::vector< bav::Parameter* >& parameterPointers,
-                                                std::vector< bav::Parameter* >& meterParameterPointers,
+static inline void initializeParameterPointers (std::vector< bav::Parameter* >* parameterPointers,
+                                                std::vector< bav::Parameter* >* meterParameterPointers,
                                                 const juce::AudioProcessorParameterGroup& parameterTree)
 {
-    parameterPointers.reserve (numParams);
+    jassert (parameterPointers != nullptr);
+    parameterPointers->reserve (numParams);
     bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, parameterTreeName()),
-                                                 parameterPointers);
+                                                 *parameterPointers);
     
-    meterParameterPointers.reserve (numMeters);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, meterTreeName()),
-                                                 meterParameterPointers);
+    if (meterParameterPointers != nullptr)
+    {
+        meterParameterPointers->reserve (numMeters);
+        bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, meterTreeName()),
+                                                     *meterParameterPointers);
+    }
 }
 
 
