@@ -136,4 +136,4 @@ jobs:
       
     - name: Run iOS build script
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_iOS.sh 
+      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_iOS.sh
