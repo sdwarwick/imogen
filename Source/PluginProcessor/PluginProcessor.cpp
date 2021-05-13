@@ -32,7 +32,8 @@
 ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
     state (ValueTreeIDs::Imogen),
-    treeSync (state, *this)
+    treeSync (state, *this),
+    properties (Imogen::createPropertyTree())
 #if IMOGEN_USE_ABLETON_LINK
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
@@ -45,11 +46,12 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     addParameterGroup (Imogen::createParameterTree());
     
-    auto nonAutomatablePropertyTree = Imogen::createPropertyTree();
-    
-    Imogen::buildImogenMainValueTree (state, getParameterTree(), *nonAutomatablePropertyTree);
+    Imogen::buildImogenMainValueTree (state, getParameterTree(), *properties);
     
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, getParameterTree());
+    
+    propertyPointers.reserve (Imogen::numNonAutomatableParams);
+    bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
     
     auto* tempMB = getParameterPntr (mainBypassID);
     jassert (tempMB != nullptr);
@@ -219,6 +221,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
     
     updateMeters (engine.getLatestMeterData());
+    
+    
 }
 
 
@@ -255,10 +259,7 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
                        };
     
     for (auto* param : meterParameterPointers)
-    {
-        updateMeter (param->orig(),
-                     getMeterValue (static_cast<MeterID> (param->key())));
-    }
+        updateMeter (param->orig(), getMeterValue (static_cast<MeterID> (param->key())));
     
     if (anyChanged)
     {

@@ -74,6 +74,7 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>& engine);
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>& engine);
 
+
 /*===========================================================================================================================
     Returns one of the processor's parameter objects, referenced by its parameterID.
  ============================================================================================================================*/
@@ -112,3 +113,30 @@ inline bav::Parameter* ImogenAudioProcessor::getMeterParamPntr (const MeterID me
     return nullptr;
 }
 
+
+/*===================================================================================*/
+
+
+bav::NonParamValueTreeNode* ImogenAudioProcessor::getPropertyPntr (const NonAutomatableParameterID propID) const
+{
+    for (auto* pntr : propertyPointers)
+        if (static_cast<NonAutomatableParameterID>(pntr->nodeID) == propID)
+            return pntr;
+    
+    return nullptr;
+}
+
+bav::IntValueTreeNode* ImogenAudioProcessor::getIntPropertyPntr (const NonAutomatableParameterID propID) const
+{
+    return dynamic_cast<bav::IntValueTreeNode*> (getPropertyPntr (propID));
+}
+
+bav::BoolValueTreeNode* ImogenAudioProcessor::getBoolPropertyPntr (const NonAutomatableParameterID propID) const
+{
+    return dynamic_cast<bav::BoolValueTreeNode*> (getPropertyPntr (propID));
+}
+
+bav::StringValueTreeNode* ImogenAudioProcessor::getStringPropertyPntr (const NonAutomatableParameterID propID) const
+{
+    return dynamic_cast<bav::StringValueTreeNode*> (getPropertyPntr (propID));
+}

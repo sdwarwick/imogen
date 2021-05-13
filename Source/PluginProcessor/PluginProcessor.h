@@ -54,6 +54,7 @@ class ImogenAudioProcessor    : public  juce::AudioProcessor
     
     using ParameterID = Imogen::ParameterID;
     using MeterID = Imogen::MeterID;
+    using NonAutomatableParameterID = Imogen::NonAutomatableParameterID;
     
     using ChangeDetails = juce::AudioProcessorListener::ChangeDetails;
 
@@ -193,6 +194,13 @@ private:
     
     void updateEditorSizeFromValueTree();
     
+    //---------------------------
+    
+    bav::NonParamValueTreeNode* getPropertyPntr       (const NonAutomatableParameterID propID) const;
+    bav::IntValueTreeNode*      getIntPropertyPntr    (const NonAutomatableParameterID propID) const;
+    bav::BoolValueTreeNode*     getBoolPropertyPntr   (const NonAutomatableParameterID propID) const;
+    bav::StringValueTreeNode*   getStringPropertyPntr (const NonAutomatableParameterID propID) const;
+    
     /*=========================================================================================*/
     
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
@@ -226,12 +234,16 @@ private:
     
     ValueTreeSynchronizer treeSync;
     
+    std::unique_ptr<bav::NonParamValueTreeNodeGroup> properties;
+    
     /*=========================================================================================*/
     
     std::vector< Parameter* > parameterPointers;
     RAP* mainBypassPntr;  // this one gets referenced specifically...
     
     std::vector< Parameter* > meterParameterPointers;
+    
+    std::vector< bav::NonParamValueTreeNode* > propertyPointers;
     
     juce::NormalisableRange<float> pitchbendNormalizedRange { 0.0f, 127.0f, 1.0f }; // range object used to scale pitchbend values
     
