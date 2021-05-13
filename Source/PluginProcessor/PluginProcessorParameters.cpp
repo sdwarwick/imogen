@@ -86,9 +86,9 @@ void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine<SampleTy
     
     // getBoolPropertyPntr (linkIsEnabledID)->onAction =
     
-//    getBoolPropertyPntr (midiLatchID)->onAction = [&engine](bool value) { engine.updateMidiLatch (value); };
-//
-//    getIntPropertyPntr (editorPitchbendID)->onAction = [&engine](int value) { engine.recieveExternalPitchbend (value); };
+    getBoolPropertyPntr (midiLatchID)->onAction = [&engine](bool value) { engine.updateMidiLatch (value); };
+
+    getIntPropertyPntr (editorPitchbendID)->onAction = [&engine](int value) { engine.recieveExternalPitchbend (value); };
 }
 template void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine<float>&);
 template void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine<double>&);
@@ -102,9 +102,9 @@ void ImogenAudioProcessor::initializePropertyValueUpdatingFunctions()
     using namespace Imogen;
     
     // all of these must be thread-safe! non-thread safe updates are handled explicitly in the timer callback
-//    getIntPropertyPntr (linkNumSessionPeersID)->getNewValueFromExternalSource = [this]() { return getNumAbletonLinkSessionPeers(); };
-//    getBoolPropertyPntr (mtsEspIsConnectedID)->getNewValueFromExternalSource = [this]() { return isConnectedToMtsEsp(); };
-//    getBoolPropertyPntr (linkIsEnabledID)->getNewValueFromExternalSource = [this]() { return isAbletonLinkEnabled(); };
+    getIntPropertyPntr (linkNumSessionPeersID)->getNewValueFromExternalSource = [this]() { return getNumAbletonLinkSessionPeers(); };
+    getBoolPropertyPntr (mtsEspIsConnectedID)->getNewValueFromExternalSource = [this]() { return isConnectedToMtsEsp(); };
+    getBoolPropertyPntr (linkIsEnabledID)->getNewValueFromExternalSource = [this]() { return isAbletonLinkEnabled(); };
     
     //getBoolPropertyPntr (midiLatchID)->getNewValueFromExternalSource =
     //getIntPropertyPntr (lastMovedMidiCCnumberID)->getNewValueFromExternalSource =
