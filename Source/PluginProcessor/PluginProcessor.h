@@ -212,12 +212,7 @@ private:
     
     void updateEditorSizeFromValueTree();
     
-    //---------------------------
-    
-    bav::NonParamValueTreeNode* getPropertyPntr       (const NonAutomatableParameterID propID) const;
-    bav::IntValueTreeNode*      getIntPropertyPntr    (const NonAutomatableParameterID propID) const;
-    bav::BoolValueTreeNode*     getBoolPropertyPntr   (const NonAutomatableParameterID propID) const;
-    bav::StringValueTreeNode*   getStringPropertyPntr (const NonAutomatableParameterID propID) const;
+    bav::NonParamValueTreeNode* getPropertyPntr (const NonAutomatableParameterID propID) const;
     
     /*=========================================================================================*/
     

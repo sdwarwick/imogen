@@ -248,7 +248,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
 
 void ImogenAudioProcessor::timerCallback()
 {
-    getStringPropertyPntr (mtsEspScaleNameID)->setValue (getScaleName());
+    getPropertyPntr (mtsEspScaleNameID)->setValueFromString (getScaleName());
 }
 
 
