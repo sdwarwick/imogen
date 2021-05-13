@@ -211,8 +211,9 @@ private:
     
     juce::ValueTree state;
     
-    juce::OwnedArray<bav::ParameterAttachment> parameterTreeAttachments;  // these are two-way
-    juce::OwnedArray<bav::ParameterToValueTreeAttachment> meterTreeAttachments;  // these are write-only
+    juce::OwnedArray< bav::ParameterAttachment >             parameterTreeAttachments;  // these are two-way
+    juce::OwnedArray< bav::ParameterToValueTreeAttachment >  meterTreeAttachments;  // these are write-only
+    juce::OwnedArray< bav::PropertyAttachmentBase >          propertyValueTreeAttachments;  // these are two-way
     
     struct ValueTreeSynchronizer  :   public juce::ValueTreeSynchroniser
     {

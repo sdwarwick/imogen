@@ -460,9 +460,9 @@ static inline auto createPropertyTree()
                                                          [](bool val, int maxLength)
                                                          {
                                                              if (val)
-                                                                 return juce::String("Dark mode is on").substring (0, maxLength);
+                                                                 return TRANS("Dark mode is on").substring (0, maxLength);
             
-                                                             return juce::String("Dark mode is off").substring (0, maxLength);
+                                                             return TRANS("Dark mode is off").substring (0, maxLength);
                                                          },
                                                          nullptr);
         
