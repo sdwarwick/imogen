@@ -28,6 +28,7 @@
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
       : state (Imogen::ValueTreeIDs::Imogen),
         treeSync (state, s),
+        properties (Imogen::createPropertyTree()),
         tooltipWindow (this, msBeforeTooltip)
 {
 #if IMOGEN_REMOTE_APP
@@ -42,11 +43,17 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     
     auto parameterTree = Imogen::createParameterTree();
     
-    auto nonAutomatablePropertyTree = Imogen::createPropertyTree();
-    
-    Imogen::buildImogenMainValueTree (state, *parameterTree, *nonAutomatablePropertyTree);
+    Imogen::buildImogenMainValueTree (state, *parameterTree, *properties);
     
     Imogen::initializeParameterPointers (parameterPointers, meterParameterPointers, *parameterTree);
+    
+    propertyPointers.reserve (Imogen::numNonAutomatableParams);
+    bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
+    
+    bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
+                                                   state.getChildWithName (Imogen::ValueTreeIDs::Meters),
+                                                   Imogen::numNonAutomatableParams,
+                                                   [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
     
     makePresetMenu (selectPreset);
     // selectPreset.onChange = [this] { holder->sendLoadPreset (selectPreset.getText()); };
@@ -319,4 +326,18 @@ void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
     juce::ignoreUnused (box);
+}
+
+
+/*=========================================================================================================
+ =========================================================================================================*/
+
+
+bav::NonParamValueTreeNode* ImogenGUI::getPropertyPntr (const NonAutomatableParameterID propID) const
+{
+    for (auto* pntr : propertyPointers)
+        if (static_cast<NonAutomatableParameterID>(pntr->nodeID) == propID)
+            return pntr;
+    
+    return nullptr;
 }

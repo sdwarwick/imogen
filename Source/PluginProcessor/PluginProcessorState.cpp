@@ -26,6 +26,7 @@
 
 void ImogenAudioProcessor::applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize)
 {
+    jassert (juce::MessageManager::getInstance()->isThisTheMessageThread());
     juce::ValueTreeSynchroniser::applyChange (state, encodedChangeData, encodedChangeDataSize, nullptr);
 }
 
@@ -58,7 +59,9 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     
     state.copyPropertiesAndChildrenFrom (newTree, nullptr);
     
-    updateAllParameters();
+    actionAllParameterUpdates();
+    actionAllPropertyUpdates();
+    
     resetParameterDefaultsToCurrentValues();
     
     updateEditorSizeFromValueTree();

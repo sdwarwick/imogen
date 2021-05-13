@@ -45,6 +45,7 @@ class ImogenGUI  :     public juce::Component
 {
     using ParameterID = Imogen::ParameterID;
     using MeterID = Imogen::MeterID;
+    using NonAutomatableParameterID = Imogen::NonAutomatableParameterID;
     
 public:
     
@@ -91,10 +92,15 @@ private:
     
     /*=========================================================================================*/
     
+    bav::NonParamValueTreeNode* getPropertyPntr (const NonAutomatableParameterID propID) const;
+    
+    /*=========================================================================================*/
+    
     juce::UndoManager undoManager;
     
     std::vector< bav::Parameter* > parameterPointers;
     std::vector< bav::Parameter* > meterParameterPointers;
+    std::vector< bav::NonParamValueTreeNode* > propertyPointers;
     
     juce::ValueTree state;
     
@@ -114,6 +120,10 @@ private:
     };
     
     ValueTreeSynchronizer treeSync;
+    
+    std::unique_ptr<bav::NonParamValueTreeNodeGroup> properties;
+    
+    juce::OwnedArray< bav::PropertyAttachmentBase >  propertyValueTreeAttachments;  // these are two-way
     
     /*=========================================================================================*/
     

@@ -112,7 +112,7 @@ static inline auto createMeterParameterTree()
     constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
     
     
-    auto inputLevel  = std::make_unique<Gain> (inputLevelID,  "In",  "Input level",  juce::AudioProcessorParameter::inputMeter);
+    auto inputLevel   = std::make_unique<Gain> (inputLevelID,  "In",  "Input level",  juce::AudioProcessorParameter::inputMeter);
     auto outputLevelL = std::make_unique<Gain> (outputLevelLID, "OutL", "Output level (L)", juce::AudioProcessorParameter::outputMeter);
     auto outputLevelR = std::make_unique<Gain> (outputLevelRID, "OutL", "Output level (R)", juce::AudioProcessorParameter::outputMeter);
     

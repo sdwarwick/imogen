@@ -46,7 +46,8 @@ struct ImogenGUIUpdateReciever
 /*
 */
 
-class ImogenAudioProcessor    : public  juce::AudioProcessor
+class ImogenAudioProcessor    : public  juce::AudioProcessor,
+                                private juce::Timer
 {
     using Parameter     = bav::Parameter;
     
@@ -62,6 +63,10 @@ class ImogenAudioProcessor    : public  juce::AudioProcessor
 public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
+    
+    /*=========================================================================================*/
+    
+    void timerCallback() override final;
     
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */
@@ -134,9 +139,15 @@ public:
     
 private:
     
-    inline void updateAllParameters()
+    inline void actionAllParameterUpdates()
     {
         for (auto* pntr : parameterPointers)
+            pntr->doAction();
+    }
+    
+    inline void actionAllPropertyUpdates()
+    {
+        for (auto* pntr : propertyPointers)
             pntr->doAction();
     }
     
@@ -156,6 +167,11 @@ private:
     
     template <typename SampleType>
     void initializeParameterFunctionPointers (bav::ImogenEngine<SampleType>& engine);
+    
+    template <typename SampleType>
+    void initializePropertyActions (bav::ImogenEngine<SampleType>& engine);
+    
+    void initializePropertyValueUpdatingFunctions();
     
     /*=========================================================================================*/
     
@@ -177,6 +193,12 @@ private:
     /*=========================================================================================*/
     
     void updateMeters (ImogenMeterData meterData);
+    
+    void updateProperties()
+    {
+        for (auto* pntr : propertyPointers)
+            pntr->updateValueFromExternalSource();
+    }
     
     /*=========================================================================================*/
 

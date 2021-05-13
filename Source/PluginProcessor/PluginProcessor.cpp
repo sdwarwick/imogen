@@ -58,16 +58,18 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     mainBypassPntr = tempMB->orig();
     
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
-                                                    state.getChildWithName (ValueTreeIDs::Parameters), numParams,
+                                                    state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
+                                                    Imogen::numParams,
                                                     [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
     
     bav::createWriteOnlyParameterValueTreeAttachments (meterTreeAttachments,
-                                                       state.getChildWithName (ValueTreeIDs::Properties), numMeters,
+                                                       state.getChildWithName (Imogen::ValueTreeIDs::Properties),
+                                                       Imogen::numMeters,
                                                        [this](int param) { return getMeterParamPntr (static_cast<MeterID>(param)); });
     
     bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
-                                                   state.getChildWithName (ValueTreeIDs::Meters),
-                                                   numNonAutomatableParams,
+                                                   state.getChildWithName (Imogen::ValueTreeIDs::Meters),
+                                                   Imogen::numNonAutomatableParams,
                                                    [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
     
     if (isUsingDoublePrecision())
@@ -77,12 +79,14 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     
     treeSync.sendFullSyncCallback();
     resetParameterDefaultsToCurrentValues();
+    
+    Timer::startTimerHz (60);
 }
 
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
-
+    Timer::stopTimer();
 }
 
 
@@ -106,6 +110,8 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine<SampleType>& act
     updateHostDisplay (change.withLatencyChanged (true));
     
     initializeParameterFunctionPointers (activeEngine);
+    initializePropertyActions (activeEngine);
+    initializePropertyValueUpdatingFunctions();
 }
 
 
@@ -129,14 +135,19 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double sampleRate,
         idleEngine.releaseResources();
     
     initializeParameterFunctionPointers (activeEngine);
+    initializePropertyActions (activeEngine);
+    initializePropertyValueUpdatingFunctions();
     
     jassert (activeEngine.getLatency() > 0);
     
     activeEngine.prepare (sampleRate);
     
+    actionAllParameterUpdates();
+    actionAllPropertyUpdates();
+    
     setLatencySamples (activeEngine.reportLatency());
-    ChangeDetails change;
-    updateHostDisplay (change.withLatencyChanged (true));
+    
+    updateHostDisplay();
 }
 
 /*===========================================================================================================
@@ -215,7 +226,8 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     
     juce::ScopedNoDenormals nodenorms;
     
-    updateAllParameters();
+    actionAllParameterUpdates();
+    actionAllPropertyUpdates();
     
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0)
         return;
@@ -226,8 +238,17 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer<SampleT
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
     
     updateMeters (engine.getLatestMeterData());
-    
-    
+    updateProperties();
+}
+
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+
+void ImogenAudioProcessor::timerCallback()
+{
+    getStringPropertyPntr (mtsEspScaleNameID)->setValue (getScaleName());
 }
 
 

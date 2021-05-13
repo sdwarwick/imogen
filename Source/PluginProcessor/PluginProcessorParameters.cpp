@@ -71,12 +71,47 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
     getBoolParameterPntr (reverbToggleID)->onAction = [&engine](bool value) { engine.updateReverbToggle (value); };
     getBoolParameterPntr (delayToggleID)->onAction = [&engine](bool value) { engine.updateDelayToggle (value); };
 }
-template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>& engine);
-template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>& engine);
+template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<float>&);
+template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine<double>&);
+
+
+/*===================================================================================*/
+
+
+template <typename SampleType>
+void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine<SampleType>& engine)
+{
+    using namespace Imogen;
+    
+    // getBoolPropertyPntr (linkIsEnabledID)->onAction =
+    
+    getBoolPropertyPntr (midiLatchID)->onAction = [&engine](bool value) { engine.updateMidiLatch (value); };
+    
+    getIntPropertyPntr (editorPitchbendID)->onAction = [&engine](int value) { engine.recieveExternalPitchbend (value); };
+}
+template void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine<float>&);
+template void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine<double>&);
+
+
+/*===================================================================================*/
+
+
+void ImogenAudioProcessor::initializePropertyValueUpdatingFunctions()
+{
+    using namespace Imogen;
+    
+    // all of these must be thread-safe! non-thread safe updates are handled explicitly in the timer callback
+    getIntPropertyPntr (linkNumSessionPeersID)->getNewValueFromExternalSource = [this]() { return getNumAbletonLinkSessionPeers(); };
+    getBoolPropertyPntr (mtsEspIsConnectedID)->getNewValueFromExternalSource = [this]() { return isConnectedToMtsEsp(); };
+    getBoolPropertyPntr (linkIsEnabledID)->getNewValueFromExternalSource = [this]() { return isAbletonLinkEnabled(); };
+    
+    //getBoolPropertyPntr (midiLatchID)->getNewValueFromExternalSource =
+    //getIntPropertyPntr (lastMovedMidiCCnumberID)->getNewValueFromExternalSource =
+    //getIntPropertyPntr (lastMovedMidiCCvalueID)->getNewValueFromExternalSource =
+}
 
 
 /*===========================================================================================================================
-    Returns one of the processor's parameter objects, referenced by its parameterID.
  ============================================================================================================================*/
 
 bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
