@@ -61,7 +61,7 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
                                                    state.getChildWithName (Imogen::ValueTreeIDs::Properties),
                                                    Imogen::numNonAutomatableParams,
                                                    [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
-    
+
     bav::createTwoWayFreeParameterValueTreeAttachments (parameterValueTreeAttachments,
                                                         state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
                                                         Imogen::numParams,

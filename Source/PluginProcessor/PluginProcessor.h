@@ -206,10 +206,6 @@ private:
     
     Parameter* getParameterPntr (const ParameterID paramID) const;
     
-    bav::FloatParameter* getFloatParameterPntr (const ParameterID paramID) const;
-    bav::IntParameter*   getIntParameterPntr   (const ParameterID paramID) const;
-    bav::BoolParameter*  getBoolParameterPntr  (const ParameterID paramID) const;
-    
     inline Parameter* getMeterParamPntr (const MeterID meterID) const;
     
     void saveEditorSizeToValueTree();
