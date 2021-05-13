@@ -91,6 +91,8 @@ private:
     
     bav::FreestandingParameter* getParameterPntr (const ParameterID paramID) const;
     
+    bav::FreestandingParameter* getMeterPntr (const MeterID meterID) const;
+    
     /*=========================================================================================*/
     
     juce::UndoManager undoManager;
@@ -119,14 +121,15 @@ private:
     std::unique_ptr<bav::NonParamValueTreeNodeGroup> properties;
     
     juce::OwnedArray<bav::FreestandingParameter> parameters;
+    juce::OwnedArray<bav::FreestandingParameter> meters;
     
     juce::OwnedArray< bav::PropertyAttachmentBase >  propertyValueTreeAttachments;  // these are two-way
+    juce::OwnedArray< bav::FreeStandingParameterAttachment > parameterValueTreeAttachments;  // these are two-way
+    juce::OwnedArray< bav::ValueTreeToFreeStandingParameterAttachment > meterValueTreeAttachments;  // these are read-only
     
     /*=========================================================================================*/
     
     ImogenDialComponent mainDial;
-    
-    juce::ComboBox selectPreset;
     
     bav::ImogenLookAndFeel lookAndFeel;
     
