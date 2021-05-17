@@ -35,8 +35,6 @@ namespace bav
 template<typename SampleType>
 ImogenEngine<SampleType>::ImogenEngine(): FIFOEngine()
 {
-    modulatorInput.store(0);
-    
     limiterIsOn.store(false);
     
     dspSpec.numChannels = 2;
@@ -76,11 +74,10 @@ bvie_VOID_TEMPLATE::resetTriggered()
 
 bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
 {
-    inputGain.reset (blocksize);
-    outputGain.reset (blocksize);
-    dryLgain.reset (blocksize);
-    dryRgain.reset (blocksize);
     harmonizer.resetRampedValues (blocksize);
+    inputGain.reset();
+    outputGain.reset();
+    dryPanner.reset();
 }
     
 
@@ -179,6 +176,13 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
     deEsser.prepare (blocksize, samplerate);
     
     reverb.prepare (blocksize, samplerate, 2);
+    
+    stereoReducer.prepare (blocksize);
+    
+    inputGain.prepare (blocksize);
+    outputGain.prepare (blocksize);
+    
+    dryPanner.prepare (blocksize);
 }
 
 
@@ -212,6 +216,10 @@ bvie_VOID_TEMPLATE::release()
     limiter.reset();
     deEsser.reset();
     reverb.reset();
+    
+    inputGain.reset();
+    outputGain.reset();
+    dryPanner.reset();
 }
     
 
@@ -220,11 +228,6 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMes
     const auto numSamples = input.getNumSamples();
     
     jassert (numSamples == FIFOEngine::getLatency());
-    
-    inputGain.skip (numSamples);
-    outputGain.skip (numSamples);
-    dryLgain.skip (numSamples);
-    dryRgain.skip (numSamples);
     
     harmonizer.bypassedBlock (numSamples, midiMessages);
 }
@@ -248,38 +251,12 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         return;
     }
     
-    switch (modulatorInput.load())  //  isolate a mono input buffer from the input bus, mixing to mono if necessary
-    {
-        case (2):  // take only the right channel
-        {
-            monoBuffer.copyFrom (0, 0, input, (input.getNumChannels() > 1), 0, blockSize);
-        }
-
-        case (3):  // mix all input channels to mono
-        {
-            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-
-            const auto totalNumChannels = input.getNumChannels();
-
-            if (totalNumChannels == 1)
-                break;
-
-            for (int channel = 1; channel < totalNumChannels; ++channel)
-                monoBuffer.addFrom (0, 0, input, channel, 0, blockSize);
-
-            monoBuffer.applyGain (1.0f / totalNumChannels);
-        }
-
-        default:  // take only the left channel
-        {
-            monoBuffer.copyFrom (0, 0, input, 0, 0, blockSize);
-        }
-    }
+    stereoReducer.convertStereoToMono (input, monoBuffer);
     
     meterData.inputLevel = static_cast<float> (monoBuffer.getMagnitude (0, blockSize));
     
-    inputGain.applyGain (monoBuffer, blockSize);
-
+    inputGain.process (monoBuffer);
+    
 //    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
 //    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
 
@@ -318,13 +295,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     
     dryBuffer.clear();
 
-    if (! leadIsBypassed)  //  write to dry buffer & apply panning
-    {
-        dryBuffer.copyFrom (0, 0, monoBuffer, 0, 0, blockSize);
-        dryBuffer.copyFrom (1, 0, monoBuffer, 0, 0, blockSize);
-        dryLgain.applyGain (dryBuffer.getWritePointer(0), blockSize);
-        dryRgain.applyGain (dryBuffer.getWritePointer(1), blockSize);
-    }
+    if (! leadIsBypassed)
+        dryPanner.process (monoBuffer, dryBuffer);  // write to dry buffer & apply panning
 
     dryWetMixer.pushDrySamples ( juce::dsp::AudioBlock<SampleType>(dryBuffer) );
 
@@ -358,8 +330,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     {
         meterData.reverbLevel = 0.0f;
     }
-
-    outputGain.applyGain (wetBuffer, blockSize);
+    
+    outputGain.process (wetBuffer);
 
     if (limiterIsOn.load())
     {

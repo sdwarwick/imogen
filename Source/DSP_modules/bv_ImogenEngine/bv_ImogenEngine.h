@@ -99,8 +99,8 @@ public:
     void updateDescantThresh           (int note)  { harmonizer.setDescantLowerThresh (note); }
     void updateDescantInterval         (int st) { harmonizer.setDescantInterval (st); }
     void updateNoteStealing            (const bool shouldSteal) { harmonizer.setNoteStealingEnabled (shouldSteal); }
-    void updateInputGain               (const float newInGain)  { inputGain.setTargetValue (smoothingZeroCheck (newInGain)); }
-    void updateOutputGain              (const float newOutGain) { outputGain.setTargetValue (smoothingZeroCheck (newOutGain)); }
+    void updateInputGain               (const float newInGain)  { inputGain.setGain (newInGain); }
+    void updateOutputGain              (const float newOutGain) { outputGain.setGain (newOutGain); }
     void updateLimiter                 (const bool isOn) { limiterIsOn.store (isOn); }
     void updateNoiseGateToggle         (bool isOn) { noiseGateIsOn.store (isOn); }
     void updateNoiseGateThresh         (float threshDB) { gate.setThreshold (threshDB); }
@@ -117,11 +117,9 @@ public:
     void updateDelayToggle             (bool isOn) { delayIsOn.store (isOn); }
     void updateDelayDryWet             (int pcntWet) { delay.setDryWet (pcntWet); }
     
-    void updateDryVoxPan   (int newMidiPan)
+    void updateDryVoxPan (int newMidiPan)
     {
         dryPanner.setMidiPan (newMidiPan);
-        dryLgain.setTargetValue (smoothingZeroCheck (dryPanner.getLeftGain()));
-        dryRgain.setTargetValue (smoothingZeroCheck (dryPanner.getRightGain()));
     }
     
     void updateAdsrAttack  (float attack)
@@ -169,8 +167,31 @@ public:
     
     /*=========================================================================================*/
     
-    int getModulatorSource() const noexcept { return modulatorInput.load(); }
-    void setModulatorSource (const int newSource) { modulatorInput.store (newSource); }
+    int getModulatorSource() const
+    {
+        using Mode = typename bav::dsp::FX::MonoStereoConverter<SampleType>::StereoReductionMode;
+        
+        switch (stereoReducer.getStereoReductionMode())
+        {
+            case (Mode::leftOnly):  return 0;
+            case (Mode::rightOnly): return 1;
+            case (Mode::mixToMono): return 2;
+        }
+    }
+    
+    void setModulatorSource (const int newSource)
+    {
+        using Mode = typename bav::dsp::FX::MonoStereoConverter<SampleType>::StereoReductionMode;
+        
+        switch (newSource)
+        {
+            case (1): stereoReducer.setStereoReductionMode (Mode::rightOnly);
+            case (2): stereoReducer.setStereoReductionMode (Mode::mixToMono);
+            default:  stereoReducer.setStereoReductionMode (Mode::leftOnly);
+        }
+    }
+    
+    /*=========================================================================================*/
     
     void playChord (const juce::Array<int>& desiredNotes, const float velocity, const bool allowTailOffOfOld);
     
@@ -200,13 +221,6 @@ private:
     
     void resetSmoothedValues (int blocksize);
     
-    static constexpr auto minSmoothedGain = SampleType(0.0000001);
-    template<typename Type>
-    inline Type smoothingZeroCheck (Type value)
-    {
-        return static_cast<Type> (std::max (minSmoothedGain, static_cast<SampleType>(value)));
-    }
-    
     /*=========================================================================================*/
     
     Harmonizer<SampleType> harmonizer;
@@ -215,13 +229,11 @@ private:
     AudioBuffer wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
     AudioBuffer dryBuffer; // this buffer is used for panning & delaying the dry signal
     
-    // determines how the modulator signal is parsed from the [usually] stereo buffer passed into processBlock
-    // 0 - left channel only
-    // 1 - right channel only
-    // 2 - mix all input channels to mono
-    std::atomic<int> modulatorInput;
-    
     juce::dsp::ProcessSpec dspSpec;
+    
+    bav::dsp::FX::MonoStereoConverter<SampleType> stereoReducer;  // the harmonizer only accepts mono input
+    
+    bav::dsp::FX::SmoothedGain<SampleType> inputGain, outputGain;
     
     bav::dsp::FX::NoiseGate<SampleType> gate;
     std::atomic<bool> noiseGateIsOn;
@@ -249,8 +261,6 @@ private:
     std::atomic<bool> delayIsOn;
     
     std::atomic<bool> leadBypass, harmonyBypass;
-    
-    juce::SmoothedValue<SampleType, juce::ValueSmoothingTypes::Multiplicative> inputGain, outputGain, dryLgain, dryRgain;
     
     struct ADSRsettings
     {
