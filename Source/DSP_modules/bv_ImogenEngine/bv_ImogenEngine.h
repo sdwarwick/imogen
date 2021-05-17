@@ -272,6 +272,19 @@ private:
     
     ImogenMeterData meterData;
     
+    inline void resetMeterData()
+    {
+        meterData.inputLevel = 0.0f;
+        meterData.noiseGateGainReduction = 0.0f;
+        meterData.deEsserGainReduction = 0.0f;
+        meterData.compressorGainReduction = 0.0f;
+        meterData.delayLevel = 0.0f;
+        meterData.reverbLevel = 0.0f;
+        meterData.limiterGainReduction = 0.0f;
+        meterData.outputLevelL = 0.0f;
+        meterData.outputLevelR = 0.0f;
+    }
+    
     static constexpr auto limiterThreshDb     = 0.0f;
     static constexpr auto limiterReleaseMs    = 35.0f;
     static constexpr auto noiseGateAttackMs   = 25.0f;

@@ -236,6 +236,8 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMes
     
 bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
 {
+    resetMeterData();
+    
     const auto blockSize = input.getNumSamples();
 
     jassert (blockSize == FIFOEngine::getLatency() && blockSize == output.getNumSamples() && blockSize == wetBuffer.getNumSamples());
@@ -266,10 +268,6 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         gate.process (monoBuffer, &gainRedux);
         meterData.noiseGateGainReduction = static_cast<float> (gainRedux);
     }
-    else
-    {
-        meterData.noiseGateGainReduction = 0.0f;
-    }
     
     if (deEsserIsOn.load())
     {
@@ -277,20 +275,12 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         deEsser.process (monoBuffer, &gainRedux);
         meterData.deEsserGainReduction = static_cast<float> (gainRedux);
     }
-    else
-    {
-        meterData.deEsserGainReduction = 0.0f;
-    }
     
     if (compressorIsOn.load())
     {
         SampleType gainRedux;
         compressor.process (monoBuffer, &gainRedux);
         meterData.compressorGainReduction = static_cast<float> (gainRedux);
-    }
-    else
-    {
-        meterData.compressorGainReduction = 0.0f;
     }
     
     dryBuffer.clear();
@@ -315,20 +305,12 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
         delay.process (wetBuffer, &level);
         meterData.delayLevel = static_cast<float> (level);
     }
-    else
-    {
-        meterData.delayLevel = 0.0f;
-    }
 
     if (reverbIsOn.load())
     {
         SampleType level;
         reverb.process (wetBuffer, &level);
         meterData.reverbLevel = static_cast<float> (level);
-    }
-    else
-    {
-        meterData.reverbLevel = 0.0f;
     }
     
     outputGain.process (wetBuffer);
@@ -337,11 +319,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     {
         SampleType gainRedux;
         limiter.process (wetBuffer, &gainRedux);
-        
-    }
-    else
-    {
-        meterData.limiterGainReduction = 0.0f;
+        meterData.limiterGainReduction = static_cast<float> (gainRedux);
     }
     
     meterData.outputLevelL = static_cast<float> (wetBuffer.getMagnitude (0, 0, blockSize));
