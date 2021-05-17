@@ -243,7 +243,7 @@ private:
     std::atomic<bool> limiterIsOn;
     std::atomic<float> limiterThresh, limiterRelease;
     
-    bav::dsp::Panner dryPanner;
+    bav::dsp::FX::MonoToStereoPanner<SampleType> dryPanner;
     
     bav::dsp::FX::Delay<SampleType> delay;
     std::atomic<bool> delayIsOn;
