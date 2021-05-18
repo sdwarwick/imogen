@@ -10,6 +10,7 @@ env:
 
 jobs:
 
+
   plugin-main-build:
 
     name: plugin - ${{ matrix.artifact }} build
@@ -34,15 +35,19 @@ jobs:
       with:
         submodules: recursive
         path: imogen
+        
+    - name: configure CMake
+      shell: bash
+      run: cd $GITHUB_WORKSPACE/imogen && cmake -B Builds
 
     - name: Install JUCE's Linux dependencies
       if: runner.os == 'Linux'
       shell: bash
-      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
+      run: sudo bash $GITHUB_WORKSPACE/imogen/Builds/_deps/shared-code-src/ShellScripts/install_JUCE_Linux_deps.sh
 
-    - name: Run main build script
+    - name: Run main build
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_script.sh
+      run: cmake --build $GITHUB_WORKSPACE/imogen/Builds --config Release
 
 
   plugin-ios-build:
@@ -61,7 +66,8 @@ jobs:
 
      - name: Run iOS build script
        shell: bash
-       run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_iOS.sh
+       run: cd $GITHUB_WORKSPACE/imogen && cmake -B Builds && cmake --build $GITHUB_WORKSPACE/imogen/Builds --config Release
+
 
   plugin-LV2-build:
   
@@ -71,69 +77,25 @@ jobs:
 
       steps:
 
-        - name: Install LV2 development headers
-          shell: bash
-          run: sudo apt-get install lv2-dev
+      - name: Install LV2 development headers
+        shell: bash
+        run: sudo apt-get install lv2-dev
 
-        - name: Checkout code
-          uses: actions/checkout@v2
-          with:
-            submodules: recursive
-            path: imogen
- 
-        - name: Install JUCE's Linux dependencies
-          shell: bash
-          run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          path: imogen
+        
+      - name: configure CMake
+        shell: bash
+        run: cd $GITHUB_WORKSPACE/imogen && cmake -B Builds
 
-        - name: Run main build script
-          shell: bash
-          run: bash $GITHUB_WORKSPACE/imogen/scripts/imogen_build_script.sh
+      - name: Install JUCE's Linux dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: sudo bash $GITHUB_WORKSPACE/imogen/Builds/_deps/shared-code-src/ShellScripts/install_JUCE_Linux_deps.sh
 
-  remote-desktop-build:
-    name: remote - ${{ matrix.artifact }} build
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        include:
-        - os: windows-latest
-          artifact: Windows
-        - os: ubuntu-latest
-          artifact: Linux
-        - os: macos-latest
-          artifact: MacOS
-
-    steps:
-
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        path: imogen
-
-    - name: Install JUCE's Linux dependencies
-      if: runner.os == 'Linux'
-      shell: bash
-      run: sudo bash $GITHUB_WORKSPACE/imogen/scripts/imogen_install_Linux_deps.sh
-
-    - name: Run main build script
-      shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_desktop.sh
- 
-  remote-ios-build:
-    name: remote - iOS build
-    runs-on: macos-latest
-    timeout-minutes: 30
- 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
-        path: imogen
-      
-    - name: Run iOS build script
-      shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/Imogen-Remote/imogenRemote_build_iOS.sh
+      - name: Run main build
+        shell: bash
+        run: cmake --build $GITHUB_WORKSPACE/imogen/Builds --config Release
