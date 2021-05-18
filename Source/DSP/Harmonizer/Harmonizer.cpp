@@ -22,7 +22,7 @@
 ======================================================================================================================================================*/
 
 
-#include "bv_HarmonizerVoice.cpp"
+#include "HarmonizerVoice.cpp"
 #include "PSOLA/GrainExtractor/GrainExtractor.cpp"
 
 

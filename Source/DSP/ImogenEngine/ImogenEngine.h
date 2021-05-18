@@ -24,19 +24,19 @@
 
 /*******************************************************************************
  BEGIN_JUCE_MODULE_DECLARATION
- ID:                 bv_ImogenEngine
+ ID:                 ImogenEngine
  vendor:             Ben Vining
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer class into a self-sufficient audio engine
- dependencies:       bv_Harmonizer bv_dsp
+ dependencies:       Harmonizer bv_dsp
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
 
 #pragma once
 
-#include "bv_Harmonizer/bv_Harmonizer.h"
+#include "Harmonizer/Harmonizer.h"
 
 #include <bv_dsp/bv_dsp.h>
 

@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "bv_ImogenEngine/bv_ImogenEngine.h"
+#include "ImogenEngine/ImogenEngine.h"
 
 #include "../Common/ImogenParameters.h"
 

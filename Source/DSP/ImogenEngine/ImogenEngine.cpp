@@ -22,7 +22,7 @@
 ======================================================================================================================================================*/
 
 
-#include "bv_ImogenEngine.h"
+#include "ImogenEngine.h"
 
 
 #define bvie_VOID_TEMPLATE template<typename SampleType> void ImogenEngine<SampleType>

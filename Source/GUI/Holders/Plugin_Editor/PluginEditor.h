@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "PluginProcessor/PluginProcessor.h"
+#include "DSP/PluginProcessor/PluginProcessor.h"
 #include "../../ImogenGUI.h"
 
 

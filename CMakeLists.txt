@@ -47,10 +47,10 @@ set (Imogen_Common_SourceFiles
     )
 
 set (Imogen_Processor_SourceFiles
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorParameters.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessorState.cpp
-    ${Imogen_sourceDir}/PluginProcessor/PluginProcessor.h)
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
 
 set (Imogen_GUI_SourceFiles
     ${Imogen_sourceDir}/GUI/ImogenGUI.h
@@ -113,11 +113,11 @@ set (Imogen_sourceFiles
 
 set (thingsToLinkTo "")
 
-juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_Harmonizer")
-list (APPEND thingsToLinkTo bv_Harmonizer)
+juce_add_module ("${Imogen_sourceDir}/DSP/Harmonizer")
+list (APPEND thingsToLinkTo Harmonizer)
 
-juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_ImogenEngine")
-list (APPEND thingsToLinkTo bv_ImogenEngine)
+juce_add_module ("${Imogen_sourceDir}/DSP/ImogenEngine")
+list (APPEND thingsToLinkTo ImogenEngine)
 
 #
 
@@ -212,26 +212,6 @@ source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (ImogenRemote assets)
-
-##########
-
-if (DEFINED BV_IGNORE_VDSP OR NOT APPLE)
-
-    target_compile_definitions (Imogen PUBLIC JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
-    target_compile_definitions (ImogenRemote PUBLIC JUCE_USE_VDSP_FRAMEWORK=0 BV_USE_VDSP=0)
-    
-    if (DEFINED BV_IGNORE_MIPP)
-        target_compile_definitions (Imogen PUBLIC BV_USE_MIPP=0)
-        target_compile_definitions (ImogenRemote PUBLIC BV_USE_MIPP=0)
-    else()
-        message (STATUS "Configuring MIPP...")
-        target_compile_definitions (Imogen PUBLIC MIPP_ENABLE_BACKTRACE BV_USE_MIPP=1)
-        target_include_directories (Imogen PUBLIC "${Imogen_sourceDir}/../third-party/MIPP/src" "MIPP")
-
-        target_compile_definitions (ImogenRemote PUBLIC MIPP_ENABLE_BACKTRACE BV_USE_MIPP=1)
-        target_include_directories (ImogenRemote PUBLIC "${Imogen_sourceDir}/../third-party/MIPP/src" "MIPP")
-    endif()
-endif()
 
 #
 

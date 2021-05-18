@@ -24,7 +24,7 @@
 
 /*******************************************************************************
  BEGIN_JUCE_MODULE_DECLARATION
- ID:                 bv_Harmonizer
+ ID:                 Harmonizer
  vendor:             Ben Vining
  version:            0.0.1
  name:               Harmonizer
@@ -37,11 +37,11 @@
 #pragma once
 
 #include "bv_SynthBase/bv_SynthBase.h"
+
 #include "PSOLA/granular_resynthesis.h"
 #include "PSOLA/psola_analyzer.h"
 #include "PSOLA/psola_shifter.h"
-#include "bv_HarmonizerVoice.h"
-//#include "AutoPitchCorrector.h"
+#include "HarmonizerVoice.h"
 
 
 
