@@ -36,7 +36,7 @@
 #endif
 
 
-#include "Shared-code/bv_SharedCode/bv_SharedCode.h"
+#include "bv_SharedCode/bv_SharedCode.h"
 
 #include "ImogenParameters.h"
 
