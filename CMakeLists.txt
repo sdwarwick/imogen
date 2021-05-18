@@ -67,13 +67,7 @@ set (Imogen_sourceFiles
 
 #
 
-juce_add_module ("${Imogen_sourceDir}/DSP/Harmonizer")
-target_link_libraries (Imogen PRIVATE Harmonizer)
-
-juce_add_module ("${Imogen_sourceDir}/DSP/ImogenEngine")
-target_link_libraries (Imogen PRIVATE ImogenEngine)
-
-#
+juce_add_modules ("${Imogen_sourceDir}/DSP/Harmonizer" "${Imogen_sourceDir}/DSP/ImogenEngine")
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
@@ -116,7 +110,8 @@ target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 add_binary_data_folder (Imogen assets)
 
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
-target_link_libraries (Imogen PRIVATE Ableton::Link)
+
+target_link_libraries (Imogen PRIVATE Ableton::Link Harmonizer ImogenEngine)
 
 target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
 target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
