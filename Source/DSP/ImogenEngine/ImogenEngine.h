@@ -29,7 +29,7 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer class into a self-sufficient audio engine
- dependencies:       Harmonizer bv_dsp
+ dependencies:       Harmonizer
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -37,8 +37,6 @@
 #pragma once
 
 #include "Harmonizer/Harmonizer.h"
-
-#include <bv_dsp/bv_dsp.h>
 
 
 struct ImogenMeterData
