@@ -111,7 +111,7 @@ set (Imogen_sourceFiles
 
 #
 
-set (thingsToLinkTo "bv_SharedCode")
+set (thingsToLinkTo "")
 
 juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_Harmonizer")
 list (APPEND thingsToLinkTo bv_Harmonizer)
@@ -213,8 +213,6 @@ target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote_sourceFiles})
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
-
-target_link_libraries (ImogenRemote PRIVATE bv_SharedCode)
 
 add_binary_data_folder (ImogenRemote assets)
 
