@@ -9,23 +9,6 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-#
-
-if (DEFINED bv_formats)
-    set (lv2detector -1)
-    list (FIND bv_formats LV2 lv2detector)
-
-    if (NOT ${lv2detector} EQUAL -1)
-        set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
-        set (bv_use_AbletonLink FALSE)
-    endif()
-else()
-    set (bv_formats AU VST3 Standalone Unity)
-endif()
-
-#
-
-
 set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
 
 set (Imogen_Common_SourceFiles
@@ -69,7 +52,9 @@ set (Imogen_Common_Flags
     SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
     )
 
-#####
+
+####################
+
 
 set (Imogen_sourceFiles
     ${Imogen_Common_SourceFiles}
@@ -82,13 +67,11 @@ set (Imogen_sourceFiles
 
 #
 
-set (thingsToLinkTo "")
-
 juce_add_module ("${Imogen_sourceDir}/DSP/Harmonizer")
-list (APPEND thingsToLinkTo Harmonizer)
+target_link_libraries (Imogen PRIVATE Harmonizer)
 
 juce_add_module ("${Imogen_sourceDir}/DSP/ImogenEngine")
-list (APPEND thingsToLinkTo ImogenEngine)
+target_link_libraries (Imogen PRIVATE ImogenEngine)
 
 #
 
@@ -104,7 +87,7 @@ juce_add_plugin (Imogen
     VST_NUM_MIDI_OUTS               1
     VST3_CATEGORIES                 "Pitch Shift"
     AU_MAIN_TYPE                    "kAudioUnitType_MusicEffect"
-    FORMATS                         ${bv_formats}
+    FORMATS                         AU VST3 Standalone Unity
     MICROPHONE_PERMISSION_ENABLED   TRUE
     MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
     PLUGIN_CODE                 Imgn
@@ -130,25 +113,13 @@ source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
-#
-
 add_binary_data_folder (Imogen assets)
-
-#
-
-target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
-
-#
 
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 target_link_libraries (Imogen PRIVATE Ableton::Link)
 
-#
-
 target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
 target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
-
-#
 
 target_compile_definitions (Imogen PUBLIC 
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
@@ -156,7 +127,9 @@ target_compile_definitions (Imogen PUBLIC
     IMOGEN_HEADLESS=0
     )
 
+
 ####################
+
 
 set (ImogenRemote_sourceFiles
     ${Imogen_Common_SourceFiles}
@@ -187,9 +160,10 @@ target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (ImogenRemote assets)
 
+target_compile_definitions (ImogenRemote PUBLIC 
+    IMOGEN_REMOTE_APP=1
+    IMOGEN_HEADLESS=0
+    )
+
 #
-
-#target_compile_features (Imogen PUBLIC cxx_std_17)
-#target_compile_features (ImogenRemote PUBLIC cxx_std_17)
-
 
