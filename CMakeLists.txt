@@ -87,7 +87,8 @@ juce_add_plugin (Imogen
     NEEDS_CURL                  TRUE
     NEEDS_WEB_BROWSER           TRUE
     )
-    
+
+set (bvsb_USE_MTS_ESP TRUE)
 set_default_juce_options (Imogen)
 
 #
@@ -109,9 +110,6 @@ add_binary_data_folder (Imogen assets)
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 
 target_link_libraries (Imogen PRIVATE Ableton::Link Harmonizer ImogenEngine)
-
-target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
-target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
 
 target_compile_definitions (Imogen PUBLIC 
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
@@ -139,7 +137,8 @@ juce_add_gui_app (ImogenRemote
     NEEDS_CURL                    TRUE
     NEEDS_WEB_BROWSER             TRUE
     )
-    
+
+set (bvsb_USE_MTS_ESP FALSE)
 set_default_juce_options (ImogenRemote)
 
 #
