@@ -119,9 +119,6 @@ list (APPEND thingsToLinkTo bv_Harmonizer)
 juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_ImogenEngine")
 list (APPEND thingsToLinkTo bv_ImogenEngine)
 
-juce_add_module ("${Imogen_sourceDir}/DSP_modules/SynthBase/bv_SynthBase")
-list (APPEND thingsToLinkTo "bv_SynthBase")
-
 #
 
 juce_add_plugin (Imogen
