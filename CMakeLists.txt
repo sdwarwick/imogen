@@ -1,40 +1,15 @@
 
 cmake_minimum_required (VERSION 3.18) 
 
+include (CMake/FindShared-code.cmake)
+
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)  # This could conceivably be in a different place, but the source tree must be intact 
+set_default_juce_options (${PROJECT_NAME})
 
-#
+######
 
-if (DEFINED bv_ignoreAllThirdPartyLibs)
-	set (bv_use_AbletonLink FALSE)
-	set (bv_use_MTS_ESP FALSE)
-else()
-    if (NOT DEFINED bv_use_AbletonLink)
-	   set (bv_use_AbletonLink TRUE)
-    endif()
-
-    if (NOT DEFINED bv_use_MTS_ESP)
-	   set (bv_use_MTS_ESP TRUE)
-    endif()
-endif()
-
-#
-
-if (DEFINED bv_formats)
-    set (lv2detector -1)
-    list (FIND bv_formats LV2 lv2detector)
-
-    if (NOT ${lv2detector} EQUAL -1)
-        set_source_files_properties (${bv_juceDir}/extras/Build/lv2_ttl_generator/lv2_ttl_generator.c PROPERTIES LANGUAGE CXX)
-        set (bv_use_AbletonLink FALSE)
-    endif()
-else()
-    set (bv_formats AU VST3 Standalone Unity)
-endif()
-
-#
+set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 include (${Imogen_sourceDir}/imogenConfig.cmake)
 
@@ -51,16 +26,13 @@ set (Imogen_sourceFiles
 
 #
 
-set (thingsToLinkTo "")
+set (thingsToLinkTo "bv_SharedCode")
 
 juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_Harmonizer")
 list (APPEND thingsToLinkTo bv_Harmonizer)
 
 juce_add_module ("${Imogen_sourceDir}/DSP_modules/bv_ImogenEngine")
 list (APPEND thingsToLinkTo bv_ImogenEngine)
-
-juce_add_module ("${Imogen_sourceDir}/Shared-code/bv_SharedCode")
-list (APPEND thingsToLinkTo "bv_SharedCode")
 
 juce_add_module ("${Imogen_sourceDir}/DSP_modules/SynthBase/bv_SynthBase")
 list (APPEND thingsToLinkTo "bv_SynthBase")
@@ -91,30 +63,9 @@ source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
-set_target_properties (Imogen PROPERTIES FOLDER "")  # prevets IDE from generating an extra nested folder
-
 #
 
-list (APPEND bv_formats "All")
-
-foreach (target ${bv_formats}) 
-    set (thisTargetName "Imogen_${target}")  # this is how JUCE automatically names the build targets created for each format
-
-    if (NOT TARGET ${thisTargetName})
-        continue()
-    endif()
-	
-	message (STATUS "Configuring ${thisTargetName}...")
-    set_target_properties (${thisTargetName} PROPERTIES FOLDER "Build Targets" XCODE_GENERATE_SCHEME ON)
-endforeach()
-
-#
-# Add binary data
-
-file (REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/Builds/juce_binarydata_ImogenGraphicAssets)
-juce_add_binary_data (ImogenGraphicAssets SOURCES ${Imogen_assetFiles})
-set_target_properties (ImogenGraphicAssets PROPERTIES FOLDER "Imogen")
-list (APPEND thingsToLinkTo ImogenGraphicAssets)
+add_binary_data_folder (${PROJECT_NAME} assets)
 
 #
 
@@ -142,18 +93,6 @@ endif()
 #
 
 imogenConfig_step2()
-
-#
-
-if (NOT DEFINED bv_use_OSC)
-	set (bv_use_OSC FALSE)
-endif()
-
-if (bv_use_OSC)
-	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_OSC=1)
-else()
-	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_OSC=0)
-endif()
 
 #
 
