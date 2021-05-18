@@ -5,8 +5,6 @@ include (CMake/FindShared-code.cmake)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-set_default_juce_options (${PROJECT_NAME})
-
 ######
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
@@ -135,6 +133,8 @@ juce_add_plugin (Imogen
     NEEDS_CURL                  TRUE
     NEEDS_WEB_BROWSER           TRUE
     )
+    
+set_default_juce_options (Imogen)
 
 #
 
@@ -203,6 +203,8 @@ juce_add_gui_app (ImogenRemote
     NEEDS_CURL                    TRUE
     NEEDS_WEB_BROWSER             TRUE
     )
+    
+set_default_juce_options (ImogenRemote)
 
 #
 
