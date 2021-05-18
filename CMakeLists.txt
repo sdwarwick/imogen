@@ -16,12 +16,6 @@ set (Imogen_Common_SourceFiles
     ${Imogen_sourceDir}/Common/ImogenParameters.h
     )
 
-set (Imogen_Processor_SourceFiles
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
-
 set (Imogen_GUI_SourceFiles
     ${Imogen_sourceDir}/GUI/ImogenGUI.h
     ${Imogen_sourceDir}/GUI/ImogenGUI.cpp
@@ -58,8 +52,11 @@ set (Imogen_Common_Flags
 
 set (Imogen_sourceFiles
     ${Imogen_Common_SourceFiles}
-    ${Imogen_Processor_SourceFiles}
     ${Imogen_GUI_SourceFiles}
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
