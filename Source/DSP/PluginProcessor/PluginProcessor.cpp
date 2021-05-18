@@ -33,10 +33,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
     state (ValueTreeIDs::Imogen),
     treeSync (state, *this),
-    properties (Imogen::createPropertyTree())
-#if IMOGEN_USE_ABLETON_LINK
-    , abletonLink (120.0) // constructed with the initial BPM
-#endif
+    properties (Imogen::createPropertyTree()),
+    abletonLink (120.0) // constructed with the initial BPM
 {
 #if BV_USE_NE10
     ne10_init();
@@ -53,9 +51,9 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     propertyPointers.reserve (Imogen::numNonAutomatableParams);
     bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
     
-    auto* tempMB = getParameterPntr (mainBypassID);
-    jassert (tempMB != nullptr);
-    mainBypassPntr = tempMB->orig();
+    if (auto* temp = getParameterPntr (mainBypassID))
+        mainBypassPntr = temp->orig();
+    jassert (mainBypassPntr != nullptr);
     
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
@@ -313,20 +311,12 @@ bool ImogenAudioProcessor::isMidiLatched() const
 
 bool ImogenAudioProcessor::isAbletonLinkEnabled() const
 {
-#if IMOGEN_USE_ABLETON_LINK
     return abletonLink.isEnabled();
-#else
-    return false;
-#endif
 }
 
 int ImogenAudioProcessor::getNumAbletonLinkSessionPeers() const
 {
-#if IMOGEN_USE_ABLETON_LINK
     return abletonLink.isEnabled() ? static_cast<int>(abletonLink.numPeers()) : 0;
-#else
-    return 0;
-#endif
 }
 
 

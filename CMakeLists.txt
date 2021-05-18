@@ -9,19 +9,6 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-if (DEFINED bv_ignoreAllThirdPartyLibs)
-    set (bv_use_AbletonLink FALSE)
-    set (bv_use_MTS_ESP FALSE)
-else()
-    if (NOT DEFINED bv_use_AbletonLink)
-       set (bv_use_AbletonLink TRUE)
-    endif()
-
-    if (NOT DEFINED bv_use_MTS_ESP)
-       set (bv_use_MTS_ESP TRUE)
-    endif()
-endif()
-
 #
 
 if (DEFINED bv_formats)
@@ -82,22 +69,6 @@ set (Imogen_Common_Flags
     SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
     )
 
-set (Imogen_Plugin_Flags
-    PLUGIN_NAME                     Imogen
-    PLUGIN_MANUFACTURER_CODE        Benv
-    DESCRIPTION                     "Real-time vocal harmonizer instrument"
-    IS_SYNTH                        FALSE
-    IS_MIDI_EFFECT                  FALSE
-    DISABLE_AAX_MULTI_MONO          TRUE
-    VST_NUM_MIDI_INS                1
-    VST_NUM_MIDI_OUTS               1
-    VST3_CATEGORIES                 "Pitch Shift"
-    AU_MAIN_TYPE                    "kAudioUnitType_MusicEffect"
-    FORMATS                         ${bv_formats}
-    MICROPHONE_PERMISSION_ENABLED   TRUE
-    MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
-    )
-
 #####
 
 set (Imogen_sourceFiles
@@ -123,7 +94,19 @@ list (APPEND thingsToLinkTo ImogenEngine)
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
-    ${Imogen_Plugin_Flags}
+    PLUGIN_NAME                     Imogen
+    PLUGIN_MANUFACTURER_CODE        Benv
+    DESCRIPTION                     "Real-time vocal harmonizer instrument"
+    IS_SYNTH                        FALSE
+    IS_MIDI_EFFECT                  FALSE
+    DISABLE_AAX_MULTI_MONO          TRUE
+    VST_NUM_MIDI_INS                1
+    VST_NUM_MIDI_OUTS               1
+    VST3_CATEGORIES                 "Pitch Shift"
+    AU_MAIN_TYPE                    "kAudioUnitType_MusicEffect"
+    FORMATS                         ${bv_formats}
+    MICROPHONE_PERMISSION_ENABLED   TRUE
+    MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
     PLUGIN_CODE                 Imgn
     DOCUMENT_BROWSER_ENABLED    TRUE
     BACKGROUND_AUDIO_ENABLED	FALSE # for iOS
@@ -157,22 +140,13 @@ target_link_libraries (Imogen PRIVATE ${thingsToLinkTo})
 
 #
 
-if (${bv_use_AbletonLink})
-	include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
-	target_link_libraries (Imogen PRIVATE Ableton::Link)
-	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_ABLETON_LINK=1)
-else()
-	target_compile_definitions (Imogen PUBLIC IMOGEN_USE_ABLETON_LINK=0)
-endif()
+include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
+target_link_libraries (Imogen PRIVATE Ableton::Link)
 
 #
 
-if (${bv_use_MTS_ESP})
-	target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
-	target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
-else()
-	target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=0)
-endif()
+target_include_directories (Imogen PUBLIC "third-party/MTS-ESP/Client" "MTS-ESP")
+target_compile_definitions (Imogen PUBLIC bvsb_USE_MTS_ESP=1)
 
 #
 
@@ -215,10 +189,7 @@ add_binary_data_folder (ImogenRemote assets)
 
 #
 
-target_compile_features (Imogen PUBLIC cxx_std_17)
-target_compile_features (ImogenRemote PUBLIC cxx_std_17)
-
-target_compile_definitions (Imogen PUBLIC BV_HAS_BINARY_DATA=1)
-target_compile_definitions (ImogenRemote PUBLIC BV_HAS_BINARY_DATA=1)
+#target_compile_features (Imogen PUBLIC cxx_std_17)
+#target_compile_features (ImogenRemote PUBLIC cxx_std_17)
 
 

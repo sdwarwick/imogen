@@ -28,9 +28,7 @@
 
 #include "../Common/ImogenParameters.h"
 
-#if IMOGEN_USE_ABLETON_LINK
-  #include <../../third-party/ableton-link/include/ableton/Link.hpp>
-#endif
+#include <../../third-party/ableton-link/include/ableton/Link.hpp>
 
 
 class ImogenAudioProcessorEditor;  // forward declaration...
@@ -263,9 +261,7 @@ private:
     
     juce::Point<int> savedEditorSize;
     
-#if IMOGEN_USE_ABLETON_LINK
     ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session
-#endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
