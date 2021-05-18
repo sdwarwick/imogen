@@ -1,6 +1,3 @@
-[submodule "Source/Shared-code"]
-	path = Source/Shared-code
-	url = https://github.com/benthevining/Shared-code.git
 [submodule "Source/DSP_modules/SynthBase"]
 	path = Source/DSP_modules/SynthBase
 	url = https://github.com/benthevining/JuceSynthBase.git
