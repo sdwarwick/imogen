@@ -69,8 +69,8 @@ set (Imogen_sourceFiles
     ${Imogen_Processor_Source_Files}
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
+    ${Imogen_sourceDir}/ApplicationBases/Plugin_StandaloneWrapper/StandaloneWrapper.h
+    ${Imogen_sourceDir}/ApplicationBases/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
 
 juce_add_plugin (Imogen
     ${Imogen_Plugin_Flags}
@@ -135,7 +135,7 @@ endif()
 set (ImogenRemote_sourceFiles
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
-    ${Imogen_sourceDir}/Remote/Main.cpp)
+    ${Imogen_sourceDir}/ApplicationBases/Remote/Main.cpp)
 
 juce_add_gui_app (ImogenRemote
     ${Imogen_Common_Flags}
