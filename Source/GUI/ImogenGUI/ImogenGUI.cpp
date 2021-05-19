@@ -24,20 +24,15 @@
 
 #include "ImogenGUI.h"
 
+#include "LookAndFeel/ImogenLookAndFeel.cpp"
+#include "MainDialComponent/MainDialComponent.cpp"
+
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
       : state (Imogen::ValueTreeIDs::Imogen),
         treeSync (state, s),
         tooltipWindow (this, msBeforeTooltip)
 {
-#if IMOGEN_REMOTE_APP
-    bav::initializeTranslations (Imogen::findAppropriateTranslationFile());
-    
-  #if BV_USE_NE10
-    ne10_init();
-  #endif
-#endif
-    
     setInterceptsMouseClicks (false, true);
     
     properties = Imogen::createPropertyTree();

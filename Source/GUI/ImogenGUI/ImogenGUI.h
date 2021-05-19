@@ -28,7 +28,7 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        self-contained module representing Imogen's entire user interface
- dependencies:       bv_gui
+ dependencies:       bv_gui ImogenCommon
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
@@ -36,13 +36,12 @@
 #pragma once
 
 #include "bv_gui/bv_gui.h"
+#include "ImogenCommon/ImogenCommon.h"
 
 #include "LookAndFeel/ImogenLookAndFeel.h"
 #include "MainDialComponent/MainDialComponent.h"
 
 #include "BinaryData.h"
-
-#include "../Common/ImogenParameters.h"
 
 
 struct ImogenGUIUpdateSender

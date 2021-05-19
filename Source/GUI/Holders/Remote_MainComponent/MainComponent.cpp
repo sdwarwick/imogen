@@ -26,6 +26,12 @@
 
 MainComponent::MainComponent(): gui(this)
 {
+    bav::initializeTranslations (Imogen::findAppropriateTranslationFile());
+    
+#if BV_USE_NE10
+    ne10_init();
+#endif
+    
     this->setBufferedToImage (true);
     
     addAndMakeVisible (gui);

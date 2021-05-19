@@ -26,7 +26,7 @@
 
 #include "ImogenEngine/ImogenEngine.h"
 
-#include "../Common/ImogenParameters.h"
+#include "ImogenCommon/ImogenCommon.h"
 
 #include <../../third-party/ableton-link/include/ableton/Link.hpp>
 

@@ -21,20 +21,19 @@
 ==========================================================================================================================*/
 
 
+/*******************************************************************************
+ BEGIN_JUCE_MODULE_DECLARATION
+ ID:                 ImogenCommon
+ vendor:             Ben Vining
+ version:            0.0.1
+ name:               ImogenCommon
+ description:        This Juce module declares some project-wide settings and data for Imogen as a whole.
+ dependencies:       bv_SharedCode
+ END_JUCE_MODULE_DECLARATION
+ *******************************************************************************/
+
+
 #pragma once
-
-#ifndef IMOGEN_REMOTE_APP
-  #define IMOGEN_REMOTE_APP 0
-#endif
-
-#ifndef IMOGEN_HEADLESS
-  #define IMOGEN_HEADLESS 0
-#endif
-
-#ifndef IMOGEN_USE_ABLETON_LINK
-  #define IMOGEN_USE_ABLETON_LINK 0
-#endif
-
 
 #include "bv_SharedCode/bv_SharedCode.h"
 
