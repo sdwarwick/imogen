@@ -38,7 +38,7 @@
 
 
 #if ! IMOGEN_HEADLESS
-class ImogenAudioProcessorEditor;  // forward declaration...
+class ImogenAudioProcessorEditor;
 #endif
 
 
@@ -46,6 +46,9 @@ struct ImogenGUIUpdateReciever
 {
     virtual void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize) = 0;
 };
+
+
+using namespace Imogen;
 
 
 
