@@ -43,8 +43,8 @@ set (Imogen_Common_Flags
     )
 
 
-#################### Configure the main build of Imogen ####################
 
+#################### Configure the main build of Imogen ####################
 
 set (Imogen_sourceFiles
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
@@ -100,12 +100,10 @@ target_link_libraries (Imogen PRIVATE Ableton::Link ImogenCommon Harmonizer Imog
 target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
 
 
+
 #################### Configure the remote GUI app build ####################
 
-
 set (ImogenRemote_sourceFiles
-    ${Imogen_Common_SourceFiles}
-    ${Imogen_GUI_SourceFiles}
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp)
@@ -127,7 +125,7 @@ set_default_juce_options (ImogenRemote)
 
 target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
-source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote_sourceFiles})
+source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${ImogenRemote_sourceFiles})
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
