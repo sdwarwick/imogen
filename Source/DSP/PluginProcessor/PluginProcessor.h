@@ -28,10 +28,18 @@
 
 #include "ImogenCommon/ImogenCommon.h"
 
-#include <../../third-party/ableton-link/include/ableton/Link.hpp>
+#ifndef IMOGEN_HEADLESS
+  #define IMOGEN_HEADLESS 0
+#endif
+
+#if ! IMOGEN_HEADLESS
+  #include <../../third-party/ableton-link/include/ableton/Link.hpp>
+#endif
 
 
+#if ! IMOGEN_HEADLESS
 class ImogenAudioProcessorEditor;  // forward declaration...
+#endif
 
 
 struct ImogenGUIUpdateReciever
@@ -261,7 +269,9 @@ private:
     
     juce::Point<int> savedEditorSize;
     
+#if ! IMOGEN_HEADLESS
     ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session
+#endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

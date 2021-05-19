@@ -21,8 +21,10 @@
  
 ======================================================================================================================================================*/
 
+#if ! IMOGEN_HEADLESS
+  #include "GUI/Holders/Plugin_Editor/PluginEditor.h"
+#endif
 
-#include "GUI/Holders/Plugin_Editor/PluginEditor.h"
 #include "PluginProcessor.h"
 
 #include "PluginProcessorParameters.cpp"
@@ -33,8 +35,10 @@ ImogenAudioProcessor::ImogenAudioProcessor()
   : AudioProcessor (makeBusProperties()),
     state (ValueTreeIDs::Imogen),
     treeSync (state, *this),
-    properties (Imogen::createPropertyTree()),
-    abletonLink (120.0) // constructed with the initial BPM
+    properties (Imogen::createPropertyTree())
+#if ! IMOGEN_HEADLESS
+    , abletonLink (120.0) // constructed with the initial BPM
+#endif
 {
 #if BV_USE_NE10
     ne10_init();
@@ -311,12 +315,20 @@ bool ImogenAudioProcessor::isMidiLatched() const
 
 bool ImogenAudioProcessor::isAbletonLinkEnabled() const
 {
+#if IMOGEN_HEADLESS
+    return false;
+#else
     return abletonLink.isEnabled();
+#endif
 }
 
 int ImogenAudioProcessor::getNumAbletonLinkSessionPeers() const
 {
+#if IMOGEN_HEADLESS
+    return 0;
+#else
     return abletonLink.isEnabled() ? static_cast<int>(abletonLink.numPeers()) : 0;
+#endif
 }
 
 
@@ -396,16 +408,22 @@ ImogenGUIUpdateReciever* ImogenAudioProcessor::getActiveGuiEventReciever() const
 
 void ImogenAudioProcessor::saveEditorSize (int width, int height)
 {
+#if IMOGEN_HEADLESS
+    juce::ignoreUnused (width, height);
+    return;
+#else
     savedEditorSize.setX (width);
     savedEditorSize.setY (height);
     
     if (juce::MessageManager::getInstance()->isThisTheMessageThread())
         saveEditorSizeToValueTree();
+#endif
 }
 
 
 void ImogenAudioProcessor::saveEditorSizeToValueTree()
 {
+#if ! IMOGEN_HEADLESS
     if (auto* editor = getActiveEditor())
     {
         savedEditorSize.x = editor->getWidth();
@@ -416,10 +434,12 @@ void ImogenAudioProcessor::saveEditorSizeToValueTree()
     
     editorSize.setProperty (ValueTreeIDs::SavedEditorSize_X, savedEditorSize.x, nullptr);
     editorSize.setProperty (ValueTreeIDs::SavedEditorSize_Y, savedEditorSize.y, nullptr);
+#endif
 }
 
 void ImogenAudioProcessor::updateEditorSizeFromValueTree()
 {
+#if ! IMOGEN_HEADLESS
     auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
     
     if (editorSize.isValid())
@@ -432,6 +452,7 @@ void ImogenAudioProcessor::updateEditorSizeFromValueTree()
         editor->setSize (savedEditorSize.x, savedEditorSize.y);
     
     updateHostDisplay();
+#endif
 }
 
 

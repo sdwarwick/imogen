@@ -42,28 +42,9 @@ set (Imogen_Common_Flags
     SEND_APPLE_EVENTS_PERMISSION_ENABLED FALSE
     )
 
-
-
-#################### Configure the main build of Imogen ####################
-
-set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
-
-#
-
-juce_add_plugin (Imogen
-    ${Imogen_Common_Flags}
-    PLUGIN_NAME                     Imogen
-    PLUGIN_MANUFACTURER_CODE        Benv
-    DESCRIPTION                     "Real-time vocal harmonizer instrument"
-    IS_SYNTH                        FALSE
+set (Imogen_Plugin_Flags
+	${Imogen_Common_Flags}
+	IS_SYNTH                        FALSE
     IS_MIDI_EFFECT                  FALSE
     DISABLE_AAX_MULTI_MONO          TRUE
     VST_NUM_MIDI_INS                1
@@ -73,6 +54,31 @@ juce_add_plugin (Imogen
     FORMATS                         AU VST3 Standalone Unity
     MICROPHONE_PERMISSION_ENABLED   TRUE
     MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
+	)
+
+set (Imogen_Processor_Source_Files
+	${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
+    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
+
+
+#################### Configure the main build of Imogen ####################
+
+set (Imogen_sourceFiles
+    ${Imogen_Processor_Source_Files}
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
+
+#
+
+juce_add_plugin (Imogen
+    ${Imogen_Plugin_Flags}
+    PLUGIN_NAME                 Imogen
+    PLUGIN_MANUFACTURER_CODE    Benv
+    DESCRIPTION                 "Real-time vocal harmonizer instrument"
     PLUGIN_CODE                 Imgn
     DOCUMENT_BROWSER_ENABLED    TRUE
     BACKGROUND_AUDIO_ENABLED	FALSE # for iOS
@@ -82,10 +88,6 @@ juce_add_plugin (Imogen
 
 set (bvsb_USE_MTS_ESP TRUE)
 set_default_juce_options (Imogen)
-
-if (TARGET Imogen_LV2)
-    set_target_properties (Imogen PROPERTIES JUCE_LV2_URI https://github.com/benthevining/imogen)
-endif()
 
 target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
 
@@ -133,5 +135,30 @@ add_binary_data_folder (ImogenRemote assets)
 
 target_link_libraries (ImogenRemote PRIVATE ImogenCommon ImogenGUI)
 
-#
+
+
+#################### Configure the headless plugin build ####################
+
+juce_add_plugin (ImogenHeadless
+    ${Imogen_Plugin_Flags}
+    PLUGIN_NAME                 ImogenHeadless
+    PLUGIN_MANUFACTURER_CODE    Benv
+    DESCRIPTION                 "Headless version of the Imogen plugin"
+    PLUGIN_CODE                 Imnh
+    DOCUMENT_BROWSER_ENABLED    FALSE
+    BACKGROUND_AUDIO_ENABLED	FALSE # for iOS
+    NEEDS_CURL                  FALSE
+    NEEDS_WEB_BROWSER           FALSE
+    )
+
+set (bvsb_USE_MTS_ESP FALSE)
+set_default_juce_options (ImogenHeadless)
+
+target_sources (ImogenHeadless PRIVATE ${Imogen_Processor_Source_Files})
+
+target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
+
+target_link_libraries (ImogenHeadless PRIVATE ImogenCommon Harmonizer ImogenEngine)
+
+target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1 IMOGEN_HEADLESS=1)
 
