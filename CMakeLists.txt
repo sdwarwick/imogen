@@ -16,14 +16,6 @@ set (Imogen_Common_SourceFiles
     ${Imogen_sourceDir}/Common/ImogenParameters.h
     )
 
-set (Imogen_GUI_SourceFiles
-    ${Imogen_sourceDir}/GUI/ImogenGUI.h
-    ${Imogen_sourceDir}/GUI/ImogenGUI.cpp
-    ${Imogen_sourceDir}/GUI/MainDialComponent/MainDialComponent.h
-    ${Imogen_sourceDir}/GUI/MainDialComponent/MainDialComponent.cpp
-    ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.h
-    ${Imogen_sourceDir}/GUI/LookAndFeel/ImogenLookAndFeel.cpp)
-
 #
 
 set (Imogen_Common_Flags
@@ -52,7 +44,6 @@ set (Imogen_Common_Flags
 
 set (Imogen_sourceFiles
     ${Imogen_Common_SourceFiles}
-    ${Imogen_GUI_SourceFiles}
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
@@ -64,7 +55,9 @@ set (Imogen_sourceFiles
 
 #
 
-juce_add_modules ("${Imogen_sourceDir}/DSP/Harmonizer" "${Imogen_sourceDir}/DSP/ImogenEngine")
+juce_add_modules ("${Imogen_sourceDir}/DSP/Harmonizer" 
+				  "${Imogen_sourceDir}/DSP/ImogenEngine"
+				  "${Imogen_sourceDir}/GUI/ImogenGUI")
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
@@ -109,7 +102,7 @@ add_binary_data_folder (Imogen assets)
 
 include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 
-target_link_libraries (Imogen PRIVATE Ableton::Link Harmonizer ImogenEngine)
+target_link_libraries (Imogen PRIVATE Ableton::Link Harmonizer ImogenEngine ImogenGUI)
 
 target_compile_definitions (Imogen PUBLIC 
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
@@ -150,6 +143,8 @@ source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR}/.. PREFIX "" FILES ${ImogenRemote
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (ImogenRemote assets)
+
+target_link_libraries (ImogenRemote PRIVATE ImogenGUI)
 
 target_compile_definitions (ImogenRemote PUBLIC 
     IMOGEN_REMOTE_APP=1

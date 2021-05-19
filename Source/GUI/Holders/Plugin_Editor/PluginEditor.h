@@ -25,7 +25,8 @@
 #pragma once
 
 #include "DSP/PluginProcessor/PluginProcessor.h"
-#include "../../ImogenGUI.h"
+
+#include "ImogenGUI/ImogenGUI.h"
 
 
 using namespace Imogen;

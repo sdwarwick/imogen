@@ -26,7 +26,7 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "../../ImogenGUI.h"
+#include "ImogenGUI/ImogenGUI.h"
 
 
 using namespace Imogen;
