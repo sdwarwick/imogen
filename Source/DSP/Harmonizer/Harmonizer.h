@@ -44,11 +44,8 @@
 #include "HarmonizerVoice.h"
 
 
-
 namespace bav
 {
-    
-    
 /***********************************************************************************************************************************************
 ***********************************************************************************************************************************************/
 
@@ -56,66 +53,66 @@ namespace bav
     Harmonizer: base class for the polyphonic instrument owning & managing a collection of HarmonizerVoices
 */
 
-template<typename SampleType>
-class Harmonizer  :     public dsp::SynthBase<SampleType>
+template < typename SampleType >
+class Harmonizer : public dsp::SynthBase< SampleType >
 {
-    using AudioBuffer = juce::AudioBuffer<SampleType>;
-    using MidiBuffer  = juce::MidiBuffer;
-    using Voice = HarmonizerVoice<SampleType>;
-    using Base = dsp::SynthBase<SampleType>;
-    using Analysis_Grain = AnalysisGrain<SampleType>;
-    
-    
+    using AudioBuffer    = juce::AudioBuffer< SampleType >;
+    using MidiBuffer     = juce::MidiBuffer;
+    using Voice          = HarmonizerVoice< SampleType >;
+    using Base           = dsp::SynthBase< SampleType >;
+    using Analysis_Grain = AnalysisGrain< SampleType >;
+
+
 public:
     Harmonizer();
-    
+
     void render (const AudioBuffer& input, AudioBuffer& output, juce::MidiBuffer& midiMessages);
-    
+
     void release() override;
-    
+
     int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
-    
+
     void updatePitchDetectionHzRange (const int minHz, const int maxHz);
-    
+
     int getCurrentPeriod() const noexcept { return period; }
-    
-    
+
+
 private:
-    friend class HarmonizerVoice<SampleType>;
-    
+    friend class HarmonizerVoice< SampleType >;
+
     void analyzeInput (const AudioBuffer& inputAudio);
-    
+
     void initialized (const double initSamplerate, const int initBlocksize) override;
-    
+
     void prepared (int blocksize) override;
-    
+
     void resetTriggered() override;
-    
+
     void samplerateChanged (double newSamplerate) override;
-    
+
     void addNumVoices (const int voicesToAdd) override;
-    
-    
-    dsp::PitchDetector<SampleType> pitchDetector;
-    
+
+
+    dsp::PitchDetector< SampleType > pitchDetector;
+
     int period;
-    
+
     AudioBuffer inputStorage;
-    
-    PsolaAnalyzer<SampleType> analyzer;
-    
-//    AutoPitch<SampleType> autoPitch;
-    
+
+    PsolaAnalyzer< SampleType > analyzer;
+
+    //    AutoPitch<SampleType> autoPitch;
+
     //
-    
-    static constexpr auto adsrQuickReleaseMs = 5;
+
+    static constexpr auto adsrQuickReleaseMs               = 5;
     static constexpr auto playingButReleasedGainMultiplier = 0.4f;
     static constexpr auto softPedalGainMultiplier          = 0.65f;
-    
-    static constexpr auto pitchDetectionConfidenceThresh = SampleType(0.3);
-    
+
+    static constexpr auto pitchDetectionConfidenceThresh = SampleType (0.3);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };
 
 
-} // namespace
+} // namespace bav

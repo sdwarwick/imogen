@@ -38,7 +38,7 @@ void ImogenAudioProcessor::applyValueTreeStateChange (const void* encodedChangeD
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     saveEditorSizeToValueTree();
-    
+
     juce::MemoryOutputStream stream (destData, false);
     state.writeToStream (stream);
 }
@@ -50,25 +50,24 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto newTree = juce::ValueTree::readFromData (data, static_cast<size_t> (sizeInBytes));
-    
-    if (! newTree.isValid() || ! newTree.hasType (state.getType()))
-        return;
-    
+    auto newTree = juce::ValueTree::readFromData (data, static_cast< size_t > (sizeInBytes));
+
+    if (!newTree.isValid() || !newTree.hasType (state.getType())) return;
+
     suspendProcessing (true);
-    
+
     state.copyPropertiesAndChildrenFrom (newTree, nullptr);
-    
+
     actionAllParameterUpdates();
     actionAllPropertyUpdates();
-    
+
     resetParameterDefaultsToCurrentValues();
-    
+
     updateEditorSizeFromValueTree();
-    
+
     treeSync.sendFullSyncCallback();
-    
+
     suspendProcessing (false);
-    
+
     updateHostDisplay();
 }

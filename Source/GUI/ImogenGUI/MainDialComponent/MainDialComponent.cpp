@@ -27,7 +27,7 @@ ImogenDialComponent::ImogenDialComponent()
 {
     setOpaque (true);
     setInterceptsMouseClicks (true, true);
-    
+
     showPitchCorrection();
 }
 
@@ -35,22 +35,17 @@ ImogenDialComponent::ImogenDialComponent()
 void ImogenDialComponent::paint (juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState graphicsState (g);
-    
+
     juce::ignoreUnused (g);
-    
-    if (showingPitchCorrection.load())
-    {
-        
-    }
+
+    if (showingPitchCorrection.load()) { }
     else
     {
-        
     }
 }
 
 void ImogenDialComponent::resized()
 {
-    
 }
 
 

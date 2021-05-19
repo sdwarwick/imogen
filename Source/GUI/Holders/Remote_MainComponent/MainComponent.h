@@ -30,29 +30,28 @@
 using namespace Imogen;
 
 
-class MainComponent  : public juce::Component,
-                       public ImogenGUIUpdateSender
+class MainComponent : public juce::Component, public ImogenGUIUpdateSender
 {
 public:
     MainComponent();
-    
+
     ~MainComponent() override;
-    
+
     /*=========================================================================================*/
-    
+
     void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) override final;
 
     /*=========================================================================================*/
     /* juce::Component functions */
-    
+
     void paint (juce::Graphics&) override final;
     void resized() override final;
-    
+
     /*=========================================================================================*/
 
 private:
     ImogenGUI gui;
-    
+
 #if JUCE_OPENGL
     OpenGLContext openGLContext;
 #endif

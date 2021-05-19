@@ -28,18 +28,15 @@
 
 
 //==============================================================================
-class ImogenRemoteApplication  : public juce::JUCEApplication
+class ImogenRemoteApplication : public juce::JUCEApplication
 {
 public:
     //==============================================================================
-    ImogenRemoteApplication()
-    {
-        juce::PluginHostType::jucePlugInClientCurrentWrapperType = juce::AudioProcessor::wrapperType_Standalone;
-    }
+    ImogenRemoteApplication() { juce::PluginHostType::jucePlugInClientCurrentWrapperType = juce::AudioProcessor::wrapperType_Standalone; }
 
-    const juce::String getApplicationName() override       { return juce::String("Imogen ") + TRANS("Remote"); }
-    const juce::String getApplicationVersion() override    { return { "0.0.1" }; }
-    bool moreThanOneInstanceAllowed() override             { return true; }
+    const juce::String getApplicationName() override { return juce::String ("Imogen ") + TRANS ("Remote"); }
+    const juce::String getApplicationVersion() override { return {"0.0.1"}; }
+    bool               moreThanOneInstanceAllowed() override { return true; }
 
     //==============================================================================
     void initialise (const juce::String& commandLine) override
@@ -48,52 +45,36 @@ public:
         mainWindow.reset (new MainWindow (getApplicationName(), getBackgroundColor()));
     }
 
-    void shutdown() override
-    {
-        mainWindow = nullptr;
-    }
+    void shutdown() override { mainWindow = nullptr; }
 
     //==============================================================================
     void systemRequestedQuit() override
     {
         if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
-            juce::Timer::callAfterDelay(100, [&]() { requestQuit(); });
+            juce::Timer::callAfterDelay (100, [&]() { requestQuit(); });
         else
             quit();
     }
-    
+
     void requestQuit() const
     {
-        if (auto app = getInstance())
-            app->systemRequestedQuit();
+        if (auto app = getInstance()) app->systemRequestedQuit();
     }
 
-    void anotherInstanceStarted (const juce::String& commandLine) override
-    {
-        juce::ignoreUnused (commandLine);
-    }
-    
+    void anotherInstanceStarted (const juce::String& commandLine) override { juce::ignoreUnused (commandLine); }
+
     //==============================================================================
-    
-    bool backButtonPressed() override
-    {
-        return false;
-    }
-    
+
+    bool backButtonPressed() override { return false; }
+
     //==============================================================================
-    
-    void suspended() override
-    {
-        
-    }
-    
-    void resumed() override
-    {
-        
-    }
-    
+
+    void suspended() override { }
+
+    void resumed() override { }
+
     //==============================================================================
-    
+
     static constexpr bool isDesktopStandaloneApp()
     {
 #if JUCE_IOS || JUCE_ANDROID
@@ -102,25 +83,22 @@ public:
         return true;
 #endif
     }
-    
-    static constexpr bool isMobileApp()
-    {
-        return ! isDesktopStandaloneApp();
-    }
+
+    static constexpr bool isMobileApp() { return !isDesktopStandaloneApp(); }
 
     //==============================================================================
-    
+
     juce::Colour getBackgroundColor() const
     {
         return juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId);
     }
-    
+
     //==============================================================================
     /*
         This class implements the desktop window that contains an instance of
         our MainComponent class.
     */
-    class MainWindow    : public juce::DocumentWindow
+    class MainWindow : public juce::DocumentWindow
     {
     public:
         MainWindow (juce::String name, juce::Colour backgroundColour)
@@ -128,35 +106,31 @@ public:
         {
             setUsingNativeTitleBar (false);
             setTitleBarTextCentred (true);
-            
+
             setContentOwned (new MainComponent(), true);
 
-          #if JUCE_IOS || JUCE_ANDROID
+#if JUCE_IOS || JUCE_ANDROID
             setDropShadowEnabled (false);
             setFullScreen (true);
-          #else
+#else
             setResizable (true, true);
             centreWithSize (getWidth(), getHeight());
             setDropShadowEnabled (true);
-          #endif
-            
-            setIcon (juce::ImageCache::getFromMemory (BinaryData::imogen_icon_png,
-                                                      BinaryData::imogen_icon_pngSize));
+#endif
+
+            setIcon (juce::ImageCache::getFromMemory (BinaryData::imogen_icon_png, BinaryData::imogen_icon_pngSize));
 
             setVisible (true);
         }
 
-        void closeButtonPressed() override
-        {
-            JUCEApplication::getInstance()->systemRequestedQuit();
-        }
+        void closeButtonPressed() override { JUCEApplication::getInstance()->systemRequestedQuit(); }
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
 
 private:
-    std::unique_ptr<MainWindow> mainWindow;
+    std::unique_ptr< MainWindow > mainWindow;
 };
 
 

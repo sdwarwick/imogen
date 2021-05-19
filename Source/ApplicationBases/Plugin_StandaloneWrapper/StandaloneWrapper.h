@@ -12,17 +12,17 @@ class StandaloneFilterApp : public juce::JUCEApplication
 public:
     StandaloneFilterApp();
 
-    const juce::String getApplicationName()    override { return JucePlugin_Name; }
+    const juce::String getApplicationName() override { return JucePlugin_Name; }
     const juce::String getApplicationVersion() override { return JucePlugin_VersionString; }
-    
-    const juce::String getDefaultAudioDeviceName() const { return juce::String(); }
+
+    const juce::String                          getDefaultAudioDeviceName() const { return juce::String(); }
     juce::AudioDeviceManager::AudioDeviceSetup* getDefaultAudioDeviceSetup() const { return nullptr; }
-    
+
     juce::Colour getBackgroundColor() const
     {
         return juce::LookAndFeel::getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId);
     }
-    
+
     bool moreThanOneInstanceAllowed() override { return true; }
     void anotherInstanceStarted (const juce::String&) override { }
 
@@ -31,25 +31,25 @@ public:
     void initialise (const juce::String&) override;
     void shutdown() override;
     void systemRequestedQuit() override;
-    
+
     virtual bool backButtonPressed() override;
-    
-    
+
+
     static constexpr bool isDesktopStandaloneApp()
     {
 #if JUCE_IOS || JUCE_ANDROID
         return false;
-#else  
+#else
         return true;
 #endif
     }
-    
-    static constexpr bool isMobileApp() { return ! isDesktopStandaloneApp(); }
+
+    static constexpr bool isMobileApp() { return !isDesktopStandaloneApp(); }
 
 private:
-    juce::ApplicationProperties appProperties;
-    std::unique_ptr<juce::StandaloneFilterWindow> mainWindow;
-    void requestQuit() const;
+    juce::ApplicationProperties                     appProperties;
+    std::unique_ptr< juce::StandaloneFilterWindow > mainWindow;
+    void                                            requestQuit() const;
 };
 
 
@@ -57,10 +57,10 @@ struct PropertiesFileOptions : public juce::PropertiesFile::Options
 {
     PropertiesFileOptions()
     {
-        applicationName = JucePlugin_Name;
-        filenameSuffix = ".settings";
+        applicationName     = JucePlugin_Name;
+        filenameSuffix      = ".settings";
         osxLibrarySubFolder = "Application Support";
-        folderName = getOptionsFolderName();
+        folderName          = getOptionsFolderName();
     }
 
     static juce::String getOptionsFolderName()

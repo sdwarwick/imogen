@@ -28,17 +28,15 @@
 namespace bav
 
 {
-
-
 class ImogenLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
     ImogenLookAndFeel();
-    
-    
+
+
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ImogenLookAndFeel)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenLookAndFeel)
 };
 
 
-}  // namespace
+} // namespace bav

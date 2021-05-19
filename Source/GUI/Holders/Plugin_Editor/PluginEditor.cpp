@@ -26,17 +26,19 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-    : AudioProcessorEditor (&p), imgnProcessor(p), gui(this)
+    : AudioProcessorEditor (&p)
+    , imgnProcessor (p)
+    , gui (this)
 {
     this->setBufferedToImage (true);
-    
+
     addAndMakeVisible (gui);
-    
+
     setResizable (true, true);
     setResizeLimits (800, 450, 2990, 1800);
     const auto size = imgnProcessor.getLastEditorSize();
     setSize (size.x, size.y);
-    
+
 #if JUCE_OPENGL
     openGLContext.attachTo (*getTopLevelComponent());
 #endif
@@ -75,6 +77,6 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 void ImogenAudioProcessorEditor::resized()
 {
     imgnProcessor.saveEditorSize (getWidth(), getHeight());
-    
+
     gui.setBounds (0, 0, getWidth(), getHeight());
 }

@@ -27,11 +27,9 @@
 
 namespace bav
 {
-    
-    ImogenLookAndFeel::ImogenLookAndFeel()
-    {
-        
-    }
-    
-    
-}  // namespace bav
+ImogenLookAndFeel::ImogenLookAndFeel()
+{
+}
+
+
+} // namespace bav

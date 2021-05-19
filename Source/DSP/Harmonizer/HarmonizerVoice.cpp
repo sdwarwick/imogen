@@ -27,66 +27,68 @@
 
 namespace bav
 {
-    
-    
-template<typename SampleType>
-HarmonizerVoice<SampleType>::HarmonizerVoice(Harmonizer<SampleType>* h):
-    dsp::SynthVoiceBase<SampleType>(h), parent(h), shifter(&parent->analyzer)
-{ }
+template < typename SampleType >
+HarmonizerVoice< SampleType >::HarmonizerVoice (Harmonizer< SampleType >* h)
+    : dsp::SynthVoiceBase< SampleType > (h)
+    , parent (h)
+    , shifter (&parent->analyzer)
+{
+}
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::prepared (const int blocksize)
+template < typename SampleType >
+void HarmonizerVoice< SampleType >::prepared (const int blocksize)
 {
     juce::ignoreUnused (blocksize);
     shifter.prepare();
 }
 
-    
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::released()
+
+template < typename SampleType >
+void HarmonizerVoice< SampleType >::released()
 {
     shifter.releaseResources();
 }
-    
-    
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::noteCleared()
+
+
+template < typename SampleType >
+void HarmonizerVoice< SampleType >::noteCleared()
 {
     shifter.reset();
 }
-    
-    
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::newBlockComing (int previousBlocksize, int upcomingBlocksize)
+
+
+template < typename SampleType >
+void HarmonizerVoice< SampleType >::newBlockComing (int previousBlocksize, int upcomingBlocksize)
 {
     juce::ignoreUnused (upcomingBlocksize);
     shifter.newBlockComing (previousBlocksize);
 }
 
 
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer)
+template < typename SampleType >
+void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer)
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
-    juce::ignoreUnused(startSampleOfOrigBuffer);
-    
-    shifter.getSamples (output.getWritePointer(0), output.getNumSamples(),
-                        juce::roundToInt (currentSamplerate / desiredFrequency),  // desired period
+    juce::ignoreUnused (startSampleOfOrigBuffer);
+
+    shifter.getSamples (output.getWritePointer (0),
+                        output.getNumSamples(),
+                        juce::roundToInt (currentSamplerate / desiredFrequency), // desired period
                         parent->getCurrentPeriod());
 }
-    
-    
-template<typename SampleType>
-void HarmonizerVoice<SampleType>::bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples)
+
+
+template < typename SampleType >
+void HarmonizerVoice< SampleType >::bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples)
 {
     juce::ignoreUnused (voicesLastOutputFreq, currentSamplerate, numSamples);
     shifter.bypassedBlockRecieved (numSamples);
 }
-    
-    
-template class HarmonizerVoice<float>;
-template class HarmonizerVoice<double>;
 
 
-} // namespace
+template class HarmonizerVoice< float >;
+template class HarmonizerVoice< double >;
+
+
+} // namespace bav

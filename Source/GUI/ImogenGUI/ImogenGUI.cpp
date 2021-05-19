@@ -29,56 +29,56 @@
 
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
-      : state (Imogen::ValueTreeIDs::Imogen),
-        treeSync (state, s),
-        tooltipWindow (this, msBeforeTooltip)
+    : state (Imogen::ValueTreeIDs::Imogen)
+    , treeSync (state, s)
+    , tooltipWindow (this, msBeforeTooltip)
 {
     setInterceptsMouseClicks (false, true);
-    
+
     properties = Imogen::createPropertyTree();
-    
-    auto parameterTree = Imogen::createParameterTree();  // this is only a temporary tree of plugin parameters...
-    
+
+    auto parameterTree = Imogen::createParameterTree(); // this is only a temporary tree of plugin parameters...
+
     Imogen::buildImogenMainValueTree (state, *parameterTree, *properties);
-    
-    std::vector< bav::Parameter* > parameterPointers;  // temporary storage for pointers to the parameters in the tree...
+
+    std::vector< bav::Parameter* > parameterPointers; // temporary storage for pointers to the parameters in the tree...
     std::vector< bav::Parameter* > meterPointers;
-    
+
     Imogen::initializeParameterPointers (&parameterPointers, &meterPointers, *parameterTree);
-    
+
     bav::convertPluginParametersToFreestanding (parameterPointers, parameters);
     bav::convertPluginParametersToFreestanding (meterPointers, meters);
-    
+
     propertyPointers.reserve (Imogen::numNonAutomatableParams);
     bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
-    
+
     bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
                                                    state.getChildWithName (Imogen::ValueTreeIDs::Properties),
                                                    Imogen::numNonAutomatableParams,
-                                                   [this](int prop) { return getPropertyPntr (static_cast<NonAutomatableParameterID>(prop)); });
+                                                   [this] (int prop) { return getPropertyPntr (static_cast< NonAutomatableParameterID > (prop)); });
 
     bav::createTwoWayFreeParameterValueTreeAttachments (parameterValueTreeAttachments,
                                                         state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
                                                         Imogen::numParams,
-                                                        [this](int param) { return getParameterPntr (static_cast<ParameterID>(param)); });
-    
+                                                        [this] (int param) { return getParameterPntr (static_cast< ParameterID > (param)); });
+
     bav::createReadOnlyFreeParameterValueTreeAttachments (meterValueTreeAttachments,
                                                           state.getChildWithName (Imogen::ValueTreeIDs::Meters),
                                                           Imogen::numMeters,
-                                                          [this](int meter) { return getMeterPntr (static_cast<MeterID>(meter)); });
-    
+                                                          [this] (int meter) { return getMeterPntr (static_cast< MeterID > (meter)); });
+
     addAndMakeVisible (mainDial);
-    
+
     setSize (940, 435);
-  
+
 #if JUCE_MAC
     darkMode.store (juce::Desktop::isOSXDarkModeActive());
 #else
     darkMode.store (true);
 #endif
-    
+
     mainDial.showPitchCorrection();
-    
+
     rescanPresetsFolder();
 }
 
@@ -104,19 +104,19 @@ void ImogenGUI::applyValueTreeStateChange (const void* encodedChangeData, size_t
 
 void ImogenGUI::rescanPresetsFolder()
 {
-//    availablePresets.clearQuick();
-//    const auto xtn = getPresetFileExtension();
-//
-//    for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
-//    {
-//        const auto filename = entry.getFile().getFileName();
-//
-//        if (filename.endsWith (xtn))
-//            availablePresets.add (filename.dropLastCharacters (xtn.length()));
-//    }
-    
+    //    availablePresets.clearQuick();
+    //    const auto xtn = getPresetFileExtension();
+    //
+    //    for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
+    //    {
+    //        const auto filename = entry.getFile().getFileName();
+    //
+    //        if (filename.endsWith (xtn))
+    //            availablePresets.add (filename.dropLastCharacters (xtn.length()));
+    //    }
+
     // show spinning/progress graphic...?
-    
+
     repaint();
 }
 
@@ -124,17 +124,15 @@ void ImogenGUI::rescanPresetsFolder()
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
     const auto xtn = Imogen::getPresetFileExtension();
-    
+
     const auto filename = bav::addFileExtensionIfMissing (presetName, xtn);
-    
+
     juce::FileOutputStream stream (filename);
-    
+
     auto tree = state.createCopy();
-    
-    tree.setProperty ("PresetName",
-                      bav::removeFileExtensionIfThere (presetName, xtn),
-                      nullptr);
-    
+
+    tree.setProperty ("PresetName", bav::removeFileExtensionIfThere (presetName, xtn), nullptr);
+
     tree.writeToStream (stream);
 
     rescanPresetsFolder();
@@ -150,31 +148,30 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
     }
 
     rescanPresetsFolder();
-    
-    const auto filename = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
+
+    const auto filename     = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
     const auto presetToLoad = Imogen::presetsFolder().getChildFile (filename);
 
-    if (! presetToLoad.existsAsFile())
+    if (!presetToLoad.existsAsFile())
     {
         // display error message...
         return;
     }
 
     juce::MemoryBlock data;
-    
+
     juce::FileInputStream stream (presetToLoad);
-    
+
     stream.readIntoMemoryBlock (data);
-    
+
     auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
-    
-    if (! newTree.isValid() || ! newTree.hasType (state.getType()))
-        return;
-    
+
+    if (!newTree.isValid() || !newTree.hasType (state.getType())) return;
+
     state.copyPropertiesAndChildrenFrom (newTree, nullptr);
-    
+
     treeSync.sendFullSyncCallback();
-    
+
     repaint();
 }
 
@@ -182,14 +179,12 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
 void ImogenGUI::deletePreset (const juce::String& presetName)
 {
     rescanPresetsFolder();
-    
-    auto presetToDelete = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
-                                                                                                Imogen::getPresetFileExtension()));
+
+    auto presetToDelete = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension()));
 
     if (presetToDelete.existsAsFile())
     {
-        if (! presetToDelete.moveToTrash())
-            presetToDelete.deleteFile();
+        if (!presetToDelete.moveToTrash()) presetToDelete.deleteFile();
 
         rescanPresetsFolder();
     }
@@ -203,49 +198,45 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
         // display error message...
         return;
     }
-    
+
     rescanPresetsFolder();
-    
+
     const auto xtn = Imogen::getPresetFileExtension();
-    
-    const auto filename = bav::addFileExtensionIfMissing (previousName, xtn);
+
+    const auto filename     = bav::addFileExtensionIfMissing (previousName, xtn);
     const auto presetToLoad = Imogen::presetsFolder().getChildFile (filename);
-    
-    if (! presetToLoad.existsAsFile())
+
+    if (!presetToLoad.existsAsFile())
     {
         // display error message...
         return;
     }
-    
+
     // load the old preset into memory
-    
+
     juce::MemoryBlock data;
-    
+
     juce::FileInputStream inStream (presetToLoad);
-    
+
     inStream.readIntoMemoryBlock (data);
-    
+
     auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
-    
-    if (! newTree.isValid() || ! newTree.hasType (state.getType()))
-        return;
-    
+
+    if (!newTree.isValid() || !newTree.hasType (state.getType())) return;
+
     // delete the old preset file
-    if (! presetToLoad.moveToTrash())
-        presetToLoad.deleteFile();
-    
+    if (!presetToLoad.moveToTrash()) presetToLoad.deleteFile();
+
     // edit the saved preset name
-    newTree.setProperty ("PresetName",
-                         bav::removeFileExtensionIfThere (newName, xtn),
-                         nullptr);
-    
+    newTree.setProperty ("PresetName", bav::removeFileExtensionIfThere (newName, xtn), nullptr);
+
     // write to a new file
     const auto newFilename = bav::addFileExtensionIfMissing (newName, xtn);
-    
+
     juce::FileOutputStream outStream (newFilename);
-    
+
     newTree.writeToStream (outStream);
-    
+
     rescanPresetsFolder();
 }
 
@@ -257,14 +248,10 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
 void ImogenGUI::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
-    
-    if (darkMode.load())
-    {
-        
-    }
+
+    if (darkMode.load()) { }
     else
     {
-        
     }
 }
 
@@ -272,9 +259,9 @@ void ImogenGUI::resized()
 {
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
-    
-    auto r = getLocalBounds();  // this rectangle represents the entire area of our GUI
-    
+
+    auto r = getLocalBounds(); // this rectangle represents the entire area of our GUI
+
     juce::ignoreUnused (r);
 }
 
@@ -324,9 +311,8 @@ inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 bav::NonParamValueTreeNode* ImogenGUI::getPropertyPntr (const NonAutomatableParameterID propID) const
 {
     for (auto* pntr : propertyPointers)
-        if (static_cast<NonAutomatableParameterID>(pntr->nodeID) == propID)
-            return pntr;
-    
+        if (static_cast< NonAutomatableParameterID > (pntr->nodeID) == propID) return pntr;
+
     return nullptr;
 }
 
@@ -334,9 +320,8 @@ bav::NonParamValueTreeNode* ImogenGUI::getPropertyPntr (const NonAutomatablePara
 bav::FreestandingParameter* ImogenGUI::getParameterPntr (const ParameterID paramID) const
 {
     for (auto* pntr : parameters)
-        if (static_cast<ParameterID>(pntr->key()) == paramID)
-            return pntr;
-    
+        if (static_cast< ParameterID > (pntr->key()) == paramID) return pntr;
+
     return nullptr;
 }
 
@@ -344,8 +329,7 @@ bav::FreestandingParameter* ImogenGUI::getParameterPntr (const ParameterID param
 bav::FreestandingParameter* ImogenGUI::getMeterPntr (const MeterID meterID) const
 {
     for (auto* pntr : meters)
-        if (static_cast<MeterID>(pntr->key()) == meterID)
-            return pntr;
-    
+        if (static_cast< MeterID > (pntr->key()) == meterID) return pntr;
+
     return nullptr;
 }

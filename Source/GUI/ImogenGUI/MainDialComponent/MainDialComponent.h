@@ -24,34 +24,33 @@
 #pragma once
 
 
-class ImogenDialComponent  :    public juce::Component,
-                                public juce::SettableTooltipClient
+class ImogenDialComponent : public juce::Component, public juce::SettableTooltipClient
 {
 public:
     ImogenDialComponent();
-    
+
     void paint (juce::Graphics& g) override final;
-    
+
     void resized() override final;
-    
+
     /* This function is overridden so that the component only accepts mouse clicks within the circular area of the dial. */
     bool hitTest (int x, int y) override final;
-    
+
     bool keyPressed (const juce::KeyPress& key) override final;
     bool keyStateChanged (bool isKeyDown) override final;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override final;
     void focusLost (FocusChangeType cause) override final;
-    
+
     //
-    
+
     void showPitchCorrection();
     void showParameter (bav::Parameter* parameter);
     bool isShowingPitchCorrection() const noexcept { return showingPitchCorrection.load(); }
-    
+
     //
-    
+
     void newIntonationData (const juce::String& noteName, int centsOffPitch);
-    
+
 private:
-    std::atomic<bool> showingPitchCorrection;
+    std::atomic< bool > showingPitchCorrection;
 };

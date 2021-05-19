@@ -43,9 +43,10 @@
 
 namespace Imogen
 {
-
-
-static inline juce::File presetsFolder() { return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen"); }
+static inline juce::File presetsFolder()
+{
+    return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen");
+}
 
 
 static inline juce::File findAppropriateTranslationFile()
@@ -54,14 +55,13 @@ static inline juce::File findAppropriateTranslationFile()
     // juce::SystemStats::getDisplayLanguage()
     // juce::SystemStats::getUserLanguage()
     // juce::SystemStats::getUserRegion()
-    return { };
+    return {};
 }
-
 
 
 static inline juce::String getPresetFileExtension()
 {
-    return { ".xml" };
+    return {".xml"};
 }
 
 
@@ -69,37 +69,38 @@ static inline juce::String getPresetFileExtension()
 /*=========================================================================================*/
 
 
-namespace ValueTreeIDs  /* Identifiers for the branches of Imogen's top-level ValueTree */
+namespace ValueTreeIDs /* Identifiers for the branches of Imogen's top-level ValueTree */
 {
-#define IMOGEN_DECLARE_VALUETREEID(name) static inline juce::Identifier name { "name" }
+#define IMOGEN_DECLARE_VALUETREEID(name)                                                                                                             \
+    static inline juce::Identifier name { "name" }
 
-    IMOGEN_DECLARE_VALUETREEID (Imogen);  // the type that the top-level tree will have
-    IMOGEN_DECLARE_VALUETREEID (Parameters);
-    IMOGEN_DECLARE_VALUETREEID (Meters);
-    IMOGEN_DECLARE_VALUETREEID (Properties);
+IMOGEN_DECLARE_VALUETREEID (Imogen); // the type that the top-level tree will have
+IMOGEN_DECLARE_VALUETREEID (Parameters);
+IMOGEN_DECLARE_VALUETREEID (Meters);
+IMOGEN_DECLARE_VALUETREEID (Properties);
 
-    IMOGEN_DECLARE_VALUETREEID (SavedEditorSize);
-    IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_X);
-    IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_Y);
+IMOGEN_DECLARE_VALUETREEID (SavedEditorSize);
+IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_X);
+IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_Y);
 
 #undef IMOGEN_DECLARE_VALUETREEID
-}  // namespace
+} // namespace ValueTreeIDs
 
 
 /*=========================================================================================*/
 
 
-static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
+static inline void buildImogenMainValueTree (juce::ValueTree&                          topLevelTree,
                                              const juce::AudioProcessorParameterGroup& parameterTree,
-                                             const bav::NonParamValueTreeNodeGroup& nonAutomatableTree)
+                                             const bav::NonParamValueTreeNodeGroup&    nonAutomatableTree)
 {
     // create the parameter tree
     if (auto* paramGroup = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))
     {
-        juce::ValueTree parameters { ValueTreeIDs::Parameters };
-        
+        juce::ValueTree parameters {ValueTreeIDs::Parameters};
+
         bav::createValueTreeFromParameterTree (parameters, *paramGroup);
-        
+
         topLevelTree.addChild (parameters, -1, nullptr);
     }
     else
@@ -110,26 +111,25 @@ static inline void buildImogenMainValueTree (juce::ValueTree& topLevelTree,
     // create the meter parameter tree
     if (auto* meterGroup = bav::findParameterSubgroup (&parameterTree, meterTreeName()))
     {
-        juce::ValueTree meters { ValueTreeIDs::Meters };
-        
+        juce::ValueTree meters {ValueTreeIDs::Meters};
+
         bav::createValueTreeFromParameterTree (meters, *meterGroup);
-        
+
         topLevelTree.addChild (meters, -1, nullptr);
     }
     else
     {
         jassertfalse;
     }
-    
-    
+
+
     /* create the rest of the ValueTree that's not bound to actual paramter objects... */
-    juce::ValueTree nonParameters { ValueTreeIDs::Properties };
-    
+    juce::ValueTree nonParameters {ValueTreeIDs::Properties};
+
     bav::createValueTreeFromNonParamNodes (nonParameters, nonAutomatableTree);
-    
+
     topLevelTree.addChild (nonParameters, -1, nullptr);
 }
 
 
-}  // namespace
-
+} // namespace Imogen
