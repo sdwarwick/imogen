@@ -20,9 +20,8 @@
  
  ======================================================================================================================================================*/
 
-#include <juce_gui_extra/juce_gui_extra.h>
 
-#include "../../Common/ImogenCommon.h"
+#pragma once
 
 
 class ImogenDialComponent  :    public juce::Component,
