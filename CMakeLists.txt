@@ -5,13 +5,10 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 #
 
+set (bvsb_USE_MTS_ESP TRUE)
 include (CMake/FindShared-code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
-
-set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
-
-#
 
 juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
 				  "${Imogen_sourceDir}/DSP/Harmonizer" 
@@ -29,11 +26,11 @@ set (Imogen_Common_Flags
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    ICON_BIG                    ${ImogenIconPath}
+    ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/assets/graphics/imogen_icon.png
     COMPANY_NAME                BenViningMusicSoftware
     COMPANY_WEBSITE             www.benvining.com
     COMPANY_EMAIL               ben.the.vining@gmail.com
-    COMPANY_COPYRIGHT           "This software is provided as-is, with no guarantee of completion or fitness for any particular purpose, by Ben Vining, under the terms and conditions of the GNU Public License."
+    COMPANY_COPYRIGHT           "Copyright 2021 Ben Vining"
     STATUS_BAR_HIDDEN           TRUE  # for iOS
     REQUIRES_FULL_SCREEN        TRUE  # for iOS
     IPAD_SCREEN_ORIENTATIONS    UIInterfaceOrientationUnknown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight
@@ -52,7 +49,7 @@ set (Imogen_Plugin_Flags
     VST3_CATEGORIES                 "Pitch Shift"
     AU_MAIN_TYPE                    "kAudioUnitType_MusicEffect"
     MICROPHONE_PERMISSION_ENABLED   TRUE
-    MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
+    MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear any audio output."
 	BACKGROUND_AUDIO_ENABLED	    FALSE # for iOS
 	)
 
@@ -61,6 +58,9 @@ set (Imogen_Processor_Source_Files
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
+
+set (Imogen_Processor_Dependencies ImogenCommon Harmonizer ImogenEngine)
+
 
 
 #################### Configure the main build of Imogen ####################
@@ -72,21 +72,18 @@ set (Imogen_sourceFiles
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.h
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
 
-#
-
 juce_add_plugin (Imogen
     ${Imogen_Plugin_Flags}
     PLUGIN_NAME                 Imogen
     PLUGIN_MANUFACTURER_CODE    Benv
-    DESCRIPTION                 "Real-time vocal harmonizer instrument"
     PLUGIN_CODE                 Imgn
+    FORMATS                     AU VST3 Standalone Unity
+    DESCRIPTION                 "Real-time vocal harmonizer instrument"
     DOCUMENT_BROWSER_ENABLED    TRUE
     NEEDS_CURL                  TRUE
     NEEDS_WEB_BROWSER           TRUE
-    FORMATS                     AU VST3 Standalone Unity
     )
 
-set (bvsb_USE_MTS_ESP TRUE)
 set_default_juce_options (Imogen)
 
 target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
@@ -97,10 +94,40 @@ target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
 link_binary_data_to_target_create_if_needed (Imogen assets)
 
-target_link_libraries (Imogen PRIVATE Ableton::Link ImogenCommon Harmonizer ImogenEngine ImogenGUI)
+target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link ImogenGUI)
 
-target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
+target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 IMOGEN_HEADLESS=0)
 
+
+if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
+	
+#################### Configure the headless plugin build ####################
+
+juce_add_plugin (ImogenHeadless
+    ${Imogen_Plugin_Flags}
+    PLUGIN_NAME                 ImogenHeadless
+    PLUGIN_MANUFACTURER_CODE    Benv
+    PLUGIN_CODE                 Imnh
+    FORMATS                     AU VST3
+    DESCRIPTION                 "Headless version of the Imogen plugin"
+    DOCUMENT_BROWSER_ENABLED    FALSE
+    NEEDS_CURL                  FALSE
+    NEEDS_WEB_BROWSER           FALSE
+    )
+
+set_default_juce_options (ImogenHeadless)
+
+target_sources (ImogenHeadless PRIVATE ${Imogen_Processor_Source_Files})
+
+target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
+
+link_binary_data_to_target_create_if_needed (ImogenHeadless assets)
+
+target_link_libraries (ImogenHeadless PRIVATE ${Imogen_Processor_Dependencies})
+
+target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1 IMOGEN_HEADLESS=1)
+
+endif()
 
 
 #################### Configure the remote GUI app build ####################
@@ -110,19 +137,16 @@ set (ImogenRemote_sourceFiles
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp)
 
-#
-
 juce_add_gui_app (ImogenRemote
     ${Imogen_Common_Flags}
     DESCRIPTION                   "Remote control for the Imogen plugin"
     DOCUMENT_BROWSER_ENABLED      TRUE
-    MICROPHONE_PERMISSION_ENABLED FALSE
-    BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     NEEDS_CURL                    TRUE
     NEEDS_WEB_BROWSER             TRUE
+    MICROPHONE_PERMISSION_ENABLED FALSE
+    BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-set (bvsb_USE_MTS_ESP FALSE)
 set_default_juce_options (ImogenRemote)
 
 target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
@@ -135,32 +159,4 @@ link_binary_data_to_target_create_if_needed (ImogenRemote assets)
 
 target_link_libraries (ImogenRemote PRIVATE ImogenCommon ImogenGUI)
 
-
-
-#################### Configure the headless plugin build ####################
-
-juce_add_plugin (ImogenHeadless
-    ${Imogen_Plugin_Flags}
-    PLUGIN_NAME                 ImogenHeadless
-    PLUGIN_MANUFACTURER_CODE    Benv
-    DESCRIPTION                 "Headless version of the Imogen plugin"
-    PLUGIN_CODE                 Imnh
-    DOCUMENT_BROWSER_ENABLED    FALSE
-    NEEDS_CURL                  FALSE
-    NEEDS_WEB_BROWSER           FALSE
-    FORMATS                     AU VST3
-    )
-
-set (bvsb_USE_MTS_ESP FALSE)
-set_default_juce_options (ImogenHeadless)
-
-target_sources (ImogenHeadless PRIVATE ${Imogen_Processor_Source_Files})
-
-target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
-
-link_binary_data_to_target_create_if_needed (ImogenHeadless assets)
-
-target_link_libraries (ImogenHeadless PRIVATE ImogenCommon Harmonizer ImogenEngine)
-
-target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1 IMOGEN_HEADLESS=1)
 

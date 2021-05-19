@@ -259,6 +259,8 @@ void ImogenAudioProcessor::timerCallback()
 
 void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 {
+    using namespace Imogen;
+    
     bool anyChanged = false;
     
     auto getMeterValue = [&meterData](MeterID meter)
