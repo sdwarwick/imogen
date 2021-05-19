@@ -51,9 +51,9 @@ set (Imogen_Plugin_Flags
     VST_NUM_MIDI_OUTS               1
     VST3_CATEGORIES                 "Pitch Shift"
     AU_MAIN_TYPE                    "kAudioUnitType_MusicEffect"
-    FORMATS                         AU VST3 Standalone Unity
     MICROPHONE_PERMISSION_ENABLED   TRUE
     MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear anything when you press the keys."
+	BACKGROUND_AUDIO_ENABLED	    FALSE # for iOS
 	)
 
 set (Imogen_Processor_Source_Files
@@ -81,9 +81,9 @@ juce_add_plugin (Imogen
     DESCRIPTION                 "Real-time vocal harmonizer instrument"
     PLUGIN_CODE                 Imgn
     DOCUMENT_BROWSER_ENABLED    TRUE
-    BACKGROUND_AUDIO_ENABLED	FALSE # for iOS
     NEEDS_CURL                  TRUE
     NEEDS_WEB_BROWSER           TRUE
+    FORMATS                     AU VST3 Standalone Unity
     )
 
 set (bvsb_USE_MTS_ESP TRUE)
@@ -95,7 +95,7 @@ source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
-add_binary_data_folder (Imogen assets)
+link_binary_data_to_target_create_if_needed (Imogen assets)
 
 target_link_libraries (Imogen PRIVATE Ableton::Link ImogenCommon Harmonizer ImogenEngine ImogenGUI)
 
@@ -131,7 +131,7 @@ source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${ImogenRemote_sourceFile
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
-add_binary_data_folder (ImogenRemote assets)
+link_binary_data_to_target_create_if_needed (ImogenRemote assets)
 
 target_link_libraries (ImogenRemote PRIVATE ImogenCommon ImogenGUI)
 
@@ -146,9 +146,9 @@ juce_add_plugin (ImogenHeadless
     DESCRIPTION                 "Headless version of the Imogen plugin"
     PLUGIN_CODE                 Imnh
     DOCUMENT_BROWSER_ENABLED    FALSE
-    BACKGROUND_AUDIO_ENABLED	FALSE # for iOS
     NEEDS_CURL                  FALSE
     NEEDS_WEB_BROWSER           FALSE
+    FORMATS                     AU VST3
     )
 
 set (bvsb_USE_MTS_ESP FALSE)
@@ -157,6 +157,8 @@ set_default_juce_options (ImogenHeadless)
 target_sources (ImogenHeadless PRIVATE ${Imogen_Processor_Source_Files})
 
 target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
+
+link_binary_data_to_target_create_if_needed (ImogenHeadless assets)
 
 target_link_libraries (ImogenHeadless PRIVATE ImogenCommon Harmonizer ImogenEngine)
 
