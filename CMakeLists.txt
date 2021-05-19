@@ -84,7 +84,7 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER           TRUE
     )
 
-set_default_juce_options (Imogen)
+set_default_juce_options (Imogen TRUE)
 
 target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
 
@@ -115,7 +115,7 @@ juce_add_plugin (ImogenHeadless
     NEEDS_WEB_BROWSER           FALSE
     )
 
-set_default_juce_options (ImogenHeadless)
+set_default_juce_options (ImogenHeadless FALSE)
 
 target_sources (ImogenHeadless PRIVATE ${Imogen_Processor_Source_Files})
 
@@ -147,7 +147,7 @@ juce_add_gui_app (ImogenRemote
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-set_default_juce_options (ImogenRemote)
+set_default_juce_options (ImogenRemote TRUE)
 
 target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
