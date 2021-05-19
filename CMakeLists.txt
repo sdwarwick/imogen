@@ -1,15 +1,24 @@
 
 cmake_minimum_required (VERSION 3.18) 
 
-include (CMake/FindShared-code.cmake)
-
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-######
+#
+
+include (CMake/FindShared-code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 set (ImogenIconPath ${Imogen_sourceDir}/../assets/graphics/imogen_icon.png)
+
+#
+
+juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
+				  "${Imogen_sourceDir}/DSP/Harmonizer" 
+				  "${Imogen_sourceDir}/DSP/ImogenEngine"
+				  "${Imogen_sourceDir}/GUI/ImogenGUI")
+
+include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
 
 #
 
@@ -34,7 +43,7 @@ set (Imogen_Common_Flags
     )
 
 
-####################
+#################### Configure the main build of Imogen ####################
 
 
 set (Imogen_sourceFiles
@@ -48,11 +57,6 @@ set (Imogen_sourceFiles
     ${Imogen_sourceDir}/GUI/Holders/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
 
 #
-
-juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
-				  "${Imogen_sourceDir}/DSP/Harmonizer" 
-				  "${Imogen_sourceDir}/DSP/ImogenEngine"
-				  "${Imogen_sourceDir}/GUI/ImogenGUI")
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
@@ -79,13 +83,9 @@ juce_add_plugin (Imogen
 set (bvsb_USE_MTS_ESP TRUE)
 set_default_juce_options (Imogen)
 
-#
-
 if (TARGET Imogen_LV2)
     set_target_properties (Imogen PROPERTIES JUCE_LV2_URI https://github.com/benthevining/imogen)
 endif()
-
-#
 
 target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
 
@@ -95,14 +95,12 @@ target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (Imogen assets)
 
-include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
-
 target_link_libraries (Imogen PRIVATE Ableton::Link ImogenCommon Harmonizer ImogenEngine ImogenGUI)
 
 target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
 
 
-####################
+#################### Configure the remote GUI app build ####################
 
 
 set (ImogenRemote_sourceFiles
@@ -111,6 +109,8 @@ set (ImogenRemote_sourceFiles
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
     ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
     ${Imogen_sourceDir}/Remote/Main.cpp)
+
+#
 
 juce_add_gui_app (ImogenRemote
     ${Imogen_Common_Flags}
@@ -124,8 +124,6 @@ juce_add_gui_app (ImogenRemote
 
 set (bvsb_USE_MTS_ESP FALSE)
 set_default_juce_options (ImogenRemote)
-
-#
 
 target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
 
