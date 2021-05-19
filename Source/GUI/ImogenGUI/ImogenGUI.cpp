@@ -68,9 +68,7 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
                                                           [this] (int meter) { return getMeterPntr (static_cast< MeterID > (meter)); });
 
     addAndMakeVisible (mainDial);
-
-    setSize (940, 435);
-
+    
 #if JUCE_MAC
     darkMode.store (juce::Desktop::isOSXDarkModeActive());
 #else
@@ -80,6 +78,12 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     mainDial.showPitchCorrection();
 
     rescanPresetsFolder();
+    
+    const auto width = 940, height = 435;
+    setResizable (true, true);
+    getConstrainer()->setMinimumSize (width / 2, height / 2);
+    getConstrainer()->setFixedAspectRatio ((float) width / (float) height);
+    setSize (width, height);
 }
 
 
