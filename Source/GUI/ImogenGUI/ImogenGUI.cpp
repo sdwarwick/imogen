@@ -78,12 +78,6 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     mainDial.showPitchCorrection();
 
     rescanPresetsFolder();
-    
-    const auto width = 940, height = 435;
-    setResizable (true, true);
-    getConstrainer()->setMinimumSize (width / 2, height / 2);
-    getConstrainer()->setFixedAspectRatio ((float) width / (float) height);
-    setSize (width, height);
 }
 
 

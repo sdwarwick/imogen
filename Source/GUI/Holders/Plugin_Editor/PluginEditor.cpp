@@ -34,14 +34,16 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 
     addAndMakeVisible (gui);
 
-    setResizable (true, true);
-    setResizeLimits (800, 450, 2990, 1800);
-    const auto size = imgnProcessor.getLastEditorSize();
-    setSize (size.x, size.y);
-
 #if JUCE_OPENGL
     openGLContext.attachTo (*getTopLevelComponent());
 #endif
+    
+    const auto size = imgnProcessor.getLastEditorSize();
+    const auto width = size.x, height = size.y;
+    setResizable (true, true);
+    getConstrainer()->setMinimumSize (width / 2, height / 2);
+    getConstrainer()->setFixedAspectRatio ((float) width / (float) height);
+    setSize (width, height);
 }
 
 
