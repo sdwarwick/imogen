@@ -31,8 +31,6 @@ template < typename SampleType >
 class HarmonizerVoice : public dsp::SynthVoiceBase< SampleType >
 {
     using AudioBuffer     = juce::AudioBuffer< SampleType >;
-    using Synthesis_Grain = SynthesisGrain< SampleType >;
-
 
 public:
     HarmonizerVoice (Harmonizer< SampleType >* h);

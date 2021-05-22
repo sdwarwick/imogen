@@ -31,15 +31,14 @@ template < typename SampleType >
 HarmonizerVoice< SampleType >::HarmonizerVoice (Harmonizer< SampleType >* h)
     : dsp::SynthVoiceBase< SampleType > (h)
     , parent (h)
-    , shifter (&parent->analyzer)
+    , shifter (parent->analyzer)
 {
 }
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::prepared (const int blocksize)
+void HarmonizerVoice< SampleType >::prepared (const int)
 {
-    juce::ignoreUnused (blocksize);
     shifter.prepare();
 }
 
@@ -72,10 +71,9 @@ void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float des
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     juce::ignoreUnused (startSampleOfOrigBuffer);
 
-//    shifter.getSamples (output.getWritePointer (0),
-//                        output.getNumSamples(),
-//                        juce::roundToInt (currentSamplerate / desiredFrequency), // desired period
-//                        parent->getCurrentPeriod());
+    shifter.getSamples (output.getWritePointer (0),
+                        output.getNumSamples(),
+                        juce::roundToInt (currentSamplerate / desiredFrequency)); // desired period
 }
 
 

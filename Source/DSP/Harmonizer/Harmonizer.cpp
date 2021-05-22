@@ -28,7 +28,7 @@
 namespace bav
 {
 template < typename SampleType >
-Harmonizer< SampleType >::Harmonizer() //: autoPitch(&analyzer)
+Harmonizer< SampleType >::Harmonizer()
 {
     Base::setConcertPitchHz (440);
 
@@ -40,19 +40,16 @@ Harmonizer< SampleType >::Harmonizer() //: autoPitch(&analyzer)
 
 
 template < typename SampleType >
-void Harmonizer< SampleType >::initialized (const double initSamplerate, const int initBlocksize)
+void Harmonizer< SampleType >::initialized (const double, const int)
 {
     analyzer.initialize();
-    juce::ignoreUnused (initSamplerate, initBlocksize);
-    //    autoPitch.initialize();
 }
 
 
 template < typename SampleType >
-void Harmonizer< SampleType >::prepared (int blocksize)
+void Harmonizer< SampleType >::prepared (int)
 {
-    inputStorage.setSize (1, blocksize);
-    analyzer.prepare (blocksize);
+
 }
 
 
@@ -60,7 +57,6 @@ template < typename SampleType >
 void Harmonizer< SampleType >::resetTriggered()
 {
     analyzer.reset();
-    //    autoPitch.reset();
 }
 
 
@@ -74,9 +70,7 @@ void Harmonizer< SampleType >::samplerateChanged (double newSamplerate)
 template < typename SampleType >
 void Harmonizer< SampleType >::release()
 {
-    inputStorage.clear();
     analyzer.releaseResources();
-    //    autoPitch.releaseResources();
 }
 
 

@@ -57,8 +57,6 @@ class Harmonizer : public dsp::SynthBase< SampleType >
     using MidiBuffer     = juce::MidiBuffer;
     using Voice          = HarmonizerVoice< SampleType >;
     using Base           = dsp::SynthBase< SampleType >;
-    using Analysis_Grain = AnalysisGrain< SampleType >;
-
 
 public:
     Harmonizer();
@@ -83,13 +81,7 @@ private:
 
     void addNumVoices (const int voicesToAdd) override;
 
-    AudioBuffer inputStorage;
-
     dsp::PsolaAnalyzer< SampleType > analyzer;
-
-    //    AutoPitch<SampleType> autoPitch;
-
-    //
 
     static constexpr auto adsrQuickReleaseMs               = 5;
     static constexpr auto playingButReleasedGainMultiplier = 0.4f;
