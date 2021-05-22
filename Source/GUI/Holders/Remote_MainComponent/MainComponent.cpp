@@ -25,8 +25,7 @@
 
 
 MainComponent::MainComponent()
-    : SystemInitializer(findAppropriateTranslationFile()),
-gui (this)
+    : gui (this)
 {
     this->setBufferedToImage (true);
 

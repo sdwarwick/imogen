@@ -32,8 +32,7 @@
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
-    : AudioProcessor (makeBusProperties()),
-SystemInitializer (findAppropriateTranslationFile())
+    : AudioProcessor (makeBusProperties())
     , state (ValueTreeIDs::Imogen)
     , treeSync (state, *this)
     , properties (Imogen::createPropertyTree())
