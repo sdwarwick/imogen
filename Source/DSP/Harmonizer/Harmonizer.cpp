@@ -23,7 +23,6 @@
 
 
 #include "HarmonizerVoice.cpp"
-#include "PSOLA/GrainExtractor/GrainExtractor.cpp"
 
 
 namespace bav
@@ -32,8 +31,6 @@ template < typename SampleType >
 Harmonizer< SampleType >::Harmonizer() //: autoPitch(&analyzer)
 {
     Base::setConcertPitchHz (440);
-
-    pitchDetector.setConfidenceThresh (pitchDetectionConfidenceThresh);
 
     Base::updateQuickReleaseMs (adsrQuickReleaseMs);
 
@@ -45,7 +42,7 @@ Harmonizer< SampleType >::Harmonizer() //: autoPitch(&analyzer)
 template < typename SampleType >
 void Harmonizer< SampleType >::initialized (const double initSamplerate, const int initBlocksize)
 {
-    pitchDetector.initialize();
+    analyzer.initialize();
     juce::ignoreUnused (initSamplerate, initBlocksize);
     //    autoPitch.initialize();
 }
@@ -70,16 +67,7 @@ void Harmonizer< SampleType >::resetTriggered()
 template < typename SampleType >
 void Harmonizer< SampleType >::samplerateChanged (double newSamplerate)
 {
-    pitchDetector.setSamplerate (newSamplerate);
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::updatePitchDetectionHzRange (const int minHz, const int maxHz)
-{
-    pitchDetector.setHzRange (minHz, maxHz);
-
-    if (Base::sampleRate > 0) pitchDetector.setSamplerate (Base::sampleRate);
+    analyzer.setSamplerate (newSamplerate);
 }
 
 
@@ -87,7 +75,6 @@ template < typename SampleType >
 void Harmonizer< SampleType >::release()
 {
     inputStorage.clear();
-    pitchDetector.releaseResources();
     analyzer.releaseResources();
     //    autoPitch.releaseResources();
 }
@@ -104,33 +91,9 @@ void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& ou
     else
         analyzer.clearUnusedGrains();
 
-    analyzeInput (input);
-
+    analyzer.analyzeInput(input.getReadPointer(0), input.getNumSamples());
+    
     Base::renderVoices (midiMessages, output);
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::analyzeInput (const AudioBuffer& inputAudio)
-{
-    jassert (Base::sampleRate > 0);
-
-    const auto inputFrequency = pitchDetector.detectPitch (inputAudio); // outputs 0.0 if frame is unpitched
-    const bool frameIsPitched = inputFrequency > 0;
-
-    const auto numSamples = inputAudio.getNumSamples();
-
-    vecops::copy (inputAudio.getReadPointer (0), inputStorage.getWritePointer (0), numSamples);
-
-    if (!frameIsPitched && bav::math::probability (50)) // for unpitched frames, reverse the polarity approx 50% of the time
-        vecops::multiplyC (inputStorage.getWritePointer (0), SampleType (-1), numSamples);
-
-    period = frameIsPitched ? juce::roundToInt (Base::sampleRate / inputFrequency)
-                            : juce::Random::getSystemRandom().nextInt (pitchDetector.getCurrentLegalPeriodRange());
-
-    jassert (period > 0);
-
-    analyzer.analyzeInput (inputStorage.getReadPointer (0), numSamples, period);
 }
 
 

@@ -38,9 +38,6 @@
 
 #include "bv_SynthBase/bv_SynthBase.h"
 
-#include "PSOLA/granular_resynthesis.h"
-#include "PSOLA/psola_analyzer.h"
-#include "PSOLA/psola_shifter.h"
 #include "HarmonizerVoice.h"
 
 
@@ -70,17 +67,11 @@ public:
 
     void release() override;
 
-    int getLatencySamples() const noexcept { return pitchDetector.getLatencySamples(); }
+    int getLatencySamples() const noexcept { return analyzer.getLatency(); }
 
-    void updatePitchDetectionHzRange (const int minHz, const int maxHz);
-
-    int getCurrentPeriod() const noexcept { return period; }
-
-
+    
 private:
     friend class HarmonizerVoice< SampleType >;
-
-    void analyzeInput (const AudioBuffer& inputAudio);
 
     void initialized (const double initSamplerate, const int initBlocksize) override;
 
@@ -92,14 +83,9 @@ private:
 
     void addNumVoices (const int voicesToAdd) override;
 
-
-    dsp::PitchDetector< SampleType > pitchDetector;
-
-    int period;
-
     AudioBuffer inputStorage;
 
-    PsolaAnalyzer< SampleType > analyzer;
+    dsp::PsolaAnalyzer< SampleType > analyzer;
 
     //    AutoPitch<SampleType> autoPitch;
 
@@ -108,8 +94,6 @@ private:
     static constexpr auto adsrQuickReleaseMs               = 5;
     static constexpr auto playingButReleasedGainMultiplier = 0.4f;
     static constexpr auto softPedalGainMultiplier          = 0.65f;
-
-    static constexpr auto pitchDetectionConfidenceThresh = SampleType (0.3);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Harmonizer)
 };

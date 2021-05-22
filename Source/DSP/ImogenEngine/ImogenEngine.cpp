@@ -137,8 +137,6 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 
     resetSmoothedValues (newInternalBlocksize);
 
-    harmonizer.updatePitchDetectionHzRange (pitchDetectorMinHz, pitchDetectorMaxHz);
-
     FIFOEngine::changeLatency (harmonizer.getLatencySamples());
 }
 

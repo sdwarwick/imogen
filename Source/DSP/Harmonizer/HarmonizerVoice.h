@@ -57,7 +57,7 @@ private:
 
     Harmonizer< SampleType >* parent;
 
-    PsolaShifter< SampleType > shifter;
+    dsp::PsolaShifter< SampleType > shifter;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HarmonizerVoice)
 };

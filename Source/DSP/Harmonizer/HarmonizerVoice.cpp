@@ -72,10 +72,10 @@ void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float des
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
     juce::ignoreUnused (startSampleOfOrigBuffer);
 
-    shifter.getSamples (output.getWritePointer (0),
-                        output.getNumSamples(),
-                        juce::roundToInt (currentSamplerate / desiredFrequency), // desired period
-                        parent->getCurrentPeriod());
+//    shifter.getSamples (output.getWritePointer (0),
+//                        output.getNumSamples(),
+//                        juce::roundToInt (currentSamplerate / desiredFrequency), // desired period
+//                        parent->getCurrentPeriod());
 }
 
 
