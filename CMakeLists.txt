@@ -99,9 +99,9 @@ target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} Ableton::
 target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 IMOGEN_HEADLESS=0)
 
 
-if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
-	
+
 #################### Configure the headless plugin build ####################
+if (NOT ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS") OR ("${CMAKE_SYSTEM_NAME}" STREQUAL "Android"))
 
 juce_add_plugin (ImogenHeadless
     ${Imogen_Plugin_Flags}
