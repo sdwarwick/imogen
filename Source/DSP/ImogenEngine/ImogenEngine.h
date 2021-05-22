@@ -38,7 +38,7 @@
 
 #include "bv_SynthBase/bv_SynthBase.h"
 
-#include "Harmonizer/HarmonizerVoice.h"
+#include "Harmonizer/HarmonizerVoice/HarmonizerVoice.h"
 #include "Harmonizer/Harmonizer.h"
 
 
