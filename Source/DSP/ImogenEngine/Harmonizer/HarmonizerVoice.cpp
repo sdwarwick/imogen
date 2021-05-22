@@ -25,10 +25,10 @@
 namespace bav
 {
 template < typename SampleType >
-HarmonizerVoice< SampleType >::HarmonizerVoice (Harmonizer* h)
-    : dsp::SynthVoiceBase< SampleType > (h)
+HarmonizerVoice< SampleType >::HarmonizerVoice (Harm& h)
+    : dsp::SynthVoiceBase< SampleType > (&h)
     , parent (h)
-    , shifter (parent->analyzer)
+    , shifter (parent.analyzer)
 {
 }
 

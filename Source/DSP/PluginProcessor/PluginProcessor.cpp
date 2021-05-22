@@ -263,6 +263,7 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
             case (limiterGainReduxID): return meterData.limiterGainReduction;
             case (reverbLevelID): return meterData.reverbLevel;
             case (delayLevelID): return meterData.delayLevel;
+            default: return 0.0f;
         }
     };
 

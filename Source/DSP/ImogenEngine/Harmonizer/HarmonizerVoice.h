@@ -33,10 +33,10 @@ template < typename SampleType >
 class HarmonizerVoice : public dsp::SynthVoiceBase< SampleType >
 {
     using AudioBuffer = juce::AudioBuffer< SampleType >;
-    using Harmonizer  = Harmonizer< SampleType >;
+    using Harm = Harmonizer< SampleType >;
 
 public:
-    HarmonizerVoice (Harmonizer* h);
+    HarmonizerVoice (Harm& h);
 
 
 private:
@@ -54,7 +54,7 @@ private:
 
     /**/
 
-    Harmonizer* parent;
+    Harm& parent;
 
     dsp::PsolaShifter< SampleType > shifter;
 

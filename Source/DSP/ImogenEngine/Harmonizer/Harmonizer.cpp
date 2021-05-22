@@ -94,7 +94,7 @@ void Harmonizer< SampleType >::addNumVoices (const int voicesToAdd)
     if (voicesToAdd == 0) return;
 
     for (int i = 0; i < voicesToAdd; ++i)
-        Base::voices.add (new Voice (this));
+        Base::voices.add (new Voice (*this));
 
     jassert (Base::voices.size() >= voicesToAdd);
 
