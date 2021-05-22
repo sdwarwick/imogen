@@ -11,9 +11,9 @@ env:
 jobs:
 
 
-  plugin-main-build:
+  main-build:
 
-    name: plugin - ${{ matrix.artifact }} build
+    name: ${{ matrix.artifact }} build
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
@@ -46,9 +46,9 @@ jobs:
       run: cd $GITHUB_WORKSPACE/imogen && cmake -B Builds && cmake --build $GITHUB_WORKSPACE/imogen/Builds --config Release
 
 
-  plugin-ios-build:
+  ios-build:
  
-     name: plugin - iOS build
+     name: iOS build
      runs-on: macos-latest
      timeout-minutes: 60
 
