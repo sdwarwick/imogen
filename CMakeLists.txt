@@ -11,7 +11,6 @@ include (CMake/FindShared-code.cmake)
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
-				  "${Imogen_sourceDir}/DSP/Harmonizer" 
 				  "${Imogen_sourceDir}/DSP/ImogenEngine"
 				  "${Imogen_sourceDir}/GUI/ImogenGUI")
 
@@ -59,7 +58,7 @@ set (Imogen_Processor_Source_Files
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
 
-set (Imogen_Processor_Dependencies ImogenCommon Harmonizer ImogenEngine)
+set (Imogen_Processor_Dependencies ImogenCommon ImogenEngine)
 
 
 

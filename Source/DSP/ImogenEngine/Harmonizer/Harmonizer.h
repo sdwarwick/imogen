@@ -22,23 +22,7 @@
 ======================================================================================================================================================*/
 
 
-/*******************************************************************************
- BEGIN_JUCE_MODULE_DECLARATION
- ID:                 Harmonizer
- vendor:             Ben Vining
- version:            0.0.1
- name:               Harmonizer
- description:        base class for a polyphonic real-time pitch shifting instrument
- dependencies:       bv_SynthBase
- END_JUCE_MODULE_DECLARATION
- *******************************************************************************/
-
-
 #pragma once
-
-#include "bv_SynthBase/bv_SynthBase.h"
-
-#include "HarmonizerVoice.h"
 
 
 namespace bav

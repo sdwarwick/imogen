@@ -22,13 +22,10 @@
 ======================================================================================================================================================*/
 
 
-#include "Harmonizer.h"
-
-
 namespace bav
 {
 template < typename SampleType >
-HarmonizerVoice< SampleType >::HarmonizerVoice (Harmonizer< SampleType >* h)
+HarmonizerVoice< SampleType >::HarmonizerVoice (Harmonizer* h)
     : dsp::SynthVoiceBase< SampleType > (h)
     , parent (h)
     , shifter (parent->analyzer)

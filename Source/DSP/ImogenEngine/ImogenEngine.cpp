@@ -24,6 +24,9 @@
 
 #include "ImogenEngine.h"
 
+#include "Harmonizer/Harmonizer.cpp"
+#include "Harmonizer/HarmonizerVoice.cpp"
+
 
 #define bvie_VOID_TEMPLATE                                                                                                                           \
     template < typename SampleType >                                                                                                                 \

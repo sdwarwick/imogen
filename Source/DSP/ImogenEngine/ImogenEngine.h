@@ -29,13 +29,16 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer class into a self-sufficient audio engine
- dependencies:       Harmonizer
+ dependencies:       bv_SynthBase
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
 
 #pragma once
 
+#include "bv_SynthBase/bv_SynthBase.h"
+
+#include "Harmonizer/HarmonizerVoice.h"
 #include "Harmonizer/Harmonizer.h"
 
 

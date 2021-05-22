@@ -20,6 +20,8 @@
  
 ======================================================================================================================================================*/
 
+#pragma once
+
 
 namespace bav
 {
@@ -30,15 +32,14 @@ class Harmonizer; // forward declaration...
 template < typename SampleType >
 class HarmonizerVoice : public dsp::SynthVoiceBase< SampleType >
 {
-    using AudioBuffer     = juce::AudioBuffer< SampleType >;
+    using AudioBuffer = juce::AudioBuffer< SampleType >;
+    using Harmonizer  = Harmonizer< SampleType >;
 
 public:
-    HarmonizerVoice (Harmonizer< SampleType >* h);
+    HarmonizerVoice (Harmonizer* h);
 
 
 private:
-    friend class Harmonizer< SampleType >;
-
     void newBlockComing (int previousBlocksize, int upcomingBlocksize) override;
 
     void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer) override;
@@ -53,7 +54,7 @@ private:
 
     /**/
 
-    Harmonizer< SampleType >* parent;
+    Harmonizer* parent;
 
     dsp::PsolaShifter< SampleType > shifter;
 
