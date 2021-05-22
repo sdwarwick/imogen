@@ -25,31 +25,19 @@
 
 
 MainComponent::MainComponent()
-    : gui (this)
+    : SystemInitializer(findAppropriateTranslationFile()),
+gui (this)
 {
-    bav::initializeTranslations (Imogen::findAppropriateTranslationFile());
-
-#if BV_USE_NE10
-    ne10_init();
-#endif
-
     this->setBufferedToImage (true);
 
     addAndMakeVisible (gui);
 
     setSize (800, 2990);
-
-#if JUCE_OPENGL
-    openGLContext.attachTo (*getTopLevelComponent());
-#endif
 }
 
 
 MainComponent::~MainComponent()
 {
-#if JUCE_OPENGL
-    openGLContext.detach();
-#endif
 }
 
 

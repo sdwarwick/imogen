@@ -34,10 +34,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 
     addAndMakeVisible (gui);
 
-#if JUCE_OPENGL
-    openGLContext.attachTo (*getTopLevelComponent());
-#endif
-    
     const auto size = imgnProcessor.getLastEditorSize();
     const auto width = size.x, height = size.y;
     setResizable (true, true);
@@ -49,9 +45,6 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 
 ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
-#if JUCE_OPENGL
-    openGLContext.detach();
-#endif
 }
 
 /*=========================================================================================================*/

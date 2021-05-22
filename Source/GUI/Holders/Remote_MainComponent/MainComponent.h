@@ -30,7 +30,9 @@
 using namespace Imogen;
 
 
-class MainComponent : public juce::Component, public ImogenGUIUpdateSender
+class MainComponent : public juce::Component,
+                      public ImogenGUIUpdateSender,
+                      private bav::SystemInitializer
 {
 public:
     MainComponent();
@@ -52,8 +54,5 @@ public:
 private:
     ImogenGUI gui;
 
-#if JUCE_OPENGL
-    OpenGLContext openGLContext;
-#endif
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

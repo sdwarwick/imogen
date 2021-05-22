@@ -32,7 +32,8 @@
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
-    : AudioProcessor (makeBusProperties())
+    : AudioProcessor (makeBusProperties()),
+SystemInitializer (findAppropriateTranslationFile())
     , state (ValueTreeIDs::Imogen)
     , treeSync (state, *this)
     , properties (Imogen::createPropertyTree())
@@ -40,12 +41,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
 {
-#if BV_USE_NE10
-    ne10_init();
-#endif
-
-    bav::initializeTranslations (findAppropriateTranslationFile());
-
     addParameterGroup (Imogen::createParameterTree());
 
     Imogen::buildImogenMainValueTree (state, getParameterTree(), *properties);

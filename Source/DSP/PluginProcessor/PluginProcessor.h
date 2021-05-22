@@ -54,7 +54,9 @@ using namespace Imogen;
 /*
 */
 
-class ImogenAudioProcessor : public juce::AudioProcessor, private juce::Timer
+class ImogenAudioProcessor : public juce::AudioProcessor,
+                             private juce::Timer,
+                             private bav::SystemInitializer
 {
     using Parameter = bav::Parameter;
 

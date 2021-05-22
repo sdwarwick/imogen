@@ -57,9 +57,6 @@ private:
     ImogenAudioProcessor& imgnProcessor; // reference to the processor that created this editor
 
     ImogenGUI gui;
-
-#if JUCE_OPENGL
-    OpenGLContext openGLContext;
-#endif
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };

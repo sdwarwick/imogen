@@ -29,7 +29,8 @@
 
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
-    : state (Imogen::ValueTreeIDs::Imogen)
+    : GUIInitializer (getTopLevelComponent()),
+state (Imogen::ValueTreeIDs::Imogen)
     , treeSync (state, s)
     , tooltipWindow (this, msBeforeTooltip)
 {
