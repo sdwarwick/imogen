@@ -39,14 +39,13 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
 {
-    addParameterGroup (Imogen::createParameterTree());
+    parameters.addParametersTo (*this);
 
     Imogen::buildImogenMainValueTree (state, getParameterTree());
 
     Imogen::initializeParameterPointers (&parameterPointers, &meterParameterPointers, getParameterTree());
 
-    if (auto* temp = getParameterPntr (mainBypassID)) mainBypassPntr = &temp->rap;
-    jassert (mainBypassPntr != nullptr);
+    mainBypassPntr = &parameters.mainBypass.getParam()->rap;
 
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
                                                     state.getChildWithName (Imogen::ValueTreeIDs::Parameters),

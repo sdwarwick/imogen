@@ -243,6 +243,8 @@ private:
     juce::NormalisableRange< float > pitchbendNormalizedRange {0.0f, 127.0f, 1.0f}; // range object used to scale pitchbend values
 
     juce::Point< int > savedEditorSize;
+    
+    Imogen::Parameters parameters;
 
 #if !IMOGEN_HEADLESS
     ableton::Link abletonLink; // this object represents the plugin as a participant in an Ableton Link session

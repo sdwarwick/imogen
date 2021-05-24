@@ -36,14 +36,12 @@ state (Imogen::ValueTreeIDs::Imogen)
 {
     setInterceptsMouseClicks (false, true);
 
-    auto parameterTree = Imogen::createParameterTree(); // this is only a temporary tree of plugin parameters...
-
-    Imogen::buildImogenMainValueTree (state, *parameterTree);
+    //Imogen::buildImogenMainValueTree (state, *parameterTree);
 
     std::vector< bav::Parameter* > parameterPointers; // temporary storage for pointers to the parameters in the tree...
     std::vector< bav::Parameter* > meterPointers;
 
-    Imogen::initializeParameterPointers (&parameterPointers, &meterPointers, *parameterTree);
+   // Imogen::initializeParameterPointers (&parameterPointers, &meterPointers, *parameterTree);
 
     addAndMakeVisible (mainDial);
     
