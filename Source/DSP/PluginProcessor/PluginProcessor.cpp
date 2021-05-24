@@ -35,21 +35,17 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     : AudioProcessor (makeBusProperties())
     , state (ValueTreeIDs::Imogen)
     , treeSync (state, *this)
-    , properties (Imogen::createPropertyTree())
 #if !IMOGEN_HEADLESS
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
 {
     addParameterGroup (Imogen::createParameterTree());
 
-    Imogen::buildImogenMainValueTree (state, getParameterTree(), *properties);
+    Imogen::buildImogenMainValueTree (state, getParameterTree());
 
     Imogen::initializeParameterPointers (&parameterPointers, &meterParameterPointers, getParameterTree());
 
-    propertyPointers.reserve (Imogen::numNonAutomatableParams);
-    bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
-
-    if (auto* temp = getParameterPntr (mainBypassID)) mainBypassPntr = temp->orig();
+    if (auto* temp = getParameterPntr (mainBypassID)) mainBypassPntr = &temp->rap;
     jassert (mainBypassPntr != nullptr);
 
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
@@ -61,11 +57,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
                                                        state.getChildWithName (Imogen::ValueTreeIDs::Meters),
                                                        Imogen::numMeters,
                                                        [this] (int param) { return getMeterParamPntr (static_cast< MeterID > (param)); });
-
-    bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
-                                                   state.getChildWithName (Imogen::ValueTreeIDs::Properties),
-                                                   Imogen::numNonAutomatableParams,
-                                                   [this] (int prop) { return getPropertyPntr (static_cast< NonAutomatableParameterID > (prop)); });
 
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -105,8 +96,6 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine< SampleType >& a
     updateHostDisplay (change.withLatencyChanged (true));
 
     initializeParameterFunctionPointers (activeEngine);
-    initializePropertyActions (activeEngine);
-    initializePropertyValueUpdatingFunctions();
 }
 
 
@@ -129,16 +118,13 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double            
     if (!idleEngine.hasBeenReleased()) idleEngine.releaseResources();
 
     initializeParameterFunctionPointers (activeEngine);
-    initializePropertyActions (activeEngine);
-    initializePropertyValueUpdatingFunctions();
 
     jassert (activeEngine.getLatency() > 0);
 
     activeEngine.prepare (sampleRate);
 
     actionAllParameterUpdates();
-    actionAllPropertyUpdates();
-
+    
     setLatencySamples (activeEngine.reportLatency());
 
     updateHostDisplay();
@@ -217,8 +203,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
     juce::ScopedNoDenormals nodenorms;
 
     actionAllParameterUpdates();
-    actionAllPropertyUpdates();
-
+    
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0) return;
 
     auto inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
@@ -227,7 +212,6 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 
     updateMeters (engine.getLatestMeterData());
-    updateProperties();
 }
 
 
@@ -237,7 +221,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
 
 void ImogenAudioProcessor::timerCallback()
 {
-    getPropertyPntr (mtsEspScaleNameID)->setValueFromString (getScaleName());
+    
 }
 
 
@@ -267,17 +251,17 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
         }
     };
 
-    auto updateMeter = [&anyChanged] (RAP* meter, float newValue)
+    auto updateMeter = [&anyChanged] (RAP& meter, float newValue)
     {
-        if (meter->getValue() != newValue)
+        if (meter.getValue() != newValue)
         {
-            meter->setValueNotifyingHost (newValue);
+            meter.setValueNotifyingHost (newValue);
             anyChanged = true;
         }
     };
 
     for (auto* param : meterParameterPointers)
-        updateMeter (param->orig(), getMeterValue (static_cast< MeterID > (param->key())));
+        updateMeter (param->rap, getMeterValue (static_cast< MeterID > (param->key)));
 
     if (anyChanged)
     {

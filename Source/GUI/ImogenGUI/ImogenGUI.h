@@ -97,17 +97,7 @@ private:
 
     /*=========================================================================================*/
 
-    bav::NonParamValueTreeNode* getPropertyPntr (const NonAutomatableParameterID propID) const;
-
-    bav::FreestandingParameter* getParameterPntr (const ParameterID paramID) const;
-
-    bav::FreestandingParameter* getMeterPntr (const MeterID meterID) const;
-
-    /*=========================================================================================*/
-
     juce::UndoManager undoManager;
-
-    std::vector< bav::NonParamValueTreeNode* > propertyPointers;
 
     juce::ValueTree state;
 
@@ -128,15 +118,6 @@ private:
     };
 
     ValueTreeSynchronizer treeSync;
-
-    std::unique_ptr< bav::NonParamValueTreeNodeGroup > properties;
-
-    juce::OwnedArray< bav::FreestandingParameter > parameters;
-    juce::OwnedArray< bav::FreestandingParameter > meters;
-
-    juce::OwnedArray< bav::PropertyAttachmentBase >                     propertyValueTreeAttachments; // these are two-way
-    juce::OwnedArray< bav::FreeStandingParameterAttachment >            parameterValueTreeAttachments; // these are two-way
-    juce::OwnedArray< bav::ValueTreeToFreeStandingParameterAttachment > meterValueTreeAttachments; // these are read-only
 
     /*=========================================================================================*/
 

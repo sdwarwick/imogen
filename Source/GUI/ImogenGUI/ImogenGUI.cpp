@@ -36,37 +36,14 @@ state (Imogen::ValueTreeIDs::Imogen)
 {
     setInterceptsMouseClicks (false, true);
 
-    properties = Imogen::createPropertyTree();
-
     auto parameterTree = Imogen::createParameterTree(); // this is only a temporary tree of plugin parameters...
 
-    Imogen::buildImogenMainValueTree (state, *parameterTree, *properties);
+    Imogen::buildImogenMainValueTree (state, *parameterTree);
 
     std::vector< bav::Parameter* > parameterPointers; // temporary storage for pointers to the parameters in the tree...
     std::vector< bav::Parameter* > meterPointers;
 
     Imogen::initializeParameterPointers (&parameterPointers, &meterPointers, *parameterTree);
-
-    bav::convertPluginParametersToFreestanding (parameterPointers, parameters);
-    bav::convertPluginParametersToFreestanding (meterPointers, meters);
-
-    propertyPointers.reserve (Imogen::numNonAutomatableParams);
-    bav::parsePropertyTreeForPropertyPointers (properties.get(), propertyPointers);
-
-    bav::createTwoWayPropertyValueTreeAttachments (propertyValueTreeAttachments,
-                                                   state.getChildWithName (Imogen::ValueTreeIDs::Properties),
-                                                   Imogen::numNonAutomatableParams,
-                                                   [this] (int prop) { return getPropertyPntr (static_cast< NonAutomatableParameterID > (prop)); });
-
-    bav::createTwoWayFreeParameterValueTreeAttachments (parameterValueTreeAttachments,
-                                                        state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
-                                                        Imogen::numParams,
-                                                        [this] (int param) { return getParameterPntr (static_cast< ParameterID > (param)); });
-
-    bav::createReadOnlyFreeParameterValueTreeAttachments (meterValueTreeAttachments,
-                                                          state.getChildWithName (Imogen::ValueTreeIDs::Meters),
-                                                          Imogen::numMeters,
-                                                          [this] (int meter) { return getMeterPntr (static_cast< MeterID > (meter)); });
 
     addAndMakeVisible (mainDial);
     
@@ -300,35 +277,4 @@ void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {
     juce::ignoreUnused (box);
-}
-
-
-/*=========================================================================================================
- =========================================================================================================*/
-
-
-bav::NonParamValueTreeNode* ImogenGUI::getPropertyPntr (const NonAutomatableParameterID propID) const
-{
-    for (auto* pntr : propertyPointers)
-        if (static_cast< NonAutomatableParameterID > (pntr->nodeID) == propID) return pntr;
-
-    return nullptr;
-}
-
-
-bav::FreestandingParameter* ImogenGUI::getParameterPntr (const ParameterID paramID) const
-{
-    for (auto* pntr : parameters)
-        if (static_cast< ParameterID > (pntr->key()) == paramID) return pntr;
-
-    return nullptr;
-}
-
-
-bav::FreestandingParameter* ImogenGUI::getMeterPntr (const MeterID meterID) const
-{
-    for (auto* pntr : meters)
-        if (static_cast< MeterID > (pntr->key()) == meterID) return pntr;
-
-    return nullptr;
 }

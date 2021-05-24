@@ -76,49 +76,13 @@ template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::Im
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< double >&);
 
 
-/*===================================================================================*/
-
-
-template < typename SampleType >
-void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine< SampleType >& engine)
-{
-    using namespace Imogen;
-
-    // getBoolPropertyPntr (linkIsEnabledID)->onAction =
-
-    getPropertyPntr (midiLatchID)->setBoolAction ([&engine] (bool value) { engine.updateMidiLatch (value); });
-
-    getPropertyPntr (editorPitchbendID)->setIntAction ([&engine] (int value) { engine.recieveExternalPitchbend (value); });
-}
-template void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine< float >&);
-template void ImogenAudioProcessor::initializePropertyActions (bav::ImogenEngine< double >&);
-
-
-/*===================================================================================*/
-
-
-void ImogenAudioProcessor::initializePropertyValueUpdatingFunctions()
-{
-    using namespace Imogen;
-
-    // all of these must be thread-safe! non-thread safe updates are handled explicitly in the timer callback
-    //    getIntPropertyPntr (linkNumSessionPeersID)->getNewValueFromExternalSource = [this]() { return getNumAbletonLinkSessionPeers(); };
-    //    getBoolPropertyPntr (mtsEspIsConnectedID)->getNewValueFromExternalSource = [this]() { return isConnectedToMtsEsp(); };
-    //    getBoolPropertyPntr (linkIsEnabledID)->getNewValueFromExternalSource = [this]() { return isAbletonLinkEnabled(); };
-    //
-    //getBoolPropertyPntr (midiLatchID)->getNewValueFromExternalSource =
-    //getIntPropertyPntr (lastMovedMidiCCnumberID)->getNewValueFromExternalSource =
-    //getIntPropertyPntr (lastMovedMidiCCvalueID)->getNewValueFromExternalSource =
-}
-
-
 /*===========================================================================================================================
  ============================================================================================================================*/
 
 bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
 {
     for (auto* pntr : parameterPointers)
-        if (static_cast< ParameterID > (pntr->key()) == paramID) return pntr;
+        if (static_cast< ParameterID > (pntr->key) == paramID) return pntr;
 
     return nullptr;
 }
@@ -127,16 +91,8 @@ bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramI
 inline bav::Parameter* ImogenAudioProcessor::getMeterParamPntr (const MeterID meterID) const
 {
     for (auto* pntr : meterParameterPointers)
-        if (static_cast< MeterID > (pntr->key()) == meterID) return pntr;
+        if (static_cast< MeterID > (pntr->key) == meterID) return pntr;
 
     return nullptr;
 }
 
-
-bav::NonParamValueTreeNode* ImogenAudioProcessor::getPropertyPntr (const NonAutomatableParameterID propID) const
-{
-    for (auto* pntr : propertyPointers)
-        if (static_cast< NonAutomatableParameterID > (pntr->nodeID) == propID) return pntr;
-
-    return nullptr;
-}

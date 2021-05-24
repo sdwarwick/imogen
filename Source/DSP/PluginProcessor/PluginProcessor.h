@@ -152,12 +152,6 @@ private:
             pntr->doAction();
     }
 
-    inline void actionAllPropertyUpdates()
-    {
-        for (auto* pntr : propertyPointers)
-            pntr->doAction();
-    }
-
     inline void resetParameterDefaultsToCurrentValues()
     {
         for (auto* pntr : parameterPointers)
@@ -174,11 +168,6 @@ private:
 
     template < typename SampleType >
     void initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine);
-
-    template < typename SampleType >
-    void initializePropertyActions (bav::ImogenEngine< SampleType >& engine);
-
-    void initializePropertyValueUpdatingFunctions();
 
     /*=========================================================================================*/
 
@@ -199,12 +188,6 @@ private:
 
     void updateMeters (ImogenMeterData meterData);
 
-    void updateProperties()
-    {
-        for (auto* pntr : propertyPointers)
-            pntr->updateValueFromExternalSource();
-    }
-
     /*=========================================================================================*/
 
     ImogenGUIUpdateReciever* getActiveGuiEventReciever() const;
@@ -216,8 +199,6 @@ private:
     void saveEditorSizeToValueTree();
 
     void updateEditorSizeFromValueTree();
-
-    bav::NonParamValueTreeNode* getPropertyPntr (const NonAutomatableParameterID propID) const;
 
     /*=========================================================================================*/
 
@@ -231,7 +212,6 @@ private:
 
     juce::OwnedArray< bav::ParameterAttachment >            parameterTreeAttachments; // these are two-way
     juce::OwnedArray< bav::ParameterToValueTreeAttachment > meterTreeAttachments; // these are write-only
-    juce::OwnedArray< bav::PropertyAttachmentBase >         propertyValueTreeAttachments; // these are two-way
 
     struct ValueTreeSynchronizer : public juce::ValueTreeSynchroniser
     {
@@ -253,16 +233,12 @@ private:
 
     ValueTreeSynchronizer treeSync;
 
-    std::unique_ptr< bav::NonParamValueTreeNodeGroup > properties;
-
     /*=========================================================================================*/
 
     std::vector< Parameter* > parameterPointers;
     RAP*                      mainBypassPntr; // this one gets referenced specifically...
 
     std::vector< Parameter* > meterParameterPointers;
-
-    std::vector< bav::NonParamValueTreeNode* > propertyPointers;
 
     juce::NormalisableRange< float > pitchbendNormalizedRange {0.0f, 127.0f, 1.0f}; // range object used to scale pitchbend values
 

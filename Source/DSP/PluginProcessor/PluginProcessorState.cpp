@@ -59,8 +59,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     state.copyPropertiesAndChildrenFrom (newTree, nullptr);
 
     actionAllParameterUpdates();
-    actionAllPropertyUpdates();
-
+    
     resetParameterDefaultsToCurrentValues();
 
     updateEditorSizeFromValueTree();
