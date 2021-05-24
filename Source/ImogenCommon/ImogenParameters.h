@@ -219,11 +219,11 @@ struct Parameters :     bav::ParameterList
     
     BoolParam limiterToggle { limiterToggleID, "Toggle", "Limiter toggle", true, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString };
     
-    BoolParam midiLatch { midiLatchID, "Is latched", "MIDI is latched", false, l::toggle_stringFromBool, l::toggle_boolFromString };
+    BoolParam midiLatch { midiLatchID, "Is latched", "MIDI is latched", false, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString };
     
     /* */
     
-    BoolParam abletonLinkEnabled { linkIsEnabledID, "Toggle", "Ableton link toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString };
+    BoolParam abletonLinkEnabled { linkIsEnabledID, "Toggle", "Ableton link toggle", false, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString };
     
     IntParam abletonLinkSessionPeers { linkNumSessionPeersID,
         "Num peers",
@@ -231,10 +231,11 @@ struct Parameters :     bav::ParameterList
         0,
         50,
         0,
+        juce::String(),
         [] (int value, int maximumStringLength) { return juce::String (value).substring (0, maximumStringLength); },
         nullptr };
     
-    BoolParam mtsEspIsConnected { mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected", false, l::toggle_stringFromBool, l::toggle_boolFromString };
+    BoolParam mtsEspIsConnected { mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected", false, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString };
     
     IntParam editorPitchbend { editorPitchbendID,
         "Pitchbend",
@@ -242,16 +243,18 @@ struct Parameters :     bav::ParameterList
         0,
         127,
         64,
+        juce::String(),
         [] (int value, int maximumStringLength) { return juce::String (value).substring (0, maximumStringLength); },
         [] (const juce::String& text) { return text.retainCharacters ("1234567890").getIntValue(); } };
     
-    IntParam lastMovedMidiController { lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0, nullptr, nullptr };
-    IntParam lastMovedCCValue { lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0, nullptr, nullptr };
+    IntParam lastMovedMidiController { lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0 };
+    IntParam lastMovedCCValue { lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0 };
     
     BoolParam guiDarkMode { guiLightDarkModeID,
         "Dark mode",
         "GUI Dark mode",
         true,
+        juce::String(),
         [] (bool val, int maxLength)
         {
             if (val) return TRANS ("Dark mode is on").substring (0, maxLength);
@@ -266,6 +269,7 @@ struct Parameters :     bav::ParameterList
         -100,
         100,
         0,
+        juce::String(),
         [] (int cents, int maxLength)
         {
             if (cents == 0) return TRANS ("Perfect!");
@@ -290,9 +294,7 @@ private:
     const juce::String sec { TRANS ("sec") };
 };
 
-
     // auto scaleName = std::make_unique< StringNode > (mtsEspScaleNameID, "Scale name", "MTS-ESP scale name", "No active scale");
-    
     // auto currentNote = std::make_unique< StringNode > (currentInputNoteAsStringID, "Current note", "Current input note as string", "-");
     
 

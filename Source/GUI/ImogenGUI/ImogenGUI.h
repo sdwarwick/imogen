@@ -57,7 +57,6 @@ class ImogenGUI : public juce::Component,
 {
     using ParameterID               = Imogen::ParameterID;
     using MeterID                   = Imogen::MeterID;
-    using NonAutomatableParameterID = Imogen::NonAutomatableParameterID;
 
 public:
     ImogenGUI(ImogenGUIUpdateSender* s);

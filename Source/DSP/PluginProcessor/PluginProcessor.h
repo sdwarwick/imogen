@@ -63,7 +63,6 @@ class ImogenAudioProcessor : public juce::AudioProcessor,
 
     using ParameterID               = Imogen::ParameterID;
     using MeterID                   = Imogen::MeterID;
-    using NonAutomatableParameterID = Imogen::NonAutomatableParameterID;
 
     using ChangeDetails = juce::AudioProcessorListener::ChangeDetails;
 
