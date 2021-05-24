@@ -129,6 +129,8 @@ private:
     static constexpr int msBeforeTooltip = 700;
 
     std::atomic< bool > darkMode;
+    
+    Imogen::Parameters parameters;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };

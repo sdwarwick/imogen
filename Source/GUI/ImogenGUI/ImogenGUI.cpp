@@ -35,6 +35,8 @@ state (Imogen::ValueTreeIDs::Imogen)
     , tooltipWindow (this, msBeforeTooltip)
 {
     setInterceptsMouseClicks (false, true);
+    
+    parameters.addAllParametersAsInternal();
 
     //Imogen::buildImogenMainValueTree (state, *parameterTree);
 

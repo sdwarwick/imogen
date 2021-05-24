@@ -43,8 +43,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 
     Imogen::buildImogenMainValueTree (state, getParameterTree());
 
-    Imogen::initializeParameterPointers (&parameterPointers, &meterParameterPointers, getParameterTree());
-
     mainBypassPntr = &parameters.mainBypass.getParam()->rap;
 
     bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,

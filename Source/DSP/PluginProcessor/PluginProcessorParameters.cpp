@@ -29,12 +29,13 @@ template < typename SampleType >
 void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine)
 {
     using namespace Imogen;
+    
+    parameters.adsrAttack.get()->setAction ([&engine] (float value) { engine.updateAdsrAttack (value); });
+    parameters.adsrDecay.get()->setAction ([&engine] (float value) { engine.updateAdsrDecay (value); });
+    parameters.adsrSustain.get()->setAction ([&engine] (float value) { engine.updateAdsrSustain (value); });
+    parameters.adsrRelease.get()->setAction ([&engine] (float value) { engine.updateAdsrRelease (value); });
+    
 
-//    getParameterPntr (adsrAttackID)->setAction ([&engine] (float value) { engine.updateAdsrAttack (value); });
-//    getParameterPntr (adsrDecayID)->setAction ([&engine] (float value) { engine.updateAdsrDecay (value); });
-//    getParameterPntr (adsrDecayID)->setAction ([&engine] (float value) { engine.updateAdsrDecay (value); });
-//    getParameterPntr (adsrSustainID)->setAction ([&engine] (float value) { engine.updateAdsrSustain (value); });
-//    getParameterPntr (adsrReleaseID)->setAction ([&engine] (float value) { engine.updateAdsrRelease (value); });
 //    getParameterPntr (inputGainID)->setAction ([&engine] (float value) { engine.updateInputGain (value); });
 //    getParameterPntr (outputGainID)->setAction ([&engine] (float value) { engine.updateOutputGain (value); });
 //    getParameterPntr (noiseGateThresholdID)->setAction ([&engine] (float value) { engine.updateNoiseGateThresh (value); });
@@ -74,25 +75,3 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
 }
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< float >&);
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< double >&);
-
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-bav::Parameter* ImogenAudioProcessor::getParameterPntr (const ParameterID paramID) const
-{
-    for (auto* pntr : parameterPointers)
-        if (static_cast< ParameterID > (pntr->key) == paramID) return pntr;
-
-    return nullptr;
-}
-
-
-inline bav::Parameter* ImogenAudioProcessor::getMeterParamPntr (const MeterID meterID) const
-{
-    for (auto* pntr : meterParameterPointers)
-        if (static_cast< MeterID > (pntr->key) == meterID) return pntr;
-
-    return nullptr;
-}
-

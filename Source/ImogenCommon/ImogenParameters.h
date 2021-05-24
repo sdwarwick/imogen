@@ -151,44 +151,6 @@ static inline auto createMeterParameterTree()
 /*=========================================================================================*/
 
 
-static inline auto createAutomatableParameterTree()
-{
-    
-}
-
-
-/*=========================================================================================*/
-
-
-static inline auto createParameterTree()
-{
-//    return std::make_unique< juce::AudioProcessorParameterGroup > (
-//        "Imogen", "Imogen", parameterTreeSeparatorString(), createAutomatableParameterTree(), createMeterParameterTree());
-}
-
-
-/*=========================================================================================*/
-
-
-static inline void initializeParameterPointers (std::vector< bav::Parameter* >*           parameterPointers,
-                                                std::vector< bav::Parameter* >*           meterParameterPointers,
-                                                const juce::AudioProcessorParameterGroup& parameterTree)
-{
-    jassert (parameterPointers != nullptr);
-    parameterPointers->reserve (numParams);
-    bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, parameterTreeName()), *parameterPointers);
-
-    if (meterParameterPointers != nullptr)
-    {
-        meterParameterPointers->reserve (numMeters);
-        bav::parseParameterTreeForParameterPointers (bav::findParameterSubgroup (&parameterTree, meterTreeName()), *meterParameterPointers);
-    }
-}
-
-
-/*=========================================================================================*/
-
-
 //static inline auto createPropertyTree()
 //{
 //    using Group = bav::NonParamValueTreeNodeGroup;
@@ -311,9 +273,15 @@ struct Parameters :     bav::ParameterList
         add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle);
     }
     
-    //juce::ValueTree toValueTree() const override final;
+    juce::ValueTree toValueTree() const override final
+    {
+        return {};
+    }
     
-    //void
+    void restoreFromValueTree (const juce::ValueTree& tree) override final
+    {
+        juce::ignoreUnused (tree);
+    }
     
     IntParam inputMode { inputSourceID,
         "Input source",

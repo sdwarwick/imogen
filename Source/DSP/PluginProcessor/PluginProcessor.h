@@ -146,18 +146,6 @@ public:
     /*=========================================================================================*/
 
 private:
-    inline void actionAllParameterUpdates()
-    {
-        for (auto* pntr : parameterPointers)
-            pntr->doAction();
-    }
-
-    inline void resetParameterDefaultsToCurrentValues()
-    {
-        for (auto* pntr : parameterPointers)
-            pntr->refreshDefault();
-    }
-
     /*=========================================================================================*/
     /* Initialization functions */
 
@@ -192,12 +180,7 @@ private:
 
     ImogenGUIUpdateReciever* getActiveGuiEventReciever() const;
 
-    Parameter* getParameterPntr (const ParameterID paramID) const;
-
-    inline Parameter* getMeterParamPntr (const MeterID meterID) const;
-
     void saveEditorSizeToValueTree();
-
     void updateEditorSizeFromValueTree();
 
     /*=========================================================================================*/
@@ -235,12 +218,7 @@ private:
 
     /*=========================================================================================*/
 
-    std::vector< Parameter* > parameterPointers;
-    RAP*                      mainBypassPntr; // this one gets referenced specifically...
-
-    std::vector< Parameter* > meterParameterPointers;
-
-    juce::NormalisableRange< float > pitchbendNormalizedRange {0.0f, 127.0f, 1.0f}; // range object used to scale pitchbend values
+    RAP* mainBypassPntr; // this one gets referenced specifically...
 
     juce::Point< int > savedEditorSize;
     
