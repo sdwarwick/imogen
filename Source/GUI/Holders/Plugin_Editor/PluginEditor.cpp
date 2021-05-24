@@ -47,18 +47,6 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
 }
 
-/*=========================================================================================================*/
-
-void ImogenAudioProcessorEditor::applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize)
-{
-    gui.applyValueTreeStateChange (encodedChangeData, encodedChangeDataSize);
-}
-
-void ImogenAudioProcessorEditor::sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize)
-{
-    imgnProcessor.applyValueTreeStateChange (encodedChange, encodedChangeSize);
-}
-
 /*=========================================================================================================
     juce::Component functions
  =========================================================================================================*/

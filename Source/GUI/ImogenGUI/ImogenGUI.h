@@ -46,7 +46,7 @@
 
 struct ImogenGUIUpdateSender
 {
-    virtual void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) = 0;
+    virtual ~ImogenGUIUpdateSender() = default;
 };
 
 /*=========================================================================================*/
@@ -60,7 +60,7 @@ class ImogenGUI : public juce::Component,
     using NonAutomatableParameterID = Imogen::NonAutomatableParameterID;
 
 public:
-    ImogenGUI (ImogenGUIUpdateSender* s);
+    ImogenGUI(ImogenGUIUpdateSender* s);
 
     virtual ~ImogenGUI() override;
 
@@ -98,28 +98,6 @@ private:
     /*=========================================================================================*/
 
     juce::UndoManager undoManager;
-
-    juce::ValueTree state;
-
-    struct ValueTreeSynchronizer : public juce::ValueTreeSynchroniser
-    {
-        ValueTreeSynchronizer (const juce::ValueTree& vtree, ImogenGUIUpdateSender* s)
-            : juce::ValueTreeSynchroniser (vtree)
-            , sender (s)
-        {
-        }
-
-        void stateChanged (const void* encodedChange, size_t encodedChangeSize) override final
-        {
-            sender->sendValueTreeStateChange (encodedChange, encodedChangeSize);
-        }
-
-        ImogenGUIUpdateSender* const sender;
-    };
-
-    ValueTreeSynchronizer treeSync;
-
-    /*=========================================================================================*/
 
     ImogenDialComponent mainDial;
 

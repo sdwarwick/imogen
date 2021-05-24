@@ -29,9 +29,7 @@
 
 
 ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
-    : GUIInitializer (getTopLevelComponent()),
-state (Imogen::ValueTreeIDs::Imogen)
-    , treeSync (state, s)
+    : GUIInitializer (getTopLevelComponent())
     , tooltipWindow (this, msBeforeTooltip)
 {
     setInterceptsMouseClicks (false, true);
@@ -64,17 +62,6 @@ ImogenGUI::~ImogenGUI()
     this->setLookAndFeel (nullptr);
 }
 
-
-/*=========================================================================================================
- =========================================================================================================*/
-
-
-void ImogenGUI::applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize)
-{
-    juce::ValueTreeSynchroniser::applyChange (state, encodedChangeData, encodedChangeDataSize, nullptr);
-}
-
-
 /*=========================================================================================================
  =========================================================================================================*/
 
@@ -99,17 +86,11 @@ void ImogenGUI::rescanPresetsFolder()
 
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    const auto xtn = Imogen::getPresetFileExtension();
-
-    const auto filename = bav::addFileExtensionIfMissing (presetName, xtn);
+    const auto filename = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
 
     juce::FileOutputStream stream (filename);
 
-    auto tree = state.createCopy();
-
-    tree.setProperty ("PresetName", bav::removeFileExtensionIfThere (presetName, xtn), nullptr);
-
-    tree.writeToStream (stream);
+    parameters.toValueTree().writeToStream(stream);
 
     rescanPresetsFolder();
 }
@@ -142,11 +123,9 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
 
     auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
 
-    if (!newTree.isValid() || !newTree.hasType (state.getType())) return;
+    if (!newTree.isValid()) return;
 
-    state.copyPropertiesAndChildrenFrom (newTree, nullptr);
-
-    treeSync.sendFullSyncCallback();
+    parameters.restoreFromValueTree (newTree);
 
     repaint();
 }
@@ -169,51 +148,7 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 
 void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
 {
-    if (previousName.isEmpty() || newName.isEmpty())
-    {
-        // display error message...
-        return;
-    }
-
-    rescanPresetsFolder();
-
-    const auto xtn = Imogen::getPresetFileExtension();
-
-    const auto filename     = bav::addFileExtensionIfMissing (previousName, xtn);
-    const auto presetToLoad = Imogen::presetsFolder().getChildFile (filename);
-
-    if (!presetToLoad.existsAsFile())
-    {
-        // display error message...
-        return;
-    }
-
-    // load the old preset into memory
-
-    juce::MemoryBlock data;
-
-    juce::FileInputStream inStream (presetToLoad);
-
-    inStream.readIntoMemoryBlock (data);
-
-    auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
-
-    if (!newTree.isValid() || !newTree.hasType (state.getType())) return;
-
-    // delete the old preset file
-    if (!presetToLoad.moveToTrash()) presetToLoad.deleteFile();
-
-    // edit the saved preset name
-    newTree.setProperty ("PresetName", bav::removeFileExtensionIfThere (newName, xtn), nullptr);
-
-    // write to a new file
-    const auto newFilename = bav::addFileExtensionIfMissing (newName, xtn);
-
-    juce::FileOutputStream outStream (newFilename);
-
-    newTree.writeToStream (outStream);
-
-    rescanPresetsFolder();
+    
 }
 
 

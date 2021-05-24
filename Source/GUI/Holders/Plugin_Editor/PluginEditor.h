@@ -32,18 +32,13 @@
 using namespace Imogen;
 
 
-class ImogenAudioProcessorEditor : public juce::AudioProcessorEditor, public ImogenGUIUpdateSender, public ImogenGUIUpdateReciever
+class ImogenAudioProcessorEditor :  public juce::AudioProcessorEditor,
+                                    public ImogenGUIUpdateSender
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor& p);
 
     ~ImogenAudioProcessorEditor() override;
-
-    /*=========================================================================================*/
-
-    void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize) override final;
-
-    void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) override final;
 
     /*=========================================================================================*/
     /* juce::Component functions */

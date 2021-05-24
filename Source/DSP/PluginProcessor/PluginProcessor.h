@@ -141,10 +141,6 @@ public:
 
     /*=========================================================================================*/
 
-    void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize);
-
-    /*=========================================================================================*/
-
 private:
     /*=========================================================================================*/
     /* Initialization functions */
@@ -191,38 +187,13 @@ private:
 
     /*=========================================================================================*/
 
-    juce::ValueTree state;
-
-    juce::OwnedArray< bav::ParameterAttachment >            parameterTreeAttachments; // these are two-way
-    juce::OwnedArray< bav::ParameterToValueTreeAttachment > meterTreeAttachments; // these are write-only
-
-    struct ValueTreeSynchronizer : public juce::ValueTreeSynchroniser
-    {
-        ValueTreeSynchronizer (const juce::ValueTree& vtree, ImogenAudioProcessor& p)
-            : juce::ValueTreeSynchroniser (vtree)
-            , processor (p)
-        {
-        }
-
-        void stateChanged (const void* encodedChange, size_t encodedChangeSize) override final
-        {
-            if (auto* editor = processor.getActiveGuiEventReciever()) { editor->applyValueTreeStateChange (encodedChange, encodedChangeSize); }
-
-            // transmit to OSC...
-        }
-
-        ImogenAudioProcessor& processor;
-    };
-
-    ValueTreeSynchronizer treeSync;
-
-    /*=========================================================================================*/
-
     RAP* mainBypassPntr; // this one gets referenced specifically...
 
     juce::Point< int > savedEditorSize;
     
     Imogen::Parameters parameters;
+    
+    Imogen::Meters meters;
 
 #if !IMOGEN_HEADLESS
     ableton::Link abletonLink; // this object represents the plugin as a participant in an Ableton Link session

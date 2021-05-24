@@ -89,45 +89,4 @@ IMOGEN_DECLARE_VALUETREEID (SavedEditorSize_Y);
 /*=========================================================================================*/
 
 
-static inline void buildImogenMainValueTree (juce::ValueTree&                          topLevelTree,
-                                             const juce::AudioProcessorParameterGroup& parameterTree)
-{
-    // create the parameter tree
-    if (auto* paramGroup = bav::findParameterSubgroup (&parameterTree, parameterTreeName()))
-    {
-        juce::ValueTree parameters {ValueTreeIDs::Parameters};
-
-        bav::createValueTreeFromParameterTree (parameters, *paramGroup);
-
-        topLevelTree.addChild (parameters, -1, nullptr);
-    }
-    else
-    {
-        jassertfalse;
-    }
-
-    // create the meter parameter tree
-    if (auto* meterGroup = bav::findParameterSubgroup (&parameterTree, meterTreeName()))
-    {
-        juce::ValueTree meters {ValueTreeIDs::Meters};
-
-        bav::createValueTreeFromParameterTree (meters, *meterGroup);
-
-        topLevelTree.addChild (meters, -1, nullptr);
-    }
-    else
-    {
-        jassertfalse;
-    }
-
-
-    /* create the rest of the ValueTree that's not bound to actual paramter objects... */
-//    juce::ValueTree nonParameters {ValueTreeIDs::Properties};
-//
-//    bav::createValueTreeFromNonParamNodes (nonParameters, nonAutomatableTree);
-//
-//    topLevelTree.addChild (nonParameters, -1, nullptr);
-}
-
-
 } // namespace Imogen

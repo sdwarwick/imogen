@@ -33,15 +33,14 @@
 
 ImogenAudioProcessor::ImogenAudioProcessor()
     : AudioProcessor (makeBusProperties())
-    , state (ValueTreeIDs::Imogen)
-    , treeSync (state, *this)
 #if !IMOGEN_HEADLESS
     , abletonLink (120.0) // constructed with the initial BPM
 #endif
 {
     parameters.addParametersTo (*this);
+    meters.addParametersTo (*this);
 
-    Imogen::buildImogenMainValueTree (state, getParameterTree());
+    //Imogen::buildImogenMainValueTree (state, getParameterTree());
 
     mainBypassPntr = parameters.mainBypass.get();
 
@@ -60,8 +59,6 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     else
         initialize (floatEngine);
 
-    treeSync.sendFullSyncCallback();
-    
     parameters.resetAllToDefault();
 
     Timer::startTimerHz (60);
@@ -222,52 +219,6 @@ void ImogenAudioProcessor::timerCallback()
     
 }
 
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
-{
-    using namespace Imogen;
-
-    bool anyChanged = false;
-
-    auto getMeterValue = [&meterData] (MeterID meter)
-    {
-        switch (meter)
-        {
-            case (inputLevelID): return meterData.inputLevel;
-            case (outputLevelLID): return meterData.outputLevelL;
-            case (outputLevelRID): return meterData.outputLevelR;
-            case (gateReduxID): return meterData.noiseGateGainReduction;
-            case (compReduxID): return meterData.compressorGainReduction;
-            case (deEssGainReduxID): return meterData.deEsserGainReduction;
-            case (limiterGainReduxID): return meterData.limiterGainReduction;
-            case (reverbLevelID): return meterData.reverbLevel;
-            case (delayLevelID): return meterData.delayLevel;
-            default: return 0.0f;
-        }
-    };
-
-    auto updateMeter = [&anyChanged] (RAP& meter, float newValue)
-    {
-        if (meter.getValue() != newValue)
-        {
-            meter.setValueNotifyingHost (newValue);
-            anyChanged = true;
-        }
-    };
-
-//    for (auto* param : meterParameterPointers)
-//        updateMeter (param->rap, getMeterValue (static_cast< MeterID > (param->key)));
-
-    if (anyChanged)
-    {
-        ChangeDetails change;
-        updateHostDisplay (change.withParameterInfoChanged (true));
-    }
-}
-
 /*===========================================================================================================================
  ============================================================================================================================*/
 
@@ -361,7 +312,6 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
-    juce::Timer::callAfterDelay (20, [&]() { treeSync.sendFullSyncCallback(); });
     return new ImogenAudioProcessorEditor (*this);
 #endif
 }
@@ -400,27 +350,27 @@ void ImogenAudioProcessor::saveEditorSizeToValueTree()
         savedEditorSize.y = editor->getHeight();
     }
 
-    auto editorSize = state.getOrCreateChildWithName (ValueTreeIDs::SavedEditorSize, nullptr);
-
-    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_X, savedEditorSize.x, nullptr);
-    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_Y, savedEditorSize.y, nullptr);
+//    auto editorSize = state.getOrCreateChildWithName (ValueTreeIDs::SavedEditorSize, nullptr);
+//
+//    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_X, savedEditorSize.x, nullptr);
+//    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_Y, savedEditorSize.y, nullptr);
 #endif
 }
 
 void ImogenAudioProcessor::updateEditorSizeFromValueTree()
 {
 #if !IMOGEN_HEADLESS
-    auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
+//    auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
+//
+//    if (editorSize.isValid())
+//    {
+//        savedEditorSize.x = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_X);
+//        savedEditorSize.y = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_Y);
+//    }
 
-    if (editorSize.isValid())
-    {
-        savedEditorSize.x = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_X);
-        savedEditorSize.y = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_Y);
-    }
-
-    if (auto* editor = getActiveEditor()) editor->setSize (savedEditorSize.x, savedEditorSize.y);
-
-    updateHostDisplay();
+//    if (auto* editor = getActiveEditor()) editor->setSize (savedEditorSize.x, savedEditorSize.y);
+//
+//    updateHostDisplay();
 #endif
 }
 

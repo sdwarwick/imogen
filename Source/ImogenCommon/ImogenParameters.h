@@ -4,32 +4,6 @@
 
 namespace Imogen
 {
-static inline juce::String parameterTreeID()
-{
-    return "ImogenParameters";
-}
-static inline juce::String parameterTreeName()
-{
-    return TRANS ("Parameters");
-}
-
-static inline juce::String meterTreeID()
-{
-    return "ImogenMeters";
-}
-static inline juce::String meterTreeName()
-{
-    return TRANS ("Meters");
-}
-
-static inline juce::String parameterTreeSeparatorString()
-{
-    return {" | "};
-}
-
-
-/*=========================================================================================*/
-
 
 enum ParameterID
 {
@@ -107,45 +81,6 @@ enum NonAutomatableParameterID
     guiLightDarkModeID
 };
 static constexpr int numNonAutomatableParams = guiLightDarkModeID + 1;
-
-
-/*=========================================================================================*/
-
-
-static inline auto createMeterParameterTree()
-{
-    using Group = juce::AudioProcessorParameterGroup;
-    using Gain  = bav::GainMeterParameter;
-
-    constexpr auto compLimMeter = juce::AudioProcessorParameter::compressorLimiterGainReductionMeter;
-    constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
-
-
-    auto inputLevel   = std::make_unique< Gain > (inputLevelID, "In", "Input level", juce::AudioProcessorParameter::inputMeter);
-    auto outputLevelL = std::make_unique< Gain > (outputLevelLID, "OutL", "Output level (L)", juce::AudioProcessorParameter::outputMeter);
-    auto outputLevelR = std::make_unique< Gain > (outputLevelRID, "OutL", "Output level (R)", juce::AudioProcessorParameter::outputMeter);
-
-    auto gateGainRedux  = std::make_unique< Gain > (gateReduxID, "Gate redux", "Noise gate gain reduction", compLimMeter);
-    auto compGainRedux  = std::make_unique< Gain > (compReduxID, "Comp redux", "Compressor gain reduction", compLimMeter);
-    auto deEssGainRedux = std::make_unique< Gain > (deEssGainReduxID, "D-S redux", "De-esser gain reduction", compLimMeter);
-    auto limtrGainRedux = std::make_unique< Gain > (limiterGainReduxID, "Lim redux", "Limiter gain reduction", compLimMeter);
-
-    auto reverbLevel = std::make_unique< Gain > (reverbLevelID, "Reverb", "Reverb level", otherMeter);
-    auto delayLevel  = std::make_unique< Gain > (delayLevelID, "Delay", "Delay level", otherMeter);
-
-    return std::make_unique< Group > (meterTreeID(),
-                                      meterTreeName(),
-                                      parameterTreeSeparatorString(),
-                                      std::move (inputLevel),
-                                      std::move (outputLevelL),
-                                      std::move (outputLevelR),
-                                      std::move (gateGainRedux),
-                                      std::move (compGainRedux),
-                                      std::move (deEssGainRedux),
-                                      std::move (limtrGainRedux),
-                                      std::move (reverbLevel),
-                                      std::move (delayLevel));
-}
 
 
 /*=========================================================================================*/
@@ -271,16 +206,6 @@ struct Parameters :     bav::ParameterList
     Parameters()
     {
         add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle);
-    }
-    
-    juce::ValueTree toValueTree() const override final
-    {
-        return {};
-    }
-    
-    void restoreFromValueTree (const juce::ValueTree& tree) override final
-    {
-        juce::ignoreUnused (tree);
     }
     
     IntParam inputMode { inputSourceID,
@@ -420,6 +345,34 @@ private:
     const juce::String dB { TRANS ("dB") };
     const juce::String st { TRANS ("st") };
     const juce::String sec { TRANS ("sec") };
+};
+
+
+struct Meters :     bav::ParameterList
+{
+    using Gain = bav::ParameterHolder< bav::GainMeterParameter >;
+    
+    Meters()
+    {
+        add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
+    }
+    
+    Gain inputLevel { inputLevelID, "In", "Input level", juce::AudioProcessorParameter::inputMeter };
+    
+    Gain outputLevelL { outputLevelLID, "OutL", "Output level (L)", juce::AudioProcessorParameter::outputMeter };
+    Gain outputLevelR { outputLevelRID, "OutL", "Output level (R)", juce::AudioProcessorParameter::outputMeter };
+    
+    Gain gateRedux { gateReduxID, "Gate redux", "Noise gate gain reduction", compLimMeter };
+    Gain compRedux { compReduxID, "Comp redux", "Compressor gain reduction", compLimMeter };
+    Gain deEssRedux { deEssGainReduxID, "D-S redux", "De-esser gain reduction", compLimMeter };
+    Gain limRedux { limiterGainReduxID, "Lim redux", "Limiter gain reduction", compLimMeter };
+    
+    Gain reverbLevel { reverbLevelID, "Reverb", "Reverb level", otherMeter };
+    Gain delayLevel { delayLevelID, "Delay", "Delay level", otherMeter };
+    
+private:
+    static constexpr auto compLimMeter = juce::AudioProcessorParameter::compressorLimiterGainReductionMeter;
+    static constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
 };
 
 

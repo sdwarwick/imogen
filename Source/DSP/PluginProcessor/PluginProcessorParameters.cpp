@@ -71,3 +71,35 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
 }
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< float >&);
 template void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< double >&);
+
+
+
+void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
+{
+    bool anyChanged = false;
+    
+    auto updateMeter = [&anyChanged] (bav::FloatParameter& meter, float newValue)
+    {
+        if (meter.get() != newValue)
+        {
+            meter.setValueNotifyingHost (newValue);
+            anyChanged = true;
+        }
+    };
+    
+    updateMeter (meters.inputLevel, meterData.inputLevel);
+    updateMeter (meters.outputLevelL, meterData.outputLevelL);
+    updateMeter (meters.outputLevelR, meterData.outputLevelR);
+    updateMeter (meters.gateRedux, meterData.noiseGateGainReduction);
+    updateMeter (meters.compRedux, meterData.compressorGainReduction);
+    updateMeter (meters.deEssRedux, meterData.deEsserGainReduction);
+    updateMeter (meters.limRedux, meterData.limiterGainReduction);
+    updateMeter (meters.reverbLevel, meterData.reverbLevel);
+    updateMeter (meters.delayLevel, meterData.delayLevel);
+    
+    if (anyChanged)
+    {
+        ChangeDetails change;
+        updateHostDisplay (change.withParameterInfoChanged (true));
+    }
+}
