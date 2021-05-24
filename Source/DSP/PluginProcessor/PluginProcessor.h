@@ -44,7 +44,7 @@ class ImogenAudioProcessorEditor;
 
 struct ImogenGUIUpdateReciever
 {
-    virtual void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize) = 0;
+    
 };
 
 
@@ -192,7 +192,6 @@ private:
     juce::Point< int > savedEditorSize;
     
     Imogen::Parameters parameters;
-    
     Imogen::Meters meters;
 
 #if !IMOGEN_HEADLESS

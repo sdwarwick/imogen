@@ -40,19 +40,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     parameters.addParametersTo (*this);
     meters.addParametersTo (*this);
 
-    //Imogen::buildImogenMainValueTree (state, getParameterTree());
-
     mainBypassPntr = parameters.mainBypass.get();
-
-//    bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
-//                                                    state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
-//                                                    Imogen::numParams,
-//                                                    [this] (int param) { return getParameterPntr (static_cast< ParameterID > (param)); });
-//
-//    bav::createWriteOnlyParameterValueTreeAttachments (meterTreeAttachments,
-//                                                       state.getChildWithName (Imogen::ValueTreeIDs::Meters),
-//                                                       Imogen::numMeters,
-//                                                       [this] (int param) { return getMeterParamPntr (static_cast< MeterID > (param)); });
 
     if (isUsingDoublePrecision())
         initialize (doubleEngine);

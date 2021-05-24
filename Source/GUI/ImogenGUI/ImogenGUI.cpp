@@ -35,13 +35,7 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     setInterceptsMouseClicks (false, true);
     
     parameters.addAllParametersAsInternal();
-
-    //Imogen::buildImogenMainValueTree (state, *parameterTree);
-
-    std::vector< bav::Parameter* > parameterPointers; // temporary storage for pointers to the parameters in the tree...
-    std::vector< bav::Parameter* > meterPointers;
-
-   // Imogen::initializeParameterPointers (&parameterPointers, &meterPointers, *parameterTree);
+    meters.addAllParametersAsInternal();
 
     addAndMakeVisible (mainDial);
     

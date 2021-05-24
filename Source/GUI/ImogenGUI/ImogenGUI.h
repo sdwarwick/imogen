@@ -109,6 +109,7 @@ private:
     std::atomic< bool > darkMode;
     
     Imogen::Parameters parameters;
+    Imogen::Meters meters;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };
