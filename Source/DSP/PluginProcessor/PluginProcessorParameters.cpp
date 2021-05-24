@@ -55,7 +55,9 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
     parameters.descantInterval.get()->setAction ([&engine] (int value) { engine.updateDescantInterval (value); });
     parameters.reverbDryWet.get()->setAction ([&engine] (int value) { engine.updateReverbDryWet (value); });
     parameters.delayDryWet.get()->setAction ([&engine] (int value) { engine.updateDelayDryWet (value); });
+    parameters.editorPitchbend.get()->setAction ([&engine (int value) { engine.recieveExternalPitchbend (value); }]);
     
+    parameters.midiLatch.get()->setAction([&engine] (bool value) { engine.updateMidiLatch (value); });
     parameters.leadBypass.get()->setAction ([&engine] (bool value) { engine.updateLeadBypass (value); });
     parameters.harmonyBypass.get()->setAction([&engine] (bool value) { engine.updateHarmonyBypass (value); });
     parameters.pedalToggle.get()->setAction ([&engine] (bool value) { engine.updatePedalToggle (value); });

@@ -46,9 +46,20 @@ enum ParameterID
     reverbLoCutID,
     reverbHiCutID,
     delayToggleID,
-    delayDryWetID
+    delayDryWetID,
+    linkIsEnabledID,
+    linkNumSessionPeersID,
+    mtsEspIsConnectedID,
+    mtsEspScaleNameID,
+    midiLatchID,
+    editorPitchbendID,
+    lastMovedMidiCCnumberID,
+    lastMovedMidiCCvalueID,
+    currentInputNoteAsStringID,
+    currentCentsSharpID,
+    guiLightDarkModeID
 };
-static constexpr int numParams = delayDryWetID + 1;
+static constexpr int numParams = guiLightDarkModeID + 1;
 
 
 enum MeterID
@@ -66,134 +77,7 @@ enum MeterID
 static constexpr int numMeters = delayLevelID + 1;
 
 
-enum NonAutomatableParameterID
-{
-    linkIsEnabledID,
-    linkNumSessionPeersID,
-    mtsEspIsConnectedID,
-    mtsEspScaleNameID,
-    midiLatchID,
-    editorPitchbendID,
-    lastMovedMidiCCnumberID,
-    lastMovedMidiCCvalueID,
-    currentInputNoteAsStringID,
-    currentCentsSharpID,
-    guiLightDarkModeID
-};
-static constexpr int numNonAutomatableParams = guiLightDarkModeID + 1;
-
-
 /*=========================================================================================*/
-
-
-//static inline auto createPropertyTree()
-//{
-//    using Group = bav::NonParamValueTreeNodeGroup;
-//
-//    using IntNode    = bav::IntValueTreeNode;
-//    using BoolNode   = bav::BoolValueTreeNode;
-//    using StringNode = bav::StringValueTreeNode;
-//
-//    namespace l = bav::ParameterValueConversionLambdas;
-//
-//    std::vector< std::unique_ptr< Group > > groups;
-//
-//    { /* Ableton Link */
-//        auto isEnabled = std::make_unique< BoolNode > (
-//            linkIsEnabledID, "Toggle", "Ableton link toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString);
-//
-//        auto numSessionPeers = std::make_unique< IntNode > (
-//            linkNumSessionPeersID,
-//            "Num peers",
-//            "Ableton link num session peers",
-//            0,
-//            50,
-//            0,
-//            [] (int value, int maximumStringLength) { return juce::String (value).substring (0, maximumStringLength); },
-//            nullptr);
-//
-//        groups.emplace_back (std::make_unique< Group > ("Ableton Link", std::move (isEnabled), std::move (numSessionPeers)));
-//    }
-//    { /* MTS-ESP */
-//        auto isConnected = std::make_unique< BoolNode > (
-//            mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected", false, l::toggle_stringFromBool, l::toggle_boolFromString);
-//
-//        auto scaleName = std::make_unique< StringNode > (mtsEspScaleNameID, "Scale name", "MTS-ESP scale name", "No active scale");
-//
-//        groups.emplace_back (std::make_unique< Group > ("MTS-ESP", std::move (isConnected), std::move (scaleName)));
-//    }
-//    { /* MIDI */
-//        auto isLatched =
-//            std::make_unique< BoolNode > (midiLatchID, "Is latched", "MIDI is latched", false, l::toggle_stringFromBool, l::toggle_boolFromString);
-//
-//        auto editorPitchbend = std::make_unique< IntNode > (
-//            editorPitchbendID,
-//            "Pitchbend",
-//            "GUI pitchbend",
-//            0,
-//            127,
-//            64,
-//            [] (int value, int maximumStringLength) { return juce::String (value).substring (0, maximumStringLength); },
-//            [] (const juce::String& text) { return text.retainCharacters ("1234567890").getIntValue(); });
-//
-//        // subgroup: last moved MIDI controller
-//        auto number =
-//            std::make_unique< IntNode > (lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0, nullptr, nullptr);
-//
-//        auto value = std::make_unique< IntNode > (lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0, nullptr, nullptr);
-//
-//        auto lastMovedController = std::make_unique< Group > ("Last moved MIDI controller", std::move (number), std::move (value));
-//
-//        groups.emplace_back (std::make_unique< Group > ("MIDI", std::move (isLatched), std::move (editorPitchbend), std::move (lastMovedController)));
-//    }
-//
-//    { /* GUI state */
-//        auto lightDarkMode = std::make_unique< BoolNode > (
-//            guiLightDarkModeID,
-//            "Dark mode",
-//            "GUI Dark mode",
-//            true,
-//            [] (bool val, int maxLength)
-//            {
-//                if (val) return TRANS ("Dark mode is on").substring (0, maxLength);
-//
-//                return TRANS ("Dark mode is off").substring (0, maxLength);
-//            },
-//            nullptr);
-//
-//        groups.emplace_back (std::make_unique< Group > ("GUI state", std::move (lightDarkMode)));
-//    }
-//
-//    { /* Current intonation information */
-//        auto currentNote = std::make_unique< StringNode > (currentInputNoteAsStringID, "Current note", "Current input note as string", "-");
-//
-//        auto currentCentsSharp = std::make_unique< IntNode > (
-//            currentCentsSharpID,
-//            "Cents sharp",
-//            "Current input cents sharp",
-//            -100,
-//            100,
-//            0,
-//            [] (int cents, int maxLength)
-//            {
-//                if (cents == 0) return TRANS ("Perfect!");
-//
-//                if (cents > 0) return (juce::String (cents) + TRANS (" cents sharp")).substring (0, maxLength);
-//
-//                return (juce::String (abs (cents)) + TRANS (" cents flat")).substring (0, maxLength);
-//            },
-//            nullptr);
-//
-//        groups.emplace_back (std::make_unique< Group > ("Intonation information", std::move (currentNote), std::move (currentCentsSharp)));
-//    }
-//
-//    auto mainGroup = std::make_unique< Group > ("Non-parameter properties");
-//
-//    for (auto& group : groups)
-//        mainGroup->addChild (std::move (group));
-//
-//    return mainGroup;
-//}
 
 namespace l = bav::ParameterValueConversionLambdas;
 
@@ -205,7 +89,9 @@ struct Parameters :     bav::ParameterList
     
     Parameters()
     {
-        add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle);
+        add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch);
+        
+        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, editorPitchbend, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentCentsSharp);
     }
     
     IntParam inputMode { inputSourceID,
@@ -333,6 +219,63 @@ struct Parameters :     bav::ParameterList
     
     BoolParam limiterToggle { limiterToggleID, "Toggle", "Limiter toggle", true, juce::String(), l::toggle_stringFromBool, l::toggle_boolFromString };
     
+    BoolParam midiLatch { midiLatchID, "Is latched", "MIDI is latched", false, l::toggle_stringFromBool, l::toggle_boolFromString };
+    
+    /* */
+    
+    BoolParam abletonLinkEnabled { linkIsEnabledID, "Toggle", "Ableton link toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString };
+    
+    IntParam abletonLinkSessionPeers { linkNumSessionPeersID,
+        "Num peers",
+        "Ableton link num session peers",
+        0,
+        50,
+        0,
+        [] (int value, int maximumStringLength) { return juce::String (value).substring (0, maximumStringLength); },
+        nullptr };
+    
+    BoolParam mtsEspIsConnected { mtsEspIsConnectedID, "Is connected", "MTS-ESP is connected", false, l::toggle_stringFromBool, l::toggle_boolFromString };
+    
+    IntParam editorPitchbend { editorPitchbendID,
+        "Pitchbend",
+        "GUI pitchbend",
+        0,
+        127,
+        64,
+        [] (int value, int maximumStringLength) { return juce::String (value).substring (0, maximumStringLength); },
+        [] (const juce::String& text) { return text.retainCharacters ("1234567890").getIntValue(); } };
+    
+    IntParam lastMovedMidiController { lastMovedMidiCCnumberID, "Number", "Last moved MIDI controller number", 0, 127, 0, nullptr, nullptr };
+    IntParam lastMovedCCValue { lastMovedMidiCCvalueID, "Value", "Last moved MIDI controller value", 0, 127, 0, nullptr, nullptr };
+    
+    BoolParam guiDarkMode { guiLightDarkModeID,
+        "Dark mode",
+        "GUI Dark mode",
+        true,
+        [] (bool val, int maxLength)
+        {
+            if (val) return TRANS ("Dark mode is on").substring (0, maxLength);
+            
+            return TRANS ("Dark mode is off").substring (0, maxLength);
+        },
+        nullptr };
+    
+    IntParam currentCentsSharp { currentCentsSharpID,
+        "Cents sharp",
+        "Current input cents sharp",
+        -100,
+        100,
+        0,
+        [] (int cents, int maxLength)
+        {
+            if (cents == 0) return TRANS ("Perfect!");
+            
+            if (cents > 0) return (juce::String (cents) + TRANS (" cents sharp")).substring (0, maxLength);
+            
+            return (juce::String (abs (cents)) + TRANS (" cents flat")).substring (0, maxLength);
+        },
+        nullptr };
+    
 private:
     const juce::NormalisableRange< float > gainRange {-60.0f, 0.0f, 0.01f};
     const juce::NormalisableRange< float > zeroToOneRange {0.0f, 1.0f, 0.01f};
@@ -347,6 +290,11 @@ private:
     const juce::String sec { TRANS ("sec") };
 };
 
+
+    // auto scaleName = std::make_unique< StringNode > (mtsEspScaleNameID, "Scale name", "MTS-ESP scale name", "No active scale");
+    
+    // auto currentNote = std::make_unique< StringNode > (currentInputNoteAsStringID, "Current note", "Current input note as string", "-");
+    
 
 struct Meters :     bav::ParameterList
 {
