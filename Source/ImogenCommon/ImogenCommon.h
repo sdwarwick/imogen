@@ -28,14 +28,13 @@
  version:            0.0.1
  name:               ImogenCommon
  description:        This Juce module declares some project-wide settings and data for Imogen as a whole.
- dependencies:       bv_data_model bv_midi
+ dependencies:       bv_midi
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
 
 #pragma once
 
-#include "bv_data_model/bv_data_model.h"
 #include "bv_midi/bv_midi.h"
 
 #include "ImogenParameters.h"
