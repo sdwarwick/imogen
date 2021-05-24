@@ -41,8 +41,6 @@ public:
 
     /*=========================================================================================*/
 
-    void sendValueTreeStateChange (const void* encodedChange, size_t encodedChangeSize) override final;
-
     /*=========================================================================================*/
     /* juce::Component functions */
 
