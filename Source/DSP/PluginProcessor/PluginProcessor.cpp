@@ -43,17 +43,17 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 
     Imogen::buildImogenMainValueTree (state, getParameterTree());
 
-    mainBypassPntr = &parameters.mainBypass.getParam()->rap;
+    mainBypassPntr = parameters.mainBypass.get();
 
-    bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
-                                                    state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
-                                                    Imogen::numParams,
-                                                    [this] (int param) { return getParameterPntr (static_cast< ParameterID > (param)); });
-
-    bav::createWriteOnlyParameterValueTreeAttachments (meterTreeAttachments,
-                                                       state.getChildWithName (Imogen::ValueTreeIDs::Meters),
-                                                       Imogen::numMeters,
-                                                       [this] (int param) { return getMeterParamPntr (static_cast< MeterID > (param)); });
+//    bav::createTwoWayParameterValueTreeAttachments (parameterTreeAttachments,
+//                                                    state.getChildWithName (Imogen::ValueTreeIDs::Parameters),
+//                                                    Imogen::numParams,
+//                                                    [this] (int param) { return getParameterPntr (static_cast< ParameterID > (param)); });
+//
+//    bav::createWriteOnlyParameterValueTreeAttachments (meterTreeAttachments,
+//                                                       state.getChildWithName (Imogen::ValueTreeIDs::Meters),
+//                                                       Imogen::numMeters,
+//                                                       [this] (int param) { return getMeterParamPntr (static_cast< MeterID > (param)); });
 
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -61,7 +61,8 @@ ImogenAudioProcessor::ImogenAudioProcessor()
         initialize (floatEngine);
 
     treeSync.sendFullSyncCallback();
-    resetParameterDefaultsToCurrentValues();
+    
+    parameters.resetAllToDefault();
 
     Timer::startTimerHz (60);
 }
@@ -119,9 +120,9 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double            
     jassert (activeEngine.getLatency() > 0);
 
     activeEngine.prepare (sampleRate);
-
-    actionAllParameterUpdates();
     
+    parameters.doAllActions();
+
     setLatencySamples (activeEngine.reportLatency());
 
     updateHostDisplay();
@@ -198,9 +199,9 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
     jassert (!engine.hasBeenReleased() && engine.hasBeenInitialized());
 
     juce::ScopedNoDenormals nodenorms;
-
-    actionAllParameterUpdates();
     
+    parameters.doAllActions();
+
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0) return;
 
     auto inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
@@ -257,8 +258,8 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
         }
     };
 
-    for (auto* param : meterParameterPointers)
-        updateMeter (param->rap, getMeterValue (static_cast< MeterID > (param->key)));
+//    for (auto* param : meterParameterPointers)
+//        updateMeter (param->rap, getMeterValue (static_cast< MeterID > (param->key)));
 
     if (anyChanged)
     {
@@ -318,7 +319,7 @@ juce::String ImogenAudioProcessor::getScaleName() const
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-    return static_cast< double > (getParameterPntr (adsrReleaseID)->getCurrentNormalizedValue());
+    return parameters.adsrRelease.get()->get();
 }
 
 
