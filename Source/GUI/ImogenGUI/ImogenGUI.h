@@ -55,9 +55,6 @@ struct ImogenGUIUpdateSender
 class ImogenGUI : public juce::Component,
                   public bav::GUIInitializer
 {
-    using ParameterID               = Imogen::ParameterID;
-    using MeterID                   = Imogen::MeterID;
-
 public:
     ImogenGUI(ImogenGUIUpdateSender* s);
 

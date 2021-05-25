@@ -60,10 +60,6 @@ class ImogenAudioProcessor : public juce::AudioProcessor,
 {
     using Parameter = bav::Parameter;
     using RAP = juce::RangedAudioParameter;
-
-    using ParameterID               = Imogen::ParameterID;
-    using MeterID                   = Imogen::MeterID;
-
     using ChangeDetails = juce::AudioProcessorListener::ChangeDetails;
 
 
