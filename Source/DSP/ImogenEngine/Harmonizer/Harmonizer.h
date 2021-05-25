@@ -14,10 +14,10 @@ namespace bav
 template < typename SampleType >
 class Harmonizer : public dsp::SynthBase< SampleType >
 {
-    using AudioBuffer    = juce::AudioBuffer< SampleType >;
-    using MidiBuffer     = juce::MidiBuffer;
-    using Voice          = HarmonizerVoice< SampleType >;
-    using Base           = dsp::SynthBase< SampleType >;
+    using AudioBuffer = juce::AudioBuffer< SampleType >;
+    using MidiBuffer  = juce::MidiBuffer;
+    using Voice       = HarmonizerVoice< SampleType >;
+    using Base        = dsp::SynthBase< SampleType >;
 
 public:
     Harmonizer();
@@ -28,7 +28,7 @@ public:
 
     int getLatencySamples() const noexcept { return analyzer.getLatency(); }
 
-    
+
 private:
     friend class HarmonizerVoice< SampleType >;
 
@@ -52,4 +52,4 @@ private:
 };
 
 
-} // namespace bav
+}  // namespace bav

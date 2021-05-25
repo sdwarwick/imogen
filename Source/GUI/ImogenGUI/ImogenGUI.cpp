@@ -6,21 +6,21 @@
 
 
 ImogenGUI::ImogenGUI()
-    : GUIInitializer (getTopLevelComponent())
-    , tooltipWindow (this, msBeforeTooltip)
+    : GUIInitializer (getTopLevelComponent()), tooltipWindow (this, msBeforeTooltip)
 {
     setInterceptsMouseClicks (false, true);
-    
+
     parameters.addAllParametersAsInternal();
     meters.addAllParametersAsInternal();
 
     addAndMakeVisible (mainDial);
-    
+
 #if JUCE_MAC
     parameters.guiDarkMode->set (juce::Desktop::isOSXDarkModeActive());
 #endif
-    
-    parameters.guiDarkMode->onParameterChange = [this](){ repaint(); };
+
+    parameters.guiDarkMode->onParameterChange = [this]()
+    { repaint(); };
 
     mainDial.showPitchCorrection();
 
@@ -60,7 +60,7 @@ void ImogenGUI::savePreset (const juce::String& presetName)
     const auto filename = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
 
     juce::FileOutputStream stream (filename);
-    
+
     state.serialize().writeToStream (stream);
 
     rescanPresetsFolder();
@@ -72,7 +72,7 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
     const auto presetToLoad = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
                                                                                                     Imogen::getPresetFileExtension()));
 
-    if (!presetToLoad.existsAsFile())
+    if (! presetToLoad.existsAsFile())
     {
         // display error message...
         return;
@@ -97,7 +97,7 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 
     if (presetToDelete.existsAsFile())
     {
-        if (!presetToDelete.moveToTrash()) presetToDelete.deleteFile();
+        if (! presetToDelete.moveToTrash()) presetToDelete.deleteFile();
 
         rescanPresetsFolder();
     }
@@ -108,16 +108,16 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
 {
     const auto presetToLoad = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (previousName,
                                                                                                     Imogen::getPresetFileExtension()));
-    
+
     if (! presetToLoad.existsAsFile())
     {
         // display error message...
         return;
     }
-    
+
     bav::renameFile (presetToLoad,
                      bav::addFileExtensionIfMissing (newName, Imogen::getPresetFileExtension()));
-    
+
     rescanPresetsFolder();
 }
 
@@ -130,7 +130,9 @@ void ImogenGUI::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
 
-    if (parameters.guiDarkMode->get()) { }
+    if (parameters.guiDarkMode->get())
+    {
+    }
     else
     {
     }
@@ -141,7 +143,7 @@ void ImogenGUI::resized()
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
 
-    auto r = getLocalBounds(); // this rectangle represents the entire area of our GUI
+    auto r = getLocalBounds();  // this rectangle represents the entire area of our GUI
 
     juce::ignoreUnused (r);
 }

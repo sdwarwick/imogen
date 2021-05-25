@@ -23,7 +23,6 @@ void Harmonizer< SampleType >::initialized (const double, const int)
 template < typename SampleType >
 void Harmonizer< SampleType >::prepared (int)
 {
-
 }
 
 
@@ -59,8 +58,8 @@ void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& ou
     else
         analyzer.clearUnusedGrains();
 
-    analyzer.analyzeInput(input.getReadPointer(0), input.getNumSamples());
-    
+    analyzer.analyzeInput (input.getReadPointer (0), input.getNumSamples());
+
     Base::renderVoices (midiMessages, output);
 }
 
@@ -83,4 +82,4 @@ template class Harmonizer< float >;
 template class Harmonizer< double >;
 
 
-} // namespace bav
+}  // namespace bav

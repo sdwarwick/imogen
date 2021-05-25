@@ -5,8 +5,8 @@
 #include "Harmonizer/HarmonizerVoice/HarmonizerVoice.cpp"
 
 
-#define bvie_VOID_TEMPLATE                                                                                                                           \
-    template < typename SampleType >                                                                                                                 \
+#define bvie_VOID_TEMPLATE           \
+    template < typename SampleType > \
     void ImogenEngine< SampleType >
 
 
@@ -244,7 +244,7 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
 
     dryBuffer.clear();
 
-    if (!leadIsBypassed) dryPanner.process (monoBuffer, dryBuffer); // write to dry buffer & apply panning
+    if (! leadIsBypassed) dryPanner.process (monoBuffer, dryBuffer);  // write to dry buffer & apply panning
 
     dryWetMixer.pushDrySamples (juce::dsp::AudioBlock< SampleType > (dryBuffer));
 
@@ -253,9 +253,9 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     if (harmoniesAreBypassed)
         harmonizer.bypassedBlock (blockSize, midiMessages);
     else
-        harmonizer.render (monoBuffer, wetBuffer, midiMessages); // renders the stereo output into wetBuffer
+        harmonizer.render (monoBuffer, wetBuffer, midiMessages);  // renders the stereo output into wetBuffer
 
-    dryWetMixer.mixWetSamples (juce::dsp::AudioBlock< SampleType > (wetBuffer)); // puts the mixed dry & wet samples into wetBuffer
+    dryWetMixer.mixWetSamples (juce::dsp::AudioBlock< SampleType > (wetBuffer));  // puts the mixed dry & wet samples into wetBuffer
 
     if (delayIsOn.load())
     {
@@ -294,4 +294,4 @@ template class ImogenEngine< float >;
 template class ImogenEngine< double >;
 
 
-} // namespace bav
+}  // namespace bav

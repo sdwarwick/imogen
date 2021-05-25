@@ -20,7 +20,6 @@
 #include "MainDialComponent/MainDialComponent.h"
 
 
-
 class ImogenGUI : public juce::Component,
                   public bav::GUIInitializer
 {
@@ -32,17 +31,17 @@ public:
 private:
     /*=========================================================================================*/
     /* juce::Component functions */
-    
+
     void paint (juce::Graphics& g) override;
     void resized() override;
-    
+
     bool keyPressed (const juce::KeyPress& key) override;
     bool keyStateChanged (bool isKeyDown) override;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override;
     void focusLost (FocusChangeType cause) override;
-    
+
     /*=========================================================================================*/
-    
+
     inline void makePresetMenu (juce::ComboBox& box);
 
     void rescanPresetsFolder();
@@ -62,9 +61,9 @@ private:
     juce::TooltipWindow  tooltipWindow;
     static constexpr int msBeforeTooltip = 700;
 
-    Imogen::State state;
+    Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
-    Imogen::Meters& meters {state.meters};
+    Imogen::Meters&     meters {state.meters};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };

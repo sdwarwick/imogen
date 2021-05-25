@@ -20,24 +20,22 @@
 
 namespace Imogen
 {
-
-
-struct State  :     bav::SerializableData
+struct State : bav::SerializableData
 {
     State() : SerializableData ("ImogenState") { }
-    
+
     void toValueTree (ValueTree& tree) override final
     {
         parameters.serialize (tree);
     }
-    
+
     void fromValueTree (const ValueTree& tree) override final
     {
         parameters.deserialize (tree);
     }
-    
+
     Parameters parameters;
-    Meters meters;
+    Meters     meters;
 };
 
 
@@ -53,4 +51,4 @@ static inline juce::String getPresetFileExtension()
 }
 
 
-} // namespace Imogen
+}  // namespace Imogen

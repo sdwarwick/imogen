@@ -51,7 +51,8 @@ public:
     void systemRequestedQuit() override
     {
         if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
-            juce::Timer::callAfterDelay (100, [&]() { requestQuit(); });
+            juce::Timer::callAfterDelay (100, [&]()
+                                         { requestQuit(); });
         else
             quit();
     }
@@ -84,7 +85,7 @@ public:
 #endif
     }
 
-    static constexpr bool isMobileApp() { return !isDesktopStandaloneApp(); }
+    static constexpr bool isMobileApp() { return ! isDesktopStandaloneApp(); }
 
     //==============================================================================
 

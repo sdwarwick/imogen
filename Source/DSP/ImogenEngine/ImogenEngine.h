@@ -146,9 +146,9 @@ public:
 
         switch (stereoReducer.getStereoReductionMode())
         {
-            case (Mode::leftOnly): return 0;
-            case (Mode::rightOnly): return 1;
-            case (Mode::mixToMono): return 2;
+            case (Mode::leftOnly) : return 0;
+            case (Mode::rightOnly) : return 1;
+            case (Mode::mixToMono) : return 2;
         }
     }
 
@@ -158,9 +158,9 @@ public:
 
         switch (newSource)
         {
-            case (1): stereoReducer.setStereoReductionMode (Mode::rightOnly);
-            case (2): stereoReducer.setStereoReductionMode (Mode::mixToMono);
-            default: stereoReducer.setStereoReductionMode (Mode::leftOnly);
+            case (1) : stereoReducer.setStereoReductionMode (Mode::rightOnly);
+            case (2) : stereoReducer.setStereoReductionMode (Mode::mixToMono);
+            default : stereoReducer.setStereoReductionMode (Mode::leftOnly);
         }
     }
 
@@ -195,13 +195,13 @@ private:
 
     Harmonizer< SampleType > harmonizer;
 
-    AudioBuffer monoBuffer; // this buffer is used to store the mono input signal so that input gain can be applied
-    AudioBuffer wetBuffer; // this buffer is where the 12 harmony voices' output gets added together
-    AudioBuffer dryBuffer; // this buffer is used for panning & delaying the dry signal
+    AudioBuffer monoBuffer;  // this buffer is used to store the mono input signal so that input gain can be applied
+    AudioBuffer wetBuffer;   // this buffer is where the 12 harmony voices' output gets added together
+    AudioBuffer dryBuffer;   // this buffer is used for panning & delaying the dry signal
 
     juce::dsp::ProcessSpec dspSpec;
 
-    bav::dsp::FX::MonoStereoConverter< SampleType > stereoReducer; // the harmonizer only accepts mono input
+    bav::dsp::FX::MonoStereoConverter< SampleType > stereoReducer;  // the harmonizer only accepts mono input
 
     bav::dsp::FX::SmoothedGain< SampleType > inputGain, outputGain;
 
@@ -259,7 +259,7 @@ private:
     static constexpr auto limiterReleaseMs    = 35.0f;
     static constexpr auto noiseGateAttackMs   = 25.0f;
     static constexpr auto noiseGateReleaseMs  = 100.0f;
-    static constexpr auto noiseGateFloorRatio = 10.0f; // ratio to one when the noise gate is activated
+    static constexpr auto noiseGateFloorRatio = 10.0f;  // ratio to one when the noise gate is activated
     static constexpr auto compressorAttackMs  = 4.0f;
     static constexpr auto compressorReleaseMs = 200.0f;
 
@@ -270,4 +270,4 @@ private:
 };
 
 
-} // namespace bav
+}  // namespace bav

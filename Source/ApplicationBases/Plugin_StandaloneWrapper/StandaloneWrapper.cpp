@@ -1,7 +1,7 @@
 #if JucePlugin_Build_Standalone && JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP
 
-#include "StandaloneWrapper.h"
-#include "BinaryData.h"
+#    include "StandaloneWrapper.h"
+#    include "BinaryData.h"
 
 
 StandaloneFilterApp::StandaloneFilterApp()
@@ -16,11 +16,11 @@ juce::StandaloneFilterWindow* StandaloneFilterApp::createWindow()
     auto window = new juce::StandaloneFilterWindow (getApplicationName(),
                                                     getBackgroundColor(),
                                                     appProperties.getUserSettings(),
-                                                    false, // take ownership of settings
+                                                    false,  // take ownership of settings
                                                     getDefaultAudioDeviceName(),
                                                     getDefaultAudioDeviceSetup(),
                                                     {},
-                                                    true); // auto open midi devices
+                                                    true);  // auto open midi devices
 
     window->setTitleBarTextCentred (true);
     window->setUsingNativeTitleBar (false);
@@ -59,7 +59,8 @@ void StandaloneFilterApp::systemRequestedQuit()
     if (mainWindow != nullptr) mainWindow->pluginHolder->savePluginState();
 
     if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
-        juce::Timer::callAfterDelay (100, [&]() { requestQuit(); });
+        juce::Timer::callAfterDelay (100, [&]()
+                                     { requestQuit(); });
     else
         quit();
 }
@@ -78,7 +79,7 @@ bool StandaloneFilterApp::backButtonPressed()
 JUCE_CREATE_APPLICATION_DEFINE (StandaloneFilterApp)
 
 
-#if JUCE_IOS
+#    if JUCE_IOS
 
 bool JUCE_CALLTYPE juce_isInterAppAudioConnected()
 {
@@ -99,6 +100,6 @@ juce::Image JUCE_CALLTYPE juce_getIAAHostIcon (int size)
     return juce::Image();
 }
 
-#endif /* JUCE_IOS */
+#    endif /* JUCE_IOS */
 
 #endif /* JucePlugin_Build_Standalone && JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP */
