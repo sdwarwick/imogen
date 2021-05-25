@@ -33,7 +33,12 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     saveEditorSizeToValueTree();
 
     juce::MemoryOutputStream stream (destData, false);
-    parameters.toValueTree().writeToStream (stream);
+    
+    juce::ValueTree tree {"ImogenState"};
+    
+    parameters.serialize (tree);
+    
+    tree.writeToStream (stream);
 }
 
 
@@ -45,15 +50,15 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 {
     auto newTree = juce::ValueTree::readFromData (data, static_cast< size_t > (sizeInBytes));
 
-    if (! newTree.isValid()) return;
+    if (! newTree.isValid() || ! newTree.hasType ("ImogenState")) return;
 
     suspendProcessing (true);
-
-    parameters.restoreFromValueTree (newTree);
-
-    parameters.doAllActions();
+    
+    parameters.deserialize (newTree);
     
     parameters.refreshAllDefaults();
+
+    parameters.doAllActions();
     
     updateEditorSizeFromValueTree();
 
