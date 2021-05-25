@@ -53,6 +53,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     suspendProcessing (true);
     
     parameters.deserialize (newTree);
+    parameters.refreshAllDefaults();
     
     updateEditorSizeFromValueTree();
 
