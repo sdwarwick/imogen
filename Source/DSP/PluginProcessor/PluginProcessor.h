@@ -67,11 +67,10 @@ private:
     bool supportsMPE() const override final { return false; }
     bool isMidiEffect() const override final { return false; }
     
-    const juce::String getName() const override final { return JucePlugin_Name; }
+    const juce::String getName() const override final { return "Imogen"; }
     juce::StringArray  getAlternateDisplayNames() const override final { return {"Imgn"}; }
     
     bool hasEditor() const override final;
-    
     juce::AudioProcessorEditor* createEditor() override final;
     
     bool supportsDoublePrecisionProcessing() const override final { return true; }
@@ -106,9 +105,9 @@ private:
     bav::ImogenEngine< float >  floatEngine;
     bav::ImogenEngine< double > doubleEngine;
     
-    Imogen::State state;
+    Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
-    Imogen::Meters& meters {state.meters};
+    Imogen::Meters&     meters {state.meters};
     
 #if !IMOGEN_HEADLESS
     ableton::Link abletonLink; // this object represents the plugin as a participant in an Ableton Link session
