@@ -285,6 +285,21 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
 
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
+    
+    udpateInternalsData();
+}
+
+bvie_VOID_TEMPLATE::udpateInternalsData()
+{
+    internalsData.mtsEspConnected = harmonizer.isConnectedToMtsEsp();
+    internalsData.mtsEspScaleName = harmonizer.getScaleName();
+    
+    const auto intonationInfo = harmonizer.getLatestIntonationInfo();
+    internalsData.currentCentsSharp = intonationInfo.centsSharp;
+    internalsData.currentPitchAsString = intonationInfo.pitchAsString;
+    
+    //int lastMovedMidiController {};
+    //int lastMovedControllerValue {};
 }
 
 

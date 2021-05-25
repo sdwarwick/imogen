@@ -16,6 +16,8 @@ struct Parameters : bav::ParameterList
         : ParameterList ("ImogenParameters")
     {
         add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch);
+        
+        addInternal (editorPitchbend);
     }
 
     IntParam inputMode {"Input source", "Input source", 1, 3, 1,
@@ -121,6 +123,13 @@ struct Parameters : bav::ParameterList
 
     BoolParam midiLatch {"Is latched", "MIDI is latched", false, l::toggle_stringFromBool, l::toggle_boolFromString};
 
+    /* */
+    
+    IntParam editorPitchbend {"Pitchbend", "GUI pitchbend", 0, 127, 64,
+        [] (int value, int maximumStringLength)
+        { return juce::String (value).substring (0, maximumStringLength); },
+        [] (const juce::String& text)
+        { return text.retainCharacters ("1234567890").getIntValue(); }};
     
 private:
     const juce::NormalisableRange< float > gainRange {-60.0f, 0.0f, 0.01f};

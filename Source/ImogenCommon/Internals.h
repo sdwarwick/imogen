@@ -12,7 +12,7 @@ struct Internals :  bav::ParameterList
     Internals()
     : ParameterList ("ImogenInternals")
     {
-        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, editorPitchbend, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentCentsSharp, editorSizeX, editorSizeY);
+        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentCentsSharp, editorSizeX, editorSizeY);
     }
     
     
@@ -24,12 +24,6 @@ struct Internals :  bav::ParameterList
         nullptr};
     
     BoolParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false, l::toggle_stringFromBool, l::toggle_boolFromString};
-    
-    IntParam editorPitchbend {"Pitchbend", "GUI pitchbend", 0, 127, 64,
-        [] (int value, int maximumStringLength)
-        { return juce::String (value).substring (0, maximumStringLength); },
-        [] (const juce::String& text)
-        { return text.retainCharacters ("1234567890").getIntValue(); }};
     
     IntParam lastMovedMidiController {"Number", "Last moved MIDI controller number", 0, 127, 0};
     

@@ -27,6 +27,15 @@ public:
     void release() override;
 
     int getLatencySamples() const noexcept { return analyzer.getLatency(); }
+    
+    
+    struct IntonationInfo
+    {
+        juce::String pitchAsString {};
+        int centsSharp {};
+    };
+    
+    IntonationInfo getLatestIntonationInfo() const { return intonationInfo; }
 
 
 private:
@@ -43,6 +52,8 @@ private:
     void addNumVoices (const int voicesToAdd) override;
 
     dsp::PsolaAnalyzer< SampleType > analyzer;
+    
+    IntonationInfo intonationInfo;
 
     static constexpr auto adsrQuickReleaseMs               = 5;
     static constexpr auto playingButReleasedGainMultiplier = 0.4f;

@@ -149,6 +149,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
     engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 
     updateMeters (engine.getLatestMeterData());
+    updateInternals (engine.getLatestInternalsData());
 }
 
 /*===========================================================================================================================
@@ -179,6 +180,22 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 
     if (anyChanged)
         updateHostDisplay();
+}
+
+
+void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
+{
+#if ! IMOGEN_HEADLESS
+    internals.abletonLinkEnabled->set (abletonLink.isEnabled());
+    internals.abletonLinkSessionPeers->set (static_cast<int> (abletonLink.numPeers()));
+#endif
+    
+    internals.mtsEspIsConnected->set (internalsData.mtsEspConnected);
+    internals.currentCentsSharp->set (internalsData.currentCentsSharp);
+    
+    //int lastMovedMidiController {};
+    //int lastMovedControllerValue {};
+    //juce::String currentPitchAsString {};
 }
 
 /*===========================================================================================================================
@@ -300,8 +317,7 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
                                         { engine.updateReverbDryWet (value); });
     parameters.delayDryWet->setAction ([&engine] (int value)
                                        { engine.updateDelayDryWet (value); });
-    
-    internals.editorPitchbend->setAction ([&engine] (int value)
+    parameters.editorPitchbend->setAction ([&engine] (int value)
                                            { engine.recieveExternalPitchbend (value); });
 
     parameters.midiLatch->setAction ([&engine] (bool value)

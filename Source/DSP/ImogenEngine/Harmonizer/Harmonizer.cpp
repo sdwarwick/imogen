@@ -61,6 +61,8 @@ void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& ou
     analyzer.analyzeInput (input.getReadPointer (0), input.getNumSamples());
 
     Base::renderVoices (midiMessages, output);
+    
+    //TODO: update intonation info...
 }
 
 

@@ -33,6 +33,17 @@ struct ImogenMeterData
 };
 
 
+struct ImogenInternalsData
+{
+    bool mtsEspConnected {};
+    juce::String mtsEspScaleName {};
+    int lastMovedMidiController {};
+    int lastMovedControllerValue {};
+    int currentCentsSharp {};
+    juce::String currentPitchAsString {};
+};
+
+
 namespace bav
 {
 template < typename SampleType >
@@ -58,6 +69,8 @@ public:
     void recieveExternalPitchbend (const int bend);
 
     ImogenMeterData getLatestMeterData() const { return meterData; }
+    
+    ImogenInternalsData getLatestInternalsData() const { return internalsData; }
 
     /*=========================================================================================*/
     /* Parameter updating functions */
@@ -241,6 +254,8 @@ private:
 
 
     ImogenMeterData meterData;
+    
+    ImogenInternalsData internalsData;
 
     inline void resetMeterData()
     {
@@ -254,6 +269,8 @@ private:
         meterData.outputLevelL            = 0.0f;
         meterData.outputLevelR            = 0.0f;
     }
+    
+    void udpateInternalsData();
 
     static constexpr auto limiterThreshDb     = 0.0f;
     static constexpr auto limiterReleaseMs    = 35.0f;

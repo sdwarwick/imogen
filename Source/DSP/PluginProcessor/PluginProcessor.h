@@ -98,6 +98,8 @@ private:
                                      const bool                       isBypassedThisCallback);
 
     void updateMeters (ImogenMeterData meterData);
+    
+    void updateInternals (ImogenInternalsData internalsData);
 
     /*=========================================================================================*/
 
