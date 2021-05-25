@@ -11,8 +11,7 @@ ImogenAudioProcessor::ImogenAudioProcessor()
     : abletonLink (120.0)  // constructed with the initial BPM
 #endif
 {
-    parameters.addParametersTo (*this);
-    meters.addParametersTo (*this);
+    state.addTo (*this);
 
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -301,7 +300,8 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
                                         { engine.updateReverbDryWet (value); });
     parameters.delayDryWet->setAction ([&engine] (int value)
                                        { engine.updateDelayDryWet (value); });
-    parameters.editorPitchbend->setAction ([&engine] (int value)
+    
+    internals.editorPitchbend->setAction ([&engine] (int value)
                                            { engine.recieveExternalPitchbend (value); });
 
     parameters.midiLatch->setAction ([&engine] (bool value)
@@ -355,14 +355,14 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 
 void ImogenAudioProcessor::saveEditorSize (int width, int height)
 {
-    parameters.editorSizeX->set (width);
-    parameters.editorSizeY->set (height);
+    internals.editorSizeX->set (width);
+    internals.editorSizeY->set (height);
 }
 
 juce::Point< int > ImogenAudioProcessor::getSavedEditorSize() const
 {
-    return {parameters.editorSizeX.get()->get(),
-            parameters.editorSizeY.get()->get()};
+    return {internals.editorSizeX.get()->get(),
+            internals.editorSizeY.get()->get()};
 }
 
 

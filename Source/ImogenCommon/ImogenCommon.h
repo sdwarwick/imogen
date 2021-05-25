@@ -15,11 +15,14 @@
 
 #include "bv_midi/bv_midi.h"
 
-#include "ImogenParameters.h"
+#include "Parameters.h"
+#include "Internals.h"
+#include "Meters.h"
 
 
 namespace Imogen
 {
+
 struct State : bav::SerializableData
 {
     State() : SerializableData ("ImogenState") { }
@@ -27,14 +30,31 @@ struct State : bav::SerializableData
     void toValueTree (ValueTree& tree) override final
     {
         parameters.serialize (tree);
+        internals.serialize (tree);
     }
 
     void fromValueTree (const ValueTree& tree) override final
     {
         parameters.deserialize (tree);
+        internals.deserialize (tree);
+    }
+    
+    void addTo (juce::AudioProcessor& p)
+    {
+        parameters.addParametersTo (p);
+        internals.addAllParametersAsInternal();
+        meters.addAllParametersAsInternal();
+    }
+    
+    void addAllAsInternal()
+    {
+        parameters.addAllParametersAsInternal();
+        internals.addAllParametersAsInternal();
+        meters.addAllParametersAsInternal();
     }
 
     Parameters parameters;
+    Internals  internals;
     Meters     meters;
 };
 

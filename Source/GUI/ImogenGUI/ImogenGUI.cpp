@@ -9,17 +9,16 @@ ImogenGUI::ImogenGUI()
     : GUIInitializer (getTopLevelComponent()), tooltipWindow (this, msBeforeTooltip)
 {
     setInterceptsMouseClicks (false, true);
-
-    parameters.addAllParametersAsInternal();
-    meters.addAllParametersAsInternal();
+    
+    state.addAllAsInternal();
 
     addAndMakeVisible (mainDial);
 
 #if JUCE_MAC
-    parameters.guiDarkMode->set (juce::Desktop::isOSXDarkModeActive());
+    internals.guiDarkMode->set (juce::Desktop::isOSXDarkModeActive());
 #endif
 
-    parameters.guiDarkMode->onParameterChange = [this]()
+    internals.guiDarkMode->onParameterChange = [this]()
     { repaint(); };
 
     mainDial.showPitchCorrection();
@@ -130,7 +129,7 @@ void ImogenGUI::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
 
-    if (parameters.guiDarkMode->get())
+    if (internals.guiDarkMode->get())
     {
     }
     else
@@ -142,10 +141,6 @@ void ImogenGUI::resized()
 {
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
-
-    auto r = getLocalBounds();  // this rectangle represents the entire area of our GUI
-
-    juce::ignoreUnused (r);
 }
 
 bool ImogenGUI::keyPressed (const juce::KeyPress& key)

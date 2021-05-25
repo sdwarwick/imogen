@@ -63,6 +63,7 @@ private:
 
     Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
+    Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)

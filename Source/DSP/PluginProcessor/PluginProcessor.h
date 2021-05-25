@@ -107,6 +107,7 @@ private:
 
     Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
+    Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};
 
 #if ! IMOGEN_HEADLESS
