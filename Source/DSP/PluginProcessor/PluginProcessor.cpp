@@ -167,7 +167,7 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
     {
         if (meter.get() != newValue)
         {
-            meter.setValueNotifyingHost (newValue);
+            meter.set (newValue);
             anyChanged = true;
         }
     };
@@ -258,48 +258,48 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 template < typename SampleType >
 void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine)
 {
-    parameters.adsrAttack.get()->setAction ([&engine] (float value) { engine.updateAdsrAttack (value); });
-    parameters.adsrDecay.get()->setAction ([&engine] (float value) { engine.updateAdsrDecay (value); });
-    parameters.adsrSustain.get()->setAction ([&engine] (float value) { engine.updateAdsrSustain (value); });
-    parameters.adsrRelease.get()->setAction ([&engine] (float value) { engine.updateAdsrRelease (value); });
-    parameters.inputGain.get()->setAction ([&engine] (float value) { engine.updateInputGain (value); });
-    parameters.outputGain.get()->setAction ([&engine] (float value) { engine.updateOutputGain (value); });
-    parameters.noiseGateThresh.get()->setAction ([&engine] (float value) { engine.updateNoiseGateThresh (value); });
-    parameters.compAmount.get()->setAction ([&engine] (float value) { engine.updateCompressorAmount (value); });
-    parameters.deEsserThresh.get()->setAction ([&engine] (float value) { engine.updateDeEsserThresh (value); });
-    parameters.deEsserAmount.get()->setAction ([&engine] (float value) { engine.updateDeEsserAmount (value); });
-    parameters.reverbDecay.get()->setAction ([&engine] (float value) { engine.updateReverbDecay (value); });
-    parameters.reverbDuck.get()->setAction ([&engine] (float value) { engine.updateReverbDuck (value); });
-    parameters.reverbLoCut.get()->setAction ([&engine] (float value) { engine.updateReverbLoCut (value); });
-    parameters.reverbHiCut.get()->setAction ([&engine] (float value) { engine.updateReverbHiCut (value); });
+    parameters.adsrAttack->setAction ([&engine] (float value) { engine.updateAdsrAttack (value); });
+    parameters.adsrDecay->setAction ([&engine] (float value) { engine.updateAdsrDecay (value); });
+    parameters.adsrSustain->setAction ([&engine] (float value) { engine.updateAdsrSustain (value); });
+    parameters.adsrRelease->setAction ([&engine] (float value) { engine.updateAdsrRelease (value); });
+    parameters.inputGain->setAction ([&engine] (float value) { engine.updateInputGain (value); });
+    parameters.outputGain->setAction ([&engine] (float value) { engine.updateOutputGain (value); });
+    parameters.noiseGateThresh->setAction ([&engine] (float value) { engine.updateNoiseGateThresh (value); });
+    parameters.compAmount->setAction ([&engine] (float value) { engine.updateCompressorAmount (value); });
+    parameters.deEsserThresh->setAction ([&engine] (float value) { engine.updateDeEsserThresh (value); });
+    parameters.deEsserAmount->setAction ([&engine] (float value) { engine.updateDeEsserAmount (value); });
+    parameters.reverbDecay->setAction ([&engine] (float value) { engine.updateReverbDecay (value); });
+    parameters.reverbDuck->setAction ([&engine] (float value) { engine.updateReverbDuck (value); });
+    parameters.reverbLoCut->setAction ([&engine] (float value) { engine.updateReverbLoCut (value); });
+    parameters.reverbHiCut->setAction ([&engine] (float value) { engine.updateReverbHiCut (value); });
     
-    parameters.inputMode.get()->setAction ([&engine] (int value) { engine.setModulatorSource (value); });
-    parameters.leadPan.get()->setAction ([&engine] (int value) { engine.updateDryVoxPan (value); });
-    parameters.stereoWidth.get()->setAction ([&engine] (int value) { engine.updateStereoWidth (value); });
-    parameters.lowestPanned.get()->setAction ([&engine] (int value) { engine.updateLowestPannedNote (value); });
-    parameters.velocitySens.get()->setAction ([&engine] (int value) { engine.updateMidiVelocitySensitivity (value); });
-    parameters.pitchbendRange.get()->setAction ([&engine] (int value) { engine.updatePitchbendRange (value); });
-    parameters.pedalThresh.get()->setAction ([&engine] (int value) { engine.updatePedalThresh (value); });
-    parameters.pedalInterval.get()->setAction ([&engine] (int value) { engine.updatePedalInterval (value); });
-    parameters.descantThresh.get()->setAction ([&engine] (int value) { engine.updateDescantThresh (value); });
-    parameters.descantInterval.get()->setAction ([&engine] (int value) { engine.updateDescantInterval (value); });
-    parameters.reverbDryWet.get()->setAction ([&engine] (int value) { engine.updateReverbDryWet (value); });
-    parameters.delayDryWet.get()->setAction ([&engine] (int value) { engine.updateDelayDryWet (value); });
-    parameters.editorPitchbend.get()->setAction ([&engine] (int value) { engine.recieveExternalPitchbend (value); });
+    parameters.inputMode->setAction ([&engine] (int value) { engine.setModulatorSource (value); });
+    parameters.leadPan->setAction ([&engine] (int value) { engine.updateDryVoxPan (value); });
+    parameters.stereoWidth->setAction ([&engine] (int value) { engine.updateStereoWidth (value); });
+    parameters.lowestPanned->setAction ([&engine] (int value) { engine.updateLowestPannedNote (value); });
+    parameters.velocitySens->setAction ([&engine] (int value) { engine.updateMidiVelocitySensitivity (value); });
+    parameters.pitchbendRange->setAction ([&engine] (int value) { engine.updatePitchbendRange (value); });
+    parameters.pedalThresh->setAction ([&engine] (int value) { engine.updatePedalThresh (value); });
+    parameters.pedalInterval->setAction ([&engine] (int value) { engine.updatePedalInterval (value); });
+    parameters.descantThresh->setAction ([&engine] (int value) { engine.updateDescantThresh (value); });
+    parameters.descantInterval->setAction ([&engine] (int value) { engine.updateDescantInterval (value); });
+    parameters.reverbDryWet->setAction ([&engine] (int value) { engine.updateReverbDryWet (value); });
+    parameters.delayDryWet->setAction ([&engine] (int value) { engine.updateDelayDryWet (value); });
+    parameters.editorPitchbend->setAction ([&engine] (int value) { engine.recieveExternalPitchbend (value); });
     
-    parameters.midiLatch.get()->setAction([&engine] (bool value) { engine.updateMidiLatch (value); });
-    parameters.leadBypass.get()->setAction ([&engine] (bool value) { engine.updateLeadBypass (value); });
-    parameters.harmonyBypass.get()->setAction([&engine] (bool value) { engine.updateHarmonyBypass (value); });
-    parameters.pedalToggle.get()->setAction ([&engine] (bool value) { engine.updatePedalToggle (value); });
-    parameters.descantToggle.get()->setAction ([&engine] (bool value) { engine.updateDescantToggle (value); });
-    parameters.voiceStealing.get()->setAction ([&engine] (bool value) { engine.updateNoteStealing (value); });
-    parameters.limiterToggle.get()->setAction ([&engine] (bool value) { engine.updateLimiter (value); });
-    parameters.noiseGateToggle.get()->setAction ([&engine] (bool value) { engine.updateNoiseGateToggle (value); });
-    parameters.compToggle.get()->setAction ([&engine] (bool value) { engine.updateCompressorToggle (value); });
-    parameters.aftertouchToggle.get()->setAction ([&engine] (bool value) { engine.updateAftertouchGainOnOff (value); });
-    parameters.deEsserToggle.get()->setAction ([&engine] (bool value) { engine.updateDeEsserToggle (value); });
-    parameters.reverbToggle.get()->setAction ([&engine] (bool value) { engine.updateReverbToggle (value); });
-    parameters.delayToggle.get()->setAction ([&engine] (bool value) { engine.updateDelayToggle (value); });
+    parameters.midiLatch->setAction([&engine] (bool value) { engine.updateMidiLatch (value); });
+    parameters.leadBypass->setAction ([&engine] (bool value) { engine.updateLeadBypass (value); });
+    parameters.harmonyBypass->setAction([&engine] (bool value) { engine.updateHarmonyBypass (value); });
+    parameters.pedalToggle->setAction ([&engine] (bool value) { engine.updatePedalToggle (value); });
+    parameters.descantToggle->setAction ([&engine] (bool value) { engine.updateDescantToggle (value); });
+    parameters.voiceStealing->setAction ([&engine] (bool value) { engine.updateNoteStealing (value); });
+    parameters.limiterToggle->setAction ([&engine] (bool value) { engine.updateLimiter (value); });
+    parameters.noiseGateToggle->setAction ([&engine] (bool value) { engine.updateNoiseGateToggle (value); });
+    parameters.compToggle->setAction ([&engine] (bool value) { engine.updateCompressorToggle (value); });
+    parameters.aftertouchToggle->setAction ([&engine] (bool value) { engine.updateAftertouchGainOnOff (value); });
+    parameters.deEsserToggle->setAction ([&engine] (bool value) { engine.updateDeEsserToggle (value); });
+    parameters.reverbToggle->setAction ([&engine] (bool value) { engine.updateReverbToggle (value); });
+    parameters.delayToggle->setAction ([&engine] (bool value) { engine.updateDelayToggle (value); });
 }
 
 /*===========================================================================================================================
@@ -325,8 +325,8 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 
 void ImogenAudioProcessor::saveEditorSize (int width, int height)
 {
-    parameters.editorSizeX.get()->set (width);
-    parameters.editorSizeY.get()->set (height);
+    parameters.editorSizeX->set (width);
+    parameters.editorSizeY->set (height);
 }
 
 juce::Point< int > ImogenAudioProcessor::getSavedEditorSize() const
