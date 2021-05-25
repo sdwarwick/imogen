@@ -92,16 +92,8 @@ void ImogenGUI::savePreset (const juce::String& presetName)
 
 void ImogenGUI::loadPreset (const juce::String& presetName)
 {
-    if (presetName.isEmpty())
-    {
-        // display error message...
-        return;
-    }
-
-    rescanPresetsFolder();
-
-    const auto filename     = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
-    const auto presetToLoad = Imogen::presetsFolder().getChildFile (filename);
+    const auto presetToLoad = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
+                                                                                                    Imogen::getPresetFileExtension()));
 
     if (!presetToLoad.existsAsFile())
     {
@@ -115,9 +107,7 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
 
     stream.readIntoMemoryBlock (data);
 
-    auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
-
-    state.deserialize (newTree);
+    state.deserialize (data.getData(), data.getSize());
 
     repaint();
 }
@@ -125,9 +115,8 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
 
 void ImogenGUI::deletePreset (const juce::String& presetName)
 {
-    rescanPresetsFolder();
-
-    auto presetToDelete = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension()));
+    auto presetToDelete = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
+                                                                                                Imogen::getPresetFileExtension()));
 
     if (presetToDelete.existsAsFile())
     {
@@ -140,7 +129,19 @@ void ImogenGUI::deletePreset (const juce::String& presetName)
 
 void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
 {
+    const auto presetToLoad = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (previousName,
+                                                                                                    Imogen::getPresetFileExtension()));
     
+    if (! presetToLoad.existsAsFile())
+    {
+        // display error message...
+        return;
+    }
+    
+    bav::renameFile (presetToLoad,
+                     bav::addFileExtensionIfMissing (newName, Imogen::getPresetFileExtension()));
+    
+    rescanPresetsFolder();
 }
 
 
