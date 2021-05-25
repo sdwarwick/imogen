@@ -1,27 +1,4 @@
 
-/*======================================================================================================================================================
-           _             _   _                _                _                 _               _
-          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
- /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
- \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
- This file is part of the Imogen codebase.
- 
- @2021 by Ben Vining. All rights reserved.
- 
- bv_HarmonizerVoice.cpp: This file defines implementation details for the HarmonizerVoice class. HarmonizerVoice essentially represents a single synthesizer voice that generates sound by pitch shifting an audio input. The voice's parent Harmonizer object performs the analysis of the input signal, so that analysis only needs to be done once no matter how many voices the Harmonizer has.
- 
-======================================================================================================================================================*/
-
-
 namespace bav
 {
 template < typename SampleType >
@@ -55,18 +32,16 @@ void HarmonizerVoice< SampleType >::noteCleared()
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::newBlockComing (int previousBlocksize, int upcomingBlocksize)
+void HarmonizerVoice< SampleType >::newBlockComing (int previousBlocksize, int)
 {
-    juce::ignoreUnused (upcomingBlocksize);
     shifter.newBlockComing (previousBlocksize);
 }
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer)
+void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int)
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
-    juce::ignoreUnused (startSampleOfOrigBuffer);
 
     shifter.getSamples (output.getWritePointer (0),
                         output.getNumSamples(),
@@ -75,9 +50,8 @@ void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float des
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples)
+void HarmonizerVoice< SampleType >::bypassedBlockRecieved (float, double, int numSamples)
 {
-    juce::ignoreUnused (voicesLastOutputFreq, currentSamplerate, numSamples);
     shifter.bypassedBlockRecieved (numSamples);
 }
 
