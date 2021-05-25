@@ -1,34 +1,11 @@
 
-/*===================================================================================================================================================
-           _             _   _                _                _                 _               _
-          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
- /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
- \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
- This file is part of the Imogen codebase.
- 
- @2021 by Ben Vining. All rights reserved.
- 
- ImogenGUI.cpp: This file defines implementation details for Imogen's top-level GUI component.
-
-===================================================================================================================================================*/
-
-
 #include "ImogenGUI.h"
 
 #include "LookAndFeel/ImogenLookAndFeel.cpp"
 #include "MainDialComponent/MainDialComponent.cpp"
 
 
-ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
+ImogenGUI::ImogenGUI()
     : GUIInitializer (getTopLevelComponent())
     , tooltipWindow (this, msBeforeTooltip)
 {

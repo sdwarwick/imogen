@@ -1,25 +1,3 @@
-/*======================================================================================================================================================
-           _             _   _                _                _                 _               _
-          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
- /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
- \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
- This file is part of the Imogen codebase.
- 
- @2021 by Ben Vining. All rights reserved.
- 
- ImogenGUI.h: This file defines the interface for Imogen's top-level GUI component. This class does not reference ImogenAudioProcessor, so that it can also be used to  create a GUI-only remote control application for Imogen.
- 
-======================================================================================================================================================*/
-
 
 /*******************************************************************************
  BEGIN_JUCE_MODULE_DECLARATION
@@ -41,22 +19,13 @@
 #include "LookAndFeel/ImogenLookAndFeel.h"
 #include "MainDialComponent/MainDialComponent.h"
 
-#include "BinaryData.h"
-
-
-struct ImogenGUIUpdateSender
-{
-    virtual ~ImogenGUIUpdateSender() = default;
-};
-
-/*=========================================================================================*/
 
 
 class ImogenGUI : public juce::Component,
                   public bav::GUIInitializer
 {
 public:
-    ImogenGUI(ImogenGUIUpdateSender* s);
+    ImogenGUI();
 
     virtual ~ImogenGUI() override;
 
