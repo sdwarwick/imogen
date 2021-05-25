@@ -7,15 +7,12 @@
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
-    : AudioProcessor (makeBusProperties())
 #if !IMOGEN_HEADLESS
-    , abletonLink (120.0) // constructed with the initial BPM
+    : abletonLink (120.0) // constructed with the initial BPM
 #endif
 {
     parameters.addParametersTo (*this);
     meters.addParametersTo (*this);
-
-    mainBypassPntr = parameters.mainBypass.get();
 
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
@@ -100,21 +97,21 @@ void ImogenAudioProcessor::releaseResources()
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, floatEngine, mainBypassPntr->get());
+    processBlockWrapped (buffer, midiMessages, floatEngine, parameters.mainBypass->get());
 }
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, doubleEngine, mainBypassPntr->get());
+    processBlockWrapped (buffer, midiMessages, doubleEngine, parameters.mainBypass->get());
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! mainBypassPntr->get())
+    if (! parameters.mainBypass->get())
     {
-        mainBypassPntr->set (true);
+        parameters.mainBypass->set (true);
         updateHostDisplay();
     }
     
@@ -124,9 +121,9 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< float >& buf
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (! mainBypassPntr->get())
+    if (! parameters.mainBypass->get())
     {
-        mainBypassPntr->set (true);
+        parameters.mainBypass->set (true);
         updateHostDisplay();
     }
 
@@ -215,19 +212,18 @@ juce::String ImogenAudioProcessor::getScaleName() const
 
 double ImogenAudioProcessor::getTailLengthSeconds() const
 {
-    return parameters.adsrRelease.get()->get();
+    return parameters.adsrRelease->get();
 }
 
-
-inline juce::AudioProcessor::BusesProperties ImogenAudioProcessor::makeBusProperties() const
+juce::AudioProcessor::BusesProperties ImogenAudioProcessor::createBusProperties() const
 {
     const auto stereo = juce::AudioChannelSet::stereo();
     const auto mono   = juce::AudioChannelSet::mono();
-
+    
     return BusesProperties()
-        .withInput (TRANS ("Input"), stereo, true)
-        .withInput (TRANS ("Sidechain"), mono, false)
-        .withOutput (TRANS ("Output"), stereo, true);
+    .withInput (TRANS ("Input"), stereo, true)
+    .withInput (TRANS ("Sidechain"), mono, false)
+    .withOutput (TRANS ("Output"), stereo, true);
 }
 
 
@@ -238,6 +234,11 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
     if (layouts.getMainInputChannelSet() == disabled && layouts.getChannelSet (true, 1) == disabled) return false;
 
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+}
+
+juce::AudioProcessorParameter* ImogenAudioProcessor::getBypassParameter() const
+{
+    return parameters.mainBypass.get();
 }
 
 /*===========================================================================================================================

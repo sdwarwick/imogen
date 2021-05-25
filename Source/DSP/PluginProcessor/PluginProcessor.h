@@ -20,8 +20,7 @@ using namespace Imogen;
 /*
 */
 
-class ImogenAudioProcessor : public juce::AudioProcessor,
-                             private bav::SystemInitializer
+class ImogenAudioProcessor : public bav::dsp::ProcessorBase
 {
     using Parameter = bav::Parameter;
     using RAP = juce::RangedAudioParameter;
@@ -61,13 +60,7 @@ private:
     void getStateInformation (juce::MemoryBlock& destData) override final;
     void setStateInformation (const void* data, int sizeInBytes) override final;
     
-    juce::AudioProcessorParameter* getBypassParameter() const override final { return mainBypassPntr; }
-    
-    int                getNumPrograms() override final { return 1; }
-    int                getCurrentProgram() override final { return 0; }
-    void               setCurrentProgram (int) override final { }
-    const juce::String getProgramName (int) override final { return {}; }
-    void               changeProgramName (int, const juce::String&) override final { }
+    juce::AudioProcessorParameter* getBypassParameter() const override final;
     
     bool acceptsMidi() const override final { return true; }
     bool producesMidi() const override final { return true; }
@@ -86,10 +79,10 @@ private:
     /*=========================================================================================*/
     /* Initialization functions */
 
+    BusesProperties createBusProperties() const override final;
+    
     template < typename SampleType >
     void initialize (bav::ImogenEngine< SampleType >& activeEngine);
-
-    BusesProperties makeBusProperties() const;
 
     template < typename SampleType >
     void initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine);
@@ -117,8 +110,6 @@ private:
     Imogen::Parameters& parameters {state.parameters};
     Imogen::Meters& meters {state.meters};
     
-    bav::BoolParameter* mainBypassPntr; // this one gets referenced specifically...
-
 #if !IMOGEN_HEADLESS
     ableton::Link abletonLink; // this object represents the plugin as a participant in an Ableton Link session
 #endif
