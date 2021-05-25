@@ -83,8 +83,12 @@ void ImogenGUI::savePreset (const juce::String& presetName)
     const auto filename = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
 
     juce::FileOutputStream stream (filename);
+    
+    juce::ValueTree tree {"ImogenState"};
+    
+    parameters.serialize (tree);
 
-    parameters.toValueTree().writeToStream(stream);
+    tree.writeToStream (stream);
 
     rescanPresetsFolder();
 }
@@ -118,8 +122,8 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
     auto newTree = juce::ValueTree::readFromData (data.getData(), data.getSize());
 
     if (!newTree.isValid()) return;
-
-    parameters.restoreFromValueTree (newTree);
+    
+    parameters.deserialize (newTree);
 
     repaint();
 }
