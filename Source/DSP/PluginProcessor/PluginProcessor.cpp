@@ -202,12 +202,8 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
     
     if (! newTree.isValid()) return;
     
-    suspendProcessing (true);
-    
     parameters.deserialize (newTree);
     parameters.refreshAllDefaults();
-    
-    suspendProcessing (false);
     
     updateHostDisplay();
 }
