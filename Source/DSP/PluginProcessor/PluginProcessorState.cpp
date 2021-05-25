@@ -36,9 +36,7 @@ void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     
     juce::ValueTree tree {"ImogenState"};
     
-    parameters.serialize (tree);
-    
-    tree.writeToStream (stream);
+    parameters.serialize (tree).writeToStream (stream);
 }
 
 
