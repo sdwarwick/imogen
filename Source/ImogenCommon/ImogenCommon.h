@@ -22,8 +22,20 @@ namespace Imogen
 {
 
 
-struct State
+struct State  :     bav::SerializableData
 {
+    State() : SerializableData ("ImogenState") { }
+    
+    void toValueTree (ValueTree& tree) override final
+    {
+        parameters.serialize (tree);
+    }
+    
+    void fromValueTree (const ValueTree& tree) override final
+    {
+        parameters.deserialize (tree);
+    }
+    
     Parameters parameters;
     Meters meters;
 };

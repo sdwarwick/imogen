@@ -192,19 +192,13 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     juce::MemoryOutputStream stream (destData, false);
-    juce::ValueTree tree {"ImogenState"};
-    parameters.serialize (tree).writeToStream (stream);
+    state.serialize().writeToStream (stream);
 }
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto newTree = juce::ValueTree::readFromData (data, static_cast< size_t > (sizeInBytes));
-    
-    if (! newTree.isValid()) return;
-    
-    parameters.deserialize (newTree);
+    state.deserialize (data, sizeInBytes);
     parameters.refreshAllDefaults();
-    
     updateHostDisplay();
 }
 
