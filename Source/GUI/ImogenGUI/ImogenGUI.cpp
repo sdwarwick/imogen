@@ -40,10 +40,10 @@ ImogenGUI::ImogenGUI (ImogenGUIUpdateSender* s)
     addAndMakeVisible (mainDial);
     
 #if JUCE_MAC
-    darkMode.store (juce::Desktop::isOSXDarkModeActive());
-#else
-    darkMode.store (true);
+    parameters.guiDarkMode->set (juce::Desktop::isOSXDarkModeActive());
 #endif
+    
+    parameters.guiDarkMode->onParameterChange = [this](){ repaint(); };
 
     mainDial.showPitchCorrection();
 
@@ -156,7 +156,7 @@ void ImogenGUI::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
 
-    if (darkMode.load()) { }
+    if (parameters.guiDarkMode->get()) { }
     else
     {
     }
@@ -194,16 +194,6 @@ void ImogenGUI::focusLost (FocusChangeType cause)
     juce::ignoreUnused (cause);
 }
 
-
-/*=========================================================================================================
- =========================================================================================================*/
-
-void ImogenGUI::setDarkMode (bool shouldUseDarkMode)
-{
-    darkMode.store (shouldUseDarkMode);
-    // inform all child components of the change...
-    this->repaint();
-}
 
 inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
 {

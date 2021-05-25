@@ -14,11 +14,6 @@
 #endif
 
 
-#if !IMOGEN_HEADLESS
-class ImogenAudioProcessorEditor;
-#endif
-
-
 using namespace Imogen;
 
 
@@ -117,9 +112,10 @@ private:
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     bav::ImogenEngine< float >  floatEngine;
     bav::ImogenEngine< double > doubleEngine;
-
-    Imogen::Parameters parameters;
-    Imogen::Meters meters;
+    
+    Imogen::State state;
+    Imogen::Parameters& parameters {state.parameters};
+    Imogen::Meters& meters {state.meters};
     
     bav::BoolParameter* mainBypassPntr; // this one gets referenced specifically...
 

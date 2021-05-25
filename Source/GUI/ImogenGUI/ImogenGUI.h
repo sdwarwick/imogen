@@ -60,29 +60,20 @@ public:
 
     virtual ~ImogenGUI() override;
 
-    /*=========================================================================================*/
-
-    void applyValueTreeStateChange (const void* encodedChangeData, size_t encodedChangeDataSize);
-
+private:
     /*=========================================================================================*/
     /* juce::Component functions */
-
+    
     void paint (juce::Graphics& g) override;
     void resized() override;
-
+    
     bool keyPressed (const juce::KeyPress& key) override;
     bool keyStateChanged (bool isKeyDown) override;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override;
     void focusLost (FocusChangeType cause) override;
-
+    
     /*=========================================================================================*/
-
-    void setDarkMode (bool shouldUseDarkMode);
-    bool isUsingDarkMode() const noexcept { return darkMode.load(); }
-
-    /*=========================================================================================*/
-
-private:
+    
     inline void makePresetMenu (juce::ComboBox& box);
 
     void rescanPresetsFolder();
@@ -102,10 +93,9 @@ private:
     juce::TooltipWindow  tooltipWindow;
     static constexpr int msBeforeTooltip = 700;
 
-    std::atomic< bool > darkMode;
-    
-    Imogen::Parameters parameters;
-    Imogen::Meters meters;
+    Imogen::State state;
+    Imogen::Parameters& parameters {state.parameters};
+    Imogen::Meters& meters {state.meters};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };
