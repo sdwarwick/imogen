@@ -47,16 +47,6 @@ static inline juce::File presetsFolder()
 }
 
 
-static inline juce::File findAppropriateTranslationFile()
-{
-    // things to test:
-    // juce::SystemStats::getDisplayLanguage()
-    // juce::SystemStats::getUserLanguage()
-    // juce::SystemStats::getUserRegion()
-    return {};
-}
-
-
 static inline juce::String getPresetFileExtension()
 {
     return {".xml"};
