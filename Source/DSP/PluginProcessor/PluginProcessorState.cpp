@@ -50,7 +50,7 @@ void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInByte
 {
     auto newTree = juce::ValueTree::readFromData (data, static_cast< size_t > (sizeInBytes));
 
-    if (! newTree.isValid() || ! newTree.hasType ("ImogenState")) return;
+    if (! newTree.isValid()) return;
 
     suspendProcessing (true);
     
