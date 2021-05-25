@@ -58,24 +58,6 @@ ImogenEngine< SampleType >::ImogenEngine()
 }
 
 
-bvie_VOID_TEMPLATE::resetTriggered()
-{
-    harmonizer.reset();
-
-    initialHiddenLoCut.reset();
-    gate.reset();
-    dryWetMixer.reset();
-    limiter.reset();
-    deEsser.reset();
-    reverb.reset();
-    delay.reset();
-
-    monoBuffer.clear();
-
-    resetSmoothedValues (FIFOEngine::getLatency());
-}
-
-
 bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
 {
     harmonizer.resetRampedValues (blocksize);

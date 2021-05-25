@@ -1,34 +1,9 @@
 
-/*======================================================================================================================================================
-           _             _   _                _                _                 _               _
-          /\ \          /\_\/\_\ _           /\ \             /\ \              /\ \            /\ \     _
-          \ \ \        / / / / //\_\        /  \ \           /  \ \            /  \ \          /  \ \   /\_\
-          /\ \_\      /\ \/ \ \/ / /       / /\ \ \         / /\ \_\          / /\ \ \        / /\ \ \_/ / /
-         / /\/_/     /  \____\__/ /       / / /\ \ \       / / /\/_/         / / /\ \_\      / / /\ \___/ /
-        / / /       / /\/________/       / / /  \ \_\     / / / ______      / /_/_ \/_/     / / /  \/____/
-       / / /       / / /\/_// / /       / / /   / / /    / / / /\_____\    / /____/\       / / /    / / /
-      / / /       / / /    / / /       / / /   / / /    / / /  \/____ /   / /\____\/      / / /    / / /
-  ___/ / /__     / / /    / / /       / / /___/ / /    / / /_____/ / /   / / /______     / / /    / / /
- /\__\/_/___\    \/_/    / / /       / / /____\/ /    / / /______\/ /   / / /_______\   / / /    / / /
- \/_________/            \/_/        \/_________/     \/___________/    \/__________/   \/_/     \/_/
- 
- 
- This file is part of the Imogen codebase.
- 
- @2021 by Ben Vining. All rights reserved.
- 
- PluginProcessor.cpp: This file contains the guts of Imogen's AudioProcessor code.
- 
-======================================================================================================================================================*/
-
 #if !IMOGEN_HEADLESS
 #include "GUI/Holders/Plugin_Editor/PluginEditor.h"
 #endif
 
 #include "PluginProcessor.h"
-
-#include "PluginProcessorParameters.cpp"
-#include "PluginProcessorState.cpp"
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
@@ -48,14 +23,12 @@ ImogenAudioProcessor::ImogenAudioProcessor()
         initialize (floatEngine);
 
     parameters.resetAllToDefault();
-
-    Timer::startTimerHz (60);
 }
 
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
-    Timer::stopTimer();
+    
 }
 
 
@@ -75,21 +48,19 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine< SampleType >& a
     activeEngine.initialize (initSamplerate, initBlockSize);
 
     setLatencySamples (activeEngine.reportLatency());
-    ChangeDetails change;
-    updateHostDisplay (change.withLatencyChanged (true));
+    
+    updateHostDisplay();
 
-    initializeParameterFunctionPointers (activeEngine);
+    prepareToPlay (initSamplerate, 512);
 }
 
 
-void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int samplesPerBlock)
+void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int)
 {
     if (isUsingDoublePrecision())
         prepareToPlayWrapped (sampleRate, doubleEngine, floatEngine);
     else
         prepareToPlayWrapped (sampleRate, floatEngine, doubleEngine);
-
-    juce::ignoreUnused (samplesPerBlock);
 }
 
 
@@ -124,51 +95,39 @@ void ImogenAudioProcessor::releaseResources()
 }
 
 
-void ImogenAudioProcessor::reset()
-{
-    if (isUsingDoublePrecision())
-        doubleEngine.reset();
-    else
-        floatEngine.reset();
-}
-
 /*===========================================================================================================
  ===========================================================================================================*/
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, floatEngine, mainBypassPntr->getValue() >= 0.5f);
+    processBlockWrapped (buffer, midiMessages, floatEngine, mainBypassPntr->get());
 }
 
 
 void ImogenAudioProcessor::processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, doubleEngine, mainBypassPntr->getValue() >= 0.5f);
+    processBlockWrapped (buffer, midiMessages, doubleEngine, mainBypassPntr->get());
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (!(mainBypassPntr->getValue() >= 0.5f))
+    if (! mainBypassPntr->get())
     {
-        mainBypassPntr->setValueNotifyingHost (1.0f);
-
-        ChangeDetails change;
-        updateHostDisplay (change.withParameterInfoChanged (true));
+        mainBypassPntr->set (true);
+        updateHostDisplay();
     }
-
+    
     processBlockWrapped (buffer, midiMessages, floatEngine, true);
 }
 
 
 void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (!(mainBypassPntr->getValue() >= 0.5f))
+    if (! mainBypassPntr->get())
     {
-        mainBypassPntr->setValueNotifyingHost (1.0f);
-
-        ChangeDetails change;
-        updateHostDisplay (change.withParameterInfoChanged (true));
+        mainBypassPntr->set (true);
+        updateHostDisplay();
     }
 
     processBlockWrapped (buffer, midiMessages, doubleEngine, true);
@@ -197,56 +156,64 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
     updateMeters (engine.getLatestMeterData());
 }
 
-
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-
-void ImogenAudioProcessor::timerCallback()
+void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 {
+    bool anyChanged = false;
     
+    auto updateMeter = [&anyChanged] (bav::FloatParameter& meter, float newValue)
+    {
+        if (meter.get() != newValue)
+        {
+            meter.setValueNotifyingHost (newValue);
+            anyChanged = true;
+        }
+    };
+    
+    updateMeter (meters.inputLevel, meterData.inputLevel);
+    updateMeter (meters.outputLevelL, meterData.outputLevelL);
+    updateMeter (meters.outputLevelR, meterData.outputLevelR);
+    updateMeter (meters.gateRedux, meterData.noiseGateGainReduction);
+    updateMeter (meters.compRedux, meterData.compressorGainReduction);
+    updateMeter (meters.deEssRedux, meterData.deEsserGainReduction);
+    updateMeter (meters.limRedux, meterData.limiterGainReduction);
+    updateMeter (meters.reverbLevel, meterData.reverbLevel);
+    updateMeter (meters.delayLevel, meterData.delayLevel);
+    
+    if (anyChanged)
+        updateHostDisplay();
 }
 
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-void ImogenAudioProcessor::changeMidiLatchState (bool isNowLatched)
+void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    if (isUsingDoublePrecision())
-        doubleEngine.updateMidiLatch (isNowLatched);
-    else
-        floatEngine.updateMidiLatch (isNowLatched);
+    juce::MemoryOutputStream stream (destData, false);
+    juce::ValueTree tree {"ImogenState"};
+    parameters.serialize (tree).writeToStream (stream);
 }
 
-bool ImogenAudioProcessor::isMidiLatched() const
+void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    return isUsingDoublePrecision() ? doubleEngine.isMidiLatched() : floatEngine.isMidiLatched();
+    auto newTree = juce::ValueTree::readFromData (data, static_cast< size_t > (sizeInBytes));
+    
+    if (! newTree.isValid()) return;
+    
+    suspendProcessing (true);
+    
+    parameters.deserialize (newTree);
+    parameters.refreshAllDefaults();
+    
+    suspendProcessing (false);
+    
+    updateHostDisplay();
 }
 
-
-bool ImogenAudioProcessor::isAbletonLinkEnabled() const
-{
-#if IMOGEN_HEADLESS
-    return false;
-#else
-    return abletonLink.isEnabled();
-#endif
-}
-
-int ImogenAudioProcessor::getNumAbletonLinkSessionPeers() const
-{
-#if IMOGEN_HEADLESS
-    return 0;
-#else
-    return abletonLink.isEnabled() ? static_cast< int > (abletonLink.numPeers()) : 0;
-#endif
-}
-
-
-bool ImogenAudioProcessor::isConnectedToMtsEsp() const noexcept
-{
-    return isUsingDoublePrecision() ? doubleEngine.isConnectedToMtsEsp() : floatEngine.isConnectedToMtsEsp();
-}
+/*===========================================================================================================================
+ ============================================================================================================================*/
 
 juce::String ImogenAudioProcessor::getScaleName() const
 {
@@ -286,6 +253,58 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 /*===========================================================================================================================
  ============================================================================================================================*/
 
+// This function initializes the actions that will be performed each time a parameter is changed
+
+template < typename SampleType >
+void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine)
+{
+    parameters.adsrAttack.get()->setAction ([&engine] (float value) { engine.updateAdsrAttack (value); });
+    parameters.adsrDecay.get()->setAction ([&engine] (float value) { engine.updateAdsrDecay (value); });
+    parameters.adsrSustain.get()->setAction ([&engine] (float value) { engine.updateAdsrSustain (value); });
+    parameters.adsrRelease.get()->setAction ([&engine] (float value) { engine.updateAdsrRelease (value); });
+    parameters.inputGain.get()->setAction ([&engine] (float value) { engine.updateInputGain (value); });
+    parameters.outputGain.get()->setAction ([&engine] (float value) { engine.updateOutputGain (value); });
+    parameters.noiseGateThresh.get()->setAction ([&engine] (float value) { engine.updateNoiseGateThresh (value); });
+    parameters.compAmount.get()->setAction ([&engine] (float value) { engine.updateCompressorAmount (value); });
+    parameters.deEsserThresh.get()->setAction ([&engine] (float value) { engine.updateDeEsserThresh (value); });
+    parameters.deEsserAmount.get()->setAction ([&engine] (float value) { engine.updateDeEsserAmount (value); });
+    parameters.reverbDecay.get()->setAction ([&engine] (float value) { engine.updateReverbDecay (value); });
+    parameters.reverbDuck.get()->setAction ([&engine] (float value) { engine.updateReverbDuck (value); });
+    parameters.reverbLoCut.get()->setAction ([&engine] (float value) { engine.updateReverbLoCut (value); });
+    parameters.reverbHiCut.get()->setAction ([&engine] (float value) { engine.updateReverbHiCut (value); });
+    
+    parameters.inputMode.get()->setAction ([&engine] (int value) { engine.setModulatorSource (value); });
+    parameters.leadPan.get()->setAction ([&engine] (int value) { engine.updateDryVoxPan (value); });
+    parameters.stereoWidth.get()->setAction ([&engine] (int value) { engine.updateStereoWidth (value); });
+    parameters.lowestPanned.get()->setAction ([&engine] (int value) { engine.updateLowestPannedNote (value); });
+    parameters.velocitySens.get()->setAction ([&engine] (int value) { engine.updateMidiVelocitySensitivity (value); });
+    parameters.pitchbendRange.get()->setAction ([&engine] (int value) { engine.updatePitchbendRange (value); });
+    parameters.pedalThresh.get()->setAction ([&engine] (int value) { engine.updatePedalThresh (value); });
+    parameters.pedalInterval.get()->setAction ([&engine] (int value) { engine.updatePedalInterval (value); });
+    parameters.descantThresh.get()->setAction ([&engine] (int value) { engine.updateDescantThresh (value); });
+    parameters.descantInterval.get()->setAction ([&engine] (int value) { engine.updateDescantInterval (value); });
+    parameters.reverbDryWet.get()->setAction ([&engine] (int value) { engine.updateReverbDryWet (value); });
+    parameters.delayDryWet.get()->setAction ([&engine] (int value) { engine.updateDelayDryWet (value); });
+    parameters.editorPitchbend.get()->setAction ([&engine] (int value) { engine.recieveExternalPitchbend (value); });
+    
+    parameters.midiLatch.get()->setAction([&engine] (bool value) { engine.updateMidiLatch (value); });
+    parameters.leadBypass.get()->setAction ([&engine] (bool value) { engine.updateLeadBypass (value); });
+    parameters.harmonyBypass.get()->setAction([&engine] (bool value) { engine.updateHarmonyBypass (value); });
+    parameters.pedalToggle.get()->setAction ([&engine] (bool value) { engine.updatePedalToggle (value); });
+    parameters.descantToggle.get()->setAction ([&engine] (bool value) { engine.updateDescantToggle (value); });
+    parameters.voiceStealing.get()->setAction ([&engine] (bool value) { engine.updateNoteStealing (value); });
+    parameters.limiterToggle.get()->setAction ([&engine] (bool value) { engine.updateLimiter (value); });
+    parameters.noiseGateToggle.get()->setAction ([&engine] (bool value) { engine.updateNoiseGateToggle (value); });
+    parameters.compToggle.get()->setAction ([&engine] (bool value) { engine.updateCompressorToggle (value); });
+    parameters.aftertouchToggle.get()->setAction ([&engine] (bool value) { engine.updateAftertouchGainOnOff (value); });
+    parameters.deEsserToggle.get()->setAction ([&engine] (bool value) { engine.updateDeEsserToggle (value); });
+    parameters.reverbToggle.get()->setAction ([&engine] (bool value) { engine.updateReverbToggle (value); });
+    parameters.delayToggle.get()->setAction ([&engine] (bool value) { engine.updateDelayToggle (value); });
+}
+
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
 bool ImogenAudioProcessor::hasEditor() const
 {
 #if IMOGEN_HEADLESS
@@ -304,62 +323,16 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #endif
 }
 
-ImogenGUIUpdateReciever* ImogenAudioProcessor::getActiveGuiEventReciever() const
-{
-#if IMOGEN_HEADLESS
-    return nullptr;
-#else
-    if (auto* editor = getActiveEditor()) return dynamic_cast< ImogenGUIUpdateReciever* > (editor);
-
-    return nullptr;
-#endif
-}
-
 void ImogenAudioProcessor::saveEditorSize (int width, int height)
 {
-#if IMOGEN_HEADLESS
-    juce::ignoreUnused (width, height);
-    return;
-#else
-    savedEditorSize.setX (width);
-    savedEditorSize.setY (height);
-
-    if (juce::MessageManager::getInstance()->isThisTheMessageThread()) saveEditorSizeToValueTree();
-#endif
+    parameters.editorSizeX.get()->set (width);
+    parameters.editorSizeY.get()->set (height);
 }
 
-
-void ImogenAudioProcessor::saveEditorSizeToValueTree()
+juce::Point< int > ImogenAudioProcessor::getSavedEditorSize() const
 {
-#if !IMOGEN_HEADLESS
-    if (auto* editor = getActiveEditor())
-    {
-        savedEditorSize.x = editor->getWidth();
-        savedEditorSize.y = editor->getHeight();
-    }
-
-//    auto editorSize = state.getOrCreateChildWithName (ValueTreeIDs::SavedEditorSize, nullptr);
-//
-//    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_X, savedEditorSize.x, nullptr);
-//    editorSize.setProperty (ValueTreeIDs::SavedEditorSize_Y, savedEditorSize.y, nullptr);
-#endif
-}
-
-void ImogenAudioProcessor::updateEditorSizeFromValueTree()
-{
-#if !IMOGEN_HEADLESS
-//    auto editorSize = state.getChildWithName (ValueTreeIDs::SavedEditorSize);
-//
-//    if (editorSize.isValid())
-//    {
-//        savedEditorSize.x = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_X);
-//        savedEditorSize.y = editorSize.getProperty (ValueTreeIDs::SavedEditorSize_Y);
-//    }
-
-//    if (auto* editor = getActiveEditor()) editor->setSize (savedEditorSize.x, savedEditorSize.y);
-//
-//    updateHostDisplay();
-#endif
+    return { parameters.editorSizeX.get()->get(),
+             parameters.editorSizeY.get()->get() };
 }
 
 

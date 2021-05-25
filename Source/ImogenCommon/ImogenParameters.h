@@ -19,7 +19,7 @@ struct Parameters :     bav::ParameterList
     {
         add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch);
         
-        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, editorPitchbend, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentCentsSharp);
+        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, editorPitchbend, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentCentsSharp, editorSizeX, editorSizeY);
     }
     
     IntParam inputMode { "Input source", "Input source", 1, 3, 1, juce::String(),
@@ -162,6 +162,9 @@ struct Parameters :     bav::ParameterList
             return (juce::String (abs (cents)) + TRANS (" cents flat")).substring (0, maxLength);
         },
         nullptr };
+    
+    IntParam editorSizeX { "editorSizeX", "editor size X", 0, 10000, 900 };
+    IntParam editorSizeY { "editorSizeY", "editor size Y", 0, 10000, 400 };
     
 private:
     const juce::NormalisableRange< float > gainRange {-60.0f, 0.0f, 0.01f};

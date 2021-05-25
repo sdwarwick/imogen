@@ -54,8 +54,6 @@ set (Imogen_Plugin_Flags
 
 set (Imogen_Processor_Source_Files
 	${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorParameters.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessorState.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
 
 set (Imogen_Processor_Dependencies ImogenCommon ImogenEngine)

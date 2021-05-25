@@ -33,7 +33,7 @@ using namespace Imogen;
 
 
 class ImogenAudioProcessorEditor :  public juce::AudioProcessorEditor,
-                                    public ImogenGUIUpdateSender, public ImogenGUIUpdateReciever
+                                    public ImogenGUIUpdateSender
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor& p);

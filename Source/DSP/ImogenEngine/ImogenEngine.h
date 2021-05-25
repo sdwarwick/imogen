@@ -208,8 +208,6 @@ private:
 
     void prepareToPlay (double samplerate) override;
 
-    void resetTriggered() override;
-
     void latencyChanged (int newInternalBlocksize) override;
 
     void release() override;

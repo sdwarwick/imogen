@@ -34,7 +34,7 @@ ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
 
     addAndMakeVisible (gui);
 
-    const auto size = imgnProcessor.getLastEditorSize();
+    const auto size = imgnProcessor.getSavedEditorSize();
     const auto width = size.x, height = size.y;
     setResizable (true, true);
     getConstrainer()->setMinimumSize (width / 2, height / 2);
