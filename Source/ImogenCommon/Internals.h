@@ -8,6 +8,7 @@ struct Internals :  bav::ParameterList
 {
     using IntParam   = bav::IntParam;
     using BoolParam  = bav::BoolParam;
+    using ToggleParam  = bav::ToggleParam;
     
     Internals()
     : ParameterList ("ImogenInternals")
@@ -16,14 +17,14 @@ struct Internals :  bav::ParameterList
     }
     
     
-    BoolParam abletonLinkEnabled {"Toggle", "Ableton link toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam abletonLinkEnabled {"Toggle", "Ableton link toggle", false};
     
     IntParam abletonLinkSessionPeers {"Num peers", "Ableton link num session peers", 0, 50, 0,
         [] (int value, int maximumStringLength)
         { return juce::String (value).substring (0, maximumStringLength); },
         nullptr};
     
-    BoolParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
     
     IntParam lastMovedMidiController {"Number", "Last moved MIDI controller number", 0, 127, 0};
     

@@ -97,10 +97,10 @@ public:
     void updateAftertouchGainOnOff (const bool shouldBeOn) { harmonizer.setAftertouchGainOnOff (shouldBeOn); }
     void updateDeEsserToggle (bool isOn) { deEsserIsOn.store (isOn); }
     void updateDeEsserThresh (float threshDB) { deEsser.setThresh (threshDB); }
-    void updateDeEsserAmount (float amount) { deEsser.setDeEssAmount (amount); }
+    void updateDeEsserAmount (int amount) { deEsser.setDeEssAmount (float(amount) * 0.01f); }
     void updateReverbToggle (bool isOn) { reverbIsOn.store (isOn); }
     void updateReverbDryWet (int wetPcnt) { reverb.setDryWet (wetPcnt); }
-    void updateReverbDuck (float duck) { reverb.setDuckAmount (duck); }
+    void updateReverbDuck (int duck) { reverb.setDuckAmount (float(duck) * 0.01f); }
     void updateReverbLoCut (float loCutFreq) { reverb.setLoCutFrequency (loCutFreq); }
     void updateReverbHiCut (float hiCutFreq) { reverb.setHiCutFrequency (hiCutFreq); }
     void updateDelayToggle (bool isOn) { delayIsOn.store (isOn); }
@@ -138,16 +138,18 @@ public:
         reverb.setWidth (static_cast< float > (width) * 0.01f);
     }
 
-    void updateCompressorAmount (float amount)
+    void updateCompressorAmount (int amount)
     {
-        compressor.setThreshold (juce::jmap (amount, 0.0f, -60.0f));
-        compressor.setRatio (juce::jmap (amount, 1.0f, 10.0f));
+        const auto a = float(amount) * 0.01f;
+        compressor.setThreshold (juce::jmap (a, 0.0f, -60.0f));
+        compressor.setRatio (juce::jmap (a, 1.0f, 10.0f));
     }
 
-    void updateReverbDecay (float decay)
+    void updateReverbDecay (int decay)
     {
-        reverb.setDamping (1.0f - decay);
-        reverb.setRoomSize (decay);
+        const auto d = float(decay) * 0.01f;
+        reverb.setDamping (1.0f - d);
+        reverb.setRoomSize (d);
     }
 
 

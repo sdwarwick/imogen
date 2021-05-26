@@ -8,11 +8,12 @@ namespace l = bav::ParameterValueConversionLambdas;
 
 struct Parameters : bav::ParameterList
 {
-    using IntParam    = bav::IntParam;
-    using FloatParam  = bav::FloatParam;
-    using BoolParam   = bav::BoolParam;
-    using GainParam   = bav::GainParam;
-    using ToggleParam = bav::ToggleParam;
+    using IntParam     = bav::IntParam;
+    using FloatParam   = bav::FloatParam;
+    using BoolParam    = bav::BoolParam;
+    using GainParam    = bav::GainParam;
+    using ToggleParam  = bav::ToggleParam;
+    using PercentParam = bav::PercentParam;
 
     Parameters()
         : ParameterList ("ImogenParameters")
@@ -39,7 +40,7 @@ struct Parameters : bav::ParameterList
                             return 1;
                         }};
 
-    IntParam dryWet {"Dry/wet", "Main dry/wet", 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
+    PercentParam dryWet {"Dry/wet", "Main dry/wet", 100};
 
     GainParam inputGain { "In", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain };
     
@@ -51,7 +52,7 @@ struct Parameters : bav::ParameterList
 
     ToggleParam harmonyBypass {"Harmony", "Harmony bypass", false};
 
-    IntParam stereoWidth {"Width", "Stereo width", 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
+    PercentParam stereoWidth {"Width", "Stereo width", 100};
 
     IntParam lowestPanned {"Lowest note", "Lowest panned note", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
 
@@ -59,7 +60,7 @@ struct Parameters : bav::ParameterList
 
     IntParam pitchbendRange {"Pitchbend", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString, st};
 
-    IntParam velocitySens {"Velocity", "Velocity amount", 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
+    PercentParam velocitySens {"Velocity", "Velocity amount", 100};
 
     ToggleParam aftertouchToggle {"Aftertouch", "Aftertouch gain", true};
 
@@ -81,39 +82,41 @@ struct Parameters : bav::ParameterList
 
     FloatParam adsrDecay {"Decay", "ADSR decay", msRange, 0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, sec};
 
-    FloatParam adsrSustain {"Sustain", "ADSR sustain", zeroToOneRange, 0.8f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
+    FloatParam adsrSustain {"Sustain", "ADSR sustain",
+        juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
+        0.8f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
 
     FloatParam adsrRelease {"Release", "ADSR release", msRange, 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, sec};
 
     ToggleParam noiseGateToggle {"Toggle", "Gate toggle", true};
 
-    FloatParam noiseGateThresh {"Thresh", "Gate thresh", gainRange, -20.0f, generic, l::gain_stringFromFloat, l::gain_floatFromString, dB};
+    GainParam noiseGateThresh {"Thresh", "Gate thresh", -20.0f, generic};
 
     ToggleParam deEsserToggle {"Toggle", "D-S toggle", true};
 
-    FloatParam deEsserThresh {"Thresh", "D-S thresh", gainRange, -6.0f, generic, l::gain_stringFromFloat, l::gain_floatFromString, dB};
+    GainParam deEsserThresh {"Thresh", "D-S thresh", -6.0f, generic};
 
-    FloatParam deEsserAmount {"Amount", "D-S amount", zeroToOneRange, 0.5f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, dB};
+    PercentParam deEsserAmount {"Amount", "D-S amount", 50};
 
     ToggleParam compToggle {"Toggle", "Compressor toggle", false};
 
-    FloatParam compAmount {"Amount", "Compressor amount", zeroToOneRange, 0.35f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, dB};
+    PercentParam compAmount {"Amount", "Compressor amount", 50};
 
     ToggleParam delayToggle {"Toggle", "Delay toggle", false};
 
-    IntParam delayDryWet {"Mix", "Delay mix", 0, 100, 35, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
+    PercentParam delayDryWet {"Mix", "Delay mix", 0};
 
     ToggleParam reverbToggle {"Toggle", "Reverb toggle", false};
 
-    IntParam reverbDryWet {"Mix", "Reverb mix", 0, 100, 35, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
+    PercentParam reverbDryWet {"Mix", "Reverb mix", 15};
 
-    FloatParam reverbDecay {"Decay", "Reverb decay", zeroToOneRange, 0.6f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
+    PercentParam reverbDecay {"Decay", "Reverb decay", 60};
 
-    FloatParam reverbDuck {"Duck", "Reverb duck", zeroToOneRange, 0.3f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
+    PercentParam reverbDuck {"Duck", "Reverb duck", 30};
 
-    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut", hzRange, 80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
+    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut", hzRange, 80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, hz};
 
-    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", hzRange, 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
+    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", hzRange, 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, hz};
 
     ToggleParam limiterToggle {"Toggle", "Limiter toggle", true};
 
@@ -128,8 +131,6 @@ struct Parameters : bav::ParameterList
         { return text.retainCharacters ("1234567890").getIntValue(); }};
     
 private:
-    const juce::NormalisableRange< float > gainRange {-60.0f, 0.0f, 0.01f};
-    const juce::NormalisableRange< float > zeroToOneRange {0.0f, 1.0f, 0.01f};
     const juce::NormalisableRange< float > msRange {0.001f, 1.0f, 0.001f};
     const juce::NormalisableRange< float > hzRange {40.0f, 10000.0f, 1.0f};
 
@@ -139,6 +140,7 @@ private:
     const juce::String dB {TRANS ("dB")};
     const juce::String st {TRANS ("st")};
     const juce::String sec {TRANS ("sec")};
+    const juce::String hz {TRANS ("Hz")};
 };
 
 
