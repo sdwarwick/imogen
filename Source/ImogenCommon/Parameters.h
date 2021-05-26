@@ -78,15 +78,15 @@ struct Parameters : bav::ParameterList
 
     IntParam descantInterval {"Interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
 
-    FloatParam adsrAttack {"Attack", "ADSR attack", msRange, 0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
+    FloatParam adsrAttack {"Attack", "ADSR attack", juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f), 0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
 
-    FloatParam adsrDecay {"Decay", "ADSR decay", msRange, 0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
+    FloatParam adsrDecay {"Decay", "ADSR decay", juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f), 0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
 
     FloatParam adsrSustain {"Sustain", "ADSR sustain",
         juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
         0.8f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
 
-    FloatParam adsrRelease {"Release", "ADSR release", msRange, 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
+    FloatParam adsrRelease {"Release", "ADSR release", juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f), 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
 
     ToggleParam noiseGateToggle {"Toggle", "Gate toggle", true};
 
@@ -114,9 +114,9 @@ struct Parameters : bav::ParameterList
 
     PercentParam reverbDuck {"Duck", "Reverb duck", 30};
 
-    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut", hzRange, 80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
+    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut", juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f), 80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
 
-    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", hzRange, 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
+    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f), 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
 
     ToggleParam limiterToggle {"Toggle", "Limiter toggle", true};
 
@@ -131,9 +131,6 @@ struct Parameters : bav::ParameterList
         { return text.retainCharacters ("1234567890").getIntValue(); }};
     
 private:
-    const juce::NormalisableRange< float > msRange {0.001f, 1.0f, 0.001f};
-    const juce::NormalisableRange< float > hzRange {40.0f, 10000.0f, 1.0f};
-
     static constexpr auto generic = juce::AudioProcessorParameter::genericParameter;
 
     // labels for parameter units
