@@ -48,8 +48,6 @@ void ImogenGUI::rescanPresetsFolder()
     //            availablePresets.add (filename.dropLastCharacters (xtn.length()));
     //    }
 
-    // show spinning/progress graphic...?
-
     repaint();
 }
 
