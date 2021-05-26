@@ -120,7 +120,7 @@ target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
 
 link_binary_data_to_target_create_if_needed (ImogenHeadless assets)
 
-target_link_libraries (ImogenHeadless PRIVATE ${Imogen_Processor_Dependencies})
+target_link_libraries (ImogenHeadless PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link)
 
 target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1 IMOGEN_HEADLESS=1)
 

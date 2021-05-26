@@ -6,7 +6,7 @@
 
 
 ImogenGUI::ImogenGUI()
-    : GUIInitializer (getTopLevelComponent()), tooltipWindow (this, msBeforeTooltip)
+    : GUIInitializer (getTopLevelComponent())
 {
     setInterceptsMouseClicks (false, true);
     

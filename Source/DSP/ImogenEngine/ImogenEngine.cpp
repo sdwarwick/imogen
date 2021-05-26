@@ -14,7 +14,6 @@ namespace bav
 {
 template < typename SampleType >
 ImogenEngine< SampleType >::ImogenEngine()
-    : FIFOEngine()
 {
     limiterIsOn.store (false);
 

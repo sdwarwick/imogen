@@ -9,9 +9,7 @@
 #    define IMOGEN_HEADLESS 0
 #endif
 
-#if ! IMOGEN_HEADLESS
-#    include <../../third-party/ableton-link/include/ableton/Link.hpp>
-#endif
+#include <../../third-party/ableton-link/include/ableton/Link.hpp>
 
 
 using namespace Imogen;
@@ -22,11 +20,6 @@ using namespace Imogen;
 
 class ImogenAudioProcessor : public bav::dsp::ProcessorBase
 {
-    using Parameter     = bav::Parameter;
-    using RAP           = juce::RangedAudioParameter;
-    using ChangeDetails = juce::AudioProcessorListener::ChangeDetails;
-
-
 public:
     ImogenAudioProcessor();
     ~ImogenAudioProcessor() override;
@@ -98,7 +91,6 @@ private:
                                      const bool                       isBypassedThisCallback);
 
     void updateMeters (ImogenMeterData meterData);
-    
     void updateInternals (ImogenInternalsData internalsData);
 
     /*=========================================================================================*/
@@ -112,9 +104,8 @@ private:
     Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};
 
-#if ! IMOGEN_HEADLESS
-    ableton::Link abletonLink;  // this object represents the plugin as a participant in an Ableton Link session
-#endif
+    // this object represents the plugin as a participant in an Ableton Link session
+    ableton::Link abletonLink {120.0};  // constructed w/ initial BPM
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

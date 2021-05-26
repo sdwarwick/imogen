@@ -7,9 +7,6 @@
 
 
 ImogenAudioProcessor::ImogenAudioProcessor()
-#if ! IMOGEN_HEADLESS
-    : abletonLink (120.0)  // constructed with the initial BPM
-#endif
 {
     state.addTo (*this);
 
@@ -157,39 +154,22 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
 
 void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 {
-    bool anyChanged = false;
-
-    auto updateMeter = [&anyChanged] (bav::FloatParameter& meter, float newValue)
-    {
-        if (meter.get() != newValue)
-        {
-            meter.set (newValue);
-            anyChanged = true;
-        }
-    };
-
-    updateMeter (meters.inputLevel, meterData.inputLevel);
-    updateMeter (meters.outputLevelL, meterData.outputLevelL);
-    updateMeter (meters.outputLevelR, meterData.outputLevelR);
-    updateMeter (meters.gateRedux, meterData.noiseGateGainReduction);
-    updateMeter (meters.compRedux, meterData.compressorGainReduction);
-    updateMeter (meters.deEssRedux, meterData.deEsserGainReduction);
-    updateMeter (meters.limRedux, meterData.limiterGainReduction);
-    updateMeter (meters.reverbLevel, meterData.reverbLevel);
-    updateMeter (meters.delayLevel, meterData.delayLevel);
-
-    if (anyChanged)
-        updateHostDisplay();
+    meters.inputLevel->set (meterData.inputLevel);
+    meters.outputLevelL->set (meterData.outputLevelL);
+    meters.outputLevelR->set (meterData.outputLevelR);
+    meters.gateRedux->set (meterData.noiseGateGainReduction);
+    meters.compRedux->set (meterData.compressorGainReduction);
+    meters.deEssRedux->set (meterData.deEsserGainReduction);
+    meters.limRedux->set (meterData.limiterGainReduction);
+    meters.reverbLevel->set (meterData.reverbLevel);
+    meters.delayLevel->set (meterData.delayLevel);
 }
 
 
 void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
 {
-#if ! IMOGEN_HEADLESS
     internals.abletonLinkEnabled->set (abletonLink.isEnabled());
     internals.abletonLinkSessionPeers->set (static_cast<int> (abletonLink.numPeers()));
-#endif
-    
     internals.mtsEspIsConnected->set (internalsData.mtsEspConnected);
     internals.currentCentsSharp->set (internalsData.currentCentsSharp);
     internals.currentInputNote->set (internalsData.currentPitch);

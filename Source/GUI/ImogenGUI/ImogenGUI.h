@@ -58,8 +58,7 @@ private:
 
     bav::ImogenLookAndFeel lookAndFeel;
 
-    juce::TooltipWindow  tooltipWindow;
-    static constexpr int msBeforeTooltip = 700;
+    juce::TooltipWindow  tooltipWindow {this, 700};
 
     Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
