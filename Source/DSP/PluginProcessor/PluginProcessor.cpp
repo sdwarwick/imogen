@@ -192,10 +192,10 @@ void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
     
     internals.mtsEspIsConnected->set (internalsData.mtsEspConnected);
     internals.currentCentsSharp->set (internalsData.currentCentsSharp);
+    internals.currentInputNote->set (internalsData.currentPitch);
     
     //int lastMovedMidiController {};
     //int lastMovedControllerValue {};
-    //juce::String currentPitchAsString {};
 }
 
 /*===========================================================================================================================
@@ -275,15 +275,15 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
                                       { engine.updateOutputGain (value); });
     parameters.noiseGateThresh->setAction ([&engine] (float value)
                                            { engine.updateNoiseGateThresh (value); });
-    parameters.compAmount->setAction ([&engine] (float value)
+    parameters.compAmount->setAction ([&engine] (int value)
                                       { engine.updateCompressorAmount (value); });
     parameters.deEsserThresh->setAction ([&engine] (float value)
                                          { engine.updateDeEsserThresh (value); });
-    parameters.deEsserAmount->setAction ([&engine] (float value)
+    parameters.deEsserAmount->setAction ([&engine] (int value)
                                          { engine.updateDeEsserAmount (value); });
-    parameters.reverbDecay->setAction ([&engine] (float value)
+    parameters.reverbDecay->setAction ([&engine] (int value)
                                        { engine.updateReverbDecay (value); });
-    parameters.reverbDuck->setAction ([&engine] (float value)
+    parameters.reverbDuck->setAction ([&engine] (int value)
                                       { engine.updateReverbDuck (value); });
     parameters.reverbLoCut->setAction ([&engine] (float value)
                                        { engine.updateReverbLoCut (value); });

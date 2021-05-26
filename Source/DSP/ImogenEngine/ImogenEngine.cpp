@@ -296,7 +296,7 @@ bvie_VOID_TEMPLATE::udpateInternalsData()
     
     const auto intonationInfo = harmonizer.getLatestIntonationInfo();
     internalsData.currentCentsSharp = intonationInfo.centsSharp;
-    internalsData.currentPitchAsString = intonationInfo.pitchAsString;
+    internalsData.currentPitch = intonationInfo.pitch;
     
     //int lastMovedMidiController {};
     //int lastMovedControllerValue {};

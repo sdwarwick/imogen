@@ -31,7 +31,7 @@ public:
     
     struct IntonationInfo
     {
-        juce::String pitchAsString {};
+        int pitch {};
         int centsSharp {};
     };
     

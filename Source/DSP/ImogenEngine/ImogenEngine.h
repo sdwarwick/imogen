@@ -40,7 +40,7 @@ struct ImogenInternalsData
     int lastMovedMidiController {};
     int lastMovedControllerValue {};
     int currentCentsSharp {};
-    juce::String currentPitchAsString {};
+    int currentPitch {};
 };
 
 

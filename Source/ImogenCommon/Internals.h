@@ -13,7 +13,7 @@ struct Internals :  bav::ParameterList
     Internals()
     : ParameterList ("ImogenInternals")
     {
-        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentCentsSharp, editorSizeX, editorSizeY);
+        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp, editorSizeX, editorSizeY);
     }
     
     
@@ -21,8 +21,7 @@ struct Internals :  bav::ParameterList
     
     IntParam abletonLinkSessionPeers {"Num peers", "Ableton link num session peers", 0, 50, 0,
         [] (int value, int maximumStringLength)
-        { return juce::String (value).substring (0, maximumStringLength); },
-        nullptr};
+        { return juce::String (value).substring (0, maximumStringLength); }};
     
     ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
     
@@ -36,8 +35,14 @@ struct Internals :  bav::ParameterList
             if (val) return TRANS ("Dark mode is on").substring (0, maxLength);
             
             return TRANS ("Dark mode is off").substring (0, maxLength);
-        },
-        nullptr};
+        }};
+    
+    IntParam currentInputNote {"Current note", "Current input note", -1, 127, -1,
+        [](int note, int maxLength)
+        {
+            if (note == -1) return juce::String("Unpitched");
+            return bav::pitchToString(note).substring(0, maxLength);
+        }};
     
     IntParam currentCentsSharp {"Cents sharp", "Current input cents sharp", -100, 100, 0,
         [] (int cents, int maxLength)
@@ -60,4 +65,3 @@ struct Internals :  bav::ParameterList
 
 
 // auto scaleName = std::make_unique< StringNode > ("Scale name", "MTS-ESP scale name", "No active scale");
-// auto currentNote = std::make_unique< StringNode > ("Current note", "Current input note as string", "-");

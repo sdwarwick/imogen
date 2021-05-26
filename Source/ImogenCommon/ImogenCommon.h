@@ -25,33 +25,13 @@ namespace Imogen
 
 struct State : bav::SerializableData
 {
-    State() : SerializableData ("ImogenState") { }
-
-    void toValueTree (ValueTree& tree) override final
-    {
-        parameters.serialize (tree);
-        internals.serialize (tree);
-    }
-
-    void fromValueTree (const ValueTree& tree) override final
-    {
-        parameters.deserialize (tree);
-        internals.deserialize (tree);
-    }
+    State();
     
-    void addTo (juce::AudioProcessor& p)
-    {
-        parameters.addParametersTo (p);
-        internals.addAllParametersAsInternal();
-        meters.addAllParametersAsInternal();
-    }
+    void toValueTree (ValueTree& tree) override final;
+    void fromValueTree (const ValueTree& tree) override final;
     
-    void addAllAsInternal()
-    {
-        parameters.addAllParametersAsInternal();
-        internals.addAllParametersAsInternal();
-        meters.addAllParametersAsInternal();
-    }
+    void addTo (juce::AudioProcessor& p);
+    void addAllAsInternal();
 
     Parameters parameters;
     Internals  internals;
@@ -68,6 +48,12 @@ static inline juce::File presetsFolder()
 static inline juce::String getPresetFileExtension()
 {
     return {".xml"};
+}
+
+
+static inline juce::File presetNameToFilePath (const juce::String& presetName)
+{
+    return presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, getPresetFileExtension()));
 }
 
 
