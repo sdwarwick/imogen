@@ -120,9 +120,9 @@ public:
         harmonizer.updateADSRsettings (adsrSettings.attack, decay, adsrSettings.sustain, adsrSettings.release);
     }
 
-    void updateAdsrSustain (float sustain)
+    void updateAdsrSustain (int sustain)
     {
-        adsrSettings.sustain = sustain;
+        adsrSettings.sustain = float(sustain) * 0.01f;
         harmonizer.updateADSRsettings (adsrSettings.attack, adsrSettings.decay, sustain, adsrSettings.release);
     }
 

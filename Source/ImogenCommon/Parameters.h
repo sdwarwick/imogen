@@ -58,7 +58,7 @@ struct Parameters : bav::ParameterList
 
     IntParam leadPan {"Lead pan", "Lead pan", 0, 127, 64, l::midiPan_stringFromInt, l::midiPan_intFromString};
 
-    IntParam pitchbendRange {"Pitchbend", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString};
+    IntParam pitchbendRange {"Pitchbend", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString, TRANS ("st")};
 
     PercentParam velocitySens {"Velocity", "Velocity amount", 100};
 
@@ -80,19 +80,17 @@ struct Parameters : bav::ParameterList
 
     FloatParam adsrAttack {"Attack", "ADSR attack",
         juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
-        0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
+        0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
 
     FloatParam adsrDecay {"Decay", "ADSR decay",
         juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
-        0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
-
-    FloatParam adsrSustain {"Sustain", "ADSR sustain",
-        juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
-        0.8f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
+        0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+    
+    PercentParam adsrSustain {"Sustain", "ADSR sustain", 80};
 
     FloatParam adsrRelease {"Release", "ADSR release",
         juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
-        0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
+        0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
 
     ToggleParam noiseGateToggle {"Toggle", "Gate toggle", true};
 
@@ -122,11 +120,11 @@ struct Parameters : bav::ParameterList
 
     FloatParam reverbLoCut {"Lo cut", "Reverb lo cut",
         juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f),
-        80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
+        80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
     FloatParam reverbHiCut {"Hi cut", "Reverb hi cut",
         juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f),
-        5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
+        5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
     ToggleParam limiterToggle {"Toggle", "Limiter toggle", true};
 
@@ -142,12 +140,6 @@ struct Parameters : bav::ParameterList
     
 private:
     static constexpr auto generic = juce::AudioProcessorParameter::genericParameter;
-
-    // labels for parameter units
-    const juce::String dB {TRANS ("dB")};
-    const juce::String st {TRANS ("st")};
-    const juce::String sec {TRANS ("sec")};
-    const juce::String hz {TRANS ("Hz")};
 };
 
 

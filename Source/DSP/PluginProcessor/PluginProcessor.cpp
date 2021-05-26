@@ -265,7 +265,7 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
                                       { engine.updateAdsrAttack (value); });
     parameters.adsrDecay->setAction ([&engine] (float value)
                                      { engine.updateAdsrDecay (value); });
-    parameters.adsrSustain->setAction ([&engine] (float value)
+    parameters.adsrSustain->setAction ([&engine] (int value)
                                        { engine.updateAdsrSustain (value); });
     parameters.adsrRelease->setAction ([&engine] (float value)
                                        { engine.updateAdsrRelease (value); });
