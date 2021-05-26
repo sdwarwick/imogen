@@ -8,9 +8,11 @@ namespace l = bav::ParameterValueConversionLambdas;
 
 struct Parameters : bav::ParameterList
 {
-    using IntParam   = bav::IntParam;
-    using FloatParam = bav::FloatParam;
-    using BoolParam  = bav::BoolParam;
+    using IntParam    = bav::IntParam;
+    using FloatParam  = bav::FloatParam;
+    using BoolParam   = bav::BoolParam;
+    using GainParam   = bav::GainParam;
+    using ToggleParam = bav::ToggleParam;
 
     Parameters()
         : ParameterList ("ImogenParameters")
@@ -39,21 +41,15 @@ struct Parameters : bav::ParameterList
 
     IntParam dryWet {"Dry/wet", "Main dry/wet", 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
 
-    FloatParam inputGain {"In", "Input gain", gainRange, 0.0f,
-                          juce::AudioProcessorParameter::inputGain,
-                          l::gain_stringFromFloat,
-                          l::gain_floatFromString, dB};
+    GainParam inputGain { "In", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain };
+    
+    GainParam outputGain { "Out", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain };
+    
+    ToggleParam mainBypass { "Main", "Main bypass", false };
 
-    FloatParam outputGain {"Out", "Output gain", gainRange, -4.0f,
-                           juce::AudioProcessorParameter::outputGain,
-                           l::gain_stringFromFloat,
-                           l::gain_floatFromString, dB};
+    ToggleParam leadBypass {"Lead", "Lead bypass", false};
 
-    BoolParam mainBypass {"Main", "Main bypass", false, l::toggle_stringFromBool, l::toggle_boolFromString};
-
-    BoolParam leadBypass {"Lead", "Lead bypass", false, l::toggle_stringFromBool, l::toggle_boolFromString};
-
-    BoolParam harmonyBypass {"Harmony", "Harmony bypass", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam harmonyBypass {"Harmony", "Harmony bypass", false};
 
     IntParam stereoWidth {"Width", "Stereo width", 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
 
@@ -65,17 +61,17 @@ struct Parameters : bav::ParameterList
 
     IntParam velocitySens {"Velocity", "Velocity amount", 0, 100, 100, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
 
-    BoolParam aftertouchToggle {"Aftertouch", "Aftertouch gain", true, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam aftertouchToggle {"Aftertouch", "Aftertouch gain", true};
 
-    BoolParam voiceStealing {"Stealing", "Voice stealing", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam voiceStealing {"Stealing", "Voice stealing", false};
 
-    BoolParam pedalToggle {"Toggle", "Pedal toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam pedalToggle {"Toggle", "Pedal toggle", false};
 
     IntParam pedalThresh {"Thresh", "Pedal thresh", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
 
     IntParam pedalInterval {"Interval", "Pedal interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString, st};
 
-    BoolParam descantToggle {"Toggle", "Descant toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam descantToggle {"Toggle", "Descant toggle", false};
 
     IntParam descantThresh {"Thresh", "Descant thresh", 0, 127, 127, l::pcnt_stringFromInt, l::pitch_intFromString};
 
@@ -89,25 +85,25 @@ struct Parameters : bav::ParameterList
 
     FloatParam adsrRelease {"Release", "ADSR release", msRange, 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, sec};
 
-    BoolParam noiseGateToggle {"Toggle", "Gate toggle", true, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam noiseGateToggle {"Toggle", "Gate toggle", true};
 
     FloatParam noiseGateThresh {"Thresh", "Gate thresh", gainRange, -20.0f, generic, l::gain_stringFromFloat, l::gain_floatFromString, dB};
 
-    BoolParam deEsserToggle {"Toggle", "D-S toggle", true, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam deEsserToggle {"Toggle", "D-S toggle", true};
 
     FloatParam deEsserThresh {"Thresh", "D-S thresh", gainRange, -6.0f, generic, l::gain_stringFromFloat, l::gain_floatFromString, dB};
 
     FloatParam deEsserAmount {"Amount", "D-S amount", zeroToOneRange, 0.5f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, dB};
 
-    BoolParam compToggle {"Toggle", "Compressor toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam compToggle {"Toggle", "Compressor toggle", false};
 
     FloatParam compAmount {"Amount", "Compressor amount", zeroToOneRange, 0.35f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, dB};
 
-    BoolParam delayToggle {"Toggle", "Delay toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam delayToggle {"Toggle", "Delay toggle", false};
 
     IntParam delayDryWet {"Mix", "Delay mix", 0, 100, 35, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
 
-    BoolParam reverbToggle {"Toggle", "Reverb toggle", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam reverbToggle {"Toggle", "Reverb toggle", false};
 
     IntParam reverbDryWet {"Mix", "Reverb mix", 0, 100, 35, l::pcnt_stringFromInt, l::pcnt_intFromString, "%"};
 
@@ -119,9 +115,9 @@ struct Parameters : bav::ParameterList
 
     FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", hzRange, 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
-    BoolParam limiterToggle {"Toggle", "Limiter toggle", true, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam limiterToggle {"Toggle", "Limiter toggle", true};
 
-    BoolParam midiLatch {"Is latched", "MIDI is latched", false, l::toggle_stringFromBool, l::toggle_boolFromString};
+    ToggleParam midiLatch {"Is latched", "MIDI is latched", false};
 
     /* */
     
