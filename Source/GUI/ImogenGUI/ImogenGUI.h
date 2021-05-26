@@ -65,6 +65,8 @@ private:
     Imogen::Parameters& parameters {state.parameters};
     Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};
+    
+    bav::gui::DarkModeSentinel darkModeUpdater {internals.guiDarkMode};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };

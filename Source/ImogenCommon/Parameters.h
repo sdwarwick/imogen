@@ -58,7 +58,7 @@ struct Parameters : bav::ParameterList
 
     IntParam leadPan {"Lead pan", "Lead pan", 0, 127, 64, l::midiPan_stringFromInt, l::midiPan_intFromString};
 
-    IntParam pitchbendRange {"Pitchbend", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString, st};
+    IntParam pitchbendRange {"Pitchbend", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString};
 
     PercentParam velocitySens {"Velocity", "Velocity amount", 100};
 
@@ -70,23 +70,23 @@ struct Parameters : bav::ParameterList
 
     IntParam pedalThresh {"Thresh", "Pedal thresh", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
 
-    IntParam pedalInterval {"Interval", "Pedal interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString, st};
+    IntParam pedalInterval {"Interval", "Pedal interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
 
     ToggleParam descantToggle {"Toggle", "Descant toggle", false};
 
     IntParam descantThresh {"Thresh", "Descant thresh", 0, 127, 127, l::pcnt_stringFromInt, l::pitch_intFromString};
 
-    IntParam descantInterval {"Interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString, st};
+    IntParam descantInterval {"Interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
 
-    FloatParam adsrAttack {"Attack", "ADSR attack", msRange, 0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString, sec};
+    FloatParam adsrAttack {"Attack", "ADSR attack", msRange, 0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
 
-    FloatParam adsrDecay {"Decay", "ADSR decay", msRange, 0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, sec};
+    FloatParam adsrDecay {"Decay", "ADSR decay", msRange, 0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
 
     FloatParam adsrSustain {"Sustain", "ADSR sustain",
         juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
         0.8f, generic, l::normPcnt_stringFromInt, l::normPcnt_intFromString, "%"};
 
-    FloatParam adsrRelease {"Release", "ADSR release", msRange, 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, sec};
+    FloatParam adsrRelease {"Release", "ADSR release", msRange, 0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString};
 
     ToggleParam noiseGateToggle {"Toggle", "Gate toggle", true};
 
@@ -114,9 +114,9 @@ struct Parameters : bav::ParameterList
 
     PercentParam reverbDuck {"Duck", "Reverb duck", 30};
 
-    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut", hzRange, 80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, hz};
+    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut", hzRange, 80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
 
-    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", hzRange, 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, hz};
+    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut", hzRange, 5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString};
 
     ToggleParam limiterToggle {"Toggle", "Limiter toggle", true};
 

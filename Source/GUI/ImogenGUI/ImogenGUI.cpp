@@ -14,10 +14,6 @@ ImogenGUI::ImogenGUI()
 
     addAndMakeVisible (mainDial);
 
-#if JUCE_MAC
-    internals.guiDarkMode->set (juce::Desktop::isOSXDarkModeActive());
-#endif
-    
     internals.abletonLinkEnabled->onParameterChange = []() { };
     internals.abletonLinkSessionPeers->onParameterChange = [](){ };
     internals.mtsEspIsConnected->onParameterChange = [](){ };
@@ -68,41 +64,25 @@ void ImogenGUI::rescanPresetsFolder()
 
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    auto savingTo = Imogen::presetNameToFilePath (presetName);
-    bav::toBinary (state, savingTo);
+    bav::toBinary (state, Imogen::presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
-
 
 void ImogenGUI::loadPreset (const juce::String& presetName)
 {
-    auto presetToLoad = Imogen::presetNameToFilePath (presetName);
-    
-    if (! presetToLoad.existsAsFile())
-    {
-        // display error message...
-        return;
-    }
-
-    bav::fromBinary (presetToLoad, state);
-    
+    bav::fromBinary (Imogen::presetNameToFilePath (presetName), state);
     repaint();
 }
 
-
 void ImogenGUI::deletePreset (const juce::String& presetName)
 {
-    auto presetToDelete = Imogen::presetNameToFilePath (presetName);
-    bav::deleteFile (presetToDelete);
+    bav::deleteFile (Imogen::presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
 
-
 void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
 {
-    const auto presetToLoad = Imogen::presetNameToFilePath (previousName);
-
-    bav::renameFile (presetToLoad,
+    bav::renameFile (Imogen::presetNameToFilePath (previousName),
                      bav::addFileExtensionIfMissing (newName, Imogen::getPresetFileExtension()));
 
     rescanPresetsFolder();
