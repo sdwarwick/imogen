@@ -203,15 +203,12 @@ void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    juce::MemoryOutputStream stream (destData, false);
-    state.serialize().writeToStream (stream);
+    bav::toBinary (state, destData);
 }
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    state.deserialize (data, sizeInBytes);
-    parameters.refreshAllDefaults();
-    updateHostDisplay();
+    bav::fromBinary (data, sizeInBytes, state);
 }
 
 /*===========================================================================================================================

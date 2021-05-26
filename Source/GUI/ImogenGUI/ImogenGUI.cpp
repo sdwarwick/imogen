@@ -56,20 +56,18 @@ void ImogenGUI::rescanPresetsFolder()
 
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    const auto filename = bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension());
-
-    juce::FileOutputStream stream (filename);
-
-    state.serialize().writeToStream (stream);
-
+    auto savingTo = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, Imogen::getPresetFileExtension()));
+    
+    bav::toBinary (state, savingTo);
+    
     rescanPresetsFolder();
 }
 
 
 void ImogenGUI::loadPreset (const juce::String& presetName)
 {
-    const auto presetToLoad = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
-                                                                                                    Imogen::getPresetFileExtension()));
+    auto presetToLoad = Imogen::presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName,
+                                                                                              Imogen::getPresetFileExtension()));
 
     if (! presetToLoad.existsAsFile())
     {
@@ -77,14 +75,8 @@ void ImogenGUI::loadPreset (const juce::String& presetName)
         return;
     }
 
-    juce::MemoryBlock data;
-
-    juce::FileInputStream stream (presetToLoad);
-
-    stream.readIntoMemoryBlock (data);
-
-    state.deserialize (data.getData(), data.getSize());
-
+    bav::fromBinary (presetToLoad, state);
+    
     repaint();
 }
 
