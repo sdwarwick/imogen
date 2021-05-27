@@ -69,7 +69,6 @@ public:
     void recieveExternalPitchbend (const int bend);
 
     ImogenMeterData getLatestMeterData() const { return meterData; }
-    
     ImogenInternalsData getLatestInternalsData() const { return internalsData; }
 
     /*=========================================================================================*/

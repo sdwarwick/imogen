@@ -173,9 +173,8 @@ void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
     internals.mtsEspIsConnected->set (internalsData.mtsEspConnected);
     internals.currentCentsSharp->set (internalsData.currentCentsSharp);
     internals.currentInputNote->set (internalsData.currentPitch);
-    
-    //int lastMovedMidiController {};
-    //int lastMovedControllerValue {};
+    internals.lastMovedMidiController->set (internalsData.lastMovedMidiController);
+    internals.lastMovedCCValue->set (internalsData.lastMovedControllerValue);
 }
 
 /*===========================================================================================================================

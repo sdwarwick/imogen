@@ -297,8 +297,9 @@ bvie_VOID_TEMPLATE::udpateInternalsData()
     internalsData.currentCentsSharp = intonationInfo.centsSharp;
     internalsData.currentPitch = intonationInfo.pitch;
     
-    //int lastMovedMidiController {};
-    //int lastMovedControllerValue {};
+    const auto controllerData = harmonizer.getLastMovedControllerInfo();
+    internalsData.lastMovedMidiController  = controllerData.controllerNumber;
+    internalsData.lastMovedControllerValue = controllerData.controllerValue;
 }
 
 
