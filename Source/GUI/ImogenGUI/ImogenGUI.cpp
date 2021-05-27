@@ -5,8 +5,13 @@
 #include "MainDialComponent/MainDialComponent.cpp"
 
 
-ImogenGUI::ImogenGUI()
-    : GUIInitializer (getTopLevelComponent())
+ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
+    : GUIInitializer (getTopLevelComponent()),
+      state (stateToUse),
+      parameters (state.parameters),
+      internals (state.internals),
+      meters (state.meters),
+      darkModeUpdater (internals.guiDarkMode)
 {
     setInterceptsMouseClicks (false, true);
     
@@ -14,24 +19,7 @@ ImogenGUI::ImogenGUI()
 
     addAndMakeVisible (mainDial);
 
-    internals.abletonLinkEnabled->onParameterChange = []() { };
-    internals.abletonLinkSessionPeers->onParameterChange = [](){ };
-    internals.mtsEspIsConnected->onParameterChange = [](){ };
-    internals.lastMovedMidiController->onParameterChange = [](){ };
-    internals.lastMovedCCValue->onParameterChange = [](){ };
     internals.guiDarkMode->onParameterChange = [this]() { repaint(); };
-    internals.currentInputNote->onParameterChange = [](){ };
-    internals.currentCentsSharp->onParameterChange = [](){ };
-    
-    meters.inputLevel->onParameterChange = [](){ };
-    meters.outputLevelL->onParameterChange = [](){ };
-    meters.outputLevelR->onParameterChange = [](){ };
-    meters.gateRedux->onParameterChange = [](){ };
-    meters.compRedux->onParameterChange = [](){ };
-    meters.deEssRedux->onParameterChange = [](){ };
-    meters.limRedux->onParameterChange = [](){ };
-    meters.reverbLevel->onParameterChange = [](){ };
-    meters.delayLevel->onParameterChange = [](){ };
     
     rescanPresetsFolder();
 }

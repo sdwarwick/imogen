@@ -24,7 +24,7 @@ class ImogenGUI : public juce::Component,
                   public bav::GUIInitializer
 {
 public:
-    ImogenGUI();
+    ImogenGUI (Imogen::State& stateToUse);
 
     virtual ~ImogenGUI() override;
 
@@ -60,12 +60,12 @@ private:
 
     juce::TooltipWindow  tooltipWindow {this, 700};
 
-    Imogen::State       state;
-    Imogen::Parameters& parameters {state.parameters};
-    Imogen::Internals&  internals {state.internals};
-    Imogen::Meters&     meters {state.meters};
+    Imogen::State&      state;
+    Imogen::Parameters& parameters;
+    Imogen::Internals&  internals;
+    Imogen::Meters&     meters;
     
-    bav::gui::DarkModeSentinel darkModeUpdater {internals.guiDarkMode};
+    bav::gui::DarkModeSentinel darkModeUpdater;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };

@@ -3,7 +3,7 @@
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-    : AudioProcessorEditor (&p), imgnProcessor (p)
+    : AudioProcessorEditor (&p), imgnProcessor (p), gui (p.state)
 {
     this->setBufferedToImage (true);
 
@@ -36,5 +36,5 @@ void ImogenAudioProcessorEditor::resized()
 {
     imgnProcessor.saveEditorSize (getWidth(), getHeight());
 
-    gui.setBounds (0, 0, getWidth(), getHeight());
+    gui.setBounds (getLocalBounds());
 }

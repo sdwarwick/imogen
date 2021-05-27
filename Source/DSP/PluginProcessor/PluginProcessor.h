@@ -30,7 +30,9 @@ public:
     void               saveEditorSize (int width, int height);
 
     /*=========================================================================================*/
-
+    
+    Imogen::State state;
+    
 private:
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */
@@ -99,7 +101,6 @@ private:
     bav::ImogenEngine< float >  floatEngine;
     bav::ImogenEngine< double > doubleEngine;
 
-    Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
     Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};

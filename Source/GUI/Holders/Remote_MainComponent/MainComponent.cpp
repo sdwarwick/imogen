@@ -28,5 +28,5 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    gui.setBounds (0, 0, getWidth(), getHeight());
+    gui.setBounds (getLocalBounds());
 }
