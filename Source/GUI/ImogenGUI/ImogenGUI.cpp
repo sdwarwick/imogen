@@ -6,28 +6,28 @@
 
 
 ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
-    : GUIInitializer (getTopLevelComponent()),
+    : GUIInitializer (*getTopLevelComponent()),
       state (stateToUse),
       parameters (state.parameters),
       internals (state.internals),
       meters (state.meters),
-      darkModeUpdater (internals.guiDarkMode)
+      darkModeSentinel (internals.guiDarkMode, *this)
 {
     setInterceptsMouseClicks (false, true);
     
     state.addAllAsInternal();
+    
+    setLookAndFeel (&lookAndFeel);
 
     addAndMakeVisible (mainDial);
 
-    internals.guiDarkMode->onParameterChange = [this]() { repaint(); };
-    
     rescanPresetsFolder();
 }
 
 
 ImogenGUI::~ImogenGUI()
 {
-    this->setLookAndFeel (nullptr);
+    setLookAndFeel (nullptr);
 }
 
 /*=========================================================================================================

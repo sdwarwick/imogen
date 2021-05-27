@@ -21,7 +21,7 @@
 
 
 class ImogenGUI : public juce::Component,
-                  public bav::GUIInitializer
+                  public bav::gui::GUIInitializer
 {
 public:
     ImogenGUI (Imogen::State& stateToUse);
@@ -65,7 +65,7 @@ private:
     Imogen::Internals&  internals;
     Imogen::Meters&     meters;
     
-    bav::gui::DarkModeSentinel darkModeUpdater;
-
+    bav::gui::DarkModeSentinel darkModeSentinel;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };
