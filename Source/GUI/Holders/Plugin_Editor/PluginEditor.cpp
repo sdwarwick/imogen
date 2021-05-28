@@ -25,7 +25,7 @@ void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 }
 
 
-void ImogenAudioProcessorEditor::resized()
+void ImogenAudioProcessorEditor::resizeTriggered()
 {
     gui.setBounds (getLocalBounds());
 }

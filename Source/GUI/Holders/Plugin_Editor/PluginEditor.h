@@ -17,14 +17,12 @@ public:
     ~ImogenAudioProcessorEditor() override;
 
     /*=========================================================================================*/
-    /* juce::Component functions */
-
-    void paint (juce::Graphics&) override final;
-    void resized() override final;
-
-    /*=========================================================================================*/
 
 private:
+    void paint (juce::Graphics&) override final;
+    
+    void resizeTriggered() override final;
+    
     ImogenGUI gui;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
