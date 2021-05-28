@@ -8,13 +8,6 @@ namespace l = bav::ParameterValueConversionLambdas;
 
 struct Parameters : bav::ParameterList
 {
-    using IntParam     = bav::IntParam;
-    using FloatParam   = bav::FloatParam;
-    using BoolParam    = bav::BoolParam;
-    using GainParam    = bav::GainParam;
-    using ToggleParam  = bav::ToggleParam;
-    using PercentParam = bav::PercentParam;
-
     Parameters(): ParameterList ("ImogenParameters")
     {
         add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch);

@@ -7,30 +7,29 @@ namespace Imogen
 
 struct Meters : bav::ParameterList
 {
-    using Gain  = bav::ParameterHolder< bav::GainMeterParameter >;
-    using Param = juce::AudioProcessorParameter;
-    
     Meters(): ParameterList ("ImogenMeters")
     {
         add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
     }
     
-    Gain inputLevel {"Input level", "Input level", Param::inputMeter};
+    GainMeter inputLevel {"Input level", "Input level", inputMeter};
     
-    Gain outputLevelL {"OutL", "Output level (L)", Param::outputMeter};
-    Gain outputLevelR {"OutR", "Output level (R)", Param::outputMeter};
+    GainMeter outputLevelL {"OutL", "Output level (L)", outputMeter};
+    GainMeter outputLevelR {"OutR", "Output level (R)", outputMeter};
     
-    Gain gateRedux {"Gate redux", "Noise gate gain reduction", compLimMeter};
-    Gain compRedux {"Comp redux", "Compressor gain reduction", compLimMeter};
-    Gain deEssRedux {"D-S redux", "De-esser gain reduction", compLimMeter};
-    Gain limRedux {"Lim redux", "Limiter gain reduction", compLimMeter};
+    GainMeter gateRedux {"Gate redux", "Noise gate gain reduction", compLimMeter};
+    GainMeter compRedux {"Comp redux", "Compressor gain reduction", compLimMeter};
+    GainMeter deEssRedux {"D-S redux", "De-esser gain reduction", compLimMeter};
+    GainMeter limRedux {"Lim redux", "Limiter gain reduction", compLimMeter};
     
-    Gain reverbLevel {"Reverb level", "Reverb level", otherMeter};
-    Gain delayLevel {"Delay level", "Delay level", otherMeter};
+    GainMeter reverbLevel {"Reverb level", "Reverb level", otherMeter};
+    GainMeter delayLevel {"Delay level", "Delay level", otherMeter};
     
 private:
-    static constexpr auto compLimMeter = Param::compressorLimiterGainReductionMeter;
-    static constexpr auto otherMeter   = Param::otherMeter;
+    static constexpr auto inputMeter   = juce::AudioProcessorParameter::inputMeter;
+    static constexpr auto outputMeter  = juce::AudioProcessorParameter::outputMeter;
+    static constexpr auto compLimMeter = juce::AudioProcessorParameter::compressorLimiterGainReductionMeter;
+    static constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
 };
 
 }  // namespace

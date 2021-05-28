@@ -6,15 +6,10 @@ namespace Imogen
 
 struct Internals :  bav::ParameterList
 {
-    using IntParam   = bav::IntParam;
-    using BoolParam  = bav::BoolParam;
-    using ToggleParam  = bav::ToggleParam;
-    
     Internals(): ParameterList ("ImogenInternals")
     {
         addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
     }
-    
     
     ToggleParam abletonLinkEnabled {"Ableton link Toggle", "Ableton link toggle", false};
     
