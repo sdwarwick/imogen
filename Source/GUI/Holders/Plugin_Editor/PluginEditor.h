@@ -9,7 +9,7 @@
 using namespace Imogen;
 
 
-class ImogenAudioProcessorEditor : public juce::AudioProcessorEditor
+class ImogenAudioProcessorEditor : public bav::gui::EditorBase
 {
 public:
     ImogenAudioProcessorEditor (ImogenAudioProcessor& p);
@@ -25,8 +25,6 @@ public:
     /*=========================================================================================*/
 
 private:
-    ImogenAudioProcessor& imgnProcessor;  // reference to the processor that created this editor
-
     ImogenGUI gui;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
