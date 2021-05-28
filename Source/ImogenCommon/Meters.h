@@ -15,7 +15,7 @@ struct Meters : bav::ParameterList
         add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
     }
     
-    Gain inputLevel {"In", "Input level", Param::inputMeter};
+    Gain inputLevel {"Input level", "Input level", Param::inputMeter};
     
     Gain outputLevelL {"OutL", "Output level (L)", Param::outputMeter};
     Gain outputLevelR {"OutR", "Output level (R)", Param::outputMeter};
@@ -25,8 +25,8 @@ struct Meters : bav::ParameterList
     Gain deEssRedux {"D-S redux", "De-esser gain reduction", compLimMeter};
     Gain limRedux {"Lim redux", "Limiter gain reduction", compLimMeter};
     
-    Gain reverbLevel {"Reverb", "Reverb level", otherMeter};
-    Gain delayLevel {"Delay", "Delay level", otherMeter};
+    Gain reverbLevel {"Reverb level", "Reverb level", otherMeter};
+    Gain delayLevel {"Delay level", "Delay level", otherMeter};
     
 private:
     static constexpr auto compLimMeter = Param::compressorLimiterGainReductionMeter;

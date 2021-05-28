@@ -16,17 +16,17 @@ struct Internals :  bav::ParameterList
     }
     
     
-    ToggleParam abletonLinkEnabled {"Toggle", "Ableton link toggle", false};
+    ToggleParam abletonLinkEnabled {"Ableton link Toggle", "Ableton link toggle", false};
     
-    IntParam abletonLinkSessionPeers {"Num peers", "Ableton link num session peers", 0, 50, 0,
+    IntParam abletonLinkSessionPeers {"Link Num peers", "Ableton link num session peers", 0, 50, 0,
         [] (int value, int maximumStringLength)
         { return juce::String (value).substring (0, maximumStringLength); }};
     
     ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
     
-    IntParam lastMovedMidiController {"Number", "Last moved MIDI controller number", 0, 127, 0};
+    IntParam lastMovedMidiController {"Controller Number", "Last moved MIDI controller number", 0, 127, 0};
     
-    IntParam lastMovedCCValue {"Value", "Last moved MIDI controller value", 0, 127, 0};
+    IntParam lastMovedCCValue {"Controller Value", "Last moved MIDI controller value", 0, 127, 0};
     
     BoolParam guiDarkMode {"Dark mode", "GUI Dark mode", true,
         [] (bool val, int maxLength)

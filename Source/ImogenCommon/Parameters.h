@@ -39,99 +39,99 @@ struct Parameters : bav::ParameterList
                             return 1;
                         }};
 
-    PercentParam dryWet {"Dry/wet", "Main dry/wet", 100};
+    PercentParam dryWet {"Main dry/wet", "Main dry/wet", 100};
 
-    GainParam inputGain { "In", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain };
+    GainParam inputGain { "Input gain", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain };
     
-    GainParam outputGain { "Out", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain };
+    GainParam outputGain { "Output gain", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain };
     
-    ToggleParam mainBypass { "Main", "Main bypass", false };
+    ToggleParam mainBypass { "Main bypass", "Main bypass", false };
 
-    ToggleParam leadBypass {"Lead", "Lead bypass", false};
+    ToggleParam leadBypass {"Lead bypass", "Lead bypass", false};
 
-    ToggleParam harmonyBypass {"Harmony", "Harmony bypass", false};
+    ToggleParam harmonyBypass {"Harmony bypass", "Harmony bypass", false};
 
-    PercentParam stereoWidth {"Width", "Stereo width", 100};
+    PercentParam stereoWidth {"Stereo width", "Stereo width", 100};
 
-    IntParam lowestPanned {"Lowest note", "Lowest panned note", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
+    IntParam lowestPanned {"Lowest panned note", "Lowest panned note", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
 
     IntParam leadPan {"Lead pan", "Lead pan", 0, 127, 64, l::midiPan_stringFromInt, l::midiPan_intFromString};
 
-    IntParam pitchbendRange {"Pitchbend", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString, TRANS ("st")};
+    IntParam pitchbendRange {"Pitchbend range", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString, TRANS ("st")};
 
-    PercentParam velocitySens {"Velocity", "Velocity amount", 100};
+    PercentParam velocitySens {"Velocity amount", "Velocity amount", 100};
 
-    ToggleParam aftertouchToggle {"Aftertouch", "Aftertouch gain", true};
+    ToggleParam aftertouchToggle {"Aftertouch gain", "Aftertouch gain", true};
 
-    ToggleParam voiceStealing {"Stealing", "Voice stealing", false};
+    ToggleParam voiceStealing {"Voice stealing", "Voice stealing", false};
 
-    ToggleParam pedalToggle {"Toggle", "Pedal toggle", false};
+    ToggleParam pedalToggle {" Pedal toggle", "Pedal toggle", false};
 
-    IntParam pedalThresh {"Thresh", "Pedal thresh", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
+    IntParam pedalThresh {"Pedal thresh", "Pedal thresh", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
 
-    IntParam pedalInterval {"Interval", "Pedal interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
+    IntParam pedalInterval {"Pedal interval", "Pedal interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
 
-    ToggleParam descantToggle {"Toggle", "Descant toggle", false};
+    ToggleParam descantToggle {"Descant toggle", "Descant toggle", false};
 
-    IntParam descantThresh {"Thresh", "Descant thresh", 0, 127, 127, l::pcnt_stringFromInt, l::pitch_intFromString};
+    IntParam descantThresh {"Descant thresh", "Descant thresh", 0, 127, 127, l::pcnt_stringFromInt, l::pitch_intFromString};
 
-    IntParam descantInterval {"Interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
+    IntParam descantInterval {"Descant interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
 
-    FloatParam adsrAttack {"Attack", "ADSR attack",
+    FloatParam adsrAttack {"ADSR Attack", "ADSR attack",
         juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
         0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
 
-    FloatParam adsrDecay {"Decay", "ADSR decay",
+    FloatParam adsrDecay {"ADSR Decay", "ADSR decay",
         juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
         0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
     
-    PercentParam adsrSustain {"Sustain", "ADSR sustain", 80};
+    PercentParam adsrSustain {"ADSR Sustain", "ADSR sustain", 80};
 
-    FloatParam adsrRelease {"Release", "ADSR release",
+    FloatParam adsrRelease {"ADSR Release", "ADSR release",
         juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
         0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
 
-    ToggleParam noiseGateToggle {"Toggle", "Gate toggle", true};
+    ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
 
-    GainParam noiseGateThresh {"Thresh", "Gate thresh", -20.0f, generic};
+    GainParam noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f, generic};
 
-    ToggleParam deEsserToggle {"Toggle", "D-S toggle", true};
+    ToggleParam deEsserToggle {"D-S Toggle", "D-S toggle", true};
 
-    GainParam deEsserThresh {"Thresh", "D-S thresh", -6.0f, generic};
+    GainParam deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f, generic};
 
-    PercentParam deEsserAmount {"Amount", "D-S amount", 50};
+    PercentParam deEsserAmount {"D-S Amount", "D-S amount", 50};
 
-    ToggleParam compToggle {"Toggle", "Compressor toggle", false};
+    ToggleParam compToggle {"Compressor Toggle", "Compressor toggle", false};
 
-    PercentParam compAmount {"Amount", "Compressor amount", 50};
+    PercentParam compAmount {"Compressor Amount", "Compressor amount", 50};
 
-    ToggleParam delayToggle {"Toggle", "Delay toggle", false};
+    ToggleParam delayToggle {"Delay Toggle", "Delay toggle", false};
 
-    PercentParam delayDryWet {"Mix", "Delay mix", 0};
+    PercentParam delayDryWet {"Delay Mix", "Delay mix", 0};
 
-    ToggleParam reverbToggle {"Toggle", "Reverb toggle", false};
+    ToggleParam reverbToggle {"Reverb Toggle", "Reverb toggle", false};
 
-    PercentParam reverbDryWet {"Mix", "Reverb mix", 15};
+    PercentParam reverbDryWet {"Reverb Mix", "Reverb mix", 15};
 
-    PercentParam reverbDecay {"Decay", "Reverb decay", 60};
+    PercentParam reverbDecay {"Reverb Decay", "Reverb decay", 60};
 
-    PercentParam reverbDuck {"Duck", "Reverb duck", 30};
+    PercentParam reverbDuck {"Reverb Duck", "Reverb duck", 30};
 
-    FloatParam reverbLoCut {"Lo cut", "Reverb lo cut",
+    FloatParam reverbLoCut {"Reverb Lo cut", "Reverb lo cut",
         juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f),
         80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
-    FloatParam reverbHiCut {"Hi cut", "Reverb hi cut",
+    FloatParam reverbHiCut {"Reverb Hi cut", "Reverb hi cut",
         juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f),
         5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
-    ToggleParam limiterToggle {"Toggle", "Limiter toggle", true};
+    ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
 
-    ToggleParam midiLatch {"Is latched", "MIDI is latched", false};
+    ToggleParam midiLatch {"MIDI latch", "MIDI latch", false};
 
     /* */
     
-    IntParam editorPitchbend {"Pitchbend", "GUI pitchbend", 0, 127, 64,
+    IntParam editorPitchbend {"GUI Pitchbend", "GUI Pitchbend", 0, 127, 64,
         [] (int value, int maximumStringLength)
         { return juce::String (value).substring (0, maximumStringLength); },
         [] (const juce::String& text)
