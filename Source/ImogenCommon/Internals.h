@@ -13,7 +13,7 @@ struct Internals :  bav::ParameterList
     Internals()
     : ParameterList ("ImogenInternals")
     {
-        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp, editorSizeX, editorSizeY);
+        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
     }
     
     
@@ -55,10 +55,6 @@ struct Internals :  bav::ParameterList
         },
         nullptr,
         TRANS ("cents")};
-    
-    IntParam editorSizeX {"editorSizeX", "editor size X", 0, 10000, 900};
-    IntParam editorSizeY {"editorSizeY", "editor size Y", 0, 10000, 400};
-    
 };
 
 }  // namespace

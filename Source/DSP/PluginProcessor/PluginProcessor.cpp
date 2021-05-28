@@ -345,18 +345,6 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 #endif
 }
 
-void ImogenAudioProcessor::saveEditorSize (int width, int height)
-{
-    internals.editorSizeX->set (width);
-    internals.editorSizeY->set (height);
-}
-
-juce::Point< int > ImogenAudioProcessor::getSavedEditorSize() const
-{
-    return {internals.editorSizeX.get()->get(),
-            internals.editorSizeY.get()->get()};
-}
-
 
 /*===========================================================================================================================
  ============================================================================================================================*/

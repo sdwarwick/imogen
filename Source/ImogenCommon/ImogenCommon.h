@@ -24,16 +24,14 @@
 namespace Imogen
 {
 
-struct State : bav::SerializableData
+struct State : bav::StateBase
 {
-    State();
+    State()
+        : StateBase ("ImogenState")
+    {
+        add (parameters, internals, meters);
+    }
     
-    void toValueTree (ValueTree& tree) override final;
-    void fromValueTree (const ValueTree& tree) override final;
-    
-    void addTo (juce::AudioProcessor& p);
-    void addAllAsInternal();
-
     Parameters parameters;
     Internals  internals;
     Meters     meters;

@@ -26,9 +26,6 @@ public:
 
     juce::String getScaleName() const;
 
-    juce::Point< int > getSavedEditorSize() const;
-    void               saveEditorSize (int width, int height);
-
     /*=========================================================================================*/
     
     Imogen::State state;
