@@ -63,6 +63,7 @@ void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& ou
     Base::renderVoices (midiMessages, output);
     
     //TODO: update intonation info...
+    intonationInfo.pitch = juce::roundToInt (math::freqToMidi (analyzer.getLastFrequency()));
 }
 
 
