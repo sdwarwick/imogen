@@ -26,8 +26,7 @@ namespace Imogen
 
 struct State : bav::StateBase
 {
-    State()
-        : StateBase ("ImogenState")
+    State(): StateBase ("ImogenState")
     {
         add (parameters, internals, meters);
     }

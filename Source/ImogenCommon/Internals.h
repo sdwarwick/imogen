@@ -10,8 +10,7 @@ struct Internals :  bav::ParameterList
     using BoolParam  = bav::BoolParam;
     using ToggleParam  = bav::ToggleParam;
     
-    Internals()
-    : ParameterList ("ImogenInternals")
+    Internals(): ParameterList ("ImogenInternals")
     {
         addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
     }

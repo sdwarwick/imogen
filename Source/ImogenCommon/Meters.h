@@ -10,8 +10,7 @@ struct Meters : bav::ParameterList
     using Gain  = bav::ParameterHolder< bav::GainMeterParameter >;
     using Param = juce::AudioProcessorParameter;
     
-    Meters()
-    : ParameterList ("ImogenMeters")
+    Meters(): ParameterList ("ImogenMeters")
     {
         add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
     }
