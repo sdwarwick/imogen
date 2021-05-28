@@ -15,13 +15,13 @@ ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
 {
     setInterceptsMouseClicks (false, true);
     
-    state.addAllAsInternal();
-    
     setLookAndFeel (&lookAndFeel);
 
     addAndMakeVisible (mainDial);
 
     rescanPresetsFolder();
+    
+    state.setUndoManager (undoManager);
 }
 
 

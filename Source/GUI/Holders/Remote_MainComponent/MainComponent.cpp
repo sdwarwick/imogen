@@ -7,6 +7,8 @@ MainComponent::MainComponent()
     this->setBufferedToImage (true);
 
     addAndMakeVisible (gui);
+    
+    state.addAllAsInternal();
 
     setSize (800, 2990);
 }
