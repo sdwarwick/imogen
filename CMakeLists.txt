@@ -65,9 +65,7 @@ set (Imogen_Processor_Dependencies ImogenCommon ImogenEngine)
 set (Imogen_sourceFiles
     ${Imogen_Processor_Source_Files}
     ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h
-    ${Imogen_sourceDir}/ApplicationBases/Plugin_StandaloneWrapper/StandaloneWrapper.h
-    ${Imogen_sourceDir}/ApplicationBases/Plugin_StandaloneWrapper/StandaloneWrapper.cpp)
+    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h)
 
 juce_add_plugin (Imogen
     ${Imogen_Plugin_Flags}
@@ -93,7 +91,7 @@ link_binary_data_to_target_create_if_needed (Imogen assets)
 
 target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link ImogenGUI)
 
-target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 IMOGEN_HEADLESS=0)
+target_compile_definitions (Imogen PUBLIC IMOGEN_HEADLESS=0)
 
 
 
@@ -130,9 +128,9 @@ endif()
 #################### Configure the remote GUI app build ####################
 
 set (ImogenRemote_sourceFiles
-    ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.h
-    ${Imogen_sourceDir}/GUI/Holders/Remote_MainComponent/MainComponent.cpp
-    ${Imogen_sourceDir}/ApplicationBases/Remote/Main.cpp)
+    ${Imogen_sourceDir}/GUI/Holders/Remote/MainComponent.h
+    ${Imogen_sourceDir}/GUI/Holders/Remote/MainComponent.cpp
+    ${Imogen_sourceDir}/GUI/Holders/Remote/Main.cpp)
 
 juce_add_gui_app (ImogenRemote
     ${Imogen_Common_Flags}
