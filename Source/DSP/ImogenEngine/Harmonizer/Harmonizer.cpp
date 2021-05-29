@@ -8,8 +8,8 @@ Harmonizer< SampleType >::Harmonizer()
 
     Base::updateQuickReleaseMs (adsrQuickReleaseMs);
 
-    Base::playingButReleasedMultiplier = playingButReleasedGainMultiplier;
-    Base::softPedalMultiplier          = softPedalGainMultiplier;
+    Base::setPlayingButReleasedMultiplier (playingButReleasedGainMultiplier);
+    Base::setSoftPedalMultiplier (softPedalGainMultiplier);
 }
 
 
@@ -65,20 +65,6 @@ void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& ou
     //TODO: update intonation info...
     intonationInfo.pitch = juce::roundToInt (math::freqToMidi (analyzer.getLastFrequency()));
     //intonationInfo.centsSharp = ...
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::addNumVoices (const int voicesToAdd)
-{
-    if (voicesToAdd == 0) return;
-
-    for (int i = 0; i < voicesToAdd; ++i)
-        Base::voices.add (new Voice (*this));
-
-    jassert (Base::voices.size() >= voicesToAdd);
-
-    Base::numVoicesChanged();
 }
 
 

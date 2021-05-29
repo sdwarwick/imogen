@@ -3,6 +3,8 @@
 
 #include "DSP/PluginProcessor/PluginProcessor.h"
 
+#if ! IMOGEN_HEADLESS
+
 #include "ImogenGUI/ImogenGUI.h"
 
 
@@ -27,3 +29,5 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
 };
+
+#endif /* if ! IMOGEN_HEADLESS */

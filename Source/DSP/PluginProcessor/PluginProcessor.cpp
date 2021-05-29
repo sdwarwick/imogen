@@ -339,8 +339,9 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {
 #if IMOGEN_HEADLESS
     return nullptr;
-#endif
+#else
     return new ImogenAudioProcessorEditor (*this);
+#endif
 }
 
 

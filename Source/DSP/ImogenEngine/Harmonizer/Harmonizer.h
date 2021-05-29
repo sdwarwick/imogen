@@ -48,8 +48,11 @@ private:
     void resetTriggered() override;
 
     void samplerateChanged (double newSamplerate) override;
-
-    void addNumVoices (const int voicesToAdd) override;
+    
+    Voice* createVoice() override final
+    {
+        return new Voice (*this);
+    }
 
     dsp::PsolaAnalyzer< SampleType > analyzer;
     

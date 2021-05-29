@@ -108,7 +108,7 @@ juce_add_plugin (ImogenHeadless
     NEEDS_WEB_BROWSER           FALSE
     )
 
-_configure_juce_app (ImogenHeadless FALSE TRUE)
+_configure_juce_app (ImogenHeadless FALSE)
 
 target_sources (ImogenHeadless PRIVATE ${Imogen_Processor_Source_Files})
 

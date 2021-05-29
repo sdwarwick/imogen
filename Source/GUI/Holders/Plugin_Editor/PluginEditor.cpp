@@ -1,6 +1,8 @@
 
 #include "PluginEditor.h"
 
+#if ! IMOGEN_HEADLESS
+
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
     : EditorBase (p), gui (p.state)
@@ -15,9 +17,6 @@ ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
 {
 }
 
-/*=========================================================================================================
-    juce::Component functions
- =========================================================================================================*/
 
 void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
 {
@@ -29,3 +28,5 @@ void ImogenAudioProcessorEditor::resizeTriggered()
 {
     gui.setBounds (getLocalBounds());
 }
+
+#endif /* if ! IMOGEN_HEADLESS */
