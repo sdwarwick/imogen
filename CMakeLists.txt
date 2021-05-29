@@ -93,7 +93,7 @@ link_binary_data_to_target_create_if_needed (Imogen assets)
 
 target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link ImogenGUI)
 
-target_compile_definitions (Imogen PUBLIC JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 IMOGEN_HEADLESS=0)
+target_compile_definitions (Imogen PUBLIC IMOGEN_HEADLESS=0)
 
 
 
