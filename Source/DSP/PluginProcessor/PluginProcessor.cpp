@@ -331,18 +331,16 @@ bool ImogenAudioProcessor::hasEditor() const
 {
 #if IMOGEN_HEADLESS
     return false;
-#else
-    return true;
 #endif
+    return true;
 }
 
 juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 {
 #if IMOGEN_HEADLESS
     return nullptr;
-#else
-    return new ImogenAudioProcessorEditor (*this);
 #endif
+    return new ImogenAudioProcessorEditor (*this);
 }
 
 

@@ -91,8 +91,6 @@ link_binary_data_to_target_create_if_needed (Imogen assets)
 
 target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link ImogenGUI)
 
-target_compile_definitions (Imogen PUBLIC IMOGEN_HEADLESS=0)
-
 
 
 #################### Configure the headless plugin build ####################
@@ -120,7 +118,7 @@ link_binary_data_to_target_create_if_needed (ImogenHeadless assets)
 
 target_link_libraries (ImogenHeadless PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link)
 
-target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1 IMOGEN_HEADLESS=1)
+target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1)
 
 endif()
 
