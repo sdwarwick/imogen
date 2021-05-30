@@ -7,15 +7,7 @@
 
 //#include <../../third-party/ableton-link/include/ableton/Link.hpp>
 
-#ifndef JUCE_MODULE_AVAILABLE_ImogenGUI
-  #define JUCE_MODULE_AVAILABLE_ImogenGUI 0
-#endif
-
-#if JUCE_MODULE_AVAILABLE_ImogenGUI
-  #define IMOGEN_HEADLESS 0
-#else
-  #define IMOGEN_HEADLESS 1
-#endif
+#define IMOGEN_HEADLESS 0
 
 
 using namespace Imogen;
