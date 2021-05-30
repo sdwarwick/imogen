@@ -203,7 +203,7 @@ private:
 
     void release() override;
 
-    void resetSmoothedValues (int blocksize);
+    void resetSmoothedValues();
 
     /*=========================================================================================*/
 

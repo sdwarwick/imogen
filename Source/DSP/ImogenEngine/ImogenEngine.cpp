@@ -34,9 +34,9 @@ ImogenEngine< SampleType >::ImogenEngine()
 }
 
 
-bvie_VOID_TEMPLATE::resetSmoothedValues (int blocksize)
+bvie_VOID_TEMPLATE::resetSmoothedValues()
 {
-    harmonizer.resetRampedValues (blocksize);
+    harmonizer.resetRampedValues();
     inputGain.reset();
     outputGain.reset();
     dryPanner.reset();
@@ -96,7 +96,7 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 
     delay.prepare (newInternalBlocksize, samplerate, 2);
 
-    resetSmoothedValues (newInternalBlocksize);
+    resetSmoothedValues();
 
     FIFOEngine::changeLatency (harmonizer.getLatencySamples());
 }
@@ -157,7 +157,7 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
 
     dspSpec.maximumBlockSize = uint32 (newInternalBlocksize);
 
-    resetSmoothedValues (newInternalBlocksize);
+    resetSmoothedValues();
 }
 
 
