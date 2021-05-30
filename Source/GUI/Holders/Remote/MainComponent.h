@@ -15,17 +15,12 @@ public:
 
     ~MainComponent() override;
 
-    /*=========================================================================================*/
-
-    /*=========================================================================================*/
-    /* juce::Component functions */
-
+private:
     void paint (juce::Graphics&) override final;
     void resized() override final;
-
+    
     /*=========================================================================================*/
-
-private:
+    
     Imogen::State state;
     ImogenGUI gui {state};
 

@@ -2,19 +2,12 @@
 #pragma once
 
 #include "ImogenEngine/ImogenEngine.h"
-
 #include "ImogenCommon/ImogenCommon.h"
 
-//#include <../../third-party/ableton-link/include/ableton/Link.hpp>
+#ifndef IMOGEN_HEADLESS
+#    define IMOGEN_HEADLESS 0
+#endif
 
-#define IMOGEN_HEADLESS 0
-
-
-using namespace Imogen;
-
-
-/*
-*/
 
 class ImogenAudioProcessor : public bav::dsp::ProcessorBase
 {
@@ -99,9 +92,6 @@ private:
     Imogen::Parameters& parameters {state.parameters};
     Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};
-
-    // this object represents the plugin as a participant in an Ableton Link session
-    //ableton::Link abletonLink {120.0};  // constructed w/ initial BPM
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
