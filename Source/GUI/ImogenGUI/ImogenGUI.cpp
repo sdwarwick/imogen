@@ -22,6 +22,8 @@ ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
     rescanPresetsFolder();
     
     state.setUndoManager (undoManager);
+    
+    juce::ignoreUnused (state, parameters, internals, meters);
 }
 
 
