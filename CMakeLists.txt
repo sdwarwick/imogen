@@ -54,7 +54,7 @@ set (Imogen_Processor_Source_Files
 	${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
     ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h)
 
-set (Imogen_Processor_Dependencies ImogenCommon ImogenEngine)
+set (Imogen_Processor_Dependencies ImogenCommon ImogenEngine) #Ableton::Link
 
 
 
@@ -87,7 +87,7 @@ target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
 link_binary_data_to_target_create_if_needed (Imogen assets)
 
-target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link ImogenGUI)
+target_link_libraries (Imogen PRIVATE ${Imogen_Processor_Dependencies} ImogenGUI)
 
 
 
@@ -114,7 +114,7 @@ target_include_directories (ImogenHeadless PRIVATE ${Imogen_sourceDir})
 
 link_binary_data_to_target_create_if_needed (ImogenHeadless assets)
 
-target_link_libraries (ImogenHeadless PRIVATE ${Imogen_Processor_Dependencies} Ableton::Link)
+target_link_libraries (ImogenHeadless PRIVATE ${Imogen_Processor_Dependencies})
 
 target_compile_definitions (ImogenHeadless PUBLIC JUCE_HEADLESS_PLUGIN_CLIENT=1)
 

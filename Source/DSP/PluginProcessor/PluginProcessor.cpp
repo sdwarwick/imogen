@@ -168,8 +168,8 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 
 void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
 {
-    internals.abletonLinkEnabled->set (abletonLink.isEnabled());
-    internals.abletonLinkSessionPeers->set (static_cast<int> (abletonLink.numPeers()));
+    //internals.abletonLinkEnabled->set (abletonLink.isEnabled());
+    //internals.abletonLinkSessionPeers->set (static_cast<int> (abletonLink.numPeers()));
     internals.mtsEspIsConnected->set (internalsData.mtsEspConnected);
     internals.currentCentsSharp->set (internalsData.currentCentsSharp);
     internals.currentInputNote->set (internalsData.currentPitch);

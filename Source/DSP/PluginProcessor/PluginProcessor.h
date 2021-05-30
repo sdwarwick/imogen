@@ -5,7 +5,7 @@
 
 #include "ImogenCommon/ImogenCommon.h"
 
-#include <../../third-party/ableton-link/include/ableton/Link.hpp>
+//#include <../../third-party/ableton-link/include/ableton/Link.hpp>
 
 #ifndef JUCE_MODULE_AVAILABLE_ImogenGUI
   #define JUCE_MODULE_AVAILABLE_ImogenGUI 0
@@ -109,7 +109,7 @@ private:
     Imogen::Meters&     meters {state.meters};
 
     // this object represents the plugin as a participant in an Ableton Link session
-    ableton::Link abletonLink {120.0};  // constructed w/ initial BPM
+    //ableton::Link abletonLink {120.0};  // constructed w/ initial BPM
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };
