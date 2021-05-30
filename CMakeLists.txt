@@ -14,8 +14,6 @@ juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
 				  "${Imogen_sourceDir}/DSP/ImogenEngine"
 				  "${Imogen_sourceDir}/GUI/ImogenGUI")
 
-include (${CMAKE_CURRENT_LIST_DIR}/third-party/ableton-link/AbletonLinkConfig.cmake)
-
 #
 
 set (Imogen_Common_Flags
