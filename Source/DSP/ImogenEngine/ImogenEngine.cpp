@@ -63,7 +63,7 @@ bvie_VOID_TEMPLATE::returnActivePitches (juce::Array< int >& outputArray) const
 
 bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
 {
-    harmonizer.handlePitchWheel (bend);
+    harmonizer.processMidiEvent (juce::MidiMessage::pitchWheel (1, bend));
 }
 
 
