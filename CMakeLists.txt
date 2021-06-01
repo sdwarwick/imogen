@@ -3,8 +3,6 @@ cmake_minimum_required (VERSION 3.18)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-#
-
 set (BV_USE_MTS_ESP TRUE)
 include (CMake/FindShared-code.cmake)
 
@@ -13,8 +11,6 @@ set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
 				  "${Imogen_sourceDir}/DSP/ImogenEngine"
 				  "${Imogen_sourceDir}/GUI/ImogenGUI")
-
-#
 
 set (Imogen_Common_Flags
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
