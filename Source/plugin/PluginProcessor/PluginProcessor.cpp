@@ -1,6 +1,6 @@
 
 #if ! IMOGEN_HEADLESS
-#    include "GUI/Holders/Plugin_Editor/PluginEditor.h"
+#    include "../PluginEditor/PluginEditor.h"
 #endif
 
 #include "PluginProcessor.h"

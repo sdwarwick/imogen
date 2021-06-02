@@ -10,9 +10,7 @@ include (CMake/FindShared-code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-juce_add_modules ("${Imogen_sourceDir}/ImogenCommon"
-				  "${Imogen_sourceDir}/DSP/ImogenEngine"
-				  "${Imogen_sourceDir}/GUI/ImogenGUI")
+add_subdirectory (Source/modules)
 
 set (Imogen_Common_Flags
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
@@ -38,10 +36,10 @@ set (Imogen_Common_Flags
 #################### Configure the main build of Imogen ####################
 
 set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/DSP/PluginProcessor/PluginProcessor.h
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.cpp
-    ${Imogen_sourceDir}/GUI/Holders/Plugin_Editor/PluginEditor.h)
+    ${Imogen_sourceDir}/plugin/PluginProcessor/PluginProcessor.cpp
+    ${Imogen_sourceDir}/plugin/PluginProcessor/PluginProcessor.h
+    ${Imogen_sourceDir}/plugin/PluginEditor/PluginEditor.cpp
+    ${Imogen_sourceDir}/plugin/PluginEditor/PluginEditor.h)
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
@@ -81,9 +79,9 @@ target_link_libraries (Imogen PRIVATE ImogenCommon ImogenEngine ImogenGUI)
 #################### Configure the remote GUI app build ####################
 
 set (ImogenRemote_sourceFiles
-    ${Imogen_sourceDir}/GUI/Holders/Remote/MainComponent.h
-    ${Imogen_sourceDir}/GUI/Holders/Remote/MainComponent.cpp
-    ${Imogen_sourceDir}/GUI/Holders/Remote/Main.cpp)
+    ${Imogen_sourceDir}/remote_app/MainComponent.h
+    ${Imogen_sourceDir}/remote_app/MainComponent.cpp
+    ${Imogen_sourceDir}/remote_app/Main.cpp)
 
 juce_add_gui_app (ImogenRemote
     ${Imogen_Common_Flags}

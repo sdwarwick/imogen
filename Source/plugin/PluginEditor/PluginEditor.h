@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "DSP/PluginProcessor/PluginProcessor.h"
-
 #if ! IMOGEN_HEADLESS
+
+#include "../PluginProcessor/PluginProcessor.h"
 
 #include "ImogenGUI/ImogenGUI.h"
 
