@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.18)
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
 set (BV_USE_MTS_ESP TRUE)
-#set (BV_USE_ABLETON_LINK TRUE)
+set (BV_USE_ABLETON_LINK TRUE)
 
 include (CMake/FindShared-code.cmake)
 
