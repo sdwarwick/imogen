@@ -1,11 +1,9 @@
 
 #pragma once
-
 #if ! IMOGEN_HEADLESS
 
-#include "../PluginProcessor/PluginProcessor.h"
-
-#include "ImogenGUI/ImogenGUI.h"
+#    include "../PluginProcessor/PluginProcessor.h"
+#    include "ImogenGUI/ImogenGUI.h"
 
 
 using namespace Imogen;
@@ -22,9 +20,9 @@ public:
 
 private:
     void paint (juce::Graphics&) override final;
-    
+
     void resizeTriggered() override final;
-    
+
     ImogenGUI gui;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)

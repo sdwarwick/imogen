@@ -14,15 +14,15 @@ ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
       darkModeSentinel (internals.guiDarkMode, *this)
 {
     setInterceptsMouseClicks (false, true);
-    
+
     setLookAndFeel (&lookAndFeel);
 
     addAndMakeVisible (mainDial);
 
     rescanPresetsFolder();
-    
+
     state.setUndoManager (undoManager);
-    
+
     juce::ignoreUnused (state, parameters, internals, meters);
 }
 
@@ -54,13 +54,13 @@ void ImogenGUI::rescanPresetsFolder()
 
 void ImogenGUI::savePreset (const juce::String& presetName)
 {
-    bav::toBinary (state, Imogen::presetNameToFilePath (presetName));
+    bav::serializing::toBinary (state, Imogen::presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
 
 void ImogenGUI::loadPreset (const juce::String& presetName)
 {
-    bav::fromBinary (Imogen::presetNameToFilePath (presetName), state);
+    bav::serializing::fromBinary (Imogen::presetNameToFilePath (presetName), state);
     repaint();
 }
 

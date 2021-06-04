@@ -58,14 +58,14 @@ private:
 
     bav::ImogenLookAndFeel lookAndFeel;
 
-    juce::TooltipWindow  tooltipWindow {this, 700};
+    juce::TooltipWindow tooltipWindow {this, 700};
 
     Imogen::State&      state;
     Imogen::Parameters& parameters;
     Imogen::Internals&  internals;
     Imogen::Meters&     meters;
-    
+
     bav::gui::DarkModeSentinel darkModeSentinel;
-    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
 };

@@ -17,10 +17,8 @@ public:
 
     juce::String getScaleName() const;
 
-    /*=========================================================================================*/
-    
-    Imogen::State state;
-    
+    Imogen::State& getState() { return state; }
+
 private:
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */
@@ -89,9 +87,12 @@ private:
     bav::ImogenEngine< float >  floatEngine;
     bav::ImogenEngine< double > doubleEngine;
 
+    Imogen::State       state;
     Imogen::Parameters& parameters {state.parameters};
     Imogen::Internals&  internals {state.internals};
     Imogen::Meters&     meters {state.meters};
+
+    bav::network::SelfOwnedOscDataSynchronizer dataSync {state};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
 };

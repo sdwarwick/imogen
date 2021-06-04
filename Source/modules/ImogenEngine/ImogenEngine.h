@@ -35,12 +35,12 @@ struct ImogenMeterData
 
 struct ImogenInternalsData
 {
-    bool mtsEspConnected {};
+    bool         mtsEspConnected {};
     juce::String mtsEspScaleName {};
-    int lastMovedMidiController {};
-    int lastMovedControllerValue {};
-    int currentCentsSharp {};
-    int currentPitch {};
+    int          lastMovedMidiController {};
+    int          lastMovedControllerValue {};
+    int          currentCentsSharp {};
+    int          currentPitch {};
 };
 
 
@@ -68,7 +68,7 @@ public:
 
     void recieveExternalPitchbend (const int bend);
 
-    ImogenMeterData getLatestMeterData() const { return meterData; }
+    ImogenMeterData     getLatestMeterData() const { return meterData; }
     ImogenInternalsData getLatestInternalsData() const { return internalsData; }
 
     /*=========================================================================================*/
@@ -96,10 +96,10 @@ public:
     void updateAftertouchGainOnOff (const bool shouldBeOn) { harmonizer.setAftertouchGainOnOff (shouldBeOn); }
     void updateDeEsserToggle (bool isOn) { deEsserIsOn.store (isOn); }
     void updateDeEsserThresh (float threshDB) { deEsser.setThresh (threshDB); }
-    void updateDeEsserAmount (int amount) { deEsser.setDeEssAmount (float(amount) * 0.01f); }
+    void updateDeEsserAmount (int amount) { deEsser.setDeEssAmount (float (amount) * 0.01f); }
     void updateReverbToggle (bool isOn) { reverbIsOn.store (isOn); }
     void updateReverbDryWet (int wetPcnt) { reverb.setDryWet (wetPcnt); }
-    void updateReverbDuck (int duck) { reverb.setDuckAmount (float(duck) * 0.01f); }
+    void updateReverbDuck (int duck) { reverb.setDuckAmount (float (duck) * 0.01f); }
     void updateReverbLoCut (float loCutFreq) { reverb.setLoCutFrequency (loCutFreq); }
     void updateReverbHiCut (float hiCutFreq) { reverb.setHiCutFrequency (hiCutFreq); }
     void updateDelayToggle (bool isOn) { delayIsOn.store (isOn); }
@@ -121,7 +121,7 @@ public:
 
     void updateAdsrSustain (int sustain)
     {
-        adsrSettings.sustain = float(sustain) * 0.01f;
+        adsrSettings.sustain = float (sustain) * 0.01f;
         harmonizer.updateADSRsettings (adsrSettings.attack, adsrSettings.decay, adsrSettings.sustain, adsrSettings.release);
     }
 
@@ -139,14 +139,14 @@ public:
 
     void updateCompressorAmount (int amount)
     {
-        const auto a = float(amount) * 0.01f;
+        const auto a = float (amount) * 0.01f;
         compressor.setThreshold (juce::jmap (a, 0.0f, -60.0f));
         compressor.setRatio (juce::jmap (a, 1.0f, 10.0f));
     }
 
     void updateReverbDecay (int decay)
     {
-        const auto d = float(decay) * 0.01f;
+        const auto d = float (decay) * 0.01f;
         reverb.setDamping (1.0f - d);
         reverb.setRoomSize (d);
     }
@@ -255,7 +255,7 @@ private:
 
 
     ImogenMeterData meterData;
-    
+
     ImogenInternalsData internalsData;
 
     inline void resetMeterData()
@@ -270,7 +270,7 @@ private:
         meterData.outputLevelL            = 0.0f;
         meterData.outputLevelR            = 0.0f;
     }
-    
+
     void udpateInternalsData();
 
     static constexpr auto limiterThreshDb     = 0.0f;

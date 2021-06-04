@@ -8,10 +8,10 @@ namespace l = bav::ParameterValueConversionLambdas;
 
 struct Parameters : bav::ParameterList
 {
-    Parameters(): ParameterList ("ImogenParameters")
+    Parameters() : ParameterList ("ImogenParameters")
     {
         add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch);
-        
+
         addInternal (editorPitchbend);
     }
 
@@ -34,11 +34,11 @@ struct Parameters : bav::ParameterList
 
     PercentParam dryWet {"Main dry/wet", "Main dry/wet", 100};
 
-    GainParam inputGain { "Input gain", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain };
-    
-    GainParam outputGain { "Output gain", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain };
-    
-    ToggleParam mainBypass { "Main bypass", "Main bypass", false };
+    GainParam inputGain {"Input gain", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain};
+
+    GainParam outputGain {"Output gain", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain};
+
+    ToggleParam mainBypass {"Main bypass", "Main bypass", false};
 
     ToggleParam leadBypass {"Lead bypass", "Lead bypass", false};
 
@@ -71,18 +71,18 @@ struct Parameters : bav::ParameterList
     IntParam descantInterval {"Descant interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
 
     FloatParam adsrAttack {"ADSR Attack", "ADSR attack",
-        juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
-        0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+                           juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
+                           0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
 
     FloatParam adsrDecay {"ADSR Decay", "ADSR decay",
-        juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
-        0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
-    
+                          juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
+                          0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+
     PercentParam adsrSustain {"ADSR Sustain", "ADSR sustain", 80};
 
     FloatParam adsrRelease {"ADSR Release", "ADSR release",
-        juce::NormalisableRange< float >(0.0f, 1.0f, 0.01f),
-        0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+                            juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
+                            0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
 
     ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
 
@@ -111,25 +111,25 @@ struct Parameters : bav::ParameterList
     PercentParam reverbDuck {"Reverb Duck", "Reverb duck", 30};
 
     FloatParam reverbLoCut {"Reverb Lo cut", "Reverb lo cut",
-        juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f),
-        80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
+                            juce::NormalisableRange< float > (40.0f, 10000.0f, 1.0f),
+                            80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
     FloatParam reverbHiCut {"Reverb Hi cut", "Reverb hi cut",
-        juce::NormalisableRange< float >(40.0f, 10000.0f, 1.0f),
-        5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
+                            juce::NormalisableRange< float > (40.0f, 10000.0f, 1.0f),
+                            5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
 
     ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
 
     ToggleParam midiLatch {"MIDI latch", "MIDI latch", false};
 
     /* */
-    
+
     IntParam editorPitchbend {"GUI Pitchbend", "GUI Pitchbend", 0, 127, 64,
-        [] (int value, int maximumStringLength)
-        { return juce::String (value).substring (0, maximumStringLength); },
-        [] (const juce::String& text)
-        { return text.retainCharacters ("1234567890").getIntValue(); }};
-    
+                              [] (int value, int maximumStringLength)
+                              { return juce::String (value).substring (0, maximumStringLength); },
+                              [] (const juce::String& text)
+                              { return text.retainCharacters ("1234567890").getIntValue(); }};
+
 private:
     static constexpr auto generic = juce::AudioProcessorParameter::genericParameter;
 };

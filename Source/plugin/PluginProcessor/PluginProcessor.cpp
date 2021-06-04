@@ -16,11 +16,14 @@ ImogenAudioProcessor::ImogenAudioProcessor()
         initialize (floatEngine);
 
     parameters.resetAllToDefault();
+
+    //dataSync.connect (<#const juce::String &targetHostName#>);
 }
 
 
 ImogenAudioProcessor::~ImogenAudioProcessor()
 {
+    dataSync.disconnect();
 }
 
 
@@ -182,12 +185,12 @@ void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
 
 void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    bav::toBinary (state, destData);
+    bav::serializing::toBinary (state, destData);
 }
 
 void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    bav::fromBinary (data, sizeInBytes, state);
+    bav::serializing::fromBinary (data, sizeInBytes, state);
 }
 
 /*===========================================================================================================================

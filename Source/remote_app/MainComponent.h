@@ -18,11 +18,13 @@ public:
 private:
     void paint (juce::Graphics&) override final;
     void resized() override final;
-    
+
     /*=========================================================================================*/
-    
+
     Imogen::State state;
-    ImogenGUI gui {state};
+    ImogenGUI     gui {state};
+
+    bav::network::SelfOwnedOscDataSynchronizer dataSync {state};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

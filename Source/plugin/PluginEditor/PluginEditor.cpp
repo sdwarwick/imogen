@@ -1,11 +1,11 @@
 
-#include "PluginEditor.h"
-
 #if ! IMOGEN_HEADLESS
+
+#    include "PluginEditor.h"
 
 
 ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
-    : EditorBase (p), gui (p.state)
+    : EditorBase (p), gui (p.getState())
 {
     this->setBufferedToImage (true);
 
