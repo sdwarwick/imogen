@@ -44,19 +44,19 @@ struct ImogenInternalsData
 };
 
 
-namespace bav
+namespace Imogen
 {
 template < typename SampleType >
-class ImogenEngine : public bav::dsp::FIFOWrappedEngine< SampleType >
+class Engine : public dsp::FIFOWrappedEngine< SampleType >
 {
-    using FIFOEngine  = bav::dsp::FIFOWrappedEngine< SampleType >;
+    using FIFOEngine  = dsp::FIFOWrappedEngine< SampleType >;
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using MidiBuffer  = juce::MidiBuffer;
     using uint32      = juce::uint32;
 
 
 public:
-    ImogenEngine();
+    Engine();
 
     void killAllMidi();
 
@@ -156,7 +156,7 @@ public:
 
     int getModulatorSource() const
     {
-        using Mode = typename bav::dsp::FX::MonoStereoConverter< SampleType >::StereoReductionMode;
+        using Mode = typename dsp::FX::MonoStereoConverter< SampleType >::StereoReductionMode;
 
         switch (stereoReducer.getStereoReductionMode())
         {
@@ -168,7 +168,7 @@ public:
 
     void setModulatorSource (const int newSource)
     {
-        using Mode = typename bav::dsp::FX::MonoStereoConverter< SampleType >::StereoReductionMode;
+        using Mode = typename dsp::FX::MonoStereoConverter< SampleType >::StereoReductionMode;
 
         switch (newSource)
         {
@@ -215,33 +215,33 @@ private:
 
     juce::dsp::ProcessSpec dspSpec;
 
-    bav::dsp::FX::MonoStereoConverter< SampleType > stereoReducer;  // the harmonizer only accepts mono input
+    dsp::FX::MonoStereoConverter< SampleType > stereoReducer;  // the harmonizer only accepts mono input
 
-    bav::dsp::FX::SmoothedGain< SampleType > inputGain, outputGain;
+    dsp::FX::SmoothedGain< SampleType > inputGain, outputGain;
 
-    bav::dsp::FX::NoiseGate< SampleType > gate;
-    std::atomic< bool >                   noiseGateIsOn;
+    dsp::FX::NoiseGate< SampleType > gate;
+    std::atomic< bool >              noiseGateIsOn;
 
-    bav::dsp::FX::DeEsser< SampleType > deEsser;
-    std::atomic< bool >                 deEsserIsOn;
+    dsp::FX::DeEsser< SampleType > deEsser;
+    std::atomic< bool >            deEsserIsOn;
 
     juce::dsp::DryWetMixer< SampleType > dryWetMixer;
 
     juce::dsp::IIR::Filter< SampleType > initialHiddenLoCut;
 
-    bav::dsp::FX::Compressor< SampleType > compressor;
+    dsp::FX::Compressor< SampleType > compressor;
     std::atomic< bool >                    compressorIsOn;
 
-    bav::dsp::FX::Reverb reverb;
+    dsp::FX::Reverb reverb;
     std::atomic< bool >  reverbIsOn;
 
-    bav::dsp::FX::Limiter< SampleType > limiter;
+    dsp::FX::Limiter< SampleType > limiter;
     std::atomic< bool >                 limiterIsOn;
     std::atomic< float >                limiterThresh, limiterRelease;
 
-    bav::dsp::FX::MonoToStereoPanner< SampleType > dryPanner;
+    dsp::FX::MonoToStereoPanner< SampleType > dryPanner;
 
-    bav::dsp::FX::Delay< SampleType > delay;
+    dsp::FX::Delay< SampleType > delay;
     std::atomic< bool >               delayIsOn;
 
     std::atomic< bool > leadBypass, harmonyBypass;
@@ -283,8 +283,7 @@ private:
 
     static constexpr auto initialHiddenHiPassFreq = SampleType (65);
 
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenEngine)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Engine)
 };
 
 

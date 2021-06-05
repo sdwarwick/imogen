@@ -3,30 +3,30 @@
 
 #    include "PluginEditor.h"
 
+namespace Imogen
+{
 
-ImogenAudioProcessorEditor::ImogenAudioProcessorEditor (ImogenAudioProcessor& p)
+Editor::Editor (Processor& p)
     : EditorBase (p), gui (p.getState())
 {
     this->setBufferedToImage (true);
-
     addAndMakeVisible (gui);
 }
 
-
-ImogenAudioProcessorEditor::~ImogenAudioProcessorEditor()
+Editor::~Editor()
 {
 }
 
-
-void ImogenAudioProcessorEditor::paint (juce::Graphics& g)
+void Editor::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 }
 
-
-void ImogenAudioProcessorEditor::resizeTriggered()
+void Editor::resizeTriggered()
 {
     gui.setBounds (getLocalBounds());
 }
+
+}  // namespace
 
 #endif /* if ! IMOGEN_HEADLESS */

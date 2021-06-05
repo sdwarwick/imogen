@@ -2,8 +2,10 @@
 #pragma once
 
 
-namespace bav
+namespace Imogen
 {
+using namespace bav;
+
 template < typename SampleType >
 class Harmonizer; // forward declaration...
 

@@ -3,7 +3,7 @@
 
 namespace Imogen
 {
-struct Internals : bav::ParameterList
+struct Internals : ParameterList
 {
     Internals() : ParameterList ("ImogenInternals")
     {
@@ -34,7 +34,7 @@ struct Internals : bav::ParameterList
                                [] (int note, int maxLength)
                                {
                                    if (note == -1) return juce::String ("Unpitched");
-                                   return bav::pitchToString (note).substring (0, maxLength);
+                                   return pitchToString (note).substring (0, maxLength);
                                }};
 
     IntParam currentCentsSharp {"Cents sharp", "Current input cents sharp", -100, 100, 0,

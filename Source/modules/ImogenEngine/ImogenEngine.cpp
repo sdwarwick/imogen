@@ -5,15 +5,10 @@
 #include "Harmonizer/HarmonizerVoice/HarmonizerVoice.cpp"
 
 
-#define bvie_VOID_TEMPLATE           \
-    template < typename SampleType > \
-    void ImogenEngine< SampleType >
-
-
-namespace bav
+namespace Imogen
 {
 template < typename SampleType >
-ImogenEngine< SampleType >::ImogenEngine()
+Engine< SampleType >::Engine()
 {
     limiterIsOn.store (false);
 
@@ -34,7 +29,8 @@ ImogenEngine< SampleType >::ImogenEngine()
 }
 
 
-bvie_VOID_TEMPLATE::resetSmoothedValues()
+template < typename SampleType >
+void Engine< SampleType >::resetSmoothedValues()
 {
     harmonizer.resetRampedValues();
     inputGain.reset();
@@ -43,31 +39,36 @@ bvie_VOID_TEMPLATE::resetSmoothedValues()
 }
 
 
-bvie_VOID_TEMPLATE::killAllMidi()
+template < typename SampleType >
+void Engine< SampleType >::killAllMidi()
 {
     harmonizer.allNotesOff (false);
 }
 
 
-bvie_VOID_TEMPLATE::playChord (const juce::Array< int >& desiredNotes, const float velocity, const bool allowTailOffOfOld)
+template < typename SampleType >
+void Engine< SampleType >::playChord (const juce::Array< int >& desiredNotes, const float velocity, const bool allowTailOffOfOld)
 {
     harmonizer.playChord (desiredNotes, velocity, allowTailOffOfOld);
 }
 
 
-bvie_VOID_TEMPLATE::returnActivePitches (juce::Array< int >& outputArray) const
+template < typename SampleType >
+void Engine< SampleType >::returnActivePitches (juce::Array< int >& outputArray) const
 {
     harmonizer.reportActiveNotes (outputArray);
 }
 
 
-bvie_VOID_TEMPLATE::recieveExternalPitchbend (const int bend)
+template < typename SampleType >
+void Engine< SampleType >::recieveExternalPitchbend (const int bend)
 {
     harmonizer.processMidiEvent (juce::MidiMessage::pitchWheel (1, bend));
 }
 
 
-bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
+template < typename SampleType >
+void Engine< SampleType >::initialized (int newInternalBlocksize, double samplerate)
 {
     jassert (samplerate > 0 && newInternalBlocksize > 0);
 
@@ -102,7 +103,8 @@ bvie_VOID_TEMPLATE::initialized (int newInternalBlocksize, double samplerate)
 }
 
 
-bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
+template < typename SampleType >
+void Engine< SampleType >::prepareToPlay (double samplerate)
 {
     jassert (samplerate > 0);
 
@@ -145,7 +147,8 @@ bvie_VOID_TEMPLATE::prepareToPlay (double samplerate)
 }
 
 
-bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
+template < typename SampleType >
+void Engine< SampleType >::latencyChanged (int newInternalBlocksize)
 {
     jassert (newInternalBlocksize == FIFOEngine::getLatency());
 
@@ -161,7 +164,8 @@ bvie_VOID_TEMPLATE::latencyChanged (int newInternalBlocksize)
 }
 
 
-bvie_VOID_TEMPLATE::release()
+template < typename SampleType >
+void Engine< SampleType >::release()
 {
     harmonizer.releaseResources();
 
@@ -182,7 +186,8 @@ bvie_VOID_TEMPLATE::release()
 }
 
 
-bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages)
+template < typename SampleType >
+void Engine< SampleType >::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages)
 {
     const auto numSamples = input.getNumSamples();
 
@@ -192,7 +197,8 @@ bvie_VOID_TEMPLATE::bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMes
 }
 
 
-bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
+template < typename SampleType >
+void Engine< SampleType >::renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages)
 {
     resetMeterData();
 
@@ -288,7 +294,8 @@ bvie_VOID_TEMPLATE::renderBlock (const AudioBuffer& input, AudioBuffer& output, 
     udpateInternalsData();
 }
 
-bvie_VOID_TEMPLATE::udpateInternalsData()
+template < typename SampleType >
+void Engine< SampleType >::udpateInternalsData()
 {
     internalsData.mtsEspConnected = harmonizer.isConnectedToMtsEsp();
     internalsData.mtsEspScaleName = harmonizer.getScaleName();
@@ -302,11 +309,8 @@ bvie_VOID_TEMPLATE::udpateInternalsData()
     internalsData.lastMovedControllerValue = controllerData.controllerValue;
 }
 
-
-#undef bvie_VOID_TEMPLATE
-
-template class ImogenEngine< float >;
-template class ImogenEngine< double >;
+template class Engine< float >;
+template class Engine< double >;
 
 
 }  // namespace bav

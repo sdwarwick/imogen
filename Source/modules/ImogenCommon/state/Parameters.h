@@ -1,12 +1,13 @@
 
 #pragma once
 
-
 namespace Imogen
 {
-namespace l = bav::ParameterValueConversionLambdas;
+using namespace bav;
 
-struct Parameters : bav::ParameterList
+using namespace ParameterValueConversionLambdas;
+
+struct Parameters : ParameterList
 {
     Parameters() : ParameterList ("ImogenParameters")
     {
@@ -46,11 +47,11 @@ struct Parameters : bav::ParameterList
 
     PercentParam stereoWidth {"Stereo width", "Stereo width", 100};
 
-    IntParam lowestPanned {"Lowest panned note", "Lowest panned note", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
+    IntParam lowestPanned {"Lowest panned note", "Lowest panned note", 0, 127, 0, pitch_stringFromInt, pitch_intFromString};
 
-    IntParam leadPan {"Lead pan", "Lead pan", 0, 127, 64, l::midiPan_stringFromInt, l::midiPan_intFromString};
+    IntParam leadPan {"Lead pan", "Lead pan", 0, 127, 64, midiPan_stringFromInt, midiPan_intFromString};
 
-    IntParam pitchbendRange {"Pitchbend range", "Pitchbend range", 0, 12, 2, l::st_stringFromInt, l::st_intFromString, TRANS ("st")};
+    IntParam pitchbendRange {"Pitchbend range", "Pitchbend range", 0, 12, 2, st_stringFromInt, st_intFromString, TRANS ("st")};
 
     PercentParam velocitySens {"Velocity amount", "Velocity amount", 100};
 
@@ -60,29 +61,29 @@ struct Parameters : bav::ParameterList
 
     ToggleParam pedalToggle {" Pedal toggle", "Pedal toggle", false};
 
-    IntParam pedalThresh {"Pedal thresh", "Pedal thresh", 0, 127, 0, l::pitch_stringFromInt, l::pitch_intFromString};
+    IntParam pedalThresh {"Pedal thresh", "Pedal thresh", 0, 127, 0, pitch_stringFromInt, pitch_intFromString};
 
-    IntParam pedalInterval {"Pedal interval", "Pedal interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
+    IntParam pedalInterval {"Pedal interval", "Pedal interval", 1, 12, 12, st_stringFromInt, st_intFromString};
 
     ToggleParam descantToggle {"Descant toggle", "Descant toggle", false};
 
-    IntParam descantThresh {"Descant thresh", "Descant thresh", 0, 127, 127, l::pcnt_stringFromInt, l::pitch_intFromString};
+    IntParam descantThresh {"Descant thresh", "Descant thresh", 0, 127, 127, pcnt_stringFromInt, pitch_intFromString};
 
-    IntParam descantInterval {"Descant interval", "Descant interval", 1, 12, 12, l::st_stringFromInt, l::st_intFromString};
+    IntParam descantInterval {"Descant interval", "Descant interval", 1, 12, 12, st_stringFromInt, st_intFromString};
 
     FloatParam adsrAttack {"ADSR Attack", "ADSR attack",
                            juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
-                           0.35f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+                           0.35f, generic, sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
 
     FloatParam adsrDecay {"ADSR Decay", "ADSR decay",
                           juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
-                          0.06f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+                          0.06f, generic, sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
 
     PercentParam adsrSustain {"ADSR Sustain", "ADSR sustain", 80};
 
     FloatParam adsrRelease {"ADSR Release", "ADSR release",
                             juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
-                            0.1f, generic, l::sec_stringFromFloat, l::sec_floatFromString, TRANS ("sec")};
+                            0.1f, generic, sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
 
     ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
 
@@ -112,11 +113,11 @@ struct Parameters : bav::ParameterList
 
     FloatParam reverbLoCut {"Reverb Lo cut", "Reverb lo cut",
                             juce::NormalisableRange< float > (40.0f, 10000.0f, 1.0f),
-                            80.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
+                            80.0f, generic, hz_stringFromFloat, hz_floatFromString, TRANS ("Hz")};
 
     FloatParam reverbHiCut {"Reverb Hi cut", "Reverb hi cut",
                             juce::NormalisableRange< float > (40.0f, 10000.0f, 1.0f),
-                            5500.0f, generic, l::hz_stringFromFloat, l::hz_floatFromString, TRANS ("Hz")};
+                            5500.0f, generic, hz_stringFromFloat, hz_floatFromString, TRANS ("Hz")};
 
     ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
 

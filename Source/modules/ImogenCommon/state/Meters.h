@@ -4,7 +4,7 @@
 
 namespace Imogen
 {
-struct Meters : bav::ParameterList
+struct Meters : ParameterList
 {
     Meters() : ParameterList ("ImogenMeters")
     {

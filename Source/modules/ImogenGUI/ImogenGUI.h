@@ -20,13 +20,16 @@
 #include "MainDialComponent/MainDialComponent.h"
 
 
-class ImogenGUI : public juce::Component,
-                  public bav::gui::GUIInitializer
+namespace Imogen
+{
+
+class GUI : public juce::Component,
+            public gui::GUIInitializer
 {
 public:
-    ImogenGUI (Imogen::State& stateToUse);
+    GUI (Imogen::State& stateToUse);
 
-    virtual ~ImogenGUI() override;
+    virtual ~GUI() override;
 
 private:
     /*=========================================================================================*/
@@ -56,16 +59,18 @@ private:
 
     ImogenDialComponent mainDial;
 
-    bav::ImogenLookAndFeel lookAndFeel;
+    ImogenLookAndFeel lookAndFeel;
 
     juce::TooltipWindow tooltipWindow {this, 700};
 
-    Imogen::State&      state;
-    Imogen::Parameters& parameters;
-    Imogen::Internals&  internals;
-    Imogen::Meters&     meters;
+    State&      state;
+    Parameters& parameters;
+    Internals&  internals;
+    Meters&     meters;
 
-    bav::gui::DarkModeSentinel darkModeSentinel;
+    gui::DarkModeSentinel darkModeSentinel;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenGUI)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUI)
 };
+
+}  // namespace

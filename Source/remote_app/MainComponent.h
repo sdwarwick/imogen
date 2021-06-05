@@ -4,27 +4,26 @@
 #include "ImogenGUI/ImogenGUI.h"
 
 
-using namespace Imogen;
+namespace Imogen
+{
 
-
-class MainComponent : public juce::Component,
-                      private bav::SystemInitializer
+class Remote : public juce::Component,
+               private SystemInitializer
 {
 public:
-    MainComponent();
-
-    ~MainComponent() override;
+    Remote();
+    ~Remote() override;
 
 private:
     void paint (juce::Graphics&) override final;
     void resized() override final;
 
-    /*=========================================================================================*/
+    State state;
+    GUI   gui {state};
 
-    Imogen::State state;
-    ImogenGUI     gui {state};
+    network::SelfOwnedOscDataSynchronizer dataSync {state};
 
-    bav::network::SelfOwnedOscDataSynchronizer dataSync {state};
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Remote)
 };
+
+}  // namespace

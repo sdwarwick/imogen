@@ -17,14 +17,15 @@
 #include <bv_plugin/bv_plugin.h>
 #include <bv_networking/bv_networking.h>
 
-#include "Parameters.h"
-#include "Internals.h"
-#include "Meters.h"
+#include "state/Parameters.h"
+#include "state/Internals.h"
+#include "state/Meters.h"
 
 
 namespace Imogen
 {
-struct State : bav::StateBase
+
+struct State : StateBase
 {
     State() : StateBase ("ImogenState")
     {
@@ -39,7 +40,7 @@ struct State : bav::StateBase
 
 static inline juce::File presetsFolder()
 {
-    return bav::getPresetsFolder ("Ben Vining Music Software", "Imogen");
+    return getPresetsFolder ("Ben Vining Music Software", "Imogen");
 }
 
 
@@ -51,7 +52,7 @@ static inline juce::String getPresetFileExtension()
 
 static inline juce::File presetNameToFilePath (const juce::String& presetName)
 {
-    return presetsFolder().getChildFile (bav::addFileExtensionIfMissing (presetName, getPresetFileExtension()));
+    return presetsFolder().getChildFile (addFileExtensionIfMissing (presetName, getPresetFileExtension()));
 }
 
 

@@ -8,16 +8,18 @@
 #    define IMOGEN_HEADLESS 0
 #endif
 
+namespace Imogen
+{
 
-class ImogenAudioProcessor : public bav::dsp::ProcessorBase
+class Processor : public dsp::ProcessorBase
 {
 public:
-    ImogenAudioProcessor();
-    ~ImogenAudioProcessor() override;
+    Processor();
+    ~Processor() override;
 
     juce::String getScaleName() const;
 
-    Imogen::State& getState() { return state; }
+    State& getState() { return state; }
 
 private:
     /*=========================================================================================*/
@@ -62,20 +64,20 @@ private:
     BusesProperties createBusProperties() const override final;
 
     template < typename SampleType >
-    void initialize (bav::ImogenEngine< SampleType >& activeEngine);
+    void initialize (Engine< SampleType >& activeEngine);
 
     template < typename SampleType >
-    void initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine);
+    void initializeParameterFunctionPointers (Engine< SampleType >& engine);
 
     /*=========================================================================================*/
 
     template < typename SampleType1, typename SampleType2 >
-    void prepareToPlayWrapped (const double sampleRate, bav::ImogenEngine< SampleType1 >& activeEngine, bav::ImogenEngine< SampleType2 >& idleEngine);
+    void prepareToPlayWrapped (const double sampleRate, Engine< SampleType1 >& activeEngine, Engine< SampleType2 >& idleEngine);
 
     template < typename SampleType >
     inline void processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
                                      juce::MidiBuffer&                midiMessages,
-                                     bav::ImogenEngine< SampleType >& engine,
+                                     Engine< SampleType >& engine,
                                      const bool                       isBypassedThisCallback);
 
     void updateMeters (ImogenMeterData meterData);
@@ -84,15 +86,19 @@ private:
     /*=========================================================================================*/
 
     // one engine of each type. The idle one isn't destroyed, but takes up few resources.
-    bav::ImogenEngine< float >  floatEngine;
-    bav::ImogenEngine< double > doubleEngine;
+    Engine< float >  floatEngine;
+    Engine< double > doubleEngine;
 
-    Imogen::State       state;
-    Imogen::Parameters& parameters {state.parameters};
-    Imogen::Internals&  internals {state.internals};
-    Imogen::Meters&     meters {state.meters};
+    State       state;
+    Parameters& parameters {state.parameters};
+    Internals&  internals {state.internals};
+    Meters&     meters {state.meters};
 
-    bav::network::SelfOwnedOscDataSynchronizer dataSync {state};
+    network::SelfOwnedOscDataSynchronizer dataSync {state};
+    
+    PluginTransport transport;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Processor)
 };
+
+}  // namespace

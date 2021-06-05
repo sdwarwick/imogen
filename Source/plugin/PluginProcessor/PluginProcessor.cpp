@@ -6,7 +6,10 @@
 #include "PluginProcessor.h"
 
 
-ImogenAudioProcessor::ImogenAudioProcessor()
+namespace Imogen
+{
+
+Processor::Processor()
 {
     state.addTo (*this);
 
@@ -17,11 +20,11 @@ ImogenAudioProcessor::ImogenAudioProcessor()
 
     parameters.resetAllToDefault();
 
-    //dataSync.connect (<#const juce::String &targetHostName#>);
+    dataSync.connect ("host");
 }
 
 
-ImogenAudioProcessor::~ImogenAudioProcessor()
+Processor::~Processor()
 {
     dataSync.disconnect();
 }
@@ -32,7 +35,7 @@ ImogenAudioProcessor::~ImogenAudioProcessor()
 
 
 template < typename SampleType >
-inline void ImogenAudioProcessor::initialize (bav::ImogenEngine< SampleType >& activeEngine)
+inline void Processor::initialize (Engine< SampleType >& activeEngine)
 {
     auto initSamplerate = getSampleRate();
     if (initSamplerate <= 0.0) initSamplerate = 44100.0;
@@ -50,7 +53,7 @@ inline void ImogenAudioProcessor::initialize (bav::ImogenEngine< SampleType >& a
 }
 
 
-void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int)
+void Processor::prepareToPlay (const double sampleRate, const int)
 {
     if (isUsingDoublePrecision())
         prepareToPlayWrapped (sampleRate, doubleEngine, floatEngine);
@@ -60,9 +63,9 @@ void ImogenAudioProcessor::prepareToPlay (const double sampleRate, const int)
 
 
 template < typename SampleType1, typename SampleType2 >
-inline void ImogenAudioProcessor::prepareToPlayWrapped (const double                      sampleRate,
-                                                        bav::ImogenEngine< SampleType1 >& activeEngine,
-                                                        bav::ImogenEngine< SampleType2 >& idleEngine)
+inline void Processor::prepareToPlayWrapped (const double                      sampleRate,
+                                                        Engine< SampleType1 >& activeEngine,
+                                                        Engine< SampleType2 >& idleEngine)
 {
     if (! idleEngine.hasBeenReleased()) idleEngine.releaseResources();
 
@@ -82,7 +85,7 @@ inline void ImogenAudioProcessor::prepareToPlayWrapped (const double            
 /*===========================================================================================================
  ===========================================================================================================*/
 
-void ImogenAudioProcessor::releaseResources()
+void Processor::releaseResources()
 {
     if (! doubleEngine.hasBeenReleased()) doubleEngine.releaseResources();
 
@@ -93,19 +96,19 @@ void ImogenAudioProcessor::releaseResources()
 /*===========================================================================================================
  ===========================================================================================================*/
 
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
+void Processor::processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
     processBlockWrapped (buffer, midiMessages, floatEngine, parameters.mainBypass->get());
 }
 
 
-void ImogenAudioProcessor::processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
+void Processor::processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
     processBlockWrapped (buffer, midiMessages, doubleEngine, parameters.mainBypass->get());
 }
 
 
-void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
+void Processor::processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
     if (! parameters.mainBypass->get())
     {
@@ -117,7 +120,7 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< float >& buf
 }
 
 
-void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
+void Processor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
     if (! parameters.mainBypass->get())
     {
@@ -130,9 +133,9 @@ void ImogenAudioProcessor::processBlockBypassed (juce::AudioBuffer< double >& bu
 
 
 template < typename SampleType >
-inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
+inline void Processor::processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
                                                        juce::MidiBuffer&                midiMessages,
-                                                       bav::ImogenEngine< SampleType >& engine,
+                                                       Engine< SampleType >& engine,
                                                        const bool                       isBypassedThisCallback)
 {
     jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
@@ -155,7 +158,7 @@ inline void ImogenAudioProcessor::processBlockWrapped (juce::AudioBuffer< Sample
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
+void Processor::updateMeters (ImogenMeterData meterData)
 {
     meters.inputLevel->set (meterData.inputLevel);
     meters.outputLevelL->set (meterData.outputLevelL);
@@ -169,10 +172,10 @@ void ImogenAudioProcessor::updateMeters (ImogenMeterData meterData)
 }
 
 
-void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
+void Processor::updateInternals (ImogenInternalsData internalsData)
 {
-    //internals.abletonLinkEnabled->set (abletonLink.isEnabled());
-    //internals.abletonLinkSessionPeers->set (static_cast<int> (abletonLink.numPeers()));
+    internals.abletonLinkEnabled->set (transport.isAbletonLinkEnabled());
+    internals.abletonLinkSessionPeers->set (transport.getNumAbletonLinkSessionPeers());
     internals.mtsEspIsConnected->set (internalsData.mtsEspConnected);
     internals.currentCentsSharp->set (internalsData.currentCentsSharp);
     internals.currentInputNote->set (internalsData.currentPitch);
@@ -183,20 +186,21 @@ void ImogenAudioProcessor::updateInternals (ImogenInternalsData internalsData)
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-void ImogenAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void Processor::getStateInformation (juce::MemoryBlock& destData)
 {
-    bav::serializing::toBinary (state, destData);
+    serializing::toBinary (state, destData);
 }
 
-void ImogenAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void Processor::setStateInformation (const void* data, int sizeInBytes)
 {
-    bav::serializing::fromBinary (data, sizeInBytes, state);
+    serializing::fromBinary (data, sizeInBytes, state);
+    repaintEditor();
 }
 
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-juce::String ImogenAudioProcessor::getScaleName() const
+juce::String Processor::getScaleName() const
 {
     return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
 }
@@ -204,12 +208,12 @@ juce::String ImogenAudioProcessor::getScaleName() const
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-double ImogenAudioProcessor::getTailLengthSeconds() const
+double Processor::getTailLengthSeconds() const
 {
     return parameters.adsrRelease->get();
 }
 
-juce::AudioProcessor::BusesProperties ImogenAudioProcessor::createBusProperties() const
+juce::AudioProcessor::BusesProperties Processor::createBusProperties() const
 {
     const auto stereo = juce::AudioChannelSet::stereo();
     const auto mono   = juce::AudioChannelSet::mono();
@@ -221,7 +225,7 @@ juce::AudioProcessor::BusesProperties ImogenAudioProcessor::createBusProperties(
 }
 
 
-bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool Processor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     const auto disabled = juce::AudioChannelSet::disabled();
 
@@ -230,7 +234,7 @@ bool ImogenAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
 }
 
-juce::AudioProcessorParameter* ImogenAudioProcessor::getBypassParameter() const
+juce::AudioProcessorParameter* Processor::getBypassParameter() const
 {
     return parameters.mainBypass.get();
 }
@@ -241,7 +245,7 @@ juce::AudioProcessorParameter* ImogenAudioProcessor::getBypassParameter() const
 // This function initializes the actions that will be performed each time a parameter is changed
 
 template < typename SampleType >
-void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngine< SampleType >& engine)
+void Processor::initializeParameterFunctionPointers (Imogen::Engine< SampleType >& engine)
 {
     parameters.adsrAttack->setAction ([&engine] (float value)
                                       { engine.updateAdsrAttack (value); });
@@ -330,7 +334,7 @@ void ImogenAudioProcessor::initializeParameterFunctionPointers (bav::ImogenEngin
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-bool ImogenAudioProcessor::hasEditor() const
+bool Processor::hasEditor() const
 {
 #if IMOGEN_HEADLESS
     return false;
@@ -338,15 +342,16 @@ bool ImogenAudioProcessor::hasEditor() const
     return true;
 }
 
-juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
+juce::AudioProcessorEditor* Processor::createEditor()
 {
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
-    return new ImogenAudioProcessorEditor (*this);
+    return new Editor (*this);
 #endif
 }
 
+}  // namespace
 
 /*===========================================================================================================================
  ============================================================================================================================*/
@@ -354,5 +359,5 @@ juce::AudioProcessorEditor* ImogenAudioProcessor::createEditor()
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new ImogenAudioProcessor();
+    return new Imogen::Processor();
 }

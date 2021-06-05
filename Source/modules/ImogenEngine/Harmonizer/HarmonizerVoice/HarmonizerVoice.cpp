@@ -1,5 +1,5 @@
 
-namespace bav
+namespace Imogen
 {
 template < typename SampleType >
 HarmonizerVoice< SampleType >::HarmonizerVoice (Harm& h)

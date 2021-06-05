@@ -1,8 +1,10 @@
 
 #include "MainComponent.h"
 
+namespace Imogen
+{
 
-MainComponent::MainComponent()
+Remote::Remote()
 {
     this->setBufferedToImage (true);
 
@@ -12,26 +14,22 @@ MainComponent::MainComponent()
 
     setSize (800, 2990);
 
-    //dataSync.connect (<#const juce::String &targetHostName#>);
+    dataSync.connect ("host");
 }
 
-
-MainComponent::~MainComponent()
+Remote::~Remote()
 {
     dataSync.disconnect();
 }
 
-
-/*=========================================================================================================
-    juce::Component functions
- =========================================================================================================*/
-
-void MainComponent::paint (juce::Graphics& g)
+void Remote::paint (juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 }
 
-void MainComponent::resized()
+void Remote::resized()
 {
     gui.setBounds (getLocalBounds());
 }
+
+}  // namespace

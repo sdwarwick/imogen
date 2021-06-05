@@ -6,26 +6,24 @@
 #    include "ImogenGUI/ImogenGUI.h"
 
 
-using namespace Imogen;
+namespace Imogen
+{
 
-
-class ImogenAudioProcessorEditor : public bav::gui::EditorBase
+class Editor : public gui::EditorBase
 {
 public:
-    ImogenAudioProcessorEditor (ImogenAudioProcessor& p);
-
-    ~ImogenAudioProcessorEditor() override;
-
-    /*=========================================================================================*/
+    Editor (Processor& p);
+    ~Editor() override;
 
 private:
     void paint (juce::Graphics&) override final;
-
     void resizeTriggered() override final;
 
-    ImogenGUI gui;
+    GUI gui;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ImogenAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Editor)
 };
+
+}  // namespace
 
 #endif /* if ! IMOGEN_HEADLESS */

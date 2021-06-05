@@ -4,8 +4,10 @@
 #include "LookAndFeel/ImogenLookAndFeel.cpp"
 #include "MainDialComponent/MainDialComponent.cpp"
 
+namespace Imogen
+{
 
-ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
+GUI::GUI (Imogen::State& stateToUse)
     : GUIInitializer (*getTopLevelComponent()),
       state (stateToUse),
       parameters (state.parameters),
@@ -27,7 +29,7 @@ ImogenGUI::ImogenGUI (Imogen::State& stateToUse)
 }
 
 
-ImogenGUI::~ImogenGUI()
+GUI::~GUI()
 {
     setLookAndFeel (nullptr);
 }
@@ -35,7 +37,7 @@ ImogenGUI::~ImogenGUI()
 /*=========================================================================================================
  =========================================================================================================*/
 
-void ImogenGUI::rescanPresetsFolder()
+void GUI::rescanPresetsFolder()
 {
     //    availablePresets.clearQuick();
     //    const auto xtn = getPresetFileExtension();
@@ -52,28 +54,28 @@ void ImogenGUI::rescanPresetsFolder()
 }
 
 
-void ImogenGUI::savePreset (const juce::String& presetName)
+void GUI::savePreset (const juce::String& presetName)
 {
-    bav::serializing::toBinary (state, Imogen::presetNameToFilePath (presetName));
+    serializing::toBinary (state, presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
 
-void ImogenGUI::loadPreset (const juce::String& presetName)
+void GUI::loadPreset (const juce::String& presetName)
 {
-    bav::serializing::fromBinary (Imogen::presetNameToFilePath (presetName), state);
+    serializing::fromBinary (presetNameToFilePath (presetName), state);
     repaint();
 }
 
-void ImogenGUI::deletePreset (const juce::String& presetName)
+void GUI::deletePreset (const juce::String& presetName)
 {
-    bav::deleteFile (Imogen::presetNameToFilePath (presetName));
+    deleteFile (presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
 
-void ImogenGUI::renamePreset (const juce::String& previousName, const juce::String& newName)
+void GUI::renamePreset (const juce::String& previousName, const juce::String& newName)
 {
-    bav::renameFile (Imogen::presetNameToFilePath (previousName),
-                     bav::addFileExtensionIfMissing (newName, Imogen::getPresetFileExtension()));
+    renameFile (presetNameToFilePath (previousName),
+                addFileExtensionIfMissing (newName, getPresetFileExtension()));
 
     rescanPresetsFolder();
 }
@@ -83,7 +85,7 @@ void ImogenGUI::renamePreset (const juce::String& previousName, const juce::Stri
     juce::Component functions
  =========================================================================================================*/
 
-void ImogenGUI::paint (juce::Graphics& g)
+void GUI::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
 
@@ -95,36 +97,38 @@ void ImogenGUI::paint (juce::Graphics& g)
     }
 }
 
-void ImogenGUI::resized()
+void GUI::resized()
 {
     //selectPreset.setBounds (x, y, w, h);
     //mainDial.setBounds (x, y, w, h);
 }
 
-bool ImogenGUI::keyPressed (const juce::KeyPress& key)
+bool GUI::keyPressed (const juce::KeyPress& key)
 {
     juce::ignoreUnused (key);
     return false;
 }
 
-bool ImogenGUI::keyStateChanged (bool isKeyDown)
+bool GUI::keyStateChanged (bool isKeyDown)
 {
     juce::ignoreUnused (isKeyDown);
     return false;
 }
 
-void ImogenGUI::modifierKeysChanged (const juce::ModifierKeys& modifiers)
+void GUI::modifierKeysChanged (const juce::ModifierKeys& modifiers)
 {
     juce::ignoreUnused (modifiers);
 }
 
-void ImogenGUI::focusLost (FocusChangeType cause)
+void GUI::focusLost (FocusChangeType cause)
 {
     juce::ignoreUnused (cause);
 }
 
 
-inline void ImogenGUI::makePresetMenu (juce::ComboBox& box)
+inline void GUI::makePresetMenu (juce::ComboBox& box)
 {
     juce::ignoreUnused (box);
 }
+
+}  // namespace

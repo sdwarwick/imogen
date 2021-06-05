@@ -86,7 +86,7 @@ public:
             setUsingNativeTitleBar (false);
             setTitleBarTextCentred (true);
 
-            setContentOwned (new MainComponent(), true);
+            setContentOwned (new Imogen::Remote(), true);
 
 #if JUCE_IOS || JUCE_ANDROID
             setDropShadowEnabled (false);
