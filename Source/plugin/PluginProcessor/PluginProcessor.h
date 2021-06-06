@@ -48,9 +48,9 @@ private:
 
     double getTailLengthSeconds() const final;
 
-    bav::BoolParameter& getMainBypass() const final;
-    SerializableData&   getStateData() { return state; }
-    ParameterList&      getParameterList() { return parameters; }
+    BoolParameter&    getMainBypass() const final;
+    SerializableData& getStateData() { return state; }
+    ParameterList&    getParameterList() { return parameters; }
 
     bool acceptsMidi() const final { return true; }
     bool producesMidi() const final { return true; }
