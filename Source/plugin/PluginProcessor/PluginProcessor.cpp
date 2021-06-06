@@ -17,21 +17,13 @@ Processor::Processor()
     else
         initialize (floatEngine);
 
-    parameters.resetAllToDefault();
-
     dataSync.connect ("host");
 }
-
 
 Processor::~Processor()
 {
     dataSync.disconnect();
 }
-
-
-/*===========================================================================================================
- ===========================================================================================================*/
-
 
 template < typename SampleType >
 inline void Processor::initialize (Engine< SampleType >& activeEngine)
@@ -51,7 +43,6 @@ inline void Processor::initialize (Engine< SampleType >& activeEngine)
     prepareToPlay (initSamplerate, 512);
 }
 
-
 void Processor::prepareToPlay (const double sampleRate, const int)
 {
     if (isUsingDoublePrecision())
@@ -59,7 +50,6 @@ void Processor::prepareToPlay (const double sampleRate, const int)
     else
         prepareToPlayWrapped (sampleRate, floatEngine, doubleEngine);
 }
-
 
 template < typename SampleType1, typename SampleType2 >
 inline void Processor::prepareToPlayWrapped (const double           sampleRate,
@@ -86,19 +76,12 @@ bav::BoolParameter& Processor::getMainBypass() const
     return *parameters.mainBypass.get();
 }
 
-/*===========================================================================================================
- ===========================================================================================================*/
-
 void Processor::releaseResources()
 {
     if (! doubleEngine.hasBeenReleased()) doubleEngine.releaseResources();
 
     if (! floatEngine.hasBeenReleased()) floatEngine.releaseResources();
 }
-
-
-/*===========================================================================================================
- ===========================================================================================================*/
 
 void Processor::renderChunk (juce::AudioBuffer< float >& audio, juce::MidiBuffer& midi)
 {
@@ -124,9 +107,6 @@ void Processor::renderChunkInternal (Engine< SampleType >& engine, juce::AudioBu
     updateInternals (engine.getLatestInternalsData());
 }
 
-/*===========================================================================================================================
- ============================================================================================================================*/
-
 void Processor::updateMeters (ImogenMeterData meterData)
 {
     meters.inputLevel->set (meterData.inputLevel);
@@ -140,7 +120,6 @@ void Processor::updateMeters (ImogenMeterData meterData)
     meters.delayLevel->set (meterData.delayLevel);
 }
 
-
 void Processor::updateInternals (ImogenInternalsData internalsData)
 {
     internals.abletonLinkEnabled->set (transport.isAbletonLinkEnabled());
@@ -152,16 +131,10 @@ void Processor::updateInternals (ImogenInternalsData internalsData)
     internals.lastMovedCCValue->set (internalsData.lastMovedControllerValue);
 }
 
-/*===========================================================================================================================
- ============================================================================================================================*/
-
 juce::String Processor::getScaleName() const
 {
     return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();
 }
-
-/*===========================================================================================================================
- ============================================================================================================================*/
 
 double Processor::getTailLengthSeconds() const
 {
@@ -179,7 +152,6 @@ juce::AudioProcessor::BusesProperties Processor::createBusProperties() const
         .withOutput (TRANS ("Output"), stereo, true);
 }
 
-
 bool Processor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     const auto disabled = juce::AudioChannelSet::disabled();
@@ -188,11 +160,6 @@ bool Processor::isBusesLayoutSupported (const BusesLayout& layouts) const
 
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
 }
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-// This function initializes the actions that will be performed each time a parameter is changed
 
 template < typename SampleType >
 void Processor::initializeParameterFunctionPointers (Imogen::Engine< SampleType >& engine)
@@ -281,9 +248,6 @@ void Processor::initializeParameterFunctionPointers (Imogen::Engine< SampleType 
                                        { engine.updateDelayToggle (value); });
 }
 
-/*===========================================================================================================================
- ============================================================================================================================*/
-
 bool Processor::hasEditor() const
 {
 #if IMOGEN_HEADLESS
@@ -301,8 +265,6 @@ juce::AudioProcessorEditor* Processor::createEditor()
 #endif
 }
 
-/*===========================================================================================================================
- ============================================================================================================================*/
 
 }  // namespace Imogen
 
