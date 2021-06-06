@@ -166,20 +166,6 @@ void Processor::updateInternals (ImogenInternalsData internalsData)
 /*===========================================================================================================================
  ============================================================================================================================*/
 
-void Processor::getStateInformation (juce::MemoryBlock& destData)
-{
-    serializing::toBinary (state, destData);
-}
-
-void Processor::setStateInformation (const void* data, int sizeInBytes)
-{
-    serializing::fromBinary (data, sizeInBytes, state);
-    repaintEditor();
-}
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
 juce::String Processor::getScaleName() const
 {
     return isUsingDoublePrecision() ? doubleEngine.getScaleName() : floatEngine.getScaleName();

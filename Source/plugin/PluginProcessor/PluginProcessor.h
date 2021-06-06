@@ -33,9 +33,6 @@ private:
 
     double getTailLengthSeconds() const final;
 
-    void getStateInformation (juce::MemoryBlock& destData) final;
-    void setStateInformation (const void* data, int sizeInBytes) final;
-
     bav::BoolParameter* getMainBypass() const final;
 
     bool acceptsMidi() const final { return true; }
@@ -48,6 +45,8 @@ private:
 
     bool                        hasEditor() const final;
     juce::AudioProcessorEditor* createEditor() final;
+    
+    SerializableData* getStateData() { return &state; }
 
     bool supportsDoublePrecisionProcessing() const final { return true; }
 
