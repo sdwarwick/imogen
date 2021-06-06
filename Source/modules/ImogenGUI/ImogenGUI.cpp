@@ -12,6 +12,7 @@ GUI::GUI (Imogen::State& stateToUse)
       parameters (state.parameters),
       internals (state.internals),
       meters (state.meters),
+      presetManager (state),
       darkModeSentinel (internals.guiDarkMode, *this)
 {
     setInterceptsMouseClicks (false, true);
@@ -19,8 +20,6 @@ GUI::GUI (Imogen::State& stateToUse)
     setLookAndFeel (&lookAndFeel);
 
     addAndMakeVisible (mainDial);
-
-    rescanPresetsFolder();
 
     state.setUndoManager (undoManager);
 
@@ -32,53 +31,6 @@ GUI::~GUI()
 {
     setLookAndFeel (nullptr);
 }
-
-/*=========================================================================================================
- =========================================================================================================*/
-
-void GUI::rescanPresetsFolder()
-{
-    //    availablePresets.clearQuick();
-    //    const auto xtn = getPresetFileExtension();
-    //
-    //    for (auto entry  :   juce::RangedDirectoryIterator (getPresetsFolder(), false))
-    //    {
-    //        const auto filename = entry.getFile().getFileName();
-    //
-    //        if (filename.endsWith (xtn))
-    //            availablePresets.add (filename.dropLastCharacters (xtn.length()));
-    //    }
-
-    repaint();
-}
-
-
-void GUI::savePreset (const String& presetName)
-{
-    serializing::toBinary (state, presetNameToFilePath (presetName));
-    rescanPresetsFolder();
-}
-
-void GUI::loadPreset (const String& presetName)
-{
-    serializing::fromBinary (presetNameToFilePath (presetName), state);
-    repaint();
-}
-
-void GUI::deletePreset (const String& presetName)
-{
-    deleteFile (presetNameToFilePath (presetName));
-    rescanPresetsFolder();
-}
-
-void GUI::renamePreset (const String& previousName, const juce::String& newName)
-{
-    renameFile (presetNameToFilePath (previousName),
-                addFileExtensionIfMissing (newName, getPresetFileExtension()));
-
-    rescanPresetsFolder();
-}
-
 
 /*=========================================================================================================
     juce::Component functions

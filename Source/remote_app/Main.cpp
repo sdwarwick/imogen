@@ -12,21 +12,21 @@ public:
     //==============================================================================
     ImogenRemoteApplication() { juce::PluginHostType::jucePlugInClientCurrentWrapperType = juce::AudioProcessor::wrapperType_Standalone; }
 
-    const juce::String getApplicationName() override { return juce::String ("Imogen ") + TRANS ("Remote"); }
-    const juce::String getApplicationVersion() override { return {"0.0.1"}; }
-    bool               moreThanOneInstanceAllowed() override { return true; }
+    const juce::String getApplicationName() final { return juce::String ("Imogen ") + TRANS ("Remote"); }
+    const juce::String getApplicationVersion() final { return {"0.0.1"}; }
+    bool               moreThanOneInstanceAllowed() final { return true; }
 
     //==============================================================================
-    void initialise (const juce::String& commandLine) override
+    void initialise (const juce::String& commandLine) final
     {
         juce::ignoreUnused (commandLine);
         mainWindow.reset (new MainWindow (getApplicationName(), getBackgroundColor()));
     }
 
-    void shutdown() override { mainWindow = nullptr; }
+    void shutdown() final { mainWindow = nullptr; }
 
     //==============================================================================
-    void systemRequestedQuit() override
+    void systemRequestedQuit() final
     {
         if (juce::ModalComponentManager::getInstance()->cancelAllModalComponents())
             juce::Timer::callAfterDelay (100, [&]()
@@ -40,17 +40,17 @@ public:
         if (auto app = getInstance()) app->systemRequestedQuit();
     }
 
-    void anotherInstanceStarted (const juce::String& commandLine) override { juce::ignoreUnused (commandLine); }
+    void anotherInstanceStarted (const juce::String& commandLine) final { juce::ignoreUnused (commandLine); }
 
     //==============================================================================
 
-    bool backButtonPressed() override { return false; }
+    bool backButtonPressed() final { return false; }
 
     //==============================================================================
 
-    void suspended() override { }
+    void suspended() final { }
 
-    void resumed() override { }
+    void resumed() final { }
 
     //==============================================================================
 
@@ -102,7 +102,7 @@ public:
             setVisible (true);
         }
 
-        void closeButtonPressed() override { JUCEApplication::getInstance()->systemRequestedQuit(); }
+        void closeButtonPressed() final { JUCEApplication::getInstance()->systemRequestedQuit(); }
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)

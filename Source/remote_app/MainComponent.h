@@ -15,8 +15,8 @@ public:
     ~Remote() override;
 
 private:
-    void paint (juce::Graphics&) override final;
-    void resized() override final;
+    void paint (juce::Graphics&) final;
+    void resized() final;
 
     State state;
     GUI   gui {state};

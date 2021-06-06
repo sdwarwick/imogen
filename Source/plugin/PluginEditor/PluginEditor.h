@@ -15,8 +15,8 @@ public:
     ~Editor() override;
 
 private:
-    void paint (juce::Graphics&) override final;
-    void resizeTriggered() override final;
+    void paint (juce::Graphics&) final;
+    void resizeTriggered() final;
 
     GUI gui;
 

@@ -34,23 +34,17 @@ private:
     /*=========================================================================================*/
     /* juce::Component functions */
 
-    void paint (juce::Graphics& g) override;
-    void resized() override;
+    void paint (juce::Graphics& g) final;
+    void resized() final;
 
-    bool keyPressed (const juce::KeyPress& key) override;
-    bool keyStateChanged (bool isKeyDown) override;
-    void modifierKeysChanged (const juce::ModifierKeys& modifiers) override;
-    void focusLost (FocusChangeType cause) override;
+    bool keyPressed (const juce::KeyPress& key) final;
+    bool keyStateChanged (bool isKeyDown) final;
+    void modifierKeysChanged (const juce::ModifierKeys& modifiers) final;
+    void focusLost (FocusChangeType cause) final;
 
     /*=========================================================================================*/
 
     inline void makePresetMenu (juce::ComboBox& box);
-
-    void rescanPresetsFolder();
-    void loadPreset (const String& presetName);
-    void savePreset (const String& presetName);
-    void renamePreset (const String& previousName, const String& newName);
-    void deletePreset (const String& presetName);
 
     /*=========================================================================================*/
 
@@ -66,6 +60,8 @@ private:
     Parameters& parameters;
     Internals&  internals;
     Meters&     meters;
+    
+    PresetManager presetManager;
 
     gui::DarkModeSentinel darkModeSentinel;
 

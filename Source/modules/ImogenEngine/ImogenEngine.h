@@ -191,17 +191,17 @@ public:
     /*=========================================================================================*/
 
 private:
-    void renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages) override;
+    void renderBlock (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages) final;
 
-    void bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages) override;
+    void bypassedBlock (const AudioBuffer& input, MidiBuffer& midiMessages) final;
 
-    void initialized (int newInternalBlocksize, double samplerate) override;
+    void initialized (int newInternalBlocksize, double samplerate) final;
 
-    void prepareToPlay (double samplerate) override;
+    void prepareToPlay (double samplerate) final;
 
-    void latencyChanged (int newInternalBlocksize) override;
+    void latencyChanged (int newInternalBlocksize) final;
 
-    void release() override;
+    void release() final;
 
     void resetSmoothedValues();
 

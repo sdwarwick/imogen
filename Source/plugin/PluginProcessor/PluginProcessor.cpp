@@ -141,7 +141,7 @@ inline void Processor::processBlockWrapped (juce::AudioBuffer< SampleType >& buf
 
     juce::ScopedNoDenormals nodenorms;
 
-    parameters.processMidi (midiMessages);
+    parameters.processMidi (midiMessages, true);
     parameters.doAllActions();
 
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0) return;

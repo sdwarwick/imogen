@@ -37,22 +37,14 @@ struct State : StateBase
 };
 
 
-static inline juce::File presetsFolder()
+struct PresetManager : PresetManagerBase
 {
-    return getPresetsFolder ("Ben Vining Music Software", "Imogen");
-}
+    using PresetManagerBase::PresetManagerBase;
 
-
-static inline String getPresetFileExtension()
-{
-    return {".xml"};
-}
-
-
-static inline juce::File presetNameToFilePath (const String& presetName)
-{
-    return presetsFolder().getChildFile (addFileExtensionIfMissing (presetName, getPresetFileExtension()));
-}
+    std::string getCompanyName() final { return "Ben Vining Music Software"; }
+    std::string getProductName() final { return "Imogen"; }
+    std::string getPresetFileExtension() final { return ".xml"; }
+};
 
 
 }  // namespace Imogen

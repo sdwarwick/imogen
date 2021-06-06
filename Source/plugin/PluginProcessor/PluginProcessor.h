@@ -24,43 +24,43 @@ private:
     /*=========================================================================================*/
     /* juce::AudioProcessor functions */
 
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override final;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) final;
 
-    void releaseResources() override final;
+    void releaseResources() final;
 
-    void processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages) override final;
-    void processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages) override final;
+    void processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages) final;
+    void processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages) final;
 
-    void processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages) override final;
-    void processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages) override final;
+    void processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages) final;
+    void processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages) final;
 
     bool canAddBus (bool isInput) const override final { return isInput; }
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override final;
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
-    double getTailLengthSeconds() const override final;
+    double getTailLengthSeconds() const final;
 
-    void getStateInformation (juce::MemoryBlock& destData) override final;
-    void setStateInformation (const void* data, int sizeInBytes) override final;
+    void getStateInformation (juce::MemoryBlock& destData) final;
+    void setStateInformation (const void* data, int sizeInBytes) final;
 
-    juce::AudioProcessorParameter* getBypassParameter() const override final;
+    juce::AudioProcessorParameter* getBypassParameter() const final;
 
-    bool acceptsMidi() const override final { return true; }
-    bool producesMidi() const override final { return true; }
-    bool supportsMPE() const override final { return false; }
-    bool isMidiEffect() const override final { return false; }
+    bool acceptsMidi() const final { return true; }
+    bool producesMidi() const final { return true; }
+    bool supportsMPE() const final { return false; }
+    bool isMidiEffect() const final { return false; }
 
-    const String      getName() const override final { return "Imogen"; }
-    juce::StringArray getAlternateDisplayNames() const override final { return {"Imgn"}; }
+    const String      getName() const final { return "Imogen"; }
+    juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
 
-    bool                        hasEditor() const override final;
-    juce::AudioProcessorEditor* createEditor() override final;
+    bool                        hasEditor() const final;
+    juce::AudioProcessorEditor* createEditor() final;
 
-    bool supportsDoublePrecisionProcessing() const override final { return true; }
+    bool supportsDoublePrecisionProcessing() const final { return true; }
 
     /*=========================================================================================*/
     /* Initialization functions */
 
-    BusesProperties createBusProperties() const override final;
+    BusesProperties createBusProperties() const final;
 
     template < typename SampleType >
     void initialize (Engine< SampleType >& activeEngine);
