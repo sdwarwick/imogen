@@ -20,8 +20,8 @@ public:
     State& getState() { return state; }
 
 private:
-    void renderChunk (juce::AudioBuffer< float >& audio, juce::MidiBuffer& midi);
-    void renderChunk (juce::AudioBuffer< double >& audio, juce::MidiBuffer& midi);
+    void renderChunk (juce::AudioBuffer< float >& audio, juce::MidiBuffer& midi) final;
+    void renderChunk (juce::AudioBuffer< double >& audio, juce::MidiBuffer& midi) final;
     
     template < typename SampleType >
     void renderChunkInternal (Engine< SampleType >& engine, juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi);
@@ -49,9 +49,8 @@ private:
     double getTailLengthSeconds() const final;
 
     BoolParameter&    getMainBypass() const final;
-    SerializableData& getStateData() { return state; }
-    ParameterList&    getParameterList() { return parameters; }
-
+    SerializableData& getStateData() final { return state; }
+    
     bool acceptsMidi() const final { return true; }
     bool producesMidi() const final { return true; }
     bool supportsMPE() const final { return false; }

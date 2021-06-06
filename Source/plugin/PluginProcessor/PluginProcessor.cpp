@@ -9,6 +9,7 @@
 namespace Imogen
 {
 Processor::Processor()
+: ProcessorBase (state.parameters)
 {
     state.addTo (*this);
 
