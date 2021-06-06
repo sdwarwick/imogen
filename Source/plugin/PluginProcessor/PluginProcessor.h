@@ -75,9 +75,10 @@ private:
 
     template < typename SampleType >
     inline void processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
-                                     juce::MidiBuffer&                midiMessages,
-                                     Engine< SampleType >&            engine,
-                                     const bool                       isBypassedThisCallback);
+                                     juce::MidiBuffer&                midiMessages);
+    
+    template < typename SampleType >
+    void renderChunk (juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi, Engine<SampleType>& engine);
 
     void updateMeters (ImogenMeterData meterData);
     void updateInternals (ImogenInternalsData internalsData);
@@ -92,10 +93,27 @@ private:
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
     Meters&     meters {state.meters};
-
+    
     network::SelfOwnedOscDataSynchronizer dataSync {state};
 
     PluginTransport transport;
+    
+    /*=========================================================================================*/
+    
+    struct ParameterProcessor : ParameterProcessorBase
+    {
+        ParameterProcessor (Processor& p, ParameterList& l);
+        
+    private:
+        void renderChunk (juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi) final;
+        void renderChunk (juce::AudioBuffer<double>& audio, juce::MidiBuffer& midi) final;
+        
+        Processor& processor;
+    };
+    
+    ParameterProcessor parameterProcessor {*this, parameters};
+    
+    /*=========================================================================================*/
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Processor)
 };

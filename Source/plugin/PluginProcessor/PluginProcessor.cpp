@@ -97,60 +97,64 @@ void Processor::releaseResources()
 
 void Processor::processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, floatEngine, parameters.mainBypass->get());
+    processBlockWrapped (buffer, midiMessages);
 }
 
 
 void Processor::processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
-    processBlockWrapped (buffer, midiMessages, doubleEngine, parameters.mainBypass->get());
+    processBlockWrapped (buffer, midiMessages);
 }
 
 
 void Processor::processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
 {
     if (! parameters.mainBypass->get())
-    {
         parameters.mainBypass->set (true);
-        updateHostDisplay();
-    }
 
-    processBlockWrapped (buffer, midiMessages, floatEngine, true);
+    processBlockWrapped (buffer, midiMessages);
 }
 
 
 void Processor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
 {
     if (! parameters.mainBypass->get())
-    {
         parameters.mainBypass->set (true);
-        updateHostDisplay();
-    }
 
-    processBlockWrapped (buffer, midiMessages, doubleEngine, true);
+    processBlockWrapped (buffer, midiMessages);
 }
 
 
 template < typename SampleType >
 inline void Processor::processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
-                                            juce::MidiBuffer&                midiMessages,
-                                            Engine< SampleType >&            engine,
-                                            const bool                       isBypassedThisCallback)
+                                            juce::MidiBuffer&                midiMessages)
 {
-    jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
-
     juce::ScopedNoDenormals nodenorms;
+    parameterProcessor.process (buffer, midiMessages);
+}
 
-    parameters.processMidi (midiMessages, true);
-    parameters.doAllActions();
 
-    if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0) return;
+void Processor::ParameterProcessor::renderChunk (juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi)
+{
+    processor.renderChunk (audio, midi, processor.floatEngine);
+}
 
-    auto inBus  = getBusBuffer (buffer, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
-    auto outBus = getBusBuffer (buffer, false, 0);
+void Processor::ParameterProcessor::renderChunk (juce::AudioBuffer<double>& audio, juce::MidiBuffer& midi)
+{
+    processor.renderChunk (audio, midi, processor.doubleEngine);
+}
 
-    engine.process (inBus, outBus, midiMessages, isBypassedThisCallback);
 
+template < typename SampleType >
+void Processor::renderChunk (juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi, Engine<SampleType>& engine)
+{
+    if (audio.getNumSamples() == 0 || audio.getNumChannels() == 0) return;
+
+    auto inBus  = getBusBuffer (audio, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
+    auto outBus = getBusBuffer (audio, false, 0);
+
+    engine.process (inBus, outBus, midi, parameters.mainBypass->get());
+    
     updateMeters (engine.getLatestMeterData());
     updateInternals (engine.getLatestInternalsData());
 }
@@ -351,10 +355,19 @@ juce::AudioProcessorEditor* Processor::createEditor()
 #endif
 }
 
-}  // namespace Imogen
+/*===========================================================================================================================
+ ============================================================================================================================*/
+
+Processor::ParameterProcessor::ParameterProcessor (Processor& p, ParameterList& l)
+: ParameterProcessorBase (l),
+  processor (p)
+{
+}
 
 /*===========================================================================================================================
  ============================================================================================================================*/
+
+}  // namespace Imogen
 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
