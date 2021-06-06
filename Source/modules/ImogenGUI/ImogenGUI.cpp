@@ -6,7 +6,6 @@
 
 namespace Imogen
 {
-
 GUI::GUI (Imogen::State& stateToUse)
     : GUIInitializer (*getTopLevelComponent()),
       state (stateToUse),
@@ -54,25 +53,25 @@ void GUI::rescanPresetsFolder()
 }
 
 
-void GUI::savePreset (const juce::String& presetName)
+void GUI::savePreset (const String& presetName)
 {
     serializing::toBinary (state, presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
 
-void GUI::loadPreset (const juce::String& presetName)
+void GUI::loadPreset (const String& presetName)
 {
     serializing::fromBinary (presetNameToFilePath (presetName), state);
     repaint();
 }
 
-void GUI::deletePreset (const juce::String& presetName)
+void GUI::deletePreset (const String& presetName)
 {
     deleteFile (presetNameToFilePath (presetName));
     rescanPresetsFolder();
 }
 
-void GUI::renamePreset (const juce::String& previousName, const juce::String& newName)
+void GUI::renamePreset (const String& previousName, const juce::String& newName)
 {
     renameFile (presetNameToFilePath (previousName),
                 addFileExtensionIfMissing (newName, getPresetFileExtension()));
@@ -131,4 +130,4 @@ inline void GUI::makePresetMenu (juce::ComboBox& box)
     juce::ignoreUnused (box);
 }
 
-}  // namespace
+}  // namespace Imogen

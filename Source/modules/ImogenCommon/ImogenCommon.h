@@ -24,7 +24,6 @@
 
 namespace Imogen
 {
-
 struct State : StateBase
 {
     State() : StateBase ("ImogenState")
@@ -44,13 +43,13 @@ static inline juce::File presetsFolder()
 }
 
 
-static inline juce::String getPresetFileExtension()
+static inline String getPresetFileExtension()
 {
     return {".xml"};
 }
 
 
-static inline juce::File presetNameToFilePath (const juce::String& presetName)
+static inline juce::File presetNameToFilePath (const String& presetName)
 {
     return presetsFolder().getChildFile (addFileExtensionIfMissing (presetName, getPresetFileExtension()));
 }

@@ -313,4 +313,4 @@ template class Engine< float >;
 template class Engine< double >;
 
 
-}  // namespace bav
+}  // namespace Imogen

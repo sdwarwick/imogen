@@ -8,7 +8,6 @@
 
 namespace Imogen
 {
-
 Processor::Processor()
 {
     state.addTo (*this);
@@ -63,9 +62,9 @@ void Processor::prepareToPlay (const double sampleRate, const int)
 
 
 template < typename SampleType1, typename SampleType2 >
-inline void Processor::prepareToPlayWrapped (const double                      sampleRate,
-                                                        Engine< SampleType1 >& activeEngine,
-                                                        Engine< SampleType2 >& idleEngine)
+inline void Processor::prepareToPlayWrapped (const double           sampleRate,
+                                             Engine< SampleType1 >& activeEngine,
+                                             Engine< SampleType2 >& idleEngine)
 {
     if (! idleEngine.hasBeenReleased()) idleEngine.releaseResources();
 
@@ -134,14 +133,15 @@ void Processor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce:
 
 template < typename SampleType >
 inline void Processor::processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
-                                                       juce::MidiBuffer&                midiMessages,
-                                                       Engine< SampleType >& engine,
-                                                       const bool                       isBypassedThisCallback)
+                                            juce::MidiBuffer&                midiMessages,
+                                            Engine< SampleType >&            engine,
+                                            const bool                       isBypassedThisCallback)
 {
     jassert (! engine.hasBeenReleased() && engine.hasBeenInitialized());
 
     juce::ScopedNoDenormals nodenorms;
 
+    parameters.processMidi (midiMessages);
     parameters.doAllActions();
 
     if (buffer.getNumSamples() == 0 || buffer.getNumChannels() == 0) return;
@@ -351,7 +351,7 @@ juce::AudioProcessorEditor* Processor::createEditor()
 #endif
 }
 
-}  // namespace
+}  // namespace Imogen
 
 /*===========================================================================================================================
  ============================================================================================================================*/

@@ -230,19 +230,19 @@ private:
     juce::dsp::IIR::Filter< SampleType > initialHiddenLoCut;
 
     dsp::FX::Compressor< SampleType > compressor;
-    std::atomic< bool >                    compressorIsOn;
+    std::atomic< bool >               compressorIsOn;
 
-    dsp::FX::Reverb reverb;
-    std::atomic< bool >  reverbIsOn;
+    dsp::FX::Reverb     reverb;
+    std::atomic< bool > reverbIsOn;
 
     dsp::FX::Limiter< SampleType > limiter;
-    std::atomic< bool >                 limiterIsOn;
-    std::atomic< float >                limiterThresh, limiterRelease;
+    std::atomic< bool >            limiterIsOn;
+    std::atomic< float >           limiterThresh, limiterRelease;
 
     dsp::FX::MonoToStereoPanner< SampleType > dryPanner;
 
     dsp::FX::Delay< SampleType > delay;
-    std::atomic< bool >               delayIsOn;
+    std::atomic< bool >          delayIsOn;
 
     std::atomic< bool > leadBypass, harmonyBypass;
 
@@ -287,4 +287,4 @@ private:
 };
 
 
-}  // namespace bav
+}  // namespace Imogen

@@ -22,7 +22,6 @@
 
 namespace Imogen
 {
-
 class GUI : public juce::Component,
             public gui::GUIInitializer
 {
@@ -48,10 +47,10 @@ private:
     inline void makePresetMenu (juce::ComboBox& box);
 
     void rescanPresetsFolder();
-    void loadPreset (const juce::String& presetName);
-    void savePreset (const juce::String& presetName);
-    void renamePreset (const juce::String& previousName, const juce::String& newName);
-    void deletePreset (const juce::String& presetName);
+    void loadPreset (const String& presetName);
+    void savePreset (const String& presetName);
+    void renamePreset (const String& previousName, const String& newName);
+    void deletePreset (const String& presetName);
 
     /*=========================================================================================*/
 
@@ -73,4 +72,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUI)
 };
 
-}  // namespace
+}  // namespace Imogen

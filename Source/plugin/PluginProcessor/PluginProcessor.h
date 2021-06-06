@@ -10,14 +10,13 @@
 
 namespace Imogen
 {
-
 class Processor : public dsp::ProcessorBase
 {
 public:
     Processor();
     ~Processor() override;
 
-    juce::String getScaleName() const;
+    String getScaleName() const;
 
     State& getState() { return state; }
 
@@ -50,8 +49,8 @@ private:
     bool supportsMPE() const override final { return false; }
     bool isMidiEffect() const override final { return false; }
 
-    const juce::String getName() const override final { return "Imogen"; }
-    juce::StringArray  getAlternateDisplayNames() const override final { return {"Imgn"}; }
+    const String      getName() const override final { return "Imogen"; }
+    juce::StringArray getAlternateDisplayNames() const override final { return {"Imgn"}; }
 
     bool                        hasEditor() const override final;
     juce::AudioProcessorEditor* createEditor() override final;
@@ -77,7 +76,7 @@ private:
     template < typename SampleType >
     inline void processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
                                      juce::MidiBuffer&                midiMessages,
-                                     Engine< SampleType >& engine,
+                                     Engine< SampleType >&            engine,
                                      const bool                       isBypassedThisCallback);
 
     void updateMeters (ImogenMeterData meterData);
@@ -95,10 +94,10 @@ private:
     Meters&     meters {state.meters};
 
     network::SelfOwnedOscDataSynchronizer dataSync {state};
-    
+
     PluginTransport transport;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Processor)
 };
 
-}  // namespace
+}  // namespace Imogen

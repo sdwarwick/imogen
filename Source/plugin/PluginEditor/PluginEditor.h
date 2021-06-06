@@ -8,7 +8,6 @@
 
 namespace Imogen
 {
-
 class Editor : public gui::EditorBase
 {
 public:
@@ -24,6 +23,6 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Editor)
 };
 
-}  // namespace
+}  // namespace Imogen
 
 #endif /* if ! IMOGEN_HEADLESS */

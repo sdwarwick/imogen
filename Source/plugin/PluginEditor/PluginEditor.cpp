@@ -5,7 +5,6 @@
 
 namespace Imogen
 {
-
 Editor::Editor (Processor& p)
     : EditorBase (p), gui (p.getState())
 {
@@ -27,6 +26,6 @@ void Editor::resizeTriggered()
     gui.setBounds (getLocalBounds());
 }
 
-}  // namespace
+}  // namespace Imogen
 
 #endif /* if ! IMOGEN_HEADLESS */
