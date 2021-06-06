@@ -81,9 +81,9 @@ inline void Processor::prepareToPlayWrapped (const double           sampleRate,
     updateHostDisplay();
 }
 
-bav::BoolParameter* Processor::getMainBypass() const
+bav::BoolParameter& Processor::getMainBypass() const
 {
-    return parameters.mainBypass.get();
+    return *parameters.mainBypass.get();
 }
 
 /*===========================================================================================================
@@ -100,29 +100,18 @@ void Processor::releaseResources()
 /*===========================================================================================================
  ===========================================================================================================*/
 
+void Processor::renderChunk (juce::AudioBuffer< float >& audio, juce::MidiBuffer& midi)
+{
+    renderChunkInternal (floatEngine, audio, midi);
+}
+
+void Processor::renderChunk (juce::AudioBuffer< double >& audio, juce::MidiBuffer& midi)
+{
+    renderChunkInternal (doubleEngine, audio, midi);
+}
 
 template < typename SampleType >
-inline void Processor::processBlockInternal (juce::AudioBuffer< SampleType >& buffer,
-                                             juce::MidiBuffer&                midiMessages)
-{
-    juce::ScopedNoDenormals nodenorms;
-    parameterProcessor.process (buffer, midiMessages);
-}
-
-
-void Processor::ParameterProcessor::renderChunk (juce::AudioBuffer<float>& audio, juce::MidiBuffer& midi)
-{
-    processor.renderChunk (audio, midi, processor.floatEngine);
-}
-
-void Processor::ParameterProcessor::renderChunk (juce::AudioBuffer<double>& audio, juce::MidiBuffer& midi)
-{
-    processor.renderChunk (audio, midi, processor.doubleEngine);
-}
-
-
-template < typename SampleType >
-void Processor::renderChunk (juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi, Engine<SampleType>& engine)
+void Processor::renderChunkInternal (Engine< SampleType >& engine, juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi)
 {
     if (audio.getNumSamples() == 0 || audio.getNumChannels() == 0) return;
 
@@ -130,7 +119,7 @@ void Processor::renderChunk (juce::AudioBuffer< SampleType >& audio, juce::MidiB
     auto outBus = getBusBuffer (audio, false, 0);
 
     engine.process (inBus, outBus, midi, parameters.mainBypass->get());
-    
+
     updateMeters (engine.getLatestMeterData());
     updateInternals (engine.getLatestInternalsData());
 }
@@ -310,15 +299,6 @@ juce::AudioProcessorEditor* Processor::createEditor()
 #else
     return new Editor (*this);
 #endif
-}
-
-/*===========================================================================================================================
- ============================================================================================================================*/
-
-Processor::ParameterProcessor::ParameterProcessor (Processor& p, ParameterList& l)
-: ParameterProcessorBase (l),
-  processor (p)
-{
 }
 
 /*===========================================================================================================================
