@@ -81,6 +81,11 @@ inline void Processor::prepareToPlayWrapped (const double           sampleRate,
     updateHostDisplay();
 }
 
+bav::BoolParameter* Processor::getMainBypass() const
+{
+    return parameters.mainBypass.get();
+}
+
 /*===========================================================================================================
  ===========================================================================================================*/
 
@@ -95,39 +100,10 @@ void Processor::releaseResources()
 /*===========================================================================================================
  ===========================================================================================================*/
 
-void Processor::processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
-{
-    processBlockWrapped (buffer, midiMessages);
-}
-
-
-void Processor::processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
-{
-    processBlockWrapped (buffer, midiMessages);
-}
-
-
-void Processor::processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages)
-{
-    if (! parameters.mainBypass->get())
-        parameters.mainBypass->set (true);
-
-    processBlockWrapped (buffer, midiMessages);
-}
-
-
-void Processor::processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages)
-{
-    if (! parameters.mainBypass->get())
-        parameters.mainBypass->set (true);
-
-    processBlockWrapped (buffer, midiMessages);
-}
-
 
 template < typename SampleType >
-inline void Processor::processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
-                                            juce::MidiBuffer&                midiMessages)
+inline void Processor::processBlockInternal (juce::AudioBuffer< SampleType >& buffer,
+                                             juce::MidiBuffer&                midiMessages)
 {
     juce::ScopedNoDenormals nodenorms;
     parameterProcessor.process (buffer, midiMessages);
@@ -236,11 +212,6 @@ bool Processor::isBusesLayoutSupported (const BusesLayout& layouts) const
     if (layouts.getMainInputChannelSet() == disabled && layouts.getChannelSet (true, 1) == disabled) return false;
 
     return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
-}
-
-juce::AudioProcessorParameter* Processor::getBypassParameter() const
-{
-    return parameters.mainBypass.get();
 }
 
 /*===========================================================================================================================

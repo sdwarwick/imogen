@@ -28,12 +28,6 @@ private:
 
     void releaseResources() final;
 
-    void processBlock (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages) final;
-    void processBlock (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages) final;
-
-    void processBlockBypassed (juce::AudioBuffer< float >& buffer, juce::MidiBuffer& midiMessages) final;
-    void processBlockBypassed (juce::AudioBuffer< double >& buffer, juce::MidiBuffer& midiMessages) final;
-
     bool canAddBus (bool isInput) const override final { return isInput; }
     bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
@@ -42,7 +36,7 @@ private:
     void getStateInformation (juce::MemoryBlock& destData) final;
     void setStateInformation (const void* data, int sizeInBytes) final;
 
-    juce::AudioProcessorParameter* getBypassParameter() const final;
+    bav::BoolParameter* getMainBypass() const final;
 
     bool acceptsMidi() const final { return true; }
     bool producesMidi() const final { return true; }
@@ -74,8 +68,8 @@ private:
     void prepareToPlayWrapped (const double sampleRate, Engine< SampleType1 >& activeEngine, Engine< SampleType2 >& idleEngine);
 
     template < typename SampleType >
-    inline void processBlockWrapped (juce::AudioBuffer< SampleType >& buffer,
-                                     juce::MidiBuffer&                midiMessages);
+    inline void processBlockInternal (juce::AudioBuffer< SampleType >& buffer,
+                                      juce::MidiBuffer&                midiMessages);
     
     template < typename SampleType >
     void renderChunk (juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi, Engine<SampleType>& engine);
