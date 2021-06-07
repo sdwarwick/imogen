@@ -12,13 +12,13 @@ Processor::Processor()
     : ProcessorBase (state.parameters)
 {
     state.addTo (*this);
+    
+    dataSync.connect ("host");
 
     if (isUsingDoublePrecision())
         initialize (doubleEngine);
     else
         initialize (floatEngine);
-
-    dataSync.connect ("host");
 }
 
 Processor::~Processor()
@@ -35,11 +35,8 @@ inline void Processor::initialize (Engine< SampleType >& activeEngine)
     auto initBlockSize = getBlockSize();
     if (initBlockSize <= 0) initBlockSize = 512;
 
-    setLatencySamples (activeEngine.reportLatency());
-
-    updateHostDisplay();
-
     prepareToPlay (initSamplerate, 512);
+    setLatencySamples (activeEngine.reportLatency());
 }
 
 void Processor::prepareToPlay (const double sampleRate, const int)
@@ -63,8 +60,6 @@ inline void Processor::prepareToPlayWrapped (const double           sampleRate,
     activeEngine.prepare (sampleRate, activeEngine.reportLatency());
 
     setLatencySamples (activeEngine.reportLatency());
-
-    updateHostDisplay();
 }
 
 BoolParameter& Processor::getMainBypass() const
@@ -99,8 +94,6 @@ void Processor::renderChunk (juce::AudioBuffer< double >& audio, juce::MidiBuffe
 template < typename SampleType >
 void Processor::renderChunkInternal (Engine< SampleType >& engine, juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi)
 {
-    if (audio.getNumSamples() == 0 || audio.getNumChannels() == 0) return;
-
     auto inBus  = getBusBuffer (audio, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
     auto outBus = getBusBuffer (audio, false, 0);
 

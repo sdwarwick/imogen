@@ -33,6 +33,9 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     updateAllParameters();
 
     const auto blockSize = input.getNumSamples();
+    
+    if (blockSize == 0)
+        return;
 
     const bool leadIsBypassed       = parameters.leadBypass->get();
     const bool harmoniesAreBypassed = parameters.harmonyBypass->get();
