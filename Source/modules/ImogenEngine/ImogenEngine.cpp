@@ -34,7 +34,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     output.clear();
 
     const auto blockSize = input.getNumSamples();
-    
+
     const bool leadIsBypassed       = parameters.leadBypass->get();
     const bool harmoniesAreBypassed = parameters.harmonyBypass->get();
 
@@ -53,8 +53,8 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     //    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
     //    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
 
-    processNoiseGate  (monoBuffer);
-    processDeEsser    (monoBuffer);
+    processNoiseGate (monoBuffer);
+    processDeEsser (monoBuffer);
     processCompressor (monoBuffer);
 
     dryBuffer.clear();
@@ -73,7 +73,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     dryWetMixer.mixWetSamples (juce::dsp::AudioBlock< SampleType > (wetBuffer));  // puts the mixed dry & wet samples into wetBuffer
 
-    processDelay  (wetBuffer);
+    processDelay (wetBuffer);
     processReverb (wetBuffer);
 
     outputGain.process (wetBuffer);
@@ -193,11 +193,11 @@ void Engine< SampleType >::updateAllParameters()
                                    parameters.adsrDecay->get(),
                                    parameters.adsrSustain->get(),
                                    parameters.adsrRelease->get());
-    
+
     harmonizer.setPedalPitch (parameters.pedalToggle->get(),
                               parameters.pedalThresh->get(),
                               parameters.pedalInterval->get());
-    
+
     harmonizer.setDescant (parameters.descantToggle->get(),
                            parameters.descantThresh->get(),
                            parameters.descantInterval->get());
@@ -206,7 +206,7 @@ void Engine< SampleType >::updateAllParameters()
     harmonizer.setAftertouchGainOnOff (parameters.aftertouchToggle->get());
     harmonizer.updateMidiVelocitySensitivity (parameters.velocitySens->get());
     harmonizer.updatePitchbendRange (parameters.pitchbendRange->get());
-    
+
     updateStereoWidth (parameters.stereoWidth->get());
     harmonizer.updateLowestPannedNote (parameters.lowestPanned->get());
 
@@ -256,12 +256,12 @@ template < typename SampleType >
 void Engine< SampleType >::updateStereoReductionMode (int mode)
 {
     using Mode = typename dsp::FX::MonoStereoConverter< SampleType >::StereoReductionMode;
-    
+
     switch (mode)
     {
-        case (1): stereoReducer.setStereoReductionMode (Mode::rightOnly); return;
-        case (2): stereoReducer.setStereoReductionMode (Mode::mixToMono); return;
-        default:  stereoReducer.setStereoReductionMode (Mode::leftOnly);  return;
+        case (1) : stereoReducer.setStereoReductionMode (Mode::rightOnly); return;
+        case (2) : stereoReducer.setStereoReductionMode (Mode::mixToMono); return;
+        default : stereoReducer.setStereoReductionMode (Mode::leftOnly); return;
     }
 }
 
@@ -270,11 +270,11 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
 {
     if (! harmonizer.isInitialized())
         harmonizer.initialize (16, samplerate, blocksize);
-    
+
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
     harmonizer.prepare (blocksize);
-    
-    dsp::LatencyEngine<SampleType>::changeLatency (harmonizer.getLatencySamples());
+
+    dsp::LatencyEngine< SampleType >::changeLatency (harmonizer.getLatencySamples());
 
     monoBuffer.setSize (1, blocksize, true, true, true);
     wetBuffer.setSize (1, blocksize, true, true, true);

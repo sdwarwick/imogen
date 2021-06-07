@@ -19,25 +19,8 @@ public:
     IntParameter& getPitchbendParam();
 
 private:
-    void renderChunk (juce::AudioBuffer< float >& audio, juce::MidiBuffer& midi) final;
-    void renderChunk (juce::AudioBuffer< double >& audio, juce::MidiBuffer& midi) final;
-
-    template < typename SampleType >
-    void renderChunkInternal (Engine< SampleType >& engine, juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi);
-
-    void prepareToPlay (double sampleRate, int samplesPerBlock) final;
-
-    template < typename SampleType1, typename SampleType2 >
-    void prepareToPlayWrapped (const double sampleRate, Engine< SampleType1 >& activeEngine, Engine< SampleType2 >& idleEngine);
-
-    template < typename SampleType >
-    void initialize (Engine< SampleType >& activeEngine);
-
-    void releaseResources() final;
-
-    BusesProperties createBusProperties() const final;
-    bool            canAddBus (bool isInput) const override final { return isInput; }
-    bool            isBusesLayoutSupported (const BusesLayout& layouts) const final;
+    bool canAddBus (bool isInput) const override final { return isInput; }
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
     double getTailLengthSeconds() const final;
 
@@ -62,7 +45,6 @@ private:
     Internals&  internals {state.internals};
     Meters&     meters {state.meters};
 
-    // one engine of each type. The idle one isn't destroyed, but takes up few resources.
     Engine< float >  floatEngine {parameters, meters, internals};
     Engine< double > doubleEngine {parameters, meters, internals};
 

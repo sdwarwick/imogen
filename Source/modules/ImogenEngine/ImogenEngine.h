@@ -42,13 +42,13 @@ private:
     void updateCompressorAmount (int amount);
     void updateReverbDecay (int decay);
     void updateStereoReductionMode (int mode);
-    
-    void processNoiseGate  (AudioBuffer& audio);
-    void processDeEsser    (AudioBuffer& audio);
+
+    void processNoiseGate (AudioBuffer& audio);
+    void processDeEsser (AudioBuffer& audio);
     void processCompressor (AudioBuffer& audio);
-    void processDelay      (AudioBuffer& audio);
-    void processReverb     (AudioBuffer& audio);
-    void processLimiter    (AudioBuffer& audio);
+    void processDelay (AudioBuffer& audio);
+    void processReverb (AudioBuffer& audio);
+    void processLimiter (AudioBuffer& audio);
 
     Parameters& parameters;
     Meters&     meters;
