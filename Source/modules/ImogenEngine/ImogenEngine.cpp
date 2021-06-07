@@ -31,13 +31,12 @@ template < typename SampleType >
 void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool)
 {
     updateAllParameters();
+    output.clear();
 
     const auto blockSize = input.getNumSamples();
     
     const bool leadIsBypassed       = parameters.leadBypass->get();
     const bool harmoniesAreBypassed = parameters.harmonyBypass->get();
-
-    output.clear();
 
     if (leadIsBypassed && harmoniesAreBypassed)
     {
@@ -54,26 +53,9 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     //    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
     //    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
 
-    if (parameters.noiseGateToggle->get())
-    {
-        SampleType gainRedux;
-        gate.process (monoBuffer, &gainRedux);
-        meters.gateRedux->set (static_cast< float > (gainRedux));
-    }
-
-    if (parameters.deEsserToggle->get())
-    {
-        SampleType gainRedux;
-        deEsser.process (monoBuffer, &gainRedux);
-        meters.deEssRedux->set (static_cast< float > (gainRedux));
-    }
-
-    if (parameters.compToggle->get())
-    {
-        SampleType gainRedux;
-        compressor.process (monoBuffer, &gainRedux);
-        meters.compRedux->set (static_cast< float > (gainRedux));
-    }
+    processNoiseGate  (monoBuffer);
+    processDeEsser    (monoBuffer);
+    processCompressor (monoBuffer);
 
     dryBuffer.clear();
 
@@ -91,28 +73,12 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     dryWetMixer.mixWetSamples (juce::dsp::AudioBlock< SampleType > (wetBuffer));  // puts the mixed dry & wet samples into wetBuffer
 
-    if (parameters.delayToggle->get())
-    {
-        SampleType level;
-        delay.process (wetBuffer, &level);
-        meters.delayLevel->set (static_cast< float > (level));
-    }
-
-    if (parameters.reverbToggle->get())
-    {
-        SampleType level;
-        reverb.process (wetBuffer, &level);
-        meters.reverbLevel->set (static_cast< float > (level));
-    }
+    processDelay  (wetBuffer);
+    processReverb (wetBuffer);
 
     outputGain.process (wetBuffer);
 
-    if (parameters.limiterToggle->get())
-    {
-        SampleType gainRedux;
-        limiter.process (wetBuffer, &gainRedux);
-        meters.limRedux->set (static_cast< float > (gainRedux));
-    }
+    processLimiter (wetBuffer);
 
     meters.outputLevelL->set (static_cast< float > (wetBuffer.getRMSLevel (0, 0, blockSize)));
     meters.outputLevelR->set (static_cast< float > (wetBuffer.getRMSLevel (1, 0, blockSize)));
@@ -128,6 +94,97 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 }
 
 template < typename SampleType >
+void Engine< SampleType >::processNoiseGate (AudioBuffer& audio)
+{
+    if (parameters.noiseGateToggle->get())
+    {
+        SampleType gainRedux;
+        gate.process (audio, &gainRedux);
+        meters.gateRedux->set (static_cast< float > (gainRedux));
+    }
+    else
+    {
+        meters.gateRedux->set (0.f);
+    }
+}
+
+template < typename SampleType >
+void Engine< SampleType >::processDeEsser (AudioBuffer& audio)
+{
+    if (parameters.deEsserToggle->get())
+    {
+        SampleType gainRedux;
+        deEsser.process (audio, &gainRedux);
+        meters.deEssRedux->set (static_cast< float > (gainRedux));
+    }
+    else
+    {
+        meters.deEssRedux->set (0.f);
+    }
+}
+
+template < typename SampleType >
+void Engine< SampleType >::processCompressor (AudioBuffer& audio)
+{
+    if (parameters.compToggle->get())
+    {
+        SampleType gainRedux;
+        compressor.process (audio, &gainRedux);
+        meters.compRedux->set (static_cast< float > (gainRedux));
+    }
+    else
+    {
+        meters.compRedux->set (0.f);
+    }
+}
+
+template < typename SampleType >
+void Engine< SampleType >::processDelay (AudioBuffer& audio)
+{
+    if (parameters.delayToggle->get())
+    {
+        SampleType level;
+        delay.process (audio, &level);
+        meters.delayLevel->set (static_cast< float > (level));
+    }
+    else
+    {
+        meters.delayLevel->set (-60.f);
+    }
+}
+
+
+template < typename SampleType >
+void Engine< SampleType >::processReverb (AudioBuffer& audio)
+{
+    if (parameters.reverbToggle->get())
+    {
+        SampleType level;
+        reverb.process (audio, &level);
+        meters.reverbLevel->set (static_cast< float > (level));
+    }
+    else
+    {
+        meters.reverbLevel->set (-60.f);
+    }
+}
+
+template < typename SampleType >
+void Engine< SampleType >::processLimiter (AudioBuffer& audio)
+{
+    if (parameters.limiterToggle->get())
+    {
+        SampleType gainRedux;
+        limiter.process (audio, &gainRedux);
+        meters.limRedux->set (static_cast< float > (gainRedux));
+    }
+    else
+    {
+        meters.limRedux->set (0.f);
+    }
+}
+
+template < typename SampleType >
 void Engine< SampleType >::updateAllParameters()
 {
     harmonizer.setMidiLatch (parameters.midiLatch->get());
@@ -136,39 +193,40 @@ void Engine< SampleType >::updateAllParameters()
                                    parameters.adsrDecay->get(),
                                    parameters.adsrSustain->get(),
                                    parameters.adsrRelease->get());
+    
+    harmonizer.setPedalPitch (parameters.pedalToggle->get(),
+                              parameters.pedalThresh->get(),
+                              parameters.pedalInterval->get());
+    
+    harmonizer.setDescant (parameters.descantToggle->get(),
+                           parameters.descantThresh->get(),
+                           parameters.descantInterval->get());
 
     harmonizer.setNoteStealingEnabled (parameters.voiceStealing->get());
     harmonizer.setAftertouchGainOnOff (parameters.aftertouchToggle->get());
-    harmonizer.updateLowestPannedNote (parameters.lowestPanned->get());
     harmonizer.updateMidiVelocitySensitivity (parameters.velocitySens->get());
-    harmonizer.setPedalPitch (parameters.pedalToggle->get());
-    harmonizer.setPedalPitchUpperThresh (parameters.pedalThresh->get());
-    harmonizer.setPedalPitchInterval (parameters.pedalInterval->get());
-    harmonizer.setDescant (parameters.descantToggle->get());
-    harmonizer.setDescantLowerThresh (parameters.descantThresh->get());
-    harmonizer.setDescantInterval (parameters.descantInterval->get());
+    harmonizer.updatePitchbendRange (parameters.pitchbendRange->get());
+    
+    updateStereoWidth (parameters.stereoWidth->get());
+    harmonizer.updateLowestPannedNote (parameters.lowestPanned->get());
 
-    //   stereoReducer.setStereoReductionMode (parameters.inputMode->get());
     inputGain.setGain (parameters.inputGain->get());
-    gate.setThreshold (static_cast< SampleType > (parameters.noiseGateThresh->get()));
+    gate.setThreshold (parameters.noiseGateThresh->get());
     deEsser.setThresh (parameters.deEsserThresh->get());
-    deEsser.setDeEssAmount (float (parameters.deEsserAmount->get()) * 0.01f);
+    deEsser.setDeEssAmount (parameters.deEsserAmount->get());
     dryPanner.setMidiPan (parameters.leadPan->get());
-    dryWetMixer.setWetMixProportion (float (parameters.dryWet->get()) * 0.01f);
+    dryWetMixer.setWetMixProportion (static_cast< float > (parameters.dryWet->get()) * 0.01f);
     delay.setDryWet (parameters.delayDryWet->get());
     outputGain.setGain (parameters.outputGain->get());
 
     reverb.setDryWet (parameters.reverbDryWet->get());
-    reverb.setDuckAmount (float (parameters.reverbDuck->get()) * 0.01f);
+    reverb.setDuckAmount (parameters.reverbDuck->get());
     reverb.setLoCutFrequency (parameters.reverbLoCut->get());
     reverb.setHiCutFrequency (parameters.reverbHiCut->get());
     updateReverbDecay (parameters.reverbDecay->get());
 
     updateCompressorAmount (parameters.compAmount->get());
-    updateStereoWidth (parameters.stereoWidth->get());
-
-    const auto st = parameters.pitchbendRange->get();
-    harmonizer.updatePitchbendSettings (st, st);
+    updateStereoReductionMode (parameters.inputMode->get());
 }
 
 template < typename SampleType >
@@ -181,17 +239,30 @@ void Engine< SampleType >::updateStereoWidth (int width)
 template < typename SampleType >
 void Engine< SampleType >::updateCompressorAmount (int amount)
 {
-    const auto a = float (amount) * 0.01f;
-    compressor.setThreshold (juce::jmap (a, 0.0f, -60.0f));
-    compressor.setRatio (juce::jmap (a, 1.0f, 10.0f));
+    const auto a = static_cast< float > (amount) * 0.01f;
+    compressor.setThreshold (juce::jmap (a, 0.f, -60.f));
+    compressor.setRatio (juce::jmap (a, 1.f, 10.f));
 }
 
 template < typename SampleType >
 void Engine< SampleType >::updateReverbDecay (int decay)
 {
-    const auto d = float (decay) * 0.01f;
-    reverb.setDamping (1.0f - d);
+    const auto d = static_cast< float > (decay) * 0.01f;
+    reverb.setDamping (1.f - d);
     reverb.setRoomSize (d);
+}
+
+template < typename SampleType >
+void Engine< SampleType >::updateStereoReductionMode (int mode)
+{
+    using Mode = typename dsp::FX::MonoStereoConverter< SampleType >::StereoReductionMode;
+    
+    switch (mode)
+    {
+        case (1): stereoReducer.setStereoReductionMode (Mode::rightOnly); return;
+        case (2): stereoReducer.setStereoReductionMode (Mode::mixToMono); return;
+        default:  stereoReducer.setStereoReductionMode (Mode::leftOnly);  return;
+    }
 }
 
 template < typename SampleType >
