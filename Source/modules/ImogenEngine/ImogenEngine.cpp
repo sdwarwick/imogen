@@ -20,11 +20,6 @@ Engine< SampleType >::Engine (Parameters& params, Meters& metersToUse, Internals
     //
     //    static constexpr auto limiterThreshDb     = 0.0f;
     //    static constexpr auto limiterReleaseMs    = 35.0f;
-
-    dryWetMixer.setMixingRule (juce::dsp::DryWetMixingRule::balanced);
-    dryWetMixer.setWetLatency (SampleType (0.0));
-
-    // harmonizer.initialize (16, samplerate, newInternalBlocksize);
 }
 
 template < typename SampleType >
@@ -61,8 +56,8 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     if (! leadIsBypassed)
         dryPanner.process (monoBuffer, dryBuffer);
-
-    dryWetMixer.pushDrySamples (juce::dsp::AudioBlock< SampleType > (dryBuffer));
+    
+    dryWetMixer.pushDrySamples (dryBuffer);
 
     wetBuffer.clear();
 
@@ -70,8 +65,8 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
         harmonizer.bypassedBlock (blockSize, midiMessages);
     else
         harmonizer.render (monoBuffer, wetBuffer, midiMessages);  // renders the stereo output into wetBuffer
-
-    dryWetMixer.mixWetSamples (juce::dsp::AudioBlock< SampleType > (wetBuffer));  // puts the mixed dry & wet samples into wetBuffer
+    
+    dryWetMixer.mixWetSamples (wetBuffer);
 
     processDelay (wetBuffer);
     processReverb (wetBuffer);
@@ -86,11 +81,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     for (int chan = 0; chan < 2; ++chan)
         output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
 
-    auto ccInfo = harmonizer.getLastMovedControllerInfo();
-    internals.lastMovedMidiController->set (ccInfo.controllerNumber);
-    internals.lastMovedCCValue->set (ccInfo.controllerValue);
-    internals.mtsEspIsConnected->set (harmonizer.isConnectedToMtsEsp());
-    // to do: intonation info...
+    updateInternals();
 }
 
 template < typename SampleType >
@@ -215,7 +206,7 @@ void Engine< SampleType >::updateAllParameters()
     deEsser.setThresh (parameters.deEsserThresh->get());
     deEsser.setDeEssAmount (parameters.deEsserAmount->get());
     dryPanner.setMidiPan (parameters.leadPan->get());
-    dryWetMixer.setWetMixProportion (static_cast< float > (parameters.dryWet->get()) * 0.01f);
+    dryWetMixer.setWetMix (parameters.dryWet->get());
     delay.setDryWet (parameters.delayDryWet->get());
     outputGain.setGain (parameters.outputGain->get());
 
@@ -227,6 +218,16 @@ void Engine< SampleType >::updateAllParameters()
 
     updateCompressorAmount (parameters.compAmount->get());
     updateStereoReductionMode (parameters.inputMode->get());
+}
+
+template < typename SampleType >
+void Engine< SampleType >::updateInternals()
+{
+    auto ccInfo = harmonizer.getLastMovedControllerInfo();
+    internals.lastMovedMidiController->set (ccInfo.controllerNumber);
+    internals.lastMovedCCValue->set (ccInfo.controllerValue);
+    internals.mtsEspIsConnected->set (harmonizer.isConnectedToMtsEsp());
+    // to do: intonation info...
 }
 
 template < typename SampleType >
@@ -291,11 +292,7 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     reverb.prepare (blocksize, samplerate, 2);
     limiter.prepare (blocksize, samplerate, 2);
 
-    dspSpec.maximumBlockSize = static_cast< juce::uint32 > (blocksize);
-    dspSpec.sampleRate       = samplerate;
-    dspSpec.numChannels      = 2;
-
-    dryWetMixer.prepare (dspSpec);
+    dryWetMixer.prepare (2, blocksize, samplerate);
 }
 
 template < typename SampleType >

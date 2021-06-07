@@ -49,6 +49,8 @@ private:
     void processDelay (AudioBuffer& audio);
     void processReverb (AudioBuffer& audio);
     void processLimiter (AudioBuffer& audio);
+    
+    void updateInternals();
 
     Parameters& parameters;
     Meters&     meters;
@@ -69,9 +71,7 @@ private:
     dsp::FX::Limiter< SampleType >             limiter;
 
     dsp::FX::MonoToStereoPanner< SampleType > dryPanner;
-
-    juce::dsp::ProcessSpec               dspSpec;
-    juce::dsp::DryWetMixer< SampleType > dryWetMixer;
+    dsp::FX::DryWetMixer< SampleType >        dryWetMixer;
 };
 
 }  // namespace Imogen
