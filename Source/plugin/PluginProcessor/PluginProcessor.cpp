@@ -97,6 +97,8 @@ void Processor::renderChunk (juce::AudioBuffer< double >& audio, juce::MidiBuffe
 template < typename SampleType >
 void Processor::renderChunkInternal (Engine< SampleType >& engine, juce::AudioBuffer< SampleType >& audio, juce::MidiBuffer& midi)
 {
+    parameters.doAllActions();
+    
     if (audio.getNumSamples() == 0 || audio.getNumChannels() == 0) return;
 
     auto inBus  = getBusBuffer (audio, true, getBusesLayout().getMainInputChannelSet() == juce::AudioChannelSet::disabled());
