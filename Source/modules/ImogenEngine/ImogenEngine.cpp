@@ -200,8 +200,13 @@ void Engine< SampleType >::updateReverbDecay (int decay)
 template < typename SampleType >
 void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
 {
+    if (! harmonizer.isInitialized())
+        harmonizer.initialize (16, samplerate, blocksize);
+    
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
     harmonizer.prepare (blocksize);
+    
+    dsp::LatencyEngine<SampleType>::changeLatency (harmonizer.getLatencySamples());
 
     monoBuffer.setSize (1, blocksize, true, true, true);
     wetBuffer.setSize (1, blocksize, true, true, true);
