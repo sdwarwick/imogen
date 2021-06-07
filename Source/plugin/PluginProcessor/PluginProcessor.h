@@ -17,7 +17,10 @@ public:
     ~Processor() override;
 
     String getScaleName() const;
+    
     State& getState() { return state; }
+    
+    IntParameter& getPitchbendParam();
 
 private:
     void renderChunk (juce::AudioBuffer< float >& audio, juce::MidiBuffer& midi) final;

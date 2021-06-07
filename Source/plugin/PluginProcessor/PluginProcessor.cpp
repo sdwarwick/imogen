@@ -72,9 +72,14 @@ inline void Processor::prepareToPlayWrapped (const double           sampleRate,
     updateHostDisplay();
 }
 
-bav::BoolParameter& Processor::getMainBypass() const
+BoolParameter& Processor::getMainBypass() const
 {
     return *parameters.mainBypass.get();
+}
+
+IntParameter& Processor::getPitchbendParam()
+{
+    return *parameters.editorPitchbend.get();
 }
 
 void Processor::releaseResources()
