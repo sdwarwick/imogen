@@ -45,9 +45,6 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     inputGain.process (monoBuffer);
 
-    //    juce::dsp::AudioBlock<SampleType> monoBlock (monoBuffer);
-    //    initialHiddenLoCut.process ( juce::dsp::ProcessContextReplacing<SampleType>(monoBlock) );
-
     processNoiseGate (monoBuffer);
     processDeEsser (monoBuffer);
     processCompressor (monoBuffer);
@@ -64,7 +61,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     if (harmoniesAreBypassed)
         harmonizer.bypassedBlock (blockSize, midiMessages);
     else
-        harmonizer.render (monoBuffer, wetBuffer, midiMessages);  // renders the stereo output into wetBuffer
+        harmonizer.render (monoBuffer, wetBuffer, midiMessages);
     
     dryWetMixer.mixWetSamples (wetBuffer);
 
