@@ -16,7 +16,8 @@ Processor::Processor()
                          .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
                          .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
 {
-    state.addTo (*this);
+    state.addTo (this);
+    state.addDataChild (dataSync);
     dataSync.connect ("host");
 }
 
