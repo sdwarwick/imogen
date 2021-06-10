@@ -48,8 +48,6 @@ private:
 
     /*=========================================================================================*/
 
-    juce::UndoManager undoManager;
-
     ImogenDialComponent mainDial;
 
     ImogenLookAndFeel lookAndFeel;
@@ -60,6 +58,8 @@ private:
     Parameters& parameters;
     Internals&  internals;
     Meters&     meters;
+    
+    UndoManager   undoManager {state};
     
     PresetManager presetManager;
 
