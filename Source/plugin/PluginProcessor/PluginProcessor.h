@@ -45,8 +45,8 @@ private:
     Internals&  internals {state.internals};
     Meters&     meters {state.meters};
 
-    Engine< float >  floatEngine {parameters, meters, internals};
-    Engine< double > doubleEngine {parameters, meters, internals};
+    Engine< float >  floatEngine {state};
+    Engine< double > doubleEngine {state};
 
     network::SelfOwnedOscDataSynchronizer dataSync {state};
 

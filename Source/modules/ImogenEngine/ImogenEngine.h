@@ -29,7 +29,7 @@ public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using MidiBuffer  = juce::MidiBuffer;
 
-    Engine (Parameters& params, Meters& metersToUse, Internals& internalsToUse);
+    Engine (State& stateToUse);
 
 private:
     void renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool isBypassed) final;
@@ -49,12 +49,13 @@ private:
     void processDelay (AudioBuffer& audio);
     void processReverb (AudioBuffer& audio);
     void processLimiter (AudioBuffer& audio);
-    
+
     void updateInternals();
 
-    Parameters& parameters;
-    Meters&     meters;
-    Internals&  internals;
+    State&      state;
+    Parameters& parameters {state.parameters};
+    Meters&     meters {state.meters};
+    Internals&  internals {state.internals};
 
     Harmonizer< SampleType > harmonizer;
 

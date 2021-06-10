@@ -8,12 +8,7 @@ namespace Imogen
 {
 GUI::GUI (Imogen::State& stateToUse)
     : GUIInitializer (*getTopLevelComponent()),
-      state (stateToUse),
-      parameters (state.parameters),
-      internals (state.internals),
-      meters (state.meters),
-      presetManager (state),
-      darkModeSentinel (internals.guiDarkMode, *this)
+      state (stateToUse)
 {
     setInterceptsMouseClicks (false, true);
 

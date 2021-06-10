@@ -55,15 +55,15 @@ private:
     juce::TooltipWindow tooltipWindow {this, 700};
 
     State&      state;
-    Parameters& parameters;
-    Internals&  internals;
-    Meters&     meters;
-    
-    UndoManager   undoManager {state};
-    
-    PresetManager presetManager;
+    Parameters& parameters {state.parameters};
+    Internals&  internals {state.internals};
+    Meters&     meters {state.meters};
 
-    gui::DarkModeSentinel darkModeSentinel;
+    UndoManager undoManager {state};
+
+    PresetManager presetManager {state, undoManager};
+
+    gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUI)
 };

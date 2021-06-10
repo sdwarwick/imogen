@@ -8,8 +8,8 @@
 namespace Imogen
 {
 template < typename SampleType >
-Engine< SampleType >::Engine (Parameters& params, Meters& metersToUse, Internals& internalsToUse)
-    : parameters (params), meters (metersToUse), internals (internalsToUse)
+Engine< SampleType >::Engine (State& stateToUse)
+    : state (stateToUse)
 {
     //    static constexpr auto noiseGateAttackMs   = 25.0f;
     //    static constexpr auto noiseGateReleaseMs  = 100.0f;
@@ -53,7 +53,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     if (! leadIsBypassed)
         dryPanner.process (monoBuffer, dryBuffer);
-    
+
     dryWetMixer.pushDrySamples (dryBuffer);
 
     wetBuffer.clear();
@@ -62,7 +62,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
         harmonizer.bypassedBlock (blockSize, midiMessages);
     else
         harmonizer.render (monoBuffer, wetBuffer, midiMessages);
-    
+
     dryWetMixer.mixWetSamples (wetBuffer);
 
     processDelay (wetBuffer);
