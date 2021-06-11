@@ -28,8 +28,7 @@ struct State : StateBase
 {
     State() : StateBase ("ImogenState")
     {
-        add (parameters);
-        addInternal (internals, meters);
+        add (parameters, internals, meters);
     }
 
     Parameters parameters;

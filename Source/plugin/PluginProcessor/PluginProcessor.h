@@ -47,10 +47,10 @@ private:
 
     Engine< float >  floatEngine {state};
     Engine< double > doubleEngine {state};
-
-    network::SelfOwnedOscDataSynchronizer dataSync {state};
-
+    
     PluginTransport transport;
+
+    network::OscDataSynchronizer dataSync {state};
 
     /*=========================================================================================*/
 

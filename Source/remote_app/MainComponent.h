@@ -21,7 +21,7 @@ private:
     State state;
     GUI   gui {state};
 
-    network::SelfOwnedOscDataSynchronizer dataSync {state};
+    network::OscDataSynchronizer dataSync {state};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Remote)
 };
