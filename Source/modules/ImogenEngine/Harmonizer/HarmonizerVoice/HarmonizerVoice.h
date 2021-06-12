@@ -21,11 +21,11 @@ public:
 
 
 private:
-    void newBlockComing (int previousBlocksize, int upcomingBlocksize) override;
+    void newBlockComing (int previousBlocksize, int upcomingBlocksize) final;
 
-    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int startSampleOfOrigBuffer) override;
+    void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) final;
 
-    void bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples) override;
+    void bypassedBlockRecieved (float voicesLastOutputFreq, double currentSamplerate, int numSamples) final;
 
     void prepared (const int blocksize) override;
 

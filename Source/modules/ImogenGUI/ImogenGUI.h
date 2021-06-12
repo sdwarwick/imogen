@@ -26,7 +26,7 @@ class GUI : public juce::Component,
             public gui::GUIInitializer
 {
 public:
-    GUI (Imogen::State& stateToUse);
+    GUI (State& stateToUse);
 
     virtual ~GUI() override;
 
@@ -44,12 +44,6 @@ private:
 
     /*=========================================================================================*/
 
-    inline void makePresetMenu (juce::ComboBox& box);
-
-    /*=========================================================================================*/
-
-    ImogenDialComponent mainDial;
-
     ImogenLookAndFeel lookAndFeel;
 
     juce::TooltipWindow tooltipWindow {this, 700};
@@ -59,8 +53,8 @@ private:
     Internals&  internals {state.internals};
     Meters&     meters {state.meters};
 
-    UndoManager undoManager {parameters};
-
+    PluginUndo undoManager {parameters};
+    
     PresetManager presetManager {state};
 
     gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};

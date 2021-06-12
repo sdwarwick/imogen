@@ -13,12 +13,6 @@ GUI::GUI (Imogen::State& stateToUse)
     setInterceptsMouseClicks (false, true);
 
     setLookAndFeel (&lookAndFeel);
-
-    addAndMakeVisible (mainDial);
-
-    state.setUndoManager (undoManager);
-
-    juce::ignoreUnused (state, parameters, internals, meters);
 }
 
 
@@ -45,8 +39,7 @@ void GUI::paint (juce::Graphics& g)
 
 void GUI::resized()
 {
-    //selectPreset.setBounds (x, y, w, h);
-    //mainDial.setBounds (x, y, w, h);
+    
 }
 
 bool GUI::keyPressed (const juce::KeyPress& key)
@@ -71,10 +64,5 @@ void GUI::focusLost (FocusChangeType cause)
     juce::ignoreUnused (cause);
 }
 
-
-inline void GUI::makePresetMenu (juce::ComboBox& box)
-{
-    juce::ignoreUnused (box);
-}
 
 }  // namespace Imogen

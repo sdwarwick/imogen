@@ -39,7 +39,7 @@ void HarmonizerVoice< SampleType >::newBlockComing (int previousBlocksize, int)
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate, int)
+void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
 
