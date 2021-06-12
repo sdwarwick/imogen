@@ -39,7 +39,8 @@ struct State : StateBase
 
 struct PresetManager : PresetManagerBase
 {
-    using PresetManagerBase::PresetManagerBase;
+    PresetManager (State& state) : PresetManagerBase (state.parameters)
+    { }
 
     std::string getCompanyName() final { return "Ben Vining Music Software"; }
     std::string getProductName() final { return "Imogen"; }

@@ -59,9 +59,9 @@ private:
     Internals&  internals {state.internals};
     Meters&     meters {state.meters};
 
-    UndoManager undoManager {state};
+    UndoManager undoManager {parameters};
 
-    PresetManager presetManager {state, undoManager};
+    PresetManager presetManager {state};
 
     gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};
 

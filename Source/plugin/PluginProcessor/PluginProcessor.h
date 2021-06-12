@@ -25,7 +25,7 @@ private:
     double getTailLengthSeconds() const final;
 
     BoolParameter&    getMainBypass() const final;
-    SerializableData& getStateData() final { return state; }
+    SerializableData& getStateData() final { return parameters; }
 
     bool acceptsMidi() const final { return true; }
     bool producesMidi() const final { return true; }
