@@ -17,7 +17,7 @@ struct Internals : ParameterList
                                       { return juce::String (value).substring (0, maximumStringLength); }};
 
     ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
-    
+
     StringProperty mtsEspScaleName {"Scale name"};
 
     IntParam lastMovedMidiController {"Controller Number", "Last moved MIDI controller number", 0, 127, 0};
@@ -50,6 +50,26 @@ struct Internals : ParameterList
                                 },
                                 nullptr,
                                 TRANS ("cents")};
+
+private:
+    ParamUpdater linkPeersUpdater {abletonLinkEnabled, [this]()
+                                   {
+                                       if (! abletonLinkEnabled->get())
+                                           abletonLinkSessionPeers->set (0);
+                                   }};
+
+    ParamUpdater scaleNameUpdater {mtsEspIsConnected, [this]()
+                                   {
+                                       if (mtsEspIsConnected->get())
+                                       {
+                                           mtsEspScaleName->setDefault ("UnnamedScale");
+                                       }
+                                       else
+                                       {
+                                           mtsEspScaleName->setDefault ("Not connected");
+                                           mtsEspScaleName->set ("Not connected");
+                                       }
+                                   }};
 };
 
 }  // namespace Imogen

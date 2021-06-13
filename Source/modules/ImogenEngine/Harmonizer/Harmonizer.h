@@ -26,7 +26,7 @@ public:
 
     void release() override;
 
-    int getLatencySamples() const noexcept { return analyzer.getLatency(); }
+    int getLatencySamples() const noexcept { /*return analyzer.getLatency();*/ return 0; }
     
     
     struct IntonationInfo

@@ -16,7 +16,7 @@ Harmonizer< SampleType >::Harmonizer()
 template < typename SampleType >
 void Harmonizer< SampleType >::initialized (const double, const int)
 {
-    analyzer.initialize();
+    //analyzer.initialize();
 }
 
 
@@ -29,21 +29,21 @@ void Harmonizer< SampleType >::prepared (int)
 template < typename SampleType >
 void Harmonizer< SampleType >::resetTriggered()
 {
-    analyzer.reset();
+   // analyzer.reset();
 }
 
 
 template < typename SampleType >
 void Harmonizer< SampleType >::samplerateChanged (double newSamplerate)
 {
-    analyzer.setSamplerate (newSamplerate);
+   // analyzer.setSamplerate (newSamplerate);
 }
 
 
 template < typename SampleType >
 void Harmonizer< SampleType >::release()
 {
-    analyzer.releaseResources();
+   // analyzer.releaseResources();
 }
 
 
@@ -53,17 +53,17 @@ void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& ou
     jassert (input.getNumSamples() == output.getNumSamples());
     jassert (output.getNumChannels() == 2);
 
-    if (Base::getNumActiveVoices() == 0)
-        analyzer.reset();
-    else
-        analyzer.clearUnusedGrains();
-
-    analyzer.analyzeInput (input.getReadPointer (0), input.getNumSamples());
+//    if (Base::getNumActiveVoices() == 0)
+//        analyzer.reset();
+//    else
+//        analyzer.clearUnusedGrains();
+//
+//    analyzer.analyzeInput (input.getReadPointer (0), input.getNumSamples());
 
     Base::renderVoices (midiMessages, output);
     
     //TODO: update intonation info...
-    intonationInfo.pitch = juce::roundToInt (math::freqToMidi (analyzer.getLastFrequency()));
+  //  intonationInfo.pitch = juce::roundToInt (math::freqToMidi (analyzer.getLastFrequency()));
     //intonationInfo.centsSharp = ...
 }
 
