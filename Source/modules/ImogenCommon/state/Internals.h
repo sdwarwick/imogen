@@ -7,7 +7,7 @@ struct Internals : ParameterList
 {
     Internals() : ParameterList ("ImogenInternals")
     {
-        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
+        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp, mtsEspScaleName);
     }
 
     ToggleParam abletonLinkEnabled {"Ableton link Toggle", "Ableton link toggle", false};
@@ -17,6 +17,8 @@ struct Internals : ParameterList
                                       { return juce::String (value).substring (0, maximumStringLength); }};
 
     ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
+    
+    StringProperty mtsEspScaleName {"Scale name"};
 
     IntParam lastMovedMidiController {"Controller Number", "Last moved MIDI controller number", 0, 127, 0};
 

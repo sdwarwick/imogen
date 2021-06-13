@@ -224,7 +224,7 @@ void Engine< SampleType >::updateInternals()
     internals.lastMovedMidiController->set (ccInfo.controllerNumber);
     internals.lastMovedCCValue->set (ccInfo.controllerValue);
     internals.mtsEspIsConnected->set (harmonizer.isConnectedToMtsEsp());
-    // to do: intonation info...
+    internals.mtsEspScaleName->set (harmonizer.getScaleName());
 }
 
 template < typename SampleType >
