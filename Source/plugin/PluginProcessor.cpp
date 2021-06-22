@@ -1,9 +1,9 @@
 
+#include "PluginProcessor.h"
+
 #if ! IMOGEN_HEADLESS
 #    include <ImogenGUI/ImogenGUI.h>
 #endif
-
-#include "PluginProcessor.h"
 
 
 namespace Imogen
