@@ -31,9 +31,6 @@ public:
     virtual ~GUI() override;
 
 private:
-    /*=========================================================================================*/
-    /* juce::Component functions */
-
     void paint (juce::Graphics& g) final;
     void resized() final;
 
@@ -41,8 +38,6 @@ private:
     bool keyStateChanged (bool isKeyDown) final;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) final;
     void focusLost (FocusChangeType cause) final;
-
-    /*=========================================================================================*/
 
     ImogenLookAndFeel lookAndFeel;
 
@@ -55,7 +50,7 @@ private:
 
     PluginUndo undoManager {parameters};
     
-    PresetManager presetManager {state};
+    PresetManager presetManager {parameters, &undoManager};
 
     gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};
 

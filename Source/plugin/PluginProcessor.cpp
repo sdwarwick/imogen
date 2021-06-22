@@ -21,19 +21,9 @@ Processor::Processor()
     dataSync.connect ("host");
 }
 
-Processor::~Processor()
-{
-    dataSync.disconnect();
-}
-
 BoolParameter& Processor::getMainBypass() const
 {
     return *parameters.mainBypass.get();
-}
-
-IntParameter& Processor::getPitchbendParam()
-{
-    return *parameters.editorPitchbend.get();
 }
 
 double Processor::getTailLengthSeconds() const

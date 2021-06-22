@@ -13,9 +13,6 @@ class Processor : public dsp::ProcessorBase
 {
 public:
     Processor();
-    ~Processor() override;
-
-    IntParameter& getPitchbendParam();
 
 private:
     bool canAddBus (bool isInput) const override final { return isInput; }
@@ -35,12 +32,9 @@ private:
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
 
-    
     State       state;
     Parameters& parameters {state.parameters};
-    Internals&  internals {state.internals};
-    Meters&     meters {state.meters};
-
+    
     Engine< float >  floatEngine {state};
     Engine< double > doubleEngine {state};
     

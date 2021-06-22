@@ -272,7 +272,8 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     harmonizer.setCurrentPlaybackSampleRate (samplerate);
     harmonizer.prepare (blocksize);
 
-    dsp::LatencyEngine< SampleType >::changeLatency (harmonizer.getLatencySamples());
+    if (const auto latency = harmonizer.getLatencySamples() > 0)
+        dsp::LatencyEngine< SampleType >::changeLatency (latency);
 
     monoBuffer.setSize (1, blocksize, true, true, true);
     wetBuffer.setSize (1, blocksize, true, true, true);
