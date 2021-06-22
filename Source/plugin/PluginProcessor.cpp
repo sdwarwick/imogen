@@ -17,7 +17,7 @@ Processor::Processor()
                          .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
 {
     state.addTo (this);
-    state.addDataChild (dataSync);
+    parameters.addDataChild (dataSync);
     dataSync.connect ("host");
 }
 
