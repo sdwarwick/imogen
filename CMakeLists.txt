@@ -36,10 +36,8 @@ set (Imogen_Common_Flags
 #################### Configure the main build of Imogen ####################
 
 set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/plugin/PluginProcessor/PluginProcessor.cpp
-    ${Imogen_sourceDir}/plugin/PluginProcessor/PluginProcessor.h
-    ${Imogen_sourceDir}/plugin/PluginEditor/PluginEditor.cpp
-    ${Imogen_sourceDir}/plugin/PluginEditor/PluginEditor.h)
+    ${Imogen_sourceDir}/plugin/PluginProcessor.cpp
+    ${Imogen_sourceDir}/plugin/PluginProcessor.h)
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}

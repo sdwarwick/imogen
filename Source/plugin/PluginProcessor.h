@@ -15,7 +15,6 @@ public:
     Processor();
     ~Processor() override;
 
-    State&        getState() { return state; }
     IntParameter& getPitchbendParam();
 
 private:
@@ -36,8 +35,7 @@ private:
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
 
-    /*=========================================================================================*/
-
+    
     State       state;
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
@@ -49,10 +47,6 @@ private:
     PluginTransport transport;
 
     network::OscDataSynchronizer dataSync {state};
-
-    /*=========================================================================================*/
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Processor)
 };
 
 }  // namespace Imogen

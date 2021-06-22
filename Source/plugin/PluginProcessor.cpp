@@ -1,6 +1,6 @@
 
 #if ! IMOGEN_HEADLESS
-#    include "../PluginEditor/PluginEditor.h"
+#    include <ImogenGUI/ImogenGUI.h>
 #endif
 
 #include "PluginProcessor.h"
@@ -61,7 +61,7 @@ juce::AudioProcessorEditor* Processor::createEditor()
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
-    return new Editor (*this);
+    return new gui::PluginEditor<GUI> (*this, state);
 #endif
 }
 
