@@ -37,9 +37,9 @@ struct State : StateBase
 };
 
 
-struct PresetManager : PresetManagerBase
+struct PresetManager : PluginPresetManager
 {
-    using PresetManagerBase::PresetManagerBase;
+    using PluginPresetManager::PluginPresetManager;
 
     std::string getCompanyName() final { return "Ben Vining Music Software"; }
     std::string getProductName() final { return "Imogen"; }
