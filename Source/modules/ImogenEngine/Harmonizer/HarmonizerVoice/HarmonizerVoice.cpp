@@ -32,14 +32,14 @@ void HarmonizerVoice< SampleType >::noteCleared()
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::newBlockComing (int previousBlocksize, int)
+void HarmonizerVoice< SampleType >::newBlockComing (int /*previousBlocksize*/, int)
 {
     //shifter.newBlockComing (previousBlocksize);
 }
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
+void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& /*output*/, float desiredFrequency, double currentSamplerate)
 {
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
 
@@ -50,7 +50,7 @@ void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float des
 
 
 template < typename SampleType >
-void HarmonizerVoice< SampleType >::bypassedBlockRecieved (float, double, int numSamples)
+void HarmonizerVoice< SampleType >::bypassedBlockRecieved (float, double, int /*numSamples*/)
 {
     //shifter.bypassedBlockRecieved (numSamples);
 }
