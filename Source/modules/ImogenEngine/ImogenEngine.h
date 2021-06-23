@@ -56,6 +56,8 @@ private:
     Parameters& parameters {state.parameters};
     Meters&     meters {state.meters};
     Internals&  internals {state.internals};
+    
+    dsp::filters::Filter<SampleType> initialLoCut;
 
     Harmonizer< SampleType > harmonizer;
 
@@ -73,6 +75,8 @@ private:
 
     dsp::FX::MonoToStereoPanner< SampleType > dryPanner;
     dsp::FX::DryWetMixer< SampleType >        dryWetMixer;
+    
+    static constexpr auto initialHiddenLoCutFreq = (SampleType) 65;
 };
 
 }  // namespace Imogen

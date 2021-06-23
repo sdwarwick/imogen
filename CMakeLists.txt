@@ -69,7 +69,7 @@ source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
-link_binary_data_to_target_create_if_needed (Imogen assets)
+add_binary_data_folder (Imogen assets)
 
 target_link_libraries (Imogen PRIVATE ImogenCommon ImogenEngine ImogenGUI)
 
@@ -99,7 +99,7 @@ source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${ImogenRemote_sourceFile
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
-link_binary_data_to_target_create_if_needed (ImogenRemote assets)
+add_binary_data_folder (ImogenRemote assets)
 
 target_link_libraries (ImogenRemote PRIVATE ImogenCommon ImogenGUI)
 

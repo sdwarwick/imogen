@@ -40,6 +40,8 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     }
 
     stereoReducer.convertStereoToMono (input, monoBuffer);
+    
+    initialLoCut.process (monoBuffer.getWritePointer(0), blockSize);
 
     meters.inputLevel->set (static_cast< float > (monoBuffer.getRMSLevel (0, 0, blockSize)));
 
@@ -278,6 +280,9 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     monoBuffer.setSize (1, blocksize, true, true, true);
     wetBuffer.setSize (1, blocksize, true, true, true);
     dryBuffer.setSize (1, blocksize, true, true, true);
+    
+    initialLoCut.coefs.makeHighPass (samplerate, initialHiddenLoCutFreq);
+    initialLoCut.prepare();
 
     stereoReducer.prepare (blocksize);
     inputGain.prepare (blocksize);
@@ -289,7 +294,6 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     delay.prepare (blocksize, samplerate, 2);
     reverb.prepare (blocksize, samplerate, 2);
     limiter.prepare (blocksize, samplerate, 2);
-
     dryWetMixer.prepare (2, blocksize, samplerate);
 }
 
