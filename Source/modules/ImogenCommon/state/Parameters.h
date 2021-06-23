@@ -11,7 +11,7 @@ struct Parameters : ParameterList
 {
     Parameters() : ParameterList ("ImogenParameters")
     {
-        add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch);
+        add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch, pitchGlide);
 
         setPitchbendParameter (editorPitchbend);
     }
@@ -122,6 +122,12 @@ struct Parameters : ParameterList
     ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
 
     ToggleParam midiLatch {"MIDI latch", "MIDI latch", false};
+
+    ToggleParam pitchGlide {"Glide toggle", "Pitch glide toggle", false};
+
+    FloatParam glideTime {"Glide time", "Pitch glide time",
+                          juce::NormalisableRange< float > (0.0f, 2.0f, 0.01f),
+                          0.4f, generic, sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
 
     IntParam editorPitchbend {"GUI Pitchbend", "GUI Pitchbend", 0, 127, 64,
                               [] (int value, int maximumStringLength)

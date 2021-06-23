@@ -199,6 +199,9 @@ void Engine< SampleType >::updateAllParameters()
 
     updateStereoWidth (parameters.stereoWidth->get());
     harmonizer.updateLowestPannedNote (parameters.lowestPanned->get());
+    
+    harmonizer.togglePitchGlide (parameters.pitchGlide->get());
+    harmonizer.setPitchGlideTime ((double) parameters.glideTime->get());
 
     inputGain.setGain (parameters.inputGain->get());
     gate.setThreshold (parameters.noiseGateThresh->get());
