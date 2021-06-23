@@ -34,7 +34,7 @@ void Harmonizer< SampleType >::resetTriggered()
 
 
 template < typename SampleType >
-void Harmonizer< SampleType >::samplerateChanged (double newSamplerate)
+void Harmonizer< SampleType >::samplerateChanged (double /*newSamplerate*/)
 {
    // analyzer.setSamplerate (newSamplerate);
 }
