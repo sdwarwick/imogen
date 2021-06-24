@@ -20,12 +20,17 @@ Engine< SampleType >::Engine (State& stateToUse)
     //
     //    static constexpr auto limiterThreshDb     = 0.0f;
     //    static constexpr auto limiterReleaseMs    = 35.0f;
+        
+        using FT = dsp::FX::FilterType;
+        
+        EQ.addBand (FT::LowPass, 10000.f);
+        EQ.addBand (FT::HighPass, 80.f);
+        EQ.addBand (FT::Peak, 2500.f);
 }
 
 template < typename SampleType >
 void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool)
 {
-    updateAllParameters();
     output.clear();
 
     const auto blockSize = input.getNumSamples();
@@ -39,23 +44,31 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
         return;
     }
 
+    updateStereoReductionMode (parameters.inputMode->get());
     stereoReducer.convertStereoToMono (input, monoBuffer);
     
-    initialLoCut.process (monoBuffer.getWritePointer(0), blockSize);
+    initialLoCut.process (monoBuffer);
 
-    meters.inputLevel->set (static_cast< float > (monoBuffer.getRMSLevel (0, 0, blockSize)));
-
+    inputGain.setGain (parameters.inputGain->get());
     inputGain.process (monoBuffer);
+    
+    meters.inputLevel->set (static_cast< float > (monoBuffer.getRMSLevel (0, 0, blockSize)));
 
     processNoiseGate (monoBuffer);
     processDeEsser (monoBuffer);
     processCompressor (monoBuffer);
+    
+    updateStereoWidth (parameters.stereoWidth->get());
 
     dryBuffer.clear();
 
     if (! leadIsBypassed)
+    {
+        dryPanner.setMidiPan (parameters.leadPan->get());
         dryPanner.process (monoBuffer, dryBuffer);
+    }
 
+    dryWetMixer.setWetMix (parameters.dryWet->get());
     dryWetMixer.pushDrySamples (dryBuffer);
 
     wetBuffer.clear();
@@ -63,13 +76,18 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     if (harmoniesAreBypassed)
         harmonizer.bypassedBlock (blockSize, midiMessages);
     else
+    {
+        updateHarmonizerParameters();
         harmonizer.render (monoBuffer, wetBuffer, midiMessages);
+    }
 
     dryWetMixer.mixWetSamples (wetBuffer);
 
     processDelay (wetBuffer);
     processReverb (wetBuffer);
+    processEQ (wetBuffer);
 
+    outputGain.setGain (parameters.outputGain->get());
     outputGain.process (wetBuffer);
 
     processLimiter (wetBuffer);
@@ -88,6 +106,8 @@ void Engine< SampleType >::processNoiseGate (AudioBuffer& audio)
 {
     if (parameters.noiseGateToggle->get())
     {
+        gate.setThreshold (parameters.noiseGateThresh->get());
+        
         gate.process (audio);
         meters.gateRedux->set (static_cast< float > (gate.getAverageGainReduction()));
     }
@@ -102,6 +122,9 @@ void Engine< SampleType >::processDeEsser (AudioBuffer& audio)
 {
     if (parameters.deEsserToggle->get())
     {
+        deEsser.setThresh (parameters.deEsserThresh->get());
+        deEsser.setDeEssAmount (parameters.deEsserAmount->get());
+        
         deEsser.process (audio);
         meters.deEssRedux->set (static_cast< float > (deEsser.getAverageGainReduction()));
     }
@@ -116,6 +139,8 @@ void Engine< SampleType >::processCompressor (AudioBuffer& audio)
 {
     if (parameters.compToggle->get())
     {
+        updateCompressorAmount (parameters.compAmount->get());
+        
         compressor.process (audio);
         meters.compRedux->set (static_cast< float > (compressor.getAverageGainReduction()));
     }
@@ -130,6 +155,8 @@ void Engine< SampleType >::processDelay (AudioBuffer& audio)
 {
     if (parameters.delayToggle->get())
     {
+        delay.setDryWet (parameters.delayDryWet->get());
+        
         delay.process (audio);
         meters.delayLevel->set (static_cast< float > (delay.getAverageGainReduction()));
     }
@@ -145,6 +172,12 @@ void Engine< SampleType >::processReverb (AudioBuffer& audio)
 {
     if (parameters.reverbToggle->get())
     {
+        reverb.setDryWet (parameters.reverbDryWet->get());
+        reverb.setDuckAmount (parameters.reverbDuck->get());
+        reverb.setLoCutFrequency (parameters.reverbLoCut->get());
+        reverb.setHiCutFrequency (parameters.reverbHiCut->get());
+        updateReverbDecay (parameters.reverbDecay->get());
+        
         SampleType level;
         reverb.process (audio, &level);
         meters.reverbLevel->set (static_cast< float > (level));
@@ -152,6 +185,36 @@ void Engine< SampleType >::processReverb (AudioBuffer& audio)
     else
     {
         meters.reverbLevel->set (-60.f);
+    }
+}
+
+template < typename SampleType >
+void Engine< SampleType >::processEQ (AudioBuffer& audio)
+{
+    using FT = dsp::FX::FilterType;
+    
+    if (parameters.eqToggle->get())
+    {
+        if (auto* lowPass = EQ.getBandOfType (FT::LowPass))
+        {
+            lowPass->setFilterFrequency (parameters.eqLowPassFreq->get());
+            lowPass->setQfactor (parameters.eqLowPassQ->get());
+        }
+        
+        if (auto* highPass = EQ.getBandOfType (FT::HighPass))
+        {
+            highPass->setFilterFrequency (parameters.eqHiPassFreq->get());
+            highPass->setQfactor (parameters.eqHiPassQ->get());
+        }
+        
+        if (auto* peak = EQ.getBandOfType (FT::Peak))
+        {
+            peak->setFilterFrequency (parameters.eqPeakFreq->get());
+            peak->setQfactor (parameters.eqPeakQ->get());
+            peak->setGain (parameters.eqPeakGain->get());
+        }
+        
+        EQ.process (audio);
     }
 }
 
@@ -170,7 +233,7 @@ void Engine< SampleType >::processLimiter (AudioBuffer& audio)
 }
 
 template < typename SampleType >
-void Engine< SampleType >::updateAllParameters()
+void Engine< SampleType >::updateHarmonizerParameters()
 {
     harmonizer.setMidiLatch (parameters.midiLatch->get());
 
@@ -192,29 +255,10 @@ void Engine< SampleType >::updateAllParameters()
     harmonizer.updateMidiVelocitySensitivity (parameters.velocitySens->get());
     harmonizer.updatePitchbendRange (parameters.pitchbendRange->get());
 
-    updateStereoWidth (parameters.stereoWidth->get());
     harmonizer.updateLowestPannedNote (parameters.lowestPanned->get());
     
     harmonizer.togglePitchGlide (parameters.pitchGlide->get());
     harmonizer.setPitchGlideTime ((double) parameters.glideTime->get());
-
-    inputGain.setGain (parameters.inputGain->get());
-    gate.setThreshold (parameters.noiseGateThresh->get());
-    deEsser.setThresh (parameters.deEsserThresh->get());
-    deEsser.setDeEssAmount (parameters.deEsserAmount->get());
-    dryPanner.setMidiPan (parameters.leadPan->get());
-    dryWetMixer.setWetMix (parameters.dryWet->get());
-    delay.setDryWet (parameters.delayDryWet->get());
-    outputGain.setGain (parameters.outputGain->get());
-
-    reverb.setDryWet (parameters.reverbDryWet->get());
-    reverb.setDuckAmount (parameters.reverbDuck->get());
-    reverb.setLoCutFrequency (parameters.reverbLoCut->get());
-    reverb.setHiCutFrequency (parameters.reverbHiCut->get());
-    updateReverbDecay (parameters.reverbDecay->get());
-
-    updateCompressorAmount (parameters.compAmount->get());
-    updateStereoReductionMode (parameters.inputMode->get());
 }
 
 template < typename SampleType >
@@ -279,8 +323,7 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     wetBuffer.setSize (1, blocksize, true, true, true);
     dryBuffer.setSize (1, blocksize, true, true, true);
     
-    initialLoCut.coefs.makeHighPass (samplerate, initialHiddenLoCutFreq);
-    initialLoCut.prepare();
+    initialLoCut.prepare (samplerate, blocksize);
 
     stereoReducer.prepare (blocksize);
     inputGain.prepare (samplerate, blocksize);
@@ -291,6 +334,7 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     dryPanner.prepare (samplerate, blocksize);
     delay.prepare (samplerate, blocksize);
     reverb.prepare (blocksize, samplerate, 2);
+    EQ.prepare (samplerate, blocksize);
     limiter.prepare (samplerate, blocksize);
     dryWetMixer.prepare (2, blocksize, samplerate);
 }

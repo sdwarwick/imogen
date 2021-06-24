@@ -37,7 +37,7 @@ private:
     void onPrepare (int blocksize, double samplerate) final;
     void onRelease() final;
 
-    void updateAllParameters();
+    void updateHarmonizerParameters();
     void updateStereoWidth (int width);
     void updateCompressorAmount (int amount);
     void updateReverbDecay (int decay);
@@ -48,6 +48,7 @@ private:
     void processCompressor (AudioBuffer& audio);
     void processDelay (AudioBuffer& audio);
     void processReverb (AudioBuffer& audio);
+    void processEQ (AudioBuffer& audio);
     void processLimiter (AudioBuffer& audio);
 
     void updateInternals();
@@ -57,7 +58,7 @@ private:
     Meters&     meters {state.meters};
     Internals&  internals {state.internals};
     
-    dsp::filters::Filter<SampleType> initialLoCut;
+    dsp::FX::Filter<SampleType> initialLoCut {dsp::FX::FilterType::HighPass, 65.f};
 
     Harmonizer< SampleType > harmonizer;
 
@@ -72,11 +73,10 @@ private:
     dsp::FX::Delay< SampleType >               delay;
     dsp::FX::Reverb                            reverb;
     dsp::FX::Limiter< SampleType >             limiter;
+    dsp::FX::EQ< SampleType >                  EQ;
 
     dsp::FX::MonoToStereoPanner< SampleType > dryPanner;
     dsp::FX::DryWetMixer< SampleType >        dryWetMixer;
-    
-    static constexpr auto initialHiddenLoCutFreq = (SampleType) 65;
 };
 
 }  // namespace Imogen

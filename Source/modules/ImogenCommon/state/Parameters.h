@@ -35,9 +35,9 @@ struct Parameters : ParameterList
 
     PercentParam dryWet {"Main dry/wet", "Main dry/wet", 100};
 
-    GainParam inputGain {"Input gain", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain};
+    dbParam inputGain {"Input gain", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain};
 
-    GainParam outputGain {"Output gain", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain};
+    dbParam outputGain {"Output gain", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain};
 
     ToggleParam mainBypass {"Main bypass", "Main bypass", false};
 
@@ -87,11 +87,11 @@ struct Parameters : ParameterList
 
     ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
 
-    GainParam noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f, generic};
+    dbParam noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f, generic};
 
     ToggleParam deEsserToggle {"D-S Toggle", "D-S toggle", true};
 
-    GainParam deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f, generic};
+    dbParam deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f, generic};
 
     PercentParam deEsserAmount {"D-S Amount", "D-S amount", 50};
 
@@ -111,13 +111,25 @@ struct Parameters : ParameterList
 
     PercentParam reverbDuck {"Reverb Duck", "Reverb duck", 30};
 
-    FloatParam reverbLoCut {"Reverb Lo cut", "Reverb lo cut",
-                            juce::NormalisableRange< float > (40.0f, 10000.0f, 1.0f),
-                            80.0f, generic, hz_stringFromFloat, hz_floatFromString, TRANS ("Hz")};
+    HzParam reverbLoCut {"Reverb Lo cut", "Reverb lo cut", 80.f};
 
-    FloatParam reverbHiCut {"Reverb Hi cut", "Reverb hi cut",
-                            juce::NormalisableRange< float > (40.0f, 10000.0f, 1.0f),
-                            5500.0f, generic, hz_stringFromFloat, hz_floatFromString, TRANS ("Hz")};
+    HzParam reverbHiCut {"Reverb Hi cut", "Reverb hi cut", 5500.f};
+    
+    ToggleParam eqToggle {"EQ Toggle", "EQ toggle", false};
+    
+    HzParam eqLowPassFreq {"EQ low pass freq", "EQ low pass freq", 10000.f};
+    
+    FloatParam eqLowPassQ {"EQ low pass Q", "EQ low pass Q", Qrange, 0.707f};
+    
+    HzParam eqHiPassFreq {"EQ low pass freq", "EQ low pass freq", 40.f};
+    
+    FloatParam eqHiPassQ {"EQ low pass Q", "EQ low pass Q", Qrange, 0.707f};
+    
+    HzParam eqPeakFreq {"EQ low pass freq", "EQ low pass freq", 2500.f};
+    
+    FloatParam eqPeakGain {"EQ peak gain", "EQ peak gain", juce::NormalisableRange<float>(0.f, 4.f, 0.01f), 1.f};
+    
+    FloatParam eqPeakQ {"EQ low pass Q", "EQ low pass Q", Qrange, 0.707f};
 
     ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
 
@@ -137,6 +149,8 @@ struct Parameters : ParameterList
 
 private:
     static constexpr auto generic = juce::AudioProcessorParameter::genericParameter;
+    
+    juce::NormalisableRange< float > Qrange {0.01f, 10.f, 0.01f};
 };
 
 
