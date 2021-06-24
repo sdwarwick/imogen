@@ -88,9 +88,8 @@ void Engine< SampleType >::processNoiseGate (AudioBuffer& audio)
 {
     if (parameters.noiseGateToggle->get())
     {
-        SampleType gainRedux;
-        gate.process (audio, &gainRedux);
-        meters.gateRedux->set (static_cast< float > (gainRedux));
+        gate.process (audio);
+        meters.gateRedux->set (static_cast< float > (gate.getAverageGainReduction()));
     }
     else
     {
@@ -103,9 +102,8 @@ void Engine< SampleType >::processDeEsser (AudioBuffer& audio)
 {
     if (parameters.deEsserToggle->get())
     {
-        SampleType gainRedux;
-        deEsser.process (audio, &gainRedux);
-        meters.deEssRedux->set (static_cast< float > (gainRedux));
+        deEsser.process (audio);
+        meters.deEssRedux->set (static_cast< float > (deEsser.getAverageGainReduction()));
     }
     else
     {
@@ -118,9 +116,8 @@ void Engine< SampleType >::processCompressor (AudioBuffer& audio)
 {
     if (parameters.compToggle->get())
     {
-        SampleType gainRedux;
-        compressor.process (audio, &gainRedux);
-        meters.compRedux->set (static_cast< float > (gainRedux));
+        compressor.process (audio);
+        meters.compRedux->set (static_cast< float > (compressor.getAverageGainReduction()));
     }
     else
     {
@@ -133,9 +130,8 @@ void Engine< SampleType >::processDelay (AudioBuffer& audio)
 {
     if (parameters.delayToggle->get())
     {
-        SampleType level;
-        delay.process (audio, &level);
-        meters.delayLevel->set (static_cast< float > (level));
+        delay.process (audio);
+        meters.delayLevel->set (static_cast< float > (delay.getAverageGainReduction()));
     }
     else
     {
@@ -164,9 +160,8 @@ void Engine< SampleType >::processLimiter (AudioBuffer& audio)
 {
     if (parameters.limiterToggle->get())
     {
-        SampleType gainRedux;
-        limiter.process (audio, &gainRedux);
-        meters.limRedux->set (static_cast< float > (gainRedux));
+        limiter.process (audio);
+        meters.limRedux->set (static_cast< float > (limiter.getAverageGainReduction()));
     }
     else
     {
@@ -288,15 +283,15 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     initialLoCut.prepare();
 
     stereoReducer.prepare (blocksize);
-    inputGain.prepare (blocksize);
-    outputGain.prepare (blocksize);
-    gate.prepare (1, blocksize, samplerate);
-    deEsser.prepare (blocksize, samplerate);
-    compressor.prepare (blocksize, samplerate, 1);
-    dryPanner.prepare (blocksize);
-    delay.prepare (blocksize, samplerate, 2);
+    inputGain.prepare (samplerate, blocksize);
+    outputGain.prepare (samplerate, blocksize);
+    gate.prepare (samplerate, blocksize);
+    deEsser.prepare (samplerate, blocksize);
+    compressor.prepare (samplerate, blocksize);
+    dryPanner.prepare (samplerate, blocksize);
+    delay.prepare (samplerate, blocksize);
     reverb.prepare (blocksize, samplerate, 2);
-    limiter.prepare (blocksize, samplerate, 2);
+    limiter.prepare (samplerate, blocksize);
     dryWetMixer.prepare (2, blocksize, samplerate);
 }
 
