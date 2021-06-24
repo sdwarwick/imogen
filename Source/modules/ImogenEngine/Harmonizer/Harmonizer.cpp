@@ -2,7 +2,7 @@
 namespace Imogen
 {
 template < typename SampleType >
-Harmonizer< SampleType >::Harmonizer()
+Harmonizer< SampleType >::Harmonizer(State& stateToUse): state(stateToUse)
 {
     Base::setConcertPitchHz (440);
 
@@ -46,25 +46,51 @@ void Harmonizer< SampleType >::release()
    // analyzer.releaseResources();
 }
 
-
 template < typename SampleType >
-void Harmonizer< SampleType >::render (const AudioBuffer& input, AudioBuffer& output, juce::MidiBuffer& midiMessages)
+void Harmonizer< SampleType >::process (AudioBuffer& /*input*/, AudioBuffer& output, MidiBuffer& midi, bool bypassed)
 {
-    jassert (input.getNumSamples() == output.getNumSamples());
-    jassert (output.getNumChannels() == 2);
-
-//    if (Base::getNumActiveVoices() == 0)
-//        analyzer.reset();
-//    else
-//        analyzer.clearUnusedGrains();
-//
-//    analyzer.analyzeInput (input.getReadPointer (0), input.getNumSamples());
-
-    Base::renderVoices (midiMessages, output);
+    if (bypassed)
+    {
+        output.clear();
+        this->bypassedBlock (output.getNumSamples(), midi);
+    }
+    else
+    {
+        this->setMidiLatch (parameters.midiLatch->get());
+        
+        this->updateADSRsettings (parameters.adsrAttack->get(),
+                                       parameters.adsrDecay->get(),
+                                       parameters.adsrSustain->get(),
+                                       parameters.adsrRelease->get());
+        
+        this->setPedalPitch (parameters.pedalToggle->get(),
+                                  parameters.pedalThresh->get(),
+                                  parameters.pedalInterval->get());
+        
+        this->setDescant (parameters.descantToggle->get(),
+                               parameters.descantThresh->get(),
+                               parameters.descantInterval->get());
+        
+        this->setNoteStealingEnabled (parameters.voiceStealing->get());
+        this->setAftertouchGainOnOff (parameters.aftertouchToggle->get());
+        
+        this->updateMidiVelocitySensitivity (parameters.velocitySens->get());
+        
+        this->updatePitchbendRange (parameters.pitchbendRange->get());
+        
+        this->updateLowestPannedNote (parameters.lowestPanned->get());
+        
+        this->togglePitchGlide (parameters.pitchGlide->get());
+        this->setPitchGlideTime ((double) parameters.glideTime->get());
+        
+        this->renderVoices (midi, output);
+    }
     
-    //TODO: update intonation info...
-  //  intonationInfo.pitch = juce::roundToInt (math::freqToMidi (analyzer.getLastFrequency()));
-    //intonationInfo.centsSharp = ...
+    auto ccInfo = this->getLastMovedControllerInfo();
+    internals.lastMovedMidiController->set (ccInfo.controllerNumber);
+    internals.lastMovedCCValue->set (ccInfo.controllerValue);
+    internals.mtsEspIsConnected->set (this->isConnectedToMtsEsp());
+    internals.mtsEspScaleName->set (this->getScaleName());
 }
 
 

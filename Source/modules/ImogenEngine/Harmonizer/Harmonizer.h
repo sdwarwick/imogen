@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "HarmonizerVoice/HarmonizerVoice.h"
+
 
 namespace Imogen
 {
@@ -20,9 +22,11 @@ class Harmonizer : public dsp::SynthBase< SampleType >
     using Base        = dsp::SynthBase< SampleType >;
 
 public:
-    Harmonizer();
-
-    void render (const AudioBuffer& input, AudioBuffer& output, juce::MidiBuffer& midiMessages);
+    Harmonizer (State& stateToUse);
+    
+    void process (AudioBuffer& input, AudioBuffer& output,
+                  MidiBuffer& midi,
+                  bool bypassed);
 
     void release() override;
 
@@ -53,6 +57,11 @@ private:
     {
         return new Voice (*this);
     }
+    
+    State&      state;
+    Parameters& parameters {state.parameters};
+    Meters&     meters {state.meters};
+    Internals&  internals {state.internals};
 
     dsp::PsolaAnalyzer< SampleType > analyzer;
     
