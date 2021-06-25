@@ -43,8 +43,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     outputGain.process (wetBuffer);
     limiter.process (wetBuffer);
 
-    for (int chan = 0; chan < 2; ++chan)
-        output.copyFrom (chan, 0, wetBuffer, chan, 0, blockSize);
+    dsp::buffers::copy (wetBuffer, output);
 }
 
 template < typename SampleType >
