@@ -67,8 +67,8 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
         dsp::LatencyEngine< SampleType >::changeLatency (latency);
 
     monoBuffer.setSize (1, blocksize, true, true, true);
-    wetBuffer.setSize (1, blocksize, true, true, true);
-    dryBuffer.setSize (1, blocksize, true, true, true);
+    wetBuffer.setSize (2, blocksize, true, true, true);
+    dryBuffer.setSize (2, blocksize, true, true, true);
 
     stereoReducer.prepare (samplerate, blocksize);
     initialLoCut.prepare (samplerate, blocksize);
