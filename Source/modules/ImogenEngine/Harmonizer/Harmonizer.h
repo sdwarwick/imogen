@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <bv_synth/bv_synth.h>
+#include <bv_psola/bv_psola.h>
+
 #include "HarmonizerVoice/HarmonizerVoice.h"
 
 

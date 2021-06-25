@@ -36,10 +36,8 @@ public:
 private:
     State&      state;
     Parameters& parameters {state.parameters};
-    Meters&     meters {state.meters};
 
-    AudioBuffer processedMonoBuffer;
-    AudioBuffer pannedLeadBuffer;
+    AudioBuffer processedMonoBuffer, pannedLeadBuffer;
 
     StereoReducer< SampleType >   stereoReducer {parameters};
     dsp::FX::Filter< SampleType > initialLoCut {dsp::FX::FilterType::HighPass, 65.f};

@@ -1,11 +1,8 @@
 #pragma once
 
-#include <bv_synth/bv_synth.h>
-#include <bv_psola/bv_psola.h>
 #include <ImogenCommon/ImogenCommon.h>
 
 #include <ImogenEngine/Harmonizer/Harmonizer.h>
-
 #include "Effects.h"
 
 
@@ -30,8 +27,6 @@ private:
 
     State&      state;
     Parameters& parameters {state.parameters};
-    Meters&     meters {state.meters};
-    Internals&  internals {state.internals};
 
     AudioBuffer wetBuffer;
 
