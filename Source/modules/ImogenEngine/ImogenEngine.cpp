@@ -1,6 +1,7 @@
 
 #include "ImogenEngine.h"
 
+
 #include "effects/StereoReducer.cpp"
 #include "effects/InputGain.cpp"
 #include "effects/NoiseGate.cpp"
@@ -19,4 +20,5 @@
 #include "effects/OutputGain.cpp"
 #include "effects/Limiter.cpp"
 
+#include "engine/Effects.cpp"
 #include "engine/Engine.cpp"

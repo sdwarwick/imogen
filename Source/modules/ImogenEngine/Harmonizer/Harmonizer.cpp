@@ -47,7 +47,7 @@ void Harmonizer< SampleType >::release()
 }
 
 template < typename SampleType >
-void Harmonizer< SampleType >::process (AudioBuffer& /*input*/, AudioBuffer& output, MidiBuffer& midi, bool bypassed)
+void Harmonizer< SampleType >::process (const AudioBuffer& /*input*/, AudioBuffer& output, MidiBuffer& midi, bool bypassed)
 {
     if (bypassed)
     {

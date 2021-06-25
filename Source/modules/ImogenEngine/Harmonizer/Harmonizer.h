@@ -24,7 +24,7 @@ class Harmonizer : public dsp::SynthBase< SampleType >
 public:
     Harmonizer (State& stateToUse);
     
-    void process (AudioBuffer& input, AudioBuffer& output,
+    void process (const AudioBuffer& input, AudioBuffer& output,
                   MidiBuffer& midi,
                   bool bypassed);
 

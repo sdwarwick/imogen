@@ -23,34 +23,19 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
         return;
     }
 
-    stereoReducer.process (input, monoBuffer);
-    initialLoCut.process (monoBuffer);
-    inputGain.process (monoBuffer);
-    gate.process (monoBuffer);
+    effects.processPreHarmony (input, leadIsBypassed);
 
-    dryPanner.process (monoBuffer, dryBuffer, leadIsBypassed);
+    harmonizer.process (effects.getProcessedInputSignal(),
+                        wetBuffer, midiMessages, harmoniesAreBypassed);
 
-    harmonizer.process (monoBuffer, wetBuffer, midiMessages, harmoniesAreBypassed);
-
-    EQ.process (dryBuffer, wetBuffer);
-    compressor.process (dryBuffer, wetBuffer);
-    deEsser.process (dryBuffer, wetBuffer);
-
-    dryWetMixer.process (dryBuffer, wetBuffer);
-
-    delay.process (wetBuffer);
-    reverb.process (wetBuffer);
-    outputGain.process (wetBuffer);
-    limiter.process (wetBuffer);
-
-    dsp::buffers::copy (wetBuffer, output);
+    effects.processPostHarmony (wetBuffer, output);
 }
 
 template < typename SampleType >
 void Engine< SampleType >::updateStereoWidth (int width)
 {
     harmonizer.updateStereoWidth (width);
-    reverb.setWidth (static_cast< float > (width) * 0.01f);
+    effects.updateStereoWidth (width);
 }
 
 template < typename SampleType >
@@ -63,37 +48,21 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     harmonizer.prepare (blocksize);
 
     if (const auto latency = harmonizer.getLatencySamples() > 0)
+    {
         dsp::LatencyEngine< SampleType >::changeLatency (latency);
+        return;
+    }
 
-    monoBuffer.setSize (1, blocksize, true, true, true);
     wetBuffer.setSize (2, blocksize, true, true, true);
-    dryBuffer.setSize (2, blocksize, true, true, true);
 
-    stereoReducer.prepare (samplerate, blocksize);
-    initialLoCut.prepare (samplerate, blocksize);
-    inputGain.prepare (samplerate, blocksize);
-    gate.prepare (samplerate, blocksize);
-    dryPanner.prepare (samplerate, blocksize);
-
-    EQ.prepare (samplerate, blocksize);
-    compressor.prepare (samplerate, blocksize);
-    deEsser.prepare (samplerate, blocksize);
-
-    dryWetMixer.prepare (samplerate, blocksize);
-    delay.prepare (samplerate, blocksize);
-    reverb.prepare (samplerate, blocksize);
-    outputGain.prepare (samplerate, blocksize);
-    limiter.prepare (samplerate, blocksize);
+    effects.prepare (samplerate, blocksize);
 }
 
 template < typename SampleType >
 void Engine< SampleType >::onRelease()
 {
     harmonizer.releaseResources();
-
-    monoBuffer.setSize (0, 0);
     wetBuffer.setSize (0, 0);
-    dryBuffer.setSize (0, 0);
 }
 
 
