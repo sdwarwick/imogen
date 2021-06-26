@@ -20,5 +20,6 @@
 #include "effects/OutputGain.cpp"
 #include "effects/Limiter.cpp"
 
-#include "engine/Effects.cpp"
+#include "effects/EffectsManager.cpp"
+
 #include "engine/Engine.cpp"

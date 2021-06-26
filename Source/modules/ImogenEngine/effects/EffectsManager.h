@@ -1,17 +1,17 @@
 #pragma once
 
-#include <ImogenEngine/effects/StereoReducer.h>
-#include <ImogenEngine/effects/InputGain.h>
-#include <ImogenEngine/effects/NoiseGate.h>
-#include <ImogenEngine/effects/DryPanner.h>
-#include <ImogenEngine/effects/EQ.h>
-#include <ImogenEngine/effects/Compressor.h>
-#include <ImogenEngine/effects/DeEsser.h>
-#include <ImogenEngine/effects/DryWetMixer.h>
-#include <ImogenEngine/effects/Delay.h>
-#include <ImogenEngine/effects/Reverb.h>
-#include <ImogenEngine/effects/OutputGain.h>
-#include <ImogenEngine/effects/Limiter.h>
+#include "StereoReducer.h"
+#include "InputGain.h"
+#include "NoiseGate.h"
+#include "DryPanner.h"
+#include "EQ.h"
+#include "Compressor.h"
+#include "DeEsser.h"
+#include "DryWetMixer.h"
+#include "Delay.h"
+#include "Reverb.h"
+#include "OutputGain.h"
+#include "Limiter.h"
 
 namespace Imogen
 {

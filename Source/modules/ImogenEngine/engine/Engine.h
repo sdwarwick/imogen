@@ -3,7 +3,7 @@
 #include <ImogenCommon/ImogenCommon.h>
 
 #include <ImogenEngine/Harmonizer/Harmonizer.h>
-#include "Effects.h"
+#include <ImogenEngine/effects/EffectsManager.h>
 
 
 namespace Imogen
