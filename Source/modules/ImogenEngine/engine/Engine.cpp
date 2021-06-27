@@ -44,8 +44,7 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     if (! harmonizer.isInitialized())
         harmonizer.initialize (16, samplerate, blocksize);
 
-    harmonizer.setCurrentPlaybackSampleRate (samplerate);
-    harmonizer.prepare (blocksize);
+    harmonizer.prepare (samplerate, blocksize);
 
     if (const auto latency = harmonizer.getLatencySamples() > 0)
     {

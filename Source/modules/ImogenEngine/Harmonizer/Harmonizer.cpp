@@ -2,52 +2,24 @@
 namespace Imogen
 {
 template < typename SampleType >
-Harmonizer< SampleType >::Harmonizer(State& stateToUse): state(stateToUse)
+Harmonizer< SampleType >::Harmonizer (State& stateToUse)
+    : state (stateToUse)
 {
     Base::setConcertPitchHz (440);
 
-    Base::updateQuickReleaseMs (adsrQuickReleaseMs);
-
-    Base::setPlayingButReleasedMultiplier (playingButReleasedGainMultiplier);
-    Base::setSoftPedalMultiplier (softPedalGainMultiplier);
+    Base::updateQuickReleaseMs (5);
+    Base::setPlayingButReleasedMultiplier (0.4f);
+    Base::setSoftPedalMultiplier (0.65f);
 }
 
-
 template < typename SampleType >
-void Harmonizer< SampleType >::initialized (const double, const int)
+void Harmonizer< SampleType >::prepared (double samplerate, int blocksize)
 {
-    //analyzer.initialize();
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::prepared (int)
-{
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::resetTriggered()
-{
-   // analyzer.reset();
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::samplerateChanged (double /*newSamplerate*/)
-{
-   // analyzer.setSamplerate (newSamplerate);
-}
-
-
-template < typename SampleType >
-void Harmonizer< SampleType >::release()
-{
-   // analyzer.releaseResources();
+    analyzer.prepare (samplerate, blocksize);
 }
 
 template < typename SampleType >
-void Harmonizer< SampleType >::process (const AudioBuffer& /*input*/, AudioBuffer& output, MidiBuffer& midi, bool bypassed)
+void Harmonizer< SampleType >::process (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midi, bool bypassed)
 {
     if (bypassed)
     {
@@ -56,36 +28,49 @@ void Harmonizer< SampleType >::process (const AudioBuffer& /*input*/, AudioBuffe
     }
     else
     {
-        this->setMidiLatch (parameters.midiLatch->get());
-        
-        this->updateADSRsettings (parameters.adsrAttack->get(),
-                                       parameters.adsrDecay->get(),
-                                       parameters.adsrSustain->get(),
-                                       parameters.adsrRelease->get());
-        
-        this->setPedalPitch (parameters.pedalToggle->get(),
-                                  parameters.pedalThresh->get(),
-                                  parameters.pedalInterval->get());
-        
-        this->setDescant (parameters.descantToggle->get(),
-                               parameters.descantThresh->get(),
-                               parameters.descantInterval->get());
-        
-        this->setNoteStealingEnabled (parameters.voiceStealing->get());
-        this->setAftertouchGainOnOff (parameters.aftertouchToggle->get());
-        
-        this->updateMidiVelocitySensitivity (parameters.velocitySens->get());
-        
-        this->updatePitchbendRange (parameters.pitchbendRange->get());
-        
-        this->updateLowestPannedNote (parameters.lowestPanned->get());
-        
-        this->togglePitchGlide (parameters.pitchGlide->get());
-        this->setPitchGlideTime ((double) parameters.glideTime->get());
-        
+        updateParameters();
+
+        analyzer.analyzeInput (input);
         this->renderVoices (midi, output);
     }
-    
+
+    updateInternals();
+}
+
+template < typename SampleType >
+void Harmonizer< SampleType >::updateParameters()
+{
+    this->setMidiLatch (parameters.midiLatch->get());
+
+    this->updateADSRsettings (parameters.adsrAttack->get(),
+                              parameters.adsrDecay->get(),
+                              parameters.adsrSustain->get(),
+                              parameters.adsrRelease->get());
+
+    this->setPedalPitch (parameters.pedalToggle->get(),
+                         parameters.pedalThresh->get(),
+                         parameters.pedalInterval->get());
+
+    this->setDescant (parameters.descantToggle->get(),
+                      parameters.descantThresh->get(),
+                      parameters.descantInterval->get());
+
+    this->setNoteStealingEnabled (parameters.voiceStealing->get());
+    this->setAftertouchGainOnOff (parameters.aftertouchToggle->get());
+
+    this->updateMidiVelocitySensitivity (parameters.velocitySens->get());
+
+    this->updatePitchbendRange (parameters.pitchbendRange->get());
+
+    this->updateLowestPannedNote (parameters.lowestPanned->get());
+
+    this->togglePitchGlide (parameters.pitchGlide->get());
+    this->setPitchGlideTime ((double) parameters.glideTime->get());
+}
+
+template < typename SampleType >
+void Harmonizer< SampleType >::updateInternals()
+{
     auto ccInfo = this->getLastMovedControllerInfo();
     internals.lastMovedMidiController->set (ccInfo.controllerNumber);
     internals.lastMovedCCValue->set (ccInfo.controllerValue);
@@ -93,9 +78,15 @@ void Harmonizer< SampleType >::process (const AudioBuffer& /*input*/, AudioBuffe
     internals.mtsEspScaleName->set (this->getScaleName());
 }
 
+template < typename SampleType >
+HarmonizerVoice< SampleType >* Harmonizer< SampleType >::createVoice()
+{
+    return new Voice (*this, analyzer);
+}
+
 
 template class Harmonizer< float >;
 template class Harmonizer< double >;
 
 
-}  // namespace bav
+}  // namespace Imogen

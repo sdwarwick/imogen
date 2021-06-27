@@ -52,13 +52,13 @@ struct Internals : ParameterList
                                 TRANS ("cents")};
 
 private:
-    ParamUpdater linkPeersUpdater {abletonLinkEnabled, [this]()
+    ParamUpdater linkPeersUpdater {abletonLinkEnabled, [&]
                                    {
                                        if (! abletonLinkEnabled->get())
                                            abletonLinkSessionPeers->set (0);
                                    }};
 
-    ParamUpdater scaleNameUpdater {mtsEspIsConnected, [this]()
+    ParamUpdater scaleNameUpdater {mtsEspIsConnected, [&]
                                    {
                                        if (mtsEspIsConnected->get())
                                        {

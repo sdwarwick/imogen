@@ -8,7 +8,7 @@
 #include "effects/DryPanner.cpp"
 
 #include "Harmonizer/Harmonizer.cpp"
-#include "Harmonizer/HarmonizerVoice/HarmonizerVoice.cpp"
+#include "Harmonizer/HarmonizerVoice.cpp"
 
 #include "effects/EQ.cpp"
 #include "effects/Compressor.cpp"
