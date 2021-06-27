@@ -84,6 +84,12 @@ HarmonizerVoice< SampleType >* Harmonizer< SampleType >::createVoice()
     return new Voice (*this, analyzer);
 }
 
+template < typename SampleType >
+int Harmonizer< SampleType >::getLatencySamples() const
+{
+    return analyzer.getLatencySamples();
+}
+
 
 template class Harmonizer< float >;
 template class Harmonizer< double >;

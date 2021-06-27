@@ -24,10 +24,7 @@ public:
                   MidiBuffer& midi,
                   bool        bypassed);
 
-    int getLatencySamples() const noexcept
-    { /*return analyzer.getLatency();*/
-        return 0;
-    }
+    int getLatencySamples() const;
 
 private:
     void prepared (double samplerate, int blocksize) final;
