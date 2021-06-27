@@ -13,7 +13,7 @@ void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float des
     jassert (desiredFrequency > 0 && currentSamplerate > 0);
 
     shifter.setPitch (desiredFrequency, currentSamplerate);
-    shifter.getSamples (output.getWritePointer (0), output.getNumSamples());
+    shifter.getSamples (output);
 }
 
 template class HarmonizerVoice< float >;
