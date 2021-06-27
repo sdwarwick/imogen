@@ -51,7 +51,7 @@ juce::AudioProcessorEditor* Processor::createEditor()
 #if IMOGEN_HEADLESS
     return nullptr;
 #else
-    return new gui::PluginEditor<GUI> (*this, state);
+    return new gui::PluginEditor<GUI> (*this, {450, 300}, state);
 #endif
 }
 
