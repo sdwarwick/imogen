@@ -38,7 +38,7 @@ private:
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
 
-    dsp::PsolaAnalyzer< SampleType > analyzer;
+    dsp::psola::Analyzer< SampleType > analyzer;
 };
 
 

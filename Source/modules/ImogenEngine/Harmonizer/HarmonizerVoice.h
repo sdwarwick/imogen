@@ -16,12 +16,12 @@ class HarmonizerVoice : public dsp::SynthVoiceBase< SampleType >
     using AudioBuffer = juce::AudioBuffer< SampleType >;
 
 public:
-    HarmonizerVoice (Harmonizer< SampleType >& h, dsp::PsolaAnalyzer< SampleType >& analyzerToUse);
+    HarmonizerVoice (Harmonizer< SampleType >& h, dsp::psola::Analyzer< SampleType >& analyzerToUse);
 
 private:
     void renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate) final;
 
-    dsp::PsolaShifter< SampleType > shifter;
+    dsp::psola::Shifter< SampleType > shifter;
 };
 
 
