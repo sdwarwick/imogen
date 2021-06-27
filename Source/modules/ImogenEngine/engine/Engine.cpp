@@ -57,13 +57,6 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
     effects.prepare (samplerate, blocksize);
 }
 
-template < typename SampleType >
-void Engine< SampleType >::onRelease()
-{
-    harmonizer.releaseResources();
-    wetBuffer.setSize (0, 0);
-}
-
 
 template class Engine< float >;
 template class Engine< double >;

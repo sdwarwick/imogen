@@ -21,7 +21,6 @@ private:
     void renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool isBypassed) final;
 
     void onPrepare (int blocksize, double samplerate) final;
-    void onRelease() final;
 
     void updateStereoWidth (int width);
 
