@@ -12,14 +12,12 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     output.clear();
     updateStereoWidth (parameters.stereoWidth->get());
 
-    const auto blockSize = input.getNumSamples();
-
     const bool leadIsBypassed       = parameters.leadBypass->get();
     const bool harmoniesAreBypassed = parameters.harmonyBypass->get();
 
     if (leadIsBypassed && harmoniesAreBypassed)
     {
-        harmonizer.bypassedBlock (blockSize, midiMessages);
+        harmonizer.bypassedBlock (input.getNumSamples(), midiMessages);
         return;
     }
 
