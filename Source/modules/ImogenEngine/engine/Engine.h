@@ -2,7 +2,7 @@
 
 #include <ImogenCommon/ImogenCommon.h>
 
-#include <ImogenEngine/Harmonizer/Harmonizer.h>
+#include <ImogenEngine/Lead/LeadProcessor.h>
 #include <ImogenEngine/effects/EffectsManager.h>
 
 
@@ -28,6 +28,8 @@ private:
     Parameters& parameters {state.parameters};
 
     Harmonizer< SampleType > harmonizer {state};
+    
+    LeadProcessor< SampleType > leadProcessor {harmonizer, state};
 
     EffectsManager< SampleType > effects {state};
 };

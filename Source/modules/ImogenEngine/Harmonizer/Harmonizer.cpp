@@ -5,29 +5,26 @@ template < typename SampleType >
 Harmonizer< SampleType >::Harmonizer (State& stateToUse)
     : state (stateToUse)
 {
-    Base::setConcertPitchHz (440);
+    this->setConcertPitchHz (440);
 
-    Base::updateQuickReleaseMs (5);
-    Base::setPlayingButReleasedMultiplier (0.4f);
-    Base::setSoftPedalMultiplier (0.65f);
+    this->updateQuickReleaseMs (5);
+    this->setPlayingButReleasedMultiplier (0.4f);
+    this->setSoftPedalMultiplier (0.65f);
 }
 
 template < typename SampleType >
 void Harmonizer< SampleType >::prepared (double samplerate, int blocksize)
 {
     analyzer.prepare (samplerate, blocksize);
-    leadProcessor.prepare (samplerate, blocksize);
 
     wetBuffer.setSize (2, blocksize, true, true, true);
 }
 
 template < typename SampleType >
 void Harmonizer< SampleType >::process (const AudioBuffer& input, MidiBuffer& midi,
-                                        bool harmoniesBypassed, bool leadBypassed)
+                                        bool harmoniesBypassed)
 {
     analyzer.analyzeInput (input);
-
-    leadProcessor.process (leadBypassed);
 
     if (harmoniesBypassed)
     {
@@ -103,9 +100,9 @@ juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getHarmonySignal()
 }
 
 template < typename SampleType >
-juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getLeadSignal()
+dsp::psola::Analyzer< SampleType >& Harmonizer< SampleType >::getAnalyzer()
 {
-    return leadProcessor.getProcessedSignal();
+    return analyzer;
 }
 
 

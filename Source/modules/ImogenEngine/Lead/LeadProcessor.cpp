@@ -2,8 +2,8 @@
 namespace Imogen
 {
 template < typename SampleType >
-LeadProcessor< SampleType >::LeadProcessor (Synth& harm, State& stateToUse, Analyzer& analyzerToUse)
-    : state (stateToUse), pitchCorrector (harm, state.internals, analyzerToUse)
+LeadProcessor< SampleType >::LeadProcessor (Harmonizer& harm, State& stateToUse)
+    : pitchCorrector (harm, stateToUse.internals, harm.getAnalyzer()), dryPanner(stateToUse.parameters)
 {
 }
 

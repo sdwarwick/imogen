@@ -8,9 +8,10 @@
 
 #include "Harmonizer/Harmonizer.cpp"
 #include "Harmonizer/HarmonizerVoice.cpp"
-#include "Harmonizer/Lead/LeadProcessor.cpp"
-#include "Harmonizer/Lead/DryPanner.cpp"
-#include "Harmonizer/Lead/PitchCorrector.cpp"
+
+#include "Lead/LeadProcessor.cpp"
+#include "Lead/DryPanner.cpp"
+#include "Lead/PitchCorrector.cpp"
 
 #include "effects/PostHarmony/EQ.cpp"
 #include "effects/PostHarmony/Compressor.cpp"

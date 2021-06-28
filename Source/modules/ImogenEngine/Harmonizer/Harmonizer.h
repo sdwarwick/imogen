@@ -5,7 +5,6 @@
 #include <bv_psola/bv_psola.h>
 
 #include "HarmonizerVoice.h"
-#include "Lead/LeadProcessor.h"
 
 
 namespace Imogen
@@ -16,20 +15,20 @@ class Harmonizer : public dsp::SynthBase< SampleType >
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using MidiBuffer  = juce::MidiBuffer;
     using Voice       = HarmonizerVoice< SampleType >;
-    using Base        = dsp::SynthBase< SampleType >;
+    using Analyzer    = dsp::psola::Analyzer< SampleType >;
 
 public:
     Harmonizer (State& stateToUse);
 
     void process (const AudioBuffer& input,
                   MidiBuffer&        midi,
-                  bool               harmoniesBypassed,
-                  bool               leadBypassed);
+                  bool               harmoniesBypassed);
 
     int getLatencySamples() const;
 
     AudioBuffer& getHarmonySignal();
-    AudioBuffer& getLeadSignal();
+    
+    Analyzer& getAnalyzer();
 
 private:
     void prepared (double samplerate, int blocksize) final;
@@ -45,9 +44,7 @@ private:
 
     AudioBuffer wetBuffer;
 
-    dsp::psola::Analyzer< SampleType > analyzer;
-
-    LeadProcessor< SampleType > leadProcessor {*this, state, analyzer};
+    Analyzer analyzer;
 };
 
 

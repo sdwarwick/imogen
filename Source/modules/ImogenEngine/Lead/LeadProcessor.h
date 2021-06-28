@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <ImogenEngine/Harmonizer/Harmonizer.h>
+
 #include "DryPanner.h"
 #include "PitchCorrector.h"
 
@@ -13,8 +15,9 @@ public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using Analyzer    = dsp::psola::Analyzer< SampleType >;
     using Synth       = dsp::SynthBase< SampleType >;
+    using Harmonizer  = Harmonizer< SampleType >;
 
-    LeadProcessor (Synth& harm, State& stateToUse, Analyzer& analyzerToUse);
+    LeadProcessor (Harmonizer& harm, State& stateToUse);
 
     void prepare (double samplerate, int blocksize);
 
@@ -23,11 +26,8 @@ public:
     AudioBuffer& getProcessedSignal();
 
 private:
-    State&      state;
-    Parameters& parameters {state.parameters};
-
     PitchCorrection< SampleType > pitchCorrector;
-    DryPanner< SampleType >       dryPanner {parameters};
+    DryPanner< SampleType >       dryPanner;
 
     AudioBuffer pannedLeadBuffer;
 };
