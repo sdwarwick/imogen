@@ -23,12 +23,11 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
         return;
     }
 
-    effects.processPreHarmony (input, leadIsBypassed);
+    effects.processPreHarmony (input);
 
-    harmonizer.process (effects.getProcessedInputSignal(),
-                        wetBuffer, midiMessages, harmoniesAreBypassed);
+    harmonizer.process (effects.getProcessedInputSignal(), midiMessages, harmoniesAreBypassed, leadIsBypassed);
 
-    effects.processPostHarmony (wetBuffer, output);
+    effects.processPostHarmony (harmonizer.getHarmonySignal(), harmonizer.getLeadSignal(), output);
 }
 
 template < typename SampleType >
@@ -51,8 +50,6 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
         dsp::LatencyEngine< SampleType >::changeLatency (latency);
         return;
     }
-
-    wetBuffer.setSize (2, blocksize, true, true, true);
 
     effects.prepare (samplerate, blocksize);
 }

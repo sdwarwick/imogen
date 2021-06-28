@@ -25,9 +25,9 @@ public:
 
     void prepare (double samplerate, int blocksize);
 
-    void processPreHarmony (const AudioBuffer& input, bool leadIsBypassed);
+    void processPreHarmony (const AudioBuffer& input);
 
-    void processPostHarmony (AudioBuffer& harmonySignal, AudioBuffer& output);
+    void processPostHarmony (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output);
 
     const AudioBuffer& getProcessedInputSignal() const;
 
@@ -37,13 +37,12 @@ private:
     State&      state;
     Parameters& parameters {state.parameters};
 
-    AudioBuffer processedMonoBuffer, pannedLeadBuffer;
+    AudioBuffer processedMonoBuffer;
 
     StereoReducer< SampleType >   stereoReducer {parameters};
     dsp::FX::Filter< SampleType > initialLoCut {dsp::FX::FilterType::HighPass, 65.f};
     InputGain< SampleType >       inputGain {state};
     NoiseGate< SampleType >       gate {state};
-    DryPanner< SampleType >       dryPanner {parameters};
 
     EQ< SampleType >         EQ {parameters};
     Compressor< SampleType > compressor {state};

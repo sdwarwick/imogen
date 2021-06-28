@@ -16,12 +16,12 @@ struct EQ
 
 private:
     using FT = dsp::FX::FilterType;
-    
+
     void updateLowShelf (float freq, float Q, float gain);
     void updateHighShelf (float freq, float Q, float gain);
     void updatePeak (float freq, float Q, float gain);
     void updateHighPass (float freq, float Q);
-    
+
     Parameters& parameters;
 
     dsp::FX::EQ< SampleType > dryEQ, wetEQ;

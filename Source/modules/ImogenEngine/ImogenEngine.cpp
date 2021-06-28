@@ -9,6 +9,8 @@
 
 #include "Harmonizer/Harmonizer.cpp"
 #include "Harmonizer/HarmonizerVoice.cpp"
+#include "Harmonizer/Lead/LeadProcessor.cpp"
+#include "Harmonizer/Lead/PitchCorrector.cpp"
 
 #include "effects/EQ.cpp"
 #include "effects/Compressor.cpp"

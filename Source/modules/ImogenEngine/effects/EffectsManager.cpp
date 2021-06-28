@@ -10,13 +10,11 @@ template < typename SampleType >
 void EffectsManager< SampleType >::prepare (double samplerate, int blocksize)
 {
     processedMonoBuffer.setSize (1, blocksize, true, true, true);
-    pannedLeadBuffer.setSize (2, blocksize, true, true, true);
 
     stereoReducer.prepare (samplerate, blocksize);
     initialLoCut.prepare (samplerate, blocksize);
     inputGain.prepare (samplerate, blocksize);
     gate.prepare (samplerate, blocksize);
-    dryPanner.prepare (samplerate, blocksize);
 
     EQ.prepare (samplerate, blocksize);
     compressor.prepare (samplerate, blocksize);
@@ -30,24 +28,22 @@ void EffectsManager< SampleType >::prepare (double samplerate, int blocksize)
 }
 
 template < typename SampleType >
-void EffectsManager< SampleType >::processPreHarmony (const AudioBuffer& input, bool leadIsBypassed)
+void EffectsManager< SampleType >::processPreHarmony (const AudioBuffer& input)
 {
     stereoReducer.process (input, processedMonoBuffer);
     initialLoCut.process (processedMonoBuffer);
     inputGain.process (processedMonoBuffer);
     gate.process (processedMonoBuffer);
-
-    dryPanner.process (processedMonoBuffer, pannedLeadBuffer, leadIsBypassed);
 }
 
 template < typename SampleType >
-void EffectsManager< SampleType >::processPostHarmony (AudioBuffer& harmonySignal, AudioBuffer& output)
+void EffectsManager< SampleType >::processPostHarmony (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output)
 {
-    EQ.process (pannedLeadBuffer, harmonySignal);
-    compressor.process (pannedLeadBuffer, harmonySignal);
-    deEsser.process (pannedLeadBuffer, harmonySignal);
+    EQ.process (drySignal, harmonySignal);
+    compressor.process (drySignal, harmonySignal);
+    deEsser.process (drySignal, harmonySignal);
 
-    dryWetMixer.process (pannedLeadBuffer, harmonySignal);
+    dryWetMixer.process (drySignal, harmonySignal);
 
     delay.process (harmonySignal);
     reverb.process (harmonySignal);

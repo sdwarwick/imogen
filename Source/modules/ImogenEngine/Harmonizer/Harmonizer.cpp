@@ -16,22 +16,28 @@ template < typename SampleType >
 void Harmonizer< SampleType >::prepared (double samplerate, int blocksize)
 {
     analyzer.prepare (samplerate, blocksize);
+    leadProcessor.prepare (samplerate, blocksize);
+
+    wetBuffer.setSize (2, blocksize, true, true, true);
 }
 
 template < typename SampleType >
-void Harmonizer< SampleType >::process (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midi, bool bypassed)
+void Harmonizer< SampleType >::process (const AudioBuffer& input, MidiBuffer& midi,
+                                        bool harmoniesBypassed, bool leadBypassed)
 {
-    if (bypassed)
+    analyzer.analyzeInput (input);
+
+    leadProcessor.process (leadBypassed);
+
+    if (harmoniesBypassed)
     {
-        output.clear();
-        this->bypassedBlock (output.getNumSamples(), midi);
+        wetBuffer.clear();
+        this->bypassedBlock (input.getNumSamples(), midi);
     }
     else
     {
         updateParameters();
-
-        analyzer.analyzeInput (input);
-        this->renderVoices (midi, output);
+        this->renderVoices (midi, wetBuffer);
     }
 
     updateInternals();
@@ -88,6 +94,18 @@ template < typename SampleType >
 int Harmonizer< SampleType >::getLatencySamples() const
 {
     return analyzer.getLatencySamples();
+}
+
+template < typename SampleType >
+juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getHarmonySignal()
+{
+    return wetBuffer;
+}
+
+template < typename SampleType >
+juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getLeadSignal()
+{
+    return leadProcessor.getProcessedSignal();
 }
 
 

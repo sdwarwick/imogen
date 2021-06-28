@@ -27,8 +27,6 @@ private:
     State&      state;
     Parameters& parameters {state.parameters};
 
-    AudioBuffer wetBuffer;
-
     Harmonizer< SampleType > harmonizer {state};
 
     EffectsManager< SampleType > effects {state};
