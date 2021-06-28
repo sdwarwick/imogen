@@ -6,7 +6,7 @@
  version:            0.0.1
  name:               ImogenEngine
  description:        base class that wraps the Harmonizer class into a self-sufficient audio engine
- dependencies:       bv_synth bv_psola bv_audio_effects ImogenCommon
+ dependencies:       bv_synth bv_psola ImogenCommon
  END_JUCE_MODULE_DECLARATION
  *******************************************************************************/
 
