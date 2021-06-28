@@ -2,31 +2,15 @@
 namespace Imogen
 {
 template < typename SampleType >
-PitchCorrection< SampleType >::PitchCorrection (Synth& harm, Internals& internalsToUse, Analyzer& analyzerToUse)
-    : internals (internalsToUse), analyzer (analyzerToUse), harmonizer (harm)
+PitchCorrection< SampleType >::PitchCorrection (Harmonizer& harm, Internals& internalsToUse)
+: dsp::psola::PitchCorrectorBase<SampleType>(harm.getAnalyzer(), harm.getPitchAdjuster()), internals (internalsToUse)
 {
 }
 
 template < typename SampleType >
-void PitchCorrection< SampleType >::prepare (double samplerate, int blocksize)
+void PitchCorrection< SampleType >::renderNextFrame()
 {
-    sampleRate = samplerate;
-
-    correctedBuffer.setSize (1, blocksize, true, true, true);
-}
-
-template < typename SampleType >
-void PitchCorrection< SampleType >::processNextFrame()
-{
-    shifter.setPitch (getTargetFrequency(), sampleRate);
-    shifter.getSamples (correctedBuffer);
-}
-
-template < typename SampleType >
-float PitchCorrection< SampleType >::getTargetFrequency()
-{
-    const auto inputPitch = harmonizer.getMidiForFrequency (analyzer.getFrequency());
-    return harmonizer.getFrequencyForMidi (juce::roundToInt (inputPitch));
+    this->processNextFrame (correctedBuffer);
 }
 
 template < typename SampleType >

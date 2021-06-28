@@ -3,7 +3,7 @@ namespace Imogen
 {
 template < typename SampleType >
 LeadProcessor< SampleType >::LeadProcessor (Harmonizer& harm, State& stateToUse)
-    : pitchCorrector (harm, stateToUse.internals, harm.getAnalyzer()), dryPanner(stateToUse.parameters)
+    : pitchCorrector (harm, stateToUse.internals), dryPanner(stateToUse.parameters)
 {
 }
 
@@ -19,7 +19,7 @@ void LeadProcessor< SampleType >::prepare (double samplerate, int blocksize)
 template < typename SampleType >
 void LeadProcessor< SampleType >::process (bool leadIsBypassed)
 {
-    pitchCorrector.processNextFrame();
+    pitchCorrector.renderNextFrame();
     dryPanner.process (pitchCorrector.getCorrectedSignal(), pannedLeadBuffer, leadIsBypassed);
 }
 

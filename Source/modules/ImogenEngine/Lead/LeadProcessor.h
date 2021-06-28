@@ -1,10 +1,8 @@
 
 #pragma once
 
-#include <ImogenEngine/Harmonizer/Harmonizer.h>
-
-#include "DryPanner.h"
 #include "PitchCorrector.h"
+#include "DryPanner.h"
 
 namespace Imogen
 {
