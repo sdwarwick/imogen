@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <ImogenEngine/effects/DryPanner.h>
+#include "DryPanner.h"
 #include "PitchCorrector.h"
 
 namespace Imogen

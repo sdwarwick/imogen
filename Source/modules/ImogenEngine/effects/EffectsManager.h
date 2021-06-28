@@ -1,17 +1,17 @@
 #pragma once
 
-#include "StereoReducer.h"
-#include "InputGain.h"
-#include "NoiseGate.h"
-#include "DryPanner.h"
-#include "EQ.h"
-#include "Compressor.h"
-#include "DeEsser.h"
-#include "DryWetMixer.h"
-#include "Delay.h"
-#include "Reverb.h"
-#include "OutputGain.h"
-#include "Limiter.h"
+#include "PreHarmony/StereoReducer.h"
+#include "PreHarmony/InputGain.h"
+#include "PreHarmony/NoiseGate.h"
+
+#include "PostHarmony/EQ.h"
+#include "PostHarmony/Compressor.h"
+#include "PostHarmony/DeEsser.h"
+#include "PostHarmony/DryWetMixer.h"
+#include "PostHarmony/Delay.h"
+#include "PostHarmony/Reverb.h"
+#include "PostHarmony/OutputGain.h"
+#include "PostHarmony/Limiter.h"
 
 namespace Imogen
 {
