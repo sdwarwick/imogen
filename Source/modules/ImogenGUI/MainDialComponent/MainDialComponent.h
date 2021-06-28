@@ -23,11 +23,13 @@
 
 #pragma once
 
+namespace Imogen
+{
 
-class ImogenDialComponent : public juce::Component, public juce::SettableTooltipClient
+class MainDialComponent : public juce::Component, public juce::SettableTooltipClient
 {
 public:
-    ImogenDialComponent();
+    MainDialComponent (State& stateToUse);
 
     void paint (juce::Graphics& g) override final;
 
@@ -40,17 +42,16 @@ public:
     bool keyStateChanged (bool isKeyDown) override final;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override final;
     void focusLost (FocusChangeType cause) override final;
-
-    //
-
-    void showPitchCorrection();
-    void showParameter (bav::Parameter* parameter);
-    bool isShowingPitchCorrection() const noexcept { return showingPitchCorrection.load(); }
-
-    //
-
-    void newIntonationData (const juce::String& noteName, int centsOffPitch);
-
+    
 private:
-    std::atomic< bool > showingPitchCorrection;
+    void showParameter (Parameter& param);
+    void showPitchCorrection();
+    
+    State& state;
+    
+    ParameterList::Listener l {state.parameters,
+                               [&](Parameter& param) { showParameter (param); },
+                               [&](Parameter&, bool starting) { if (! starting) showPitchCorrection(); }};
 };
+
+}

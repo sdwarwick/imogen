@@ -23,78 +23,66 @@
 #include "MainDialComponent.h"
 
 
-ImogenDialComponent::ImogenDialComponent()
+namespace Imogen
+{
+
+MainDialComponent::MainDialComponent (State& stateToUse)
+: state (stateToUse)
 {
     setOpaque (true);
     setInterceptsMouseClicks (true, true);
-
-    showPitchCorrection();
 }
 
 
-void ImogenDialComponent::paint (juce::Graphics& g)
+void MainDialComponent::paint (juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState graphicsState (g);
 
     juce::ignoreUnused (g);
-
-    if (showingPitchCorrection.load()) { }
-    else
-    {
-    }
 }
 
-void ImogenDialComponent::resized()
+void MainDialComponent::resized()
 {
 }
 
 
-void ImogenDialComponent::showPitchCorrection()
-{
-    showingPitchCorrection.store (true);
-    setTooltip (TRANS ("Intonation"));
-    repaint();
-}
-
-void ImogenDialComponent::showParameter (bav::Parameter* parameter)
-{
-    showingPitchCorrection.store (false);
-    setTooltip (parameter->parameterNameVerbose);
-    repaint();
-}
-
-
-void ImogenDialComponent::newIntonationData (const juce::String& noteName, int centsOffPitch)
-{
-    juce::ignoreUnused (noteName, centsOffPitch);
-}
-
-
-bool ImogenDialComponent::hitTest (int x, int y)
+bool MainDialComponent::hitTest (int x, int y)
 {
     juce::ignoreUnused (x, y);
     return false;
 }
 
 
-bool ImogenDialComponent::keyPressed (const juce::KeyPress& key)
+bool MainDialComponent::keyPressed (const juce::KeyPress& key)
 {
     juce::ignoreUnused (key);
     return false;
 }
 
-bool ImogenDialComponent::keyStateChanged (bool isKeyDown)
+bool MainDialComponent::keyStateChanged (bool isKeyDown)
 {
     juce::ignoreUnused (isKeyDown);
     return false;
 }
 
-void ImogenDialComponent::modifierKeysChanged (const juce::ModifierKeys& modifiers)
+void MainDialComponent::modifierKeysChanged (const juce::ModifierKeys& modifiers)
 {
     juce::ignoreUnused (modifiers);
 }
 
-void ImogenDialComponent::focusLost (FocusChangeType cause)
+void MainDialComponent::focusLost (FocusChangeType cause)
 {
     juce::ignoreUnused (cause);
+}
+
+void MainDialComponent::showParameter (Parameter& /*param*/)
+{
+    
+}
+
+void MainDialComponent::showPitchCorrection()
+{
+    
+}
+
 }
