@@ -11,7 +11,9 @@ struct Parameters : ParameterList
 {
     Parameters() : ParameterList ("ImogenParameters")
     {
-        add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut, limiterToggle, midiLatch, pitchGlide);
+        add (inputMode, dryWet, inputGain, outputGain, mainBypass, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval, adsrAttack, adsrDecay, adsrSustain, adsrRelease, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut,
+             eqToggle, eqLowShelfFreq, eqLowShelfQ, eqLowShelfGain, eqHighShelfFreq, eqHighShelfQ, eqHighShelfGain, eqHighPassFreq, eqHighPassQ, eqPeakFreq, eqPeakQ, eqPeakGain,
+             limiterToggle, midiLatch, pitchGlide);
 
         setPitchbendParameter (editorPitchbend);
     }
@@ -60,16 +62,12 @@ struct Parameters : ParameterList
     ToggleParam voiceStealing {"Voice stealing", "Voice stealing", false};
 
     ToggleParam pedalToggle {" Pedal toggle", "Pedal toggle", false};
-
-    IntParam pedalThresh {"Pedal thresh", "Pedal thresh", 0, 127, 0, pitch_stringFromInt, pitch_intFromString};
-
-    IntParam pedalInterval {"Pedal interval", "Pedal interval", 1, 12, 12, st_stringFromInt, st_intFromString};
+    IntParam    pedalThresh {"Pedal thresh", "Pedal thresh", 0, 127, 0, pitch_stringFromInt, pitch_intFromString};
+    IntParam    pedalInterval {"Pedal interval", "Pedal interval", 1, 12, 12, st_stringFromInt, st_intFromString};
 
     ToggleParam descantToggle {"Descant toggle", "Descant toggle", false};
-
-    IntParam descantThresh {"Descant thresh", "Descant thresh", 0, 127, 127, pcnt_stringFromInt, pitch_intFromString};
-
-    IntParam descantInterval {"Descant interval", "Descant interval", 1, 12, 12, st_stringFromInt, st_intFromString};
+    IntParam    descantThresh {"Descant thresh", "Descant thresh", 0, 127, 127, pcnt_stringFromInt, pitch_intFromString};
+    IntParam    descantInterval {"Descant interval", "Descant interval", 1, 12, 12, st_stringFromInt, st_intFromString};
 
     FloatParam adsrAttack {"ADSR Attack", "ADSR attack",
                            juce::NormalisableRange< float > (0.0f, 1.0f, 0.01f),
@@ -86,50 +84,37 @@ struct Parameters : ParameterList
                             0.1f, generic, sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
 
     ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
+    dbParam     noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f, generic};
 
-    dbParam noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f, generic};
-
-    ToggleParam deEsserToggle {"D-S Toggle", "D-S toggle", true};
-
-    dbParam deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f, generic};
-
+    ToggleParam  deEsserToggle {"D-S Toggle", "D-S toggle", true};
+    dbParam      deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f, generic};
     PercentParam deEsserAmount {"D-S Amount", "D-S amount", 50};
 
-    ToggleParam compToggle {"Compressor Toggle", "Compressor toggle", false};
-
+    ToggleParam  compToggle {"Compressor Toggle", "Compressor toggle", false};
     PercentParam compAmount {"Compressor Amount", "Compressor amount", 50};
 
-    ToggleParam delayToggle {"Delay Toggle", "Delay toggle", false};
-
+    ToggleParam  delayToggle {"Delay Toggle", "Delay toggle", false};
     PercentParam delayDryWet {"Delay Mix", "Delay mix", 0};
 
-    ToggleParam reverbToggle {"Reverb Toggle", "Reverb toggle", false};
-
+    ToggleParam  reverbToggle {"Reverb Toggle", "Reverb toggle", false};
     PercentParam reverbDryWet {"Reverb Mix", "Reverb mix", 15};
-
     PercentParam reverbDecay {"Reverb Decay", "Reverb decay", 60};
-
     PercentParam reverbDuck {"Reverb Duck", "Reverb duck", 30};
+    HzParam      reverbLoCut {"Reverb Lo cut", "Reverb lo cut", 80.f};
+    HzParam      reverbHiCut {"Reverb Hi cut", "Reverb hi cut", 5500.f};
 
-    HzParam reverbLoCut {"Reverb Lo cut", "Reverb lo cut", 80.f};
-
-    HzParam reverbHiCut {"Reverb Hi cut", "Reverb hi cut", 5500.f};
-    
     ToggleParam eqToggle {"EQ Toggle", "EQ toggle", false};
-    
-    HzParam eqLowPassFreq {"EQ low pass freq", "EQ low pass freq", 10000.f};
-    
-    FloatParam eqLowPassQ {"EQ low pass Q", "EQ low pass Q", Qrange, 0.707f};
-    
-    HzParam eqHiPassFreq {"EQ low pass freq", "EQ low pass freq", 40.f};
-    
-    FloatParam eqHiPassQ {"EQ low pass Q", "EQ low pass Q", Qrange, 0.707f};
-    
-    HzParam eqPeakFreq {"EQ low pass freq", "EQ low pass freq", 2500.f};
-    
-    FloatParam eqPeakGain {"EQ peak gain", "EQ peak gain", juce::NormalisableRange<float>(0.f, 4.f, 0.01f), 1.f};
-    
-    FloatParam eqPeakQ {"EQ low pass Q", "EQ low pass Q", Qrange, 0.707f};
+    HzParam     eqLowShelfFreq {"EQ low shelf freq", "EQ low shelf freq", 80.f};
+    FloatParam  eqLowShelfQ {"EQ low shelf Q", "EQ low shelf Q", Qrange, 0.707f};
+    FloatParam  eqLowShelfGain {"EQ low shelf gain", "EQ low shelf gain", juce::NormalisableRange< float > (0.f, 4.f, 0.01f), 1.f};
+    HzParam     eqHighShelfFreq {"EQ high shelf freq", "EQ high shelf freq", 80.f};
+    FloatParam  eqHighShelfQ {"EQ high shelf Q", "EQ high shelf Q", Qrange, 0.707f};
+    FloatParam  eqHighShelfGain {"EQ high shelf gain", "EQ high shelf gain", juce::NormalisableRange< float > (0.f, 4.f, 0.01f), 1.f};
+    HzParam     eqHighPassFreq {"EQ high pass freq", "EQ high pass freq", 80.f};
+    FloatParam  eqHighPassQ {"EQ high pass Q", "EQ high pass Q", Qrange, 0.707f};
+    HzParam     eqPeakFreq {"EQ peak freq", "EQ peak freq", 80.f};
+    FloatParam  eqPeakQ {"EQ peak Q", "EQ peak Q", Qrange, 0.707f};
+    FloatParam  eqPeakGain {"EQ peak gain", "EQ peak gain", juce::NormalisableRange< float > (0.f, 4.f, 0.01f), 1.f};
 
     ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
 
@@ -149,7 +134,7 @@ struct Parameters : ParameterList
 
 private:
     static constexpr auto generic = juce::AudioProcessorParameter::genericParameter;
-    
+
     juce::NormalisableRange< float > Qrange {0.01f, 10.f, 0.01f};
 };
 

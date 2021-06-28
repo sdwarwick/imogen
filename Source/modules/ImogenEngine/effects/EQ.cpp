@@ -5,13 +5,13 @@ template < typename SampleType >
 EQ< SampleType >::EQ (Parameters& params)
     : parameters (params)
 {
-    using FT = dsp::FX::FilterType;
-
-    dryEQ.addBand (FT::LowPass, 10000.f);
+    dryEQ.addBand (FT::LowShelf, 80.f);
+    dryEQ.addBand (FT::HighShelf, 10000.f);
     dryEQ.addBand (FT::HighPass, 80.f);
     dryEQ.addBand (FT::Peak, 2500.f);
-
-    wetEQ.addBand (FT::LowPass, 10000.f);
+        
+    wetEQ.addBand (FT::LowShelf, 80.f);
+    wetEQ.addBand (FT::HighShelf, 10000.f);
     wetEQ.addBand (FT::HighPass, 80.f);
     wetEQ.addBand (FT::Peak, 2500.f);
 }
@@ -19,57 +19,85 @@ EQ< SampleType >::EQ (Parameters& params)
 template < typename SampleType >
 void EQ< SampleType >::process (AudioBuffer& dry, AudioBuffer& wet)
 {
-    using FT = dsp::FX::FilterType;
+    if (! parameters.eqToggle->get())
+        return;
+    
+    updateLowShelf (parameters.eqLowShelfFreq->get(), parameters.eqLowShelfQ->get(), parameters.eqLowShelfGain->get());
+    updateHighShelf (parameters.eqHighShelfFreq->get(), parameters.eqHighShelfQ->get(), parameters.eqHighShelfGain->get());
+    updatePeak (parameters.eqPeakFreq->get(), parameters.eqPeakQ->get(), parameters.eqPeakGain->get());
+    updateHighPass (parameters.eqHighPassFreq->get(), parameters.eqHighPassQ->get());
 
-    if (parameters.eqToggle->get())
+    dryEQ.process (dry);
+    wetEQ.process (wet);
+}
+
+template < typename SampleType >
+void EQ< SampleType >::updateLowShelf (float freq, float Q, float gain)
+{
+    if (auto* dry = dryEQ.getBandOfType (FT::LowShelf))
     {
-        const auto lowPassFreq = parameters.eqLowPassFreq->get();
-        const auto lowPassQ    = parameters.eqLowPassQ->get();
+        dry->setFilterFrequency (freq);
+        dry->setQfactor (Q);
+        dry->setGain (gain);
+    }
+    
+    if (auto* wet = wetEQ.getBandOfType (FT::LowShelf))
+    {
+        wet->setFilterFrequency (freq);
+        wet->setQfactor (Q);
+        wet->setGain (gain);
+    }
+}
 
-        if (auto* dryLowPass = dryEQ.getBandOfType (FT::LowPass))
-        {
-            dryLowPass->setFilterFrequency (lowPassFreq);
-            dryLowPass->setQfactor (lowPassQ);
-        }
-        if (auto* wetLowPass = wetEQ.getBandOfType (FT::LowPass))
-        {
-            wetLowPass->setFilterFrequency (lowPassFreq);
-            wetLowPass->setQfactor (lowPassQ);
-        }
+template < typename SampleType >
+void EQ< SampleType >::updateHighShelf (float freq, float Q, float gain)
+{
+    if (auto* dry = dryEQ.getBandOfType (FT::HighShelf))
+    {
+        dry->setFilterFrequency (freq);
+        dry->setQfactor (Q);
+        dry->setGain (gain);
+    }
+    
+    if (auto* wet = wetEQ.getBandOfType (FT::HighShelf))
+    {
+        wet->setFilterFrequency (freq);
+        wet->setQfactor (Q);
+        wet->setGain (gain);
+    }
+}
 
-        const auto highPassFreq = parameters.eqHiPassFreq->get();
-        const auto highPassQ    = parameters.eqHiPassQ->get();
+template < typename SampleType >
+void EQ< SampleType >::updatePeak (float freq, float Q, float gain)
+{
+    if (auto* dry = dryEQ.getBandOfType (FT::Peak))
+    {
+        dry->setFilterFrequency (freq);
+        dry->setQfactor (Q);
+        dry->setGain (gain);
+    }
+    
+    if (auto* wet = wetEQ.getBandOfType (FT::Peak))
+    {
+        wet->setFilterFrequency (freq);
+        wet->setQfactor (Q);
+        wet->setGain (gain);
+    }
+}
 
-        if (auto* dryHighPass = dryEQ.getBandOfType (FT::HighPass))
-        {
-            dryHighPass->setFilterFrequency (highPassFreq);
-            dryHighPass->setQfactor (highPassQ);
-        }
-        if (auto* wetHighPass = wetEQ.getBandOfType (FT::HighPass))
-        {
-            wetHighPass->setFilterFrequency (highPassFreq);
-            wetHighPass->setQfactor (highPassQ);
-        }
-
-        const auto peakFreq = parameters.eqPeakFreq->get();
-        const auto peakQ    = parameters.eqPeakQ->get();
-        const auto peakGain = parameters.eqPeakGain->get();
-
-        if (auto* dryPeak = dryEQ.getBandOfType (FT::Peak))
-        {
-            dryPeak->setFilterFrequency (peakFreq);
-            dryPeak->setQfactor (peakQ);
-            dryPeak->setGain (peakGain);
-        }
-        if (auto* wetPeak = wetEQ.getBandOfType (FT::Peak))
-        {
-            wetPeak->setFilterFrequency (peakFreq);
-            wetPeak->setQfactor (peakQ);
-            wetPeak->setGain (peakGain);
-        }
-
-        dryEQ.process (dry);
-        wetEQ.process (wet);
+template < typename SampleType >
+void EQ< SampleType >::updateHighPass (float freq, float Q)
+{
+    if (auto* dry = dryEQ.getBandOfType (FT::HighPass))
+    {
+        dry->setFilterFrequency (freq);
+        dry->setQfactor (Q);
+    }
+    
+    if (auto* wet = wetEQ.getBandOfType (FT::HighPass))
+    {
+        wet->setFilterFrequency (freq);
+        wet->setQfactor (Q);
     }
 }
 
