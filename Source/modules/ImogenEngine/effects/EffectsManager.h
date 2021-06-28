@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bv_audio_effects/bv_audio_effects.h>
+
 #include "PreHarmony/StereoReducer.h"
 #include "PreHarmony/InputGain.h"
 #include "PreHarmony/NoiseGate.h"
