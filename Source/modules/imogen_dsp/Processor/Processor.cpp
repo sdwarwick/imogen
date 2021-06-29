@@ -2,11 +2,10 @@
 namespace Imogen
 {
 Processor::Processor()
-    : dsp::Processor< State > (floatEngine, doubleEngine,
-                               BusesProperties()
-                                   .withInput (TRANS ("Input"), juce::AudioChannelSet::stereo(), true)
-                                   .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
-                                   .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
+    : dsp::Processor< State, Engine > (BusesProperties()
+                                           .withInput (TRANS ("Input"), juce::AudioChannelSet::stereo(), true)
+                                           .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
+                                           .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
 {
     parameters.addDataChild (dataSync);
     dataSync.connect ("host");

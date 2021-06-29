@@ -5,7 +5,7 @@
 
 namespace Imogen
 {
-class Processor : public dsp::Processor< State >
+class Processor : public dsp::Processor< State, Engine >
 {
 public:
     Processor();
@@ -30,9 +30,6 @@ private:
 
     State&      state {getState()};
     Parameters& parameters {state.parameters};
-
-    Engine< float >  floatEngine {state};
-    Engine< double > doubleEngine {state};
 
     PluginTransport transport;
 

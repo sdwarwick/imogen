@@ -3,7 +3,7 @@ namespace Imogen
 {
 template < typename SampleType >
 Harmonizer< SampleType >::Harmonizer (State& stateToUse, Analyzer& analyzerToUse)
-    : state (stateToUse), analyzer(analyzerToUse)
+    : analyzer(analyzerToUse), state (stateToUse)
 {
     this->setConcertPitchHz (440);
 

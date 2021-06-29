@@ -1,12 +1,6 @@
 namespace Imogen
 {
 template < typename SampleType >
-Engine< SampleType >::Engine (State& stateToUse)
-    : state (stateToUse)
-{
-}
-
-template < typename SampleType >
 void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool)
 {
     output.clear();
@@ -22,11 +16,11 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     }
 
     effects.processPreHarmony (input);
-    
+
     analyzer.analyzeInput (effects.getProcessedInputSignal());
 
     harmonizer.process (input.getNumSamples(), midiMessages, harmoniesAreBypassed);
-    
+
     leadProcessor.process (leadIsBypassed);
 
     effects.processPostHarmony (harmonizer.getHarmonySignal(), leadProcessor.getProcessedSignal(), output);
@@ -44,7 +38,7 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
 {
     if (! harmonizer.isInitialized())
         harmonizer.initialize (16, samplerate, blocksize);
-    
+
     analyzer.prepare (samplerate, blocksize);
 
     if (const auto latency = analyzer.getLatencySamples() > 0)

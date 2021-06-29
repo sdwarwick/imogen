@@ -15,7 +15,7 @@ public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using MidiBuffer  = juce::MidiBuffer;
 
-    Engine (State& stateToUse);
+    Engine (State& stateToUse) : state (stateToUse) { }
 
 private:
     void renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool isBypassed) final;
@@ -28,9 +28,9 @@ private:
     Parameters& parameters {state.parameters};
 
     dsp::psola::Analyzer< SampleType > analyzer;
-    
+
     Harmonizer< SampleType > harmonizer {state, analyzer};
-    
+
     LeadProcessor< SampleType > leadProcessor {harmonizer, state};
 
     EffectsManager< SampleType > effects {state};
