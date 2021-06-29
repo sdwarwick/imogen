@@ -10,15 +10,8 @@
 
 namespace Imogen
 {
-
-struct Plugin : Processor
+struct Plugin : dsp::ProcessorWithEditor< Processor, GUI, 450, 300 >
 {
-    bool hasEditor() const final { return true; }
-    
-    juce::AudioProcessorEditor* createEditor() final
-    {
-        return new gui::PluginEditor<GUI> (*this, {450, 300}, state);
-    }
 };
 
 }  // namespace Imogen

@@ -24,13 +24,29 @@
 
 namespace Imogen
 {
-struct State : StateBase
+struct State : PluginState
 {
-    State() : StateBase ("ImogenState")
+    State() : PluginState ("ImogenState")
     {
-        add (parameters, internals, meters);
+        addDataChild (parameters, internals, meters);
     }
-
+    
+    ParameterList& getParameters() final { return parameters; }
+    
+    void addTo (juce::AudioProcessor& processor) final
+    {
+        parameters.addParametersTo (processor);
+        meters.addParametersTo (processor);
+        internals.addAllParametersAsInternal();
+    }
+    
+    void addAllAsInternal()
+    {
+        parameters.addAllParametersAsInternal();
+        meters.addAllParametersAsInternal();
+        internals.addAllParametersAsInternal();
+    }
+    
     Parameters parameters;
     Internals  internals;
     Meters     meters;

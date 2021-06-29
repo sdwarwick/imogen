@@ -5,19 +5,16 @@
 
 namespace Imogen
 {
-class Processor : public dsp::ProcessorBase
+class Processor : public dsp::Processor< State >
 {
 public:
     Processor();
-    
-protected:
-    State state;
 
 private:
     bool canAddBus (bool isInput) const override final { return isInput; }
     bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
-    double getTailLengthSeconds() const final;
+    double         getTailLengthSeconds() const final;
     BoolParameter& getMainBypass() const final;
 
     bool acceptsMidi() const final { return true; }
@@ -30,12 +27,13 @@ private:
 
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
-    
+
+    State&      state {getState()};
     Parameters& parameters {state.parameters};
-    
+
     Engine< float >  floatEngine {state};
     Engine< double > doubleEngine {state};
-    
+
     PluginTransport transport;
 
     network::OscDataSynchronizer dataSync {state};
