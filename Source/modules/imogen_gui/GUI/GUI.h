@@ -9,36 +9,32 @@
 
 namespace Imogen
 {
-
 class GUI : public juce::Component,
-public gui::GUIInitializer
+            public gui::GUIInitializer
 {
 public:
     GUI (State& stateToUse);
-    
+
     virtual ~GUI() override;
-    
+
 private:
     void paint (juce::Graphics& g) final;
     void resized() final;
     bool keyPressed (const juce::KeyPress& key) final;
-    
+
     State&      state;
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
-    Meters&     meters {state.meters};
-    
-    Header header;
-    CenterDial dial {state};
-    MidiKeyboard keyboard;
     
     PluginUndo undoManager {parameters};
-    
-    PresetManager presetManager {parameters, &undoManager};
-    
+
+    Header       header {state, undoManager};
+    CenterDial   dial {state};
+    MidiKeyboard keyboard;
+
     juce::TooltipWindow tooltipWindow {this, 700};
-    
+
     gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};
 };
 
-}
+}  // namespace Imogen
