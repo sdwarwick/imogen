@@ -7,24 +7,17 @@
 
 #if ! IMOGEN_HEADLESS
 #    include <ImogenGUI/ImogenGUI.h>
-
-namespace Imogen
-{
-struct Plugin : dsp::ProcessorWithEditor< Processor, GUI, 450, 300 >
-{
-};
-
-}  // namespace Imogen
-
 #endif
 
 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
+    using namespace Imogen;
+    
 #if IMOGEN_HEADLESS
-    return new Imogen::Processor();
+    return new Processor();
 #else
-    return new Imogen::Plugin();
+    return new dsp::ProcessorWithEditor< Processor, GUI, 450, 300 >();
 #endif
 }

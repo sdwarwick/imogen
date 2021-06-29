@@ -35,9 +35,6 @@ set (Imogen_Common_Flags
 
 #################### Configure the main build of Imogen ####################
 
-set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/plugin/PluginProcessor.cpp)
-
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
     IS_SYNTH                        FALSE
@@ -62,9 +59,7 @@ juce_add_plugin (Imogen
 
 configure_default_juce_plugin (Imogen)
 
-target_sources (Imogen PRIVATE ${Imogen_sourceFiles})
-
-source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${Imogen_sourceFiles})
+target_sources (Imogen PRIVATE ${Imogen_sourceDir}/plugin/Main.cpp)
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
