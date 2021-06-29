@@ -6,7 +6,7 @@
 #endif
 
 #if ! IMOGEN_HEADLESS
-#    include <ImogenGUI/ImogenGUI.h>
+#    include <imogen_gui/imogen_gui.h>
 #endif
 
 

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <bv_plugin_gui/bv_plugin_gui.h>
-
 #include <ImogenCommon/ImogenCommon.h>
 
-#include <ImogenGUI/LookAndFeel/ImogenLookAndFeel.h>
-#include <ImogenGUI/MainDialComponent/MainDialComponent.h>
+#include <imogen_gui/Header/Header.h>
+#include <imogen_gui/CenterDial/CenterDial.h>
+#include <imogen_gui/MidiKeyboard/MidiKeyboard.h>
 
 namespace Imogen
 {
@@ -21,26 +21,22 @@ public:
 private:
     void paint (juce::Graphics& g) final;
     void resized() final;
-    
     bool keyPressed (const juce::KeyPress& key) final;
-    bool keyStateChanged (bool isKeyDown) final;
-    void modifierKeysChanged (const juce::ModifierKeys& modifiers) final;
-    void focusLost (FocusChangeType cause) final;
-    
-    ImogenLookAndFeel lookAndFeel;
-    
-    juce::TooltipWindow tooltipWindow {this, 700};
     
     State&      state;
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
     Meters&     meters {state.meters};
     
-    MainDialComponent mainDial {state};
+    Header header;
+    CenterDial dial {state};
+    MidiKeyboard keyboard;
     
     PluginUndo undoManager {parameters};
     
     PresetManager presetManager {parameters, &undoManager};
+    
+    juce::TooltipWindow tooltipWindow {this, 700};
     
     gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};
 };

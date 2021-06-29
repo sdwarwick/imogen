@@ -22,9 +22,6 @@ private:
     bool supportsMPE() const final { return false; }
     bool isMidiEffect() const final { return false; }
 
-    bool                        hasEditor() const override { return false; }
-    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
-
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
 

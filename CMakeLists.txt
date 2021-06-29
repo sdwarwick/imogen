@@ -65,7 +65,7 @@ target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (Imogen assets)
 
-target_link_libraries (Imogen PRIVATE imogen_dsp ImogenGUI)
+target_link_libraries (Imogen PRIVATE imogen_dsp imogen_gui)
 
 
 #################### Configure the remote GUI app build ####################
@@ -95,6 +95,6 @@ target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (ImogenRemote assets)
 
-target_link_libraries (ImogenRemote PRIVATE ImogenGUI)
+target_link_libraries (ImogenRemote PRIVATE imogen_gui)
 
 

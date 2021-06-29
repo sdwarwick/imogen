@@ -8,7 +8,7 @@ state (stateToUse)
 {
     setInterceptsMouseClicks (false, true);
     
-    setLookAndFeel (&lookAndFeel);
+    gui::addAndMakeVisible (this, header, dial, keyboard);
 }
 
 
@@ -31,29 +31,12 @@ void GUI::paint (juce::Graphics& g)
 
 void GUI::resized()
 {
-    
+    // header, dial, keyboard
 }
 
-bool GUI::keyPressed (const juce::KeyPress& key)
+bool GUI::keyPressed (const juce::KeyPress&)
 {
-    juce::ignoreUnused (key);
     return false;
-}
-
-bool GUI::keyStateChanged (bool isKeyDown)
-{
-    juce::ignoreUnused (isKeyDown);
-    return false;
-}
-
-void GUI::modifierKeysChanged (const juce::ModifierKeys& modifiers)
-{
-    juce::ignoreUnused (modifiers);
-}
-
-void GUI::focusLost (FocusChangeType cause)
-{
-    juce::ignoreUnused (cause);
 }
 
 }
