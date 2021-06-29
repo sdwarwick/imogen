@@ -1,65 +1,37 @@
 
-#include "PluginProcessor.h"
+#include "imogen_dsp/imogen_dsp.h"
+
+#ifndef IMOGEN_HEADLESS
+#    define IMOGEN_HEADLESS 0
+#endif
 
 #if ! IMOGEN_HEADLESS
 #    include <ImogenGUI/ImogenGUI.h>
-#endif
-
 
 namespace Imogen
 {
-Processor::Processor()
-    : ProcessorBase (state.parameters,
-                     floatEngine, doubleEngine,
-                     BusesProperties()
-                         .withInput (TRANS ("Input"), juce::AudioChannelSet::stereo(), true)
-                         .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
-                         .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
+
+struct Plugin : Processor
 {
-    state.addTo (this);
-    parameters.addDataChild (dataSync);
-    dataSync.connect ("host");
-}
-
-BoolParameter& Processor::getMainBypass() const
-{
-    return *parameters.mainBypass.get();
-}
-
-double Processor::getTailLengthSeconds() const
-{
-    return parameters.adsrRelease->get();
-}
-
-bool Processor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{
-    if (layouts.getMainInputChannelSet().isDisabled() && layouts.getChannelSet (true, 1).isDisabled()) return false;
-
-    return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
-}
-
-bool Processor::hasEditor() const
-{
-#if IMOGEN_HEADLESS
-    return false;
-#endif
-    return true;
-}
-
-juce::AudioProcessorEditor* Processor::createEditor()
-{
-#if IMOGEN_HEADLESS
-    return nullptr;
-#else
-    return new gui::PluginEditor<GUI> (*this, {450, 300}, state);
-#endif
-}
-
+    bool hasEditor() const final { return true; }
+    
+    juce::AudioProcessorEditor* createEditor() final
+    {
+        return new gui::PluginEditor<GUI> (*this, {450, 300}, state);
+    }
+};
 
 }  // namespace Imogen
+
+#endif
+
 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
+#if IMOGEN_HEADLESS
     return new Imogen::Processor();
+#else
+    return new Imogen::Plugin();
+#endif
 }

@@ -1,11 +1,7 @@
 
 #pragma once
 
-#include "ImogenEngine/ImogenEngine.h"
-
-#ifndef IMOGEN_HEADLESS
-#    define IMOGEN_HEADLESS 0
-#endif
+#include <imogen_dsp/Engine/Engine.h>
 
 namespace Imogen
 {
@@ -13,6 +9,9 @@ class Processor : public dsp::ProcessorBase
 {
 public:
     Processor();
+    
+protected:
+    State state;
 
 private:
     bool canAddBus (bool isInput) const override final { return isInput; }
@@ -26,13 +25,12 @@ private:
     bool supportsMPE() const final { return false; }
     bool isMidiEffect() const final { return false; }
 
-    bool                        hasEditor() const final;
-    juce::AudioProcessorEditor* createEditor() final;
+    bool                        hasEditor() const override { return false; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
 
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
     
-    State       state;
     Parameters& parameters {state.parameters};
     
     Engine< float >  floatEngine {state};

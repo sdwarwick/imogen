@@ -2,8 +2,8 @@
 
 #include <ImogenCommon/ImogenCommon.h>
 
-#include <ImogenEngine/Lead/LeadProcessor.h>
-#include <ImogenEngine/effects/EffectsManager.h>
+#include "Lead/LeadProcessor.h"
+#include "effects/EffectsManager.h"
 
 
 namespace Imogen

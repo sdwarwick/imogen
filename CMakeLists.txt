@@ -36,8 +36,7 @@ set (Imogen_Common_Flags
 #################### Configure the main build of Imogen ####################
 
 set (Imogen_sourceFiles
-    ${Imogen_sourceDir}/plugin/PluginProcessor.cpp
-    ${Imogen_sourceDir}/plugin/PluginProcessor.h)
+    ${Imogen_sourceDir}/plugin/PluginProcessor.cpp)
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
@@ -71,7 +70,7 @@ target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (Imogen assets)
 
-target_link_libraries (Imogen PRIVATE ImogenCommon ImogenEngine ImogenGUI)
+target_link_libraries (Imogen PRIVATE imogen_dsp ImogenGUI)
 
 
 #################### Configure the remote GUI app build ####################
@@ -101,6 +100,6 @@ target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (ImogenRemote assets)
 
-target_link_libraries (ImogenRemote PRIVATE ImogenCommon ImogenGUI)
+target_link_libraries (ImogenRemote PRIVATE ImogenGUI)
 
 

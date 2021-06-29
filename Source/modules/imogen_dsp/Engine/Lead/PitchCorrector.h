@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ImogenEngine/Harmonizer/Harmonizer.h>
+#include <imogen_dsp/Engine/Harmonizer/Harmonizer.h>
 
 namespace Imogen
 {

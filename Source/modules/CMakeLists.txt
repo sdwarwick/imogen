@@ -1,4 +1,4 @@
 juce_add_modules (ImogenCommon
-				  ImogenEngine
-				  ImogenGUI
-				  )
+                  imogen_dsp
+		 ImogenGUI
+		 )
