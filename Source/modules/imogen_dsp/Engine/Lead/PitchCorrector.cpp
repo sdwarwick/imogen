@@ -4,7 +4,7 @@ namespace Imogen
 
 template < typename SampleType >
 PitchCorrection< SampleType >::PitchCorrection (Harmonizer& harm, Internals& internalsToUse)
-: Base(harm.getAnalyzer(), harm.getPitchAdjuster()), internals (internalsToUse)
+: Base(harm.analyzer, harm.getPitchAdjuster()), internals (internalsToUse)
 {
 }
 

@@ -22,8 +22,11 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
     }
 
     effects.processPreHarmony (input);
+    
+    analyzer.analyzeInput (effects.getProcessedInputSignal());
 
-    harmonizer.process (effects.getProcessedInputSignal(), midiMessages, harmoniesAreBypassed);
+    harmonizer.process (input.getNumSamples(), midiMessages, harmoniesAreBypassed);
+    
     leadProcessor.process (leadIsBypassed);
 
     effects.processPostHarmony (harmonizer.getHarmonySignal(), leadProcessor.getProcessedSignal(), output);
@@ -41,15 +44,16 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
 {
     if (! harmonizer.isInitialized())
         harmonizer.initialize (16, samplerate, blocksize);
+    
+    analyzer.prepare (samplerate, blocksize);
 
-    harmonizer.prepare (samplerate, blocksize);
-
-    if (const auto latency = harmonizer.getLatencySamples() > 0)
+    if (const auto latency = analyzer.getLatencySamples() > 0)
     {
         dsp::LatencyEngine< SampleType >::changeLatency (latency);
         return;
     }
 
+    harmonizer.prepare (samplerate, blocksize);
     leadProcessor.prepare (samplerate, blocksize);
     effects.prepare (samplerate, blocksize);
 }

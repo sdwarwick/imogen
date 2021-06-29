@@ -27,7 +27,9 @@ private:
     State&      state;
     Parameters& parameters {state.parameters};
 
-    Harmonizer< SampleType > harmonizer {state};
+    dsp::psola::Analyzer< SampleType > analyzer;
+    
+    Harmonizer< SampleType > harmonizer {state, analyzer};
     
     LeadProcessor< SampleType > leadProcessor {harmonizer, state};
 

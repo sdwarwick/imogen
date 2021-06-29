@@ -18,18 +18,16 @@ class Harmonizer : public dsp::SynthBase< SampleType >
     using Analyzer    = dsp::psola::Analyzer< SampleType >;
 
 public:
-    Harmonizer (State& stateToUse);
+    Harmonizer (State& stateToUse, Analyzer& analyzerToUse);
 
-    void process (const AudioBuffer& input,
+    void process (int numSamples,
                   MidiBuffer&        midi,
                   bool               harmoniesBypassed);
 
-    int getLatencySamples() const;
-
     AudioBuffer& getHarmonySignal();
     
-    Analyzer& getAnalyzer();
-
+    Analyzer& analyzer;
+    
 private:
     void prepared (double samplerate, int blocksize) final;
 
@@ -43,8 +41,6 @@ private:
     Internals&  internals {state.internals};
 
     AudioBuffer wetBuffer;
-
-    Analyzer analyzer;
 };
 
 

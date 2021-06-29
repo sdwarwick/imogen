@@ -2,8 +2,8 @@
 namespace Imogen
 {
 template < typename SampleType >
-Harmonizer< SampleType >::Harmonizer (State& stateToUse)
-    : state (stateToUse)
+Harmonizer< SampleType >::Harmonizer (State& stateToUse, Analyzer& analyzerToUse)
+    : state (stateToUse), analyzer(analyzerToUse)
 {
     this->setConcertPitchHz (440);
 
@@ -13,23 +13,19 @@ Harmonizer< SampleType >::Harmonizer (State& stateToUse)
 }
 
 template < typename SampleType >
-void Harmonizer< SampleType >::prepared (double samplerate, int blocksize)
+void Harmonizer< SampleType >::prepared (double, int blocksize)
 {
-    analyzer.prepare (samplerate, blocksize);
-
     wetBuffer.setSize (2, blocksize, true, true, true);
 }
 
 template < typename SampleType >
-void Harmonizer< SampleType >::process (const AudioBuffer& input, MidiBuffer& midi,
+void Harmonizer< SampleType >::process (int numSamples, MidiBuffer& midi,
                                         bool harmoniesBypassed)
 {
-    analyzer.analyzeInput (input);
-
     if (harmoniesBypassed)
     {
         wetBuffer.clear();
-        this->bypassedBlock (input.getNumSamples(), midi);
+        this->bypassedBlock (numSamples, midi);
     }
     else
     {
@@ -88,21 +84,9 @@ HarmonizerVoice< SampleType >* Harmonizer< SampleType >::createVoice()
 }
 
 template < typename SampleType >
-int Harmonizer< SampleType >::getLatencySamples() const
-{
-    return analyzer.getLatencySamples();
-}
-
-template < typename SampleType >
 juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getHarmonySignal()
 {
     return wetBuffer;
-}
-
-template < typename SampleType >
-dsp::psola::Analyzer< SampleType >& Harmonizer< SampleType >::getAnalyzer()
-{
-    return analyzer;
 }
 
 
