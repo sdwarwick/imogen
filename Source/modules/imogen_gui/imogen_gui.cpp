@@ -10,6 +10,8 @@
 #include "Header/OutputLevel/Thumb.cpp"
 #include "Header/OutputLevel/OutputLevel.cpp"
 #include "Header/InputIcon.cpp"
+#include "Header/AboutPopup/AboutPopup.cpp"
+#include "Header/AboutPopup/LogoButton.cpp"
 #include "Header/Header.cpp"
 
 #include "MidiKeyboard/KeyboardState.cpp"

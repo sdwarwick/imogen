@@ -4,6 +4,7 @@
 #include "OutputLevel/OutputLevel.h"
 #include "PresetBar/PresetBar.h"
 #include "ScaleChooser.h"
+#include "AboutPopup/LogoButton.h"
 
 namespace Imogen
 {
@@ -19,6 +20,8 @@ private:
     
     State& state;
     UndoManager& undo;
+    
+    LogoButton logo;
     
     InputIcon   inputIcon {state};
     OutputLevel outputLevel {state};
