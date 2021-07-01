@@ -9,8 +9,7 @@
 
 namespace Imogen
 {
-class GUI : public juce::Component,
-            public gui::GUIInitializer
+class GUI : public juce::Component
 {
 public:
     GUI (State& stateToUse);
