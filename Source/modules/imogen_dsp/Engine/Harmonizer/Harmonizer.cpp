@@ -43,7 +43,7 @@ void Harmonizer< SampleType >::updateParameters()
 
     this->updateADSRsettings (parameters.adsrAttack->get(),
                               parameters.adsrDecay->get(),
-                              parameters.adsrSustain->get(),
+                              (float) parameters.adsrSustain->get(),
                               parameters.adsrRelease->get());
 
     this->setPedalPitch (parameters.pedalToggle->get(),
