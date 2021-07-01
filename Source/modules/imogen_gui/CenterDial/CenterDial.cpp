@@ -6,6 +6,8 @@ CenterDial::CenterDial (State& stateToUse)
 {
     setOpaque (true);
     setInterceptsMouseClicks (true, true);
+    
+    showPitchCorrection();
 }
 
 
@@ -50,14 +52,27 @@ void CenterDial::focusLost (FocusChangeType cause)
     juce::ignoreUnused (cause);
 }
 
-void CenterDial::showParameter (Parameter& /*param*/)
+void CenterDial::showParameter (Parameter& param)
 {
+    const auto n = juce::NotificationType::dontSendNotification;
     
+    mainText.setText (param.rap.getCurrentValueAsText(), n);
+    description.setText (param.parameterNameVerbose, n);
+    
+//    const auto range = param.getRange();
+//
+//    leftEnd.setText (range.start, n);
+//    rightEnd.setText (range.end, n);
 }
 
 void CenterDial::showPitchCorrection()
 {
+    const auto n = juce::NotificationType::dontSendNotification;
     
+    mainText.setText (state.internals.currentInputNote->getCurrentValueAsText(), n);
+    description.setText (TRANS ("Pitch correction"), n);
+    leftEnd.setText (TRANS ("Flat"), n);
+    rightEnd.setText (TRANS ("Sharp"), n);
 }
 
 }

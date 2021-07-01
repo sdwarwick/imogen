@@ -1,7 +1,6 @@
 
 #include "imogen_gui.h"
 
-#include "CenterDial/DialState.cpp"
 #include "CenterDial/CenterDial.cpp"
 
 #include "Header/ScaleChooser.cpp"
@@ -12,9 +11,13 @@
 #include "Header/InputIcon.cpp"
 #include "Header/AboutPopup/AboutPopup.cpp"
 #include "Header/AboutPopup/LogoButton.cpp"
+#include "Header/MidiSettings/MidiSettingsPopup.cpp"
+#include "Header/MidiSettings/KeyboardButton.cpp"
 #include "Header/Header.cpp"
 
 #include "MidiKeyboard/KeyboardState.cpp"
 #include "MidiKeyboard/MidiKeyboard.cpp"
+
+#include "DryWet/DryWet.cpp"
 
 #include "GUI/GUI.cpp"

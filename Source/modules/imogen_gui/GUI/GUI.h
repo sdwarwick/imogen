@@ -6,6 +6,7 @@
 #include <imogen_gui/Header/Header.h>
 #include <imogen_gui/CenterDial/CenterDial.h>
 #include <imogen_gui/MidiKeyboard/MidiKeyboard.h>
+#include <imogen_gui/DryWet/DryWet.h>
 
 namespace Imogen
 {
@@ -29,6 +30,7 @@ private:
 
     Header       header {state, undoManager};
     CenterDial   dial {state};
+    DryWet       dryWet {state};
     MidiKeyboard keyboard;
 
     juce::TooltipWindow tooltipWindow {this, 700};

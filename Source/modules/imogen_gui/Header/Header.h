@@ -5,6 +5,7 @@
 #include "PresetBar/PresetBar.h"
 #include "ScaleChooser.h"
 #include "AboutPopup/LogoButton.h"
+#include "MidiSettings/KeyboardButton.h"
 
 namespace Imogen
 {
@@ -22,6 +23,8 @@ private:
     UndoManager& undo;
     
     LogoButton logo;
+    
+    KeyboardButton keyboardButton;
     
     InputIcon   inputIcon {state};
     OutputLevel outputLevel {state};

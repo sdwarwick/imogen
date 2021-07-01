@@ -26,8 +26,8 @@ private:
     
     Meters& meters;
     
-    Bar left {*meters.outputLevelL.get()};
-    Bar right {*meters.outputLevelR.get()};
+    Bar left {*meters.outputLevelL};
+    Bar right {*meters.outputLevelR};
 };
 
 }

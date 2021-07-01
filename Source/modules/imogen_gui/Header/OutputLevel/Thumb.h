@@ -13,7 +13,7 @@ private:
     
     Parameters& params;
     
-    GainParameter& outputGain {*params.outputGain.get()};
+    GainParameter& outputGain {*params.outputGain};
 };
 
 }

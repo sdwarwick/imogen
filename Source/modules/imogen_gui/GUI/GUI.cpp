@@ -6,7 +6,7 @@ GUI::GUI (Imogen::State& stateToUse)
 {
     setInterceptsMouseClicks (false, true);
 
-    gui::addAndMakeVisible (this, header, dial, keyboard);
+    gui::addAndMakeVisible (this, header, dial, dryWet, keyboard);
 }
 
 
@@ -29,7 +29,7 @@ void GUI::paint (juce::Graphics& g)
 
 void GUI::resized()
 {
-    // header, dial, keyboard
+    // header, dial, dryWet, keyboard
 }
 
 bool GUI::keyPressed (const juce::KeyPress&)

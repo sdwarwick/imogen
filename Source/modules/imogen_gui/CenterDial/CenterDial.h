@@ -1,7 +1,5 @@
 #pragma once
 
-#include "DialState.h"
-
 namespace Imogen
 {
 
@@ -26,6 +24,11 @@ private:
     void showPitchCorrection();
     
     State& state;
+    
+    juce::Label mainText;
+    juce::Label description;
+    juce::Label leftEnd;
+    juce::Label rightEnd;
     
     ParameterList::Listener l {state.parameters,
                                [&](Parameter& param) { showParameter (param); },
