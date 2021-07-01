@@ -63,6 +63,8 @@ void CenterDial::showParameter (Parameter& param)
 //
 //    leftEnd.setText (range.start, n);
 //    rightEnd.setText (range.end, n);
+    
+    setTooltip (param.parameterNameVerbose);
 }
 
 void CenterDial::showPitchCorrection()
@@ -73,6 +75,8 @@ void CenterDial::showPitchCorrection()
     description.setText (TRANS ("Pitch correction"), n);
     leftEnd.setText (TRANS ("Flat"), n);
     rightEnd.setText (TRANS ("Sharp"), n);
+    
+    setTooltip (TRANS ("Pitch correction"));
 }
 
 }

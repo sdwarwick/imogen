@@ -21,3 +21,4 @@
 #include "DryWet/DryWet.cpp"
 
 #include "GUI/GUI.cpp"
+#include "GUI/Remote.cpp"

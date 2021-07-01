@@ -70,11 +70,6 @@ target_link_libraries (Imogen PRIVATE imogen_dsp imogen_gui)
 
 #################### Configure the remote GUI app build ####################
 
-set (ImogenRemote_sourceFiles
-    ${Imogen_sourceDir}/remote_app/MainComponent.h
-    ${Imogen_sourceDir}/remote_app/MainComponent.cpp
-    ${Imogen_sourceDir}/remote_app/Main.cpp)
-
 juce_add_gui_app (ImogenRemote
     ${Imogen_Common_Flags}
     DESCRIPTION                   "Remote control for the Imogen plugin"
@@ -87,14 +82,12 @@ juce_add_gui_app (ImogenRemote
 
 configure_default_juce_app (ImogenRemote)
 
-target_sources (ImogenRemote PRIVATE ${ImogenRemote_sourceFiles})
-
-source_group (TREE ${Imogen_sourceDir} PREFIX "" FILES ${ImogenRemote_sourceFiles})
+target_sources (ImogenRemote PRIVATE ${Imogen_sourceDir}/remote_app/Main.cpp)
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
 add_binary_data_folder (ImogenRemote assets)
 
-target_link_libraries (ImogenRemote PRIVATE imogen_gui)
+target_link_libraries (ImogenRemote PRIVATE imogen_gui bv_app_utils)
 
 
