@@ -13,9 +13,8 @@ public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using Analyzer    = dsp::psola::Analyzer< SampleType >;
     using Synth       = dsp::SynthBase< SampleType >;
-    using Harmonizer  = Harmonizer< SampleType >;
 
-    LeadProcessor (Harmonizer& harm, State& stateToUse);
+    LeadProcessor (Harmonizer< SampleType >& harm, State& stateToUse);
 
     void prepare (double samplerate, int blocksize);
 

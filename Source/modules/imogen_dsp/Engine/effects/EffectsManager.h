@@ -46,7 +46,7 @@ private:
     InputGain< SampleType >       inputGain {state};
     NoiseGate< SampleType >       gate {state};
 
-    EQ< SampleType >         EQ {parameters};
+    EQ< SampleType >         eq {parameters};
     Compressor< SampleType > compressor {state};
     DeEsser< SampleType >    deEsser {state};
 

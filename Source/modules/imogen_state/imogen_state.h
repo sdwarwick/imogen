@@ -1,4 +1,6 @@
 
+#pragma once
+
 #if 0
 
  BEGIN_JUCE_MODULE_DECLARATION
@@ -14,8 +16,6 @@
 
 #endif
 
-
-#pragma once
 
 #include <bv_plugin/bv_plugin.h>
 #include <bv_networking/bv_networking.h>

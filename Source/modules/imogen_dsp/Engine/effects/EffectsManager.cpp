@@ -16,7 +16,7 @@ void EffectsManager< SampleType >::prepare (double samplerate, int blocksize)
     inputGain.prepare (samplerate, blocksize);
     gate.prepare (samplerate, blocksize);
 
-    EQ.prepare (samplerate, blocksize);
+    eq.prepare (samplerate, blocksize);
     compressor.prepare (samplerate, blocksize);
     deEsser.prepare (samplerate, blocksize);
 
@@ -39,7 +39,7 @@ void EffectsManager< SampleType >::processPreHarmony (const AudioBuffer& input)
 template < typename SampleType >
 void EffectsManager< SampleType >::processPostHarmony (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output)
 {
-    EQ.process (drySignal, harmonySignal);
+    eq.process (drySignal, harmonySignal);
     compressor.process (drySignal, harmonySignal);
     deEsser.process (drySignal, harmonySignal);
 

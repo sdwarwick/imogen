@@ -9,10 +9,9 @@ class PitchCorrection : public dsp::psola::PitchCorrectorBase<SampleType>
 {
 public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
-    using Harmonizer = Harmonizer<SampleType>;
     using Base = dsp::psola::PitchCorrectorBase<SampleType>;
     
-    PitchCorrection (Harmonizer& harm, Internals& internalsToUse);
+    PitchCorrection (Harmonizer< SampleType >& harm, Internals& internalsToUse);
     
     void renderNextFrame();
     

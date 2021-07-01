@@ -3,7 +3,7 @@ namespace Imogen
 {
 
 template < typename SampleType >
-PitchCorrection< SampleType >::PitchCorrection (Harmonizer& harm, Internals& internalsToUse)
+PitchCorrection< SampleType >::PitchCorrection (Harmonizer< SampleType >& harm, Internals& internalsToUse)
 : Base(harm.analyzer, harm.getPitchAdjuster()), internals (internalsToUse)
 {
 }
