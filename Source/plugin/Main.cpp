@@ -10,7 +10,6 @@
 #endif
 
 
-// This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     using namespace Imogen;
