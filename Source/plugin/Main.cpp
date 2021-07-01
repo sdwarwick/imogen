@@ -18,6 +18,6 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 #if IMOGEN_HEADLESS
     return new Processor();
 #else
-    return new dsp::ProcessorWithEditor< Processor, GUI, 1060, 640 >();
+    return new dsp::ProcessorWithEditor< Processor, GUI >(1060, 640);
 #endif
 }
