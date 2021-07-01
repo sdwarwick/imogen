@@ -25,7 +25,6 @@ private:
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
 
-    State&      state {getState()};
     Parameters& parameters {state.parameters};
 
     PluginTransport transport;

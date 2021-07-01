@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "ImogenGUI/ImogenGUI.h"
+#include "imogen_gui/imogen_gui.h"
 
 
 namespace Imogen
