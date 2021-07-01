@@ -10,7 +10,7 @@
  version:            0.0.1
  name:               imogen_gui
  description:        Imogen's user interface
- dependencies:       bv_plugin_gui ImogenCommon
+ dependencies:       bv_plugin_gui imogen_state
 
  END_JUCE_MODULE_DECLARATION
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ImogenCommon/ImogenCommon.h>
+#include <imogen_state/imogen_state.h>
 
 #include "Lead/LeadProcessor.h"
 #include "effects/EffectsManager.h"

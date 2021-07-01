@@ -1,19 +1,22 @@
 
-/*******************************************************************************
+#if 0
+
  BEGIN_JUCE_MODULE_DECLARATION
- ID:                 ImogenCommon
+
+ ID:                 imogen_state
  vendor:             Ben Vining
  version:            0.0.1
- name:               ImogenCommon
- description:        This Juce module declares some project-wide settings and data for Imogen as a whole.
- dependencies:       bv_midi bv_plugin bv_networking
+ name:               imogen_state
+ description:        Imogen's shared state
+ dependencies:       bv_plugin bv_networking
+
  END_JUCE_MODULE_DECLARATION
- *******************************************************************************/
+
+#endif
 
 
 #pragma once
 
-#include <bv_midi/bv_midi.h>
 #include <bv_plugin/bv_plugin.h>
 #include <bv_networking/bv_networking.h>
 

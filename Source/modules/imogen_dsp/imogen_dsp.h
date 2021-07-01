@@ -10,7 +10,7 @@
  version:            0.0.1
  name:               imogen_dsp
  description:        DSP module for Imogen
- dependencies:       bv_synth bv_psola ImogenCommon
+ dependencies:       bv_synth bv_psola imogen_state
 
  END_JUCE_MODULE_DECLARATION
 
