@@ -17,16 +17,18 @@ void LeadProcessor< SampleType >::prepare (double samplerate, int blocksize)
 }
 
 template < typename SampleType >
-void LeadProcessor< SampleType >::process (bool leadIsBypassed)
+void LeadProcessor< SampleType >::process (bool leadIsBypassed, int numSamples)
 {
-    pitchCorrector.renderNextFrame();
+    pitchCorrector.renderNextFrame (numSamples);
     dryPanner.process (pitchCorrector.getCorrectedSignal(), pannedLeadBuffer, leadIsBypassed);
+    lastBlocksize = numSamples;
 }
 
 template < typename SampleType >
 juce::AudioBuffer< SampleType >& LeadProcessor< SampleType >::getProcessedSignal()
 {
-    return pannedLeadBuffer;
+    alias.setDataToReferTo (pannedLeadBuffer.getArrayOfWritePointers(), 2, lastBlocksize);
+    return alias;
 }
 
 template class LeadProcessor< float >;

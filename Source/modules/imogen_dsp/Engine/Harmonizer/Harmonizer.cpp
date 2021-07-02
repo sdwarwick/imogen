@@ -34,6 +34,7 @@ void Harmonizer< SampleType >::process (int numSamples, MidiBuffer& midiMessages
     }
 
     updateInternals();
+    lastBlocksize = numSamples;
 }
 
 template < typename SampleType >
@@ -86,7 +87,8 @@ HarmonizerVoice< SampleType >* Harmonizer< SampleType >::createVoice()
 template < typename SampleType >
 juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getHarmonySignal()
 {
-    return wetBuffer;
+    alias.setDataToReferTo (wetBuffer.getArrayOfWritePointers(), 2, lastBlocksize);
+    return alias;
 }
 
 

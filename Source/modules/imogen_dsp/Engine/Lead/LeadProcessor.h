@@ -18,7 +18,7 @@ public:
 
     void prepare (double samplerate, int blocksize);
 
-    void process (bool leadIsBypassed);
+    void process (bool leadIsBypassed, int numSamples);
 
     AudioBuffer& getProcessedSignal();
 
@@ -27,6 +27,9 @@ private:
     DryPanner< SampleType >       dryPanner;
 
     AudioBuffer pannedLeadBuffer;
+    AudioBuffer alias;
+    
+    int lastBlocksize {0};
 };
 
 }  // namespace Imogen

@@ -15,7 +15,7 @@ public:
     
     void process (const AudioBuffer& input);
     
-    const AudioBuffer& getProcessedInputSignal() const;
+    const SampleType* getProcessedInputSignal() const;
     
 private:
     AudioBuffer processedMonoBuffer;

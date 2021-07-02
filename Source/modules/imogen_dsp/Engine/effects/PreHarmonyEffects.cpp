@@ -29,9 +29,9 @@ void PreHarmonyEffects<SampleType>::process (const AudioBuffer& input)
 }
 
 template<typename SampleType>
-const juce::AudioBuffer<SampleType>& PreHarmonyEffects<SampleType>::getProcessedInputSignal() const
+const SampleType* PreHarmonyEffects<SampleType>::getProcessedInputSignal() const
 {
-    return processedMonoBuffer;
+    return processedMonoBuffer.getReadPointer (0);
 }
 
 template class PreHarmonyEffects<float>;

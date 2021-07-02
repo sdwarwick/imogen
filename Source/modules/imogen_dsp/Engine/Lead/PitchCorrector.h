@@ -13,7 +13,7 @@ public:
     
     PitchCorrection (Harmonizer< SampleType >& harm, Internals& internalsToUse);
     
-    void renderNextFrame();
+    void renderNextFrame (int numSamples);
     
     void prepare (double samplerate, int blocksize);
 
@@ -23,6 +23,7 @@ private:
     Internals& internals;
 
     AudioBuffer correctedBuffer;
+    AudioBuffer alias;
 };
 
 }  // namespace Imogen

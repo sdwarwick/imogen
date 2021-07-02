@@ -14,20 +14,22 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     const bool leadIsBypassed       = parameters.leadBypass->get();
     const bool harmoniesAreBypassed = parameters.harmonyBypass->get();
+    
+    const auto numSamples = input.getNumSamples();
 
     if (leadIsBypassed && harmoniesAreBypassed)
     {
-        harmonizer.bypassedBlock (input.getNumSamples(), midiMessages);
+        harmonizer.bypassedBlock (numSamples, midiMessages);
         return;
     }
 
     preHarmonyEffects.process (input);
 
-    analyzer.analyzeInput (preHarmonyEffects.getProcessedInputSignal());
+    analyzer.analyzeInput (preHarmonyEffects.getProcessedInputSignal(), numSamples);
 
-    harmonizer.process (input.getNumSamples(), midiMessages, harmoniesAreBypassed);
+    harmonizer.process (numSamples, midiMessages, harmoniesAreBypassed);
 
-    leadProcessor.process (leadIsBypassed);
+    leadProcessor.process (leadIsBypassed, numSamples);
 
     postHarmonyEffects.process (harmonizer.getHarmonySignal(), leadProcessor.getProcessedSignal(), output);
 }

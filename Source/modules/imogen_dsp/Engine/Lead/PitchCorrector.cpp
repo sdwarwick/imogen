@@ -9,9 +9,11 @@ PitchCorrection< SampleType >::PitchCorrection (Harmonizer< SampleType >& harm, 
 }
 
 template < typename SampleType >
-void PitchCorrection< SampleType >::renderNextFrame()
+void PitchCorrection< SampleType >::renderNextFrame (int numSamples)
 {
-    this->processNextFrame (correctedBuffer);
+    alias.setDataToReferTo (correctedBuffer.getArrayOfWritePointers(), 1, numSamples);
+    
+    this->processNextFrame (alias);
     
     internals.currentInputNote->set (this->getOutputMidiPitch());
     internals.currentCentsSharp->set (this->getCentsSharp());
@@ -20,7 +22,7 @@ void PitchCorrection< SampleType >::renderNextFrame()
 template < typename SampleType >
 const juce::AudioBuffer< SampleType >& PitchCorrection< SampleType >::getCorrectedSignal() const
 {
-    return correctedBuffer;
+    return alias;
 }
 
 template < typename SampleType >

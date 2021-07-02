@@ -42,6 +42,9 @@ private:
     Internals&  internals {state.internals};
 
     AudioBuffer wetBuffer;
+    AudioBuffer alias;
+    
+    int lastBlocksize {0};
 };
 
 
