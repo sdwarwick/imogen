@@ -1,6 +1,12 @@
 namespace Imogen
 {
 template < typename SampleType >
+Engine< SampleType >::Engine (State& stateToUse)
+: state (stateToUse)
+{
+}
+
+template < typename SampleType >
 void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool)
 {
     output.clear();

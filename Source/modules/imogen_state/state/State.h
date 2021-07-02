@@ -21,9 +21,9 @@ struct State : PluginState
 };
 
 
-struct PresetManager : PluginPresetManager
+struct PresetManager : PresetManagerBase
 {
-    using PluginPresetManager::PluginPresetManager;
+    using PresetManagerBase::PresetManagerBase;
     
     std::string getCompanyName() final;
     std::string getProductName() final;

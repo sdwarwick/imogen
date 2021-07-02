@@ -13,7 +13,7 @@ private:
     State& state;
     UndoManager& undo;
     
-    PresetManager presetManager {state.parameters, &undo};
+    PresetManager presetManager {state, &undo};
 };
 
 }

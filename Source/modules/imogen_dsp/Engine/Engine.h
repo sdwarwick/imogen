@@ -15,7 +15,7 @@ public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using MidiBuffer  = juce::MidiBuffer;
 
-    Engine (State& stateToUse) : state (stateToUse) { }
+    Engine (State& stateToUse);
 
 private:
     void renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool isBypassed) final;
