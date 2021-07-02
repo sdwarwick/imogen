@@ -8,7 +8,7 @@ struct EQ
 {
     using AudioBuffer = juce::AudioBuffer< SampleType >;
 
-    EQ (Parameters& params);
+    EQ (EQState& params);
 
     void process (AudioBuffer& dry, AudioBuffer& wet);
 
@@ -22,7 +22,7 @@ private:
     void updatePeak (float freq, float Q, float gain);
     void updateHighPass (float freq, float Q);
 
-    Parameters& parameters;
+    EQState& parameters;
 
     dsp::FX::EQ< SampleType > dryEQ, wetEQ;
 };

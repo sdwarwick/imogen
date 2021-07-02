@@ -6,10 +6,7 @@ namespace Imogen
 {
 struct Meters : ParameterList
 {
-    Meters() : ParameterList ("ImogenMeters")
-    {
-        add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
-    }
+    Meters();
 
     GainMeter inputLevel {"Input level", "Input level", inputMeter};
 

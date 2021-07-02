@@ -19,18 +19,18 @@ void Harmonizer< SampleType >::prepared (double, int blocksize)
 }
 
 template < typename SampleType >
-void Harmonizer< SampleType >::process (int numSamples, MidiBuffer& midi,
+void Harmonizer< SampleType >::process (int numSamples, MidiBuffer& midiMessages,
                                         bool harmoniesBypassed)
 {
     if (harmoniesBypassed)
     {
         wetBuffer.clear();
-        this->bypassedBlock (numSamples, midi);
+        this->bypassedBlock (numSamples, midiMessages);
     }
     else
     {
         updateParameters();
-        this->renderVoices (midi, wetBuffer);
+        this->renderVoices (midiMessages, wetBuffer);
     }
 
     updateInternals();
@@ -39,32 +39,32 @@ void Harmonizer< SampleType >::process (int numSamples, MidiBuffer& midi,
 template < typename SampleType >
 void Harmonizer< SampleType >::updateParameters()
 {
-    this->setMidiLatch (parameters.midiLatch->get());
+    this->setMidiLatch (midi.midiLatch->get());
 
-    this->updateADSRsettings (parameters.adsrAttack->get(),
-                              parameters.adsrDecay->get(),
-                              (float) parameters.adsrSustain->get(),
-                              parameters.adsrRelease->get());
+    this->updateADSRsettings (midi.adsrAttack->get(),
+                              midi.adsrDecay->get(),
+                              (float) midi.adsrSustain->get() * 0.01f,
+                              midi.adsrRelease->get());
 
-    this->setPedalPitch (parameters.pedalToggle->get(),
-                         parameters.pedalThresh->get(),
-                         parameters.pedalInterval->get());
+    this->setPedalPitch (midi.pedalToggle->get(),
+                         midi.pedalThresh->get(),
+                         midi.pedalInterval->get());
 
-    this->setDescant (parameters.descantToggle->get(),
-                      parameters.descantThresh->get(),
-                      parameters.descantInterval->get());
+    this->setDescant (midi.descantToggle->get(),
+                      midi.descantThresh->get(),
+                      midi.descantInterval->get());
 
-    this->setNoteStealingEnabled (parameters.voiceStealing->get());
-    this->setAftertouchGainOnOff (parameters.aftertouchToggle->get());
+    this->setNoteStealingEnabled (midi.voiceStealing->get());
+    this->setAftertouchGainOnOff (midi.aftertouchToggle->get());
 
-    this->updateMidiVelocitySensitivity (parameters.velocitySens->get());
+    this->updateMidiVelocitySensitivity (midi.velocitySens->get());
 
-    this->updatePitchbendRange (parameters.pitchbendRange->get());
+    this->updatePitchbendRange (midi.pitchbendRange->get());
 
     this->updateLowestPannedNote (parameters.lowestPanned->get());
 
-    this->togglePitchGlide (parameters.pitchGlide->get());
-    this->setPitchGlideTime ((double) parameters.glideTime->get());
+    this->togglePitchGlide (midi.pitchGlide->get());
+    this->setPitchGlideTime ((double) midi.glideTime->get());
 }
 
 template < typename SampleType >

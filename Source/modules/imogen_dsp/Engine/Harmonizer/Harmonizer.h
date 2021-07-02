@@ -21,7 +21,7 @@ public:
     Harmonizer (State& stateToUse, Analyzer& analyzerToUse);
 
     void process (int numSamples,
-                  MidiBuffer&        midi,
+                  MidiBuffer&        midiMessages,
                   bool               harmoniesBypassed);
 
     AudioBuffer& getHarmonySignal();
@@ -38,6 +38,7 @@ private:
 
     State&      state;
     Parameters& parameters {state.parameters};
+    MidiState&  midi {parameters.midiState};
     Internals&  internals {state.internals};
 
     AudioBuffer wetBuffer;

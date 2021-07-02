@@ -2,7 +2,7 @@
 namespace Imogen
 {
 template < typename SampleType >
-EQ< SampleType >::EQ (Parameters& params)
+EQ< SampleType >::EQ (EQState& params)
     : parameters (params)
 {
     dryEQ.addBand (FT::LowShelf, 80.f);

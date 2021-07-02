@@ -5,10 +5,7 @@ namespace Imogen
 {
 struct Internals : ParameterList
 {
-    Internals() : ParameterList ("ImogenInternals")
-    {
-        addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp, mtsEspScaleName);
-    }
+    Internals();
 
     ToggleParam abletonLinkEnabled {"Ableton link Toggle", "Ableton link toggle", false};
 

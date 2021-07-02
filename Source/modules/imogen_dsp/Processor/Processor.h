@@ -15,7 +15,6 @@ private:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
     double         getTailLengthSeconds() const final;
-    BoolParameter& getMainBypass() const final;
 
     bool acceptsMidi() const final { return true; }
     bool producesMidi() const final { return true; }

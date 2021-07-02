@@ -11,14 +11,9 @@ Processor::Processor()
     dataSync.connect ("host");
 }
 
-BoolParameter& Processor::getMainBypass() const
-{
-    return *parameters.mainBypass.get();
-}
-
 double Processor::getTailLengthSeconds() const
 {
-    return parameters.adsrRelease->get();
+    return parameters.midiState.adsrRelease->get();
 }
 
 bool Processor::isBusesLayoutSupported (const BusesLayout& layouts) const

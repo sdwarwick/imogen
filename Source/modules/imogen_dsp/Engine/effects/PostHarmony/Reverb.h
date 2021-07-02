@@ -17,7 +17,7 @@ struct Reverb
 
 private:
     State&      state;
-    Parameters& parameters {state.parameters};
+    ReverbState& parameters {state.parameters.reverbState};
     Meters&     meters {state.meters};
 
     dsp::FX::Reverb reverb;
