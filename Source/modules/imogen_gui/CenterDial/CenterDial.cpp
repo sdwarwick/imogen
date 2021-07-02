@@ -54,27 +54,23 @@ void CenterDial::focusLost (FocusChangeType cause)
 
 void CenterDial::showParameter (Parameter& param)
 {
-    const auto n = juce::NotificationType::dontSendNotification;
-    
-    mainText.setText (param.rap.getCurrentValueAsText(), n);
-    description.setText (param.parameterNameVerbose, n);
+    mainText.set (param.rap.getCurrentValueAsText());
+    description.set (param.parameterNameVerbose);
     
 //    const auto range = param.getRange();
 //
-//    leftEnd.setText (range.start, n);
-//    rightEnd.setText (range.end, n);
+//    leftEnd.set (range.start);
+//    rightEnd.set (range.end);
     
     setTooltip (param.parameterNameVerbose);
 }
 
 void CenterDial::showPitchCorrection()
 {
-    const auto n = juce::NotificationType::dontSendNotification;
-    
-    mainText.setText (state.internals.currentInputNote->getCurrentValueAsText(), n);
-    description.setText (TRANS ("Pitch correction"), n);
-    leftEnd.setText (TRANS ("Flat"), n);
-    rightEnd.setText (TRANS ("Sharp"), n);
+    mainText.set (state.internals.currentInputNote->getCurrentValueAsText());
+    description.set (TRANS ("Pitch correction"));
+    leftEnd.set (TRANS ("Flat"));
+    rightEnd.set (TRANS ("Sharp"));
     
     setTooltip (TRANS ("Pitch correction"));
 }

@@ -25,10 +25,10 @@ private:
     
     State& state;
     
-    juce::Label mainText;
-    juce::Label description;
-    juce::Label leftEnd;
-    juce::Label rightEnd;
+    gui::Label mainText;
+    gui::Label description;
+    gui::Label leftEnd;
+    gui::Label rightEnd;
     
     ParameterList::Listener l {state.parameters,
                                [&](Parameter& param) { showParameter (param); },

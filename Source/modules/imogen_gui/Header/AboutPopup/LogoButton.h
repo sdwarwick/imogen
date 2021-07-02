@@ -14,7 +14,7 @@ private:
     void resized() final;
     void createAboutWindow();
     
-    gui::TextButton button {"Imogen", [&]{ createAboutWindow(); }, "Imogen"};
+    gui::TextButton button {"Imogen", [&]{ createAboutWindow(); }};
     
     gui::Popup<AboutPopup> aboutWindow;
 };
