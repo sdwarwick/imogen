@@ -21,22 +21,22 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
         return;
     }
 
-    effects.processPreHarmony (input);
+    preHarmonyEffects.process (input);
 
-    analyzer.analyzeInput (effects.getProcessedInputSignal());
+    analyzer.analyzeInput (preHarmonyEffects.getProcessedInputSignal());
 
     harmonizer.process (input.getNumSamples(), midiMessages, harmoniesAreBypassed);
 
     leadProcessor.process (leadIsBypassed);
 
-    effects.processPostHarmony (harmonizer.getHarmonySignal(), leadProcessor.getProcessedSignal(), output);
+    postHarmonyEffects.process (harmonizer.getHarmonySignal(), leadProcessor.getProcessedSignal(), output);
 }
 
 template < typename SampleType >
 void Engine< SampleType >::updateStereoWidth (int width)
 {
     harmonizer.updateStereoWidth (width);
-    effects.updateStereoWidth (width);
+    postHarmonyEffects.updateStereoWidth (width);
 }
 
 template < typename SampleType >
@@ -55,7 +55,8 @@ void Engine< SampleType >::onPrepare (int blocksize, double samplerate)
 
     harmonizer.prepare (samplerate, blocksize);
     leadProcessor.prepare (samplerate, blocksize);
-    effects.prepare (samplerate, blocksize);
+    preHarmonyEffects.prepare (samplerate, blocksize);
+    postHarmonyEffects.prepare (samplerate, blocksize);
 }
 
 

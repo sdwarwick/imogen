@@ -18,33 +18,22 @@
 namespace Imogen
 {
 template < typename SampleType >
-class EffectsManager
+class PostHarmonyEffects
 {
 public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
 
-    EffectsManager (State& stateToUse);
+    PostHarmonyEffects (State& stateToUse);
 
     void prepare (double samplerate, int blocksize);
 
-    void processPreHarmony (const AudioBuffer& input);
-
-    void processPostHarmony (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output);
-
-    const AudioBuffer& getProcessedInputSignal() const;
+    void process (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output);
 
     void updateStereoWidth (int width);
 
 private:
     State&      state;
     Parameters& parameters {state.parameters};
-
-    AudioBuffer processedMonoBuffer;
-
-    StereoReducer< SampleType >   stereoReducer {parameters};
-    dsp::FX::Filter< SampleType > initialLoCut {dsp::FX::FilterType::HighPass, 65.f};
-    InputGain< SampleType >       inputGain {state};
-    NoiseGate< SampleType >       gate {state};
 
     EQ< SampleType >         eq {parameters.eqState};
     Compressor< SampleType > compressor {state};

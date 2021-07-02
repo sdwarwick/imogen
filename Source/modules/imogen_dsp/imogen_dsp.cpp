@@ -5,6 +5,7 @@
 #include "Engine/effects/PreHarmony/StereoReducer.cpp"
 #include "Engine/effects/PreHarmony/InputGain.cpp"
 #include "Engine/effects/PreHarmony/NoiseGate.cpp"
+#include "Engine/effects/PreHarmonyEffects.cpp"
 
 #include "Engine/Harmonizer/Harmonizer.cpp"
 #include "Engine/Harmonizer/HarmonizerVoice.cpp"
@@ -22,7 +23,7 @@
 #include "Engine/effects/PostHarmony/OutputGain.cpp"
 #include "Engine/effects/PostHarmony/Limiter.cpp"
 
-#include "Engine/effects/EffectsManager.cpp"
+#include "Engine/effects/PostHarmonyEffects.cpp"
 
 #include "Engine/Engine.cpp"
 

@@ -3,8 +3,8 @@
 #include <imogen_state/imogen_state.h>
 
 #include "Lead/LeadProcessor.h"
-#include "effects/EffectsManager.h"
-
+#include "effects/PostHarmonyEffects.h"
+#include "effects/PreHarmonyEffects.h"
 
 namespace Imogen
 {
@@ -28,12 +28,14 @@ private:
     Parameters& parameters {state.parameters};
 
     dsp::psola::Analyzer< SampleType > analyzer;
+    
+    PreHarmonyEffects<SampleType> preHarmonyEffects {state};
 
     Harmonizer< SampleType > harmonizer {state, analyzer};
 
     LeadProcessor< SampleType > leadProcessor {harmonizer, state};
 
-    EffectsManager< SampleType > effects {state};
+    PostHarmonyEffects< SampleType > postHarmonyEffects {state};
 };
 
 }  // namespace Imogen
