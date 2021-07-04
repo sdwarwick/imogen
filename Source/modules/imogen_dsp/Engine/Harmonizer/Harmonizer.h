@@ -13,7 +13,6 @@ template < typename SampleType >
 class Harmonizer : public dsp::SynthBase< SampleType >
 {
     using AudioBuffer = juce::AudioBuffer< SampleType >;
-    using MidiBuffer  = juce::MidiBuffer;
     using Voice       = HarmonizerVoice< SampleType >;
     using Analyzer    = dsp::psola::Analyzer< SampleType >;
 

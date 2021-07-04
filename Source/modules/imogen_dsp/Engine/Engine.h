@@ -13,7 +13,6 @@ class Engine : public dsp::LatencyEngine< SampleType >
 {
 public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
-    using MidiBuffer  = juce::MidiBuffer;
 
     Engine (State& stateToUse);
 

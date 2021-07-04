@@ -26,8 +26,6 @@ private:
 
     Parameters& parameters {state.parameters};
 
-    PluginTransport transport;
-
     network::OscDataSynchronizer dataSync {state};
 };
 
