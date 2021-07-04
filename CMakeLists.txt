@@ -6,7 +6,7 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 set (BV_USE_MTS_ESP TRUE)
 #set (BV_USE_ABLETON_LINK TRUE)
 
-include (CMake/FindShared-code.cmake)
+include (scripts/FindShared-code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
