@@ -16,7 +16,7 @@ private:
     State state;
     GUI   gui {state};
     
-    network::OscDataSynchronizer dataSync {state};
+    // network::OscDataSynchronizer dataSync {state};
 };
 
 }

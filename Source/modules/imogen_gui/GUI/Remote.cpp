@@ -11,13 +11,10 @@ Remote::Remote()
     state.addAllAsInternal();
     
     setSize (800, 2990);
-    
-    dataSync.connect ("host");
 }
 
 Remote::~Remote()
 {
-    dataSync.disconnect();
     setLookAndFeel (nullptr);
 }
 

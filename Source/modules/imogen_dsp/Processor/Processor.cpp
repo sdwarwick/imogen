@@ -7,7 +7,6 @@ Processor::Processor()
                                            .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
                                            .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
 {
-    dataSync.connect ("host");
 }
 
 double Processor::getTailLengthSeconds() const

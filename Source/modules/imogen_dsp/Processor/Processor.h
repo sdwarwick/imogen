@@ -26,7 +26,7 @@ private:
 
     Parameters& parameters {state.parameters};
 
-    network::OscDataSynchronizer dataSync {state};
+    // network::OscDataSynchronizer dataSync {state};
 };
 
 }  // namespace Imogen
