@@ -2,7 +2,7 @@
 namespace Imogen
 {
 
-State::State() : PluginState (parameters, "ImogenState")
+State::State() : PluginState (parameters, "Imogen")
 {
     addDataChild (parameters, internals, meters);
 }
