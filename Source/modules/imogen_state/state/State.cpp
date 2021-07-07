@@ -4,7 +4,6 @@ namespace Imogen
 
 State::State() : PluginState (parameters, "Imogen")
 {
-    addDataChild (parameters, internals, meters);
 }
 
 void State::addTo (juce::AudioProcessor& processor)
@@ -19,6 +18,14 @@ void State::addAllAsInternal()
     parameters.addAllParametersAsInternal();
     meters.addAllParametersAsInternal();
     internals.addAllParametersAsInternal();
+}
+
+void State::serialize (TreeReflector& ref)
+{
+    PluginState::serialize (ref);
+    
+    ref.add ("Meters", meters);
+    ref.add ("InternalSettings", internals);
 }
 
 

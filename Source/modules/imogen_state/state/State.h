@@ -12,8 +12,9 @@ struct State : PluginState
     State();
     
     void addTo (juce::AudioProcessor& processor) final;
-    
     void addAllAsInternal();
+    
+    void serialize (TreeReflector& ref) final;
     
     Parameters parameters;
     Internals  internals;

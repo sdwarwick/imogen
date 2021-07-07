@@ -9,7 +9,6 @@ Remote::Remote()
     addAndMakeVisible (gui);
     
     state.addAllAsInternal();
-    state.parameters.addDataChild (dataSync);
     
     setSize (800, 2990);
     
