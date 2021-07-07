@@ -10,7 +10,7 @@ include (scripts/FindShared-code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-add_subdirectory (Source/modules)
+bv_add_modules (${Imogen_sourceDir}/modules)
 
 set (Imogen_Common_Flags
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
