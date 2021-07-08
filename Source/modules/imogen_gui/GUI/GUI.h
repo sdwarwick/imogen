@@ -34,8 +34,6 @@ private:
     MidiKeyboard keyboard;
 
     juce::TooltipWindow tooltipWindow {this, 700};
-
-    gui::DarkModeSentinel darkModeSentinel {internals.guiDarkMode, *this};
 };
 
 }  // namespace Imogen

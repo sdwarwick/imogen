@@ -12,7 +12,7 @@ struct Parameters : plugin::ParameterList
 {
     Parameters();
 
-    IntParam inputMode {"Input source", "Input source", 1, 3, 1,
+    IntParam inputMode {1, 3, 1, "Input source", "Input source",
                         [] (int value, int maxLength)
                         {
                             switch (value)
@@ -41,15 +41,15 @@ struct Parameters : plugin::ParameterList
 
     PercentParam stereoWidth {"Stereo width", "Stereo width", 100};
 
-    IntParam lowestPanned {"Lowest panned note", "Lowest panned note", 0, 127, 0, pitch_stringFromInt, pitch_intFromString};
+    IntParam lowestPanned {0, 127, 0, "Lowest panned note", "Lowest panned note", pitch_stringFromInt, pitch_intFromString};
 
-    IntParam leadPan {"Lead pan", "Lead pan", 0, 127, 64, midiPan_stringFromInt, midiPan_intFromString};
+    IntParam leadPan {0, 127, 64, "Lead pan", "Lead pan", midiPan_stringFromInt, midiPan_intFromString};
 
     ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
-    dbParam     noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f, generic};
+    dbParam     noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f};
 
     ToggleParam  deEsserToggle {"D-S Toggle", "D-S toggle", true};
-    dbParam      deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f, generic};
+    dbParam      deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f};
     PercentParam deEsserAmount {"D-S Amount", "D-S amount", 50};
 
     ToggleParam  compToggle {"Compressor Toggle", "Compressor toggle", false};
@@ -65,9 +65,6 @@ struct Parameters : plugin::ParameterList
     ReverbState reverbState {*this};
     
     MidiState midiState {*this};
-
-private:
-    static constexpr auto generic = juce::AudioProcessorParameter::genericParameter;
 };
 
 

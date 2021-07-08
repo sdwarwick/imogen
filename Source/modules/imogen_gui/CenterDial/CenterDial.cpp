@@ -54,7 +54,7 @@ void CenterDial::focusLost (FocusChangeType cause)
 
 void CenterDial::showParameter (plugin::Parameter& param)
 {
-    mainText.set (param.rap.getCurrentValueAsText());
+    mainText.set (param.getCurrentValueAsText());
     description.set (param.parameterNameVerbose);
     
 //    const auto range = param.getRange();

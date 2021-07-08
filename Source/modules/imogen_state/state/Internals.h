@@ -9,7 +9,7 @@ struct Internals : plugin::ParameterList
 
     ToggleParam abletonLinkEnabled {"Ableton link Toggle", "Ableton link toggle", false};
 
-    IntParam abletonLinkSessionPeers {"Link Num peers", "Ableton link num session peers", 0, 50, 0,
+    IntParam abletonLinkSessionPeers {0, 50, 0, "Link Num peers", "Ableton link num session peers",
                                       [] (int value, int maximumStringLength)
                                       { return juce::String (value).substring (0, maximumStringLength); }};
 
@@ -17,26 +17,20 @@ struct Internals : plugin::ParameterList
 
     plugin::StringProperty mtsEspScaleName {"Scale name"};
 
-    IntParam lastMovedMidiController {"Controller Number", "Last moved MIDI controller number", 0, 127, 0};
+    IntParam lastMovedMidiController {0, 127, 0, "Controller Number", "Last moved MIDI controller number"};
 
-    IntParam lastMovedCCValue {"Controller Value", "Last moved MIDI controller value", 0, 127, 0};
+    IntParam lastMovedCCValue {0, 127, 0, "Controller Value", "Last moved MIDI controller value"};
 
-    BoolParam guiDarkMode {"Dark mode", "GUI Dark mode", true,
-                           [] (bool val, int maxLength)
-                           {
-                               if (val) return TRANS ("Dark mode is on").substring (0, maxLength);
+    BoolParam guiDarkMode {true, "Dark mode", "GUI Dark mode"};
 
-                               return TRANS ("Dark mode is off").substring (0, maxLength);
-                           }};
-
-    IntParam currentInputNote {"Current note", "Current input note", -1, 127, -1,
+    IntParam currentInputNote {-1, 127, -1, "Current note", "Current input note",
                                [] (int note, int maxLength)
                                {
                                    if (note == -1) return juce::String ("Unpitched");
                                    return pitchToString (note).substring (0, maxLength);
                                }};
 
-    IntParam currentCentsSharp {"Cents sharp", "Current input cents sharp", -100, 100, 0,
+    IntParam currentCentsSharp {-100, 100, 0, "Cents sharp", "Current input cents sharp",
                                 [] (int cents, int maxLength)
                                 {
                                     if (cents == 0) return TRANS ("Perfect!");
