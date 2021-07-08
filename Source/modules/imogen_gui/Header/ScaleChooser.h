@@ -11,7 +11,7 @@ public:
 private:
     Internals& internals;
     
-    StringProperty& scaleName {internals.mtsEspScaleName};
+    plugin::StringProperty& scaleName {internals.mtsEspScaleName};
 };
 
 }

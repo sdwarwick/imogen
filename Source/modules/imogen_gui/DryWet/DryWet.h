@@ -11,7 +11,7 @@ public:
 private:
     State& state;
     
-    IntParameter& pcntWet {*state.parameters.dryWet};
+    plugin::IntParameter& pcntWet {*state.parameters.dryWet};
 };
 
 }

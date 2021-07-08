@@ -12,13 +12,13 @@ public:
 private:
     struct Bar : juce::Component
     {
-        Bar (GainMeterParameter& meter);
+        Bar (plugin::GainMeterParameter& meter);
         
     private:
         void paint (juce::Graphics& g) final;
         void resized() final;
         
-        GainMeterParameter& level;
+        plugin::GainMeterParameter& level;
     };
     
     void paint (juce::Graphics& g) final;

@@ -7,7 +7,7 @@
 
 namespace Imogen
 {
-struct State : PluginState
+struct State : plugin::State
 {
     State();
     
@@ -22,7 +22,7 @@ struct State : PluginState
 };
 
 
-struct PresetManager : PresetManagerBase
+struct PresetManager : plugin::PresetManagerBase
 {
     using PresetManagerBase::PresetManagerBase;
     

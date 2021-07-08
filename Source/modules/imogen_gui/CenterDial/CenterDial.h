@@ -20,7 +20,7 @@ public:
     void focusLost (FocusChangeType cause) override final;
     
 private:
-    void showParameter (Parameter& param);
+    void showParameter (plugin::Parameter& param);
     void showPitchCorrection();
     
     State& state;
@@ -30,9 +30,9 @@ private:
     gui::Label leftEnd;
     gui::Label rightEnd;
     
-    ParameterList::Listener l {state.parameters,
-                               [&](Parameter& param) { showParameter (param); },
-                               [&](Parameter&, bool starting) { if (! starting) showPitchCorrection(); }};
+    plugin::ParameterList::Listener l {state.parameters,
+                               [&](plugin::Parameter& param) { showParameter (param); },
+                               [&](plugin::Parameter&, bool starting) { if (! starting) showPitchCorrection(); }};
 };
 
 }

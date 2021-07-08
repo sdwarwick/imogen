@@ -2,7 +2,7 @@
 namespace Imogen
 {
 
-State::State() : PluginState (parameters, "Imogen")
+State::State() : plugin::State (parameters, "Imogen")
 {
 }
 
@@ -22,7 +22,7 @@ void State::addAllAsInternal()
 
 void State::serialize (TreeReflector& ref)
 {
-    PluginState::serialize (ref);
+    plugin::State::serialize (ref);
     
     ref.add ("Meters", meters);
     ref.add ("InternalSettings", internals);
@@ -50,19 +50,19 @@ Internals::Internals()
 }
 
 
-EQState::EQState (ParameterList& list)
+EQState::EQState (plugin::ParameterList& list)
 {
     list.add (eqToggle, eqLowShelfFreq, eqLowShelfQ, eqLowShelfGain, eqHighShelfFreq, eqHighShelfQ, eqHighShelfGain, eqHighPassFreq, eqHighPassQ, eqPeakFreq, eqPeakQ, eqPeakGain);
 }
 
 
-ReverbState::ReverbState (ParameterList& list)
+ReverbState::ReverbState (plugin::ParameterList& list)
 {
     list.add (reverbToggle, reverbDryWet, reverbDecay, reverbDuck, reverbLoCut, reverbHiCut);
 }
 
 
-MidiState::MidiState (ParameterList& list)
+MidiState::MidiState (plugin::ParameterList& list)
 {
     list.add (pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, midiLatch, pitchGlide, glideTime, adsrAttack, adsrDecay, adsrSustain, adsrRelease, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval);
     

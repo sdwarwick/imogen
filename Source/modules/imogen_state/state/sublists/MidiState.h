@@ -5,7 +5,7 @@ namespace Imogen
 
 struct MidiState
 {
-    MidiState (ParameterList& list);
+    MidiState (plugin::ParameterList& list);
     
     IntParam pitchbendRange {"Pitchbend range", "Pitchbend range", 0, 12, 2, st_stringFromInt, st_intFromString, TRANS ("st")};
     

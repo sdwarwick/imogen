@@ -19,7 +19,7 @@ void OutputLevelMeter::resized()
 }
 
 
-OutputLevelMeter::Bar::Bar (GainMeterParameter& meter)
+OutputLevelMeter::Bar::Bar (plugin::GainMeterParameter& meter)
 : level (meter)
 {
     

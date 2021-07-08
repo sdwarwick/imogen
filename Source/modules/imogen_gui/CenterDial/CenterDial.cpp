@@ -52,7 +52,7 @@ void CenterDial::focusLost (FocusChangeType cause)
     juce::ignoreUnused (cause);
 }
 
-void CenterDial::showParameter (Parameter& param)
+void CenterDial::showParameter (plugin::Parameter& param)
 {
     mainText.set (param.rap.getCurrentValueAsText());
     description.set (param.parameterNameVerbose);

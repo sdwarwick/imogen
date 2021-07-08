@@ -4,7 +4,7 @@
 
 namespace Imogen
 {
-struct Meters : ParameterList
+struct Meters : plugin::ParameterList
 {
     Meters();
 

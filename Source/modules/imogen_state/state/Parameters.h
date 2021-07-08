@@ -8,7 +8,7 @@
 namespace Imogen
 {
 
-struct Parameters : ParameterList
+struct Parameters : plugin::ParameterList
 {
     Parameters();
 

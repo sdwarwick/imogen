@@ -5,7 +5,7 @@ namespace Imogen
 
 struct ReverbState
 {
-    ReverbState (ParameterList& list);
+    ReverbState (plugin::ParameterList& list);
     
     ToggleParam  reverbToggle {"Reverb Toggle", "Reverb toggle", false};
     PercentParam reverbDryWet {"Reverb Mix", "Reverb mix", 15};

@@ -14,9 +14,9 @@ private:
     
     State& state;
     
-    GainMeterParameter& inputMeter {*state.meters.inputLevel.get()};
+    plugin::GainMeterParameter& inputMeter {*state.meters.inputLevel};
     
-    GainParameter& inputGain {*state.parameters.inputGain.get()};
+    plugin::GainParameter& inputGain {*state.parameters.inputGain};
 };
 
 }

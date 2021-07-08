@@ -26,7 +26,7 @@ private:
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
     
-    PluginUndo undoManager {parameters};
+    plugin::Undo undoManager {parameters};
 
     Header       header {state, undoManager};
     CenterDial   dial {state};
