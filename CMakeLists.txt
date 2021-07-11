@@ -35,6 +35,8 @@ set (Imogen_Common_Flags
 
 #################### Configure the main build of Imogen ####################
 
+bv_detect_default_plugin_formats (formats)
+
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
     IS_SYNTH                        FALSE
@@ -50,7 +52,7 @@ juce_add_plugin (Imogen
     PLUGIN_NAME                     Imogen
     PLUGIN_MANUFACTURER_CODE        Benv
     PLUGIN_CODE                     Imgn
-    FORMATS                         AU VST3 Standalone Unity
+    FORMATS                         ${formats}
     DESCRIPTION                     "Real-time vocal harmonizer instrument"
     DOCUMENT_BROWSER_ENABLED        TRUE
     NEEDS_CURL                      TRUE
