@@ -10,7 +10,7 @@
  version:            0.0.1
  name:               imogen_state
  description:        Imogen's shared state
- dependencies:       bv_plugin bv_networking
+ dependencies:       bv_plugin
 
  END_JUCE_MODULE_DECLARATION
 
@@ -18,7 +18,6 @@
 
 
 #include <bv_plugin/bv_plugin.h>
-#include <bv_networking/bv_networking.h>
 
 namespace Imogen
 {
