@@ -1,18 +1,18 @@
-if (NOT DEFINED CPM_DOWNLOAD_LOCATION)
-  set (CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM.cmake")
+if (NOT DEFINED BV_CPM_PATH)
+  set (BV_CPM_PATH "${CMAKE_BINARY_DIR}/cmake/CPM.cmake")
 endif()
 
-if (NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
+if (NOT (EXISTS ${BV_CPM_PATH}))
 
-  message (STATUS "Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
+  message (STATUS "Downloading CPM.cmake to ${BV_CPM_PATH}")
   
   file (DOWNLOAD
        https://raw.githubusercontent.com/cpm-cmake/CPM.cmake/master/cmake/CPM.cmake
-       ${CPM_DOWNLOAD_LOCATION})
+       ${BV_CPM_PATH})
 
 endif()
 
-include (${CPM_DOWNLOAD_LOCATION})
+include (${BV_CPM_PATH})
 
 
 CPMAddPackage(
