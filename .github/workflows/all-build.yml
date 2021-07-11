@@ -62,4 +62,4 @@ jobs:
 
      - name: Run iOS build script
        shell: bash
-       run: cd $GITHUB_WORKSPACE/imogen && cmake -B Builds && cmake --build $GITHUB_WORKSPACE/imogen/Builds --config Release
+       run: cd $GITHUB_WORKSPACE/imogen/scripts && bash build_ios.sh
