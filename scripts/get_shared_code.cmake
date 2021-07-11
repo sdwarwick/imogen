@@ -1,5 +1,5 @@
 if (NOT DEFINED BV_CPM_PATH)
-  set (BV_CPM_PATH "${CMAKE_BINARY_DIR}/cmake/CPM.cmake")
+  set (BV_CPM_PATH "${CMAKE_BINARY_DIR}/cmake/CPM.cmake" CACHE INTERNAL "Path to the CPM.cmake script")
 endif()
 
 if (NOT (EXISTS ${BV_CPM_PATH}))
