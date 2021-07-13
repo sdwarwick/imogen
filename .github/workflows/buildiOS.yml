@@ -1,0 +1,27 @@
+name: iOS build
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+jobs:
+
+  ios-build:
+  
+    name: iOS build
+    runs-on: macos-latest
+    timeout-minutes: 60
+    
+    steps:
+    
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+          submodules: recursive
+          path: imogen 
+          
+    - name: Run build script
+      shell: bash
+      run: bash $GITHUB_WORKSPACE/imogen/scripts/shell/build_ios.sh $GITHUB_WORKSPACE/imogen
