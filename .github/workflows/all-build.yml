@@ -61,4 +61,4 @@ jobs:
         
       - name: Run build script
         shell: bash
-        run: cd $GITHUB_WORKSPACE/imogen/scripts && bash build_LV2.sh
+        run: cd $GITHUB_WORKSPACE/imogen/scripts && bash build_LV2.sh $GITHUB_WORKSPACE/imogen
