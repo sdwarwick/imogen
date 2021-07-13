@@ -11,9 +11,10 @@ cd Builds
 mkdir JUCE
 
 cd JUCE
+JUCE_DIR=$PWD
 
 git clone -b lv2 https://github.com/lv2-porting-project/JUCE.git
-JUCE_DIR=$PWD
+git pull
 
 cd $SCRIPT_DIR/..
 
