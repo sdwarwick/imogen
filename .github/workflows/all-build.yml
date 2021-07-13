@@ -39,7 +39,7 @@ jobs:
     - name: Install JUCE's Linux dependencies
       if: runner.os == 'Linux'
       shell: bash
-      run: bash $GITHUB_WORKSPACE/imogen/scripts/shell/install_linux_deps.sh
+      run: bash $GITHUB_WORKSPACE/imogen/scripts/shell/install_juce_linux_deps.sh
     
     - name: Run main build
       shell: bash
