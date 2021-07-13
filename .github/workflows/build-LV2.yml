@@ -28,4 +28,4 @@ jobs:
         
     - name: Run build script
       shell: bash
-      run: bash build_LV2.sh
+      run: cd $GITHUB_WORKSPACE/imogen/scripts && bash build_LV2.sh
