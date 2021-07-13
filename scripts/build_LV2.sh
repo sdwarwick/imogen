@@ -12,7 +12,7 @@ mkdir JUCE
 
 cd JUCE
 
-git clone https://github.com/lv2-porting-project/JUCE.git
+git clone -b lv2 https://github.com/lv2-porting-project/JUCE.git
 JUCE_DIR=$PWD
 
 cd $SCRIPT_DIR/..
