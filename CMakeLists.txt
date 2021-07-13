@@ -34,7 +34,8 @@ set (Imogen_Common_Flags
 
 #################### Configure the main build of Imogen ####################
 
-bv_detect_default_plugin_formats (formats)
+set (bv_default_formats Standalone VST3 AU Unity)
+bv_detect_plugin_formats (formats)
 
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
