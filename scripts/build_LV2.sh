@@ -4,13 +4,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 cd $SCRIPT_DIR/..
 
-mkdir Builds
-
-cd Builds
-
 mkdir JUCE
 
 cd JUCE
+
 JUCE_DIR=$PWD
 
 git clone -b lv2 https://github.com/lv2-porting-project/JUCE.git
