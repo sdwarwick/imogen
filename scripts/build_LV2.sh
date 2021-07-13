@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-	printf ("LV2 is only available on Linux :(");
+	printf "LV2 is only available on Linux :(";
 	exit 0;
 fi
 
