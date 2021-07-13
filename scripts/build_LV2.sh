@@ -9,7 +9,7 @@ sudo apt-get install lv2-dev
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-cd $SCRIPT_DIR && bash install_juce_linux_deps.sh
+bash $SCRIPT_DIR/install_linux_deps.sh
 
 if [[ $# > 0 ]]; then
 	REPO_DIR=$1
