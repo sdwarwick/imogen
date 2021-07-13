@@ -22,6 +22,10 @@ jobs:
         submodules: recursive
         path: imogen
         
+    - name: Install JUCE's Linux dependencies
+      shell: bash
+      run: cd $GITHUB_WORKSPACE/imogen/scripts && bash install_linux_deps.sh
+        
     - name: Run build script
       shell: bash
-      run: cd $GITHUB_WORKSPACE/imogen/scripts && bash build_LV2.sh
+      run: bash build_LV2.sh
