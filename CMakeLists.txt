@@ -5,7 +5,7 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 set (BV_USE_MTS_ESP TRUE)
 
-include (scripts/get_shared_code.cmake)
+include (scripts/cmake/get_shared_code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
