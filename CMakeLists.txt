@@ -61,7 +61,7 @@ juce_add_plugin (Imogen
 
 configure_default_juce_plugin (Imogen)
 
-target_sources (Imogen PRIVATE ${Imogen_sourceDir}/plugin/Main.cpp)
+target_sources (Imogen PRIVATE ${Imogen_sourceDir}/plugin_main.cpp)
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
@@ -84,7 +84,7 @@ juce_add_gui_app (ImogenRemote
 
 configure_default_juce_app (ImogenRemote)
 
-target_sources (ImogenRemote PRIVATE ${Imogen_sourceDir}/remote_app/Main.cpp)
+target_sources (ImogenRemote PRIVATE ${Imogen_sourceDir}/remote_main.cpp)
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
