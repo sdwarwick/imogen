@@ -58,6 +58,10 @@ jobs:
         with:
           submodules: recursive
           path: imogen 
+          
+      - name: Install LV2 dependencies 
+        shell: bash
+        run: bash $GITHUB_WORKSPACE/imogen/scripts/shell/install_LV2_deps.sh
         
       - name: Run build script
         shell: bash
