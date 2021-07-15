@@ -6,23 +6,20 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 set (BV_USE_MTS_ESP TRUE)
 
 include (scripts/cmake/get_shared_code.cmake)
+include (${BV_BRAND_FILE})
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 bv_add_juce_modules (${Imogen_sourceDir}/modules)
 
 set (Imogen_Common_Flags
+    ${BV_DEFAULT_BRAND_FLAGS}
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
     VERSION                     ${CMAKE_PROJECT_VERSION}
-    BUNDLE_ID                   com.BenViningMusicSoftware.Imogen
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     ICON_BIG                    ${CMAKE_CURRENT_LIST_DIR}/assets/graphics/imogen_icon.png
-    COMPANY_NAME                BenViningMusicSoftware
-    COMPANY_WEBSITE             www.benvining.com
-    COMPANY_EMAIL               ben.the.vining@gmail.com
-    COMPANY_COPYRIGHT           "Copyright 2021 Ben Vining"
     STATUS_BAR_HIDDEN           TRUE  # for iOS
     REQUIRES_FULL_SCREEN        TRUE  # for iOS
     IPAD_SCREEN_ORIENTATIONS    UIInterfaceOrientationUnknown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight
@@ -50,7 +47,6 @@ juce_add_plugin (Imogen
     MICROPHONE_PERMISSION_TEXT      "Imogen requires audio input to be able to produce its output. Please enable the microphone, or you won't hear any audio output."
     BACKGROUND_AUDIO_ENABLED        FALSE # for iOS
     PLUGIN_NAME                     Imogen
-    PLUGIN_MANUFACTURER_CODE        Benv
     PLUGIN_CODE                     Imgn
     FORMATS                         ${formats}
     DESCRIPTION                     "Real-time vocal harmonizer instrument"
