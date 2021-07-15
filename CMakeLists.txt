@@ -9,7 +9,7 @@ include (scripts/cmake/get_shared_code.cmake)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-bv_add_modules (${Imogen_sourceDir}/modules)
+bv_add_juce_modules (${Imogen_sourceDir}/modules)
 
 set (Imogen_Common_Flags
     PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
@@ -59,13 +59,13 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER               TRUE
     )
 
-configure_default_juce_plugin (Imogen)
+bv_configure_juce_plugin (Imogen)
 
 target_sources (Imogen PRIVATE ${Imogen_sourceDir}/plugin_main.cpp)
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
-add_binary_data_folder (Imogen assets)
+bv_add_resources_folder (Imogen assets)
 
 target_link_libraries (Imogen PRIVATE imogen_dsp imogen_gui)
 
@@ -82,13 +82,13 @@ juce_add_gui_app (ImogenRemote
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-configure_default_juce_app (ImogenRemote)
+bv_configure_juce_app (ImogenRemote)
 
 target_sources (ImogenRemote PRIVATE ${Imogen_sourceDir}/remote_main.cpp)
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
-add_binary_data_folder (ImogenRemote assets)
+bv_add_resources_folder (ImogenRemote assets)
 
 target_link_libraries (ImogenRemote PRIVATE imogen_gui bv_app_utils)
 
