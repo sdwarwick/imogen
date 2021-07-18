@@ -44,7 +44,7 @@ void Harmonizer< SampleType >::updateParameters()
 
     this->updateADSRsettings (midi.adsrAttack->get(),
                               midi.adsrDecay->get(),
-                              (float) midi.adsrSustain->get() * 0.01f,
+                              static_cast<float>(midi.adsrSustain->get()) * 0.01f,
                               midi.adsrRelease->get());
 
     this->setPedalPitch (midi.pedalToggle->get(),
@@ -65,7 +65,7 @@ void Harmonizer< SampleType >::updateParameters()
     this->updateLowestPannedNote (parameters.lowestPanned->get());
 
     this->togglePitchGlide (midi.pitchGlide->get());
-    this->setPitchGlideTime ((double) midi.glideTime->get());
+    this->setPitchGlideTime (static_cast<double>(midi.glideTime->get()));
 }
 
 template < typename SampleType >
