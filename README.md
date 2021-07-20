@@ -1,6 +1,6 @@
 # Imogen: the ultimate real-time vocal harmonizer
 
-[![AutoBuild](https://github.com/benthevining/imogen/actions/workflows/all-build.yml/badge.svg?branch=master)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
+[![Build](https://github.com/benthevining/imogen/actions/workflows/Build.yml/badge.svg?branch=master)](https://github.com/benthevining/imogen/actions/workflows/autoBuild.yml)
 
 Ever since I was introduced to music like [Imogen Heap](http://www.youtube.com/watch?v=dHk2lLaDzlM), [Bon Iver](http://www.youtube.com/watch?v=CaYgMdq6NDg), and in particular [Jacob Collier's famous "Harmonizer"](http://www.youtube.com/watch?v=ZXIApugIuqk), I became obsessed with finding a way to replicate the sound of this incredible instrument, the vocal harmonizer.
  
