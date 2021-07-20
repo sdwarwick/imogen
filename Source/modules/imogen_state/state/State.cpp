@@ -1,7 +1,6 @@
 
 namespace Imogen
 {
-
 State::State() : plugin::State (parameters, "Imogen")
 {
 }
@@ -23,28 +22,28 @@ void State::addAllAsInternal()
 void State::serialize (TreeReflector& ref)
 {
     plugin::State::serialize (ref);
-    
+
     ref.add ("Meters", meters);
     ref.add ("InternalSettings", internals);
 }
 
 
 Parameters::Parameters()
-: ParameterList ("ImogenParameters")
+    : ParameterList ("ImogenParameters")
 {
     add (inputMode, dryWet, inputGain, outputGain, leadBypass, harmonyBypass, stereoWidth, lowestPanned, leadPan, noiseGateToggle, noiseGateThresh, deEsserToggle, deEsserThresh, deEsserAmount, compToggle, compAmount, delayToggle, delayDryWet, limiterToggle);
 }
 
 
 Meters::Meters()
-: ParameterList ("ImogenMeters")
+    : ParameterList ("ImogenMeters")
 {
     add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
 }
 
 
 Internals::Internals()
-: ParameterList ("ImogenInternals")
+    : ParameterList ("ImogenInternals")
 {
     addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp, mtsEspScaleName);
 }
@@ -65,7 +64,7 @@ ReverbState::ReverbState (plugin::ParameterList& list)
 MidiState::MidiState (plugin::ParameterList& list)
 {
     list.add (pitchbendRange, velocitySens, aftertouchToggle, voiceStealing, midiLatch, pitchGlide, glideTime, adsrAttack, adsrDecay, adsrSustain, adsrRelease, pedalToggle, pedalThresh, descantToggle, descantThresh, descantInterval);
-    
+
     list.setPitchbendParameter (editorPitchbend);
 }
 
@@ -74,4 +73,4 @@ std::string PresetManager::getCompanyName() { return "Ben Vining Music Software"
 std::string PresetManager::getProductName() { return "Imogen"; }
 std::string PresetManager::getPresetFileExtension() { return ".xml"; }
 
-}
+}  // namespace Imogen

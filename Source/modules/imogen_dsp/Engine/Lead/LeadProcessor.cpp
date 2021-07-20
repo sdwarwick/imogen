@@ -3,7 +3,7 @@ namespace Imogen
 {
 template < typename SampleType >
 LeadProcessor< SampleType >::LeadProcessor (Harmonizer< SampleType >& harm, State& stateToUse)
-    : pitchCorrector (harm, stateToUse.internals), dryPanner(stateToUse.parameters)
+    : pitchCorrector (harm, stateToUse.internals), dryPanner (stateToUse.parameters)
 {
 }
 

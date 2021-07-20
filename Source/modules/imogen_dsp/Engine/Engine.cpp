@@ -2,7 +2,7 @@ namespace Imogen
 {
 template < typename SampleType >
 Engine< SampleType >::Engine (State& stateToUse)
-: state (stateToUse)
+    : state (stateToUse)
 {
 }
 
@@ -14,7 +14,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 
     const bool leadIsBypassed       = parameters.leadBypass->get();
     const bool harmoniesAreBypassed = parameters.harmonyBypass->get();
-    
+
     const auto numSamples = input.getNumSamples();
 
     if (leadIsBypassed && harmoniesAreBypassed)

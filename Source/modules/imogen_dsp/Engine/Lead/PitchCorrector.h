@@ -5,16 +5,16 @@
 namespace Imogen
 {
 template < typename SampleType >
-class PitchCorrection : public dsp::psola::PitchCorrectorBase<SampleType>
+class PitchCorrection : public dsp::psola::PitchCorrectorBase< SampleType >
 {
 public:
     using AudioBuffer = juce::AudioBuffer< SampleType >;
-    using Base = dsp::psola::PitchCorrectorBase<SampleType>;
-    
+    using Base        = dsp::psola::PitchCorrectorBase< SampleType >;
+
     PitchCorrection (Harmonizer< SampleType >& harm, Internals& internalsToUse);
-    
+
     void renderNextFrame (int numSamples);
-    
+
     void prepare (double samplerate, int blocksize);
 
     const AudioBuffer& getCorrectedSignal() const;

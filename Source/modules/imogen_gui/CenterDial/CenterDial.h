@@ -2,7 +2,6 @@
 
 namespace Imogen
 {
-
 class CenterDial : public juce::Component, public juce::SettableTooltipClient
 {
 public:
@@ -18,21 +17,25 @@ public:
     bool keyStateChanged (bool isKeyDown) override final;
     void modifierKeysChanged (const juce::ModifierKeys& modifiers) override final;
     void focusLost (FocusChangeType cause) override final;
-    
+
 private:
     void showParameter (plugin::Parameter& param);
     void showPitchCorrection();
-    
+
     State& state;
-    
+
     gui::Label mainText;
     gui::Label description;
     gui::Label leftEnd;
     gui::Label rightEnd;
-    
+
     plugin::ParameterList::Listener l {state.parameters,
-                               [&](plugin::Parameter& param) { showParameter (param); },
-                               [&](plugin::Parameter&, bool starting) { if (! starting) showPitchCorrection(); }};
+                                       [&] (plugin::Parameter& param)
+                                       { showParameter (param); },
+                                       [&] (plugin::Parameter&, bool starting)
+                                       {
+                                           if (! starting) showPitchCorrection();
+                                       }};
 };
 
-}
+}  // namespace Imogen

@@ -4,19 +4,19 @@
 
 namespace Imogen
 {
-
 class LogoButton : public juce::Component
 {
 public:
     LogoButton();
-    
+
 private:
     void resized() final;
     void createAboutWindow();
-    
-    gui::TextButton button {"Imogen", [&]{ createAboutWindow(); }};
-    
-    gui::Popup<AboutPopup> aboutWindow;
+
+    gui::TextButton button {"Imogen", [&]
+                            { createAboutWindow(); }};
+
+    gui::Popup< AboutPopup > aboutWindow;
 };
 
-}
+}  // namespace Imogen

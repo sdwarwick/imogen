@@ -16,9 +16,9 @@ struct Reverb
     void setWidth (float width);
 
 private:
-    State&      state;
+    State&       state;
     ReverbState& parameters {state.parameters.reverbState};
-    Meters&     meters {state.meters};
+    Meters&      meters {state.meters};
 
     dsp::FX::Reverb reverb;
 };

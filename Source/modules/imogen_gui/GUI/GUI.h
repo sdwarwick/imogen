@@ -25,7 +25,7 @@ private:
     State&      state;
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
-    
+
     plugin::Undo undoManager {parameters};
 
     Header       header {state, undoManager};

@@ -7,7 +7,6 @@
 
 namespace Imogen
 {
-
 struct Parameters : plugin::ParameterList
 {
     Parameters();
@@ -59,11 +58,11 @@ struct Parameters : plugin::ParameterList
     PercentParam delayDryWet {"Delay Mix", "Delay mix", 0};
 
     ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
-    
+
     EQState eqState {*this};
-    
+
     ReverbState reverbState {*this};
-    
+
     MidiState midiState {*this};
 };
 

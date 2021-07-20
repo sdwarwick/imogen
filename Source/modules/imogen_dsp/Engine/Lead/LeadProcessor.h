@@ -28,7 +28,7 @@ private:
 
     AudioBuffer pannedLeadBuffer;
     AudioBuffer alias;
-    
+
     int lastBlocksize {0};
 };
 

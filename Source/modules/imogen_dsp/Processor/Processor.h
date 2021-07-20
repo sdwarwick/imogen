@@ -14,7 +14,7 @@ private:
     bool canAddBus (bool isInput) const override final { return isInput; }
     bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
-    double         getTailLengthSeconds() const final;
+    double getTailLengthSeconds() const final;
 
     bool acceptsMidi() const final { return true; }
     bool producesMidi() const final { return true; }

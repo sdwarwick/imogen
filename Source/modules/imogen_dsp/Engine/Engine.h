@@ -27,8 +27,8 @@ private:
     Parameters& parameters {state.parameters};
 
     dsp::psola::Analyzer< SampleType > analyzer;
-    
-    PreHarmonyEffects<SampleType> preHarmonyEffects {state};
+
+    PreHarmonyEffects< SampleType > preHarmonyEffects {state};
 
     Harmonizer< SampleType > harmonizer {state, analyzer};
 

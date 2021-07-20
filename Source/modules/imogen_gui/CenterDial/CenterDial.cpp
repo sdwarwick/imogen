@@ -1,12 +1,11 @@
 namespace Imogen
 {
-
 CenterDial::CenterDial (State& stateToUse)
-: state (stateToUse)
+    : state (stateToUse)
 {
     setOpaque (true);
     setInterceptsMouseClicks (true, true);
-    
+
     showPitchCorrection();
 }
 
@@ -56,12 +55,12 @@ void CenterDial::showParameter (plugin::Parameter& param)
 {
     mainText.set (param.getCurrentValueAsText());
     description.set (param.parameterNameVerbose);
-    
-//    const auto range = param.getRange();
-//
-//    leftEnd.set (range.start);
-//    rightEnd.set (range.end);
-    
+
+    //    const auto range = param.getRange();
+    //
+    //    leftEnd.set (range.start);
+    //    rightEnd.set (range.end);
+
     setTooltip (param.parameterNameVerbose);
 }
 
@@ -71,8 +70,8 @@ void CenterDial::showPitchCorrection()
     description.set (TRANS ("Pitch correction"));
     leftEnd.set (TRANS ("Flat"));
     rightEnd.set (TRANS ("Sharp"));
-    
+
     setTooltip (TRANS ("Pitch correction"));
 }
 
-}
+}  // namespace Imogen

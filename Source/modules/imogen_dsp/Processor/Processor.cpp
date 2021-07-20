@@ -3,9 +3,9 @@ namespace Imogen
 {
 Processor::Processor()
     : plugin::Processor< State, Engine > (BusesProperties()
-                                           .withInput (TRANS ("Input"), juce::AudioChannelSet::stereo(), true)
-                                           .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
-                                           .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
+                                              .withInput (TRANS ("Input"), juce::AudioChannelSet::stereo(), true)
+                                              .withInput (TRANS ("Sidechain"), juce::AudioChannelSet::mono(), false)
+                                              .withOutput (TRANS ("Output"), juce::AudioChannelSet::stereo(), true))
 {
 }
 

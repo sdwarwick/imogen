@@ -44,23 +44,23 @@ struct Internals : plugin::ParameterList
 
 private:
     plugin::ParamUpdater linkPeersUpdater {abletonLinkEnabled, [&]
-                                   {
-                                       if (! abletonLinkEnabled->get())
-                                           abletonLinkSessionPeers->set (0);
-                                   }};
+                                           {
+                                               if (! abletonLinkEnabled->get())
+                                                   abletonLinkSessionPeers->set (0);
+                                           }};
 
     plugin::ParamUpdater scaleNameUpdater {mtsEspIsConnected, [&]
-                                   {
-                                       if (mtsEspIsConnected->get())
-                                       {
-                                           mtsEspScaleName->setDefault ("UnnamedScale");
-                                       }
-                                       else
-                                       {
-                                           mtsEspScaleName->setDefault ("Not connected");
-                                           mtsEspScaleName->set ("Not connected");
-                                       }
-                                   }};
+                                           {
+                                               if (mtsEspIsConnected->get())
+                                               {
+                                                   mtsEspScaleName->setDefault ("UnnamedScale");
+                                               }
+                                               else
+                                               {
+                                                   mtsEspScaleName->setDefault ("Not connected");
+                                                   mtsEspScaleName->set ("Not connected");
+                                               }
+                                           }};
 };
 
 }  // namespace Imogen

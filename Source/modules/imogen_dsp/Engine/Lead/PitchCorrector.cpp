@@ -1,10 +1,9 @@
 
 namespace Imogen
 {
-
 template < typename SampleType >
 PitchCorrection< SampleType >::PitchCorrection (Harmonizer< SampleType >& harm, Internals& internalsToUse)
-: Base(harm.analyzer, harm.getPitchAdjuster()), internals (internalsToUse)
+    : Base (harm.analyzer, harm.getPitchAdjuster()), internals (internalsToUse)
 {
 }
 
@@ -12,9 +11,9 @@ template < typename SampleType >
 void PitchCorrection< SampleType >::renderNextFrame (int numSamples)
 {
     alias.setDataToReferTo (correctedBuffer.getArrayOfWritePointers(), 1, numSamples);
-    
+
     this->processNextFrame (alias);
-    
+
     internals.currentInputNote->set (this->getOutputMidiPitch());
     internals.currentCentsSharp->set (this->getCentsSharp());
 }

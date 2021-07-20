@@ -9,29 +9,28 @@
 
 namespace Imogen
 {
-
 class Header : public juce::Component
 {
 public:
     Header (State& stateToUse, UndoManager& undoToUse);
-    
+
 private:
     void paint (juce::Graphics& g) final;
     void resized() final;
-    
-    State& state;
+
+    State&       state;
     UndoManager& undo;
-    
+
     LogoButton logo;
-    
+
     KeyboardButton keyboardButton;
-    
+
     InputIcon   inputIcon {state};
     OutputLevel outputLevel {state};
-    
+
     PresetBar presetBar {state, undo};
-    
+
     ScaleChooser scale {state.internals};
 };
 
-}
+}  // namespace Imogen

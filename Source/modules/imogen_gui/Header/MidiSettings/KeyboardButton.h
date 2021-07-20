@@ -4,14 +4,13 @@
 
 namespace Imogen
 {
-
 class KeyboardButton : public juce::Component
 {
 public:
     KeyboardButton();
-    
+
 private:
-    gui::Popup<MidiSettingsPopup> popup;
+    gui::Popup< MidiSettingsPopup > popup;
 };
 
-}
+}  // namespace Imogen

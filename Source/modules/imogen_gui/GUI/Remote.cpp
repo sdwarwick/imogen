@@ -1,15 +1,14 @@
 
 namespace Imogen
 {
-
 Remote::Remote()
 {
     this->setBufferedToImage (true);
-    
+
     addAndMakeVisible (gui);
-    
+
     state.addAllAsInternal();
-    
+
     setSize (800, 2990);
 }
 
@@ -29,4 +28,4 @@ void Remote::resized()
 }
 
 
-}
+}  // namespace Imogen

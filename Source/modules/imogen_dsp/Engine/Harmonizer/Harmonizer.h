@@ -19,14 +19,14 @@ class Harmonizer : public dsp::SynthBase< SampleType >
 public:
     Harmonizer (State& stateToUse, Analyzer& analyzerToUse);
 
-    void process (int numSamples,
-                  MidiBuffer&        midiMessages,
-                  bool               harmoniesBypassed);
+    void process (int         numSamples,
+                  MidiBuffer& midiMessages,
+                  bool        harmoniesBypassed);
 
     AudioBuffer& getHarmonySignal();
-    
+
     Analyzer& analyzer;
-    
+
 private:
     void prepared (double samplerate, int blocksize) final;
 
@@ -42,7 +42,7 @@ private:
 
     AudioBuffer wetBuffer;
     AudioBuffer alias;
-    
+
     int lastBlocksize {0};
 };
 
