@@ -6,7 +6,7 @@ add_subdirectory (scripts)
 
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
-    PRODUCT_NAME                ${CMAKE_PROJECT_NAME}
+    PRODUCT_NAME                ${PROJECT_NAME}
     VERSION                     ${CMAKE_PROJECT_VERSION}
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
