@@ -44,7 +44,7 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER               TRUE
     )
 
-bv_configure_juce_plugin (TARGET Imogen BROWSER)
+bv_configure_juce_plugin (TARGET Imogen BROWSER MTS-ESP)
 
 target_sources (Imogen PRIVATE ${BV_PROJECT_SOURCE_DIR}/plugin_main.cpp)
 
