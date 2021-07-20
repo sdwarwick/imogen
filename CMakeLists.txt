@@ -1,4 +1,3 @@
-
 cmake_minimum_required (VERSION 3.19) 
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
@@ -8,8 +7,6 @@ set (BV_USE_MTS_ESP TRUE)
 add_subdirectory (scripts)
 
 set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
-
-bv_add_juce_modules (${Imogen_sourceDir}/modules)
 
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
@@ -30,9 +27,6 @@ set (Imogen_Common_Flags
 
 #################### Configure the main build of Imogen ####################
 
-set (bv_default_formats Standalone VST3 AU Unity)
-bv_detect_plugin_formats (formats)
-
 juce_add_plugin (Imogen
     ${Imogen_Common_Flags}
     IS_SYNTH                        FALSE
@@ -47,7 +41,7 @@ juce_add_plugin (Imogen
     BACKGROUND_AUDIO_ENABLED        FALSE # for iOS
     PLUGIN_NAME                     Imogen
     PLUGIN_CODE                     Imgn
-    FORMATS                         ${formats}
+    FORMATS                         ${BV_PLUGIN_FORMATS}
     DESCRIPTION                     "Real-time vocal harmonizer instrument"
     DOCUMENT_BROWSER_ENABLED        TRUE
     NEEDS_CURL                      TRUE
@@ -86,5 +80,4 @@ target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 bv_add_resources_folder (TARGET ImogenRemote FOLDER assets)
 
 target_link_libraries (ImogenRemote PRIVATE imogen_gui bv_app_utils)
-
 
