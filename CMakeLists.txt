@@ -2,11 +2,7 @@ cmake_minimum_required (VERSION 3.19)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-set (BV_USE_MTS_ESP TRUE)
-
 add_subdirectory (scripts)
-
-set (Imogen_sourceDir ${CMAKE_CURRENT_LIST_DIR}/Source)
 
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
@@ -50,9 +46,9 @@ juce_add_plugin (Imogen
 
 bv_configure_juce_plugin (TARGET Imogen BROWSER)
 
-target_sources (Imogen PRIVATE ${Imogen_sourceDir}/plugin_main.cpp)
+target_sources (Imogen PRIVATE ${BV_PROJECT_SOURCE_DIR}/plugin_main.cpp)
 
-target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
+target_include_directories (Imogen PRIVATE ${BV_PROJECT_SOURCE_DIR})
 
 bv_add_resources_folder (TARGET Imogen FOLDER assets)
 
@@ -73,9 +69,9 @@ juce_add_gui_app (ImogenRemote
 
 bv_configure_juce_app (TARGET ImogenRemote)
 
-target_sources (ImogenRemote PRIVATE ${Imogen_sourceDir}/remote_main.cpp)
+target_sources (ImogenRemote PRIVATE ${BV_PROJECT_SOURCE_DIR}/remote_main.cpp)
 
-target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
+target_include_directories (ImogenRemote PRIVATE ${BV_PROJECT_SOURCE_DIR})
 
 bv_add_resources_folder (TARGET ImogenRemote FOLDER assets)
 
