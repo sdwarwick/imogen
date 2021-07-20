@@ -54,13 +54,13 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER               TRUE
     )
 
-bv_configure_juce_plugin (Imogen)
+bv_configure_juce_plugin (TARGET Imogen BROWSER)
 
 target_sources (Imogen PRIVATE ${Imogen_sourceDir}/plugin_main.cpp)
 
 target_include_directories (Imogen PRIVATE ${Imogen_sourceDir})
 
-bv_add_resources_folder (Imogen assets)
+bv_add_resources_folder (TARGET Imogen FOLDER assets)
 
 target_link_libraries (Imogen PRIVATE imogen_dsp imogen_gui)
 
@@ -77,13 +77,13 @@ juce_add_gui_app (ImogenRemote
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-bv_configure_juce_app (ImogenRemote)
+bv_configure_juce_app (TARGET ImogenRemote)
 
 target_sources (ImogenRemote PRIVATE ${Imogen_sourceDir}/remote_main.cpp)
 
 target_include_directories (ImogenRemote PRIVATE ${Imogen_sourceDir})
 
-bv_add_resources_folder (ImogenRemote assets)
+bv_add_resources_folder (TARGET ImogenRemote FOLDER assets)
 
 target_link_libraries (ImogenRemote PRIVATE imogen_gui bv_app_utils)
 
