@@ -1,3 +1,4 @@
 Builds/
 **/.DS_Store
 _clang-format
+run_clang_format.sh
