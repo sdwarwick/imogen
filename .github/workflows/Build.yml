@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+
+  build:
+
+    name: ${{ matrix.artifact }} build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+        - os: windows-latest
+          artifact: Windows
+        - os: ubuntu-latest
+          artifact: Linux
+        - os: macos-latest
+          artifact: MacOS
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        path: autoBuild
+
+    - name: Install JUCE's Linux dependencies
+      if: runner.os == 'Linux'
+      shell: bash
+      run: cd $GITHUB_WORKSPACE/autoBuild/scripts/shell && bash install_juce_linux_deps.sh
+
+    - name: Run main build
+      shell: bash
+      run: cd $GITHUB_WORKSPACE/autoBuild && cmake -B Builds && cmake --build $GITHUB_WORKSPACE/autoBuild/Builds --config Release
+
+  LV2-build:
+
+      name: LV2 build
+      runs-on: Ubuntu-latest
+      timeout-minutes: 60
+
+      steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          path: autoBuild
+
+      - name: Install LV2 dependencies
+        shell: bash
+        run: bash $GITHUB_WORKSPACE/autoBuild/scripts/shell/install_LV2_deps.sh
+
+      - name: Run build script
+        shell: bash
+        run: bash $GITHUB_WORKSPACE/autoBuild/scripts/shell/build_LV2.sh $GITHUB_WORKSPACE/autoBuild

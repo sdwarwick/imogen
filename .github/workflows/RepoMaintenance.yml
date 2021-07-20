@@ -3,16 +3,10 @@ name: Basic repo maintenence & utils
 on:
   workflow_dispatch:
   push:
-    paths-ignore:
-    - '.github/**'
-    - 'docs/**'
   schedule:
   - cron: "00 00 * * 1"
 
-#
-
 jobs:
-
 
   link-checker:
 
@@ -25,11 +19,9 @@ jobs:
       - name: Markdown links check
         uses: ruzickap/action-my-markdown-link-checker@v1
 
-  #
+  stale-pull-request-remover:
 
-  stale:
-
-    name: Mark stale pull requests
+    name: Marking stale pull requests
     runs-on: ubuntu-latest
 
     steps:
