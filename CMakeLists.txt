@@ -67,7 +67,7 @@ juce_add_gui_app (ImogenRemote
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-bv_configure_juce_app (TARGET ImogenRemote)
+bv_configure_juce_app (TARGET ImogenRemote BROWSER MTS-ESP)
 
 target_sources (ImogenRemote PRIVATE ${BV_PROJECT_SOURCE_DIR}/remote_main.cpp)
 
