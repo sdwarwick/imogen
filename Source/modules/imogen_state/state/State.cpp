@@ -68,9 +68,4 @@ MidiState::MidiState (plugin::ParameterList& list)
     list.setPitchbendParameter (editorPitchbend);
 }
 
-
-std::string PresetManager::getCompanyName() { return "Ben Vining Music Software"; }
-std::string PresetManager::getProductName() { return "Imogen"; }
-std::string PresetManager::getPresetFileExtension() { return ".xml"; }
-
 }  // namespace Imogen

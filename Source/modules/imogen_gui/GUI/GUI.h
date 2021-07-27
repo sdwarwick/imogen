@@ -26,9 +26,7 @@ private:
     Parameters& parameters {state.parameters};
     Internals&  internals {state.internals};
 
-    plugin::Undo undoManager {parameters};
-
-    Header       header {state, undoManager};
+    Header       header {state};
     CenterDial   dial {state};
     DryWet       dryWet {state};
     MidiKeyboard keyboard;

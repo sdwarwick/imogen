@@ -1,8 +1,8 @@
 
 namespace Imogen
 {
-Header::Header (State& stateToUse, UndoManager& undoToUse)
-    : state (stateToUse), undo (undoToUse)
+Header::Header (State& stateToUse)
+    : state (stateToUse)
 {
     gui::addAndMakeVisible (this, logo, inputIcon, outputLevel, presetBar, scale, keyboardButton);
 }

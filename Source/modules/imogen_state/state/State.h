@@ -21,15 +21,4 @@ struct State : plugin::State
     Meters     meters;
 };
 
-
-struct PresetManager : plugin::PresetManagerBase
-{
-    using PresetManagerBase::PresetManagerBase;
-
-    std::string getCompanyName() final;
-    std::string getProductName() final;
-    std::string getPresetFileExtension() final;
-};
-
-
 }  // namespace Imogen
