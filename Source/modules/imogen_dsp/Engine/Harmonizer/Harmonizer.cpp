@@ -75,7 +75,7 @@ void Harmonizer< SampleType >::updateInternals()
     internals.lastMovedMidiController->set (ccInfo.controllerNumber);
     internals.lastMovedCCValue->set (ccInfo.controllerValue);
     internals.mtsEspIsConnected->set (this->isConnectedToMtsEsp());
-    internals.mtsEspScaleName->set (this->getScaleName());
+    //    internals.mtsEspScaleName->set (this->getScaleName());
 }
 
 template < typename SampleType >

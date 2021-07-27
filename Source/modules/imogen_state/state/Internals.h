@@ -15,7 +15,7 @@ struct Internals : plugin::ParameterList
 
     ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
 
-    plugin::StringProperty mtsEspScaleName {"Scale name"};
+    //    plugin::StringProperty mtsEspScaleName {"Scale name"};
 
     IntParam lastMovedMidiController {0, 127, 0, "Controller Number", "Last moved MIDI controller number"};
 
@@ -49,18 +49,18 @@ private:
                                                    abletonLinkSessionPeers->set (0);
                                            }};
 
-    plugin::ParamUpdater scaleNameUpdater {mtsEspIsConnected, [&]
-                                           {
-                                               if (mtsEspIsConnected->get())
-                                               {
-                                                   mtsEspScaleName->setDefault ("UnnamedScale");
-                                               }
-                                               else
-                                               {
-                                                   mtsEspScaleName->setDefault ("Not connected");
-                                                   mtsEspScaleName->set ("Not connected");
-                                               }
-                                           }};
+    //    plugin::ParamUpdater scaleNameUpdater {mtsEspIsConnected, [&]
+    //                                           {
+    //                                               if (mtsEspIsConnected->get())
+    //                                               {
+    //                                                   mtsEspScaleName->setDefault ("UnnamedScale");
+    //                                               }
+    //                                               else
+    //                                               {
+    //                                                   mtsEspScaleName->setDefault ("Not connected");
+    //                                                   mtsEspScaleName->set ("Not connected");
+    //                                               }
+    //                                           }};
 };
 
 }  // namespace Imogen

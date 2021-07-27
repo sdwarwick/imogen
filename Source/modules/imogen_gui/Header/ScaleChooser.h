@@ -10,7 +10,7 @@ public:
 private:
     Internals& internals;
 
-    plugin::StringProperty& scaleName {internals.mtsEspScaleName};
+    //    plugin::StringProperty& scaleName {internals.mtsEspScaleName};
 };
 
 }  // namespace Imogen

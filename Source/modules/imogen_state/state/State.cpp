@@ -45,7 +45,8 @@ Meters::Meters()
 Internals::Internals()
     : ParameterList ("ImogenInternals")
 {
-    addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp, mtsEspScaleName);
+    addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
+    // mtsEspScaleName
 }
 
 
