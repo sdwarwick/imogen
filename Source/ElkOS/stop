@@ -1,8 +1,0 @@
-#!/bin/bash
-# Stop Imogen
-
-pkill -f 'python3 ./main_app'
-
-sudo systemctl stop sensei
-
-pkill -2 sushi
