@@ -11,7 +11,7 @@ struct Parameters : plugin::ParameterList
 {
     Parameters();
 
-    IntParam inputMode {1, 3, 1, "Input source", "Input source",
+    IntParam inputMode {1, 3, 1, "Input source",
                         [] (int value, int maxLength)
                         {
                             switch (value)
@@ -28,36 +28,36 @@ struct Parameters : plugin::ParameterList
                             return 1;
                         }};
 
-    PercentParam dryWet {"Main dry/wet", "Main dry/wet", 100};
+    PercentParam dryWet {"Main dry/wet", 100};
 
-    dbParam inputGain {"Input gain", "Input gain", 0.0f, juce::AudioProcessorParameter::inputGain};
+    dbParam inputGain {"Input gain", 0.0f, juce::AudioProcessorParameter::inputGain};
 
-    dbParam outputGain {"Output gain", "Output gain", -4.0f, juce::AudioProcessorParameter::outputGain};
+    dbParam outputGain {"Output gain", -4.0f, juce::AudioProcessorParameter::outputGain};
 
-    ToggleParam leadBypass {"Lead bypass", "Lead bypass", false};
+    ToggleParam leadBypass {"Lead bypass", false};
 
-    ToggleParam harmonyBypass {"Harmony bypass", "Harmony bypass", false};
+    ToggleParam harmonyBypass {"Harmony bypass", false};
 
-    PercentParam stereoWidth {"Stereo width", "Stereo width", 100};
+    PercentParam stereoWidth {"Stereo width", 100};
 
-    IntParam lowestPanned {0, 127, 0, "Lowest panned note", "Lowest panned note", pitch_stringFromInt, pitch_intFromString};
+    IntParam lowestPanned {0, 127, 0, "Lowest panned note", pitch_stringFromInt, pitch_intFromString};
 
-    IntParam leadPan {0, 127, 64, "Lead pan", "Lead pan", midiPan_stringFromInt, midiPan_intFromString};
+    IntParam leadPan {0, 127, 64, "Lead pan", midiPan_stringFromInt, midiPan_intFromString};
 
-    ToggleParam noiseGateToggle {"Gate Toggle", "Gate toggle", true};
-    dbParam     noiseGateThresh {"Gate Thresh", "Gate thresh", -20.0f};
+    ToggleParam noiseGateToggle {"Gate toggle", true};
+    dbParam     noiseGateThresh {"Gate thresh", -20.0f};
 
-    ToggleParam  deEsserToggle {"D-S Toggle", "D-S toggle", true};
-    dbParam      deEsserThresh {"D-S Thresh", "D-S thresh", -6.0f};
-    PercentParam deEsserAmount {"D-S Amount", "D-S amount", 50};
+    ToggleParam  deEsserToggle {"D-S toggle", true};
+    dbParam      deEsserThresh {"D-S thresh", -6.0f};
+    PercentParam deEsserAmount {"D-S amount", 50};
 
-    ToggleParam  compToggle {"Compressor Toggle", "Compressor toggle", false};
-    PercentParam compAmount {"Compressor Amount", "Compressor amount", 50};
+    ToggleParam  compToggle {"Compressor toggle", false};
+    PercentParam compAmount {"Compressor amount", 50};
 
-    ToggleParam  delayToggle {"Delay Toggle", "Delay toggle", false};
-    PercentParam delayDryWet {"Delay Mix", "Delay mix", 0};
+    ToggleParam  delayToggle {"Delay toggle", false};
+    PercentParam delayDryWet {"Delay mix", 0};
 
-    ToggleParam limiterToggle {"Limiter Toggle", "Limiter toggle", true};
+    ToggleParam limiterToggle {"Limiter toggle", true};
 
     EQState eqState {*this};
 

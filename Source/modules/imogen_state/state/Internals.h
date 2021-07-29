@@ -7,30 +7,30 @@ struct Internals : plugin::ParameterList
 {
     Internals();
 
-    ToggleParam abletonLinkEnabled {"Ableton link Toggle", "Ableton link toggle", false};
+    ToggleParam abletonLinkEnabled {"Ableton link toggle", false};
 
-    IntParam abletonLinkSessionPeers {0, 50, 0, "Link Num peers", "Ableton link num session peers",
+    IntParam abletonLinkSessionPeers {0, 50, 0, "Ableton link num session peers",
                                       [] (int value, int maximumStringLength)
                                       { return juce::String (value).substring (0, maximumStringLength); }};
 
-    ToggleParam mtsEspIsConnected {"Is connected", "MTS-ESP is connected", false};
+    ToggleParam mtsEspIsConnected {"MTS-ESP is connected", false};
 
     //    plugin::StringProperty mtsEspScaleName {"Scale name"};
 
-    IntParam lastMovedMidiController {0, 127, 0, "Controller Number", "Last moved MIDI controller number"};
+    IntParam lastMovedMidiController {0, 127, 0, "Last moved MIDI controller number"};
 
-    IntParam lastMovedCCValue {0, 127, 0, "Controller Value", "Last moved MIDI controller value"};
+    IntParam lastMovedCCValue {0, 127, 0, "Last moved MIDI controller value"};
 
-    BoolParam guiDarkMode {true, "Dark mode", "GUI Dark mode"};
+    BoolParam guiDarkMode {true, "GUI Dark mode"};
 
-    IntParam currentInputNote {-1, 127, -1, "Current note", "Current input note",
+    IntParam currentInputNote {-1, 127, -1, "Current input note",
                                [] (int note, int maxLength)
                                {
                                    if (note == -1) return juce::String ("Unpitched");
                                    return pitchToString (note).substring (0, maxLength);
                                }};
 
-    IntParam currentCentsSharp {-100, 100, 0, "Cents sharp", "Current input cents sharp",
+    IntParam currentCentsSharp {-100, 100, 0, "Current input cents sharp",
                                 [] (int cents, int maxLength)
                                 {
                                     if (cents == 0) return TRANS ("Perfect!");
