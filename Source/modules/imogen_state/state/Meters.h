@@ -4,9 +4,9 @@
 
 namespace Imogen
 {
-struct Meters : plugin::ParameterList
+struct Meters
 {
-    Meters();
+    void addToList (plugin::ParameterList& list);
 
     GainMeter inputLevel {"Input level", inputMeter};
 

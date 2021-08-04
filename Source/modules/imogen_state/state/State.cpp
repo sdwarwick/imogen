@@ -3,30 +3,9 @@ namespace Imogen
 {
 State::State() : plugin::State< Parameters > ("Imogen")
 {
+    internals.addToList (getParameters());
+    meters.addToList (getParameters());
 }
-
-void State::addTo (juce::AudioProcessor& processor)
-{
-    plugin::State< Parameters >::parameters.addParametersTo (processor);
-    meters.addParametersTo (processor);
-    internals.addAllParametersAsInternal();
-}
-
-void State::addAllAsInternal()
-{
-    plugin::State< Parameters >::parameters.addAllParametersAsInternal();
-    meters.addAllParametersAsInternal();
-    internals.addAllParametersAsInternal();
-}
-
-void State::serialize (TreeReflector& ref)
-{
-    plugin::State< Parameters >::serialize (ref);
-
-    ref.add ("Meters", meters);
-    ref.add ("InternalSettings", internals);
-}
-
 
 Parameters::Parameters()
     : ParameterList ("ImogenParameters")
@@ -35,17 +14,14 @@ Parameters::Parameters()
 }
 
 
-Meters::Meters()
-    : ParameterList ("ImogenMeters")
+void Meters::addToList (plugin::ParameterList& list)
 {
-    add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
+    list.add (inputLevel, outputLevelL, outputLevelR, gateRedux, compRedux, deEssRedux, limRedux, reverbLevel, delayLevel);
 }
 
-
-Internals::Internals()
-    : ParameterList ("ImogenInternals")
+void Internals::addToList (plugin::ParameterList& list)
 {
-    addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
+    list.addInternal (abletonLinkEnabled, abletonLinkSessionPeers, mtsEspIsConnected, lastMovedMidiController, lastMovedCCValue, guiDarkMode, currentInputNote, currentCentsSharp);
     // mtsEspScaleName
 }
 

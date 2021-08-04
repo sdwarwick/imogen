@@ -3,9 +3,9 @@
 
 namespace Imogen
 {
-struct Internals : plugin::ParameterList
+struct Internals
 {
-    Internals();
+    void addToList (plugin::ParameterList& list);
 
     ToggleParam abletonLinkEnabled {"Ableton link toggle", false};
 
