@@ -1,8 +1,13 @@
 
 namespace Imogen
 {
-State::State() : plugin::State (parameters, "Imogen")
+State::State() : plugin::State ("Imogen")
 {
+}
+
+plugin::ParameterList& State::getParameters()
+{
+    return parameters;
 }
 
 void State::addTo (juce::AudioProcessor& processor)
