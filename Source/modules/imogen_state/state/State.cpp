@@ -1,32 +1,27 @@
 
 namespace Imogen
 {
-State::State() : plugin::State ("Imogen")
+State::State() : plugin::State< Parameters > ("Imogen")
 {
-}
-
-plugin::ParameterList& State::getParameters()
-{
-    return parameters;
 }
 
 void State::addTo (juce::AudioProcessor& processor)
 {
-    parameters.addParametersTo (processor);
+    plugin::State< Parameters >::parameters.addParametersTo (processor);
     meters.addParametersTo (processor);
     internals.addAllParametersAsInternal();
 }
 
 void State::addAllAsInternal()
 {
-    parameters.addAllParametersAsInternal();
+    plugin::State< Parameters >::parameters.addAllParametersAsInternal();
     meters.addAllParametersAsInternal();
     internals.addAllParametersAsInternal();
 }
 
 void State::serialize (TreeReflector& ref)
 {
-    plugin::State::serialize (ref);
+    plugin::State< Parameters >::serialize (ref);
 
     ref.add ("Meters", meters);
     ref.add ("InternalSettings", internals);

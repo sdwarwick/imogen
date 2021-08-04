@@ -7,19 +7,17 @@
 
 namespace Imogen
 {
-struct State : plugin::State
+struct State : plugin::State< Parameters >
 {
     State();
 
-    plugin::ParameterList& getParameters() final;
-    void                   addTo (juce::AudioProcessor& processor) final;
-    void                   addAllAsInternal();
+    void addTo (juce::AudioProcessor& processor) final;
+    void addAllAsInternal();
 
     void serialize (TreeReflector& ref) final;
 
-    Parameters parameters;
-    Internals  internals;
-    Meters     meters;
+    Internals internals;
+    Meters    meters;
 };
 
 }  // namespace Imogen
