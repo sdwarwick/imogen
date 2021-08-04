@@ -5,8 +5,6 @@ template < typename SampleType >
 Harmonizer< SampleType >::Harmonizer (State& stateToUse, Analyzer& analyzerToUse)
     : analyzer (analyzerToUse), state (stateToUse)
 {
-    this->setConcertPitchHz (440);
-
     this->updateQuickReleaseMs (5);
     this->setPlayingButReleasedMultiplier (0.4f);
     this->setSoftPedalMultiplier (0.65f);
