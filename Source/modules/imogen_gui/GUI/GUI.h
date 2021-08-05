@@ -30,8 +30,6 @@ private:
     CenterDial   dial {state};
     DryWet       dryWet {state};
     MidiKeyboard keyboard;
-
-    juce::TooltipWindow tooltipWindow {this, 700};
 };
 
 }  // namespace Imogen
