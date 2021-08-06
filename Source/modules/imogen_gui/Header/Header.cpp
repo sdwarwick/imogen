@@ -4,7 +4,8 @@ namespace Imogen
 Header::Header (State& stateToUse)
     : state (stateToUse)
 {
-    gui::addAndMakeVisible (this, logo, inputIcon, outputLevel, presetBar, scale, keyboardButton);
+    gui::addAndMakeVisible (this, logo, inputIcon, outputLevel, scale, keyboardButton);
+    // presetBar
 }
 
 void Header::paint (juce::Graphics&)

@@ -24,7 +24,7 @@ private:
     const String      getName() const final { return "Imogen"; }
     juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
 
-    Parameters& parameters {state.parameters};
+    Parameters& parameters {getState().parameters};
 
     // network::OscDataSynchronizer dataSync {state};
 };
