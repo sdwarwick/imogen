@@ -10,10 +10,10 @@
 
 namespace Imogen
 {
-class GUI : public juce::Component
+class GUI : public plugin::GUI
 {
 public:
-    GUI (State& stateToUse);
+    BV_DECLARE_PLUGIN_GUI_CONSTRUCTOR (GUI, State);
 
     virtual ~GUI() override;
 
@@ -22,9 +22,8 @@ private:
     void resized() final;
     bool keyPressed (const juce::KeyPress& key) final;
 
-    State&      state;
-    Parameters& parameters {state.parameters};
-    Internals&  internals {state.internals};
+    State&     state;
+    Internals& internals {state.internals};
 
     Header       header {state};
     CenterDial   dial {state};

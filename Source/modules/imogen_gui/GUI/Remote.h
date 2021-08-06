@@ -12,8 +12,11 @@ private:
     void paint (juce::Graphics&) final;
     void resized() final;
 
-    State state;
-    GUI   gui {state};
+    State                state;
+    plugin::StateToggler toggler {state};
+    UndoManager          undo {state};
+
+    GUI gui {state, toggler, undo};
 
     // network::OscDataSynchronizer dataSync {state};
 };
