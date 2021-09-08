@@ -60,7 +60,7 @@ void Harmonizer< SampleType >::updateParameters()
 
     this->updatePitchbendRange (midi.pitchbendRange->get());
 
-    this->updateLowestPannedNote (parameters.lowestPanned->get());
+    this->panner.setLowestNote (parameters.lowestPanned->get());
 
     this->togglePitchGlide (midi.pitchGlide->get());
     this->setPitchGlideTime (static_cast< double > (midi.glideTime->get()));

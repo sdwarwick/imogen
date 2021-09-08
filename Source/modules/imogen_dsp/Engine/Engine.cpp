@@ -37,7 +37,7 @@ void Engine< SampleType >::renderChunk (const AudioBuffer& input, AudioBuffer& o
 template < typename SampleType >
 void Engine< SampleType >::updateStereoWidth (int width)
 {
-    harmonizer.updateStereoWidth (width);
+    harmonizer.panner.updateStereoWidth (width);
     postHarmonyEffects.updateStereoWidth (width);
 }
 
