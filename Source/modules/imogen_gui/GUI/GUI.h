@@ -10,10 +10,10 @@
 
 namespace Imogen
 {
-class GUI : public plugin::GUI
+class GUI : public plugin::GUI< State >
 {
 public:
-    BV_DECLARE_PLUGIN_GUI_CONSTRUCTOR (GUI, State);
+    GUI (plugin::PluginState< State >& pluginState);
 
     virtual ~GUI() override;
 
@@ -22,7 +22,6 @@ private:
     void resized() final;
     bool keyPressed (const juce::KeyPress& key) final;
 
-    State&     state;
     Internals& internals {state.internals};
 
     Header       header {state};

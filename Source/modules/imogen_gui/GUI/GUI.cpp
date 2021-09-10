@@ -1,7 +1,8 @@
 
 namespace Imogen
 {
-BV_IMPLEMENT_PLUGIN_GUI_CONSTRUCTOR (GUI, State)
+GUI::GUI (plugin::PluginState< State >& pluginState)
+    : plugin::GUI< State > (pluginState)
 {
     setInterceptsMouseClicks (false, true);
 

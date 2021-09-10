@@ -7,7 +7,7 @@ Remote::Remote()
 
     addAndMakeVisible (gui);
 
-    state.addAllAsInternal();
+    state.state.addAllAsInternal();
 
     setSize (800, 2990);
 }
