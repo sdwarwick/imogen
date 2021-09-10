@@ -1,7 +1,11 @@
 
 namespace Imogen
 {
-State::State() : plugin::State< Parameters > ("Imogen")
+void CustomStateData::serialize (TreeReflector& ref)
+{
+}
+
+State::State() : plugin::CustomState< Parameters, CustomStateData > ("Imogen")
 {
     internals.addToList (getParameters());
     meters.addToList (getParameters());

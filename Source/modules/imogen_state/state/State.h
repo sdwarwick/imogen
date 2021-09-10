@@ -7,7 +7,14 @@
 
 namespace Imogen
 {
-struct State : plugin::State< Parameters >
+struct CustomStateData : SerializableData
+{
+private:
+    void serialize (TreeReflector& ref) final;
+};
+
+
+struct State : plugin::CustomState< Parameters, CustomStateData >
 {
     State();
 
