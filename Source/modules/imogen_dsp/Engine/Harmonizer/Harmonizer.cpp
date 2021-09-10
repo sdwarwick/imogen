@@ -46,13 +46,13 @@ void Harmonizer< SampleType >::updateParameters()
                               static_cast< float > (midi.adsrSustain->get()) * 0.01f,
                               midi.adsrRelease->get());
 
-    this->setPedalPitch (midi.pedalToggle->get(),
-                         midi.pedalThresh->get(),
-                         midi.pedalInterval->get());
+    this->pedal.setParams (midi.pedalToggle->get(),
+                           midi.pedalThresh->get(),
+                           midi.pedalInterval->get());
 
-    this->setDescant (midi.descantToggle->get(),
-                      midi.descantThresh->get(),
-                      midi.descantInterval->get());
+    this->descant.setParams (midi.descantToggle->get(),
+                             midi.descantThresh->get(),
+                             midi.descantInterval->get());
 
     this->setNoteStealingEnabled (midi.voiceStealing->get());
     this->setAftertouchGainOnOff (midi.aftertouchToggle->get());
