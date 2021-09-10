@@ -6,8 +6,9 @@ Harmonizer< SampleType >::Harmonizer (State& stateToUse, Analyzer& analyzerToUse
     : analyzer (analyzerToUse), state (stateToUse)
 {
     this->updateQuickReleaseMs (5);
-    this->setPlayingButReleasedMultiplier (0.4f);
-    this->setSoftPedalMultiplier (0.65f);
+
+    this->playingButReleased.gain = 0.4f;
+    this->softPedal.gain          = 0.65f;
 }
 
 template < typename SampleType >
