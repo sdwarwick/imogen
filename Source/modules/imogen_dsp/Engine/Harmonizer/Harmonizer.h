@@ -10,7 +10,7 @@
 namespace Imogen
 {
 template < typename SampleType >
-class Harmonizer : public dsp::SynthBase< SampleType >
+class Harmonizer : public dsp::LambdaSynth< SampleType >
 {
     using AudioBuffer = juce::AudioBuffer< SampleType >;
     using Voice       = HarmonizerVoice< SampleType >;
@@ -32,8 +32,6 @@ private:
 
     void updateParameters();
     void updateInternals();
-
-    Voice* createVoice() final;
 
     State&      state;
     Parameters& parameters {state.parameters};

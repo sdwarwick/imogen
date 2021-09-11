@@ -3,7 +3,9 @@ namespace Imogen
 {
 template < typename SampleType >
 Harmonizer< SampleType >::Harmonizer (State& stateToUse, Analyzer& analyzerToUse)
-    : analyzer (analyzerToUse), state (stateToUse)
+    : dsp::LambdaSynth< SampleType > ([this]
+                                      { return new Voice (*this, analyzer); }),
+      analyzer (analyzerToUse), state (stateToUse)
 {
     this->updateQuickReleaseMs (5);
 
@@ -78,13 +80,7 @@ void Harmonizer< SampleType >::updateInternals()
 }
 
 template < typename SampleType >
-HarmonizerVoice< SampleType >* Harmonizer< SampleType >::createVoice()
-{
-    return new Voice (*this, analyzer);
-}
-
-template < typename SampleType >
-juce::AudioBuffer< SampleType >& Harmonizer< SampleType >::getHarmonySignal()
+AudioBuffer< SampleType >& Harmonizer< SampleType >::getHarmonySignal()
 {
     alias.setDataToReferTo (wetBuffer.getArrayOfWritePointers(), 2, lastBlocksize);
     return alias;
