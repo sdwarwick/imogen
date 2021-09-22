@@ -1,0 +1,3 @@
+[submodule "UsefulScripts"]
+	path = UsefulScripts
+	url = https://github.com/benthevining/UsefulScripts.git
