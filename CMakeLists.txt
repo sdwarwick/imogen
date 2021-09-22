@@ -2,12 +2,12 @@ cmake_minimum_required (VERSION 3.19)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-add_subdirectory (UsefulScripts)
+add_subdirectory (GetLemons)
 
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
     PRODUCT_NAME                ${PROJECT_NAME}
-    VERSION                     ${CMAKE_PROJECT_VERSION}
+    VERSION                     ${PROJECT_VERSION}
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
@@ -37,18 +37,18 @@ juce_add_plugin (Imogen
     BACKGROUND_AUDIO_ENABLED        FALSE # for iOS
     PLUGIN_NAME                     Imogen
     PLUGIN_CODE                     Imgn
-    FORMATS                         ${BV_PLUGIN_FORMATS}
+    FORMATS                         ${LEMONS_PLUGIN_FORMATS}
     DESCRIPTION                     "Real-time vocal harmonizer instrument"
     DOCUMENT_BROWSER_ENABLED        TRUE
     NEEDS_CURL                      TRUE
     NEEDS_WEB_BROWSER               TRUE
     )
 
-bv_configure_juce_plugin (TARGET Imogen BROWSER ASSET_FOLDER assets)
+lemons_configure_juce_plugin (TARGET Imogen BROWSER ASSET_FOLDER assets)
 
-target_sources (Imogen PRIVATE ${BV_PROJECT_SOURCE_DIR}/plugin_main.cpp)
+target_sources (Imogen PRIVATE ${LEMONS_PROJECT_SOURCE_DIR}/plugin_main.cpp)
 
-target_include_directories (Imogen PRIVATE ${BV_PROJECT_SOURCE_DIR})
+target_include_directories (Imogen PRIVATE ${LEMONS_PROJECT_SOURCE_DIR})
 
 target_link_libraries (Imogen PRIVATE imogen_dsp imogen_gui)
 
@@ -65,11 +65,11 @@ juce_add_gui_app (ImogenRemote
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-bv_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets)
+lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets)
 
-target_sources (ImogenRemote PRIVATE ${BV_PROJECT_SOURCE_DIR}/remote_main.cpp)
+target_sources (ImogenRemote PRIVATE ${LEMONS_PROJECT_SOURCE_DIR}/remote_main.cpp)
 
-target_include_directories (ImogenRemote PRIVATE ${BV_PROJECT_SOURCE_DIR})
+target_include_directories (ImogenRemote PRIVATE ${LEMONS_PROJECT_SOURCE_DIR})
 
 target_link_libraries (ImogenRemote PRIVATE imogen_gui bv_app_utils)
 
