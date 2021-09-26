@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bv_plugin_gui/bv_plugin_gui.h>
+#include <lemons_plugin_gui/lemons_plugin_gui.h>
 #include <imogen_state/imogen_state.h>
 
 #include <imogen_gui/Header/Header.h>

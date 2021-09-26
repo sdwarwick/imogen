@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <bv_synth/bv_synth.h>
-#include <bv_psola/bv_psola.h>
+#include <lemons_synth/lemons_synth.h>
+#include <lemons_psola/lemons_psola.h>
 
 #include "HarmonizerVoice.h"
 

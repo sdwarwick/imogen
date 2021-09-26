@@ -18,6 +18,7 @@ void OutputLevelMeter::resized()
 OutputLevelMeter::Bar::Bar (plugin::GainMeterParameter& meter)
     : level (meter)
 {
+    juce::ignoreUnused (level);
 }
 
 void OutputLevelMeter::Bar::paint (juce::Graphics&)

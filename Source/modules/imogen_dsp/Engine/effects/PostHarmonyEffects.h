@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bv_audio_effects/bv_audio_effects.h>
+#include <lemons_audio_effects/lemons_audio_effects.h>
 
 #include "PreHarmony/StereoReducer.h"
 #include "PreHarmony/InputGain.h"

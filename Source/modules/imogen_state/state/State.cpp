@@ -1,7 +1,7 @@
 
 namespace Imogen
 {
-void CustomStateData::serialize (TreeReflector& ref)
+void CustomStateData::serialize (TreeReflector&)
 {
 }
 

@@ -71,5 +71,5 @@ target_sources (ImogenRemote PRIVATE ${LEMONS_PROJECT_SOURCE_DIR}/remote_main.cp
 
 target_include_directories (ImogenRemote PRIVATE ${LEMONS_PROJECT_SOURCE_DIR})
 
-target_link_libraries (ImogenRemote PRIVATE imogen_gui bv_app_utils)
+target_link_libraries (ImogenRemote PRIVATE imogen_gui lemons_app_utils)
 

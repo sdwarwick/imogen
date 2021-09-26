@@ -1,7 +1,7 @@
 
 #pragma once
 
-#if 0
+/*-------------------------------------------------------------------------------------
 
  BEGIN_JUCE_MODULE_DECLARATION
 
@@ -10,14 +10,14 @@
  version:            0.0.1
  name:               imogen_state
  description:        Imogen's shared state
- dependencies:       bv_plugin
+ dependencies:       lemons_plugin
 
  END_JUCE_MODULE_DECLARATION
 
-#endif
+ -------------------------------------------------------------------------------------*/
 
 
-#include <bv_plugin/bv_plugin.h>
+#include <lemons_plugin/lemons_plugin.h>
 
 namespace Imogen
 {
