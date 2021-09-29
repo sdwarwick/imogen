@@ -21,7 +21,7 @@
 
 namespace Imogen
 {
-using namespace bav;
+using namespace lemons;
 }
 
 #include "state/State.h"

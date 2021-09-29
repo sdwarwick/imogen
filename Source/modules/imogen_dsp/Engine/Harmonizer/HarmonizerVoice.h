@@ -4,7 +4,7 @@
 
 namespace Imogen
 {
-using namespace bav;
+using namespace lemons;
 
 template < typename SampleType >
 class Harmonizer;  // forward declaration...
