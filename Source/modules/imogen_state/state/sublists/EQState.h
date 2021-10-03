@@ -2,7 +2,6 @@
 
 namespace Imogen
 {
-
 struct EQState
 {
     EQState (plugin::ParameterList& list);
