@@ -30,9 +30,9 @@ struct Parameters : plugin::ParameterList
 
     PercentParam dryWet {"Main dry/wet", 100};
 
-    dbParam inputGain {"Input gain", 0.0f, juce::AudioProcessorParameter::inputGain};
+    dbParam inputGain {"Input gain", 0.f, juce::AudioProcessorParameter::inputGain};
 
-    dbParam outputGain {"Output gain", -4.0f, juce::AudioProcessorParameter::outputGain};
+    dbParam outputGain {"Output gain", -4.f, juce::AudioProcessorParameter::outputGain};
 
     ToggleParam leadBypass {"Lead bypass", false};
 
@@ -40,15 +40,15 @@ struct Parameters : plugin::ParameterList
 
     PercentParam stereoWidth {"Stereo width", 100};
 
-    IntParam lowestPanned {0, 127, 0, "Lowest panned note", pitch_stringFromInt, pitch_intFromString};
+    PitchParam lowestPanned {"Lowest panned note", 0};
 
-    IntParam leadPan {0, 127, 64, "Lead pan", midiPan_stringFromInt, midiPan_intFromString};
+    PanParam leadPan {"Lead pan"};
 
     ToggleParam noiseGateToggle {"Gate toggle", true};
-    dbParam     noiseGateThresh {"Gate thresh", -20.0f};
+    dbParam     noiseGateThresh {"Gate thresh", -20.f};
 
     ToggleParam  deEsserToggle {"D-S toggle", true};
-    dbParam      deEsserThresh {"D-S thresh", -6.0f};
+    dbParam      deEsserThresh {"D-S thresh", -6.f};
     PercentParam deEsserAmount {"D-S amount", 50};
 
     ToggleParam  compToggle {"Compressor toggle", false};

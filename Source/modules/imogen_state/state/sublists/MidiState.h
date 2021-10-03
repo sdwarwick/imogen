@@ -6,7 +6,7 @@ struct MidiState
 {
     MidiState (plugin::ParameterList& list);
 
-    IntParam pitchbendRange {0, 12, 2, "Pitchbend range", st_stringFromInt, st_intFromString, TRANS ("st")};
+    SemitonesParam pitchbendRange {12, "Pitchbend range", 2};
 
     PercentParam velocitySens {"Velocity amount", 100};
 
@@ -18,23 +18,22 @@ struct MidiState
 
     ToggleParam pitchGlide {"Pitch glide toggle", false};
 
-    FloatParam glideTime {0.f, 1.f, 0.4f, "Pitch glide time", sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
+    SecParam glideTime {1.f, "Pitch glide time", 0.4f};
 
-    FloatParam adsrAttack {0.f, 1.f, 0.35f, "ADSR attack", sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
-
-    FloatParam adsrDecay {0.0f, 1.0f, 0.06f, "ADSR decay", sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
+    SecParam adsrAttack {1.f, "ADSR attack", 0.35f};
+    SecParam adsrDecay {1.f, "ADSR decay", 0.06f};
 
     PercentParam adsrSustain {"ADSR sustain", 80};
 
-    FloatParam adsrRelease {0.f, 1.f, 0.1f, "ADSR release", sec_stringFromFloat, sec_floatFromString, TRANS ("sec")};
+    SecParam adsrRelease {1.f, "ADSR release", 0.01f};
 
-    ToggleParam pedalToggle {"Pedal toggle", false};
-    IntParam    pedalThresh {0, 127, 0, "Pedal thresh", pitch_stringFromInt, pitch_intFromString};
-    IntParam    pedalInterval {1, 12, 12, "Pedal interval", st_stringFromInt, st_intFromString};
+    ToggleParam    pedalToggle {"Pedal toggle", false};
+    PitchParam     pedalThresh {"Pedal thresh", 0};
+    SemitonesParam pedalInterval {12, "Pedal interval", 12};
 
-    ToggleParam descantToggle {"Descant toggle", false};
-    IntParam    descantThresh {0, 127, 127, "Descant thresh", pcnt_stringFromInt, pitch_intFromString};
-    IntParam    descantInterval {1, 12, 12, "Descant interval", st_stringFromInt, st_intFromString};
+    ToggleParam    descantToggle {"Descant toggle", false};
+    PitchParam     descantThresh {"Descant thresh", 127};
+    SemitonesParam descantInterval {12, "Descant interval", 12};
 
     IntParam editorPitchbend {0, 127, 64, "GUI Pitchbend",
                               [] (int value, int maximumStringLength)

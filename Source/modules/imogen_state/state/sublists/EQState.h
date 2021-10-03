@@ -2,7 +2,6 @@
 
 namespace Imogen
 {
-using namespace ParameterValueConversionLambdas;
 
 struct EQState
 {
