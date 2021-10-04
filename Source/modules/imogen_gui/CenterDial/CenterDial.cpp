@@ -54,12 +54,12 @@ void CenterDial::focusLost (FocusChangeType cause)
 void CenterDial::showParameter (plugin::Parameter& param)
 {
     mainText.set (param.getCurrentValueAsText());
-    description.set (param.getName());
+    description.set (param.getParameterName());
 
     leftEnd.set (param.getTextForMin());
     rightEnd.set (param.getTextForMax());
 
-    setTooltip (param.getName());
+    setTooltip (param.getParameterName());
 }
 
 void CenterDial::showPitchCorrection()
