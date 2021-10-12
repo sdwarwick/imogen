@@ -26,7 +26,7 @@ private:
     InputIcon   inputIcon {state};
     OutputLevel outputLevel {state};
 
-    //plugin::PresetBar presetBar {state, "Imogen", ".imogenpreset"};
+    // plugin::PresetBar presetBar {state, "Imogen", ".imogenpreset"};
 
     ScaleChooser scale {state.internals};
 };
