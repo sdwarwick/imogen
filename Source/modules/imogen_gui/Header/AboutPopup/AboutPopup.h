@@ -2,7 +2,7 @@
 
 namespace Imogen
 {
-class AboutPopup : public gui::PopupComponent
+struct AboutPopup : public gui::PopupComponent
 {
     using PopupComponent::PopupComponent;
 
