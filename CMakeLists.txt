@@ -44,7 +44,7 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER               TRUE
     )
 
-lemons_configure_juce_plugin (TARGET Imogen BROWSER ASSET_FOLDER assets)
+lemons_configure_juce_plugin (TARGET Imogen BROWSER ASSET_FOLDER assets MICROPHONE)
 
 target_sources (Imogen PRIVATE ${LEMONS_PROJECT_SOURCE_DIR}/plugin_main.cpp)
 
