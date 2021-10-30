@@ -44,13 +44,13 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER               TRUE
     )
 
-lemons_configure_juce_plugin (TARGET Imogen BROWSER ASSET_FOLDER assets MICROPHONE)
+lemons_configure_juce_plugin (TARGET ${PROJECT_NAME} BROWSER ASSET_FOLDER assets MICROPHONE)
 
-target_sources (Imogen PRIVATE ${LEMONS_PROJECT_SOURCE_DIR}/plugin_main.cpp)
+target_sources (${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source/plugin_main.cpp)
 
-target_include_directories (Imogen PRIVATE ${LEMONS_PROJECT_SOURCE_DIR})
+target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-target_link_libraries (Imogen PRIVATE imogen_dsp imogen_gui)
+target_link_libraries (${PROJECT_NAME} PRIVATE imogen_dsp imogen_gui)
 
 
 #################### Configure the remote GUI app build ####################
@@ -67,9 +67,9 @@ juce_add_gui_app (ImogenRemote
 
 lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets)
 
-target_sources (ImogenRemote PRIVATE ${LEMONS_PROJECT_SOURCE_DIR}/remote_main.cpp)
+target_sources (ImogenRemote PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source/remote_main.cpp)
 
-target_include_directories (ImogenRemote PRIVATE ${LEMONS_PROJECT_SOURCE_DIR})
+target_include_directories (ImogenRemote PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source)
 
-target_link_libraries (ImogenRemote PRIVATE imogen_gui lemons_app_utils)
+target_link_libraries (ImogenRemote PRIVATE imogen_gui)
 
