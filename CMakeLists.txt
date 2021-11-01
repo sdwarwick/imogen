@@ -4,7 +4,9 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 add_subdirectory (GetLemons)
 
-lemons_add_juce_modules ("${CMAKE_CURRENT_LIST_DIR}/Source/modules")
+set (sourceDir "${CMAKE_CURRENT_LIST_DIR}/Source")
+
+lemons_add_juce_modules ("${sourceDir}/modules")
 
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
@@ -48,9 +50,9 @@ juce_add_plugin (Imogen
 
 lemons_configure_juce_plugin (TARGET ${PROJECT_NAME} BROWSER ASSET_FOLDER assets MICROPHONE)
 
-target_sources (${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source/plugin_main.cpp)
+target_sources (${PROJECT_NAME} PRIVATE "${sourceDir}/plugin_main.cpp")
 
-target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source)
+target_include_directories (${PROJECT_NAME} PRIVATE ${sourceDir})
 
 target_link_libraries (${PROJECT_NAME} PRIVATE imogen_dsp imogen_gui)
 
@@ -69,9 +71,9 @@ juce_add_gui_app (ImogenRemote
 
 lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets)
 
-target_sources (ImogenRemote PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source/remote_main.cpp)
+target_sources (ImogenRemote PRIVATE "${sourceDir}/remote_main.cpp")
 
-target_include_directories (ImogenRemote PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source)
+target_include_directories (ImogenRemote PRIVATE ${sourceDir})
 
 target_link_libraries (ImogenRemote PRIVATE imogen_gui)
 
