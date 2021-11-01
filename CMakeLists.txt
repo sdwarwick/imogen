@@ -4,6 +4,8 @@ project (Imogen VERSION 0.0.1 LANGUAGES CXX)
 
 add_subdirectory (GetLemons)
 
+lemons_add_juce_modules ("${CMAKE_CURRENT_LIST_DIR}/Source/modules")
+
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
     PRODUCT_NAME                ${PROJECT_NAME}
