@@ -1,8 +1,11 @@
-cmake_minimum_required (VERSION 3.19) 
+cmake_minimum_required (VERSION 3.21 FATAL_ERROR) 
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
 add_subdirectory (GetLemons)
+
+include (AllLemonsModules)
+include (BVBrandFlags)
 
 set (sourceDir "${CMAKE_CURRENT_LIST_DIR}/Source")
 
