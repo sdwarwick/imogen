@@ -51,7 +51,7 @@ juce_add_plugin (Imogen
     NEEDS_WEB_BROWSER               TRUE
     )
 
-lemons_configure_juce_plugin (TARGET ${PROJECT_NAME} BROWSER ASSET_FOLDER assets MICROPHONE)
+lemons_configure_juce_plugin (TARGET ${PROJECT_NAME} MICROPHONE BROWSER ASSET_FOLDER assets TRANSLATIONS)
 
 target_sources (${PROJECT_NAME} PRIVATE "${sourceDir}/plugin_main.cpp")
 
@@ -72,7 +72,7 @@ juce_add_gui_app (ImogenRemote
     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
     )
 
-lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets)
+lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets TRANSLATIONS)
 
 target_sources (ImogenRemote PRIVATE "${sourceDir}/remote_main.cpp")
 
