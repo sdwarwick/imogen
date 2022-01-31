@@ -2,6 +2,4 @@
 Builds/
 Cache/
 logs/
-translations/
-assets/translations/
 CMakeUserPresets.json

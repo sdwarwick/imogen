@@ -2,14 +2,14 @@ cmake_minimum_required (VERSION 3.21 FATAL_ERROR)
 
 project (Imogen VERSION 0.0.1 LANGUAGES CXX) 
 
-add_subdirectory (GetLemons)
+include (${CMAKE_CURRENT_LIST_DIR}/AddLemons.cmake)
 
 include (AllLemonsModules)
 include (BVBrandFlags)
 
 set (sourceDir "${CMAKE_CURRENT_LIST_DIR}/Source")
 
-lemons_add_juce_modules ("${sourceDir}/modules")
+lemons_add_juce_modules (DIR "${sourceDir}/modules")
 
 set (Imogen_Common_Flags
     ${BV_DEFAULT_BRAND_FLAGS}
@@ -62,21 +62,21 @@ target_link_libraries (${PROJECT_NAME} PRIVATE imogen_dsp imogen_gui)
 
 #################### Configure the remote GUI app build ####################
 
-juce_add_gui_app (ImogenRemote
-    ${Imogen_Common_Flags}
-    DESCRIPTION                   "Remote control for the Imogen plugin"
-    DOCUMENT_BROWSER_ENABLED      TRUE
-    NEEDS_CURL                    TRUE
-    NEEDS_WEB_BROWSER             TRUE
-    MICROPHONE_PERMISSION_ENABLED FALSE
-    BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
-    )
+# juce_add_gui_app (ImogenRemote
+#     ${Imogen_Common_Flags}
+#     DESCRIPTION                   "Remote control for the Imogen plugin"
+#     DOCUMENT_BROWSER_ENABLED      TRUE
+#     NEEDS_CURL                    TRUE
+#     NEEDS_WEB_BROWSER             TRUE
+#     MICROPHONE_PERMISSION_ENABLED FALSE
+#     BACKGROUND_AUDIO_ENABLED      TRUE # for iOS
+#     )
 
-lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets TRANSLATIONS)
+# lemons_configure_juce_app (TARGET ImogenRemote BROWSER ASSET_FOLDER assets TRANSLATIONS)
 
-target_sources (ImogenRemote PRIVATE "${sourceDir}/remote_main.cpp")
+# target_sources (ImogenRemote PRIVATE "${sourceDir}/remote_main.cpp")
 
-target_include_directories (ImogenRemote PRIVATE ${sourceDir})
+# target_include_directories (ImogenRemote PRIVATE ${sourceDir})
 
-target_link_libraries (ImogenRemote PRIVATE imogen_gui)
+# target_link_libraries (ImogenRemote PRIVATE imogen_gui)
 
