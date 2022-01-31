@@ -1,23 +1,23 @@
 
 namespace Imogen
 {
-template < typename SampleType >
-HarmonizerVoice< SampleType >::HarmonizerVoice (Harmonizer< SampleType >& h, dsp::psola::Analyzer< SampleType >& analyzerToUse)
-    : dsp::SynthVoiceBase< SampleType > (&h), shifter (analyzerToUse)
+template <typename SampleType>
+HarmonizerVoice<SampleType>::HarmonizerVoice (Harmonizer<SampleType>& h, dsp::psola::Analyzer<SampleType>& analyzerToUse)
+	: dsp::SynthVoiceBase<SampleType> (&h), shifter (analyzerToUse)
 {
 }
 
-template < typename SampleType >
-void HarmonizerVoice< SampleType >::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
+template <typename SampleType>
+void HarmonizerVoice<SampleType>::renderPlease (AudioBuffer& output, float desiredFrequency, double currentSamplerate)
 {
-    jassert (desiredFrequency > 0 && currentSamplerate > 0);
+	jassert (desiredFrequency > 0 && currentSamplerate > 0);
 
-    shifter.setPitch (desiredFrequency, currentSamplerate);
-    shifter.getSamples (output);
+	shifter.setPitch (desiredFrequency, currentSamplerate);
+	shifter.getSamples (output);
 }
 
-template class HarmonizerVoice< float >;
-template class HarmonizerVoice< double >;
+template class HarmonizerVoice<float>;
+template class HarmonizerVoice<double>;
 
 
 }  // namespace Imogen

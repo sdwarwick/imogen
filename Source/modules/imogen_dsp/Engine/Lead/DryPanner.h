@@ -2,21 +2,22 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 struct DryPanner
 {
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    DryPanner (Parameters& params);
+	DryPanner (Parameters& params);
 
-    void process (const AudioBuffer& monoIn, AudioBuffer& stereoOut, bool bypassed);
+	void process (const AudioBuffer& monoIn, AudioBuffer& stereoOut, bool bypassed);
 
-    void prepare (double samplerate, int blocksize);
+	void prepare (double samplerate, int blocksize);
 
 private:
-    Parameters& parameters;
 
-    dsp::FX::MonoToStereoPanner< SampleType > panner;
+	Parameters& parameters;
+
+	dsp::FX::MonoToStereoPanner<SampleType> panner;
 };
 
 }  // namespace Imogen

@@ -4,15 +4,17 @@ namespace Imogen
 class OutputLevelThumb : public juce::Component
 {
 public:
-    OutputLevelThumb (Parameters& paramsToUse);
+
+	OutputLevelThumb (Parameters& paramsToUse);
 
 private:
-    void paint (juce::Graphics& g) final;
-    void resized() final;
 
-    Parameters& params;
+	void paint (juce::Graphics& g) final;
+	void resized() final;
 
-    plugin::GainParameter& outputGain {*params.outputGain};
+	Parameters& params;
+
+	plugin::GainParameter& outputGain { *params.outputGain };
 };
 
 }  // namespace Imogen

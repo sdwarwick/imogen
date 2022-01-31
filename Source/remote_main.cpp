@@ -4,12 +4,12 @@
 
 namespace Imogen
 {
-struct RemoteApp : lemons::GuiApp< Remote >
+struct RemoteApp : lemons::GuiApp<Remote>
 {
-    RemoteApp()
-        : lemons::GuiApp< Imogen::Remote > (String ("Imogen ") + TRANS ("Remote"), "0.0.1", {1060, 640})
-    {
-    }
+	RemoteApp()
+		: lemons::GuiApp<Imogen::Remote> (String ("Imogen ") + TRANS ("Remote"), "0.0.1", { 1060, 640 })
+	{
+	}
 };
 
 }  // namespace Imogen

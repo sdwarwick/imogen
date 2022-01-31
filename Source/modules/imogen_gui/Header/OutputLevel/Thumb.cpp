@@ -2,7 +2,7 @@
 namespace Imogen
 {
 OutputLevelThumb::OutputLevelThumb (Parameters& paramsToUse)
-    : params (paramsToUse)
+	: params (paramsToUse)
 {
 }
 

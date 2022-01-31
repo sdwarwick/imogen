@@ -8,33 +8,35 @@
 
 namespace Imogen
 {
-template < typename SampleType >
-class Engine : public dsp::LatencyEngine< SampleType >
+template <typename SampleType>
+class Engine : public dsp::LatencyEngine<SampleType>
 {
 public:
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
 
-    Engine (State& stateToUse);
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
+
+	Engine (State& stateToUse);
 
 private:
-    void renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool isBypassed) final;
 
-    void onPrepare (int blocksize, double samplerate) final;
+	void renderChunk (const AudioBuffer& input, AudioBuffer& output, MidiBuffer& midiMessages, bool isBypassed) final;
 
-    void updateStereoWidth (int width);
+	void onPrepare (int blocksize, double samplerate) final;
 
-    State&      state;
-    Parameters& parameters {state.parameters};
+	void updateStereoWidth (int width);
 
-    dsp::psola::Analyzer< SampleType > analyzer;
+	State&		state;
+	Parameters& parameters { state.parameters };
 
-    PreHarmonyEffects< SampleType > preHarmonyEffects {state};
+	dsp::psola::Analyzer<SampleType> analyzer;
 
-    Harmonizer< SampleType > harmonizer {state, analyzer};
+	PreHarmonyEffects<SampleType> preHarmonyEffects { state };
 
-    LeadProcessor< SampleType > leadProcessor {harmonizer, state};
+	Harmonizer<SampleType> harmonizer { state, analyzer };
 
-    PostHarmonyEffects< SampleType > postHarmonyEffects {state};
+	LeadProcessor<SampleType> leadProcessor { harmonizer, state };
+
+	PostHarmonyEffects<SampleType> postHarmonyEffects { state };
 };
 
 }  // namespace Imogen

@@ -5,28 +5,30 @@
 
 namespace Imogen
 {
-class Processor : public plugin::Processor< State, Engine >
+class Processor : public plugin::Processor<State, Engine>
 {
 public:
-    Processor();
+
+	Processor();
 
 private:
-    bool canAddBus (bool isInput) const override final { return isInput; }
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
-    double getTailLengthSeconds() const final;
+	bool canAddBus (bool isInput) const override final { return isInput; }
+	bool isBusesLayoutSupported (const BusesLayout& layouts) const final;
 
-    bool acceptsMidi() const final { return true; }
-    bool producesMidi() const final { return true; }
-    bool supportsMPE() const final { return false; }
-    bool isMidiEffect() const final { return false; }
+	double getTailLengthSeconds() const final;
 
-    const String      getName() const final { return "Imogen"; }
-    juce::StringArray getAlternateDisplayNames() const final { return {"Imgn"}; }
+	bool acceptsMidi() const final { return true; }
+	bool producesMidi() const final { return true; }
+	bool supportsMPE() const final { return false; }
+	bool isMidiEffect() const final { return false; }
 
-    Parameters& parameters {getState().parameters};
+	const String	  getName() const final { return "Imogen"; }
+	juce::StringArray getAlternateDisplayNames() const final { return { "Imgn" }; }
 
-    // network::OscDataSynchronizer dataSync {state};
+	Parameters& parameters { getState().parameters };
+
+	// network::OscDataSynchronizer dataSync {state};
 };
 
 }  // namespace Imogen

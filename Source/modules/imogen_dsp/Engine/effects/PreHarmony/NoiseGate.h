@@ -2,23 +2,24 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 struct NoiseGate
 {
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    NoiseGate (State& stateToUse);
+	NoiseGate (State& stateToUse);
 
-    void process (AudioBuffer& audio);
+	void process (AudioBuffer& audio);
 
-    void prepare (double samplerate, int blocksize);
+	void prepare (double samplerate, int blocksize);
 
 private:
-    State&      state;
-    Parameters& parameters {state.parameters};
-    Meters&     meters {state.meters};
 
-    dsp::FX::NoiseGate< SampleType > gate;
+	State&		state;
+	Parameters& parameters { state.parameters };
+	Meters&		meters { state.meters };
+
+	dsp::FX::NoiseGate<SampleType> gate;
 };
 
 }  // namespace Imogen

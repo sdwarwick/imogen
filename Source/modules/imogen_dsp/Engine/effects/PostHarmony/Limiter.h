@@ -2,23 +2,24 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 struct Limiter
 {
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    Limiter (State& stateToUse);
+	Limiter (State& stateToUse);
 
-    void process (AudioBuffer& audio);
+	void process (AudioBuffer& audio);
 
-    void prepare (double samplerate, int blocksize);
+	void prepare (double samplerate, int blocksize);
 
 private:
-    State&      state;
-    Parameters& parameters {state.parameters};
-    Meters&     meters {state.meters};
 
-    dsp::FX::Limiter< SampleType > limiter;
+	State&		state;
+	Parameters& parameters { state.parameters };
+	Meters&		meters { state.meters };
+
+	dsp::FX::Limiter<SampleType> limiter;
 };
 
 }  // namespace Imogen

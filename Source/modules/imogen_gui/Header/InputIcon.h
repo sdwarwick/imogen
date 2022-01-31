@@ -5,17 +5,19 @@ namespace Imogen
 class InputIcon : public juce::Component
 {
 public:
-    InputIcon (State& stateToUse);
+
+	InputIcon (State& stateToUse);
 
 private:
-    void paint (juce::Graphics& g) final;
-    void resized() final;
 
-    State& state;
+	void paint (juce::Graphics& g) final;
+	void resized() final;
 
-    plugin::GainMeterParameter& inputMeter {*state.meters.inputLevel};
+	State& state;
 
-    plugin::GainParameter& inputGain {*state.parameters.inputGain};
+	plugin::GainMeterParameter& inputMeter { *state.meters.inputLevel };
+
+	plugin::GainParameter& inputGain { *state.parameters.inputGain };
 };
 
 }  // namespace Imogen

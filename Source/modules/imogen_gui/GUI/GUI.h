@@ -10,24 +10,26 @@
 
 namespace Imogen
 {
-class GUI : public plugin::GUI< State >
+class GUI : public plugin::GUI<State>
 {
 public:
-    GUI (plugin::PluginState< State >& pluginState);
 
-    virtual ~GUI() override;
+	GUI (plugin::PluginState<State>& pluginState);
+
+	virtual ~GUI() override;
 
 private:
-    void paint (juce::Graphics& g) final;
-    void resized() final;
-    bool keyPressed (const juce::KeyPress& key) final;
 
-    Internals& internals {state.internals};
+	void paint (juce::Graphics& g) final;
+	void resized() final;
+	bool keyPressed (const juce::KeyPress& key) final;
 
-    Header       header {state};
-    CenterDial   dial {state};
-    DryWet       dryWet {state};
-    MidiKeyboard keyboard;
+	Internals& internals { state.internals };
+
+	Header		 header { state };
+	CenterDial	 dial { state };
+	DryWet		 dryWet { state };
+	MidiKeyboard keyboard;
 };
 
 }  // namespace Imogen

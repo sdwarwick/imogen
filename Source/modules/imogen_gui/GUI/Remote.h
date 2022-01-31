@@ -5,18 +5,20 @@ namespace Imogen
 class Remote : public juce::Component
 {
 public:
-    Remote();
-    ~Remote() override;
+
+	Remote();
+	~Remote() override;
 
 private:
-    void paint (juce::Graphics&) final;
-    void resized() final;
 
-    plugin::PluginState< State > state;
+	void paint (juce::Graphics&) final;
+	void resized() final;
 
-    GUI gui {state};
+	plugin::PluginState<State> state;
 
-    // network::OscDataSynchronizer dataSync {state};
+	GUI gui { state };
+
+	// network::OscDataSynchronizer dataSync {state};
 };
 
 }  // namespace Imogen

@@ -2,7 +2,7 @@
 namespace Imogen
 {
 InputIcon::InputIcon (State& stateToUse)
-    : state (stateToUse)
+	: state (stateToUse)
 {
 }
 

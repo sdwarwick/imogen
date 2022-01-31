@@ -11,24 +11,26 @@ namespace Imogen
 class Header : public juce::Component
 {
 public:
-    Header (State& stateToUse);
+
+	Header (State& stateToUse);
 
 private:
-    void paint (juce::Graphics& g) final;
-    void resized() final;
 
-    State& state;
+	void paint (juce::Graphics& g) final;
+	void resized() final;
 
-    LogoButton logo;
+	State& state;
 
-    KeyboardButton keyboardButton;
+	LogoButton logo;
 
-    InputIcon   inputIcon {state};
-    OutputLevel outputLevel {state};
+	KeyboardButton keyboardButton;
 
-    // plugin::PresetBar presetBar {state, "Imogen", ".imogenpreset"};
+	InputIcon	inputIcon { state };
+	OutputLevel outputLevel { state };
 
-    ScaleChooser scale {state.internals};
+	// plugin::PresetBar presetBar {state, "Imogen", ".imogenpreset"};
+
+	ScaleChooser scale { state.internals };
 };
 
 }  // namespace Imogen

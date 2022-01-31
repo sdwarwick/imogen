@@ -2,7 +2,7 @@
 namespace Imogen
 {
 OutputLevelMeter::OutputLevelMeter (Meters& metersToUse)
-    : meters (metersToUse)
+	: meters (metersToUse)
 {
 }
 
@@ -16,9 +16,9 @@ void OutputLevelMeter::resized()
 
 
 OutputLevelMeter::Bar::Bar (plugin::GainMeterParameter& meter)
-    : level (meter)
+	: level (meter)
 {
-    juce::ignoreUnused (level);
+	juce::ignoreUnused (level);
 }
 
 void OutputLevelMeter::Bar::paint (juce::Graphics&)

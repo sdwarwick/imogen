@@ -7,6 +7,7 @@ namespace Imogen
 class MidiKeyboard : public juce::Component
 {
 public:
+
 private:
 };
 

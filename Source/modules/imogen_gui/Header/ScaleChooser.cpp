@@ -2,9 +2,9 @@
 namespace Imogen
 {
 ScaleChooser::ScaleChooser (Internals& internalsToUse)
-    : internals (internalsToUse)
+	: internals (internalsToUse)
 {
-    juce::ignoreUnused (internals);
+	juce::ignoreUnused (internals);
 }
 
 }  // namespace Imogen

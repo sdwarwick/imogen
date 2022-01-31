@@ -6,27 +6,30 @@ namespace Imogen
 class OutputLevelMeter : public juce::Component
 {
 public:
-    OutputLevelMeter (Meters& metersToUse);
+
+	OutputLevelMeter (Meters& metersToUse);
 
 private:
-    struct Bar : juce::Component
-    {
-        Bar (plugin::GainMeterParameter& meter);
 
-    private:
-        void paint (juce::Graphics& g) final;
-        void resized() final;
+	struct Bar : juce::Component
+	{
+		Bar (plugin::GainMeterParameter& meter);
 
-        plugin::GainMeterParameter& level;
-    };
+	private:
 
-    void paint (juce::Graphics& g) final;
-    void resized() final;
+		void paint (juce::Graphics& g) final;
+		void resized() final;
 
-    Meters& meters;
+		plugin::GainMeterParameter& level;
+	};
 
-    Bar left {*meters.outputLevelL};
-    Bar right {*meters.outputLevelR};
+	void paint (juce::Graphics& g) final;
+	void resized() final;
+
+	Meters& meters;
+
+	Bar left { *meters.outputLevelL };
+	Bar right { *meters.outputLevelR };
 };
 
 }  // namespace Imogen

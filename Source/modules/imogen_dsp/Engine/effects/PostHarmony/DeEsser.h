@@ -2,23 +2,24 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 struct DeEsser
 {
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    DeEsser (State& stateToUse);
+	DeEsser (State& stateToUse);
 
-    void process (AudioBuffer& dry, AudioBuffer& wet);
+	void process (AudioBuffer& dry, AudioBuffer& wet);
 
-    void prepare (double samplerate, int blocksize);
+	void prepare (double samplerate, int blocksize);
 
 private:
-    State&      state;
-    Parameters& parameters {state.parameters};
-    Meters&     meters {state.meters};
 
-    dsp::FX::DeEsser< SampleType > dryDS, wetDS;
+	State&		state;
+	Parameters& parameters { state.parameters };
+	Meters&		meters { state.meters };
+
+	dsp::FX::DeEsser<SampleType> dryDS, wetDS;
 };
 
 }  // namespace Imogen

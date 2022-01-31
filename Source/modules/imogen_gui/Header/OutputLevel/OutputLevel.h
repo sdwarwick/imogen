@@ -8,16 +8,18 @@ namespace Imogen
 class OutputLevel : public juce::Component
 {
 public:
-    OutputLevel (State& stateToUse);
+
+	OutputLevel (State& stateToUse);
 
 private:
-    void paint (juce::Graphics& g) final;
-    void resized() final;
 
-    State& state;
+	void paint (juce::Graphics& g) final;
+	void resized() final;
 
-    OutputLevelMeter meter {state.meters};
-    OutputLevelThumb thumb {state.parameters};
+	State& state;
+
+	OutputLevelMeter meter { state.meters };
+	OutputLevelThumb thumb { state.parameters };
 };
 
 }  // namespace Imogen

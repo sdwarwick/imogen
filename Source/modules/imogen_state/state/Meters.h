@@ -6,26 +6,27 @@ namespace Imogen
 {
 struct Meters
 {
-    void addToList (plugin::ParameterList& list);
+	void addToList (plugin::ParameterList& list);
 
-    GainMeter inputLevel {"Input level", inputMeter};
+	GainMeter inputLevel { "Input level", inputMeter };
 
-    GainMeter outputLevelL {"Output level (L)", outputMeter};
-    GainMeter outputLevelR {"Output level (R)", outputMeter};
+	GainMeter outputLevelL { "Output level (L)", outputMeter };
+	GainMeter outputLevelR { "Output level (R)", outputMeter };
 
-    GainMeter gateRedux {"Noise gate gain reduction", compLimMeter};
-    GainMeter compRedux {"Compressor gain reduction", compLimMeter};
-    GainMeter deEssRedux {"De-esser gain reduction", compLimMeter};
-    GainMeter limRedux {"Limiter gain reduction", compLimMeter};
+	GainMeter gateRedux { "Noise gate gain reduction", compLimMeter };
+	GainMeter compRedux { "Compressor gain reduction", compLimMeter };
+	GainMeter deEssRedux { "De-esser gain reduction", compLimMeter };
+	GainMeter limRedux { "Limiter gain reduction", compLimMeter };
 
-    GainMeter reverbLevel {"Reverb level", otherMeter};
-    GainMeter delayLevel {"Delay level", otherMeter};
+	GainMeter reverbLevel { "Reverb level", otherMeter };
+	GainMeter delayLevel { "Delay level", otherMeter };
 
 private:
-    static constexpr auto inputMeter   = juce::AudioProcessorParameter::inputMeter;
-    static constexpr auto outputMeter  = juce::AudioProcessorParameter::outputMeter;
-    static constexpr auto compLimMeter = juce::AudioProcessorParameter::compressorLimiterGainReductionMeter;
-    static constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
+
+	static constexpr auto inputMeter   = juce::AudioProcessorParameter::inputMeter;
+	static constexpr auto outputMeter  = juce::AudioProcessorParameter::outputMeter;
+	static constexpr auto compLimMeter = juce::AudioProcessorParameter::compressorLimiterGainReductionMeter;
+	static constexpr auto otherMeter   = juce::AudioProcessorParameter::otherMeter;
 };
 
 }  // namespace Imogen

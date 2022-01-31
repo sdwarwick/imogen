@@ -3,28 +3,28 @@ namespace Imogen
 {
 Remote::Remote()
 {
-    this->setBufferedToImage (true);
+	this->setBufferedToImage (true);
 
-    addAndMakeVisible (gui);
+	addAndMakeVisible (gui);
 
-    state.state.addAllAsInternal();
+	state.state.addAllAsInternal();
 
-    setSize (800, 2990);
+	setSize (800, 2990);
 }
 
 Remote::~Remote()
 {
-    setLookAndFeel (nullptr);
+	setLookAndFeel (nullptr);
 }
 
 void Remote::paint (juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+	g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 }
 
 void Remote::resized()
 {
-    gui.setBounds (getLocalBounds());
+	gui.setBounds (getLocalBounds());
 }
 
 

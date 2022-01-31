@@ -17,33 +17,35 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 class PostHarmonyEffects
 {
 public:
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
 
-    PostHarmonyEffects (State& stateToUse);
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    void prepare (double samplerate, int blocksize);
+	PostHarmonyEffects (State& stateToUse);
 
-    void process (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output);
+	void prepare (double samplerate, int blocksize);
 
-    void updateStereoWidth (int width);
+	void process (AudioBuffer& harmonySignal, AudioBuffer& drySignal, AudioBuffer& output);
+
+	void updateStereoWidth (int width);
 
 private:
-    State&      state;
-    Parameters& parameters {state.parameters};
 
-    EQ< SampleType >         eq {parameters.eqState};
-    Compressor< SampleType > compressor {state};
-    DeEsser< SampleType >    deEsser {state};
+	State&		state;
+	Parameters& parameters { state.parameters };
 
-    DryWetMixer< SampleType > dryWetMixer {parameters};
-    Delay< SampleType >       delay {state};
-    Reverb< SampleType >      reverb {state};
-    OutputGain< SampleType >  outputGain {parameters};
-    Limiter< SampleType >     limiter {state};
+	EQ<SampleType>		   eq { parameters.eqState };
+	Compressor<SampleType> compressor { state };
+	DeEsser<SampleType>	   deEsser { state };
+
+	DryWetMixer<SampleType> dryWetMixer { parameters };
+	Delay<SampleType>		delay { state };
+	Reverb<SampleType>		reverb { state };
+	OutputGain<SampleType>	outputGain { parameters };
+	Limiter<SampleType>		limiter { state };
 };
 
 }  // namespace Imogen

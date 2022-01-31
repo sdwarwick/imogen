@@ -10,16 +10,17 @@ namespace Imogen
 struct CustomStateData : SerializableData
 {
 private:
-    void serialize (TreeReflector& ref) final;
+
+	void serialize (TreeReflector& ref) final;
 };
 
 
-struct State : plugin::CustomState< Parameters, CustomStateData >
+struct State : plugin::CustomState<Parameters, CustomStateData>
 {
-    State();
+	State();
 
-    Internals internals;
-    Meters    meters;
+	Internals internals;
+	Meters	  meters;
 };
 
 }  // namespace Imogen

@@ -4,9 +4,9 @@ namespace Imogen
 {
 struct AboutPopup : public gui::PopupComponent
 {
-    using PopupComponent::PopupComponent;
+	using PopupComponent::PopupComponent;
 
-    void resizeTriggered() final;
+	void resizeTriggered() final;
 };
 
 }  // namespace Imogen

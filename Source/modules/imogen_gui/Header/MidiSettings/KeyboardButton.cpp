@@ -3,7 +3,7 @@ namespace Imogen
 {
 KeyboardButton::KeyboardButton()
 {
-    gui::addAndMakeVisible (this, popup);
+	gui::addAndMakeVisible (this, popup);
 }
 
 }  // namespace Imogen

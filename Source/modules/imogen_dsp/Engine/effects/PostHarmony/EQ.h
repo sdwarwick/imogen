@@ -3,28 +3,29 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 struct EQ
 {
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    EQ (EQState& params);
+	EQ (EQState& params);
 
-    void process (AudioBuffer& dry, AudioBuffer& wet);
+	void process (AudioBuffer& dry, AudioBuffer& wet);
 
-    void prepare (double samplerate, int blocksize);
+	void prepare (double samplerate, int blocksize);
 
 private:
-    using FT = dsp::FX::FilterType;
 
-    void updateLowShelf (float freq, float Q, float gain);
-    void updateHighShelf (float freq, float Q, float gain);
-    void updatePeak (float freq, float Q, float gain);
-    void updateHighPass (float freq, float Q);
+	using FT = dsp::FX::FilterType;
 
-    EQState& parameters;
+	void updateLowShelf (float freq, float Q, float gain);
+	void updateHighShelf (float freq, float Q, float gain);
+	void updatePeak (float freq, float Q, float gain);
+	void updateHighPass (float freq, float Q);
 
-    dsp::FX::EQ< SampleType > dryEQ, wetEQ;
+	EQState& parameters;
+
+	dsp::FX::EQ<SampleType> dryEQ, wetEQ;
 };
 
 }  // namespace Imogen

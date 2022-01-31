@@ -2,23 +2,24 @@
 
 namespace Imogen
 {
-template < typename SampleType >
+template <typename SampleType>
 struct Delay
 {
-    using AudioBuffer = juce::AudioBuffer< SampleType >;
+	using AudioBuffer = juce::AudioBuffer<SampleType>;
 
-    Delay (State& stateToUse);
+	Delay (State& stateToUse);
 
-    void process (AudioBuffer& audio);
+	void process (AudioBuffer& audio);
 
-    void prepare (double samplerate, int blocksize);
+	void prepare (double samplerate, int blocksize);
 
 private:
-    State&      state;
-    Parameters& parameters {state.parameters};
-    Meters&     meters {state.meters};
 
-    dsp::FX::Delay< SampleType > delay;
+	State&		state;
+	Parameters& parameters { state.parameters };
+	Meters&		meters { state.meters };
+
+	dsp::FX::Delay<SampleType> delay;
 };
 
 }  // namespace Imogen
