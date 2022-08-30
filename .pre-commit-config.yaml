@@ -47,13 +47,13 @@ repos:
 
   # text and typos
   - repo: https://github.com/sirosen/texthooks
-    rev: 0.3.1
+    rev: 0.4.0
     hooks:
       - id: fix-ligatures
       - id: fix-smartquotes
       - id: forbid-bidi-controls
   - repo: https://github.com/crate-ci/typos
-    rev: typos-dict-v0.8.8
+    rev: v1.11.5
     hooks:
       - id: typos
         args: [--write-changes]
