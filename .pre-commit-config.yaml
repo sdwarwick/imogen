@@ -53,7 +53,7 @@ repos:
       - id: fix-smartquotes
       - id: forbid-bidi-controls
   - repo: https://github.com/crate-ci/typos
-    rev: v1.14.3
+    rev: v1.14.4
     hooks:
       - id: typos
         args: [--write-changes]
